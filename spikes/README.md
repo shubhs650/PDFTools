@@ -7,6 +7,11 @@ Throwaway spike code for [docs/plan/M0.md](../docs/plan/M0.md). Nothing here is 
 | ----- | ------------------------------------ | ---------------------------------------------------- | --------------------- |
 | S8    | [`s8-csp/`](s8-csp/)                 | [ADR-003](../docs/adr/003-s8-csp-wasm-workers-sw.md) | Works with workaround |
 | S3    | [`s3-two-engines/`](s3-two-engines/) | [ADR-004](../docs/adr/004-s3-two-engines.md)         | Works with workaround |
+| S1    | [`s1-save/`](s1-save/)               | [ADR-005](../docs/adr/005-s1-incremental-save.md)    | Works with workaround |
+| S5    | [`s5-search/`](s5-search/)           | [ADR-006](../docs/adr/006-s5-search-work-worker.md)  | Works with workaround |
+| S2    | [`s2-measure/`](s2-measure/)         | [ADR-007](../docs/adr/007-s2-measure-viewport.md)    | Works with workaround |
+| S7    | [`s7-snap/`](s7-snap/)               | [ADR-008](../docs/adr/008-s7-snap-geometry.md)       | Works with workaround |
+| S4    | [`s4-oxide/`](s4-oxide/)             | [ADR-009](../docs/adr/009-s4-pdf-oxide.md)           | Works with workaround |
 
 ## Shared pieces (`shared/`)
 
@@ -44,6 +49,10 @@ node spikes/s2-measure/read-measure.ts <file.pdf>   # owner: read a viewer-saved
 # S7 snapping geometry: correctness + performance (owner: pass local drawings as arguments)
 node spikes/s7-snap/run-node.ts [drawing.pdf …]
 SPIKE=s7 npm run spikes -- --project=s7
+
+# S4 PDF Oxide: size, API, quality, throughput vs PDFium (owner: pass local files, e.g. the pipe chart)
+node spikes/s4-oxide/run-node.ts [file.pdf …]   # → spikes/s4-oxide/out/s4-node.json, out/review/*.md
+SPIKE=s4 npm run spikes -- --project=s4        # worker under CSP → test-results/s4-results.json
 
 # S5 search while scrolling (self-made 2,000-page contract stand-in)
 node spikes/s5-search/make-contract.ts && SPIKE=s5 npm run spikes -- --project=s5

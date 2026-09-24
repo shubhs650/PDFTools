@@ -1,6 +1,6 @@
 # PDFTools — Progress
 
-_Last updated: 2026-09-24 (session 6: S7)_
+_Last updated: 2026-09-24 (session 7: S4)_
 
 **Current milestone:** M0 — Spikes (plan: [docs/plan/M0.md](plan/M0.md))
 
@@ -52,6 +52,25 @@ _Last updated: 2026-09-24 (session 6: S7)_
     rendering works in our own worker and cancels in < 0.1 ms, but its slices run 37–45 ms.
   - Recommendation: host EmbedPDF's `PdfiumNative` in our own Render worker module (the "hosted"
     variant) so that direct PDFium calls are available (ADR-001 B14, needed by S1).
+- **Session 7 — M0-S4 (PDF Oxide WASM).** _Works with workaround._ See
+  [ADR-009](adr/009-s4-pdf-oxide.md).
+  - The WASM build has every API needed for §7.6 and §7.7: text, Markdown, HTML, tables with cell
+    boxes, images, words and paths. It is **4.45 MB brotli** (17.6 MB raw).
+  - Licenses: `MIT OR Apache-2.0`, and all 394 Rust crates compiled into the WASM are permissive.
+  - In a module worker under the §10.1 CSP: 0 violations, 0 third-party requests, and the only
+    fetch is the self-hosted `.wasm`. Init takes 0.7 s in the browser. Cancel between pages takes
+    11 ms. No main-thread long tasks.
+  - The **first extraction per instance takes ~0.7 s** (a one-time warm-up), so it should run in
+    the background right after init.
+  - 2,000 pages: text at 215–286 pages/s, Markdown at 109–140 pages/s, and PDFium text at 459
+    pages/s. Memory is about 47 MB.
+  - Tables: **lattice 100 %**, merged-header data 100 % (the merged header text is dropped), and
+    **stream 0 %**. There are no useful tables in the public corpus. Unruled catalogue tables come
+    out as jumbled text. So an own stream detector is needed (§7.7).
+  - Structure: H1, lists and two-column reading order are correct; the H2 comes out as bold text.
+  - **Oxide has no permission API.** It extracted from the encrypted catalogue without checks, so
+    it must be gated by PDFium's permission flags (rule 9).
+  - Added dependency `pdf-oxide-wasm` 0.3.77. The license gate passes.
 - **Session 6 — M0-S7 (vector geometry for snapping).** _Works with workaround._ See
   [ADR-008](adr/008-s7-snap-geometry.md).
   - Extraction goes straight through PDFium (EmbedPDF has no public API):
@@ -144,9 +163,13 @@ _Last updated: 2026-09-24 (session 6: S7)_
 
 ## In progress
 
-- M0: S8, S3, S1, S5, S2 and S7 have finished the agent part. The owner checks listed under Next are pending.
+- M0: S8, S3, S1, S5, S2, S7 and S4 have finished the agent part. S6 is next. The owner checks listed under Next are pending.
 
 ## Session log
+
+- **Session 7 (2026-09-24):** ADR-008 accepted (ARCHITECTURE.md Rev 0.2). S4 done. Local checks
+  all pass: typecheck (app and spikes), lint, format, 102 unit tests, license gate (529
+  packages), app e2e smoke, and 20/20 spike Playwright tests.
 
 - **Session 6 (2026-09-24):** S7. Local checks all pass: typecheck (app and spikes), lint, format,
   unit tests (11 new S7 tests), license gate, app e2e smoke, and all spike Playwright tests.
@@ -180,6 +203,8 @@ _Last updated: 2026-09-24 (session 6: S7)_
 ## Next
 
 1. **Owner decisions:**
+   - **ADR-009 decisions 1–7**: adopt Oxide (lazy, warm-up), a **PDFium permission gate** before
+     every Oxide call, own stream-table detector, and version pinning and notices;
    - ADR-003 decisions 3–5;
    - ADR-004 decisions 2–6;
    - **ADR-007 decisions 2–5**: label strategy (after interop), viewport semantics, **encrypted
@@ -197,9 +222,11 @@ _Last updated: 2026-09-24 (session 6: S7)_
    - **S2 interop checklist** §D and §F (`e2e/fixtures/self-made/s2-interop/`);
    - **S7 on the four local CAD drawings and the dense P&ID**
      (`node spikes/s7-snap/run-node.ts <files>`, plus the browser page; see ADR-008);
+   - **S4 on the local pipe-chart fixture and a parts-list drawing**
+     (`node spikes/s4-oxide/run-node.ts <files>`; dumps in `out/review/`, see ADR-009);
    - FAR, 500 MB and A0 through the S3 harness;
    - S8 Firefox check and Pages preview.
-3. **Agent:** continue M0 with **S4** (PDF Oxide WASM), then S6.
+3. **Agent:** finish M0 with **S6** (Fluent icon coverage).
 4. Get [PR #1](https://github.com/shubhs650/PDFTools/pull/1) merged. This branch builds on it.
 
 ## Open issues
@@ -208,6 +235,10 @@ _Last updated: 2026-09-24 (session 6: S7)_
   including CAD drawings. ADR-002 says drawings stay local and are never committed, and
   `.gitignore` excludes `*.pdf`, so these were force-added. S3 uses `bearing catalogue.pdf` and
   `PRESSURE-VESSEL-SAMPLE.pdf` from there. The owner needs to decide (see "Decisions needed").
+- **PDF Oxide ignores permission flags** (ADR-009). It must never receive a document before
+  PDFium's permission check allows copying or extraction (D-19, rule 9).
+- **Oxide finds no unruled (stream) tables** (ADR-009). §7.7's stream candidate has to be our own
+  detector. The pipe-chart fixture of record is still to be run by the owner.
 - **FAR not fetchable from the cloud container.** The environment's network policy denies
   `www.acquisition.gov` (HTTP 403 from the proxy). To allow it, add that host under the
   environment's Network access settings; otherwise run `npm run corpus` locally.
@@ -239,11 +270,13 @@ _Last updated: 2026-09-24 (session 6: S7)_
 
 ## Decisions needed (owner)
 
-1. **ADR-003 to ADR-007 proposals** (see Next, item 1). ADR-008 was accepted (Rev 0.2).
+1. **ADR-003 to ADR-007 and ADR-009 proposals** (see Next, item 1). ADR-008 was accepted
+   (Rev 0.2).
 2. **Committed corpus PDFs.** Either confirm that all six files in `corpus/` are public domain and
    may stay in git, and amend ADR-002 to say so, or move them to the git-ignored `corpus/files/`
    (drawings to `corpus/files/drawings/`) and remove them from history. The S3 spec skips if they
-   are missing.
+   are missing. Note: `bearing catalogue.pdf` is a commercial manufacturer catalogue under
+   copyright, not public domain (found during S4). It should move out of git either way.
 3. **Cloudflare Pages project for S8.** Until one exists, S8 runs locally with
    `spikes/shared/serve.ts`, because `wrangler` is blocked by LGPL (ADR-003). The analytics and
    injection checks wait for the project.
@@ -263,4 +296,5 @@ _Last updated: 2026-09-24 (session 6: S7)_
 | 2026-09-24 | ADR-005  | S1 proposal: Ctrl+S = PDFium `FPDF_INCREMENTAL` + narrow tail (changed objects only, our own xref/trailer), verified in the Work worker with keep-all fallback; Save Optimized = `FPDF_NO_INCREMENTAL` via our writer. Awaiting owner.                                             |
 | 2026-09-24 | ADR-006  | S5 proposal: search in the Work worker (raw FPDFText extraction + session text cache + JS RegExp, viewport order, 50 ms batches, cancel between pages); ≤ 5,000 hits streamed with context; background indexing after open; EmbedPDF plugin-search not used. Awaiting owner.       |
 | 2026-09-24 | ADR-007  | S2 proposal: own PDF object layer (reader, serializer, patch revision) writes `/Measure`, `/IT` and page `/VP`; label strategy and viewport semantics after owner interop; encrypted files need our own security handler (M3) or measurements are not saved there. Awaiting owner. |
-| 2026-09-24 | ADR-008  | S7 proposal: geometry extracted whole-page in the Work worker via raw PDFium exports and cached; snap queries answered by a new pure-JS snap worker holding transferred indexes (queries never wait for PDFium). Awaiting owner.                                                   |
+| 2026-09-24 | ADR-008  | S7: geometry extracted whole-page in the Work worker via raw PDFium exports and cached; snap queries answered by a new pure-JS snap worker holding transferred indexes (queries never wait for PDFium). **Accepted**; ARCHITECTURE.md Rev 0.2.                                     |
+| 2026-09-24 | ADR-009  | S4 proposal: adopt PDF Oxide for text/Markdown/HTML (lazy, background warm-up); PDFium permission gate before every Oxide call; Oxide tables as the lattice candidate only, own stream detector; search stays on PDFium; pin 0.3.x and add notices. Awaiting owner.                |
