@@ -50,8 +50,9 @@ _Last updated: 2026-09-24 (session 1, follow-up)_
 
 ## Next
 
-1. At the start of session 2, check the GitHub Actions CI result for branch
-   `claude/upbeat-carson-6tjwoe`.
+1. Get [PR #1](https://github.com/shubhs650/PDFTools/pull/1) (branch
+   `claude/upbeat-carson-6tjwoe`) reviewed and merged. The first GitHub Actions CI runs are
+   **green**: both the checks job and the e2e job pass.
 2. Start M0 in the suggested order: **S8 → S3 → S1 → S5 → S2 → S7 → S4 → S6**.
    - Set up `spikes/`.
    - Write the corpus manifest and download script (FAR first; public-domain sources only).
