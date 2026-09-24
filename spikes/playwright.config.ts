@@ -10,8 +10,9 @@ const launchOptions = executablePath ? { executablePath } : {};
 export const S8_PORT = 4180;
 export const S3_PORT = 4181;
 export const S1_PORT = 4182;
+export const S5_PORT = 4183;
 
-// SPIKE=s8|s3|s1 limits which spike gets built and served (default: both).
+// SPIKE=s8|s3|s1|s5 limits which spike gets built and served (default: both).
 const only = process.env.SPIKE;
 const want = (name: string): boolean => !only || only === name;
 
@@ -52,6 +53,15 @@ export default defineConfig({
       testMatch: ['s1-save/**/*.spec.ts'],
       use: { ...devices['Desktop Chrome'], baseURL: `http://localhost:${String(S1_PORT)}` },
     },
+    {
+      name: 's5',
+      testMatch: ['s5-search/**/*.spec.ts'],
+      use: {
+        ...devices['Desktop Chrome'],
+        baseURL: `http://localhost:${String(S5_PORT)}`,
+        viewport: { width: 1400, height: 1000 },
+      },
+    },
   ],
   webServer: [
     ...(want('s8') ? [server('s8', 's8-csp', S8_PORT)] : []),
@@ -64,6 +74,17 @@ export default defineConfig({
             S1_PORT,
             ' --corpus corpus',
             'node spikes/s1-save/make-fixtures.ts && ',
+          ),
+        ]
+      : []),
+    ...(want('s5')
+      ? [
+          server(
+            's5',
+            's5-search',
+            S5_PORT,
+            ' --corpus corpus',
+            'node spikes/s5-search/make-contract.ts && ',
           ),
         ]
       : []),

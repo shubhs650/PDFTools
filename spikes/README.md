@@ -35,7 +35,10 @@ npm run typecheck:spikes
 # S1 correctness matrix (needs the qpdf and openssl CLIs; qpdf: `apt-get install qpdf`)
 node spikes/s1-save/make-fixtures.ts && node spikes/s1-save/run-node.ts   # → spikes/s1-save/out/
 SPIKE=s1 npm run spikes -- --project=s1   # browser timings → test-results/s1-results.json
-npx vitest run spikes                     # unit tests for the narrow-tail writer
+npx vitest run spikes                     # unit tests (narrow-tail writer, search core)
+
+# S5 search while scrolling (self-made 2,000-page contract stand-in)
+node spikes/s5-search/make-contract.ts && SPIKE=s5 npm run spikes -- --project=s5
 ```
 
 ### Owner run: real-disk Ctrl+S timing (S1)
