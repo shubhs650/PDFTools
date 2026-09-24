@@ -1,9 +1,9 @@
 # ADR-008: S7 — Vector geometry extraction and snap queries
 
-- **Status:** Proposed. The spike result stands; decision 2 needs owner approval because it adds a
-  worker to §3.1.
+- **Status:** Accepted. The owner approved decision 2 (the snap worker) on 2026-09-24, and it is
+  applied in ARCHITECTURE.md Rev 0.2 (§3.1, D-10, §7.4).
 - **Date:** 2026-09-24
-- **Deciders:** Owner (pending); recorded by the coding agent
+- **Deciders:** Owner (approved 2026-09-24); recorded by the coding agent
 - **Related decisions:** D-10, D-14 (ARCHITECTURE.md §3.1, §7.4, M3); ADR-001 B14; ADR-002;
   ADR-004; CLAUDE.md rules 1 and 2
 - **Related spike / milestone:** M0-S7 (feeds M3)

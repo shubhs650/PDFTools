@@ -1,12 +1,14 @@
-# PDFTools — Architecture & Product Specification (Rev 0.1)
+# PDFTools — Architecture & Product Specification (Rev 0.2)
 
 **App:** PDFTools · **URL:** `pdf-tools.openengtools.com` · **Platform:** Open Engineering Tools (OET)
-**Status:** Approved for implementation · **Last updated:** 24-Sep-2026 (Rev 0.1)
+**Status:** Approved for implementation · **Last updated:** 24-Sep-2026 (Rev 0.2)
 **Companion file:** `CLAUDE.md` (standing rules for the coding agent — read it first)
 
 > This document is the single source of truth. Where code and this document disagree, this document wins until it is deliberately amended. Decisions are numbered (D-xx) so commits, issues and ADRs can reference them.
 
 > **Rev 0.1 amendments** — applied from [ADR-001](docs/adr/001-session-1-clarifications.md) (session-1 clarifications B1–B16) and [ADR-002](docs/adr/002-license-policy-and-heavy-file-targets.md) (license policy, heavy-file targets). Amended passages cite the ADR item.
+
+> **Rev 0.2 amendment** — [ADR-008](docs/adr/008-s7-snap-geometry.md) (owner-approved): a PDFium-free **Snap worker** answers pointer-time snap queries (§3.1, D-10, §7.4).
 
 ---
 
@@ -47,7 +49,7 @@ Tablet/phone UI · Safari parity · OCR · scanned-table extraction · PDF text/
 | D-07 | Desktop only. Chrome/Edge primary; Firefox supported; Safari best-effort. Pointer Events throughout |
 | D-08 | Search runs **only on Enter/click**, never as-you-type |
 | D-09 | **EmbedPDF headless** (engine + plugins) + own React UI. Direct calls to the bundled PDFium WASM functions from the workers are allowed where EmbedPDF does not expose an API (ADR-001 B14) |
-| D-10 | **Two PDFium instances in separate workers**: Render worker and Work worker (search/extract/convert/table/snap) |
+| D-10 | **Two PDFium instances in separate workers**: Render worker and Work worker (search/extract/convert/table/snap geometry extraction), plus a PDFium-free **Snap worker** for pointer-time snap queries (ADR-008) |
 | D-11 | React + TypeScript + Vite, static SPA, Cloudflare Pages |
 | D-12 | **MIT license; permissive-only dependency tree**, enforced in CI by `npm run licenses` (allowlist in `scripts/license-policy.ts`; OFL-1.1 for fonts; MPL-2.0 only for dev-only tooling that is never bundled — ADR-001 B2, ADR-002). BentoPDF is reference-only (AGPL — no code copied) |
 | D-13 | Repo private during development; published as MIT at an owner-chosen milestone. No external contributions without a CLA |
@@ -93,7 +95,13 @@ Tablet/phone UI · Safari parity · OCR · scanned-table extraction · PDF text/
       │  tiles · thumbs    │                  │  extraction · tables ·     │
       │  annotation edits  │                  │  MD/HTML/DOCX/XLSX build · │
       │  save / flatten    │                  │  snap geometry · sig hash  │
-      └────────────────────┘                  └────────────────────────────┘
+      └────────────────────┘                  └─────────────┬──────────────┘
+                │                                           │ transfers per-page snap indexes
+                │                             ┌─────────────▼──────────────┐
+                │                             │  SNAP WORKER (pure JS,     │
+                │                             │  no PDFium): pointer-time  │
+                │                             │  snap queries (ADR-008)    │
+                │                             └────────────────────────────┘
                 │                                        │
                 └─────────── OPFS (recovery) · IndexedDB (settings, handles, recent) ───────────┘
 ```
@@ -101,7 +109,8 @@ Tablet/phone UI · Safari parity · OCR · scanned-table extraction · PDF text/
 Rules:
 - The **Render worker owns the authoritative document** (annotations, form values, save). The Work worker holds a **read-only copy** of the bytes; after edits it is refreshed lazily (on next Work job) with the **original bytes plus the incremental-update tail** produced by the Render worker, never a full re-serialization (ADR-001 B11).
 - Every worker call is **cancellable** (AbortSignal → message) and reports **progress** for jobs > 300 ms.
-- One pair of workers serves all tabs; documents are keyed by `docId`. Idle documents may be evicted from the Work worker under memory pressure.
+- One set of workers serves all tabs; documents are keyed by `docId`. Idle documents may be evicted from the Work worker under memory pressure.
+- The **Snap worker** holds per-page snap indexes (typed arrays) transferred from the Work worker and answers pointer queries (≤ 1 in flight per animation frame), so snapping never waits for PDFium work (ADR-008).
 
 ### 3.2 Technology stack (all permissive — verify each at install)
 
@@ -238,7 +247,7 @@ First markup triggers a dialog: name, initials, discipline, company (optional). 
 - Scale by ratio (1:50) or calibration (pick two points, enter real length). Units: mm, m, in, ft-in; precision setting.
 - **Scale viewports**: user draws regions with their own scale (e.g. Detail A 1:5). Measurement uses the viewport containing it; outside any viewport → page default scale; no scale → shows "uncalibrated"; spanning viewports → flagged warning.
 - Persist using standard PDF measurement structures (Measure / Viewport dictionaries). Spike M0-S2 determines whether EmbedPDF/PDFium can write these; if not, add a narrow low-level writer in the Render worker.
-- **Snapping** to vector geometry (endpoints, midpoints, intersections, nearest-on-segment). Geometry for the visible region extracted in the Work worker, spatially indexed, cached per page.
+- **Snapping** to vector geometry (endpoints, midpoints, intersections, nearest-on-segment). Geometry for each visible page is extracted whole in the Work worker (page parsing dominates, so region extraction does not pay off — ADR-008), spatially indexed, cached per page. Queries are answered by the Snap worker (§3.1, ADR-008).
 
 ### 7.5 CRS export (D-15)
 Excel (ExcelJS). Header block: document number, revision, title, reviewer, date, status scheme. Columns: No. · Page · Location/Type · Reviewer · Discipline · Comment · Replies · Status · Snapshot · Vendor Response (blank) · Final Status (blank). Optional snapshot thumbnail of each markup region embedded per row. Also CSV (no images).

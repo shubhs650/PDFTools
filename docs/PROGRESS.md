@@ -182,7 +182,6 @@ _Last updated: 2026-09-24 (session 6: S7)_
 1. **Owner decisions:**
    - ADR-003 decisions 3–5;
    - ADR-004 decisions 2–6;
-   - **ADR-008 decision 2**: add a pure-JS **snap worker** to §3.1;
    - **ADR-007 decisions 2–5**: label strategy (after interop), viewport semantics, **encrypted
      files** (own security handler in M3 vs. not saving measurements there), and a single-revision
      save;
@@ -240,7 +239,7 @@ _Last updated: 2026-09-24 (session 6: S7)_
 
 ## Decisions needed (owner)
 
-1. **ADR-003 to ADR-008 proposals** (see Next, item 1).
+1. **ADR-003 to ADR-007 proposals** (see Next, item 1). ADR-008 was accepted (Rev 0.2).
 2. **Committed corpus PDFs.** Either confirm that all six files in `corpus/` are public domain and
    may stay in git, and amend ADR-002 to say so, or move them to the git-ignored `corpus/files/`
    (drawings to `corpus/files/drawings/`) and remove them from history. The S3 spec skips if they
