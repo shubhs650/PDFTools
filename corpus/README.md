@@ -10,3 +10,6 @@ client documents, and never copyrighted standards (ASME, ISO, …).
   Regulation, ~2,000 pages).
 - Very large contract (~500 MB) and dense P&ID drawings: tested by the owner with local files;
   not stored or generated here.
+- Owner-supplied CAD drawings (publicly available, but copyright not clearly public domain) live
+  only in `corpus/files/drawings/` on the owner's machine. **No URLs or files are committed**
+  (ADR-002).
