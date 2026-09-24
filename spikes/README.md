@@ -37,6 +37,10 @@ node spikes/s1-save/make-fixtures.ts && node spikes/s1-save/run-node.ts   # → 
 SPIKE=s1 npm run spikes -- --project=s1   # browser timings → test-results/s1-results.json
 npx vitest run spikes                     # unit tests (narrow-tail writer, search core)
 
+# S2 measurement structures (needs qpdf): writes, reads back, builds the interop pack
+node spikes/s2-measure/run-node.ts
+node spikes/s2-measure/read-measure.ts <file.pdf>   # owner: read a viewer-saved file
+
 # S5 search while scrolling (self-made 2,000-page contract stand-in)
 node spikes/s5-search/make-contract.ts && SPIKE=s5 npm run spikes -- --project=s5
 ```
