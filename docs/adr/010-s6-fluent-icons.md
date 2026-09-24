@@ -1,9 +1,9 @@
 # ADR-010: S6 — Fluent icon coverage for the ribbon; icon style and custom icons
 
-- **Status:** Proposed. Decisions 1–3 need owner approval; decision 1 changes D-20 and CLAUDE.md
-  rule 15.
+- **Status:** Accepted. The owner approved decisions 1–3 on 2026-09-24; applied in ARCHITECTURE.md
+  Rev 0.4 (D-20, §8) and CLAUDE.md rule 15.
 - **Date:** 2026-09-24
-- **Deciders:** Owner (pending); recorded by the coding agent
+- **Deciders:** Owner (approved 2026-09-24); recorded by the coding agent
 - **Related decisions:** D-20, D-30, D-12 (ARCHITECTURE.md §8, §8.2, §3.2); ADR-001 B6; CLAUDE.md
   rules 5, 12 and 15
 - **Related spike / milestone:** M0-S6 (feeds the M1 ribbon)
@@ -125,7 +125,7 @@ measure the bundle cost. See
    - For: some warmth without Color icons.
    - Against: two glyphs per icon. Forced-colors mode must drop the accent layer.
 
-## Decision (proposed)
+## Decision
 
 1. _(Owner)_ **Adopt option 3**, allowing option 4 later if wanted. This amends:
    - D-20: "Fluent UI System Icons (MIT), Color style" becomes "**Regular** style (Filled for

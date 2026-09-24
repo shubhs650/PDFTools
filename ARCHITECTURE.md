@@ -1,7 +1,7 @@
-# PDFTools — Architecture & Product Specification (Rev 0.3)
+# PDFTools — Architecture & Product Specification (Rev 0.4)
 
 **App:** PDFTools · **URL:** `pdf-tools.openengtools.com` · **Platform:** Open Engineering Tools (OET)
-**Status:** Approved for implementation · **Last updated:** 24-Sep-2026 (Rev 0.3)
+**Status:** Approved for implementation · **Last updated:** 24-Sep-2026 (Rev 0.4)
 **Companion file:** `CLAUDE.md` (standing rules for the coding agent — read it first)
 
 > This document is the single source of truth. Where code and this document disagree, this document wins until it is deliberately amended. Decisions are numbered (D-xx) so commits, issues and ADRs can reference them.
@@ -11,6 +11,8 @@
 > **Rev 0.2 amendment** — [ADR-008](docs/adr/008-s7-snap-geometry.md) (owner-approved): a PDFium-free **Snap worker** answers pointer-time snap queries (§3.1, D-10, §7.4).
 
 > **Rev 0.3 amendments** — M0 spike results, owner-approved: [ADR-003](docs/adr/003-s8-csp-wasm-workers-sw.md) (explicit font fallback, font split — §9), [ADR-004](docs/adr/004-s3-two-engines.md) (hosted Render worker, render cancellation, memory policy, COOP/COEP — §3.1, §10.1), [ADR-005](docs/adr/005-s1-incremental-save.md) (narrow-tail Ctrl+S — §4.2, §4.3), [ADR-006](docs/adr/006-s5-search-work-worker.md) (background indexing, context cap — §6), [ADR-007](docs/adr/007-s2-measure-viewport.md) (own object layer, encrypted files — §7.4) and [ADR-009](docs/adr/009-s4-pdf-oxide.md) (PDF Oxide gating, stream tables — §7.6, §7.7).
+
+> **Rev 0.4 amendment** — [ADR-010](docs/adr/010-s6-fluent-icons.md) (owner-approved): Fluent **Regular** icons (Filled for active states) replace the deprecated Color style (D-20, §8).
 
 ---
 
@@ -61,7 +63,7 @@ Tablet/phone UI · Safari parity · OCR · scanned-table extraction · PDF text/
 | D-17 | Core-first loading, remaining modules background-precached, visible "✓ Ready offline" |
 | D-18 | Updates never reload while documents are open; "Update ready" applies on click / next launch |
 | D-19 | Protected PDFs behave like Adobe Reader: open password prompt, permission flags honored, owner password unlocks |
-| D-20 | Fluent UI System Icons (MIT), Color style; custom engineering icons drawn to match. Light theme default, token-based colors |
+| D-20 | Fluent UI System Icons (MIT), **Regular** style (Filled for active/toggled states; Color style is deprecated upstream — ADR-010); custom engineering icons drawn to match. Light theme default, token-based colors |
 | D-21 | Installable PWA, `.pdf` file handler, single window (new files → new tabs) |
 | D-22 | Network: zero from app except update checks + opt-in error report; strict CSP; analytics = Cloudflare **server-side** request counts only — no analytics script, no CSP exception (ADR-001 B1) |
 | D-23 | Status schemes (presets + custom, export/import) drive stamps and CRS status; image stamps |
@@ -306,7 +308,7 @@ Own dialog: range (all, current page, current view, selected area, custom), fit 
 
 - Ribbon tabs (Rev 0) — this list is authoritative; `docs/ui-reference/` images are layout-only, and out-of-scope commands are omitted rather than shown disabled (ADR-001 B6): **File** (backstage: open, recent, save, save as, save optimized, print, properties, settings, about/privacy), **Home**, **View**, **Comment**, **Measure**, **Organize**, **Convert**, **Protect** (redact, security info, signatures), **Help**.
 - Large (32 px) and small (16/20 px) buttons, groups with labels, split buttons and dropdowns, collapsible ribbon, keyboard access (Alt key tips — nice-to-have).
-- Icons: Fluent System Icons Color style; missing engineering icons (cloud, calibrate, scale viewport, CRS export, express extract) drawn in the same grid/style in `/src/ui/icons`.
+- Icons: Fluent System Icons **Regular** style (Filled for active/toggled states), colored via design tokens (`currentColor`); small buttons use 20 px glyphs, large (32 px) buttons use the native 32 px glyph or the 28/24 px glyph scaled up. The 23 missing icons listed in [ADR-010](docs/adr/010-s6-fluent-icons.md) and [S6-icon-map.md](docs/plan/S6-icon-map.md) (incl. cloud, calibrate, scale viewport, CRS export, stamp; express extract uses Fluent `TableLightning`) are drawn in the same grid/line style in `/src/ui/icons`. Fluent icons are imported per icon by path, via one registry (ADR-010).
 - Design tokens (color, spacing, type, radius, elevation) as CSS variables; light theme default; dark theme deferred but tokens must support it.
 - Layout minimum 1280 px wide.
 - Start screen: open file, drop zone, recent files (clearable).
