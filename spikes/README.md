@@ -12,6 +12,7 @@ Throwaway spike code for [docs/plan/M0.md](../docs/plan/M0.md). Nothing here is 
 | S2    | [`s2-measure/`](s2-measure/)         | [ADR-007](../docs/adr/007-s2-measure-viewport.md)    | Works with workaround |
 | S7    | [`s7-snap/`](s7-snap/)               | [ADR-008](../docs/adr/008-s7-snap-geometry.md)       | Works with workaround |
 | S4    | [`s4-oxide/`](s4-oxide/)             | [ADR-009](../docs/adr/009-s4-pdf-oxide.md)           | Works with workaround |
+| S6    | [`s6-icons/`](s6-icons/)             | [ADR-010](../docs/adr/010-s6-fluent-icons.md)        | Works with workaround |
 
 ## Shared pieces (`shared/`)
 
@@ -53,6 +54,9 @@ SPIKE=s7 npm run spikes -- --project=s7
 # S4 PDF Oxide: size, API, quality, throughput vs PDFium (owner: pass local files, e.g. the pipe chart)
 node spikes/s4-oxide/run-node.ts [file.pdf …]   # → spikes/s4-oxide/out/s4-node.json, out/review/*.md
 SPIKE=s4 npm run spikes -- --project=s4        # worker under CSP → test-results/s4-results.json
+
+# S6 Fluent icon coverage: map doc, bundle cost, preview sheet (out/s6-preview.html)
+node spikes/s6-icons/bundle.ts && node spikes/s6-icons/icon-map.ts   # → docs/plan/S6-icon-map.md
 
 # S5 search while scrolling (self-made 2,000-page contract stand-in)
 node spikes/s5-search/make-contract.ts && SPIKE=s5 npm run spikes -- --project=s5

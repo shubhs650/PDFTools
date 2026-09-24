@@ -18,6 +18,7 @@ export default defineConfig(
       'node_modules',
       'corpus/files',
       'spikes/**/dist',
+      'spikes/**/out',
     ],
   },
   js.configs.recommended,

@@ -1,6 +1,6 @@
 # PDFTools — Progress
 
-_Last updated: 2026-09-24 (session 7: S4)_
+_Last updated: 2026-09-24 (session 7: S4, ADR approvals, S6)_
 
 **Current milestone:** M0 — Spikes (plan: [docs/plan/M0.md](plan/M0.md))
 
@@ -52,6 +52,28 @@ _Last updated: 2026-09-24 (session 7: S4)_
     rendering works in our own worker and cancels in < 0.1 ms, but its slices run 37–45 ms.
   - Recommendation: host EmbedPDF's `PdfiumNative` in our own Render worker module (the "hosted"
     variant) so that direct PDFium calls are available (ADR-001 B14, needed by S1).
+- **Session 7 — ADR approvals.** The owner accepted ADR-003 to ADR-007 and ADR-009. They are
+  applied as **ARCHITECTURE.md Rev 0.3**:
+  - hosted Render worker, render cancellation and the respawn memory policy; COOP/COEP headers;
+  - narrow-tail Ctrl+S; background search indexing with a 5,000-hit context cap;
+  - own Measure object layer, with encrypted files handled in M3;
+  - PDFium permission gate before PDF Oxide; own stream-table detector; the font split.
+- **Session 7 — M0-S6 (Fluent icon coverage).** _Fails as specified, works with workaround._ See
+  [ADR-010](adr/010-s6-fluent-icons.md) and the generated
+  [icon map](plan/S6-icon-map.md).
+  - 126 Rev 0 commands inventoried: the quick access toolbar, the nine §8 tabs, the rail panes and
+    the status bar.
+  - **Fluent Color covers only 24 (19 %)**, and upstream has **deprecated** all Color icons: no
+    High Contrast support, global gradient IDs, and failing dark-theme contrast. **Regular and
+    Filled cover all 126.**
+  - Large buttons: only 25 of 50 have a native 32 px glyph; the rest scale up from 28 or 24 px.
+  - 23 custom icons are needed, including the four named in §8 (cloud, calibrate, scale
+    viewport, CRS export) and Stamp, which exists only in the Light style. Express extract fits
+    Fluent's `TableLightning`.
+  - Bundle: about 22 kB brotli for the whole set plus 5.6 kB of runtime. It tree-shakes, and
+    per-icon path imports build about 4× faster than the root barrel.
+  - Added dependency `@fluentui/react-icons` 2.0.341 (MIT). The license gate passes (536
+    packages).
 - **Session 7 — M0-S4 (PDF Oxide WASM).** _Works with workaround._ See
   [ADR-009](adr/009-s4-pdf-oxide.md).
   - The WASM build has every API needed for §7.6 and §7.7: text, Markdown, HTML, tables with cell
@@ -163,13 +185,18 @@ _Last updated: 2026-09-24 (session 7: S4)_
 
 ## In progress
 
-- M0: S8, S3, S1, S5, S2, S7 and S4 have finished the agent part. S6 is next. The owner checks listed under Next are pending.
+- M0: the agent part of all eight spikes is done. What's left is owner runs and the ADR-010
+  decision; then M1 can start. The owner checks listed under Next are pending.
 
 ## Session log
 
-- **Session 7 (2026-09-24):** ADR-008 accepted (ARCHITECTURE.md Rev 0.2). S4 done. Local checks
-  all pass: typecheck (app and spikes), lint, format, 102 unit tests, license gate (529
-  packages), app e2e smoke, and 20/20 spike Playwright tests.
+- **Session 7 (2026-09-24):**
+  - ADR-008 accepted (ARCHITECTURE.md Rev 0.2).
+  - S4 done: 102 unit tests, license gate (529 packages), and 20/20 spike Playwright tests.
+  - ADR-003 to ADR-007 and ADR-009 accepted (ARCHITECTURE.md Rev 0.3).
+  - S6 done. Local checks all pass: typecheck (app and spikes), lint, format, 106 unit tests,
+    license gate (536 packages), and the app e2e smoke. S6 has no Playwright part, and the other
+    spikes are unchanged.
 
 - **Session 6 (2026-09-24):** S7. Local checks all pass: typecheck (app and spikes), lint, format,
   unit tests (11 new S7 tests), license gate, app e2e smoke, and all spike Playwright tests.
@@ -202,9 +229,13 @@ _Last updated: 2026-09-24 (session 7: S4)_
 
 ## Next
 
-1. **Owner decisions:** none open on the spikes. ADR-003 to ADR-009 are accepted (ARCHITECTURE.md
-   Rev 0.3). ADR-007 decisions 2–3 (label strategy, viewport semantics) are accepted as defaults
-   and are confirmed or adjusted by the S2 interop run below.
+1. **Owner decisions:**
+   - **ADR-010 decisions 1–3**: the icon style (Regular + Filled instead of Color; this amends
+     D-20, §8 and CLAUDE.md rule 15), large-button sizing, and the custom icon list. Review
+     `spikes/s6-icons/out/s6-preview.html` (regenerate it with
+     `node spikes/s6-icons/bundle.ts && node spikes/s6-icons/icon-map.ts`).
+   - ADR-003 to ADR-009 are accepted (Rev 0.3). ADR-007 decisions 2–3 are accepted as defaults,
+     to be confirmed by the S2 interop run below.
 2. **Owner runs:**
    - **S1 interop checklist** (`e2e/interop/CHECKLIST.md`) in Acrobat Reader and PDF-XChange;
    - S1 FSA button on the 500 MB contract;
@@ -216,7 +247,8 @@ _Last updated: 2026-09-24 (session 7: S4)_
      (`node spikes/s4-oxide/run-node.ts <files>`; dumps in `out/review/`, see ADR-009);
    - FAR, 500 MB and A0 through the S3 harness;
    - S8 Firefox check and Pages preview.
-3. **Agent:** finish M0 with **S6** (Fluent icon coverage).
+3. **Agent:** M0 is complete on the agent side. After the ADR-010 decision, apply it to
+   ARCHITECTURE.md and CLAUDE.md, then start **M1** (plan in `docs/plan/M1.md`, to be written).
 4. Get [PR #1](https://github.com/shubhs650/PDFTools/pull/1) merged. This branch builds on it.
 
 ## Open issues
@@ -260,15 +292,16 @@ _Last updated: 2026-09-24 (session 7: S4)_
 
 ## Decisions needed (owner)
 
-1. **Committed corpus PDFs.** Either confirm that all six files in `corpus/` are public domain and
+1. **ADR-010, icon style** (see Next, item 1).
+2. **Committed corpus PDFs.** Either confirm that all six files in `corpus/` are public domain and
    may stay in git, and amend ADR-002 to say so, or move them to the git-ignored `corpus/files/`
    (drawings to `corpus/files/drawings/`) and remove them from history. The S3 spec skips if they
    are missing. Note: `bearing catalogue.pdf` is a commercial manufacturer catalogue under
    copyright, not public domain (found during S4). It should move out of git either way.
-2. **Cloudflare Pages project for S8.** Until one exists, S8 runs locally with
+3. **Cloudflare Pages project for S8.** Until one exists, S8 runs locally with
    `spikes/shared/serve.ts`, because `wrangler` is blocked by LGPL (ADR-003). The analytics and
    injection checks wait for the project.
-3. **More test drawings (optional).** Item 5 in the drawing list was blank. Add more whenever you
+4. **More test drawings (optional).** Item 5 in the drawing list was blank. Add more whenever you
    like; they stay local only.
 
 ## Decisions log
@@ -286,4 +319,5 @@ _Last updated: 2026-09-24 (session 7: S4)_
 | 2026-09-24 | ADR-007  | S2: own PDF object layer (reader, serializer, patch revision) writes `/Measure`, `/IT` and page `/VP`; label strategy and viewport semantics after owner interop; encrypted files need our own security handler (M3) or measurements are not saved there. **Accepted**; ARCHITECTURE.md Rev 0.3.                |
 | 2026-09-24 | ADR-008  | S7: geometry extracted whole-page in the Work worker via raw PDFium exports and cached; snap queries answered by a new pure-JS snap worker holding transferred indexes (queries never wait for PDFium). **Accepted**; ARCHITECTURE.md Rev 0.2.                                                                  |
 | 2026-09-24 | Rev 0.3  | ARCHITECTURE.md amended per ADR-003 to ADR-007 and ADR-009 (owner-approved): hosted Render worker, render cancellation and memory policy, COOP/COEP, narrow-tail Ctrl+S, background search indexing and context cap, own Measure object layer, Oxide permission gate and own stream-table detector, font split. |
+| 2026-09-24 | ADR-010  | S6 proposal: Fluent **Regular** icons (Filled for active states) instead of the deprecated, 19 %-coverage Color style; large buttons use native 32 px or scaled 28/24 px glyphs; 23 custom icons in the same line style; icon registry with per-icon path imports. Awaiting owner.                              |
 | 2026-09-24 | ADR-009  | S4: adopt PDF Oxide for text/Markdown/HTML (lazy, background warm-up); PDFium permission gate before every Oxide call; Oxide tables as the lattice candidate only, own stream detector; search stays on PDFium; pin 0.3.x and add notices. **Accepted**; ARCHITECTURE.md Rev 0.3.                               |

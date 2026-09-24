@@ -52,6 +52,7 @@
     "@embedpdf/engines": "^2.15.1",
     "@embedpdf/models": "^2.15.1",
     "@embedpdf/pdfium": "^2.15.1",
+    "@fluentui/react-icons": "^2.0.341",
     "asn1js": "^3.0.10",
     "pdf-oxide-wasm": "^0.3.77",
     "pkijs": "^3.4.1",
