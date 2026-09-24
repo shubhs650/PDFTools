@@ -11,8 +11,9 @@ export const S8_PORT = 4180;
 export const S3_PORT = 4181;
 export const S1_PORT = 4182;
 export const S5_PORT = 4183;
+export const S7_PORT = 4184;
 
-// SPIKE=s8|s3|s1|s5 limits which spike gets built and served (default: both).
+// SPIKE=s8|s3|s1|s5|s7 limits which spike gets built and served (default: both).
 const only = process.env.SPIKE;
 const want = (name: string): boolean => !only || only === name;
 
@@ -62,6 +63,11 @@ export default defineConfig({
         viewport: { width: 1400, height: 1000 },
       },
     },
+    {
+      name: 's7',
+      testMatch: ['s7-snap/**/*.spec.ts'],
+      use: { ...devices['Desktop Chrome'], baseURL: `http://localhost:${String(S7_PORT)}` },
+    },
   ],
   webServer: [
     ...(want('s8') ? [server('s8', 's8-csp', S8_PORT)] : []),
@@ -85,6 +91,17 @@ export default defineConfig({
             S5_PORT,
             ' --corpus corpus',
             'node spikes/s5-search/make-contract.ts && ',
+          ),
+        ]
+      : []),
+    ...(want('s7')
+      ? [
+          server(
+            's7',
+            's7-snap',
+            S7_PORT,
+            ' --corpus corpus',
+            'node spikes/s7-snap/make-fixtures.ts && ',
           ),
         ]
       : []),

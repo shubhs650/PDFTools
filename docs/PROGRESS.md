@@ -1,6 +1,6 @@
 # PDFTools — Progress
 
-_Last updated: 2026-09-24 (session 5: S2)_
+_Last updated: 2026-09-24 (session 6: S7)_
 
 **Current milestone:** M0 — Spikes (plan: [docs/plan/M0.md](plan/M0.md))
 
@@ -52,6 +52,22 @@ _Last updated: 2026-09-24 (session 5: S2)_
     rendering works in our own worker and cancels in < 0.1 ms, but its slices run 37–45 ms.
   - Recommendation: host EmbedPDF's `PdfiumNative` in our own Render worker module (the "hosted"
     variant) so that direct PDFium calls are available (ADR-001 B14, needed by S1).
+- **Session 6 — M0-S7 (vector geometry for snapping).** _Works with workaround._ See
+  [ADR-008](adr/008-s7-snap-geometry.md).
+  - Extraction goes straight through PDFium (EmbedPDF has no public API):
+    - paths and forms, with composed matrices;
+    - Bézier flattening and implicit closes;
+    - raw WASM exports, 2.3–4.6× faster than `cwrap`.
+  - Correct on a known-geometry sheet (11 unit tests plus an integration check): exact endpoint,
+    intersection and midpoint snaps, and the circle within 0.2 pt.
+  - Dense public A1 page (174k segments): extraction ~0.35 s (Node) / 0.56 s (browser), grid
+    ~30 ms, queries p95 < 0.5 ms. Synthetic 1M segments: ~0.9 s + 0.2–0.3 s, 36 MB.
+  - `FPDF_LoadPage` is 75–90 % of the extraction time and can't be interrupted, so region
+    extraction doesn't help: extract whole pages once and cache them.
+  - While PDFium parses, snap queries that go to the Work worker wait **~272 ms** each. A
+    **pure-JS snap worker** fed by transferred indexes answers at **p95 0.5 ms** even during
+    extraction. This is proposed as a new worker (ADR-008 decision 2).
+  - Tiles are unaffected, and there are no main-thread long tasks.
 - **Session 5 — M0-S2 (measurement and viewport dictionaries).** _Works with workaround._ See
   [ADR-007](adr/007-s2-measure-viewport.md).
   - Neither EmbedPDF nor PDFium can write or read nested `/Measure` dictionaries or page `/VP`.
@@ -128,9 +144,12 @@ _Last updated: 2026-09-24 (session 5: S2)_
 
 ## In progress
 
-- M0: S8, S3, S1, S5 and S2 have finished the agent part. The owner checks listed under Next are pending.
+- M0: S8, S3, S1, S5, S2 and S7 have finished the agent part. The owner checks listed under Next are pending.
 
 ## Session log
+
+- **Session 6 (2026-09-24):** S7. Local checks all pass: typecheck (app and spikes), lint, format,
+  unit tests (11 new S7 tests), license gate, app e2e smoke, and all spike Playwright tests.
 
 - **Session 5 (2026-09-24):** S2. Local checks all pass: typecheck (app and spikes), lint, format,
   unit tests (19 new S2 tests), license gate, app e2e smoke, and all spike Playwright tests. The S2
@@ -163,6 +182,7 @@ _Last updated: 2026-09-24 (session 5: S2)_
 1. **Owner decisions:**
    - ADR-003 decisions 3–5;
    - ADR-004 decisions 2–6;
+   - **ADR-008 decision 2**: add a pure-JS **snap worker** to §3.1;
    - **ADR-007 decisions 2–5**: label strategy (after interop), viewport semantics, **encrypted
      files** (own security handler in M3 vs. not saving measurements there), and a single-revision
      save;
@@ -176,9 +196,11 @@ _Last updated: 2026-09-24 (session 5: S2)_
    - S1 FSA button on the 500 MB contract;
    - **S5 search on the FAR and the 500 MB contract** (ADR-006, "Owner runs");
    - **S2 interop checklist** §D and §F (`e2e/fixtures/self-made/s2-interop/`);
+   - **S7 on the four local CAD drawings and the dense P&ID**
+     (`node spikes/s7-snap/run-node.ts <files>`, plus the browser page; see ADR-008);
    - FAR, 500 MB and A0 through the S3 harness;
    - S8 Firefox check and Pages preview.
-3. **Agent:** continue M0 with **S7** (vector snapping geometry), then S4 → S6.
+3. **Agent:** continue M0 with **S4** (PDF Oxide WASM), then S6.
 4. Get [PR #1](https://github.com/shubhs650/PDFTools/pull/1) merged. This branch builds on it.
 
 ## Open issues
@@ -218,7 +240,7 @@ _Last updated: 2026-09-24 (session 5: S2)_
 
 ## Decisions needed (owner)
 
-1. **ADR-003 to ADR-007 proposals** (see Next, item 1).
+1. **ADR-003 to ADR-008 proposals** (see Next, item 1).
 2. **Committed corpus PDFs.** Either confirm that all six files in `corpus/` are public domain and
    may stay in git, and amend ADR-002 to say so, or move them to the git-ignored `corpus/files/`
    (drawings to `corpus/files/drawings/`) and remove them from history. The S3 spec skips if they
@@ -242,3 +264,4 @@ _Last updated: 2026-09-24 (session 5: S2)_
 | 2026-09-24 | ADR-005  | S1 proposal: Ctrl+S = PDFium `FPDF_INCREMENTAL` + narrow tail (changed objects only, our own xref/trailer), verified in the Work worker with keep-all fallback; Save Optimized = `FPDF_NO_INCREMENTAL` via our writer. Awaiting owner.                                             |
 | 2026-09-24 | ADR-006  | S5 proposal: search in the Work worker (raw FPDFText extraction + session text cache + JS RegExp, viewport order, 50 ms batches, cancel between pages); ≤ 5,000 hits streamed with context; background indexing after open; EmbedPDF plugin-search not used. Awaiting owner.       |
 | 2026-09-24 | ADR-007  | S2 proposal: own PDF object layer (reader, serializer, patch revision) writes `/Measure`, `/IT` and page `/VP`; label strategy and viewport semantics after owner interop; encrypted files need our own security handler (M3) or measurements are not saved there. Awaiting owner. |
+| 2026-09-24 | ADR-008  | S7 proposal: geometry extracted whole-page in the Work worker via raw PDFium exports and cached; snap queries answered by a new pure-JS snap worker holding transferred indexes (queries never wait for PDFium). Awaiting owner.                                                   |

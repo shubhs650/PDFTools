@@ -41,6 +41,10 @@ npx vitest run spikes                     # unit tests (narrow-tail writer, sear
 node spikes/s2-measure/run-node.ts
 node spikes/s2-measure/read-measure.ts <file.pdf>   # owner: read a viewer-saved file
 
+# S7 snapping geometry: correctness + performance (owner: pass local drawings as arguments)
+node spikes/s7-snap/run-node.ts [drawing.pdf …]
+SPIKE=s7 npm run spikes -- --project=s7
+
 # S5 search while scrolling (self-made 2,000-page contract stand-in)
 node spikes/s5-search/make-contract.ts && SPIKE=s5 npm run spikes -- --project=s5
 ```
