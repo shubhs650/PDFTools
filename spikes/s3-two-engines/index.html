@@ -1,0 +1,20 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>M0-S3 · two PDFium engines in two workers</title>
+  </head>
+  <body>
+    <main aria-label="S3 spike">
+      <h1>M0-S3: Render worker + Work worker</h1>
+      <p>Status: <output id="status" aria-live="polite">starting</output></p>
+      <p>
+        <label>Run on a local PDF <input id="file" type="file" accept="application/pdf" /></label>
+      </p>
+      <canvas id="viewport" width="1400" height="700" aria-label="Tile viewport"></canvas>
+      <pre id="log" aria-label="Results"></pre>
+    </main>
+    <script type="module" src="./main.ts"></script>
+  </body>
+</html>
