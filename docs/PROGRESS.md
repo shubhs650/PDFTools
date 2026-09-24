@@ -31,6 +31,11 @@ _Last updated: 2026-09-24 (session 1)_
 ## In progress
 
 - Nothing. M0 spikes have not started.
+- First CI run on GitHub Actions will happen with the session-1 push. Check its result at the start of session 2.
+
+## Session log
+
+- **Session 1 (2026-09-24):** Spec review, scaffold, and M0 docs. Commits: `b0bb839` (scaffold), `82956ef` (docs), plus this update. Local checks all pass: typecheck, lint, format, 45 unit tests, license gate (204 packages), build, and Playwright smoke.
 
 ## Next
 
