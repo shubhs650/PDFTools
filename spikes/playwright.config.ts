@@ -1,0 +1,54 @@
+import { defineConfig, devices } from '@playwright/test';
+
+// Playwright config for the M0 spikes only (not part of `npm run e2e`).
+// Each spike is built with Vite and served by spikes/shared/serve.ts, which
+// applies spikes/shared/public/_headers like Cloudflare Pages does.
+
+const executablePath = process.env.PW_CHROMIUM_EXECUTABLE;
+const launchOptions = executablePath ? { executablePath } : {};
+
+export const S8_PORT = 4180;
+export const S3_PORT = 4181;
+
+// SPIKE=s8|s3 limits which spike gets built and served (default: both).
+const only = process.env.SPIKE;
+const want = (name: string): boolean => !only || only === name;
+
+const server = (name: string, dir: string, port: number, extra = '') => ({
+  command: `npx vite build --config spikes/${dir}/vite.config.ts && node spikes/shared/serve.ts --root spikes/${dir}/dist --port ${String(port)} --report${extra}`,
+  cwd: '..',
+  url: `http://localhost:${String(port)}`,
+  reuseExistingServer: false,
+  timeout: 120_000,
+  name,
+});
+
+export default defineConfig({
+  testDir: '.',
+  testMatch: ['**/*.spec.ts'],
+  retries: 0,
+  workers: 1,
+  timeout: 180_000,
+  reporter: 'list',
+  use: { trace: 'retain-on-failure', launchOptions },
+  projects: [
+    {
+      name: 's8',
+      testMatch: ['s8-csp/**/*.spec.ts'],
+      use: { ...devices['Desktop Chrome'], baseURL: `http://localhost:${String(S8_PORT)}` },
+    },
+    {
+      name: 's3',
+      testMatch: ['s3-two-engines/**/*.spec.ts'],
+      use: {
+        ...devices['Desktop Chrome'],
+        baseURL: `http://localhost:${String(S3_PORT)}`,
+        viewport: { width: 1600, height: 1000 },
+      },
+    },
+  ],
+  webServer: [
+    ...(want('s8') ? [server('s8', 's8-csp', S8_PORT)] : []),
+    ...(want('s3') ? [server('s3', 's3-two-engines', S3_PORT, ' --corpus corpus')] : []),
+  ],
+});
