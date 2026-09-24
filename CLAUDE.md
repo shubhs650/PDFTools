@@ -31,8 +31,10 @@ React + TypeScript (strict) + Vite · Zustand · Radix UI primitives · EmbedPDF
 - If a requirement in `ARCHITECTURE.md` seems impossible or conflicts with a library's behavior, **stop and report** with options — do not silently change the design.
 - Keep feature code in `/src/features/<feature>`; shared UI in `/src/ui`; worker code in `/src/workers`.
 
-## Commands (fill in once scaffolded)
-- `npm run dev` · `npm run build` · `npm run test` · `npm run e2e` · `npm run perf` · `npm run licenses` · `npm run typecheck` · `npm run lint`
+## Commands
+- `npm run dev` · `npm run build` · `npm run test` (Vitest) · `npm run e2e` (Playwright) · `npm run perf` · `npm run licenses` · `npm run typecheck` · `npm run lint` · `npm run format` / `npm run format:check`
+- Node ≥ 22.18 (runs `scripts/*.ts` natively). In the cloud container, run e2e with `PW_CHROMIUM_EXECUTABLE=/opt/pw-browsers/chromium`.
+- License exceptions (permissive-but-unlisted only, with a reason) go in `scripts/license-exceptions.json`.
 
 ## Session protocol
 - At session start: read `docs/PROGRESS.md`, then the current milestone plan in `docs/plan/`.

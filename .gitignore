@@ -1,0 +1,17 @@
+node_modules/
+dist/
+*.tsbuildinfo
+coverage/
+test-results/
+playwright-report/
+blob-report/
+playwright/.cache/
+.vite/
+*.local
+.env*
+.DS_Store
+
+# Public test corpus is downloaded by script, never committed (§11, CLAUDE.md rule 13)
+corpus/files/
+*.pdf
+!e2e/fixtures/self-made/**/*.pdf
