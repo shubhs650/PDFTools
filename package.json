@@ -52,6 +52,8 @@
     "@embedpdf/engines": "^2.15.1",
     "@embedpdf/models": "^2.15.1",
     "@embedpdf/pdfium": "^2.15.1",
+    "asn1js": "^3.0.10",
+    "pkijs": "^3.4.1",
     "react": "^19.3.0",
     "react-dom": "^19.3.0"
   }

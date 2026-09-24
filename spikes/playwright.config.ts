@@ -9,13 +9,14 @@ const launchOptions = executablePath ? { executablePath } : {};
 
 export const S8_PORT = 4180;
 export const S3_PORT = 4181;
+export const S1_PORT = 4182;
 
-// SPIKE=s8|s3 limits which spike gets built and served (default: both).
+// SPIKE=s8|s3|s1 limits which spike gets built and served (default: both).
 const only = process.env.SPIKE;
 const want = (name: string): boolean => !only || only === name;
 
-const server = (name: string, dir: string, port: number, extra = '') => ({
-  command: `npx vite build --config spikes/${dir}/vite.config.ts && node spikes/shared/serve.ts --root spikes/${dir}/dist --port ${String(port)} --report${extra}`,
+const server = (name: string, dir: string, port: number, extra = '', pre = '') => ({
+  command: `${pre}npx vite build --config spikes/${dir}/vite.config.ts && node spikes/shared/serve.ts --root spikes/${dir}/dist --port ${String(port)} --report${extra}`,
   cwd: '..',
   url: `http://localhost:${String(port)}`,
   reuseExistingServer: false,
@@ -46,9 +47,25 @@ export default defineConfig({
         viewport: { width: 1600, height: 1000 },
       },
     },
+    {
+      name: 's1',
+      testMatch: ['s1-save/**/*.spec.ts'],
+      use: { ...devices['Desktop Chrome'], baseURL: `http://localhost:${String(S1_PORT)}` },
+    },
   ],
   webServer: [
     ...(want('s8') ? [server('s8', 's8-csp', S8_PORT)] : []),
     ...(want('s3') ? [server('s3', 's3-two-engines', S3_PORT, ' --corpus corpus')] : []),
+    ...(want('s1')
+      ? [
+          server(
+            's1',
+            's1-save',
+            S1_PORT,
+            ' --corpus corpus',
+            'node spikes/s1-save/make-fixtures.ts && ',
+          ),
+        ]
+      : []),
   ],
 });

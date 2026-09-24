@@ -31,7 +31,17 @@ npm run spikes
 SPIKE=s8 npm run spikes -- --project=s8
 SPIKE=s3 npm run spikes -- --project=s3   # raw numbers → test-results/s3-results.json
 npm run typecheck:spikes
+
+# S1 correctness matrix (needs the qpdf and openssl CLIs; qpdf: `apt-get install qpdf`)
+node spikes/s1-save/make-fixtures.ts && node spikes/s1-save/run-node.ts   # → spikes/s1-save/out/
+SPIKE=s1 npm run spikes -- --project=s1   # browser timings → test-results/s1-results.json
+npx vitest run spikes                     # unit tests for the narrow-tail writer
 ```
+
+### Owner run: real-disk Ctrl+S timing (S1)
+
+Serve the S1 build as for S3 below (use `spikes/s1-save`). Click **Append-save test on a real
+file** and pick a **copy** of a PDF: the tool appends 100 markups to it and reports the timings.
 
 ### Owner runs with local files (S3)
 
