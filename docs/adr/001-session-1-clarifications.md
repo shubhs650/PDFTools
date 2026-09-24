@@ -1,6 +1,6 @@
 # ADR-001: Session 1 clarifications to ARCHITECTURE.md Rev 0
 
-- **Status:** Accepted (owner answers given in session 1, 2026-09-24)
+- **Status:** Accepted (owner answers given in session 1, 2026-09-24). Applied to ARCHITECTURE.md Rev 0.1. B2 was extended by [ADR-002](002-license-policy-and-heavy-file-targets.md).
 - **Date:** 2026-09-24
 - **Deciders:** Owner; recorded by the coding agent
 - **Related decisions:** D-03, D-05, D-06, D-12, D-22, D-25, D-27, D-31
@@ -11,8 +11,7 @@
 In the first session, the agent reviewed ARCHITECTURE.md and CLAUDE.md and raised items B1–B16:
 contradictions, ambiguities and requirements that are likely impossible as written. The owner
 answered each one. This ADR records those answers so that later sessions and commits can cite them.
-ARCHITECTURE.md has **not** been edited yet. The wording changes listed below are to be applied in a
-dedicated commit that references this ADR.
+The wording changes listed below have been applied to ARCHITECTURE.md Rev 0.1.
 
 ## Decisions
 
@@ -41,12 +40,11 @@ dedicated commit that references this ADR.
   reported**, not pass/fail gates, until the owner sets relaxed numbers.
 - S3, S5 and S7 need owner-run measurements on local files. The agent provides the harness and a
   results template.
-- Tooling found during scaffolding: Vite 8 hard-depends on lightningcss (MPL-2.0), and
-  eslint-plugin-jsx-a11y depends on axe-core (MPL-2.0). Vite 7 is used and jsx-a11y is omitted.
-  Whether MPL-2.0 may be allowed for **dev-only, unbundled** tools is an open owner decision
-  (see PROGRESS.md).
-- EmbedPDF's CJK/Arabic/Hebrew fallback font packages are **OFL-1.1**. Allowing OFL-1.1 for
-  bundled fonts is an open owner decision (see PROGRESS.md).
+- Tooling found during scaffolding: Vite 8 depends on lightningcss (MPL-2.0), and
+  eslint-plugin-jsx-a11y depends on axe-core (MPL-2.0). EmbedPDF's fallback font packages are
+  OFL-1.1. Both are resolved by [ADR-002](002-license-policy-and-heavy-file-targets.md).
+- "Until the owner sets relaxed numbers" is superseded by ADR-002: heavy files are **measure and
+  report** for all of Rev 0.
 
 ## Evidence
 
