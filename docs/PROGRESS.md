@@ -202,19 +202,9 @@ _Last updated: 2026-09-24 (session 7: S4)_
 
 ## Next
 
-1. **Owner decisions:**
-   - **ADR-009 decisions 1–7**: adopt Oxide (lazy, warm-up), a **PDFium permission gate** before
-     every Oxide call, own stream-table detector, and version pinning and notices;
-   - ADR-003 decisions 3–5;
-   - ADR-004 decisions 2–6;
-   - **ADR-007 decisions 2–5**: label strategy (after interop), viewport semantics, **encrypted
-     files** (own security handler in M3 vs. not saving measurements there), and a single-revision
-     save;
-   - **ADR-006 decisions 2–4**: context cap, background indexing (a §6 wording change), and no
-     IndexedDB text cache for Rev 0;
-   - **ADR-005 decisions 2–6**: narrow-tail Ctrl+S with verification and keep-all fallback, Save
-     Optimized via our writer, the private EmbedPDF accessor, §4.2/§4.3 wording, and large-file
-     save progress.
+1. **Owner decisions:** none open on the spikes. ADR-003 to ADR-009 are accepted (ARCHITECTURE.md
+   Rev 0.3). ADR-007 decisions 2–3 (label strategy, viewport semantics) are accepted as defaults
+   and are confirmed or adjusted by the S2 interop run below.
 2. **Owner runs:**
    - **S1 interop checklist** (`e2e/interop/CHECKLIST.md`) in Acrobat Reader and PDF-XChange;
    - S1 FSA button on the 500 MB contract;
@@ -270,31 +260,30 @@ _Last updated: 2026-09-24 (session 7: S4)_
 
 ## Decisions needed (owner)
 
-1. **ADR-003 to ADR-007 and ADR-009 proposals** (see Next, item 1). ADR-008 was accepted
-   (Rev 0.2).
-2. **Committed corpus PDFs.** Either confirm that all six files in `corpus/` are public domain and
+1. **Committed corpus PDFs.** Either confirm that all six files in `corpus/` are public domain and
    may stay in git, and amend ADR-002 to say so, or move them to the git-ignored `corpus/files/`
    (drawings to `corpus/files/drawings/`) and remove them from history. The S3 spec skips if they
    are missing. Note: `bearing catalogue.pdf` is a commercial manufacturer catalogue under
    copyright, not public domain (found during S4). It should move out of git either way.
-3. **Cloudflare Pages project for S8.** Until one exists, S8 runs locally with
+2. **Cloudflare Pages project for S8.** Until one exists, S8 runs locally with
    `spikes/shared/serve.ts`, because `wrangler` is blocked by LGPL (ADR-003). The analytics and
    injection checks wait for the project.
-4. **More test drawings (optional).** Item 5 in the drawing list was blank. Add more whenever you
+3. **More test drawings (optional).** Item 5 in the drawing list was blank. Add more whenever you
    like; they stay local only.
 
 ## Decisions log
 
-| Date       | Ref      | Decision                                                                                                                                                                                                                                                                           |
-| ---------- | -------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| 2026-09-24 | ADR-001  | Session-1 clarifications B1–B16. Key ones: server-side analytics only; broader permissive allowlist; location-based redaction verification; EmbedPDF annotation and redaction sets; OPFS original + tail recovery; public-domain corpus only.                                      |
-| 2026-09-24 | scaffold | Vite 7 instead of 8, and no jsx-a11y, because of MPL-2.0 dependencies. Superseded by ADR-002.                                                                                                                                                                                      |
-| 2026-09-24 | ADR-002  | MPL-2.0 allowed for dev-only tooling only (lockfile `dev` flag). OFL-1.1 allowed for fonts. Heavy files are measure and report for Rev 0. Test drawings are owner-supplied local files, with no URLs in the repo. Moved to Vite 8 and enabled jsx-a11y.                            |
-| 2026-09-24 | Rev 0.1  | ARCHITECTURE.md amended per ADR-001 and ADR-002 (owner-approved).                                                                                                                                                                                                                  |
-| 2026-09-24 | ADR-003  | S8 proposal: CSP unchanged; `fontFallback` always explicit; Regular-weight fallback fonts, CJK non-core; local `_headers` server instead of `wrangler` (LGPL). Awaiting owner.                                                                                                     |
-| 2026-09-24 | ADR-004  | S3 proposal: hosted Render worker (our module + EmbedPDF `PdfiumNative`/`PdfEngine`); small tiles + queue abort + direct progressive render; respawn-based memory policy; optional COOP/COEP. Awaiting owner.                                                                      |
-| 2026-09-24 | ADR-005  | S1 proposal: Ctrl+S = PDFium `FPDF_INCREMENTAL` + narrow tail (changed objects only, our own xref/trailer), verified in the Work worker with keep-all fallback; Save Optimized = `FPDF_NO_INCREMENTAL` via our writer. Awaiting owner.                                             |
-| 2026-09-24 | ADR-006  | S5 proposal: search in the Work worker (raw FPDFText extraction + session text cache + JS RegExp, viewport order, 50 ms batches, cancel between pages); ≤ 5,000 hits streamed with context; background indexing after open; EmbedPDF plugin-search not used. Awaiting owner.       |
-| 2026-09-24 | ADR-007  | S2 proposal: own PDF object layer (reader, serializer, patch revision) writes `/Measure`, `/IT` and page `/VP`; label strategy and viewport semantics after owner interop; encrypted files need our own security handler (M3) or measurements are not saved there. Awaiting owner. |
-| 2026-09-24 | ADR-008  | S7: geometry extracted whole-page in the Work worker via raw PDFium exports and cached; snap queries answered by a new pure-JS snap worker holding transferred indexes (queries never wait for PDFium). **Accepted**; ARCHITECTURE.md Rev 0.2.                                     |
-| 2026-09-24 | ADR-009  | S4 proposal: adopt PDF Oxide for text/Markdown/HTML (lazy, background warm-up); PDFium permission gate before every Oxide call; Oxide tables as the lattice candidate only, own stream detector; search stays on PDFium; pin 0.3.x and add notices. Awaiting owner.                |
+| Date       | Ref      | Decision                                                                                                                                                                                                                                                                                                        |
+| ---------- | -------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| 2026-09-24 | ADR-001  | Session-1 clarifications B1–B16. Key ones: server-side analytics only; broader permissive allowlist; location-based redaction verification; EmbedPDF annotation and redaction sets; OPFS original + tail recovery; public-domain corpus only.                                                                   |
+| 2026-09-24 | scaffold | Vite 7 instead of 8, and no jsx-a11y, because of MPL-2.0 dependencies. Superseded by ADR-002.                                                                                                                                                                                                                   |
+| 2026-09-24 | ADR-002  | MPL-2.0 allowed for dev-only tooling only (lockfile `dev` flag). OFL-1.1 allowed for fonts. Heavy files are measure and report for Rev 0. Test drawings are owner-supplied local files, with no URLs in the repo. Moved to Vite 8 and enabled jsx-a11y.                                                         |
+| 2026-09-24 | Rev 0.1  | ARCHITECTURE.md amended per ADR-001 and ADR-002 (owner-approved).                                                                                                                                                                                                                                               |
+| 2026-09-24 | ADR-003  | S8: CSP unchanged; `fontFallback` always explicit; Regular-weight fallback fonts, CJK non-core; local `_headers` server instead of `wrangler` (LGPL). **Accepted**; ARCHITECTURE.md Rev 0.3.                                                                                                                    |
+| 2026-09-24 | ADR-004  | S3: hosted Render worker (our module + EmbedPDF `PdfiumNative`/`PdfEngine`); small tiles + queue abort + direct progressive render; respawn-based memory policy; optional COOP/COEP. **Accepted**; ARCHITECTURE.md Rev 0.3.                                                                                     |
+| 2026-09-24 | ADR-005  | S1: Ctrl+S = PDFium `FPDF_INCREMENTAL` + narrow tail (changed objects only, our own xref/trailer), verified in the Work worker with keep-all fallback; Save Optimized = `FPDF_NO_INCREMENTAL` via our writer. **Accepted**; ARCHITECTURE.md Rev 0.3.                                                            |
+| 2026-09-24 | ADR-006  | S5: search in the Work worker (raw FPDFText extraction + session text cache + JS RegExp, viewport order, 50 ms batches, cancel between pages); ≤ 5,000 hits streamed with context; background indexing after open; EmbedPDF plugin-search not used. **Accepted**; ARCHITECTURE.md Rev 0.3.                      |
+| 2026-09-24 | ADR-007  | S2: own PDF object layer (reader, serializer, patch revision) writes `/Measure`, `/IT` and page `/VP`; label strategy and viewport semantics after owner interop; encrypted files need our own security handler (M3) or measurements are not saved there. **Accepted**; ARCHITECTURE.md Rev 0.3.                |
+| 2026-09-24 | ADR-008  | S7: geometry extracted whole-page in the Work worker via raw PDFium exports and cached; snap queries answered by a new pure-JS snap worker holding transferred indexes (queries never wait for PDFium). **Accepted**; ARCHITECTURE.md Rev 0.2.                                                                  |
+| 2026-09-24 | Rev 0.3  | ARCHITECTURE.md amended per ADR-003 to ADR-007 and ADR-009 (owner-approved): hosted Render worker, render cancellation and memory policy, COOP/COEP, narrow-tail Ctrl+S, background search indexing and context cap, own Measure object layer, Oxide permission gate and own stream-table detector, font split. |
+| 2026-09-24 | ADR-009  | S4: adopt PDF Oxide for text/Markdown/HTML (lazy, background warm-up); PDFium permission gate before every Oxide call; Oxide tables as the lattice candidate only, own stream detector; search stays on PDFium; pin 0.3.x and add notices. **Accepted**; ARCHITECTURE.md Rev 0.3.                               |

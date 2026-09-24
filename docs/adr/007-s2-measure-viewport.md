@@ -1,9 +1,8 @@
 # ADR-007: S2 — Measure and Viewport dictionaries: writing, reading, viewer behavior
 
-- **Status:** Proposed. The agent part is done; the viewer-behavior results come from the owner's
-  interop run. Decisions 2–5 need owner approval.
+- **Status:** Accepted. The owner approved decisions 2–5 on 2026-09-24 (decisions 2–3 as the defaults, to be confirmed or adjusted by the interop run); applied in ARCHITECTURE.md Rev 0.3 (§7.4, §15).
 - **Date:** 2026-09-24
-- **Deciders:** Owner (pending); recorded by the coding agent
+- **Deciders:** Owner (approved 2026-09-24); recorded by the coding agent
 - **Related decisions:** D-03, D-14 (ARCHITECTURE.md §7.4, M3); ADR-001 B7 and B14; ADR-005 (narrow
   tail); CLAUDE.md rules 6 and 9
 - **Related spike / milestone:** M0-S2 (feeds M3)

@@ -1,8 +1,8 @@
 # ADR-009: S4 — PDF Oxide WASM for extraction and conversion
 
-- **Status:** Proposed (agent part of the spike done; owner decisions and owner-file runs pending)
+- **Status:** Accepted. The owner approved all decisions on 2026-09-24; applied in ARCHITECTURE.md Rev 0.3 (§7.6, §7.7).
 - **Date:** 2026-09-24
-- **Deciders:** Owner; recorded by the coding agent
+- **Deciders:** Owner (approved 2026-09-24); recorded by the coding agent
 - **Related decisions:** D-10, D-17, D-19, D-12 (ARCHITECTURE.md §3.1, §7.6, §7.7, §9); ADR-002;
   ADR-004; ADR-006; CLAUDE.md rules 1, 2, 4, 5 and 9
 - **Related spike / milestone:** M0-S4 (feeds M2 extraction and M3 tables)

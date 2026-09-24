@@ -1,8 +1,8 @@
 # ADR-005: S1 — Incremental save and full rewrite through PDFium
 
-- **Status:** Proposed. The spike result stands; decisions 2–6 need owner approval.
+- **Status:** Accepted. The owner approved decisions 2–6 on 2026-09-24; applied in ARCHITECTURE.md Rev 0.3 (§4.2, §4.3, §15).
 - **Date:** 2026-09-24
-- **Deciders:** Owner (pending); recorded by the coding agent
+- **Deciders:** Owner (approved 2026-09-24); recorded by the coding agent
 - **Related decisions:** D-03, D-05, D-06, D-09, D-24 (ARCHITECTURE.md §4.2, §4.3); ADR-001 B11,
   B12, B14; ADR-002; ADR-004; CLAUDE.md rules 6, 7 and 9
 - **Related spike / milestone:** M0-S1

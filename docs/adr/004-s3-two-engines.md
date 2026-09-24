@@ -1,8 +1,8 @@
 # ADR-004: S3 — Two PDFium instances in two workers; memory, tiles and cancellation
 
-- **Status:** Proposed. The spike result stands; decisions 2–6 need owner approval.
+- **Status:** Accepted. The owner approved decisions 2–6 on 2026-09-24; applied in ARCHITECTURE.md Rev 0.3 (§3.1, §10.1, §15).
 - **Date:** 2026-09-24
-- **Deciders:** Owner (pending); recorded by the coding agent
+- **Deciders:** Owner (approved 2026-09-24); recorded by the coding agent
 - **Related decisions:** D-09, D-10, D-27 (ARCHITECTURE.md §3.1, §5, §11), ADR-001 B10, B11,
   B14; ADR-002; CLAUDE.md rules 1 and 2
 - **Related spike / milestone:** M0-S3

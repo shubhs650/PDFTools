@@ -1,8 +1,8 @@
 # ADR-006: S5 — Search in the Work worker while scrolling
 
-- **Status:** Proposed. The spike result stands; decisions 2–4 need owner approval.
+- **Status:** Accepted. The owner approved decisions 2–4 on 2026-09-24; applied in ARCHITECTURE.md Rev 0.3 (§6).
 - **Date:** 2026-09-24
-- **Deciders:** Owner (pending); recorded by the coding agent
+- **Deciders:** Owner (approved 2026-09-24); recorded by the coding agent
 - **Related decisions:** D-02, D-08, D-10, D-27 (ARCHITECTURE.md §6, §11, §12); ADR-002; ADR-004;
   CLAUDE.md rules 1–3
 - **Related spike / milestone:** M0-S5

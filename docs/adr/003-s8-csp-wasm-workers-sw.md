@@ -1,8 +1,8 @@
 # ADR-003: S8 — CSP, WASM, module workers and service worker coexist
 
-- **Status:** Proposed. The spike result stands; decisions 3–5 need owner approval.
+- **Status:** Accepted. The owner approved decisions 3–5 on 2026-09-24; decision 3 is applied in ARCHITECTURE.md Rev 0.3 (§9).
 - **Date:** 2026-09-24
-- **Deciders:** Owner (pending); recorded by the coding agent
+- **Deciders:** Owner (approved 2026-09-24); recorded by the coding agent
 - **Related decisions:** D-09, D-17, D-22 (ARCHITECTURE.md §9, §10.1), CLAUDE.md rules 4 and 5
 - **Related spike / milestone:** M0-S8
 - **Outcome (spikes only):** **Works with workaround.** The CSP needs no change. The workarounds are
