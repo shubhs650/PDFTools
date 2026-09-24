@@ -16,6 +16,8 @@ export interface PackageInfo {
   version: string;
   license: string | undefined;
   path: string;
+  /** True only if npm marks the package dev-only (never bundled). Undefined = treat as runtime. */
+  dev?: boolean;
 }
 
 export interface LicenseException {
@@ -51,8 +53,21 @@ export const ALLOWED: ReadonlySet<string> = new Set(
     'IJG',
     'Unicode-DFS-2016',
     'Unicode-3.0',
+    // Fonts (ADR-002): EmbedPDF's fallback font packages.
+    'OFL-1.1',
   ].map((id) => id.toUpperCase()),
 );
+
+/**
+ * Licenses accepted only for dev-only packages that never ship in the app
+ * bundle (ADR-002): e.g. Vite's lightningcss, axe-core for a11y linting.
+ */
+export const DEV_ONLY_ALLOWED: ReadonlySet<string> = new Set(['MPL-2.0'.toUpperCase()]);
+
+export interface EvaluateOptions {
+  /** Package is dev-only (per package-lock `dev: true`). */
+  dev?: boolean;
+}
 
 /** Copyleft, source-available and non-commercial licenses. Matched by prefix. */
 export const FORBIDDEN_PREFIXES: readonly string[] = [
@@ -136,9 +151,10 @@ export function parseSpdx(expr: string): SpdxNode {
   return node;
 }
 
-function classifyId(id: string): LicenseStatus {
+function classifyId(id: string, dev: boolean): LicenseStatus {
   const normalized = id.toUpperCase().replace(/\+$/, '');
   if (ALLOWED.has(normalized)) return 'allowed';
+  if (dev && DEV_ONLY_ALLOWED.has(normalized)) return 'allowed';
   if (FORBIDDEN_PREFIXES.some((p) => normalized.startsWith(p))) return 'forbidden';
   return 'unknown';
 }
@@ -148,16 +164,19 @@ const RANK: Record<LicenseStatus, number> = { allowed: 0, unknown: 1, forbidden:
 
 const worst = (a: LicenseStatus, b: LicenseStatus): LicenseStatus => (RANK[a] >= RANK[b] ? a : b);
 
-function evaluateNode(node: SpdxNode): LicenseStatus {
-  if (node.type === 'license') return classifyId(node.id);
-  const l = evaluateNode(node.left);
-  const r = evaluateNode(node.right);
+function evaluateNode(node: SpdxNode, dev: boolean): LicenseStatus {
+  if (node.type === 'license') return classifyId(node.id, dev);
+  const l = evaluateNode(node.left, dev);
+  const r = evaluateNode(node.right, dev);
   if (node.type === 'or' && (l === 'allowed' || r === 'allowed')) return 'allowed';
   return worst(l, r);
 }
 
 /** Evaluate a package's license string against the policy. */
-export function evaluateLicense(license: string | undefined): Evaluation {
+export function evaluateLicense(
+  license: string | undefined,
+  options: EvaluateOptions = {},
+): Evaluation {
   const trimmed = license?.trim() ?? '';
   if (trimmed === '') return { status: 'unknown', reason: 'no license declared' };
   if (/^SEE LICENSE IN/i.test(trimmed) || trimmed.toUpperCase() === 'UNLICENSED') {
@@ -169,7 +188,7 @@ export function evaluateLicense(license: string | undefined): Evaluation {
   } catch {
     return { status: 'unknown', reason: `unparseable license "${trimmed}"` };
   }
-  const status = evaluateNode(node);
+  const status = evaluateNode(node, options.dev === true);
   const reason =
     status === 'allowed'
       ? 'permissive'
@@ -202,6 +221,8 @@ export function licenseFromManifest(manifest: Record<string, unknown>): string |
 
 export interface CheckResult {
   allowed: PackageResult[];
+  /** Allowed only because the package is dev-only (e.g. MPL-2.0 build tooling). */
+  devOnly: PackageResult[];
   excepted: PackageResult[];
   failures: PackageResult[];
   configErrors: string[];
@@ -220,6 +241,7 @@ export function checkPackages(
 ): CheckResult {
   const result: CheckResult = {
     allowed: [],
+    devOnly: [],
     excepted: [],
     failures: [],
     configErrors: [],
@@ -237,6 +259,10 @@ export function checkPackages(
     const entry: PackageResult = { ...pkg, ...evaluation };
     if (evaluation.status === 'allowed') {
       result.allowed.push(entry);
+      continue;
+    }
+    if (pkg.dev === true && evaluateLicense(pkg.license, { dev: true }).status === 'allowed') {
+      result.devOnly.push({ ...entry, status: 'allowed', reason: 'dev-only (not bundled)' });
       continue;
     }
     const ex = exceptions[pkg.name];

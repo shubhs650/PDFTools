@@ -1,7 +1,8 @@
 // Dependency license gate (D-12, CLAUDE.md rule 5).
 // Walks every installed package under node_modules (runtime AND dev) and fails
 // on forbidden, unknown or missing licenses unless a reviewed exception exists
-// in scripts/license-exceptions.json.
+// in scripts/license-exceptions.json. Packages npm marks dev-only in
+// package-lock.json may additionally use DEV_ONLY_ALLOWED licenses (ADR-002).
 //
 // Usage: node scripts/check-licenses.ts [--verbose]
 
@@ -21,6 +22,19 @@ const verbose = process.argv.includes('--verbose');
 
 function readJson(file: string): Record<string, unknown> {
   return JSON.parse(readFileSync(file, 'utf8')) as Record<string, unknown>;
+}
+
+/** Relative paths ("node_modules/x/node_modules/y") that npm marks dev-only. */
+function devOnlyPaths(): Set<string> {
+  const lockFile = join(root, 'package-lock.json');
+  const paths = new Set<string>();
+  if (!existsSync(lockFile)) return paths;
+  const lock = readJson(lockFile) as { packages?: Record<string, { dev?: boolean }> };
+  for (const [path, meta] of Object.entries(lock.packages ?? {})) {
+    // `devOptional` or missing entries are treated as runtime (conservative).
+    if (meta.dev === true) paths.add(path);
+  }
+  return paths;
 }
 
 function walk(nodeModules: string, out: Map<string, PackageInfo>): void {
@@ -74,6 +88,10 @@ function main(): void {
 
   const packages = new Map<string, PackageInfo>();
   walk(join(root, 'node_modules'), packages);
+  const devPaths = devOnlyPaths();
+  for (const pkg of packages.values()) {
+    pkg.dev = devPaths.has(pkg.path.split('\\').join('/'));
+  }
 
   const exceptionsFile = join(root, 'scripts', 'license-exceptions.json');
   const exceptions = (existsSync(exceptionsFile) ? readJson(exceptionsFile).packages : {}) as
@@ -89,9 +107,12 @@ function main(): void {
   }
   console.log(`License check: ${String(list.length)} installed packages\n`);
   for (const [license, count] of [...counts.entries()].sort((a, b) => b[1] - a[1])) {
-    const { status } = evaluateLicense(license === '(none)' ? undefined : license);
-    const mark = status === 'allowed' ? '✔' : status === 'forbidden' ? '✖' : '?';
-    console.log(`  ${mark} ${license.padEnd(40)} ${String(count)}`);
+    const id = license === '(none)' ? undefined : license;
+    const { status } = evaluateLicense(id);
+    const devOk = evaluateLicense(id, { dev: true }).status === 'allowed';
+    const mark = status === 'allowed' ? '✔' : devOk ? 'd' : status === 'forbidden' ? '✖' : '?';
+    const note = status !== 'allowed' && devOk ? '  (dev-only allowed)' : '';
+    console.log(`  ${mark} ${license.padEnd(40)} ${String(count)}${note}`);
   }
   console.log('');
 
@@ -99,6 +120,13 @@ function main(): void {
     for (const p of result.allowed) {
       console.log(`  ok  ${p.name}@${p.version}  ${p.license ?? ''}`);
     }
+  }
+  if (result.devOnly.length > 0) {
+    console.log('  Dev-only (not bundled), allowed by ADR-002:');
+    for (const p of result.devOnly) {
+      console.log(`  dev ${p.name}@${p.version}  ${p.license ?? ''}`);
+    }
+    console.log('');
   }
   for (const p of result.excepted) {
     console.log(`  exc ${p.name}@${p.version}  ${p.license ?? ''}  — ${p.reason}`);
@@ -124,7 +152,8 @@ function main(): void {
 
   if (failed) process.exit(1);
   console.log(
-    `✔ All ${String(list.length)} packages comply (${String(result.excepted.length)} via reviewed exceptions).`,
+    `✔ All ${String(list.length)} packages comply (${String(result.devOnly.length)} dev-only, ` +
+      `${String(result.excepted.length)} via reviewed exceptions).`,
   );
 }
 

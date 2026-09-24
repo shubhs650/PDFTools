@@ -176,3 +176,51 @@ describe('checkPackages', () => {
     expect(result.unusedExceptions).toEqual(['ghost']);
   });
 });
+
+describe('font and dev-only licenses (ADR-002)', () => {
+  it('allows OFL-1.1', () => {
+    expect(evaluateLicense('OFL-1.1').status).toBe('allowed');
+  });
+
+  it('treats MPL-2.0 as forbidden for runtime packages', () => {
+    expect(evaluateLicense('MPL-2.0').status).toBe('forbidden');
+    expect(evaluateLicense('MPL-2.0', { dev: false }).status).toBe('forbidden');
+  });
+
+  it('allows MPL-2.0 only for dev-only packages', () => {
+    expect(evaluateLicense('MPL-2.0', { dev: true }).status).toBe('allowed');
+    expect(evaluateLicense('(MPL-2.0 OR GPL-3.0)', { dev: true }).status).toBe('allowed');
+    expect(evaluateLicense('(MPL-2.0 OR GPL-3.0)').status).toBe('forbidden');
+  });
+
+  it('still forbids GPL for dev-only packages', () => {
+    expect(evaluateLicense('GPL-3.0', { dev: true }).status).toBe('forbidden');
+    expect(evaluateLicense('MPL-2.0 AND GPL-3.0', { dev: true }).status).toBe('forbidden');
+  });
+
+  describe('checkPackages', () => {
+    const mpl = {
+      name: 'css-tool',
+      version: '1.0.0',
+      license: 'MPL-2.0',
+      path: 'node_modules/css-tool',
+    };
+
+    it('reports a dev-only MPL package in the devOnly bucket', () => {
+      const result = checkPackages([{ ...mpl, dev: true }], {});
+      expect(result.failures).toEqual([]);
+      expect(result.devOnly.map((p) => p.name)).toEqual(['css-tool']);
+    });
+
+    it('fails an MPL package that is (or may be) bundled at runtime', () => {
+      expect(checkPackages([{ ...mpl, dev: false }], {}).failures).toHaveLength(1);
+      expect(checkPackages([mpl], {}).failures).toHaveLength(1);
+    });
+
+    it('keeps permissive dev packages in the allowed bucket', () => {
+      const result = checkPackages([{ ...mpl, license: 'MIT', dev: true }], {});
+      expect(result.allowed).toHaveLength(1);
+      expect(result.devOnly).toHaveLength(0);
+    });
+  });
+});
