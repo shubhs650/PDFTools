@@ -8,7 +8,7 @@ import { useEffect, useRef, useState, type KeyboardEvent, type PointerEvent } fr
 import { appStore, useApp } from '../../app/store/appStore';
 import { isEditable } from '../../app/keys/useShortcuts';
 import { documentStore, useDocuments, type ZoomSetting } from '../../app/store/documentStore';
-import { fitVisibleLevels, zoomTo } from './controller';
+import { fitVisibleLevels, move, zoomTo } from './controller';
 import { capability, useHost } from './host';
 import { PreviewLayer } from './PreviewLayer';
 import { setViewFocus } from './tileScheduler';
@@ -121,10 +121,15 @@ export function DocumentView({ documentId }: { documentId: string }) {
   }, []);
 
   const onKeyDown = (e: KeyboardEvent): void => {
-    if (e.key !== ' ' || e.ctrlKey || e.altKey || e.metaKey || isEditable(e.target as Element))
-      return;
-    e.preventDefault(); // no page-down scroll while Space means Hand
-    if (!e.repeat) appStore.getState().setSpaceHand(true);
+    if (e.ctrlKey || e.altKey || e.metaKey || isEditable(e.target as Element)) return;
+    if (e.key === 'Home' || e.key === 'End') {
+      // First / last page (§5), not the scroll container's own jump.
+      e.preventDefault();
+      move(e.key === 'Home' ? 'first' : 'last');
+    } else if (e.key === ' ') {
+      e.preventDefault(); // no page-down scroll while Space means Hand
+      if (!e.repeat) appStore.getState().setSpaceHand(true);
+    }
   };
 
   const scroller = (): HTMLElement | null =>
