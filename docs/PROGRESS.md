@@ -7,6 +7,12 @@ still open.
 
 ## Done
 
+- **Session 9 — M1-04 (i18n).** Branch `m1/04-i18n`. i18next 26.4.2 + react-i18next 17.0.15 (MIT), strings
+  bundled and initialised synchronously; typed keys (unknown key = type error); `msg()` marker for
+  keys in data; `Intl`-only formatters (number, percent, zoom, bytes, date, relative time) in the
+  user's locale; pseudo-locale (+40 %, accented, bracketed) behind `?locale=pseudo` in dev/e2e.
+  Completeness test: every referenced key exists and every key is used. Document title from i18n.
+
 - **Session 9 — M1-03 (typed RPC).** Branch `m1/03-rpc`. `src/engine/{protocol,errors,rpc}.ts` and
   `src/workers/rpc-host.ts`: one typed API spec per worker (wrong argument or result types don't
   compile); every call is a `Job` with `cancel()` and progress; cancel rejects with `AbortError`

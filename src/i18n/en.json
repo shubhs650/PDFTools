@@ -1,4 +1,8 @@
 {
-  "app.name": "PDFTools",
-  "app.shell.label": "PDFTools application"
+  "app": {
+    "name": "PDFTools",
+    "shell": {
+      "label": "PDFTools application"
+    }
+  }
 }
