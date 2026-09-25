@@ -20,7 +20,10 @@ export interface DocumentMeta {
 export interface ViewState {
   /** 0-based current page. */
   page: number;
+  /** What the user chose: a factor or a fit mode. */
   zoom: ZoomSetting;
+  /** The factor in effect (1 = 100 %); for a fit mode, what it resolved to. */
+  scale: number;
   mode: ViewMode;
   rotation: Rotation;
 }
@@ -53,6 +56,7 @@ export interface DocumentsState {
 export const DEFAULT_VIEW: ViewState = {
   page: 0,
   zoom: 'fitWidth',
+  scale: 1,
   mode: 'continuous',
   rotation: 0,
 };

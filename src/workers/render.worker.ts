@@ -98,5 +98,44 @@ serve<RenderApi>(self, {
     };
   },
 
+  contentBox: ({ docId, pageIndex }) => {
+    const { mod: m, native: n } = ready();
+    const page = rawCall(m, 'FPDF_LoadPage', docPtrOf(n, docId), pageIndex);
+    if (!page) throw new RpcError('page-not-loaded', 'The page could not be loaded');
+    const buf = m.pdfium.wasmExports.malloc(16);
+    try {
+      // The visible page area (crop box ∩ media box) gives the top-left origin.
+      const heap = m.pdfium as unknown as { getValue(ptr: number, type: 'float'): number };
+      const f = (i: number): number => heap.getValue(buf + 4 * i, 'float');
+      if (!rawCall(m, 'FPDF_GetPageBoundingBox', page, buf)) return null;
+      const pageLeft = f(0);
+      const pageTop = f(1);
+      let left = Infinity;
+      let bottom = Infinity;
+      let right = -Infinity;
+      let top = -Infinity;
+      const count = rawCall(m, 'FPDFPage_CountObjects', page);
+      for (let i = 0; i < count; i++) {
+        const obj = rawCall(m, 'FPDFPage_GetObject', page, i);
+        if (!obj || !rawCall(m, 'FPDFPageObj_GetBounds', obj, buf, buf + 4, buf + 8, buf + 12))
+          continue;
+        left = Math.min(left, f(0));
+        bottom = Math.min(bottom, f(1));
+        right = Math.max(right, f(2));
+        top = Math.max(top, f(3));
+      }
+      if (!(right > left) || !(top > bottom)) return null;
+      return {
+        left: left - pageLeft,
+        top: pageTop - top,
+        right: right - pageLeft,
+        bottom: pageTop - bottom,
+      };
+    } finally {
+      m.pdfium.wasmExports.free(buf);
+      rawCall(m, 'FPDF_ClosePage', page);
+    }
+  },
+
   memory: () => ({ wasmBytes: mod ? (wasmMemory(mod)?.buffer.byteLength ?? 0) : 0 }),
 });

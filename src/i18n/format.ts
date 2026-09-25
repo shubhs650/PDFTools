@@ -79,3 +79,20 @@ export function createFormatters(locale: string): Formatters {
     },
   };
 }
+
+/**
+ * Parses a number typed in the user's locale: its digits, decimal separator
+ * and grouping ("1.234,5" in de, "١٢" in ar). Returns null if it isn't one.
+ */
+export function parseLocaleNumber(text: string, locale: string): number | null {
+  const parts = new Intl.NumberFormat(locale).formatToParts(12345.6);
+  const group = parts.find((p) => p.type === 'group')?.value ?? ',';
+  const decimal = parts.find((p) => p.type === 'decimal')?.value ?? '.';
+  const native = new Intl.NumberFormat(locale, { useGrouping: false });
+  let s = text.trim().replace(/\s/g, '');
+  if (group.trim() !== '') s = s.split(group).join('');
+  for (let d = 0; d <= 9; d++) s = s.replaceAll(native.format(d), String(d));
+  if (decimal !== '.') s = s.replace(decimal, '.');
+  if (!/^[+-]?(\d+\.?\d*|\.\d+)$/.test(s)) return null;
+  return Number(s);
+}
