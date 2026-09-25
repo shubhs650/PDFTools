@@ -21,6 +21,10 @@ function executorWith(exec: (method: string) => unknown) {
   serve<RenderApi>(ch.port1, {
     init: () => ({ ms: 0, wasmBytes: 0 }),
     contentBox: () => null,
+    pageCost: () => ({ objects: 0, segments: 0 }),
+    renderProgressive: () => {
+      throw new Error('not used');
+    },
     exec: async ({ method }, ctx) => {
       if (method === 'slow') {
         await new Promise<void>((resolve) => {

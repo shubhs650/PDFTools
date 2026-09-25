@@ -4,6 +4,9 @@
 // document's pages by distance from the page in view, so the queue serves
 // what is on screen first. Stale tiles are aborted by the stock TilingLayer
 // when they leave the visible set; renderStats counts those aborts.
+// Accepted exception to rule 2 (ADR-004 decision 3): a tile already running in
+// the Render worker (~2–50 ms) is not interruptible; renders predicted over
+// 100 ms go through the progressive path instead (progressivePreview.ts).
 
 export interface ViewFocus {
   docId: string | null;

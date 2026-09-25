@@ -15,9 +15,19 @@ export interface KindStats {
   latencies: number[];
 }
 
+export interface ProgressiveStats {
+  requested: number;
+  done: number;
+  cancelled: number;
+  /** Slices per finished render and the longest slice of each (ms). */
+  slices: number[];
+  maxSliceMs: number[];
+}
+
 export interface RenderStats {
   tiles: KindStats;
   previews: KindStats;
+  progressive: ProgressiveStats;
 }
 
 const MAX_LATENCIES = 2000;
@@ -31,11 +41,24 @@ const empty = (): KindStats => ({
   latencies: [],
 });
 
-export const renderStats: RenderStats = { tiles: empty(), previews: empty() };
+const emptyProgressive = (): ProgressiveStats => ({
+  requested: 0,
+  done: 0,
+  cancelled: 0,
+  slices: [],
+  maxSliceMs: [],
+});
+
+export const renderStats: RenderStats = {
+  tiles: empty(),
+  previews: empty(),
+  progressive: emptyProgressive(),
+};
 
 export function resetRenderStats(): void {
   renderStats.tiles = empty();
   renderStats.previews = empty();
+  renderStats.progressive = emptyProgressive();
 }
 
 type RenderFn = (...args: unknown[]) => Task<Blob, unknown>;

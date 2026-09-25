@@ -17,6 +17,7 @@ import {
 } from '../view/host';
 import type { DocumentManagerCapability } from '@embedpdf/plugin-document-manager';
 import { MAX_DOCUMENTS } from '../view/plugins';
+import { dropPageCosts } from '../view/progressivePreview';
 import { HEADER_WINDOW, OpenError, classifyOpenError, hasPdfHeader } from './errors';
 import { advance, openStore, startJob } from './openStore';
 import { findDuplicate, sources } from './sources';
@@ -109,6 +110,7 @@ export async function closeDocument(docId: string): Promise<void> {
   documentStore.getState().close(docId);
   sources.delete(docId);
   tileCache.dropDoc(docId);
+  dropPageCosts(docId);
   await releaseEngineDocument(docId);
   await startedWorkClient()
     ?.close(docId)

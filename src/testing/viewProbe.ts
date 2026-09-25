@@ -50,6 +50,13 @@ export function registerViewProbe(hook: TestHook): void {
     stats: () => ({
       tiles: summary(renderStats.tiles),
       previews: summary(renderStats.previews),
+      progressive: {
+        requested: renderStats.progressive.requested,
+        done: renderStats.progressive.done,
+        cancelled: renderStats.progressive.cancelled,
+        slices: [...renderStats.progressive.slices],
+        maxSliceMs: renderStats.progressive.maxSliceMs.map((ms) => Math.round(ms * 10) / 10),
+      },
       cache: { bytes: tileCache.size, entries: tileCache.count, max: tileCache.maxBytes },
       focus: { ...viewFocus },
     }),
@@ -58,6 +65,13 @@ export function registerViewProbe(hook: TestHook): void {
       const registry = hostStore.getState().registry;
       if (!registry) throw new Error('no registry');
       capability<ZoomCapability>(registry, 'zoom').requestZoom(level);
+    },
+    /** Natural width of a page's preview image, and the width the current zoom asks for. */
+    previewWidth: (pageIndex: number) => {
+      const img = viewport().querySelector<HTMLImageElement>(
+        `[data-page="${String(pageIndex)}"] img.page-preview`,
+      );
+      return img?.naturalWidth ?? 0;
     },
     reset: () => {
       resetRenderStats();

@@ -6,6 +6,7 @@ import type { PdfEngine } from '@embedpdf/engines/pdfium';
 import type { FontFallbackConfig } from '@embedpdf/engines/pdfium';
 import pdfiumWasmUrl from '@embedpdf/pdfium/pdfium.wasm?url';
 import { createEncoder } from './encoder';
+import type { EncoderApi } from './encoderApi';
 import { createPdfEngine } from './hostedEngine';
 import type { RenderApi } from './renderApi';
 import { RpcClient } from './rpc';
@@ -24,6 +25,8 @@ export interface RenderEngineOptions {
 export interface RenderEngine {
   engine: PdfEngine;
   rpc: RpcClient<RenderApi>;
+  /** The image encoder worker (ADR-011 decision 4), for renders outside the engine (M1-17). */
+  encoder: RpcClient<EncoderApi>;
   /** Resolves once PDFium is initialized in the worker. */
   ready: Promise<{ ms: number; wasmBytes: number }>;
   terminate(): void;
@@ -49,6 +52,7 @@ export function createRenderEngine(options: RenderEngineOptions): RenderEngine {
   return {
     engine,
     rpc,
+    encoder: encoder.client,
     ready,
     terminate: () => {
       rpc.dispose();

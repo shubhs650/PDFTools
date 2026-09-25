@@ -30,6 +30,24 @@ export interface RenderApi {
     { left: number; top: number; right: number; bottom: number } | null
   >;
   memory: MethodSpec<null, { wasmBytes: number }>;
+  /** What a render of this page costs (M1-17 cost model): objects and path segments. */
+  pageCost: MethodSpec<{ docId: string; pageIndex: number }, { objects: number; segments: number }>;
+  /**
+   * Progressive render of a whole page at `scale` (M1-17): RGBA pixels,
+   * transferred. Cancellable between slices; progress = slices done.
+   */
+  renderProgressive: MethodSpec<
+    { docId: string; pageIndex: number; scale: number; sliceMs?: number },
+    {
+      data: Uint8ClampedArray<ArrayBuffer>;
+      width: number;
+      height: number;
+      slices: number;
+      maxSliceMs: number;
+      totalMs: number;
+    },
+    { slices: number }
+  >;
 }
 
 /** RpcError code for a failed PDFium/EmbedPDF task: `pdfium:<PdfErrorCode>`. */
