@@ -1,20 +1,9 @@
-import { expect, test } from '@playwright/test';
+import { expect, test } from './support/fixtures.ts';
 
-test('app shell loads with an accessible landmark and makes no cross-origin requests', async ({
-  page,
-  baseURL,
-}) => {
-  const origin = new URL(baseURL ?? 'http://localhost').origin;
-  const foreign: string[] = [];
-  page.on('request', (req) => {
-    const url = new URL(req.url());
-    if (url.protocol.startsWith('http') && url.origin !== origin) foreign.push(req.url());
-  });
-
+// The shared `guard` fixture fails this test on any CSP violation or any
+// request that leaves the app origin (CLAUDE.md rule 4, D-22).
+test('app shell loads with an accessible landmark', async ({ page }) => {
   await page.goto('/');
   await expect(page.getByRole('main', { name: 'PDFTools application' })).toBeVisible();
   await page.waitForLoadState('networkidle');
-
-  // CLAUDE.md rule 4 / D-22: no third-party network calls.
-  expect(foreign).toEqual([]);
 });

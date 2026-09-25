@@ -7,6 +7,21 @@ still open.
 
 ## Done
 
+- **Session 9 — M1-02 (e2e harness under production headers).** Branch `m1/02-e2e-harness`.
+  - `public/_headers`: the §10.1 CSP verbatim plus COOP/COEP (ADR-004 decision 5).
+    `scripts/serve.ts` + `scripts/headers.ts` promoted from the S8 spike (ADR-003 decision 4).
+  - Playwright builds the app once in `e2e` mode (`dist-e2e/`); every worker serves it with the
+    production headers, and every page is cross-origin isolated.
+  - Shared `guard` fixture (`e2e/support/fixtures.ts`): fails any test on a CSP violation (document
+    or Report-Only endpoint, so workers are covered), a request leaving the origin, or, in `perf`,
+    a main-thread task > 100 ms after `guard.startMeasuring()`. Negative controls prove each check
+    fires. Finding: a busy loop inside Playwright's own `evaluate` is not reported as a long task;
+    the control runs it as a page task.
+  - Test-only hook (M1-Q3) behind `import.meta.env.MODE === 'e2e'`; `npm run check:dist` (CI)
+    fails if its marker reaches a production build, verified against both builds.
+  - Self-made fixture generators in `e2e/fixtures/generate.ts` (simple, 2,000-page contract, A0
+    sheets, CJK fallback), all opened by PDFium in unit tests. CI now also runs `npm run perf`.
+
 - **Session 8 — M1-01 (EmbedPDF plugin layer).** _Works with workaround._ See
   [ADR-011](adr/011-m1-embedpdf-plugins.md) (proposed).
   - Core, document manager, viewport, scroll, render, tiling, zoom, spread and rotate plugins run on
@@ -209,6 +224,9 @@ still open.
 
 ## Session log
 
+- **Session 9 (2026-09-25):** M1-02. Local checks all pass: typecheck (app and spikes), lint,
+  format, unit tests, license gate, production build + `check:dist`, e2e (6/6) and perf (2/2).
+
 - **Session 8 (2026-09-25):** Read PROGRESS, ARCHITECTURE Rev 0.4 and ADR-001 to ADR-010; wrote
   the M1 plan; the owner approved it and accepted M1-Q1 to M1-Q8. Then M1-01 on branch
   `m1/01-plugin-spike`: typecheck (app and spikes), lint, format, unit tests, license gate (546
@@ -271,8 +289,7 @@ still open.
    [PR #1](https://github.com/shubhs650/PDFTools/pull/1), then
    [PR #2](https://github.com/shubhs650/PDFTools/pull/2) (M0), then the M1-01 PR, each with
    "Create a merge commit" (the PRs are stacked).
-4. **Agent:** M1-02 (e2e harness + CSP), M1-03 (RPC), M1-04 (i18n), each on its own
-   `m1/<task>` branch.
+4. **Agent:** M1-03 (RPC), then M1-04 (i18n), each on its own `m1/<task>` branch.
 
 ## Open issues
 

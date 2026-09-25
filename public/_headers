@@ -1,0 +1,9 @@
+# Cloudflare Pages response headers. ARCHITECTURE.md §10.1 (D-22): the CSP is
+# verbatim and has no exceptions (ADR-001 B1, ADR-003). COOP/COEP make the app
+# cross-origin isolated (ADR-004 decision 5). Changing this file needs an ADR.
+/*
+  Content-Security-Policy: default-src 'self'; script-src 'self' 'wasm-unsafe-eval'; worker-src 'self' blob:; connect-src 'self'; img-src 'self' blob: data:; font-src 'self'; style-src 'self' 'unsafe-inline'; object-src 'none'; base-uri 'none'; frame-ancestors 'none'; form-action 'none'
+  Cross-Origin-Opener-Policy: same-origin
+  Cross-Origin-Embedder-Policy: require-corp
+  X-Content-Type-Options: nosniff
+  Referrer-Policy: no-referrer

@@ -1,6 +1,8 @@
 import { defineConfig, devices } from '@playwright/test';
 
-const PORT = '4173';
+// The app is built once (e2e/support/global-setup.ts) and each worker serves it
+// with scripts/serve.ts and the production `_headers` (e2e/support/fixtures.ts).
+// Tests import `test`/`expect` from e2e/support/fixtures.ts.
 
 // Optional override for environments with a pre-installed browser that doesn't
 // match this Playwright version (e.g. cloud dev containers). CI uses the
@@ -10,11 +12,11 @@ const launchOptions = executablePath ? { executablePath } : {};
 
 export default defineConfig({
   testDir: './e2e',
+  globalSetup: './e2e/support/global-setup.ts',
   forbidOnly: !!process.env.CI,
   retries: 0,
   reporter: process.env.CI ? [['github'], ['html', { open: 'never' }]] : 'list',
   use: {
-    baseURL: `http://localhost:${PORT}`,
     trace: 'retain-on-failure',
     launchOptions,
   },
@@ -30,10 +32,4 @@ export default defineConfig({
       use: { ...devices['Desktop Chrome'], viewport: { width: 1920, height: 1080 } },
     },
   ],
-  webServer: {
-    command: `npm run build && npm run preview -- --port ${PORT} --strictPort`,
-    url: `http://localhost:${PORT}`,
-    reuseExistingServer: !process.env.CI,
-    timeout: 120_000,
-  },
 });
