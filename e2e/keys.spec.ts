@@ -107,6 +107,7 @@ test('the key probe page lists keys that reach the page (owner check for reserve
   page,
 }) => {
   await page.goto('/?keyprobe');
+  await page.locator('body[data-keyprobe="ready"]').waitFor({ state: 'attached' });
   await page.keyboard.press('Control+Alt+w');
   await expect(page.getByTestId('keys')).toContainText('Ctrl+Alt+w');
 });
