@@ -7,6 +7,16 @@ still open.
 
 ## Done
 
+- **Session 10 — M1-13 (open pipeline and document tabs).** Branch `m1/13-open`. Ctrl+O (FSA
+  picker or `<input type=file>`), window-level drop (Explorer files, Outlook attachments via
+  `DataTransferItem`), one tab per file in order, duplicates focus the existing tab (`isSameEntry`
+  for two handles, else fingerprint). Open state machine with localized errors (not a PDF, damaged,
+  password-protected "not supported yet", unreadable, too many). Permission flags stored in the
+  document record; no per-document overrides. Tabs: busy placeholders while opening, overflow menu,
+  close with Save / Don't save / Cancel, start screen when the last tab closes. Found and fixed: the
+  engine needed `ready` before the document manager's first open, the open buffer was being
+  copied (now transferred) and the start screen's muted text failed contrast on the canvas.
+
 - **Session 10 — M1-12 (storage layer).** Branch `m1/12-storage`. IndexedDB (`settings`, `recent`
   capped at 20, versioned migrations with an upgrade test on fake-indexeddb 6.2.5, Apache-2.0,
   dev-only); OPFS recovery store (original once + narrow tail in A/B slots + UI state, list, read,

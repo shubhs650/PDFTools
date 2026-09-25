@@ -1,23 +1,39 @@
+import { ChevronDown16Regular } from '@fluentui/react-icons/svg/chevron-down';
 import { Dismiss16Regular } from '@fluentui/react-icons/svg/dismiss';
 import { useRef, type KeyboardEvent } from 'react';
 import { useTranslation } from 'react-i18next';
-import { IconButton } from '../ui/components';
+import { requestClose } from '../features/open/openDocument';
+import { useOpen } from '../features/open/openStore';
+import { DropdownMenu, IconButton } from '../ui/components';
 import { documentStore, useDocuments } from './store/documentStore';
 
 /**
  * Document tabs (D-01): a tablist with roving focus (arrows, Home, End). Each
  * tab has its own close button next to it (not nested inside the tab, so both
- * stay valid controls). Opening files and the unsaved-changes prompt come in
- * M1-13; keyboard shortcuts in M1-11.
+ * stay valid controls). Files being opened show as busy placeholders; the
+ * overflow menu lists every document when the row is too narrow.
  */
 export function TabStrip() {
   const { t } = useTranslation();
   const order = useDocuments((s) => s.order);
   const activeId = useDocuments((s) => s.activeId);
   const docs = useDocuments((s) => s.docs);
+  const jobs = useOpen((s) => s.jobs);
   const refs = useRef(new Map<string, HTMLButtonElement>());
 
-  if (order.length === 0) return <div className="tab-strip tab-strip--empty" />;
+  const opening =
+    jobs.length > 0 ? (
+      <div className="tab-opening" role="status">
+        {jobs.map((j) => (
+          <span key={j.id} className="tab tab--opening">
+            <span className="ui-spinner tab-spinner" aria-hidden="true" />
+            <span className="tab-name">{t('open.opening', { name: j.name })}</span>
+          </span>
+        ))}
+      </div>
+    ) : null;
+
+  if (order.length === 0) return <div className="tab-strip tab-strip--empty">{opening}</div>;
 
   const focusTab = (i: number): void => {
     const id = order[(i + order.length) % order.length];
@@ -78,12 +94,33 @@ export function TabStrip() {
                 tooltip={false}
                 tabIndex={active ? 0 : -1}
                 onClick={() => {
-                  documentStore.getState().close(id);
+                  requestClose(id);
                 }}
               />
             </span>
           );
         })}
+      </div>
+      {opening}
+      <div className="tab-strip-end">
+        <DropdownMenu
+          align="end"
+          trigger={
+            <IconButton
+              label={t('open.overflow')}
+              icon={<ChevronDown16Regular />}
+              size="small"
+              tooltip={false}
+            />
+          }
+          entries={order.map((id) => ({
+            id,
+            label: docs[id]?.meta.name ?? id,
+            onSelect: () => {
+              documentStore.getState().activate(id);
+            },
+          }))}
+        />
       </div>
     </div>
   );

@@ -20,6 +20,17 @@ function toPdfError(err: unknown): { code: PdfErrorCode; message: string } {
   return { code: PdfErrorCode.Unknown, message: err instanceof Error ? err.message : 'error' };
 }
 
+/**
+ * Buffers to transfer instead of copy. A structured-clone copy of a 500 MB
+ * file would be a main-thread long task (rule 1); after the transfer the
+ * caller's buffer is detached.
+ */
+export function transferablesFor(method: string, args: unknown[]): Transferable[] {
+  if (method !== 'openDocumentBuffer') return [];
+  const content = (args[0] as { content?: unknown } | undefined)?.content;
+  return content instanceof ArrayBuffer ? [content] : [];
+}
+
 export function createHostedExecutor(rpc: RpcClient<RenderApi>): IPdfiumExecutor {
   return new Proxy({} as IPdfiumExecutor, {
     get(_target, method) {
@@ -30,6 +41,7 @@ export function createHostedExecutor(rpc: RpcClient<RenderApi>): IPdfiumExecutor
           'exec',
           { method, args },
           {
+            transfer: transferablesFor(method, args),
             onProgress: (p) => {
               task.progress(p);
             },

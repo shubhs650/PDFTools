@@ -1,6 +1,6 @@
 // Storage worker API (ARCHITECTURE §4.3, §10.3; M1-12). OPFS recovery
 // snapshots and document fingerprints, off the main thread (rule 1).
-import type { Snapshot, UiState } from '../storage/opfs';
+import type { Snapshot, UiState } from '../storage/recoveryTypes';
 import type { MethodSpec } from './protocol';
 
 export interface StorageApi {
