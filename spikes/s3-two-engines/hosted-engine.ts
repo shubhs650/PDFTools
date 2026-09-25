@@ -19,7 +19,10 @@ export interface HostedRender {
   terminate(): void;
 }
 
-export function createHostedRender(wasmUrl: string): HostedRender {
+export function createHostedRender(
+  wasmUrl: string,
+  imageConverter: typeof browserImageDataToBlobConverter = browserImageDataToBlobConverter,
+): HostedRender {
   const worker = new Worker(new URL('./render.worker.ts', import.meta.url), {
     type: 'module',
     name: 'render',
@@ -80,7 +83,7 @@ export function createHostedRender(wasmUrl: string): HostedRender {
     },
   ) as IPdfiumExecutor;
 
-  const engine = new PdfEngine(executor, { imageConverter: browserImageDataToBlobConverter });
+  const engine = new PdfEngine(executor, { imageConverter });
 
   return {
     engine,
