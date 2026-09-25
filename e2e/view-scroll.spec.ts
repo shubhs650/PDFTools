@@ -20,14 +20,11 @@ const view = (page: Page, method: string, ...args: unknown[]) => cap(page, 'view
 const stats = async (page: Page) => (await view(page, 'stats')) as Stats;
 const tabs = (page: Page) => page.getByRole('tablist', { name: 'Open documents' }).getByRole('tab');
 
-test('a document shows a preview at once, then sharp tiles; no long tasks', async ({
-  page,
-  pdfs,
-  guard,
-}) => {
+// Long tasks in these scenarios are gated in e2e/perf/scroll.spec.ts (serial, perf project).
+
+test('a document shows a preview at once, then sharp tiles', async ({ page, pdfs }) => {
   await page.goto('/');
   await stage(page, [{ name: 'contract.pdf', b64: pdfs.contract(200).toString('base64') }]);
-  await guard.startMeasuring();
   await dropStaged(page);
   const viewport = page.getByTestId('document-view');
   await expect(viewport).toBeVisible();
@@ -39,19 +36,13 @@ test('a document shows a preview at once, then sharp tiles; no long tasks', asyn
   const s = await stats(page);
   expect(s.previews.done).toBeGreaterThan(0);
   expect(s.tiles.done).toBeGreaterThan(0);
-  expect(await guard.longTasksOverLimit()).toEqual([]);
 });
 
-test('jumping through the document and zoom thrash abort stale tiles', async ({
-  page,
-  pdfs,
-  guard,
-}) => {
+test('jumping through the document and zoom thrash abort stale tiles', async ({ page, pdfs }) => {
   await page.goto('/');
   await drop(page, [{ name: 'contract.pdf', b64: pdfs.contract(2000).toString('base64') }]);
   await expect(page.locator('[data-page="0"] img.page-preview')).toBeVisible();
   await view(page, 'settle');
-  await guard.startMeasuring();
   await view(page, 'reset');
   const height = (await view(page, 'scrollHeight')) as number;
   for (const f of [0.1, 0.3, 0.5, 0.7, 0.9, 0.2]) {
@@ -68,7 +59,6 @@ test('jumping through the document and zoom thrash abort stale tiles', async ({
   expect(s.tiles.aborted).toBeGreaterThan(0);
   expect(await view(page, 'blankVisiblePages')).toBe(0);
   expect(await view(page, 'sharpVisiblePages')).toBeGreaterThan(0);
-  expect(await guard.longTasksOverLimit()).toEqual([]);
 });
 
 test('switching tabs keeps each document’s images cached; coming back renders nothing new', async ({

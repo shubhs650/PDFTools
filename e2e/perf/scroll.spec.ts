@@ -48,3 +48,27 @@ test('2,000-page stand-in: first preview, then 900 px/s with no blank page frame
   expect(firstPreviewMs).toBeLessThan(1500); // §12 target (gating in M1-27)
   expect((scroll900 as { blankFrames: number }).blankFrames).toBe(0);
 });
+
+test('jumping through the stand-in and zoom thrash: no long tasks', async ({
+  page,
+  pdfs,
+  guard,
+}) => {
+  await page.goto('/');
+  await stage(page, [{ name: 'contract.pdf', b64: pdfs.contract(2000).toString('base64') }]);
+  await dropStaged(page);
+  await page.locator('[data-page="0"] img.page-preview').waitFor();
+  await view(page, 'settle');
+  await guard.startMeasuring();
+  const height = (await view(page, 'scrollHeight')) as number;
+  for (const f of [0.1, 0.3, 0.5, 0.7, 0.9, 0.2]) {
+    await view(page, 'scrollTo', Math.round(height * f));
+    await page.waitForTimeout(30);
+  }
+  for (const z of [0.5, 2, 1, 4, 0.25, 3, 1.5]) {
+    await view(page, 'zoom', z);
+    await page.waitForTimeout(40);
+  }
+  await view(page, 'settle');
+  expect(await view(page, 'blankVisiblePages')).toBe(0);
+});

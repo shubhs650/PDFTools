@@ -3,7 +3,7 @@ import { mkdtempSync, readFileSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import type { Page } from '@playwright/test';
-import { cap, drop, dropStaged, stage } from './support/app.ts';
+import { cap, drop } from './support/app.ts';
 import { expect, test } from './support/fixtures.ts';
 
 // M1-13: open pipeline and document tabs.
