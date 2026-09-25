@@ -7,6 +7,15 @@ still open.
 
 ## Done
 
+- **Session 9 — M1-03 (typed RPC).** Branch `m1/03-rpc`. `src/engine/{protocol,errors,rpc}.ts` and
+  `src/workers/rpc-host.ts`: one typed API spec per worker (wrong argument or result types don't
+  compile); every call is a `Job` with `cancel()` and progress; cancel rejects with `AbortError`
+  exactly once and drops late results; progress throttled to 1 per 100 ms (trailing edge); a dev
+  warning when a job runs > 300 ms without progress (rule 2); zero-copy transfers both ways; errors
+  cross as `{code, message, stack}`, and non-`RpcError`s lose their message (rule 10); a lost
+  worker rejects every pending call with `WorkerLostError`. 14 unit tests over a real
+  `MessageChannel`.
+
 - **Session 9 — M1-02 (e2e harness under production headers).** Branch `m1/02-e2e-harness`.
   - `public/_headers`: the §10.1 CSP verbatim plus COOP/COEP (ADR-004 decision 5).
     `scripts/serve.ts` + `scripts/headers.ts` promoted from the S8 spike (ADR-003 decision 4).
