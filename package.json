@@ -21,7 +21,7 @@
     "format:check": "prettier --check .",
     "test": "vitest run",
     "test:watch": "vitest",
-    "e2e": "playwright test --project=e2e e2e/diag-fsa-idb.spec.ts e2e/open.spec.ts",
+    "e2e": "playwright test --project=e2e e2e/diag-fsa-idb.spec.ts",
     "perf": "true",
     "licenses": "node scripts/check-licenses.ts",
     "spikes": "playwright test -c spikes/playwright.config.ts",

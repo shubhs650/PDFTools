@@ -10,19 +10,19 @@ async function opfsHandle() {
   return h;
 }
 
+const open = `const db = await new Promise((res, rej) => { const r = indexedDB.open('diag', 1); r.onupgradeneeded = () => r.result.createObjectStore('s'); r.onsuccess = () => res(r.result); r.onerror = () => rej(r.error); });
+    const put = (v) => new Promise((res, rej) => { const tx = db.transaction('s', 'readwrite'); tx.objectStore('s').put(v, 'k'); tx.oncomplete = res; tx.onerror = () => rej(tx.error); });
+    const get = () => new Promise((res, rej) => { const r = db.transaction('s').objectStore('s').get('k'); r.onsuccess = () => res(r.result); r.onerror = () => rej(r.error); });`;
+const body = (x: string) => `(async () => { ${opfsHandle.toString()}; ${open}; const h = await opfsHandle(); await put({ h }); ${x} })()`;
 const steps: Record<string, string> = {
-  opfsWrite: `(async () => { ${opfsHandle.toString()}; await opfsHandle(); return 'ok'; })()`,
-  queryPermission: `(async () => { ${opfsHandle.toString()}; const h = await opfsHandle(); return await h.queryPermission({ mode: 'read' }); })()`,
-  structuredClone: `(async () => { ${opfsHandle.toString()}; const h = await opfsHandle(); structuredClone(h); return 'ok'; })()`,
-  idbPut: `(async () => { ${opfsHandle.toString()}; const h = await opfsHandle();
-    const db = await new Promise((res, rej) => { const r = indexedDB.open('diag', 1); r.onupgradeneeded = () => r.result.createObjectStore('s'); r.onsuccess = () => res(r.result); r.onerror = () => rej(r.error); });
-    await new Promise((res, rej) => { const tx = db.transaction('s', 'readwrite'); tx.objectStore('s').put({ h }, 'k'); tx.oncomplete = res; tx.onerror = () => rej(tx.error); });
-    return 'ok'; })()`,
-  idbPutGetSame: `(async () => { ${opfsHandle.toString()}; const h = await opfsHandle();
-    const db = await new Promise((res, rej) => { const r = indexedDB.open('diag2', 1); r.onupgradeneeded = () => r.result.createObjectStore('s'); r.onsuccess = () => res(r.result); r.onerror = () => rej(r.error); });
-    await new Promise((res, rej) => { const tx = db.transaction('s', 'readwrite'); tx.objectStore('s').put({ h }, 'k'); tx.oncomplete = res; tx.onerror = () => rej(tx.error); });
-    const got = await new Promise((res, rej) => { const r = db.transaction('s').objectStore('s').get('k'); r.onsuccess = () => res(r.result); r.onerror = () => rej(r.error); });
-    return String(await got.h.isSameEntry(h)); })()`,
+  getOnly: body(`const g = await get(); return String(g.h.kind);`),
+  getName: body(`const g = await get(); return g.h.name;`),
+  getQueryPermission: body(`const g = await get(); return await g.h.queryPermission({ mode: 'read' });`),
+  getGetFile: body(`const g = await get(); return String((await g.h.getFile()).size);`),
+  getIsSameEntryFresh: body(`const g = await get(); return String(await g.h.isSameEntry(g.h));`),
+  liveIsSameEntry: body(`const h2 = await opfsHandle(); return String(await h.isSameEntry(h2));`),
+  getIsSameEntryLive: body(`const g = await get(); return String(await g.h.isSameEntry(h));`),
+  liveIsSameEntryStored: body(`const g = await get(); return String(await h.isSameEntry(g.h));`),
 };
 
 for (const [name, code] of Object.entries(steps)) {
