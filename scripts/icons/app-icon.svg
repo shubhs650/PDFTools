@@ -1,0 +1,9 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
+  <!-- PDFTools app icon (own artwork, rule 15): a page with a folded corner
+       and a dimension line, on the accent color. -->
+  <rect width="512" height="512" rx="112" fill="#0f6cbd"/>
+  <path d="M152 88h148l92 92v244a24 24 0 0 1-24 24H152a24 24 0 0 1-24-24V112a24 24 0 0 1 24-24z" fill="#ffffff"/>
+  <path d="M300 88v68a24 24 0 0 0 24 24h68z" fill="#b4d6fa"/>
+  <path d="M176 248h160M176 296h112" stroke="#0f6cbd" stroke-width="20" stroke-linecap="round"/>
+  <path d="M176 364h160M176 344v40M336 344v40" stroke="#0f6cbd" stroke-width="12" stroke-linecap="round"/>
+</svg>

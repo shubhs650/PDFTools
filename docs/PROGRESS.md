@@ -7,6 +7,11 @@ still open.
 
 ## Done
 
+- **Session 11 — M1-19 (PWA manifest, file handler, launchQueue).** Branch `m1/19-pwa`. Installable
+  manifest with a PDF file handler and focus-existing launch handling; own app icons (SVG source +
+  generated PNGs); launchQueue consumer opening launched files as tabs; favicon and theme color in
+  index.html. Owner check (Explorer → installed app) queued for the M1-28 pack.
+
 - **Session 11 — M1-18 (start screen and recent files).** Branch `m1/18-recent`. Recent list of file
   handles in IndexedDB (dedupe by fingerprint and by same file on disk, cap 20), shown on the start
   screen and in the backstage; keyboard-reachable entries with remove buttons and "Clear recent";
