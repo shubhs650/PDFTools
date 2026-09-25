@@ -532,3 +532,52 @@ body {
   height: 100%;
   user-select: none;
 }
+
+/* ------------------------------------------------------------ status controls (M1-15) */
+
+.status-group {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-1);
+}
+
+.status-input {
+  height: var(--control-height-s);
+  padding: var(--space-0) var(--space-2);
+  border: var(--border-width) solid var(--color-border);
+  border-radius: var(--radius-m);
+  background: var(--color-surface);
+  color: var(--color-text);
+  font: inherit;
+  text-align: center;
+}
+
+.status-input[aria-invalid='true'] {
+  border-color: var(--color-danger);
+}
+
+.status-input--page {
+  width: calc(var(--control-height-m) * 2);
+}
+
+.status-input--zoom {
+  width: calc(var(--control-height-m) * 2.5);
+}
+
+.status-text {
+  padding: var(--space-0) var(--space-2);
+  color: var(--color-text-muted);
+  white-space: nowrap;
+}
+
+.document-host {
+  height: 100%;
+}
+
+.document-host[data-tool='hand'] .viewport {
+  cursor: grab;
+}
+
+.document-host[data-panning='true'] .viewport {
+  cursor: grabbing;
+}

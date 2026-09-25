@@ -312,5 +312,12 @@
       "open": "Open…"
     },
     "ok": "OK"
+  },
+  "status": {
+    "pageNav": "Page navigation",
+    "pageNumber": "Page number",
+    "pageOf": "of {{total}}",
+    "zoom": "Zoom",
+    "zoomLevels": "Zoom levels"
   }
 }

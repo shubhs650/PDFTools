@@ -2,6 +2,8 @@ import { useEffect, useState } from 'react';
 import { CloseDocumentDialog, OpenErrorDialog } from '../features/open/dialogs';
 import { DocumentArea } from '../features/open/DocumentArea';
 import { DropZone } from '../features/open/DropZone';
+import { registerViewCommands } from '../features/view/commands';
+import { PageNav, ZoomBox } from '../features/view/StatusControls';
 import { UiProvider } from '../ui/components';
 import { AppFrame } from './AppFrame';
 import { Backstage } from './backstage/Backstage';
@@ -21,11 +23,13 @@ const focusDocument = (): void => {
 export function App() {
   const [backstage, setBackstage] = useState(false);
   useEffect(() => registerBuiltinCommands(), []);
+  useEffect(() => registerViewCommands(), []);
   useShortcuts();
   return (
     <UiProvider>
       <ErrorBoundary where={BOUNDARY.app}>
         <AppFrame
+          status={{ pageNav: <PageNav />, view: <ZoomBox /> }}
           ribbon={
             <>
               <QuickAccess />

@@ -7,6 +7,14 @@ still open.
 
 ## Done
 
+- **Session 10 — M1-15 (zoom, page navigation, hand tool).** Branch `m1/15-zoom-nav`. Zoom In/Out
+  stops, Ctrl+0/1/2, Ctrl+wheel at the pointer, a zoom box ("150", "150 %", localized decimals) with
+  a level menu (fit page / width / visible, actual size, presets), clamp 1 %–6400 %; status-bar page
+  navigation with a validated, localized page box; Home/End/PageUp/PageDown in the document; Hand
+  (H, drag-pans), Space for Hand while held, Esc back to Select; view commands on the ribbon.
+  Also fixed a race in M1-11's key-probe test (merged up the stack). Sharp tiles 150–170 ms after
+  zoom on the A0 sheet.
+
 - **Session 10 — M1-14 (viewer: virtual scroll and tiling).** Branch `m1/14-viewer`. Plugin stack per
   ADR-011 (viewport, scroll, render, tiling 256 px, zoom 1 %–6400 % with fit width by default);
   bounded preview layer; visible-first render ranking; byte-bounded LRU image cache across tabs;

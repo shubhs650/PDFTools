@@ -20,6 +20,7 @@ function executorWith(exec: (method: string) => unknown) {
   channels.push(ch);
   serve<RenderApi>(ch.port1, {
     init: () => ({ ms: 0, wasmBytes: 0 }),
+    contentBox: () => null,
     exec: async ({ method }, ctx) => {
       if (method === 'slow') {
         await new Promise<void>((resolve) => {

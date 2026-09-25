@@ -3,16 +3,24 @@
 // through selectors (useApp) so a change re-renders only its readers.
 import { createStore, useStore } from 'zustand';
 
+/** Pointer tools of M1 (M1-Q5: Select has no text selection until M2). */
+export type Tool = 'select' | 'hand';
+
 export interface AppState {
   leftPaneOpen: boolean;
   propertiesOpen: boolean;
   ribbonCollapsed: boolean;
   shortcutsOpen: boolean;
+  tool: Tool;
+  /** Space held: Hand until released (§8.1). */
+  spaceHand: boolean;
   toggleLeftPane(): void;
   toggleProperties(): void;
   setProperties(open: boolean): void;
   toggleRibbon(): void;
   setShortcutsOpen(open: boolean): void;
+  setTool(tool: Tool): void;
+  setSpaceHand(on: boolean): void;
 }
 
 export const createAppStore = () =>
@@ -21,6 +29,8 @@ export const createAppStore = () =>
     propertiesOpen: false,
     ribbonCollapsed: false,
     shortcutsOpen: false,
+    tool: 'select',
+    spaceHand: false,
     toggleLeftPane: () => {
       set((s) => ({ leftPaneOpen: !s.leftPaneOpen }));
     },
@@ -35,6 +45,12 @@ export const createAppStore = () =>
     },
     setShortcutsOpen: (open) => {
       set({ shortcutsOpen: open });
+    },
+    setTool: (tool) => {
+      set({ tool, spaceHand: false });
+    },
+    setSpaceHand: (on) => {
+      set({ spaceHand: on });
     },
   }));
 
