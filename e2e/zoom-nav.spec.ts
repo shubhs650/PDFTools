@@ -208,27 +208,18 @@ test('Hand drag-pans, Space switches to Hand while held, Esc returns to Select',
   await expect(host).toHaveAttribute('data-tool', 'select');
 });
 
-test('zoom to 6400 % on the A0 sheet: no long tasks, sharp tiles after it settles', async ({
-  page,
-  pdfs,
-  guard,
-}) => {
+// Long tasks and timings for this scenario are gated in e2e/perf/zoom.spec.ts.
+test('zoom to 6400 % on the A0 sheet: sharp tiles after it settles', async ({ page, pdfs }) => {
   await page.goto('/');
   await drop(page, [{ name: 'a0.pdf', b64: pdfs.a0(20_000).toString('base64') }]);
   await expect(page.locator('[data-page="0"] img.page-preview')).toBeVisible();
   await settle(page);
-  await guard.startMeasuring();
-  const times: Record<string, number> = {};
   for (const z of ['800', '6400', '100']) {
-    const t0 = await page.evaluate(() => performance.now());
     await zoomBox(page).fill(z);
     await zoomBox(page).press('Enter');
     await expect(zoomBox(page)).toHaveValue(z === '6400' ? '6,400%' : `${z}%`);
     await settle(page);
-    times[z] = Math.round((await page.evaluate(() => performance.now())) - t0 - 400);
     expect(await cap(page, 'view', 'sharpVisiblePages')).toBeGreaterThan(0);
     expect(await cap(page, 'view', 'blankVisiblePages')).toBe(0);
   }
-  test.info().annotations.push({ type: 'sharp-after-zoom-ms', description: JSON.stringify(times) });
-  expect(await guard.longTasksOverLimit()).toEqual([]);
 });

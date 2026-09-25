@@ -12,7 +12,12 @@ still open.
   a level menu (fit page / width / visible, actual size, presets), clamp 1 %–6400 %; status-bar page
   navigation with a validated, localized page box; Home/End/PageUp/PageDown in the document; Hand
   (H, drag-pans), Space for Hand while held, Esc back to Select; view commands on the ribbon.
-  Also fixed a race in M1-11's key-probe test (merged up the stack). Sharp tiles 150–170 ms after
+  Also fixed a race in M1-11's key-probe test (merged up the stack). CI follow-ups: closing a tab no
+  longer starts the engine or Work worker (M1-13 bug); Home/End navigate explicitly; long-task
+  checks moved from the parallel e2e project into perf scenarios (\`e2e/perf/open|scroll|zoom\`),
+  and \`npm run perf\` now runs one test at a time: CI had measured a 639 ms task caused by another
+  test's browser compiling PDFium on the same 2-vCPU runner (reproduced pinned to one core; clean
+  on two). Sharp tiles 150–170 ms after
   zoom on the A0 sheet.
 
 - **Session 10 — M1-14 (viewer: virtual scroll and tiling).** Branch `m1/14-viewer`. Plugin stack per
