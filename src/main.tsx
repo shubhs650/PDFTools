@@ -24,7 +24,11 @@ if (import.meta.env.DEV || import.meta.env.MODE === 'e2e') {
 if (import.meta.env.MODE === 'e2e') {
   void import('./testing/hook').then((m) => m.installTestHook());
 }
-if (import.meta.env.MODE === 'e2e' && params.has('gallery')) {
+if (import.meta.env.MODE === 'e2e' && params.has('keyprobe')) {
+  void import('./testing/KeyProbe').then(({ KeyProbe }) => {
+    root.render(<KeyProbe />);
+  });
+} else if (import.meta.env.MODE === 'e2e' && params.has('gallery')) {
   void import('./testing/Gallery').then(({ Gallery }) => {
     root.render(
       <StrictMode>

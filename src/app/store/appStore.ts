@@ -7,10 +7,12 @@ export interface AppState {
   leftPaneOpen: boolean;
   propertiesOpen: boolean;
   ribbonCollapsed: boolean;
+  shortcutsOpen: boolean;
   toggleLeftPane(): void;
   toggleProperties(): void;
   setProperties(open: boolean): void;
   toggleRibbon(): void;
+  setShortcutsOpen(open: boolean): void;
 }
 
 export const createAppStore = () =>
@@ -18,6 +20,7 @@ export const createAppStore = () =>
     leftPaneOpen: true,
     propertiesOpen: false,
     ribbonCollapsed: false,
+    shortcutsOpen: false,
     toggleLeftPane: () => {
       set((s) => ({ leftPaneOpen: !s.leftPaneOpen }));
     },
@@ -29,6 +32,9 @@ export const createAppStore = () =>
     },
     toggleRibbon: () => {
       set((s) => ({ ribbonCollapsed: !s.ribbonCollapsed }));
+    },
+    setShortcutsOpen: (open) => {
+      set({ shortcutsOpen: open });
     },
   }));
 

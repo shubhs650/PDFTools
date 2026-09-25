@@ -23,6 +23,22 @@ export function installTestHook(): TestHook {
   void import('./workProbe').then((m) => {
     m.registerWorkProbe(hook);
   });
+  void import('../app/commands/dispatch').then((d) => {
+    const calls: string[] = [];
+    hook.capabilities['commands'] = {
+      /** Replaces the handlers of `ids` with recorders (e2e only). */
+      spy: (ids: string[]) => {
+        for (const id of ids) {
+          d.registerCommand(id, {
+            run: () => {
+              calls.push(id);
+            },
+          });
+        }
+      },
+      calls: () => [...calls],
+    };
+  });
   void Promise.all([import('../app/store/appStore'), import('../app/store/documentStore')]).then(
     ([app, docs]) => {
       hook.capabilities['stores'] = { app: app.appStore, documents: docs.documentStore };

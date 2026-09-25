@@ -260,5 +260,30 @@
       "about": "About PDFTools: version and third-party notices.",
       "privacy": "PDFTools works offline. Your documents are never uploaded."
     }
+  },
+  "shortcuts": {
+    "title": "Keyboard shortcuts",
+    "description": "Shortcuts for the commands available now. Alternates are listed for keys the browser keeps for itself.",
+    "command": "Command",
+    "keys": "Keys",
+    "print": "Print",
+    "or": " or ",
+    "reservedNote": "The first key is used by the browser in a normal tab; use the alternate there.",
+    "action": {
+      "tabClose": "Close Tab",
+      "tabNext": "Next Tab",
+      "tabPrev": "Previous Tab",
+      "toolCancel": "Cancel Tool"
+    },
+    "key": {
+      "ctrl": "Ctrl",
+      "cmd": "Cmd",
+      "shift": "Shift",
+      "alt": "Alt",
+      "option": "Option",
+      "pageUp": "Page Up",
+      "pageDown": "Page Down",
+      "escape": "Esc"
+    }
   }
 }

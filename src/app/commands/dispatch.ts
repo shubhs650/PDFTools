@@ -23,7 +23,14 @@ export type CommandState =
 const handlers = new Map<string, CommandHandler>();
 const listeners = new Set<() => void>();
 
-const KNOWN = new Set(COMMANDS.map((c) => c.id));
+/**
+ * Actions reachable from the keyboard (and other code) that are not ribbon
+ * commands: tab management and cancelling the current tool (§8.1).
+ */
+export const INTERNAL_ACTIONS = ['tab.close', 'tab.next', 'tab.prev', 'tool.cancel'] as const;
+export type InternalAction = (typeof INTERNAL_ACTIONS)[number];
+
+const KNOWN = new Set<string>([...COMMANDS.map((c) => c.id), ...INTERNAL_ACTIONS]);
 
 /** Registers the handler for a command id; returns an unregister function. */
 export function registerCommand(id: string, handler: CommandHandler): () => void {

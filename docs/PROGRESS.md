@@ -7,6 +7,13 @@ still open.
 
 ## Done
 
+- **Session 10 — M1-11 (keyboard shortcut manager).** Branch `m1/11-keys`. Central keymap with
+  global/document scopes (H/V only when the document has focus), no shortcuts while typing except
+  Esc, Mac Cmd mapping, alternates for browser-reserved chords (Ctrl+Alt+W, Ctrl+Alt+PageUp/Down),
+  printable shortcut sheet from Help generated from the keymap, and an e2e key-probe page for the
+  owner to confirm which reserved keys reach the page in real browsers. Ribbon's local Ctrl+F1
+  listener moved into the keymap.
+
 - **Session 9 — M1-10 (ribbon framework and File backstage).** Branch `m1/10-ribbon`. Ribbon layout
   derived from the command table (M1 shows File, Home, View, Help; unavailable commands omitted;
   Home repeats its reuses); quick access toolbar; command dispatch with enabled/pressed state and
