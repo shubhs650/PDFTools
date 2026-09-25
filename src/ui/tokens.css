@@ -16,6 +16,7 @@
   --color-surface-raised: #ffffff;
   --color-surface-sunken: #ebebeb;
   --color-canvas: #8a8a8a; /* area behind document pages */
+  --color-page: #ffffff; /* paper under a page's preview: white in every theme */
 
   /* Color — content */
   --color-text: #1f1f1f;
@@ -111,6 +112,7 @@
   --color-surface-raised: #333333;
   --color-surface-sunken: #141414;
   --color-canvas: #0f0f0f;
+  --color-page: #ffffff;
   --color-text: #ffffff;
   --color-text-muted: #c7c7c7;
   --color-text-disabled: #6e6e6e;
@@ -138,6 +140,7 @@
     --color-surface-raised: Canvas;
     --color-surface-sunken: Canvas;
     --color-canvas: Canvas;
+    --color-page: Canvas;
     --color-text: CanvasText;
     --color-text-muted: CanvasText;
     --color-text-disabled: GrayText;

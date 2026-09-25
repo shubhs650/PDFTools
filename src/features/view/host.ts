@@ -8,6 +8,9 @@ import { createStore, useStore } from 'zustand';
 import { createRenderEngine, type RenderEngine } from '../../engine/createEngine';
 import { localFontConfig } from '../../engine/fonts';
 import { WorkClient } from '../../engine/workClient';
+import { instrumentEngine } from './renderStats';
+import { TileCache } from './tileCache';
+import { installRanker } from './tileScheduler';
 
 interface HostState {
   render: RenderEngine | null;
@@ -22,10 +25,15 @@ export function useHost<T>(selector: (s: HostState) => T): T {
 
 let work: WorkClient | undefined;
 
+/** Rendered previews and tiles of every open document (§5). */
+export const tileCache = new TileCache();
+
 export function renderEngine(): RenderEngine {
   const existing = hostStore.getState().render;
   if (existing) return existing;
   const render = createRenderEngine({ fontFallback: localFontConfig(location.origin) });
+  instrumentEngine(render.engine, tileCache);
+  installRanker(render.engine);
   hostStore.setState({ render });
   return render;
 }

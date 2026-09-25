@@ -12,6 +12,7 @@ import {
   hostStore,
   renderEngine,
   startedWorkClient,
+  tileCache,
   workClient,
 } from '../view/host';
 import type { DocumentManagerCapability } from '@embedpdf/plugin-document-manager';
@@ -107,6 +108,7 @@ async function releaseEngineDocument(docId: string): Promise<void> {
 export async function closeDocument(docId: string): Promise<void> {
   documentStore.getState().close(docId);
   sources.delete(docId);
+  tileCache.dropDoc(docId);
   await releaseEngineDocument(docId);
   await startedWorkClient()
     ?.close(docId)
