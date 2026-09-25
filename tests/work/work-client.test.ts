@@ -1,0 +1,122 @@
+import { afterEach, describe, expect, it } from 'vitest';
+import type { WorkApi } from '../../src/engine/workApi';
+import { WorkClient } from '../../src/engine/workClient';
+import { serve } from '../../src/workers/rpc-host';
+
+interface FakeWorld {
+  memory: number;
+  spawned: number;
+  opened: { docId: string; original: number; tail: number }[];
+  terminated: number;
+}
+
+const ports: MessagePort[] = [];
+afterEach(() => {
+  for (const p of ports.splice(0)) p.close();
+});
+
+/** A Worker stand-in backed by a MessageChannel and a fake WorkApi. */
+function fakeSpawn(world: FakeWorld) {
+  return (): Worker => {
+    world.spawned++;
+    const ch = new MessageChannel();
+    ports.push(ch.port1, ch.port2);
+    serve<WorkApi>(ch.port1, {
+      init: () => ({ ms: 1, wasmBytes: 1 }),
+      open: ({ docId, original, tail }) => {
+        world.opened.push({ docId, original: original.byteLength, tail: tail?.byteLength ?? 0 });
+        return { pageCount: 3, wasmBytes: world.memory };
+      },
+      refresh: () => ({ pending: true }),
+      close: () => ({ wasmBytes: world.memory }),
+      memory: () => ({ wasmBytes: world.memory, peakWasmBytes: world.memory }),
+      docState: () => ({ pageCount: 3, appliedTailBytes: 0 }),
+      textStats: async (_a, ctx) => {
+        await new Promise((r) => setTimeout(r, 5));
+        ctx.throwIfAborted();
+        return { pages: 3, chars: 10, ms: 5 };
+      },
+    });
+    const port = ch.port2;
+    port.start();
+    return Object.assign(port, {
+      terminate: () => {
+        world.terminated++;
+        port.close();
+      },
+    }) as unknown as Worker;
+  };
+}
+
+const MB = 1024 * 1024;
+const until = async (cond: () => boolean) => {
+  for (let i = 0; i < 200 && !cond(); i++) await new Promise((r) => setTimeout(r, 5));
+  expect(cond()).toBe(true);
+};
+
+describe('WorkClient lifecycle (ADR-004 decision 4)', () => {
+  it('respawns when idle after a job above the threshold and reloads original + tail', async () => {
+    const world: FakeWorld = { memory: 10 * MB, spawned: 0, opened: [], terminated: 0 };
+    let reloads = 0;
+    const c = new WorkClient({
+      wasmUrl: 'http://x/pdfium.wasm',
+      respawnAboveBytes: 64 * MB,
+      spawn: fakeSpawn(world),
+    });
+    await c.open('doc', new ArrayBuffer(100), {
+      reload: () => {
+        reloads++;
+        return Promise.resolve(new ArrayBuffer(100));
+      },
+    });
+    await c.refresh('doc', new ArrayBuffer(7));
+
+    await c.run('textStats', { docId: 'doc' }).promise;
+    expect(c.respawns).toBe(0); // below threshold
+
+    world.memory = 300 * MB;
+    await c.run('textStats', { docId: 'doc' }).promise;
+    await until(() => c.respawns === 1);
+    await until(() => world.opened.length === 2);
+    expect(world.terminated).toBe(1);
+    expect(reloads).toBe(1);
+    expect(world.opened[1]).toEqual({ docId: 'doc', original: 100, tail: 7 });
+    // still usable afterwards
+    world.memory = 10 * MB;
+    expect((await c.run('docState', { docId: 'doc' }).promise).pageCount).toBe(3);
+    c.terminate();
+  });
+
+  it('never respawns while jobs are still running', async () => {
+    const world: FakeWorld = { memory: 300 * MB, spawned: 0, opened: [], terminated: 0 };
+    const c = new WorkClient({ wasmUrl: 'x', respawnAboveBytes: 64 * MB, spawn: fakeSpawn(world) });
+    const a = c.run('textStats', { docId: 'none' });
+    const b = c.run('textStats', { docId: 'none' });
+    await Promise.all([a.promise, b.promise]);
+    await until(() => c.respawns === 1); // once, after both finished
+    await new Promise((r) => setTimeout(r, 30));
+    expect(c.respawns).toBe(1);
+    c.terminate();
+  });
+
+  it('respawns after evicting a document, reloading only the remaining ones', async () => {
+    const world: FakeWorld = { memory: 10 * MB, spawned: 0, opened: [], terminated: 0 };
+    const c = new WorkClient({ wasmUrl: 'x', spawn: fakeSpawn(world) });
+    const src = { reload: () => Promise.resolve(new ArrayBuffer(5)) };
+    await c.open('keep', new ArrayBuffer(5), src);
+    await c.open('drop', new ArrayBuffer(5), src);
+    await c.evict('drop');
+    expect(c.respawns).toBe(1);
+    expect(world.opened.map((o) => o.docId)).toEqual(['keep', 'drop', 'keep']);
+    c.terminate();
+  });
+
+  it('cancels a job through its handle', async () => {
+    const world: FakeWorld = { memory: 1, spawned: 0, opened: [], terminated: 0 };
+    const c = new WorkClient({ wasmUrl: 'x', spawn: fakeSpawn(world) });
+    const job = c.run('textStats', { docId: 'd' });
+    job.cancel();
+    await expect(job.promise).rejects.toThrow(/cancelled/);
+    c.terminate();
+  });
+});
