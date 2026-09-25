@@ -6,7 +6,15 @@
 import { documentStore } from '../../app/store/documentStore';
 import { storageClient } from '../../engine/storageClient';
 import type { OpenedFile } from '../../storage/fileAccess';
-import { documentManager, renderEngine, workClient } from '../view/host';
+import {
+  capability,
+  documentManager,
+  hostStore,
+  renderEngine,
+  startedWorkClient,
+  workClient,
+} from '../view/host';
+import type { DocumentManagerCapability } from '@embedpdf/plugin-document-manager';
 import { MAX_DOCUMENTS } from '../view/plugins';
 import { HEADER_WINDOW, OpenError, classifyOpenError, hasPdfHeader } from './errors';
 import { advance, openStore, startJob } from './openStore';
@@ -82,9 +90,14 @@ async function openInWorkWorker(docId: string, file: File): Promise<void> {
   }
 }
 
+/** Closes the engine's copy, if the engine is running (closing never starts it). */
 async function releaseEngineDocument(docId: string): Promise<void> {
+  const registry = hostStore.getState().registry;
+  if (!registry) return;
+  const dm = capability<DocumentManagerCapability>(registry, 'document-manager');
+  if (!dm.isDocumentOpen(docId)) return;
   try {
-    await (await documentManager()).closeDocument(docId).toPromise();
+    await dm.closeDocument(docId).toPromise();
   } catch {
     // Already gone.
   }
@@ -95,8 +108,8 @@ export async function closeDocument(docId: string): Promise<void> {
   documentStore.getState().close(docId);
   sources.delete(docId);
   await releaseEngineDocument(docId);
-  await workClient()
-    .close(docId)
+  await startedWorkClient()
+    ?.close(docId)
     .catch(() => undefined);
 }
 
