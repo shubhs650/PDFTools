@@ -35,6 +35,8 @@ jobs:
         run: npm run licenses
       - name: Build
         run: npm run build
+      - name: No test hook or other forbidden strings in the build (M1-02)
+        run: npm run check:dist
 
   e2e:
     name: E2E (Playwright, Chromium)
@@ -48,8 +50,12 @@ jobs:
       - run: npm ci
       - name: Install Chromium
         run: npx playwright install --with-deps chromium
-      - name: E2E tests
+      - name: E2E tests (built app under the production _headers)
         run: npm run e2e
+      - name: Perf gate (no main-thread task > 100 ms after boot)
+        run: npm run perf
+        env:
+          E2E_SKIP_BUILD: '1'
       - uses: actions/upload-artifact@v4
         if: failure()
         with:

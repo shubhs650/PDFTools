@@ -12,6 +12,7 @@ export default defineConfig(
   {
     ignores: [
       'dist',
+      'dist-e2e',
       'coverage',
       'test-results',
       'playwright-report',

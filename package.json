@@ -11,7 +11,10 @@
   "scripts": {
     "dev": "vite",
     "build": "tsc -b && vite build",
+    "build:e2e": "vite build --mode e2e --outDir dist-e2e --emptyOutDir",
+    "check:dist": "node scripts/check-dist.ts dist",
     "preview": "vite preview",
+    "serve": "node scripts/serve.ts --root dist",
     "typecheck": "tsc -b",
     "lint": "eslint . --max-warnings=0",
     "format": "prettier --write .",
