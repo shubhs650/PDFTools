@@ -12,5 +12,216 @@
     "splitButton": {
       "more": "More options for {{label}}"
     }
+  },
+  "command": {
+    "qat": {
+      "open": "Open",
+      "save": "Save",
+      "print": "Print",
+      "undo": "Undo",
+      "redo": "Redo"
+    },
+    "file": {
+      "open": "Open",
+      "recent": "Recent",
+      "save": "Save",
+      "saveAs": "Save As",
+      "saveOptimized": "Save Optimized",
+      "print": "Print",
+      "exportPrintReady": "Export Print-Ready PDF",
+      "properties": "Document Properties",
+      "settings": "Settings",
+      "about": "About",
+      "privacy": "Privacy"
+    },
+    "home": {
+      "hand": "Hand",
+      "select": "Select",
+      "selectText": "Select Text",
+      "selectAnnotations": "Select Comments",
+      "find": "Find",
+      "advancedSearch": "Advanced Search",
+      "resetForm": "Reset Form"
+    },
+    "view": {
+      "firstPage": "First Page",
+      "prevPage": "Previous Page",
+      "nextPage": "Next Page",
+      "lastPage": "Last Page",
+      "prevView": "Previous View",
+      "nextView": "Next View",
+      "actualSize": "Actual Size",
+      "fitPage": "Fit Page",
+      "fitWidth": "Fit Width",
+      "fitVisible": "Fit Visible",
+      "zoomIn": "Zoom In",
+      "zoomOut": "Zoom Out",
+      "loupe": "Loupe",
+      "panZoom": "Pan and Zoom Window",
+      "singlePage": "Single Page",
+      "continuous": "Continuous",
+      "facing": "Facing",
+      "continuousFacing": "Continuous Facing",
+      "rotateCw": "Rotate View Clockwise",
+      "rotateCcw": "Rotate View Counterclockwise",
+      "leftPanes": "Panes",
+      "propertiesPane": "Properties Pane",
+      "collapseRibbon": "Collapse Ribbon"
+    },
+    "comment": {
+      "highlight": "Highlight",
+      "underline": "Underline",
+      "strikeout": "Strikeout",
+      "squiggly": "Squiggly",
+      "insertText": "Insert Text",
+      "replaceText": "Replace Text",
+      "stickyNote": "Sticky Note",
+      "textBox": "Text Box / Typewriter",
+      "callout": "Callout",
+      "line": "Line",
+      "arrow": "Arrow",
+      "polyline": "Polyline",
+      "polygon": "Polygon",
+      "rectangle": "Rectangle",
+      "oval": "Oval",
+      "cloud": "Cloud",
+      "pencil": "Pencil",
+      "inkHighlighter": "Ink Highlighter",
+      "stamp": "Stamp",
+      "imageStamp": "Image Stamp",
+      "statusSchemes": "Status Schemes",
+      "link": "Link",
+      "commentsPane": "Comments Pane",
+      "reply": "Reply",
+      "setStatus": "Set Status",
+      "filter": "Filter Comments",
+      "autoNumber": "Show Numbers on Page",
+      "copyStyle": "Copy Comment Style",
+      "applyStyle": "Apply Comment Style",
+      "reviewerProfile": "Reviewer Profile",
+      "exportAnnotations": "Export Comments (CSV / XLSX / JSON)",
+      "exportCrs": "Export CRS (Excel)"
+    },
+    "measure": {
+      "distance": "Distance",
+      "perimeter": "Perimeter",
+      "area": "Area",
+      "calibrate": "Calibrate",
+      "setScale": "Set Scale",
+      "scaleViewport": "Scale Viewport",
+      "units": "Units and Precision",
+      "snapping": "Enable Snapping",
+      "snapEndpoint": "Snap to Endpoint",
+      "snapMidpoint": "Snap to Midpoint",
+      "snapIntersection": "Snap to Intersection",
+      "snapNearest": "Snap to Nearest"
+    },
+    "organize": {
+      "insertBlank": "Insert Blank Page",
+      "insertFromFile": "Insert from File",
+      "delete": "Delete Pages",
+      "extract": "Extract Pages",
+      "merge": "Merge Files",
+      "rotateCw": "Rotate Pages Clockwise",
+      "rotateCcw": "Rotate Pages Counterclockwise"
+    },
+    "convert": {
+      "text": "To Text",
+      "markdown": "To Markdown",
+      "html": "To HTML",
+      "word": "To Word (Beta)",
+      "images": "Export Images",
+      "expressExtract": "Express Extract",
+      "reviewExtract": "Review & Extract",
+      "tableTemplates": "Table Templates"
+    },
+    "protect": {
+      "markRedaction": "Mark for Redaction",
+      "markRedactionArea": "Mark Area for Redaction",
+      "applyRedactions": "Apply Redactions",
+      "redactionList": "Pending Redactions",
+      "securityInfo": "Security Info",
+      "unlock": "Unlock with Owner Password",
+      "signatures": "Signatures"
+    },
+    "help": {
+      "help": "Help",
+      "shortcuts": "Keyboard Shortcuts",
+      "errorReport": "Send Error Report",
+      "updates": "Check for Updates",
+      "clearData": "Clear All Local Data"
+    },
+    "rail": {
+      "bookmarks": "Bookmarks",
+      "thumbnails": "Thumbnails",
+      "comments": "Comments",
+      "attachments": "Attachments",
+      "signatures": "Signatures",
+      "search": "Search Results",
+      "layers": "Layers"
+    },
+    "status": {
+      "readyOffline": "Ready offline",
+      "preparingOffline": "Preparing offline",
+      "updateReady": "Update ready"
+    }
+  },
+  "ribbon": {
+    "tab": {
+      "file": "File",
+      "home": "Home",
+      "view": "View",
+      "comment": "Comment",
+      "measure": "Measure",
+      "organize": "Organize",
+      "convert": "Convert",
+      "protect": "Protect",
+      "help": "Help"
+    },
+    "group": {
+      "file": {
+        "backstage": "Backstage"
+      },
+      "home": {
+        "tools": "Tools",
+        "find": "Find",
+        "forms": "Forms"
+      },
+      "view": {
+        "goTo": "Go To",
+        "zoom": "Zoom",
+        "pageDisplay": "Page Display",
+        "window": "Window"
+      },
+      "comment": {
+        "textMarkup": "Text Markup",
+        "note": "Note",
+        "text": "Text",
+        "drawing": "Drawing",
+        "stamp": "Stamp",
+        "manageComments": "Manage Comments"
+      },
+      "measure": {
+        "measure": "Measure",
+        "scale": "Scale",
+        "settings": "Settings",
+        "snap": "Snap"
+      },
+      "organize": {
+        "pages": "Pages",
+        "transform": "Transform"
+      },
+      "convert": {
+        "export": "Export",
+        "tablesBeta": "Tables (Beta)"
+      },
+      "protect": {
+        "redact": "Redact",
+        "security": "Security"
+      },
+      "help": {
+        "help": "Help"
+      }
+    }
   }
 }

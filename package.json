@@ -26,7 +26,8 @@
     "licenses": "node scripts/check-licenses.ts",
     "spikes": "playwright test -c spikes/playwright.config.ts",
     "typecheck:spikes": "tsc -p spikes",
-    "corpus": "node scripts/fetch-corpus.ts"
+    "corpus": "node scripts/fetch-corpus.ts",
+    "icons": "node scripts/gen-icons.ts"
   },
   "devDependencies": {
     "@axe-core/playwright": "4.13.0",

@@ -1,6 +1,8 @@
 import { readdirSync, readFileSync, statSync } from 'node:fs';
 import { join } from 'node:path';
 import { describe, expect, it } from 'vitest';
+import { COMMANDS, RIBBON_TABS } from '../../src/app/commands';
+import { commandLabelKey, groupLabelKey, tabLabelKey } from '../../src/app/commandLabels';
 import en from '../../src/i18n/en.json';
 import { createFormatters } from '../../src/i18n/format';
 import { i18n, t, type MessageKey } from '../../src/i18n';
@@ -28,6 +30,12 @@ function referencedKeys(): Set<string> {
   for (const file of sourceFiles('src')) {
     for (const m of readFileSync(file, 'utf8').matchAll(re)) found.add(m[1] ?? m[2] ?? '');
   }
+  // Keys derived from the command table by convention (src/app/commandLabels.ts).
+  for (const c of COMMANDS) {
+    found.add(commandLabelKey(c.id));
+    if ((RIBBON_TABS as readonly string[]).includes(c.tab)) found.add(groupLabelKey(c));
+  }
+  for (const t of RIBBON_TABS) found.add(tabLabelKey(t));
   return found;
 }
 
