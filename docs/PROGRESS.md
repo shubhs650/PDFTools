@@ -7,6 +7,14 @@ still open.
 
 ## Done
 
+- **Session 10 — M1-12 (storage layer).** Branch `m1/12-storage`. IndexedDB (`settings`, `recent`
+  capped at 20, versioned migrations with an upgrade test on fake-indexeddb 6.2.5, Apache-2.0,
+  dev-only); OPFS recovery store (original once + narrow tail in A/B slots + UI state, list, read,
+  discard, clear) in a new pure-JS storage worker; SHA-256 fingerprint of size + `/ID` + first/last
+  64 KB reading only those slices; file access with FSA pickers, append-in-place that refuses if the
+  file changed on disk and leaves it untouched on abort, and the `<input type=file>` + download
+  fallback. E2E proves the main thread cannot create sync access handles.
+
 - **Session 10 — M1-11 (keyboard shortcut manager).** Branch `m1/11-keys`. Central keymap with
   global/document scopes (H/V only when the document has focus), no shortcuts while typing except
   Esc, Mac Cmd mapping, alternates for browser-reserved chords (Ctrl+Alt+W, Ctrl+Alt+PageUp/Down),
