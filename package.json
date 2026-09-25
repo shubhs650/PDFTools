@@ -67,9 +67,11 @@
     "@embedpdf/plugin-zoom": "2.15.1",
     "@fluentui/react-icons": "^2.0.341",
     "asn1js": "^3.0.10",
+    "i18next": "26.4.2",
     "pdf-oxide-wasm": "^0.3.77",
     "pkijs": "^3.4.1",
     "react": "^19.3.0",
-    "react-dom": "^19.3.0"
+    "react-dom": "^19.3.0",
+    "react-i18next": "17.0.15"
   }
 }

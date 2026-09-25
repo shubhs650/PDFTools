@@ -1,6 +1,9 @@
 import { StrictMode } from 'react';
 import { createRoot } from 'react-dom/client';
+import { t } from './i18n';
 import { App } from './app/App';
+
+document.title = t('app.name');
 
 const rootElement = document.getElementById('root');
 if (!rootElement) {
