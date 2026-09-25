@@ -21,8 +21,11 @@ export function KeyProbe() {
       setSeen((s) => [`${mods ? `${mods}+` : ''}${e.key}`, ...s].slice(0, 50));
     };
     window.addEventListener('keydown', onKey);
+    // Tests wait for this before pressing keys (the page loads lazily).
+    document.body.dataset['keyprobe'] = 'ready';
     return () => {
       window.removeEventListener('keydown', onKey);
+      delete document.body.dataset['keyprobe'];
     };
   }, []);
   return (
