@@ -9,6 +9,10 @@ import { defineConfig, devices } from '@playwright/test';
 // browser installed by `npx playwright install`.
 const executablePath = process.env.PW_CHROMIUM_EXECUTABLE;
 const launchOptions = executablePath ? { executablePath } : {};
+// Full Chromium in new headless mode, not the stripped-down headless shell:
+// it is what users run, and the shell lacks browser services the app uses
+// (it crashed storing File System Access handles in IndexedDB, M1-18).
+const channel = 'chromium';
 
 export default defineConfig({
   testDir: './e2e',
@@ -24,12 +28,12 @@ export default defineConfig({
     {
       name: 'e2e',
       testIgnore: ['perf/**'],
-      use: { ...devices['Desktop Chrome'], viewport: { width: 1280, height: 800 } },
+      use: { ...devices['Desktop Chrome'], channel, viewport: { width: 1280, height: 800 } },
     },
     {
       name: 'perf',
       testMatch: ['perf/**/*.spec.ts'],
-      use: { ...devices['Desktop Chrome'], viewport: { width: 1920, height: 1080 } },
+      use: { ...devices['Desktop Chrome'], channel, viewport: { width: 1920, height: 1080 } },
     },
   ],
 });
