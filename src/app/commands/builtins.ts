@@ -1,5 +1,7 @@
 // Handlers that exist in M1-10 (window and ribbon toggles). Feature tasks add
-// theirs (open M1-13, save M1-22, view M1-15/16, help M1-11/25/26).
+// theirs (save M1-22, view M1-15/16, help M1-11/25/26).
+import { openFiles, requestClose } from '../../features/open/openDocument';
+import { pickPdfFiles } from '../../storage/fileAccess';
 import { appStore } from '../store/appStore';
 import { documentStore } from '../store/documentStore';
 import { registerCommand } from './dispatch';
@@ -29,12 +31,16 @@ export function registerBuiltinCommands(): () => void {
         appStore.getState().setShortcutsOpen(true);
       },
     }),
+    registerCommand('file.open', {
+      run: async () => {
+        await openFiles(await pickPdfFiles());
+      },
+    }),
     registerCommand('tab.close', {
       requiresDocument: true,
       run: () => {
-        // M1-13 adds the unsaved-changes prompt in front of this.
-        const s = documentStore.getState();
-        if (s.activeId) s.close(s.activeId);
+        const { activeId } = documentStore.getState();
+        if (activeId) requestClose(activeId);
       },
     }),
     registerCommand('tab.next', {

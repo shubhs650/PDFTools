@@ -13,33 +13,12 @@
 // list() and removed by discard().
 
 import { AbortError } from '../engine/errors';
+import type { RecoveryMeta, Snapshot, TailSlot, UiState } from './recoveryTypes';
+
+export type { RecoveryMeta, Snapshot, TailSlot, UiState };
 
 export const RECOVERY_DIR = 'recovery';
 const CHUNK = 8 * 1024 * 1024;
-
-export type TailSlot = 'a' | 'b';
-
-/** Small, content-free UI state saved with a snapshot (§4.3: tab order, page, zoom). */
-export type UiState = Record<string, string | number | boolean | null>;
-
-export interface RecoveryMeta {
-  v: 1;
-  fp: string;
-  /** Set once the original is fully written. */
-  originalBytes?: number;
-  tail?: { slot: TailSlot; bytes: number };
-  ui?: UiState;
-  /** Epoch ms of the last write. */
-  updated: number;
-}
-
-export interface Snapshot {
-  fp: string;
-  originalBytes: number;
-  tailBytes: number;
-  ui: UiState | undefined;
-  updated: number;
-}
 
 export interface WriteControl {
   signal?: AbortSignal;

@@ -2,7 +2,7 @@
 import { AbortError } from '../engine/errors';
 import { storageClient } from '../engine/storageClient';
 import { appendToHandle } from '../storage/fileAccess';
-import type { UiState } from '../storage/opfs';
+import type { UiState } from '../storage/recoveryTypes';
 import type { TestHook } from './hook';
 
 const bytesOf = (s: string): Uint8Array<ArrayBuffer> => new TextEncoder().encode(s);

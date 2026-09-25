@@ -441,3 +441,70 @@ body {
     left: var(--space-0);
   }
 }
+
+/* ------------------------------------------------------------ open (M1-13) */
+
+.tab-opening {
+  display: flex;
+}
+
+.tab--opening {
+  gap: var(--space-2);
+  padding: var(--space-0) var(--space-3);
+  color: var(--color-text-muted);
+}
+
+.tab-spinner {
+  width: var(--icon-size-s);
+  height: var(--icon-size-s);
+}
+
+.tab-strip-end {
+  display: flex;
+  align-items: center;
+  margin-left: auto;
+  padding: var(--space-0) var(--space-2);
+}
+
+.start-screen {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-4);
+  height: 100%;
+  background: var(--color-bg);
+  color: var(--color-text-muted);
+}
+
+.start-screen h2 {
+  margin: var(--space-0);
+  color: var(--color-text);
+  font-size: var(--font-size-xl);
+  font-weight: var(--font-weight-semibold);
+}
+
+.drop-overlay {
+  position: fixed;
+  inset: var(--space-0);
+  z-index: var(--z-dialog);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: var(--focus-width) dashed var(--color-accent);
+  background: var(--color-backdrop);
+  pointer-events: none;
+}
+
+.drop-overlay-label {
+  padding: var(--space-5) var(--space-6);
+  border-radius: var(--radius-l);
+  background: var(--color-surface-raised);
+  box-shadow: var(--elevation-3);
+  color: var(--color-text);
+  font-size: var(--font-size-xl);
+}
+
+.document-view {
+  height: 100%;
+}

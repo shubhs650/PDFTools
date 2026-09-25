@@ -285,5 +285,32 @@
       "pageDown": "Page Down",
       "escape": "Esc"
     }
+  },
+  "open": {
+    "opening": "Opening {{name}}…",
+    "failedTitle": "Couldn't open {{name}}",
+    "error": {
+      "notPdf": "This file is not a PDF.",
+      "damaged": "This PDF is damaged and can't be opened.",
+      "needsPassword": "This PDF is password-protected. Opening protected PDFs is not supported yet.",
+      "unreadable": "The file could not be read. It may have been moved, deleted or changed.",
+      "tooMany": "Too many documents are open. Close one and try again.",
+      "unknown": "Something went wrong while opening this file."
+    },
+    "dropHint": "Drop PDF files to open them",
+    "close": {
+      "title": "Save changes to {{name}}?",
+      "description": "Your changes will be lost if you don't save them.",
+      "save": "Save",
+      "discard": "Don't save",
+      "cancel": "Cancel"
+    },
+    "overflow": "All open documents",
+    "start": {
+      "title": "No document open",
+      "hint": "Open a PDF or drop files here.",
+      "open": "Open…"
+    },
+    "ok": "OK"
   }
 }
