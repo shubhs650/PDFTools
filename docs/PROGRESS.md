@@ -7,6 +7,16 @@ still open.
 
 ## Done
 
+- **Session 9 — M1-07 (Render worker and engine factory).** Branch `m1/07-render-worker`. Hosted Render
+  worker (`PdfiumNative` behind our RPC; the main-thread proxy maps RPC errors back to
+  `PdfErrorCode` and task aborts to RPC cancels); encoder worker for all image encoding (ADR-011);
+  `createRenderEngine` rejects an undefined `fontFallback` at type level and at runtime; seven
+  Regular-weight fallback fonts self-hosted with their OFL licenses (packages pinned as direct
+  dependencies); one `pdfium.wasm` in the build; `docPtrOf()` is the single private accessor and
+  fails loudly if EmbedPDF internals change; permission flags and signature count come with every
+  opened document; `needs-password` error (prompt in M2). `qpdf` added to the CI e2e job (fixture
+  encryption only).
+
 - **Session 9 — M1-06 (icon registry and command table).** Branch `m1/06-icons`. Command table ported
   from S6 (127 commands, milestone per command; only M1 is shown, M1-Q2) with English labels in
   `en.json`; `scripts/gen-icons.ts` generates per-icon path imports (a renamed Fluent icon breaks

@@ -17,5 +17,8 @@ export interface TestHook {
 export function installTestHook(): TestHook {
   const hook: TestHook = { version: 1, capabilities: {} };
   (window as unknown as Record<string, unknown>)[TEST_HOOK_GLOBAL] = hook;
+  void import('./engineProbe').then((m) => {
+    m.registerEngineProbe(hook);
+  });
   return hook;
 }
