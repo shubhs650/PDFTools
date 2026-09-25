@@ -2,9 +2,23 @@
 
 _Last updated: 2026-09-25 (session 8: M1 plan drafted and approved)_
 
-**Current milestone:** M0 — Spikes (plan: [docs/plan/M0.md](plan/M0.md))
+**Current milestone:** M1 — Foundation (plan: [docs/plan/M1.md](plan/M1.md)). M0 owner runs are
+still open.
 
 ## Done
+
+- **Session 8 — M1-01 (EmbedPDF plugin layer).** _Works with workaround._ See
+  [ADR-011](adr/011-m1-embedpdf-plugins.md) (proposed).
+  - Core, document manager, viewport, scroll, render, tiling, zoom, spread and rotate plugins run on
+    the hosted Render worker. Pinned to exactly 2.15.1; the license gate passes (546 packages).
+  - Self-made files: 2,000-page contract first preview 231 ms; dense A0 first view 0.4–0.7 s;
+    sharp tiles 148–328 ms at 100 %–6400 %; 0 blank-page frames at 900 and 3,000 px/s; **0 long
+    tasks**, 0 CSP violations, 0 third-party requests.
+  - Workarounds: our own bounded `PreviewLayer` (the stock page layer renders the whole page at the
+    current zoom); our own **encoder worker** (the stock converter encodes on the main thread,
+    against rule 1; the worker is also faster: scroll tile p95 91 vs 132 ms); our own paged mode for
+    single page and facing (the plugins are continuous only).
+  - Stale tiles are aborted by the stock `TilingLayer` (311–331 of ~370 in zoom thrash).
 
 - **Session 1 — spec review.** Reviewed ARCHITECTURE.md, CLAUDE.md and the UI reference images.
   Raised 16 items (B1–B16) and got owner answers, recorded in
@@ -196,7 +210,9 @@ _Last updated: 2026-09-25 (session 8: M1 plan drafted and approved)_
 ## Session log
 
 - **Session 8 (2026-09-25):** Read PROGRESS, ARCHITECTURE Rev 0.4 and ADR-001 to ADR-010; wrote
-  the M1 plan; the owner approved it and accepted M1-Q1 to M1-Q8. Docs only; no code changed.
+  the M1 plan; the owner approved it and accepted M1-Q1 to M1-Q8. Then M1-01 on branch
+  `m1/01-plugin-spike`: typecheck (app and spikes), lint, format, unit tests, license gate (546
+  packages) and the S9 Playwright spec (3/3) pass.
 
 - **Session 7 (2026-09-24):**
   - ADR-008 accepted (ARCHITECTURE.md Rev 0.2).
@@ -251,9 +267,12 @@ _Last updated: 2026-09-25 (session 8: M1 plan drafted and approved)_
      (`node spikes/s4-oxide/run-node.ts <files>`; dumps in `out/review/`, see ADR-009);
    - FAR, 500 MB and A0 through the S3 harness;
    - S8 Firefox check and Pages preview.
-3. **Owner:** merge [PR #1](https://github.com/shubhs650/PDFTools/pull/1) and the M0 branch
-   (M1-Q8), and authorize the first `m1/<task>` branch.
-4. **Agent:** start M1 with M1-01 (plugin spike), then M1-02, M1-03 and M1-04.
+3. **Owner:** accept or amend [ADR-011](adr/011-m1-embedpdf-plugins.md). Merge
+   [PR #1](https://github.com/shubhs650/PDFTools/pull/1), then
+   [PR #2](https://github.com/shubhs650/PDFTools/pull/2) (M0), then the M1-01 PR, each with
+   "Create a merge commit" (the PRs are stacked).
+4. **Agent:** M1-02 (e2e harness + CSP), M1-03 (RPC), M1-04 (i18n), each on its own
+   `m1/<task>` branch.
 
 ## Open issues
 

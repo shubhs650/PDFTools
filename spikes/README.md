@@ -1,6 +1,7 @@
-# M0 spikes
+# Spikes
 
-Throwaway spike code for [docs/plan/M0.md](../docs/plan/M0.md). Nothing here is imported by
+Throwaway spike code for [docs/plan/M0.md](../docs/plan/M0.md) (S1–S8) and M1-01 (S9,
+[docs/plan/M1.md](../docs/plan/M1.md)). Nothing here is imported by
 `/src` or shipped. Each spike ends with an ADR in `docs/adr/`.
 
 | Spike | Folder                               | ADR                                                  | Outcome               |
@@ -13,6 +14,7 @@ Throwaway spike code for [docs/plan/M0.md](../docs/plan/M0.md). Nothing here is 
 | S7    | [`s7-snap/`](s7-snap/)               | [ADR-008](../docs/adr/008-s7-snap-geometry.md)       | Works with workaround |
 | S4    | [`s4-oxide/`](s4-oxide/)             | [ADR-009](../docs/adr/009-s4-pdf-oxide.md)           | Works with workaround |
 | S6    | [`s6-icons/`](s6-icons/)             | [ADR-010](../docs/adr/010-s6-fluent-icons.md)        | Works with workaround |
+| S9    | [`s9-plugins/`](s9-plugins/) (M1-01) | [ADR-011](../docs/adr/011-m1-embedpdf-plugins.md)    | Works with workaround |
 
 ## Shared pieces (`shared/`)
 
@@ -35,6 +37,7 @@ Throwaway spike code for [docs/plan/M0.md](../docs/plan/M0.md). Nothing here is 
 # PW_CHROMIUM_EXECUTABLE=/opt/pw-browsers/chromium.
 npm run spikes
 SPIKE=s8 npm run spikes -- --project=s8
+SPIKE=s9 npm run spikes -- --project=s9   # M1-01: EmbedPDF plugins (ADR-011)
 SPIKE=s3 npm run spikes -- --project=s3   # raw numbers → test-results/s3-results.json
 npm run typecheck:spikes
 
