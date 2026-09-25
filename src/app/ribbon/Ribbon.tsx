@@ -1,6 +1,6 @@
 import { ChevronDown20Regular } from '@fluentui/react-icons/svg/chevron-down';
 import { ChevronUp20Regular } from '@fluentui/react-icons/svg/chevron-up';
-import { useEffect, useMemo, useRef, useState, type KeyboardEvent } from 'react';
+import { useMemo, useRef, useState, type KeyboardEvent } from 'react';
 import { useTranslation } from 'react-i18next';
 import { IconButton } from '../../ui/components';
 import { groupLabelKey, tabLabelKey } from '../commandLabels';
@@ -20,7 +20,7 @@ export interface RibbonProps {
 /**
  * The ribbon (§8): File opens the backstage; the other tabs form a tablist
  * whose panel is a toolbar with roving focus. Esc returns focus to the
- * document; Ctrl+F1 collapses the ribbon (moves to the keymap in M1-11).
+ * document; Ctrl+F1 (keymap) collapses the ribbon.
  */
 export function Ribbon({ onOpenBackstage, focusDocument }: RibbonProps) {
   const { t } = useTranslation();
@@ -29,19 +29,6 @@ export function Ribbon({ onOpenBackstage, focusDocument }: RibbonProps) {
   const collapsed = useApp((s) => s.ribbonCollapsed);
   const tabRefs = useRef<(HTMLButtonElement | null)[]>([]);
   const active = layout.tabs[tabIndex];
-
-  useEffect(() => {
-    const onKey = (e: globalThis.KeyboardEvent): void => {
-      if (e.ctrlKey && e.key === 'F1') {
-        e.preventDefault();
-        appStore.getState().toggleRibbon();
-      }
-    };
-    window.addEventListener('keydown', onKey);
-    return () => {
-      window.removeEventListener('keydown', onKey);
-    };
-  }, []);
 
   const onTabKey = (e: KeyboardEvent, i: number): void => {
     const n = layout.tabs.length;

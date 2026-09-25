@@ -1,6 +1,7 @@
 // Handlers that exist in M1-10 (window and ribbon toggles). Feature tasks add
 // theirs (open M1-13, save M1-22, view M1-15/16, help M1-11/25/26).
 import { appStore } from '../store/appStore';
+import { documentStore } from '../store/documentStore';
 import { registerCommand } from './dispatch';
 
 export function registerBuiltinCommands(): () => void {
@@ -23,8 +24,42 @@ export function registerBuiltinCommands(): () => void {
       },
       isPressed: () => appStore.getState().ribbonCollapsed,
     }),
+    registerCommand('help.shortcuts', {
+      run: () => {
+        appStore.getState().setShortcutsOpen(true);
+      },
+    }),
+    registerCommand('tab.close', {
+      requiresDocument: true,
+      run: () => {
+        // M1-13 adds the unsaved-changes prompt in front of this.
+        const s = documentStore.getState();
+        if (s.activeId) s.close(s.activeId);
+      },
+    }),
+    registerCommand('tab.next', {
+      requiresDocument: true,
+      run: () => {
+        cycleTab(1);
+      },
+    }),
+    registerCommand('tab.prev', {
+      requiresDocument: true,
+      run: () => {
+        cycleTab(-1);
+      },
+    }),
   ];
   return () => {
     for (const off of offs) off();
   };
+}
+
+/** Activates the next/previous tab, wrapping around (Ctrl+PageDown/PageUp). */
+function cycleTab(step: number): void {
+  const s = documentStore.getState();
+  if (s.order.length === 0) return;
+  const i = s.activeId ? s.order.indexOf(s.activeId) : -1;
+  const next = s.order[(i + step + s.order.length) % s.order.length];
+  if (next) s.activate(next);
 }

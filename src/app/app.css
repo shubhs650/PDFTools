@@ -396,3 +396,48 @@ body {
   margin: var(--space-0) var(--space-0) var(--space-6);
   color: var(--color-text-muted);
 }
+
+/* ------------------------------------------------------------ shortcut sheet */
+
+.shortcut-sheet {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: var(--font-size-s);
+}
+
+.shortcut-sheet th,
+.shortcut-sheet td {
+  padding: var(--space-2) var(--space-3);
+  border-bottom: var(--border-width) solid var(--color-border);
+  text-align: left;
+  vertical-align: top;
+}
+
+.shortcut-sheet kbd {
+  padding: var(--space-0) var(--space-2);
+  border: var(--border-width) solid var(--color-border-strong);
+  border-radius: var(--radius-s);
+  font-family: inherit;
+}
+
+.shortcut-note {
+  display: block;
+  color: var(--color-text-muted);
+}
+
+@media print {
+  body * {
+    visibility: hidden;
+  }
+
+  .shortcut-sheet,
+  .shortcut-sheet * {
+    visibility: visible;
+  }
+
+  .shortcut-sheet {
+    position: absolute;
+    top: var(--space-0);
+    left: var(--space-0);
+  }
+}
