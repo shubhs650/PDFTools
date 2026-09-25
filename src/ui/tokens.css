@@ -1,0 +1,162 @@
+/*
+ * Design tokens (ARCHITECTURE §8, D-20). Every color, size, radius, shadow and
+ * font in the UI comes from here; components use only these variables.
+ *
+ * Light theme is the default. The dark set exists to prove the tokens support
+ * a dark theme (Rev 2+); it is reachable only through `?theme=dark` in dev and
+ * e2e builds. Windows High Contrast (`forced-colors`) maps to system colors.
+ */
+
+:root {
+  color-scheme: light;
+
+  /* Color — surfaces */
+  --color-bg: #f3f3f3;
+  --color-surface: #ffffff;
+  --color-surface-raised: #ffffff;
+  --color-surface-sunken: #ebebeb;
+  --color-canvas: #8a8a8a; /* area behind document pages */
+
+  /* Color — content */
+  --color-text: #1f1f1f;
+  --color-text-muted: #5c5c5c;
+  --color-text-disabled: #9e9e9e;
+  --color-text-on-accent: #ffffff;
+  --color-icon: #424242;
+
+  /* Color — lines and states */
+  --color-border: #d1d1d1;
+  --color-border-strong: #8a8a8a;
+  --color-hover: #e8e8e8;
+  --color-pressed: #dcdcdc;
+  --color-selected: #d6e4f5;
+  --color-accent: #0f6cbd;
+  --color-accent-hover: #115ea3;
+  --color-focus: #0f6cbd;
+  --color-danger: #c42b1c;
+  --color-backdrop: rgb(0 0 0 / 0.4);
+  --color-tooltip-bg: #242424;
+  --color-tooltip-text: #ffffff;
+
+  /* Spacing (4 px grid) */
+  --space-0: 0;
+  --space-1: 2px;
+  --space-2: 4px;
+  --space-3: 8px;
+  --space-4: 12px;
+  --space-5: 16px;
+  --space-6: 24px;
+  --space-7: 32px;
+
+  /* Sizes */
+  --border-width: 1px;
+  --focus-width: 2px;
+  --focus-offset: 1px;
+  --icon-size-s: 16px;
+  --icon-size-m: 20px;
+  --icon-size-l: 32px;
+  --control-height-s: 24px;
+  --control-height-m: 32px;
+  --button-large-width: 56px;
+  --button-large-height: 66px;
+  --spinner-size: 20px;
+  --progress-height: 4px;
+  --dialog-min-width: 320px;
+  --dialog-max-width: 560px;
+  --menu-min-width: 160px;
+  --tooltip-max-width: 280px;
+
+  /* Radius */
+  --radius-s: 2px;
+  --radius-m: 4px;
+  --radius-l: 8px;
+  --radius-round: 999px;
+
+  /* Type (system fonts only: nothing is fetched, rule 4) */
+  --font-family: 'Segoe UI Variable Text', 'Segoe UI', system-ui, -apple-system, sans-serif;
+  --font-size-xs: 11px;
+  --font-size-s: 12px;
+  --font-size-m: 14px;
+  --font-size-l: 16px;
+  --font-size-xl: 20px;
+  --font-weight-regular: 400;
+  --font-weight-semibold: 600;
+  --line-height: 1.35;
+
+  /* Elevation */
+  --elevation-1: 0 1px 2px rgb(0 0 0 / 0.14), 0 0 2px rgb(0 0 0 / 0.12);
+  --elevation-2: 0 4px 8px rgb(0 0 0 / 0.14), 0 0 2px rgb(0 0 0 / 0.12);
+  --elevation-3: 0 14px 28px rgb(0 0 0 / 0.24), 0 0 8px rgb(0 0 0 / 0.2);
+
+  /* Motion */
+  --duration-fast: 100ms;
+  --duration-normal: 200ms;
+  --spin-duration: 800ms;
+
+  /* Layers */
+  --z-menu: 100;
+  --z-dialog: 200;
+  --z-tooltip: 300;
+}
+
+/* Dark set: overrides every --color-* token (tests/ui/tokens.test.ts enforces it). */
+:root[data-theme='dark'] {
+  color-scheme: dark;
+  --color-bg: #1f1f1f;
+  --color-surface: #292929;
+  --color-surface-raised: #333333;
+  --color-surface-sunken: #141414;
+  --color-canvas: #0f0f0f;
+  --color-text: #ffffff;
+  --color-text-muted: #c7c7c7;
+  --color-text-disabled: #6e6e6e;
+  --color-text-on-accent: #0a0a0a; /* dark text on the light accent: WCAG AA */
+  --color-icon: #e0e0e0;
+  --color-border: #474747;
+  --color-border-strong: #8a8a8a;
+  --color-hover: #3d3d3d;
+  --color-pressed: #474747;
+  --color-selected: #1a3a5c;
+  --color-accent: #479ef5;
+  --color-accent-hover: #62abf5;
+  --color-focus: #ffffff;
+  --color-danger: #f1707b;
+  --color-backdrop: rgb(0 0 0 / 0.6);
+  --color-tooltip-bg: #e0e0e0;
+  --color-tooltip-text: #1f1f1f;
+}
+
+/* Windows High Contrast: hand colors to the system (D-30 accessibility). */
+@media (forced-colors: active) {
+  :root {
+    --color-bg: Canvas;
+    --color-surface: Canvas;
+    --color-surface-raised: Canvas;
+    --color-surface-sunken: Canvas;
+    --color-canvas: Canvas;
+    --color-text: CanvasText;
+    --color-text-muted: CanvasText;
+    --color-text-disabled: GrayText;
+    --color-text-on-accent: HighlightText;
+    --color-icon: ButtonText;
+    --color-border: ButtonText;
+    --color-border-strong: ButtonText;
+    --color-hover: Highlight;
+    --color-pressed: Highlight;
+    --color-selected: Highlight;
+    --color-accent: Highlight;
+    --color-accent-hover: Highlight;
+    --color-focus: Highlight;
+    --color-danger: CanvasText;
+    --color-backdrop: transparent;
+    --color-tooltip-bg: Canvas;
+    --color-tooltip-text: CanvasText;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  :root {
+    --duration-fast: 0ms;
+    --duration-normal: 0ms;
+  }
+}

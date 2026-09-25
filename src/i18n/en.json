@@ -4,5 +4,13 @@
     "shell": {
       "label": "PDFTools application"
     }
+  },
+  "ui": {
+    "dialog": {
+      "close": "Close"
+    },
+    "splitButton": {
+      "more": "More options for {{label}}"
+    }
   }
 }
