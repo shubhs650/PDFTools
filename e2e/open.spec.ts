@@ -3,7 +3,7 @@ import { mkdtempSync, readFileSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import type { Page } from '@playwright/test';
-import { cap, drop, dropStaged, stage } from './support/app.ts';
+import { cap, drop } from './support/app.ts';
 import { expect, test } from './support/fixtures.ts';
 
 // M1-13: open pipeline and document tabs.
@@ -92,11 +92,9 @@ test('the FSA path: handles to the same file focus the existing tab (isSameEntry
 test('drop 3 files, switch between them, close them; the last close shows the start screen', async ({
   page,
   pdfs,
-  guard,
 }) => {
   await page.goto('/');
   await expect(page.getByTestId('start-screen')).toBeVisible();
-  await guard.startMeasuring();
   await drop(page, [
     { name: 'a.pdf', b64: pdfs.simple(1).toString('base64') },
     { name: 'b.pdf', b64: pdfs.simple(2).toString('base64') },
@@ -128,7 +126,6 @@ test('drop 3 files, switch between them, close them; the last close shows the st
   await expect(page.getByTestId('start-screen')).toBeVisible();
   await expect.poll(async () => (await state(page)).engineOrder).toEqual([]);
   expect((await state(page)).sources).toBe(0);
-  expect(await guard.longTasksOverLimit()).toEqual([]);
 });
 
 test('closing a tab with unsaved changes asks first; Cancel keeps it, Don’t save closes it', async ({
@@ -227,23 +224,13 @@ test('a password-protected file says it is not supported yet', async ({ page, pd
   expect((await state(page)).engineOrder).toEqual([]);
 });
 
-test('opening the 2,000-page stand-in: no long tasks, nothing written to OPFS (§4.3)', async ({
-  page,
-  pdfs,
-  guard,
-}) => {
+// Long tasks during open are gated in e2e/perf/open.spec.ts (serial, perf project).
+test('opening the 2,000-page stand-in writes nothing to OPFS (§4.3)', async ({ page, pdfs }) => {
   await page.goto('/');
   await cap(page, 'storage', 'clearAll');
-  const b64 = pdfs.contract(2000).toString('base64');
-  await stage(page, [{ name: 'contract.pdf', b64 }]);
-  await guard.startMeasuring();
-  const t0 = await page.evaluate(() => performance.now());
-  await dropStaged(page);
+  await drop(page, [{ name: 'contract.pdf', b64: pdfs.contract(2000).toString('base64') }]);
   await expect(tabs(page)).toHaveCount(1);
-  const ms = (await page.evaluate(() => performance.now())) - t0;
-  test.info().annotations.push({ type: 'open-ready-ms', description: String(Math.round(ms)) });
   expect((await state(page)).pageCounts).toEqual([2000]);
-  expect(await guard.longTasksOverLimit()).toEqual([]);
   const entries = (await cap(page, 'storage', 'opfsEntries')) as string[];
   expect(entries).not.toContain('recovery');
 });
