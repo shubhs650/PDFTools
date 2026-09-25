@@ -8,7 +8,7 @@ You are building **PDFTools** (`pdf-tools.openengtools.com`): a free, offline, p
 2. **Every long job is cancellable and reports progress** (> 300 ms).
 3. **Search runs only on Enter/click.** Never search-as-you-type.
 4. **No network calls** except same-origin update checks and the opt-in `/api/report`. No CDNs at runtime, no analytics SDKs, no telemetry. EmbedPDF font CDN fallback must stay disabled.
-5. **Permissive licenses only** (MIT, Apache-2.0, BSD, ISC). Never add GPL/LGPL/AGPL/SSPL/non-commercial packages. Never copy code from BentoPDF, PyMuPDF, Ghostscript, CoherentPDF or PDF-XChange. Run the license check after adding any dependency.
+5. **Permissive licenses only** (MIT, Apache-2.0, BSD, ISC). Never add GPL/LGPL/AGPL/SSPL/non-commercial packages. Never copy code from BentoPDF, PyMuPDF, Ghostscript, CoherentPDF or PDF-XChange. Run the license check after adding any dependency. The full allowlist is in `scripts/license-policy.ts` (ADR-002): it also includes OFL-1.1 for fonts, and MPL-2.0 only for dev-only tooling that is never bundled.
 6. **Annotations are standard PDF objects with appearance streams** — they must round-trip with Acrobat Reader and PDF-XChange. No app-private annotation formats.
 7. **Ctrl+S is incremental.** Full rewrite only via Save Optimized or redaction. Never autosave to the user's original file — recovery goes to OPFS only.
 8. **Redaction** always outputs a new, fully rewritten, sanitized file and must pass post-redaction verification before reporting success.
@@ -31,8 +31,10 @@ React + TypeScript (strict) + Vite · Zustand · Radix UI primitives · EmbedPDF
 - If a requirement in `ARCHITECTURE.md` seems impossible or conflicts with a library's behavior, **stop and report** with options — do not silently change the design.
 - Keep feature code in `/src/features/<feature>`; shared UI in `/src/ui`; worker code in `/src/workers`.
 
-## Commands (fill in once scaffolded)
-- `npm run dev` · `npm run build` · `npm run test` · `npm run e2e` · `npm run perf` · `npm run licenses` · `npm run typecheck` · `npm run lint`
+## Commands
+- `npm run dev` · `npm run build` · `npm run test` (Vitest) · `npm run e2e` (Playwright) · `npm run perf` · `npm run licenses` · `npm run typecheck` · `npm run lint` · `npm run format` / `npm run format:check`
+- Node ≥ 22.18 (runs `scripts/*.ts` natively). In the cloud container, run e2e with `PW_CHROMIUM_EXECUTABLE=/opt/pw-browsers/chromium`.
+- License exceptions (permissive-but-unlisted only, with a reason) go in `scripts/license-exceptions.json`.
 
 ## Session protocol
 - At session start: read `docs/PROGRESS.md`, then the current milestone plan in `docs/plan/`.

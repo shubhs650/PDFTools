@@ -1,0 +1,10 @@
+node_modules
+dist
+coverage
+test-results
+playwright-report
+package-lock.json
+corpus/files
+docs/ui-reference
+ARCHITECTURE.md
+CLAUDE.md
