@@ -1,9 +1,6 @@
 {
   "app": {
-    "name": "PDFTools",
-    "shell": {
-      "label": "PDFTools application"
-    }
+    "name": "PDFTools"
   },
   "ui": {
     "dialog": {
@@ -223,5 +220,23 @@
         "help": "Help"
       }
     }
+  },
+  "frame": {
+    "banner": "Toolbar",
+    "main": "Document area",
+    "tabs": "Open documents",
+    "closeTab": "Close {{name}}",
+    "dirtyTab": "{{name}}, unsaved changes",
+    "leftPanes": "Navigation panes",
+    "showLeftPanes": "Show navigation panes",
+    "hideLeftPanes": "Hide navigation panes",
+    "properties": "Properties",
+    "closeProperties": "Close the Properties pane",
+    "statusBar": "Status bar"
+  },
+  "error": {
+    "title": "Something went wrong",
+    "body": "This part of PDFTools stopped working. Your open files are not changed. Reload it to continue.",
+    "reload": "Reload"
   }
 }

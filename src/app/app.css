@@ -1,13 +1,169 @@
-/* Minimal base until design tokens land in M1 (§8, D-20). */
+/* App frame layout (D-01, §8). Tokens only (src/ui/tokens.css). */
+
 html,
 body,
 #root {
   height: 100%;
-  margin: 0;
+  margin: var(--space-0);
 }
 
-.app-shell {
-  display: block;
+body {
+  background: var(--color-bg);
+  color: var(--color-text);
+  font-family: var(--font-family);
+  font-size: var(--font-size-m);
+  line-height: var(--line-height);
+}
+
+.error-boundary-content {
+  display: contents;
+}
+
+.app-frame {
+  display: grid;
+  grid-template-rows: auto auto minmax(0, 1fr) auto;
   height: 100%;
-  min-width: 1280px;
+  min-width: var(--app-min-width);
+}
+
+.app-banner {
+  background: var(--color-surface);
+  border-bottom: var(--border-width) solid var(--color-border);
+}
+
+/* ------------------------------------------------------------ tabs */
+
+.tab-strip {
+  display: flex;
+  min-height: var(--control-height-m);
+  background: var(--color-surface-sunken);
+  border-bottom: var(--border-width) solid var(--color-border);
+}
+
+.tab-list {
+  display: flex;
+  overflow-x: auto;
+}
+
+.tab {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-1);
+  padding-right: var(--space-2);
+  border-right: var(--border-width) solid var(--color-border);
+}
+
+.tab--active {
+  background: var(--color-surface);
+}
+
+.tab-button {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  max-width: var(--tab-max-width);
+  min-height: var(--control-height-m);
+  padding: var(--space-0) var(--space-3);
+  border: none;
+  background: transparent;
+  color: inherit;
+  font: inherit;
+  cursor: pointer;
+}
+
+.tab-name {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.tab-dirty {
+  width: var(--space-3);
+  height: var(--space-3);
+  border-radius: var(--radius-round);
+  background: var(--color-accent);
+}
+
+/* ------------------------------------------------------------ body */
+
+.app-body {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  min-height: var(--space-0);
+}
+
+.left-rail {
+  display: flex;
+  border-right: var(--border-width) solid var(--color-border);
+  background: var(--color-surface);
+}
+
+.left-rail-icons {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  padding: var(--space-2);
+  border-right: var(--border-width) solid var(--color-border);
+}
+
+.left-pane {
+  width: var(--pane-width);
+}
+
+.document-area {
+  position: relative;
+  overflow: hidden;
+  background: var(--color-canvas);
+}
+
+.properties-pane {
+  width: var(--pane-width);
+  border-left: var(--border-width) solid var(--color-border);
+  background: var(--color-surface);
+}
+
+.pane-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: var(--space-2) var(--space-3);
+  border-bottom: var(--border-width) solid var(--color-border);
+}
+
+.pane-title {
+  margin: var(--space-0);
+  font-size: var(--font-size-m);
+  font-weight: var(--font-weight-semibold);
+}
+
+/* ------------------------------------------------------------ status bar */
+
+.status-bar {
+  display: grid;
+  grid-template-columns: 1fr auto 1fr;
+  align-items: center;
+  min-height: var(--control-height-m);
+  padding: var(--space-0) var(--space-3);
+  border-top: var(--border-width) solid var(--color-border);
+  background: var(--color-surface);
+  font-size: var(--font-size-s);
+}
+
+.status-bar-slot--center {
+  justify-self: center;
+}
+
+.status-bar-slot--end {
+  justify-self: end;
+}
+
+/* ------------------------------------------------------------ errors */
+
+.error-boundary {
+  max-width: var(--dialog-max-width);
+  margin: var(--space-7) auto;
+  padding: var(--space-6);
+  border: var(--border-width) solid var(--color-border);
+  border-radius: var(--radius-l);
+  background: var(--color-surface);
 }

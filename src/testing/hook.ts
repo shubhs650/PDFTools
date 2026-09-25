@@ -23,5 +23,10 @@ export function installTestHook(): TestHook {
   void import('./workProbe').then((m) => {
     m.registerWorkProbe(hook);
   });
+  void Promise.all([import('../app/store/appStore'), import('../app/store/documentStore')]).then(
+    ([app, docs]) => {
+      hook.capabilities['stores'] = { app: app.appStore, documents: docs.documentStore };
+    },
+  );
   return hook;
 }
