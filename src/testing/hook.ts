@@ -20,5 +20,8 @@ export function installTestHook(): TestHook {
   void import('./engineProbe').then((m) => {
     m.registerEngineProbe(hook);
   });
+  void import('./workProbe').then((m) => {
+    m.registerWorkProbe(hook);
+  });
   return hook;
 }

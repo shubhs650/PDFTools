@@ -7,6 +7,17 @@ still open.
 
 ## Done
 
+- **Session 9 — M1-08 (Work worker and memory policy).** Branch `m1/08-work-worker`. PDFium #2 with
+  read-only copies (original transferred in, kept in the worker; tails applied lazily by reopening
+  original + tail, never re-serialized); cooperative priority scheduler (interactive > save-verify >
+  background, preemption at page boundaries, background parked during saves, cancel at checkpoints);
+  `WorkClient` respawns the worker when idle above 256 MB or after an eviction and reloads open
+  documents from a `reload()` source plus their tails. Found and fixed a race where two jobs
+  finishing together started two memory checks and the first respawn killed the second's call
+  (now single-flight). E2E: 2,000-page text pass peaks ~31 MB from an ~18 MB baseline on the
+  stand-in, respawn returns to baseline and the document keeps working; perf gate: 0 main-thread
+  long tasks during the job.
+
 - **Session 9 — M1-07 (Render worker and engine factory).** Branch `m1/07-render-worker`. Hosted Render
   worker (`PdfiumNative` behind our RPC; the main-thread proxy maps RPC errors back to
   `PdfErrorCode` and task aborts to RPC cancels); encoder worker for all image encoding (ADR-011);
