@@ -113,6 +113,11 @@ export async function startServer(opts: ServeOptions): Promise<Server> {
     });
   });
 
+  // Playwright reuses keep-alive connections across a worker's tests; with
+  // Node's default 5 s idle close, a request sent as the server closes the
+  // socket fails with ECONNRESET. Tests never idle this long.
+  server.keepAliveTimeout = 10 * 60_000;
+  server.headersTimeout = server.keepAliveTimeout + 1000;
   await new Promise<void>((done) => server.listen(opts.port, done));
   return server;
 }
