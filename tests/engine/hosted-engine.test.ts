@@ -22,6 +22,14 @@ function executorWith(exec: (method: string) => unknown) {
     init: () => ({ ms: 0, wasmBytes: 0 }),
     contentBox: () => null,
     pageCost: () => ({ objects: 0, segments: 0 }),
+    saveIncremental: () => {
+      throw new Error('not used');
+    },
+    commitSave: () => ({ baseLength: 0 }),
+    saveRewrite: () => {
+      throw new Error('not used');
+    },
+    saveState: () => ({ dirty: [], untracked: false, baseLength: 0 }),
     renderProgressive: () => {
       throw new Error('not used');
     },

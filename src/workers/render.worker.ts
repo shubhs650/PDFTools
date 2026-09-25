@@ -11,16 +11,18 @@ import { PDFIUM_ERROR_PREFIX, type RenderApi } from '../engine/renderApi';
 import { serve } from './rpc-host';
 import { acquirePage, docPtrOf, rawCall, wasmMemory } from './render/pdfium';
 import { renderProgressive } from './render/progressive';
+import { SaveTracker, isMutation } from './render/save/tracker';
 
 const FPDF_PAGEOBJ_PATH = 2;
 
 let mod: WrappedPdfiumModule | undefined;
 let native: PdfiumNative | undefined;
+let tracker: SaveTracker | undefined;
 
-function ready(): { mod: WrappedPdfiumModule; native: PdfiumNative } {
-  if (!mod || !native)
+function ready(): { mod: WrappedPdfiumModule; native: PdfiumNative; tracker: SaveTracker } {
+  if (!mod || !native || !tracker)
     throw new RpcError('not-initialized', 'The render worker is not initialized');
-  return { mod, native };
+  return { mod, native, tracker };
 }
 
 /** Pixel buffers we own can be transferred; never the WASM heap itself. */
@@ -65,11 +67,15 @@ serve<RenderApi>(self, {
     const wasmBinary = await (await fetch(wasmUrl)).arrayBuffer();
     mod = await init({ wasmBinary });
     native = new PdfiumNative(mod, { fontFallback });
+    tracker = new SaveTracker(mod, native);
     return { ms: performance.now() - t0, wasmBytes: wasmMemory(mod)?.buffer.byteLength ?? 0 };
   },
 
   exec: async ({ method, args }, ctx) => {
-    const { mod: m, native: n } = ready();
+    const { mod: m, native: n, tracker: t } = ready();
+    const docId = (args[0] as { id?: unknown } | undefined)?.id;
+    // Rule 9: a mutation the document's permissions forbid never reaches PDFium.
+    if (isMutation(method) && typeof docId === 'string') t.checkAllowed(method, docId);
     const fn = (
       n as unknown as Record<string, ((...a: unknown[]) => Task<unknown, unknown>) | undefined>
     )[method];
@@ -88,8 +94,34 @@ serve<RenderApi>(self, {
     } catch (err) {
       throw toRpcError(err);
     }
+    // Save bookkeeping (M1-20): the opened bytes' trailer, and what each edit changed.
+    if (method === 'openDocumentBuffer') {
+      const file = args[0] as { id: string; content: ArrayBuffer };
+      t.opened(file.id, new Uint8Array(file.content));
+    } else if (method === 'closeDocument' && typeof docId === 'string') {
+      t.closed(docId);
+    } else if (isMutation(method)) {
+      t.recordMutation(method, args);
+    }
     return new Transfer(value, transferables(value, wasmMemory(m)?.buffer));
   },
+
+  saveIncremental: ({ docId, keepAll }) => {
+    const r = ready().tracker.saveIncremental(docId, keepAll ? { keepAll } : {});
+    const tail = r.tail.buffer;
+    return new Transfer({ ...r, tail }, [tail]);
+  },
+
+  commitSave: ({ docId, tailLength }) => ({
+    baseLength: ready().tracker.commit(docId, tailLength),
+  }),
+
+  saveRewrite: ({ docId }) => {
+    const bytes = ready().tracker.saveRewrite(docId).buffer;
+    return new Transfer({ bytes }, [bytes]);
+  },
+
+  saveState: ({ docId }) => ready().tracker.dirtyState(docId),
 
   docInfo: ({ docId }) => {
     const { mod: m, native: n } = ready();

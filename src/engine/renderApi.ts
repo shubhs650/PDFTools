@@ -30,6 +30,30 @@ export interface RenderApi {
     { left: number; top: number; right: number; bottom: number } | null
   >;
   memory: MethodSpec<null, { wasmBytes: number }>;
+  /**
+   * Ctrl+S core (M1-20, ADR-005): the narrow incremental tail to append to
+   * the file as last saved (`baseLength` bytes). Empty tail = nothing changed.
+   * `keepAll` is the verification fallback (ADR-005 decision 2).
+   */
+  saveIncremental: MethodSpec<
+    { docId: string; keepAll?: boolean },
+    {
+      tail: ArrayBuffer;
+      mode: 'narrow' | 'keep-all';
+      kept: number[];
+      dropped: number;
+      baseLength: number;
+    }
+  >;
+  /** The tail of the last saveIncremental was written: it becomes the new base (M1-22). */
+  commitSave: MethodSpec<{ docId: string; tailLength: number }, { baseLength: number }>;
+  /** Save Optimized core (ADR-005 decision 3): the whole file rewritten. */
+  saveRewrite: MethodSpec<{ docId: string }, { bytes: ArrayBuffer }>;
+  /** Existing objects changed since the last save (tests and diagnostics; no content). */
+  saveState: MethodSpec<
+    { docId: string },
+    { dirty: number[]; untracked: boolean; baseLength: number }
+  >;
   /** What a render of this page costs (M1-17 cost model): objects and path segments. */
   pageCost: MethodSpec<{ docId: string; pageIndex: number }, { objects: number; segments: number }>;
   /**

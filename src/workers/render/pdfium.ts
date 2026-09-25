@@ -65,3 +65,21 @@ export function rawCall(
 export function wasmMemory(mod: WrappedPdfiumModule): WebAssembly.Memory | undefined {
   return (mod.pdfium.wasmExports as unknown as { memory?: WebAssembly.Memory }).memory;
 }
+
+interface WideHeap {
+  wasmExports: { malloc(n: number): number; free(p: number): void };
+  stringToUTF16(s: string, ptr: number, maxBytes: number): number;
+}
+
+/** Calls `fn` with a NUL-terminated UTF-16LE copy of `s` on the WASM heap (FPDF_WIDESTRING). */
+export function withWideString<T>(mod: WrappedPdfiumModule, s: string, fn: (ptr: number) => T): T {
+  const heap = mod.pdfium as unknown as WideHeap;
+  const bytes = (s.length + 1) * 2;
+  const ptr = heap.wasmExports.malloc(bytes);
+  try {
+    heap.stringToUTF16(s, ptr, bytes);
+    return fn(ptr);
+  } finally {
+    heap.wasmExports.free(ptr);
+  }
+}
