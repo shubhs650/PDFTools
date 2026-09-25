@@ -2,7 +2,18 @@
 import { registerCommand } from '../../app/commands/dispatch';
 import { appStore } from '../../app/store/appStore';
 import { documentStore, selectActive, type ZoomSetting } from '../../app/store/documentStore';
-import { move, setZoom, zoomStep, type ZoomTarget } from './controller';
+import type { ViewMode } from '../../app/store/documentStore';
+import { move, rotate, setViewMode, setZoom, zoomStep, type ZoomTarget } from './controller';
+
+const modeIs = (m: ViewMode): boolean => selectActive(documentStore.getState())?.view.mode === m;
+
+/** View-mode commands (§5, M1-16), for the ribbon and the status-bar switch. */
+export const VIEW_MODE_COMMANDS: readonly [string, ViewMode][] = [
+  ['view.singlePage', 'single'],
+  ['view.continuous', 'continuous'],
+  ['view.facing', 'facing'],
+  ['view.continuousFacing', 'continuousFacing'],
+];
 
 const zoomIs = (z: ZoomSetting): boolean => selectActive(documentStore.getState())?.view.zoom === z;
 
@@ -41,6 +52,27 @@ export function registerViewCommands(): () => void {
     nav('view.prevPage', 'prev'),
     nav('view.nextPage', 'next'),
     nav('view.lastPage', 'last'),
+    ...VIEW_MODE_COMMANDS.map(([id, mode]) =>
+      registerCommand(id, {
+        requiresDocument: true,
+        run: () => {
+          setViewMode(mode);
+        },
+        isPressed: () => modeIs(mode),
+      }),
+    ),
+    registerCommand('view.rotateCw', {
+      requiresDocument: true,
+      run: () => {
+        rotate(1);
+      },
+    }),
+    registerCommand('view.rotateCcw', {
+      requiresDocument: true,
+      run: () => {
+        rotate(-1);
+      },
+    }),
     registerCommand('home.hand', {
       run: () => {
         appStore.getState().setTool('hand');

@@ -3,7 +3,7 @@ import { CloseDocumentDialog, OpenErrorDialog } from '../features/open/dialogs';
 import { DocumentArea } from '../features/open/DocumentArea';
 import { DropZone } from '../features/open/DropZone';
 import { registerViewCommands } from '../features/view/commands';
-import { PageNav, ZoomBox } from '../features/view/StatusControls';
+import { PageNav, ViewModeSwitch, ZoomBox } from '../features/view/StatusControls';
 import { UiProvider } from '../ui/components';
 import { AppFrame } from './AppFrame';
 import { Backstage } from './backstage/Backstage';
@@ -29,7 +29,15 @@ export function App() {
     <UiProvider>
       <ErrorBoundary where={BOUNDARY.app}>
         <AppFrame
-          status={{ pageNav: <PageNav />, view: <ZoomBox /> }}
+          status={{
+            pageNav: <PageNav />,
+            view: (
+              <>
+                <ViewModeSwitch />
+                <ZoomBox />
+              </>
+            ),
+          }}
           ribbon={
             <>
               <QuickAccess />
