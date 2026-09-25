@@ -37,3 +37,76 @@ for (const [name, code] of Object.entries(steps)) {
     expect(r).toBeTruthy();
   });
 }
+
+test('diag diskHandleRoundTrip', async ({ page }, info) => {
+  const { writeFileSync } = await import('node:fs');
+  const file = info.outputPath('disk.pdf');
+  writeFileSync(file, '%PDF-1.7 disk');
+  await page.goto('/');
+  console.log(`DIAG version ${String(page.context().browser()?.version())}`);
+  await page.evaluate(() => {
+    const w = window as unknown as { __r?: string };
+    window.addEventListener(
+      'dragover',
+      (e) => {
+        e.preventDefault();
+        e.stopImmediatePropagation();
+      },
+      true,
+    );
+    window.addEventListener(
+      'drop',
+      (e) => {
+        e.preventDefault();
+        e.stopImmediatePropagation();
+        void (async () => {
+          try {
+            const item = e.dataTransfer?.items[0] as DataTransferItem & {
+              getAsFileSystemHandle(): Promise<FileSystemFileHandle>;
+            };
+            const h = await item.getAsFileSystemHandle();
+            w.__r = `handle ${h.name}`;
+            const db = await new Promise<IDBDatabase>((res) => {
+              const r = indexedDB.open('disk', 1);
+              r.onupgradeneeded = () => r.result.createObjectStore('s');
+              r.onsuccess = () => {
+                res(r.result);
+              };
+            });
+            await new Promise((res) => {
+              const tx = db.transaction('s', 'readwrite');
+              tx.objectStore('s').put({ h }, 'k');
+              tx.oncomplete = res;
+            });
+            w.__r += ' put';
+            const g = await new Promise<{ h: FileSystemFileHandle }>((res) => {
+              const r = db.transaction('s').objectStore('s').get('k');
+              r.onsuccess = () => {
+                res(r.result as { h: FileSystemFileHandle });
+              };
+            });
+            w.__r += ` got ${g.h.name} same=${String(await g.h.isSameEntry(h))}`;
+          } catch (err) {
+            w.__r = `err ${String(err)}`;
+          }
+        })();
+      },
+      true,
+    );
+  });
+  const cdp = await page.context().newCDPSession(page);
+  const data = { items: [], files: [file], dragOperationsMask: 1 };
+  for (const type of ['dragEnter', 'dragOver', 'drop'] as const)
+    await cdp.send('Input.dispatchDragEvent', { type, x: 300, y: 300, data });
+  await page.waitForFunction(
+    () => {
+      const r = (window as unknown as { __r?: string }).__r;
+      return r !== undefined && (r.includes('same=') || r.startsWith('err'));
+    },
+    null,
+    { timeout: 10000 },
+  );
+  const r = await page.evaluate(() => (window as unknown as { __r?: string }).__r);
+  console.log(`DIAG diskHandleRoundTrip: ${String(r)}`);
+  expect(r).toContain('same=true');
+});
