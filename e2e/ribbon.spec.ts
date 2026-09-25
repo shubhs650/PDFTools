@@ -1,0 +1,110 @@
+import AxeBuilder from '@axe-core/playwright';
+import { expect, test } from './support/fixtures.ts';
+
+// M1-10: ribbon framework and File backstage (§8, D-01, D-29, rule 12).
+
+test('the ribbon, its tabs and the backstage pass axe', async ({ page }) => {
+  await page.goto('/');
+  expect((await new AxeBuilder({ page }).analyze()).violations.map((v) => v.id)).toEqual([]);
+  await page.getByRole('tab', { name: 'View' }).click();
+  expect((await new AxeBuilder({ page }).analyze()).violations.map((v) => v.id)).toEqual([]);
+  await page.getByTestId('file-tab').click();
+  await expect(page.getByTestId('backstage')).toBeVisible();
+  expect((await new AxeBuilder({ page }).analyze()).violations.map((v) => v.id)).toEqual([]);
+});
+
+test('M1 shows File, Home, View and Help only (M1-Q2)', async ({ page }) => {
+  await page.goto('/');
+  await expect(page.getByRole('tablist', { name: 'Ribbon tabs' }).getByRole('tab')).toHaveText([
+    'Home',
+    'View',
+    'Help',
+  ]);
+});
+
+test('keyboard: arrows between tabs and controls, Tab into the toolbar, Esc to the document', async ({
+  page,
+}) => {
+  await page.goto('/');
+  await page.getByRole('tab', { name: 'Home' }).focus();
+  await page.keyboard.press('ArrowRight');
+  await expect(page.getByRole('tab', { name: 'View' })).toBeFocused();
+  await expect(page.getByRole('tab', { name: 'View' })).toHaveAttribute('aria-selected', 'true');
+  await page.keyboard.press('Tab'); // collapse button
+  await page.keyboard.press('Tab'); // into the toolbar: one tab stop
+  const toolbar = page.getByRole('toolbar', { name: 'View commands' });
+  await expect(toolbar.getByRole('button', { name: 'First Page' })).toBeFocused();
+  await page.keyboard.press('ArrowRight');
+  await expect(toolbar.getByRole('button', { name: 'Previous Page' })).toBeFocused();
+  await page.keyboard.press('End');
+  await expect(toolbar.getByRole('button', { name: 'Collapse Ribbon' })).toBeFocused();
+  await page.keyboard.press('Escape');
+  await expect(page.getByRole('main', { name: 'Document area' })).toBeFocused();
+});
+
+test('toggles work from the keyboard and show their pressed state', async ({ page }) => {
+  await page.goto('/');
+  await page.getByRole('tab', { name: 'View' }).click();
+  const panes = page
+    .getByRole('toolbar', { name: 'View commands' })
+    .getByRole('button', { name: 'Panes' });
+  await expect(panes).toHaveAttribute('aria-pressed', 'true');
+  await panes.focus();
+  await page.keyboard.press('Enter');
+  await expect(panes).toHaveAttribute('aria-pressed', 'false');
+  await expect(page.getByTestId('left-pane')).toBeHidden();
+  await page.keyboard.press('Space');
+  await expect(page.getByTestId('left-pane')).toBeVisible();
+});
+
+test('commands that need a document are disabled with an announced reason and do nothing', async ({
+  page,
+}) => {
+  await page.goto('/');
+  await page.getByRole('tab', { name: 'View' }).click();
+  const zoomIn = page
+    .getByRole('toolbar', { name: 'View commands' })
+    .getByRole('button', { name: 'Zoom In' });
+  await expect(zoomIn).toHaveAttribute('aria-disabled', 'true');
+  await expect(zoomIn).toHaveAccessibleDescription(/Open a document|Not available yet/);
+  await zoomIn.focus();
+  await expect(zoomIn).toBeFocused(); // still reachable by keyboard (rule 12)
+});
+
+test('Ctrl+F1 collapses and expands the ribbon', async ({ page }) => {
+  await page.goto('/');
+  await expect(page.getByRole('tabpanel')).toBeVisible();
+  await page.keyboard.press('Control+F1');
+  await expect(page.getByRole('tabpanel')).toBeHidden();
+  await page.keyboard.press('Control+F1');
+  await expect(page.getByRole('tabpanel')).toBeVisible();
+});
+
+test('File backstage: opens, keyboard section navigation, Esc returns focus to File', async ({
+  page,
+}) => {
+  await page.goto('/');
+  const file = page.getByTestId('file-tab');
+  await file.focus();
+  await page.keyboard.press('Enter');
+  const backstage = page.getByRole('dialog', { name: 'File' });
+  await expect(backstage).toBeVisible();
+  await backstage.getByRole('button', { name: 'Open' }).first().focus();
+  await page.keyboard.press('ArrowDown');
+  await expect(backstage.getByRole('heading', { name: 'Recent' })).toBeVisible();
+  await page.keyboard.press('Escape');
+  await expect(backstage).toBeHidden();
+  await expect(file).toBeFocused();
+});
+
+for (const q of ['/', '/?locale=pseudo']) {
+  test(`the ribbon never makes the page scroll sideways at 1280 px (${q})`, async ({ page }) => {
+    await page.setViewportSize({ width: 1280, height: 800 });
+    await page.goto(q);
+    await page.getByRole('tab').nth(1).click();
+    const overflow = await page.evaluate(
+      () => document.documentElement.scrollWidth - document.documentElement.clientWidth,
+    );
+    expect(overflow).toBe(0);
+  });
+}

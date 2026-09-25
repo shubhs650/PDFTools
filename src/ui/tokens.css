@@ -68,6 +68,7 @@
   --app-min-width: 1280px; /* §8 */
   --pane-width: 260px;
   --tab-max-width: 240px;
+  --ribbon-height: 92px;
 
   /* Radius */
   --radius-s: 2px;

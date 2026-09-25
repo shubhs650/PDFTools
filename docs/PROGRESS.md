@@ -7,6 +7,16 @@ still open.
 
 ## Done
 
+- **Session 9 — M1-10 (ribbon framework and File backstage).** Branch `m1/10-ribbon`. Ribbon layout
+  derived from the command table (M1 shows File, Home, View, Help; unavailable commands omitted;
+  Home repeats its reuses); quick access toolbar; command dispatch with enabled/pressed state and
+  reasons (disabled buttons stay focusable via `aria-disabled` with the reason announced); tablist
+  → toolbar with roving focus, Esc to the document, Ctrl+F1 collapse; full-window File backstage
+  (modal, keyboard section list, focus back to File). Found and fixed: the backstage did not return
+  focus to File (same Radix trigger issue as the Dialog), and a wide ribbon in the pseudo-locale
+  made the whole page scroll (frame grid column now `minmax(0, 1fr)`). Axe-clean; 65/65 stable
+  over 5 repeats.
+
 - **Session 9 — M1-09 (app frame, stores, status bar, error boundary).** Branch `m1/09-frame`. Zustand
   5.0.15 (MIT). Frame with named landmarks (banner, main, two complementary panes, contentinfo), a
   document tablist with roving focus and separate close buttons, collapsible left rail, Properties
@@ -346,11 +356,11 @@ still open.
      (`node spikes/s4-oxide/run-node.ts <files>`; dumps in `out/review/`, see ADR-009);
    - FAR, 500 MB and A0 through the S3 harness;
    - S8 Firefox check and Pages preview.
-3. **Owner:** accept or amend [ADR-011](adr/011-m1-embedpdf-plugins.md). Merge
-   [PR #1](https://github.com/shubhs650/PDFTools/pull/1), then
-   [PR #2](https://github.com/shubhs650/PDFTools/pull/2) (M0), then the M1-01 PR, each with
-   "Create a merge commit" (the PRs are stacked).
-4. **Agent:** M1-03 (RPC), then M1-04 (i18n), each on its own `m1/<task>` branch.
+3. **Owner:** accept or amend [ADR-011](adr/011-m1-embedpdf-plugins.md). Merge the stacked PRs in
+   order with "Create a merge commit": #1 → #2 → #3 (M1-01) → #4 (M1-02) → #5 (M1-03) → #6 (M1-04)
+   → #7 (M1-05) → #8 (M1-06) → #9 (M1-07) → #10 (M1-08) → #11 (M1-09) → the M1-10 PR.
+4. **Agent:** M1-11 (keyboard shortcut manager), then M1-12 (storage) and M1-13 (open pipeline and
+   tabs), each on its own `m1/<task>` branch.
 
 ## Open issues
 
