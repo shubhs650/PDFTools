@@ -15,9 +15,11 @@ still open.
   Also fixed a race in M1-11's key-probe test (merged up the stack). CI follow-ups: closing a tab no
   longer starts the engine or Work worker (M1-13 bug); Home/End navigate explicitly; long-task
   checks moved from the parallel e2e project into perf scenarios (\`e2e/perf/open|scroll|zoom\`),
-  and \`npm run perf\` now runs one test at a time: CI had measured a 639 ms task caused by another
-  test's browser compiling PDFium on the same 2-vCPU runner (reproduced pinned to one core; clean
-  on two). Sharp tiles 150–170 ms after
+  and `npm run perf` runs one test at a time. CI (e2e runs 1 worker) had measured a 639 ms task
+  on the first open: the app's own Render/encoder workers and PDFium start-up competing with the
+  main thread on a small runner (reproduced pinned to one core, even without the Work worker; clean
+  on two cores). Worth re-checking on the owner's low-end machine (open issue). Test server
+  keep-alive raised to stop a teardown ECONNRESET. Sharp tiles 150–170 ms after
   zoom on the A0 sheet.
 
 - **Session 10 — M1-14 (viewer: virtual scroll and tiling).** Branch `m1/14-viewer`. Plugin stack per
@@ -408,6 +410,13 @@ still open.
    tabs), each on its own `m1/<task>` branch.
 
 ## Open issues
+
+- **First-open main-thread contention on small CPUs** (M1-13/15 CI). With one core, opening files
+  shows 100–230 ms main-thread tasks while PDFium starts and pages render in the workers; on two
+  cores none reach 50 ms. The perf gate (serial) passes; the owner should confirm on the slowest
+  target machine. If it shows there, options: lower worker priority is not available on the web,
+  so stagger engine start (start the Render worker at boot idle time) or reduce first-render React
+  work (ribbon re-render when the first document opens).
 
 - **Committed corpus PDFs vs ADR-002.** Commit `cd52644` added six PDFs directly to `corpus/`,
   including CAD drawings. ADR-002 says drawings stay local and are never committed, and
