@@ -12,7 +12,7 @@ const launchOptions = executablePath ? { executablePath } : {};
 // Full Chromium in new headless mode, not the stripped-down headless shell:
 // it is what users run, and the shell lacks browser services the app uses
 // (it crashed storing File System Access handles in IndexedDB, M1-18).
-const channel = 'chromium';
+const channel = process.env.PW_CHANNEL ?? 'chromium';
 
 export default defineConfig({
   testDir: './e2e',

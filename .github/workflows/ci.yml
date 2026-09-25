@@ -54,6 +54,8 @@ jobs:
         run: sudo apt-get install -y qpdf
       - name: E2E tests (built app under the production _headers)
         run: npm run e2e
+        env:
+          PW_CHANNEL: chrome
       - name: Perf gate (no main-thread task > 100 ms after boot)
         run: npm run perf
         env:
