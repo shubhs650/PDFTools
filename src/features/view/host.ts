@@ -43,6 +43,11 @@ export function workClient(): WorkClient {
   return work;
 }
 
+/** The Work worker client if it was ever started; closing never starts one. */
+export function startedWorkClient(): WorkClient | undefined {
+  return work;
+}
+
 /** Called by DocumentHost once EmbedPDF has initialized the plugins. */
 export function setRegistry(registry: PluginRegistry | null): void {
   hostStore.setState({ registry });

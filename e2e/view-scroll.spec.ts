@@ -81,11 +81,16 @@ test('switching tabs keeps each document’s images cached; coming back renders 
     { name: 'b.pdf', b64: pdfs.simple(3).toString('base64') },
   ]);
   await expect(tabs(page)).toHaveCount(2);
+  const preview = page.locator('[data-page="0"] img.page-preview');
+  await expect(preview).toBeVisible();
   await view(page, 'settle');
   await tabs(page).nth(0).click();
   await expect(page.getByTestId('document-view')).toHaveAccessibleName('a.pdf');
+  await expect(preview).toBeVisible();
   await view(page, 'settle');
   await tabs(page).nth(1).click();
+  await expect(page.getByTestId('document-view')).toHaveAccessibleName('b.pdf');
+  await expect(preview).toBeVisible();
   await view(page, 'settle');
   await view(page, 'reset');
   await tabs(page).nth(0).click();
@@ -100,6 +105,8 @@ test('switching tabs keeps each document’s images cached; coming back renders 
 test('closing a document drops its cached images', async ({ page, pdfs }) => {
   await page.goto('/');
   await drop(page, [{ name: 'a.pdf', b64: pdfs.contract(20).toString('base64') }]);
+  // Renders start only once the engine is up; settle measures quiet time after that.
+  await expect(page.locator('[data-page="0"] img.page-preview')).toBeVisible();
   await view(page, 'settle');
   const { activeId } = (await cap(page, 'open', 'state')) as { activeId: string };
   expect(await view(page, 'docCacheBytes', activeId)).toBeGreaterThan(0);
