@@ -32,7 +32,12 @@ export function AppFrame({ ribbon, children, status }: AppFrameProps) {
       <TabStrip />
       <div className="app-body">
         <LeftRail />
-        <main id="document-panel" aria-label={t('frame.main')} className="document-area">
+        <main
+          id="document-panel"
+          aria-label={t('frame.main')}
+          className="document-area"
+          tabIndex={-1}
+        >
           <ErrorBoundary where={BOUNDARY.document}>{children}</ErrorBoundary>
         </main>
         <PropertiesPane />

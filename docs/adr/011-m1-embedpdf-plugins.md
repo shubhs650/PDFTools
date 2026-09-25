@@ -1,8 +1,8 @@
 # ADR-011: M1-01 — EmbedPDF headless plugins on the hosted Render worker
 
-- **Status:** Proposed (awaiting owner acceptance). No ARCHITECTURE.md change is proposed.
+- **Status:** Accepted. The owner accepted all decisions on 2026-09-25. No ARCHITECTURE.md change is needed.
 - **Date:** 2026-09-25
-- **Deciders:** Owner; recorded by the coding agent
+- **Deciders:** Owner (accepted 2026-09-25); recorded by the coding agent
 - **Related decisions:** D-01, D-02, D-09, D-10, D-27 (ARCHITECTURE.md §3.1, §5, §12); ADR-003;
   ADR-004 decisions 2, 3 and 6; CLAUDE.md rules 1, 2, 4, 5 and 9
 - **Related spike / milestone:** M1-01 (feeds M1-07, M1-13 to M1-17)
@@ -145,7 +145,7 @@ For single-page and facing (non-continuous) modes:
 2. **Drop the non-continuous modes.** They are in §5, so that would need an ARCHITECTURE change.
    Not proposed.
 
-## Decision (proposed)
+## Decision
 
 1. **Adopt the plugin stack** listed under Setup, pinned to exactly 2.15.1, with one registry and
    `plugin-document-manager` for tabs. Never pass per-document `permissions` overrides (rule 9).

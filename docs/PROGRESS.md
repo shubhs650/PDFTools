@@ -7,6 +7,16 @@ still open.
 
 ## Done
 
+- **Session 9 — M1-10 (ribbon framework and File backstage).** Branch `m1/10-ribbon`. Ribbon layout
+  derived from the command table (M1 shows File, Home, View, Help; unavailable commands omitted;
+  Home repeats its reuses); quick access toolbar; command dispatch with enabled/pressed state and
+  reasons (disabled buttons stay focusable via `aria-disabled` with the reason announced); tablist
+  → toolbar with roving focus, Esc to the document, Ctrl+F1 collapse; full-window File backstage
+  (modal, keyboard section list, focus back to File). Found and fixed: the backstage did not return
+  focus to File (same Radix trigger issue as the Dialog), and a wide ribbon in the pseudo-locale
+  made the whole page scroll (frame grid column now `minmax(0, 1fr)`). Axe-clean; 65/65 stable
+  over 5 repeats.
+
 - **Session 9 — M1-09 (app frame, stores, status bar, error boundary).** Branch `m1/09-frame`. Zustand
   5.0.15 (MIT). Frame with named landmarks (banner, main, two complementary panes, contentinfo), a
   document tablist with roving focus and separate close buttons, collapsible left rail, Properties
@@ -84,7 +94,7 @@ still open.
     sheets, CJK fallback), all opened by PDFium in unit tests. CI now also runs `npm run perf`.
 
 - **Session 8 — M1-01 (EmbedPDF plugin layer).** _Works with workaround._ See
-  [ADR-011](adr/011-m1-embedpdf-plugins.md) (proposed).
+  [ADR-011](adr/011-m1-embedpdf-plugins.md) (accepted).
   - Core, document manager, viewport, scroll, render, tiling, zoom, spread and rotate plugins run on
     the hosted Render worker. Pinned to exactly 2.15.1; the license gate passes (546 packages).
   - Self-made files: 2,000-page contract first preview 231 ms; dense A0 first view 0.4–0.7 s;
@@ -346,11 +356,10 @@ still open.
      (`node spikes/s4-oxide/run-node.ts <files>`; dumps in `out/review/`, see ADR-009);
    - FAR, 500 MB and A0 through the S3 harness;
    - S8 Firefox check and Pages preview.
-3. **Owner:** accept or amend [ADR-011](adr/011-m1-embedpdf-plugins.md). Merge
-   [PR #1](https://github.com/shubhs650/PDFTools/pull/1), then
-   [PR #2](https://github.com/shubhs650/PDFTools/pull/2) (M0), then the M1-01 PR, each with
-   "Create a merge commit" (the PRs are stacked).
-4. **Agent:** M1-03 (RPC), then M1-04 (i18n), each on its own `m1/<task>` branch.
+3. **Owner:** review and merge each new M1 PR (one per task) with "Create a merge commit". M1-01 to
+   M1-10 are merged into `main` (2026-09-25).
+4. **Agent:** M1-11 (keyboard shortcut manager), then M1-12 (storage) and M1-13 (open pipeline and
+   tabs), each on its own `m1/<task>` branch.
 
 ## Open issues
 
@@ -422,3 +431,4 @@ still open.
 | 2026-09-24 | ADR-010  | S6: Fluent **Regular** icons (Filled for active states) instead of the deprecated, 19 %-coverage Color style; large buttons use native 32 px or scaled 28/24 px glyphs; 23 custom icons in the same line style; icon registry with per-icon path imports. **Accepted**; ARCHITECTURE.md Rev 0.4, CLAUDE.md rule 15.                                                                                                                                       |
 | 2026-09-24 | ADR-009  | S4: adopt PDF Oxide for text/Markdown/HTML (lazy, background warm-up); PDFium permission gate before every Oxide call; Oxide tables as the lattice candidate only, own stream detector; search stays on PDFium; pin 0.3.x and add notices. **Accepted**; ARCHITECTURE.md Rev 0.3.                                                                                                                                                                         |
 | 2026-09-25 | M1 plan  | M1 plan approved. M1-Q1: Ctrl+Alt+W / Ctrl+Alt+F4 close tab and Ctrl+Alt+PageUp/PageDown switch tab, alongside the §8.1 keys (ADR-001 B5). Q2: ribbon tabs hidden until they have a working command. Q3: test hook only in the `e2e` build mode. Q4: dependency list accepted. Q5: Select without text selection until M2. Q6: File → Properties in M2. Q7: CI uses generated self-made fixtures only. Q8: merge PR #1 and M0, then `m1/<task>` branches. |
+| 2026-09-25 | ADR-011  | M1-01: adopt the EmbedPDF plugin stack (pinned 2.15.1, one registry + document manager, no per-document permission overrides); own bounded PreviewLayer, own encoder worker, own paged mode for single/facing. **Accepted**; no ARCHITECTURE.md change.                                                                                                                                                                                                   |

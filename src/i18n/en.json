@@ -219,7 +219,14 @@
       "help": {
         "help": "Help"
       }
-    }
+    },
+    "label": "Ribbon",
+    "tabs": "Ribbon tabs",
+    "commands": "{{tab}} commands",
+    "expand": "Expand Ribbon",
+    "needsDocument": "Open a document to use this command",
+    "notReady": "Not available yet",
+    "quickAccess": "Quick access toolbar"
   },
   "frame": {
     "banner": "Toolbar",
@@ -238,5 +245,20 @@
     "title": "Something went wrong",
     "body": "This part of PDFTools stopped working. Your open files are not changed. Reload it to continue.",
     "reload": "Reload"
+  },
+  "backstage": {
+    "label": "File",
+    "nav": "File menu",
+    "back": "Back to the document",
+    "section": {
+      "open": "Open a PDF from your computer. Files never leave this device.",
+      "recent": "Files you opened recently on this device.",
+      "save": "Save changes to the original file (incremental save).",
+      "saveAs": "Save a copy of the document to a new location.",
+      "saveOptimized": "Rewrite the file compactly. Digital signatures would be invalidated.",
+      "settings": "Settings and the data PDFTools keeps on this device.",
+      "about": "About PDFTools: version and third-party notices.",
+      "privacy": "PDFTools works offline. Your documents are never uploaded."
+    }
   }
 }
