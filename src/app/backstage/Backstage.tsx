@@ -6,6 +6,7 @@ import { msg, type MessageKey } from '../../i18n';
 import { CommandIcon } from '../../ui/icons/CommandIcon';
 import { commandLabelKey } from '../commandLabels';
 import { ribbonLayout } from '../ribbon/layout';
+import { RecentList } from '../../features/recent/RecentList';
 import { RibbonButton } from '../ribbon/RibbonButton';
 
 /** One description per backstage section (content arrives with each feature task). */
@@ -21,6 +22,7 @@ const DESCRIPTIONS: Record<string, MessageKey> = {
 };
 
 const TEST_ID = 'backstage';
+const HEADING_ID = 'backstage-heading';
 
 export interface BackstageProps {
   open: boolean;
@@ -113,14 +115,23 @@ export function Backstage({ open, onOpenChange }: BackstageProps) {
             </ul>
           </nav>
           {section ? (
-            <section className="backstage-content" aria-labelledby="backstage-heading">
-              <h2 id="backstage-heading" className="backstage-heading">
+            <section className="backstage-content" aria-labelledby={HEADING_ID}>
+              <h2 id={HEADING_ID} className="backstage-heading">
                 {t(commandLabelKey(section.id))}
               </h2>
               <p className="backstage-description">
                 {t(DESCRIPTIONS[section.id] ?? msg('backstage.label'))}
               </p>
-              <RibbonButton command={section} large tabIndex={0} />
+              {section.id === 'file.recent' ? (
+                <RecentList
+                  labelledBy={HEADING_ID}
+                  onOpened={() => {
+                    onOpenChange(false);
+                  }}
+                />
+              ) : (
+                <RibbonButton command={section} large tabIndex={0} />
+              )}
             </section>
           ) : null}
         </RadixDialog.Content>

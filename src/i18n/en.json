@@ -320,5 +320,15 @@
     "zoom": "Zoom",
     "zoomLevels": "Zoom levels",
     "viewMode": "View mode"
+  },
+  "recent": {
+    "title": "Recent files",
+    "empty": "No recent files yet.",
+    "clear": "Clear recent",
+    "remove": "Remove {{name}} from recent files",
+    "removeEntry": "Remove from list",
+    "dismiss": "Dismiss",
+    "denied": "Permission to open {{name}} was not granted.",
+    "missing": "{{name}} is no longer available. It may have been moved, renamed or deleted."
   }
 }

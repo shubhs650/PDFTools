@@ -7,6 +7,12 @@ still open.
 
 ## Done
 
+- **Session 11 — M1-18 (start screen and recent files).** Branch `m1/18-recent`. Recent list of file
+  handles in IndexedDB (dedupe by fingerprint and by same file on disk, cap 20), shown on the start
+  screen and in the backstage; keyboard-reachable entries with remove buttons and "Clear recent";
+  reopen re-requests permission; missing or denied files explain themselves and can be removed;
+  hidden without the File System Access API. E2E uses OPFS handles as stand-ins for disk files.
+
 - **Session 11 — M1-17 (progressive render for heavy renders).** Branch `m1/17-progressive`. Cost model
   (objects, path segments, pixels) routes heavy previews to PDFium's progressive path in the Render
   worker, cancellable between 10 ms slices; the page comes from EmbedPDF's page cache via a second

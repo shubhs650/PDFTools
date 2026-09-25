@@ -592,3 +592,80 @@ body {
 .document-host[data-panning='true'] .viewport {
   cursor: grabbing;
 }
+
+/* ------------------------------------------------------------ recent files (M1-18) */
+
+.recent {
+  width: min(100%, var(--dialog-max-width));
+  color: var(--color-text);
+  text-align: left;
+}
+
+.recent-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-3);
+}
+
+.recent-header h3 {
+  margin: var(--space-0);
+  font-size: var(--font-size-l);
+  font-weight: var(--font-weight-semibold);
+}
+
+.recent-items {
+  margin: var(--space-3) var(--space-0) var(--space-0);
+  padding: var(--space-0);
+  list-style: none;
+}
+
+.recent-item {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+}
+
+.recent-open {
+  display: flex;
+  flex: 1;
+  justify-content: space-between;
+  gap: var(--space-4);
+  min-width: var(--space-0);
+  min-height: var(--control-height-m);
+  padding: var(--space-0) var(--space-3);
+  border: none;
+  border-radius: var(--radius-m);
+  background: transparent;
+  color: inherit;
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+
+.recent-open:hover {
+  background: var(--color-hover);
+}
+
+.recent-name {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.recent-when,
+.recent-empty {
+  color: var(--color-text-muted);
+  white-space: nowrap;
+}
+
+.recent-problem {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-3);
+  margin-top: var(--space-3);
+  padding: var(--space-3);
+  border: var(--border-width) solid var(--color-danger);
+  border-radius: var(--radius-m);
+}
