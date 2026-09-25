@@ -7,6 +7,15 @@ still open.
 
 ## Done
 
+- **Session 9 — M1-05 (design tokens and UI primitives).** Branch `m1/05-tokens-ui`. `src/ui/tokens.css`
+  (colors, spacing, sizes, radius, type, elevation, motion; light default; dark set and
+  `forced-colors` mapping override every color token). Radix-based primitives with required
+  accessible names; component CSS uses tokens only (enforced by a test). Findings fixed: dark-theme
+  primary button failed WCAG contrast (axe); the Dialog did not return focus to an opener outside
+  Radix's own Trigger. Added Radix dialog/dropdown-menu/tooltip/toggle (MIT); dev: Testing Library,
+  jsdom, `@axe-core/playwright` (MPL, dev-only per ADR-002). Gallery e2e: axe clean in light, dark
+  and pseudo-locale; keyboard-only traversal, menus and dialog; focus ring in forced-colors.
+
 - **Session 9 — M1-04 (i18n).** Branch `m1/04-i18n`. i18next 26.4.2 + react-i18next 17.0.15 (MIT), strings
   bundled and initialised synchronously; typed keys (unknown key = type error); `msg()` marker for
   keys in data; `Intl`-only formatters (number, percent, zoom, bytes, date, relative time) in the

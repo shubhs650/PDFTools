@@ -1,0 +1,270 @@
+/*
+ * Shared UI primitives (M1-05). Only design tokens from ../tokens.css here:
+ * no color or size literals (tests/ui/tokens.test.ts enforces it).
+ */
+
+.ui-focusable:focus-visible,
+.ui-button:focus-visible,
+.ui-menu-item:focus-visible,
+.ui-menu-item[data-highlighted] {
+  outline: var(--focus-width) solid var(--color-focus);
+  outline-offset: var(--focus-offset);
+}
+
+/* ------------------------------------------------------------ buttons */
+
+.ui-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-2);
+  min-height: var(--control-height-m);
+  padding: var(--space-0) var(--space-4);
+  border: var(--border-width) solid var(--color-border);
+  border-radius: var(--radius-m);
+  background: var(--color-surface);
+  color: var(--color-text);
+  font: inherit;
+  font-size: var(--font-size-m);
+  line-height: var(--line-height);
+  cursor: pointer;
+  transition: background-color var(--duration-fast);
+}
+
+.ui-button:hover:not(:disabled) {
+  background: var(--color-hover);
+}
+
+.ui-button:active:not(:disabled),
+.ui-button[data-state='on'],
+.ui-button[data-state='open'] {
+  background: var(--color-pressed);
+}
+
+.ui-button:disabled {
+  color: var(--color-text-disabled);
+  border-color: var(--color-border);
+  cursor: default;
+}
+
+.ui-button--primary {
+  background: var(--color-accent);
+  border-color: var(--color-accent);
+  color: var(--color-text-on-accent);
+}
+
+.ui-button--primary:hover:not(:disabled) {
+  background: var(--color-accent-hover);
+}
+
+.ui-button--subtle {
+  border-color: transparent;
+  background: transparent;
+}
+
+.ui-button--icon {
+  min-width: var(--control-height-m);
+  padding: var(--space-0);
+}
+
+.ui-button--small {
+  min-height: var(--control-height-s);
+  font-size: var(--font-size-s);
+}
+
+.ui-button--small.ui-button--icon {
+  min-width: var(--control-height-s);
+}
+
+.ui-button svg {
+  color: var(--color-icon);
+  flex: none;
+}
+
+.ui-button:disabled svg {
+  color: var(--color-text-disabled);
+}
+
+.ui-split {
+  display: inline-flex;
+}
+
+.ui-split > .ui-button:first-child {
+  border-top-right-radius: var(--radius-s);
+  border-bottom-right-radius: var(--radius-s);
+}
+
+.ui-split > .ui-button:last-child {
+  min-width: var(--control-height-s);
+  padding: var(--space-0) var(--space-1);
+  border-left-width: var(--space-0);
+  border-top-left-radius: var(--radius-s);
+  border-bottom-left-radius: var(--radius-s);
+}
+
+/* ------------------------------------------------------------ menus */
+
+.ui-menu {
+  z-index: var(--z-menu);
+  min-width: var(--menu-min-width);
+  padding: var(--space-2);
+  border: var(--border-width) solid var(--color-border);
+  border-radius: var(--radius-l);
+  background: var(--color-surface-raised);
+  box-shadow: var(--elevation-2);
+  color: var(--color-text);
+  font-size: var(--font-size-m);
+}
+
+.ui-menu-item {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  min-height: var(--control-height-m);
+  padding: var(--space-0) var(--space-3);
+  border-radius: var(--radius-m);
+  cursor: pointer;
+  user-select: none;
+}
+
+.ui-menu-item[data-highlighted] {
+  background: var(--color-hover);
+}
+
+.ui-menu-item[data-disabled] {
+  color: var(--color-text-disabled);
+  cursor: default;
+}
+
+.ui-menu-separator {
+  height: var(--border-width);
+  margin: var(--space-2) var(--space-0);
+  background: var(--color-border);
+}
+
+/* ------------------------------------------------------------ dialog */
+
+.ui-dialog-backdrop {
+  position: fixed;
+  inset: var(--space-0);
+  z-index: var(--z-dialog);
+  background: var(--color-backdrop);
+}
+
+.ui-dialog {
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  z-index: var(--z-dialog);
+  transform: translate(-50%, -50%);
+  min-width: var(--dialog-min-width);
+  max-width: var(--dialog-max-width);
+  padding: var(--space-6);
+  border: var(--border-width) solid var(--color-border);
+  border-radius: var(--radius-l);
+  background: var(--color-surface-raised);
+  box-shadow: var(--elevation-3);
+  color: var(--color-text);
+}
+
+.ui-dialog-title {
+  margin: var(--space-0) var(--space-0) var(--space-3);
+  font-size: var(--font-size-xl);
+  font-weight: var(--font-weight-semibold);
+}
+
+.ui-dialog-description {
+  margin: var(--space-0) var(--space-0) var(--space-5);
+  color: var(--color-text-muted);
+  font-size: var(--font-size-m);
+}
+
+.ui-dialog-footer {
+  display: flex;
+  justify-content: flex-end;
+  gap: var(--space-3);
+  margin-top: var(--space-6);
+}
+
+.ui-dialog-close {
+  position: absolute;
+  top: var(--space-3);
+  right: var(--space-3);
+}
+
+/* ------------------------------------------------------------ tooltip */
+
+.ui-tooltip {
+  z-index: var(--z-tooltip);
+  max-width: var(--tooltip-max-width);
+  padding: var(--space-2) var(--space-3);
+  border-radius: var(--radius-m);
+  background: var(--color-tooltip-bg);
+  color: var(--color-tooltip-text);
+  font-size: var(--font-size-s);
+  box-shadow: var(--elevation-1);
+}
+
+/* ------------------------------------------------------------ progress */
+
+.ui-spinner {
+  display: inline-block;
+  width: var(--spinner-size);
+  height: var(--spinner-size);
+  border: var(--focus-width) solid var(--color-border);
+  border-top-color: var(--color-accent);
+  border-radius: var(--radius-round);
+  animation: ui-spin var(--spin-duration) linear infinite;
+}
+
+@keyframes ui-spin {
+  to {
+    transform: rotate(1turn);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .ui-spinner {
+    animation: none;
+    border-top-color: var(--color-border-strong);
+  }
+}
+
+.ui-progress {
+  position: relative;
+  overflow: hidden;
+  width: 100%;
+  height: var(--progress-height);
+  border-radius: var(--radius-round);
+  background: var(--color-surface-sunken);
+}
+
+.ui-progress-bar {
+  height: 100%;
+  background: var(--color-accent);
+  transition: width var(--duration-normal);
+}
+
+.ui-visually-hidden {
+  position: absolute;
+  width: var(--border-width);
+  height: var(--border-width);
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+
+@media (forced-colors: active) {
+  .ui-button,
+  .ui-menu,
+  .ui-dialog,
+  .ui-tooltip,
+  .ui-progress {
+    border: var(--border-width) solid ButtonText;
+  }
+
+  .ui-progress-bar {
+    background: Highlight;
+    forced-color-adjust: none;
+  }
+}

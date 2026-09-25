@@ -6,6 +6,7 @@
     "module": "ESNext",
     "moduleResolution": "bundler",
     "types": ["node", "vite/client"],
+    "jsx": "react-jsx",
     "erasableSyntaxOnly": true,
     "resolveJsonModule": true,
     "allowImportingTsExtensions": true,
