@@ -1,6 +1,6 @@
 # PDFTools — Progress
 
-_Last updated: 2026-09-24 (session 7: S4, ADR approvals, S6)_
+_Last updated: 2026-09-25 (session 8: M1 plan drafted)_
 
 **Current milestone:** M0 — Spikes (plan: [docs/plan/M0.md](plan/M0.md))
 
@@ -187,9 +187,16 @@ _Last updated: 2026-09-24 (session 7: S4, ADR approvals, S6)_
 ## In progress
 
 - M0: the agent part of all eight spikes is done and all spike ADRs are accepted. Owner runs are
-  still open. M1 planning starts next session. The owner checks listed under Next are pending.
+  still open. The owner checks listed under Next are pending.
+- **M1 plan drafted, awaiting owner approval:** [docs/plan/M1.md](plan/M1.md). 28 one-session
+  tasks (M1-01 … M1-28), each with goal, files, acceptance criteria, tests and dependencies. It
+  starts with an EmbedPDF plugin-layer spike (M1-01 → ADR-011), because M0 only exercised the
+  engine. No M1 code is written until the plan is approved.
 
 ## Session log
+
+- **Session 8 (2026-09-25):** Read PROGRESS, ARCHITECTURE Rev 0.4 and ADR-001 to ADR-010; wrote
+  the M1 plan. Docs only; no code changed.
 
 - **Session 7 (2026-09-24):**
   - ADR-008 accepted (ARCHITECTURE.md Rev 0.2).
@@ -244,8 +251,11 @@ _Last updated: 2026-09-24 (session 7: S4, ADR approvals, S6)_
      (`node spikes/s4-oxide/run-node.ts <files>`; dumps in `out/review/`, see ADR-009);
    - FAR, 500 MB and A0 through the S3 harness;
    - S8 Firefox check and Pages preview.
-3. **Agent (next session):** write the **M1 plan** (`docs/plan/M1.md`), then start M1.
-4. Get [PR #1](https://github.com/shubhs650/PDFTools/pull/1) merged. This branch builds on it.
+3. **Owner:** review and approve [docs/plan/M1.md](plan/M1.md), and answer its decisions M1-Q1
+   to M1-Q8 (shortcut alternates, hidden ribbon tabs, e2e-only test hook, new dependencies,
+   Select without text selection, Properties in M2, generated CI fixtures, branching).
+4. **Agent (after approval):** start M1 with M1-01 (plugin spike), M1-02, M1-03 and M1-04.
+5. Get [PR #1](https://github.com/shubhs650/PDFTools/pull/1) merged. This branch builds on it.
 
 ## Open issues
 
