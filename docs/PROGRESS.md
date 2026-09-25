@@ -7,6 +7,14 @@ still open.
 
 ## Done
 
+- **Session 10 — M1-14 (viewer: virtual scroll and tiling).** Branch `m1/14-viewer`. Plugin stack per
+  ADR-011 (viewport, scroll, render, tiling 256 px, zoom 1 %–6400 % with fit width by default);
+  bounded preview layer; visible-first render ranking; byte-bounded LRU image cache across tabs;
+  render counters (requested / done / aborted / cached, latency) for tests; focusable, named
+  document region. Found and fixed: EmbedPDF's Viewport adds 10 px padding inline, which overflowed
+  the document area by 20 px (now border-box). Perf: first preview 886 ms cold, 0 blank frames at
+  900 and 3,000 px/s, no long tasks.
+
 - **Session 10 — M1-13 (open pipeline and document tabs).** Branch `m1/13-open`. Ctrl+O (FSA
   picker or `<input type=file>`), window-level drop (Explorer files, Outlook attachments via
   `DataTransferItem`), one tab per file in order, duplicates focus the existing tab (`isSameEntry`

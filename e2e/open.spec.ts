@@ -3,6 +3,7 @@ import { mkdtempSync, readFileSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import type { Page } from '@playwright/test';
+import { cap, drop, dropStaged, stage } from './support/app.ts';
 import { expect, test } from './support/fixtures.ts';
 
 // M1-13: open pipeline and document tabs.
@@ -18,26 +19,6 @@ interface OpenState {
   pageCounts: number[];
 }
 
-type Caps = Record<string, Record<string, (...x: unknown[]) => unknown>>;
-
-async function cap(page: Page, name: string, method: string, ...args: unknown[]): Promise<unknown> {
-  await page.waitForFunction(
-    (n) =>
-      Boolean(
-        (window as unknown as { __pdftoolsTest?: { capabilities: Record<string, unknown> } })
-          .__pdftoolsTest?.capabilities[n],
-      ),
-    name,
-  );
-  return page.evaluate(
-    ([n, m, a]) =>
-      (window as unknown as { __pdftoolsTest: { capabilities: Caps } }).__pdftoolsTest.capabilities[
-        n
-      ]?.[m]?.(...a),
-    [name, method, args] as const,
-  );
-}
-
 const state = (page: Page) => cap(page, 'open', 'state') as Promise<OpenState>;
 
 /** Uses the `<input type=file>` path, which Playwright's file chooser drives. */
@@ -45,34 +26,6 @@ async function withoutFsa(page: Page): Promise<void> {
   await page.addInitScript(() => {
     Object.defineProperty(window, 'showOpenFilePicker', { value: undefined });
   });
-}
-
-/** Builds the Files in the page first, so decoding test data is not measured as app work. */
-async function stage(page: Page, files: { name: string; b64: string; type?: string }[]) {
-  await page.evaluate((fs) => {
-    (window as unknown as { __staged: File[] }).__staged = fs.map((f) => {
-      const bytes = Uint8Array.from(atob(f.b64), (c) => c.charCodeAt(0));
-      return new File([bytes], f.name, { type: f.type ?? 'application/pdf' });
-    });
-  }, files);
-}
-
-async function dropStaged(page: Page) {
-  await page.evaluate(() => {
-    const dt = new DataTransfer();
-    for (const f of (window as unknown as { __staged: File[] }).__staged) dt.items.add(f);
-    const target = document.getElementById('document-panel') ?? document.body;
-    for (const type of ['dragenter', 'dragover', 'drop']) {
-      target.dispatchEvent(
-        new DragEvent(type, { dataTransfer: dt, bubbles: true, cancelable: true }),
-      );
-    }
-  });
-}
-
-async function drop(page: Page, files: { name: string; b64: string; type?: string }[]) {
-  await stage(page, files);
-  await dropStaged(page);
 }
 
 const tabs = (page: Page) => page.getByRole('tablist', { name: 'Open documents' }).getByRole('tab');

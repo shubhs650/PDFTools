@@ -6,7 +6,7 @@
 import { documentStore } from '../../app/store/documentStore';
 import { storageClient } from '../../engine/storageClient';
 import type { OpenedFile } from '../../storage/fileAccess';
-import { documentManager, renderEngine, workClient } from '../view/host';
+import { documentManager, renderEngine, tileCache, workClient } from '../view/host';
 import { MAX_DOCUMENTS } from '../view/plugins';
 import { HEADER_WINDOW, OpenError, classifyOpenError, hasPdfHeader } from './errors';
 import { advance, openStore, startJob } from './openStore';
@@ -94,6 +94,7 @@ async function releaseEngineDocument(docId: string): Promise<void> {
 export async function closeDocument(docId: string): Promise<void> {
   documentStore.getState().close(docId);
   sources.delete(docId);
+  tileCache.dropDoc(docId);
   await releaseEngineDocument(docId);
   await workClient()
     .close(docId)

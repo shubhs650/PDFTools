@@ -23,6 +23,9 @@ export function installTestHook(): TestHook {
   void import('./workProbe').then((m) => {
     m.registerWorkProbe(hook);
   });
+  void import('./viewProbe').then((m) => {
+    m.registerViewProbe(hook);
+  });
   void import('./openProbe').then((m) => {
     m.registerOpenProbe(hook);
   });
