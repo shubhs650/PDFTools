@@ -15,3 +15,6 @@ playwright/.cache/
 corpus/files/
 *.pdf
 !e2e/fixtures/self-made/**/*.pdf
+
+# Spike outputs (generated fixtures, saved files, interop packs)
+spikes/**/out/

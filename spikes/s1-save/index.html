@@ -1,0 +1,19 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>M0-S1 · incremental save</title>
+  </head>
+  <body>
+    <main aria-label="S1 spike">
+      <h1>M0-S1: incremental save and full rewrite</h1>
+      <p>Status: <output id="status" aria-live="polite">starting</output></p>
+      <p>
+        <button id="fsa" type="button">Append-save test on a real file (File System Access)</button>
+      </p>
+      <pre id="log" aria-label="Results"></pre>
+    </main>
+    <script type="module" src="./main.ts"></script>
+  </body>
+</html>

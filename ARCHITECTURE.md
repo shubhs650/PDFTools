@@ -1,12 +1,18 @@
-# PDFTools — Architecture & Product Specification (Rev 0.1)
+# PDFTools — Architecture & Product Specification (Rev 0.4)
 
 **App:** PDFTools · **URL:** `pdf-tools.openengtools.com` · **Platform:** Open Engineering Tools (OET)
-**Status:** Approved for implementation · **Last updated:** 24-Sep-2026 (Rev 0.1)
+**Status:** Approved for implementation · **Last updated:** 24-Sep-2026 (Rev 0.4)
 **Companion file:** `CLAUDE.md` (standing rules for the coding agent — read it first)
 
 > This document is the single source of truth. Where code and this document disagree, this document wins until it is deliberately amended. Decisions are numbered (D-xx) so commits, issues and ADRs can reference them.
 
 > **Rev 0.1 amendments** — applied from [ADR-001](docs/adr/001-session-1-clarifications.md) (session-1 clarifications B1–B16) and [ADR-002](docs/adr/002-license-policy-and-heavy-file-targets.md) (license policy, heavy-file targets). Amended passages cite the ADR item.
+
+> **Rev 0.2 amendment** — [ADR-008](docs/adr/008-s7-snap-geometry.md) (owner-approved): a PDFium-free **Snap worker** answers pointer-time snap queries (§3.1, D-10, §7.4).
+
+> **Rev 0.3 amendments** — M0 spike results, owner-approved: [ADR-003](docs/adr/003-s8-csp-wasm-workers-sw.md) (explicit font fallback, font split — §9), [ADR-004](docs/adr/004-s3-two-engines.md) (hosted Render worker, render cancellation, memory policy, COOP/COEP — §3.1, §10.1), [ADR-005](docs/adr/005-s1-incremental-save.md) (narrow-tail Ctrl+S — §4.2, §4.3), [ADR-006](docs/adr/006-s5-search-work-worker.md) (background indexing, context cap — §6), [ADR-007](docs/adr/007-s2-measure-viewport.md) (own object layer, encrypted files — §7.4) and [ADR-009](docs/adr/009-s4-pdf-oxide.md) (PDF Oxide gating, stream tables — §7.6, §7.7).
+
+> **Rev 0.4 amendment** — [ADR-010](docs/adr/010-s6-fluent-icons.md) (owner-approved): Fluent **Regular** icons (Filled for active states) replace the deprecated Color style (D-20, §8).
 
 ---
 
@@ -47,7 +53,7 @@ Tablet/phone UI · Safari parity · OCR · scanned-table extraction · PDF text/
 | D-07 | Desktop only. Chrome/Edge primary; Firefox supported; Safari best-effort. Pointer Events throughout |
 | D-08 | Search runs **only on Enter/click**, never as-you-type |
 | D-09 | **EmbedPDF headless** (engine + plugins) + own React UI. Direct calls to the bundled PDFium WASM functions from the workers are allowed where EmbedPDF does not expose an API (ADR-001 B14) |
-| D-10 | **Two PDFium instances in separate workers**: Render worker and Work worker (search/extract/convert/table/snap) |
+| D-10 | **Two PDFium instances in separate workers**: Render worker and Work worker (search/extract/convert/table/snap geometry extraction), plus a PDFium-free **Snap worker** for pointer-time snap queries (ADR-008) |
 | D-11 | React + TypeScript + Vite, static SPA, Cloudflare Pages |
 | D-12 | **MIT license; permissive-only dependency tree**, enforced in CI by `npm run licenses` (allowlist in `scripts/license-policy.ts`; OFL-1.1 for fonts; MPL-2.0 only for dev-only tooling that is never bundled — ADR-001 B2, ADR-002). BentoPDF is reference-only (AGPL — no code copied) |
 | D-13 | Repo private during development; published as MIT at an owner-chosen milestone. No external contributions without a CLA |
@@ -57,7 +63,7 @@ Tablet/phone UI · Safari parity · OCR · scanned-table extraction · PDF text/
 | D-17 | Core-first loading, remaining modules background-precached, visible "✓ Ready offline" |
 | D-18 | Updates never reload while documents are open; "Update ready" applies on click / next launch |
 | D-19 | Protected PDFs behave like Adobe Reader: open password prompt, permission flags honored, owner password unlocks |
-| D-20 | Fluent UI System Icons (MIT), Color style; custom engineering icons drawn to match. Light theme default, token-based colors |
+| D-20 | Fluent UI System Icons (MIT), **Regular** style (Filled for active/toggled states; Color style is deprecated upstream — ADR-010); custom engineering icons drawn to match. Light theme default, token-based colors |
 | D-21 | Installable PWA, `.pdf` file handler, single window (new files → new tabs) |
 | D-22 | Network: zero from app except update checks + opt-in error report; strict CSP; analytics = Cloudflare **server-side** request counts only — no analytics script, no CSP exception (ADR-001 B1) |
 | D-23 | Status schemes (presets + custom, export/import) drive stamps and CRS status; image stamps |
@@ -93,7 +99,13 @@ Tablet/phone UI · Safari parity · OCR · scanned-table extraction · PDF text/
       │  tiles · thumbs    │                  │  extraction · tables ·     │
       │  annotation edits  │                  │  MD/HTML/DOCX/XLSX build · │
       │  save / flatten    │                  │  snap geometry · sig hash  │
-      └────────────────────┘                  └────────────────────────────┘
+      └────────────────────┘                  └─────────────┬──────────────┘
+                │                                           │ transfers per-page snap indexes
+                │                             ┌─────────────▼──────────────┐
+                │                             │  SNAP WORKER (pure JS,     │
+                │                             │  no PDFium): pointer-time  │
+                │                             │  snap queries (ADR-008)    │
+                │                             └────────────────────────────┘
                 │                                        │
                 └─────────── OPFS (recovery) · IndexedDB (settings, handles, recent) ───────────┘
 ```
@@ -101,7 +113,11 @@ Tablet/phone UI · Safari parity · OCR · scanned-table extraction · PDF text/
 Rules:
 - The **Render worker owns the authoritative document** (annotations, form values, save). The Work worker holds a **read-only copy** of the bytes; after edits it is refreshed lazily (on next Work job) with the **original bytes plus the incremental-update tail** produced by the Render worker, never a full re-serialization (ADR-001 B11).
 - Every worker call is **cancellable** (AbortSignal → message) and reports **progress** for jobs > 300 ms.
-- One pair of workers serves all tabs; documents are keyed by `docId`. Idle documents may be evicted from the Work worker under memory pressure.
+- One set of workers serves all tabs; documents are keyed by `docId`. Idle documents may be evicted from the Work worker under memory pressure.
+- The **Render worker** is our own worker module hosting EmbedPDF's `PdfiumNative` executor; the main thread uses EmbedPDF's `PdfEngine` orchestrator over it (ADR-004). Both workers load the **same** self-hosted `pdfium.wasm` URL.
+- Render cancellation: tiles are 256 px; stale queued tiles are aborted on every scroll/zoom change; renders expected to take > 100 ms use PDFium's progressive path with cancel between slices. One in-flight tile (~2–50 ms) is not interruptible — the accepted exception to "every call cancellable" (ADR-004).
+- Memory: WASM memory only grows. The Work worker is respawned when idle after a job whose peak exceeds ~256 MB and on document eviction (remaining documents reload original bytes + tail); the Render worker is respawned only when no document is open (ADR-004).
+- The **Snap worker** holds per-page snap indexes (typed arrays) transferred from the Work worker and answers pointer queries (≤ 1 in flight per animation frame), so snapping never waits for PDFium work (ADR-008).
 
 ### 3.2 Technology stack (all permissive — verify each at install)
 
@@ -165,13 +181,13 @@ Rules:
 |---|---|
 | **Ctrl+S** | Incremental save (append-only) to the original handle. Target < 1 s for 100 markups on typical files; large files are measure-and-report (the FSA API copies the whole file on write) (ADR-001 B12, ADR-002). |
 | **Save As…** | Incremental copy to a new location (full rewrite if user picks "optimized"). |
-| **Save Optimized** | Full rewrite (garbage-collected, compressed). If signatures exist: modal "This will invalidate N signature(s). Continue?" |
+| **Save Optimized** | Full rewrite (garbage-collected, Flate-compressed streams, no object streams) via `FPDF_SaveAsCopy(FPDF_NO_INCREMENTAL)` through our writer (ADR-005). If signatures exist: modal "This will invalidate N signature(s). Continue?" |
 | **Growth prompt** | Track bytes appended since open. If file is unsigned and growth > 30 %, Ctrl+S offers "Save Optimized instead?" (dismissable, remembered per doc). |
 
-Spike M0-S1 must confirm incremental save is reachable through EmbedPDF/PDFium (`FPDF_SaveAsCopy` with incremental flag or equivalent). EmbedPDF's engine API exposes only `saveAsCopy()`; the bundled PDFium exports `FPDF_SaveAsCopy(doc, writer, flags)`, which may be called directly (ADR-001 B14).
+Ctrl+S calls PDFium `FPDF_SaveAsCopy(FPDF_INCREMENTAL)` in the Render worker, then keeps only changed objects and writes its own xref section and trailer in the original's form — the **narrow tail** (ADR-005). The result is verified in the Work worker; on mismatch the full PDFium tail is used with our xref (never PDFium's own xref section), and the fallback is logged without document content. Files over ~50 MB show save progress. EmbedPDF's engine API exposes only `saveAsCopy()` (a full rewrite), so the bundled PDFium export is called directly (ADR-001 B14).
 
 ### 4.3 Crash recovery (D-05)
-- On first edit, store the **original bytes once** in OPFS, keyed by a document fingerprint. Then ~5 s after the last change (debounced), write a recovery snapshot consisting of the **incremental-update tail** (bytes appended since the original) **+ UI state** (tab order, page, zoom) — never a full re-serialization (ADR-001 B11).
+- On first edit, store the **original bytes once** in OPFS, keyed by a document fingerprint. Then ~5 s after the last change (debounced), write a recovery snapshot consisting of the **narrow incremental-update tail** (bytes appended since the original; ADR-005) **+ UI state** (tab order, page, zoom) — never a full re-serialization (ADR-001 B11).
 - Never writes to the original file. Cleared on successful save or explicit discard.
 - On launch, if snapshots exist: "Recover unsaved changes?" per document.
 - Window close / Ctrl+W with unsaved changes → `beforeunload` confirmation.
@@ -194,7 +210,8 @@ Spike M0-S1 must confirm incremental save is reachable through EmbedPDF/PDFium (
 - **Ctrl+F**: quick find bar (current doc), runs on Enter.
 - **Ctrl+Shift+F**: Advanced Search pane — results grouped by page with context; options: match case, whole word, wildcards/regex; scope: current doc / all open tabs; include comments, annotations, bookmarks.
 - Runs in the **Work worker** only. Results stream in while the rest of the document is being indexed. A new search cancels the previous one.
-- Text index per document built lazily in the Work worker and cached for the session.
+- Text index per document built in the Work worker **in the background after open (idle priority, viewport order, backs off while the user scrolls/zooms)** and on demand by searches; cached for the session. No persistent text cache (ADR-006).
+- At most **5,000 hits are streamed with context** per search; beyond that, per-page counts only, with context fetched on demand as the virtualized results list scrolls. The hit count stays exact (ADR-006).
 - Target: first hits < 1 s, full 2,000-page search < 15 s, **no main-thread task > 100 ms at any point**.
 
 ---
@@ -237,8 +254,8 @@ First markup triggers a dialog: name, initials, discipline, company (optional). 
 - Tools: distance, perimeter (polyline), area (polygon); calibration tool.
 - Scale by ratio (1:50) or calibration (pick two points, enter real length). Units: mm, m, in, ft-in; precision setting.
 - **Scale viewports**: user draws regions with their own scale (e.g. Detail A 1:5). Measurement uses the viewport containing it; outside any viewport → page default scale; no scale → shows "uncalibrated"; spanning viewports → flagged warning.
-- Persist using standard PDF measurement structures (Measure / Viewport dictionaries). Spike M0-S2 determines whether EmbedPDF/PDFium can write these; if not, add a narrow low-level writer in the Render worker.
-- **Snapping** to vector geometry (endpoints, midpoints, intersections, nearest-on-segment). Geometry for the visible region extracted in the Work worker, spatially indexed, cached per page.
+- Persist using standard PDF measurement structures (Measure / Viewport dictionaries). EmbedPDF/PDFium cannot write or read these, so a narrow **own PDF object layer** (reader, serializer, patch writer) in the Render worker adds `/Measure`, `/IT`, `/Cap`, `/Contents` and page `/VP`, merged into the single Ctrl+S revision (ADR-007). Encrypted files: the Standard security handler is implemented in M3; until then, measurements in encrypted PDFs are shown but not saved, with a message (ADR-007). Label strategy and viewport semantics for viewer-made files follow the owner's interop run (ADR-007 decisions 2–3).
+- **Snapping** to vector geometry (endpoints, midpoints, intersections, nearest-on-segment). Geometry for each visible page is extracted whole in the Work worker (page parsing dominates, so region extraction does not pay off — ADR-008), spatially indexed, cached per page. Queries are answered by the Snap worker (§3.1, ADR-008).
 
 ### 7.5 CRS export (D-15)
 Excel (ExcelJS). Header block: document number, revision, title, reviewer, date, status scheme. Columns: No. · Page · Location/Type · Reviewer · Discipline · Comment · Replies · Status · Snapshot · Vendor Response (blank) · Final Status (blank). Optional snapshot thumbnail of each markup region embedded per row. Also CSV (no images).
@@ -253,9 +270,11 @@ Excel (ExcelJS). Header block: document number, revision, title, reviewer, date,
 | Word (.docx) | PDF → Markdown → mdast → `docx` | **Beta** |
 | Annotations | own serializer → CSV / XLSX / JSON | — |
 
+PDF Oxide runs in the Work worker, lazy-loaded (non-core) from a self-hosted WASM URL and warmed up in the background after init. **Every Oxide call is gated by PDFium's permission check** — Oxide itself ignores permission flags (D-19, ADR-009). Search keeps PDFium text extraction (§6).
+
 ### 7.7 Table extraction (beta)
 - Text-layer PDFs only (scanned → message "requires OCR — planned").
-- Detection candidates: (1) **lattice** — ruling lines from vector paths; (2) **stream** — text alignment/whitespace columns; (3) PDF Oxide table output. Merge/score candidates.
+- Detection candidates: (1) **lattice** — ruling lines from vector paths (PDF Oxide's table output is exact here); (2) **stream** — our own text alignment/whitespace-column detector (PDF Oxide does not detect unruled tables — ADR-009). Merge/score candidates. Merged header cells come from the grid model, not the engine.
 - **Express Extract**: one click → auto-detect selected pages → XLSX/CSV, no review.
 - **Review & Extract**: proposed outlines as overlays → accept / adjust grid (drag/add/remove row & column dividers, mark header rows, merged cells) / draw manually → preview → export. Saved **templates** apply the same grid to other pages.
 - Test fixture of record: a public pipe dimension chart style table (side-by-side tables, merged headers, multi-row cells, dual units).
@@ -289,7 +308,7 @@ Own dialog: range (all, current page, current view, selected area, custom), fit 
 
 - Ribbon tabs (Rev 0) — this list is authoritative; `docs/ui-reference/` images are layout-only, and out-of-scope commands are omitted rather than shown disabled (ADR-001 B6): **File** (backstage: open, recent, save, save as, save optimized, print, properties, settings, about/privacy), **Home**, **View**, **Comment**, **Measure**, **Organize**, **Convert**, **Protect** (redact, security info, signatures), **Help**.
 - Large (32 px) and small (16/20 px) buttons, groups with labels, split buttons and dropdowns, collapsible ribbon, keyboard access (Alt key tips — nice-to-have).
-- Icons: Fluent System Icons Color style; missing engineering icons (cloud, calibrate, scale viewport, CRS export, express extract) drawn in the same grid/style in `/src/ui/icons`.
+- Icons: Fluent System Icons **Regular** style (Filled for active/toggled states), colored via design tokens (`currentColor`); small buttons use 20 px glyphs, large (32 px) buttons use the native 32 px glyph or the 28/24 px glyph scaled up. The 23 missing icons listed in [ADR-010](docs/adr/010-s6-fluent-icons.md) and [S6-icon-map.md](docs/plan/S6-icon-map.md) (incl. cloud, calibrate, scale viewport, CRS export, stamp; express extract uses Fluent `TableLightning`) are drawn in the same grid/line style in `/src/ui/icons`. Fluent icons are imported per icon by path, via one registry (ADR-010).
 - Design tokens (color, spacing, type, radius, elevation) as CSS variables; light theme default; dark theme deferred but tokens must support it.
 - Layout minimum 1280 px wide.
 - Start screen: open file, drop zone, recent files (clearable).
@@ -307,7 +326,7 @@ No user-visible string literals in components — all via i18n keys in `en.json`
 
 - Service worker precaches the **core** (shell, UI, Render worker, PDFium WASM, base fonts) first; after first render, background-precaches the rest (Work worker, PDF Oxide WASM, CJK/extra fonts, ExcelJS, docx). Status bar shows progress then "✓ Ready offline".
 - A feature used before its module is cached triggers a priority fetch with a spinner.
-- Fonts bundled; **EmbedPDF CDN font fallback disabled** (`fontFallback: null` or local config). No runtime CDN anything. EmbedPDF defaults both `pdfium.wasm` and `@embedpdf/fonts-*` to `cdn.jsdelivr.net`; both must be overridden with self-hosted copies (verified in M0-S8).
+- Fonts bundled; **EmbedPDF CDN font fallback disabled** (`fontFallback: null` or local config with absolute same-origin URLs — never `undefined`, ADR-003). Fallback fonts: Regular weight only; Latin, Arabic and Hebrew in core, SC/TC/JP/KR in the background precache (ADR-003). No runtime CDN anything. EmbedPDF defaults both `pdfium.wasm` and `@embedpdf/fonts-*` to `cdn.jsdelivr.net`; both must be overridden with self-hosted copies (verified in M0-S8).
 - Updates: new SW installs in the background; app shows "Update ready" and activates only on user click or next launch; never while documents are open.
 - Total install budget ≤ 60 MB (measure and report per module in CI).
 
@@ -321,6 +340,8 @@ default-src 'self'; script-src 'self' 'wasm-unsafe-eval'; worker-src 'self' blob
 connect-src 'self'; img-src 'self' blob: data:; font-src 'self'; style-src 'self' 'unsafe-inline';
 object-src 'none'; base-uri 'none'; frame-ancestors 'none'; form-action 'none'
 ```
+Additional headers: `Cross-Origin-Opener-Policy: same-origin` and `Cross-Origin-Embedder-Policy: require-corp` (hardening; enables whole-tab memory measurement — ADR-004).
+
 Analytics uses **Cloudflare's server-side request analytics only**. No beacon script is injected (Web Analytics automatic setup stays off), so the CSP above needs **no exception** (ADR-001 B1).
 
 ### 10.2 Error report (opt-in)
@@ -412,11 +433,11 @@ Text/images/MD/HTML, Word (beta), tables (beta: Express + Review), page operatio
 |---|---|
 | EmbedPDF plugin doesn't meet a requirement | Replace that plugin only; drop to engine level for that subsystem (D-09) |
 | Measure/Viewport interop varies between viewers | S2 spike; document observed behavior; Bluebeam unverified (D-33) |
-| Incremental save not exposed | S1 spike; low-level PDFium call in Render worker |
-| Memory with two engine instances | Evict idle docs from Work worker; bounded tile caches |
+| Incremental save not exposed | Direct `FPDF_SaveAsCopy` + narrow tail, verified with keep-all fallback (ADR-005); private EmbedPDF document accessor pinned and unit-tested |
+| Memory with two engine instances | Evict idle docs from Work worker; respawn workers to release WASM memory (ADR-004); bounded tile caches |
 | Table extraction quality | Beta label; review path + editable grid + templates |
 | Accidental GPL/AGPL dependency via agent-added packages | CI license gate fails the build |
 | Dev-only MPL tool drifting into the runtime bundle | Gate uses the lockfile `dev` flag; any runtime MPL fails the build (ADR-002) |
 | EmbedPDF CDN defaults (`pdfium.wasm`, fonts on jsDelivr) | Always self-host; M0-S8 asserts zero third-party requests |
-| EmbedPDF has no measurement tool / Measure fields | M0-S2; narrow writer in Render worker if needed |
+| EmbedPDF has no measurement tool / Measure fields | Own object layer in Render worker (ADR-007) |
 | Font bundle size (CJK) | Background precache; measure in CI |

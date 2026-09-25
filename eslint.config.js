@@ -17,6 +17,8 @@ export default defineConfig(
       'playwright-report',
       'node_modules',
       'corpus/files',
+      'spikes/**/dist',
+      'spikes/**/out',
     ],
   },
   js.configs.recommended,
@@ -49,6 +51,13 @@ export default defineConfig(
       'react-refresh/only-export-components': ['warn', { allowConstantExport: true }],
       // CLAUDE.md rule 11: no hardcoded user-visible strings in JSX
       'i18next/no-literal-string': ['error', { mode: 'jsx-only' }],
+    },
+  },
+  // M0 spike code (throwaway; browser, workers and Node tooling)
+  {
+    files: ['spikes/**/*.ts'],
+    languageOptions: {
+      globals: { ...globals.browser, ...globals.worker, ...globals.node },
     },
   },
   // Tooling, tests and config files (Node)

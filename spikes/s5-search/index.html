@@ -1,0 +1,23 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>M0-S5 · search in the Work worker</title>
+  </head>
+  <body>
+    <main aria-label="S5 spike">
+      <h1>M0-S5: search while scrolling</h1>
+      <p>Status: <output id="status" aria-live="polite">starting</output></p>
+      <p>
+        <label>Search (press Enter) <input id="q" type="search" /></label>
+        <label><input id="case" type="checkbox" /> Match case</label>
+        <label><input id="word" type="checkbox" /> Whole word</label>
+        Hits: <output id="count" aria-live="polite">0</output>
+      </p>
+      <canvas id="viewport" width="1000" height="700" aria-label="Page viewport"></canvas>
+      <ul id="results" aria-label="Search results"></ul>
+    </main>
+    <script type="module" src="./main.ts"></script>
+  </body>
+</html>

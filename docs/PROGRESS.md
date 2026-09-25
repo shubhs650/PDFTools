@@ -1,6 +1,6 @@
 # PDFTools — Progress
 
-_Last updated: 2026-09-24 (session 1, follow-up)_
+_Last updated: 2026-09-25 (session 8: M1 plan drafted and approved)_
 
 **Current milestone:** M0 — Spikes (plan: [docs/plan/M0.md](plan/M0.md))
 
@@ -32,12 +32,199 @@ _Last updated: 2026-09-24 (session 1, follow-up)_
   - the [M0 plan](plan/M0.md) with S1–S8, including an EmbedPDF v2.15.1 capability snapshot;
   - **ARCHITECTURE.md Rev 0.1**, with ADR-001 and ADR-002 applied;
   - CLAUDE.md rule 5 now points to the allowlist in `scripts/license-policy.ts`.
+- **Session 2 — M0-S8 (CSP, WASM, workers, service worker).** _Works with workaround._ See
+  [ADR-003](adr/003-s8-csp-wasm-workers-sw.md).
+  - The §10.1 CSP works **unchanged** with EmbedPDF's `blob:` worker engine, WASM and a
+    vite-plugin-pwa service worker. Result: 0 violations and 0 third-party requests, and an
+    offline reload works.
+  - EmbedPDF falls back to jsDelivr fonts whenever `fontFallback` is `undefined`. A negative-control
+    test shows that the CSP blocks this. The engine must always get `null` or a local config with
+    absolute URLs.
+  - `wrangler` was dropped because it pulls in LGPL `sharp`/libvips. `spikes/shared/serve.ts`
+    applies `_headers` like Pages does.
+- **Session 2 — M0-S3 (two engines in two workers).** _Works with workaround._ See
+  [ADR-004](adr/004-s3-two-engines.md).
+  - The Render and Work PDFium instances run concurrently. The Work job adds about 5–9 % to tile
+    p50/p95. No main-thread long tasks. Extraction runs at ~200 pages/s and cancels in 3–9 ms.
+  - WASM memory never shrinks: the Work worker reached 129 MB after one full-text pass. Respawning
+    the worker returns it to 18.6 MB.
+  - Queued renders can be cancelled; in-flight EmbedPDF renders cannot. Direct PDFium progressive
+    rendering works in our own worker and cancels in < 0.1 ms, but its slices run 37–45 ms.
+  - Recommendation: host EmbedPDF's `PdfiumNative` in our own Render worker module (the "hosted"
+    variant) so that direct PDFium calls are available (ADR-001 B14, needed by S1).
+- **Session 7 — ADR approvals.** The owner accepted ADR-003 to ADR-007 and ADR-009. They are
+  applied as **ARCHITECTURE.md Rev 0.3**:
+  - hosted Render worker, render cancellation and the respawn memory policy; COOP/COEP headers;
+  - narrow-tail Ctrl+S; background search indexing with a 5,000-hit context cap;
+  - own Measure object layer, with encrypted files handled in M3;
+  - PDFium permission gate before PDF Oxide; own stream-table detector; the font split.
+- **Session 7 — M0-S6 (Fluent icon coverage).** _Fails as specified, works with workaround._
+  ADR-010 accepted (ARCHITECTURE.md Rev 0.4: Regular icons; CLAUDE.md rule 15). See
+  [ADR-010](adr/010-s6-fluent-icons.md) and the generated
+  [icon map](plan/S6-icon-map.md).
+  - 126 Rev 0 commands inventoried: the quick access toolbar, the nine §8 tabs, the rail panes and
+    the status bar.
+  - **Fluent Color covers only 24 (19 %)**, and upstream has **deprecated** all Color icons: no
+    High Contrast support, global gradient IDs, and failing dark-theme contrast. **Regular and
+    Filled cover all 126.**
+  - Large buttons: only 25 of 50 have a native 32 px glyph; the rest scale up from 28 or 24 px.
+  - 23 custom icons are needed, including the four named in §8 (cloud, calibrate, scale
+    viewport, CRS export) and Stamp, which exists only in the Light style. Express extract fits
+    Fluent's `TableLightning`.
+  - Bundle: about 22 kB brotli for the whole set plus 5.6 kB of runtime. It tree-shakes, and
+    per-icon path imports build about 4× faster than the root barrel.
+  - Added dependency `@fluentui/react-icons` 2.0.341 (MIT). The license gate passes (536
+    packages).
+- **Session 7 — M0-S4 (PDF Oxide WASM).** _Works with workaround._ See
+  [ADR-009](adr/009-s4-pdf-oxide.md).
+  - The WASM build has every API needed for §7.6 and §7.7: text, Markdown, HTML, tables with cell
+    boxes, images, words and paths. It is **4.45 MB brotli** (17.6 MB raw).
+  - Licenses: `MIT OR Apache-2.0`, and all 394 Rust crates compiled into the WASM are permissive.
+  - In a module worker under the §10.1 CSP: 0 violations, 0 third-party requests, and the only
+    fetch is the self-hosted `.wasm`. Init takes 0.7 s in the browser. Cancel between pages takes
+    11 ms. No main-thread long tasks.
+  - The **first extraction per instance takes ~0.7 s** (a one-time warm-up), so it should run in
+    the background right after init.
+  - 2,000 pages: text at 215–286 pages/s, Markdown at 109–140 pages/s, and PDFium text at 459
+    pages/s. Memory is about 47 MB.
+  - Tables: **lattice 100 %**, merged-header data 100 % (the merged header text is dropped), and
+    **stream 0 %**. There are no useful tables in the public corpus. Unruled catalogue tables come
+    out as jumbled text. So an own stream detector is needed (§7.7).
+  - Structure: H1, lists and two-column reading order are correct; the H2 comes out as bold text.
+  - **Oxide has no permission API.** It extracted from the encrypted catalogue without checks, so
+    it must be gated by PDFium's permission flags (rule 9).
+  - Added dependency `pdf-oxide-wasm` 0.3.77. The license gate passes.
+- **Session 6 — M0-S7 (vector geometry for snapping).** _Works with workaround._ See
+  [ADR-008](adr/008-s7-snap-geometry.md).
+  - Extraction goes straight through PDFium (EmbedPDF has no public API):
+    - paths and forms, with composed matrices;
+    - Bézier flattening and implicit closes;
+    - raw WASM exports, 2.3–4.6× faster than `cwrap`.
+  - Correct on a known-geometry sheet (11 unit tests plus an integration check): exact endpoint,
+    intersection and midpoint snaps, and the circle within 0.2 pt.
+  - Dense public A1 page (174k segments): extraction ~0.35 s (Node) / 0.56 s (browser), grid
+    ~30 ms, queries p95 < 0.5 ms. Synthetic 1M segments: ~0.9 s + 0.2–0.3 s, 36 MB.
+  - `FPDF_LoadPage` is 75–90 % of the extraction time and can't be interrupted, so region
+    extraction doesn't help: extract whole pages once and cache them.
+  - While PDFium parses, snap queries that go to the Work worker wait **~272 ms** each. A
+    **pure-JS snap worker** fed by transferred indexes answers at **p95 0.5 ms** even during
+    extraction. This is proposed as a new worker (ADR-008 decision 2).
+  - Tiles are unaffected, and there are no main-thread long tasks.
+- **Session 5 — M0-S2 (measurement and viewport dictionaries).** _Works with workaround._ See
+  [ADR-007](adr/007-s2-measure-viewport.md).
+  - Neither EmbedPDF nor PDFium can write or read nested `/Measure` dictionaries or page `/VP`.
+  - Built our own layer (19 unit tests):
+    - a minimal PDF object reader (xref tables and streams, object streams, predictors);
+    - a serializer;
+    - an incremental patch-revision writer;
+    - scale math: ratio, calibration, ft-in, and the §7.4 viewport choice including "spanning";
+    - a reader CLI for files saved by the viewers.
+  - On a self-made A1 sheet (1:100, plus Detail A at 1:5):
+    - EmbedPDF creates the geometry annotations; we add `/IT`, `/Measure`, `/Cap`, `/Contents` and
+      page `/VP`;
+    - qpdf is clean and the values read back exactly;
+    - the data survives later EmbedPDF edits.
+  - PDFium appearances draw geometry only, with no value text. Label variants (`/Cap`, grouped
+    FreeText, no appearance) went into an interop pack for the owner.
+  - **Encrypted files are not handled.** Writing or reading measurement strings needs our own
+    security handler; this is an owner decision.
+- **Session 4 — M0-S5 (search in the Work worker while scrolling).** _Works with workaround._ See
+  [ADR-006](adr/006-s5-search-work-worker.md).
+  - Design: the Work worker extracts text with raw `FPDFText_*` into a session cache, then:
+    - matches with JS `RegExp` (case, whole word, wildcards, regex);
+    - searches in viewport order;
+    - streams batches no more often than every 50 ms;
+    - cancels between pages.
+  - Results on a self-made 2,000-page contract stand-in, with continuous auto-scroll:
+    - Enter-only is verified: typing never searches;
+    - cold search: first hit **53–71 ms**, done **4.0–5.6 s**;
+    - a new query cancels the old one in **19–21 ms**, with 0 stale results;
+    - **0 main-thread long tasks**;
+    - warm index: 6–110 ms.
+  - Needed mitigations:
+    - stream at most **5,000 hits with context** and counts beyond that. Without the cap, a
+      910k-hit regex caused 66–68 ms long tasks and 150 ms frames;
+    - **background indexing after open**, so rare terms far from the viewport also get first hits
+      in under 1 s (≈1.8 s cold otherwise).
+  - EmbedPDF `plugin-search` runs in the **Render engine**, in 25-page uninterruptible chunks, and
+    doubles tile p50/p95. It is not used, which confirms D-10.
+  - Real text (the 1,152-page catalogue): first hit 55 ms, done 5.6 s, 0 long tasks.
+- **Session 3 — M0-S1 (incremental save + full rewrite).** _Works with workaround._ See
+  [ADR-005](adr/005-s1-incremental-save.md).
+  - EmbedPDF's `saveAsCopy()` is a **full rewrite**, and it copies bytes out one at a time (1.1 s
+    for 23 MB). A direct `FPDF_SaveAsCopy(doc, writer, flags)` through our own `FPDF_FILEWRITE`
+    works in both modes. It needs EmbedPDF's private document pointer.
+  - PDFium's incremental save keeps the original prefix, signatures and encryption, but it:
+    - appends **every loaded object**: +22 MB on a 23 MB file for one annotation;
+    - **damages files with xref streams**;
+    - replaces the permanent `/ID`.
+  - Proposed fix, the **narrow tail**: keep PDFium's object serialization, append only changed
+    objects, and write our own xref and trailer in the original's form.
+    - Result: a 1,044-byte tail on the 23 MB file, qpdf-clean on all 8 inputs, and signatures and
+      encryption preserved.
+    - qpdf shows every dropped object is unchanged (26k checked); PDFium's differences are float
+      rounding, `/NM` and `/P` noise.
+    - When nothing changed, no revision is appended.
+    - Keep-all fallback: every appended object with our xref.
+  - All 21 EmbedPDF tool annotations are created with appearance streams and survive every mode.
+    Form values persist. Annotate-denied files are not edited (rule 9).
+  - Ctrl+S timing: **12–42 ms** end to end for 100 markups on small files (target < 1 s). On
+    23 MB, ~0.5–0.6 s, of which `createWritable(keepExistingData)` takes 166–285 ms because it
+    copies the whole file. An OPFS sync-handle tail write takes ~1.5 ms.
+  - Interop pack (33 self-made files) in `e2e/fixtures/self-made/s1-interop/`; owner checklist in
+    `e2e/interop/CHECKLIST.md`.
+  - Tooling: `qpdf` CLI installed with apt (verification only, not a dependency). Added `pkijs` and
+    `asn1js` (BSD-3, planned for D-24). Spike unit tests now run in `npm run test`.
+- **Session 2 — tooling:**
+  - `spikes/` with a shared `_headers` server, fixture writer and probes;
+  - `npm run spikes`, `npm run typecheck:spikes` and `npm run corpus`;
+  - `corpus/manifest.json`, listing the FAR;
+  - spikes are now covered by ESLint.
+  - Dependencies added: `@embedpdf/engines`, `@embedpdf/pdfium`, `@embedpdf/models` 2.15.1
+    (runtime), and `vite-plugin-pwa` 1.3.0, `workbox-window` and `workbox-build` (dev). The license
+    gate passes (521 packages).
 
 ## In progress
 
-- Nothing. M0 spikes have not started.
+- M0: the agent part of all eight spikes is done and all spike ADRs are accepted. Owner runs are
+  still open. The owner checks listed under Next are pending.
+- **M1 plan approved:** [docs/plan/M1.md](plan/M1.md). 28 one-session tasks (M1-01 … M1-28),
+  each with goal, files, acceptance criteria, tests and dependencies. It starts with an EmbedPDF
+  plugin-layer spike (M1-01 → ADR-011), because M0 only exercised the engine. The owner accepted
+  all proposals for M1-Q1 to M1-Q8 (see the Decisions log).
 
 ## Session log
+
+- **Session 8 (2026-09-25):** Read PROGRESS, ARCHITECTURE Rev 0.4 and ADR-001 to ADR-010; wrote
+  the M1 plan; the owner approved it and accepted M1-Q1 to M1-Q8. Docs only; no code changed.
+
+- **Session 7 (2026-09-24):**
+  - ADR-008 accepted (ARCHITECTURE.md Rev 0.2).
+  - S4 done: 102 unit tests, license gate (529 packages), and 20/20 spike Playwright tests.
+  - ADR-003 to ADR-007 and ADR-009 accepted (ARCHITECTURE.md Rev 0.3).
+  - S6 done. Local checks all pass: typecheck (app and spikes), lint, format, 106 unit tests,
+    license gate (536 packages), and the app e2e smoke. S6 has no Playwright part, and the other
+    spikes are unchanged.
+
+- **Session 6 (2026-09-24):** S7. Local checks all pass: typecheck (app and spikes), lint, format,
+  unit tests (11 new S7 tests), license gate, app e2e smoke, and all spike Playwright tests.
+
+- **Session 5 (2026-09-24):** S2. Local checks all pass: typecheck (app and spikes), lint, format,
+  unit tests (19 new S2 tests), license gate, app e2e smoke, and all spike Playwright tests. The S2
+  Node harness passes: qpdf clean, all values match, survival check OK.
+
+- **Session 4 (2026-09-24):** S5. Local checks all pass: typecheck (app and spikes), lint, format,
+  unit tests (including 10 search-core tests), license gate, app e2e smoke, and all spike
+  Playwright tests (15/15).
+
+- **Session 3 (2026-09-24):** S1. Local checks all pass: typecheck (app and spikes), lint, format,
+  62 unit tests (including 10 narrow-tail tests), license gate (528 packages), app e2e smoke, and
+  11/11 spike Playwright tests. The S1 Node matrix has 0 problems.
+
+- **Session 2 (2026-09-24):** S8 → S3 as planned. Branch `claude/bold-galileo-1jyn9y`, based on
+  PR #1's branch because PR #1 is not merged yet. Local checks all pass: typecheck (app and
+  spikes), lint, format, 52 unit tests, license gate, app e2e smoke, and 8/8 spike Playwright
+  tests.
 
 - **Session 1 (2026-09-24):** Spec review, scaffold, and M0 docs. Commits: `b0bb839` (scaffold),
   `82956ef` (docs), `8806dc8` (PROGRESS).
@@ -50,18 +237,52 @@ _Last updated: 2026-09-24 (session 1, follow-up)_
 
 ## Next
 
-1. Get [PR #1](https://github.com/shubhs650/PDFTools/pull/1) (branch
-   `claude/upbeat-carson-6tjwoe`) reviewed and merged. The first GitHub Actions CI runs are
-   **green**: both the checks job and the e2e job pass.
-2. Start M0 in the suggested order: **S8 → S3 → S1 → S5 → S2 → S7 → S4 → S6**.
-   - Set up `spikes/`.
-   - Write the corpus manifest and download script (FAR first; public-domain sources only).
-   - Add an owner-local-files section to the results templates.
+1. **Owner decisions:** none open on the spikes. ADR-003 to ADR-010 are accepted
+   (ARCHITECTURE.md Rev 0.4). ADR-007 decisions 2–3 are accepted as defaults, to be confirmed by
+   the S2 interop run below.
+2. **Owner runs:**
+   - **S1 interop checklist** (`e2e/interop/CHECKLIST.md`) in Acrobat Reader and PDF-XChange;
+   - S1 FSA button on the 500 MB contract;
+   - **S5 search on the FAR and the 500 MB contract** (ADR-006, "Owner runs");
+   - **S2 interop checklist** §D and §F (`e2e/fixtures/self-made/s2-interop/`);
+   - **S7 on the four local CAD drawings and the dense P&ID**
+     (`node spikes/s7-snap/run-node.ts <files>`, plus the browser page; see ADR-008);
+   - **S4 on the local pipe-chart fixture and a parts-list drawing**
+     (`node spikes/s4-oxide/run-node.ts <files>`; dumps in `out/review/`, see ADR-009);
+   - FAR, 500 MB and A0 through the S3 harness;
+   - S8 Firefox check and Pages preview.
+3. **Owner:** merge [PR #1](https://github.com/shubhs650/PDFTools/pull/1) and the M0 branch
+   (M1-Q8), and authorize the first `m1/<task>` branch.
+4. **Agent:** start M1 with M1-01 (plugin spike), then M1-02, M1-03 and M1-04.
 
 ## Open issues
 
-- **EmbedPDF defaults use jsDelivr.** Both the PDFium WASM URL and the fallback fonts point at
-  jsDelivr. Every spike and the app must self-host them (CLAUDE.md rule 4). S8 verifies this.
+- **Committed corpus PDFs vs ADR-002.** Commit `cd52644` added six PDFs directly to `corpus/`,
+  including CAD drawings. ADR-002 says drawings stay local and are never committed, and
+  `.gitignore` excludes `*.pdf`, so these were force-added. S3 uses `bearing catalogue.pdf` and
+  `PRESSURE-VESSEL-SAMPLE.pdf` from there. The owner needs to decide (see "Decisions needed").
+- **PDF Oxide ignores permission flags** (ADR-009). It must never receive a document before
+  PDFium's permission check allows copying or extraction (D-19, rule 9).
+- **Oxide finds no unruled (stream) tables** (ADR-009). §7.7's stream candidate has to be our own
+  detector. The pipe-chart fixture of record is still to be run by the owner.
+- **FAR not fetchable from the cloud container.** The environment's network policy denies
+  `www.acquisition.gov` (HTTP 403 from the proxy). To allow it, add that host under the
+  environment's Network access settings; otherwise run `npm run corpus` locally.
+- **PDFium incremental save needs our narrow-tail post-processing** (ADR-005). Used raw, it
+  bloats files and damages xref-stream files. The narrow tail depends on EmbedPDF's private
+  `PdfiumNative.cache` for the document pointer (pinned 2.15.1; upstream request proposed).
+- **Chrome's `createWritable(keepExistingData)` copies the whole file**, so Ctrl+S on very large
+  files is O(file size). The owner measures it on 500 MB; it needs a progress UI (ADR-005).
+- **Measurement data in encrypted PDFs** can be neither written nor read without our own
+  security handler (ADR-007). The public catalogue in `corpus/` is RC4-encrypted, so this is a
+  real case.
+- **In-flight EmbedPDF renders cannot be cancelled** (ADR-004). This needs the small-tiles and
+  progressive-rendering policy; see CLAUDE.md rule 2.
+- **Font install budget.** All weights of the `@embedpdf/fonts-*` packages come to ~122 MB against a
+  60 MB budget. Regular weights only come to ~24 MB (ADR-003).
+
+- **EmbedPDF defaults use jsDelivr.** S8 resolved this: the spikes self-host the WASM file and
+  fonts, and the CSP blocks the default (ADR-003). M1 must keep `fontFallback` explicit.
 - **EmbedPDF has no incremental-save option in its engine API.** S1 will call `FPDF_SaveAsCopy`
   with the incremental flag directly (ADR-001 B14).
 - **EmbedPDF has no measurement annotation tool or Measure fields.** S2 decides the writing
@@ -75,16 +296,32 @@ _Last updated: 2026-09-24 (session 1, follow-up)_
 
 ## Decisions needed (owner)
 
-1. **Cloudflare Pages project for S8.** Until one exists, S8 runs locally with
-   `wrangler pages dev`; the analytics and injection checks wait for the project.
-2. **More test drawings (optional).** Item 5 in the drawing list was blank. Add more whenever you
+1. **Committed corpus PDFs.** Either confirm that all six files in `corpus/` are public domain and
+   may stay in git, and amend ADR-002 to say so, or move them to the git-ignored `corpus/files/`
+   (drawings to `corpus/files/drawings/`) and remove them from history. The S3 spec skips if they
+   are missing. Note: `bearing catalogue.pdf` is a commercial manufacturer catalogue under
+   copyright, not public domain (found during S4). It should move out of git either way.
+2. **Cloudflare Pages project for S8.** Until one exists, S8 runs locally with
+   `spikes/shared/serve.ts`, because `wrangler` is blocked by LGPL (ADR-003). The analytics and
+   injection checks wait for the project.
+3. **More test drawings (optional).** Item 5 in the drawing list was blank. Add more whenever you
    like; they stay local only.
 
 ## Decisions log
 
-| Date       | Ref      | Decision                                                                                                                                                                                                                                                |
-| ---------- | -------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| 2026-09-24 | ADR-001  | Session-1 clarifications B1–B16. Key ones: server-side analytics only; broader permissive allowlist; location-based redaction verification; EmbedPDF annotation and redaction sets; OPFS original + tail recovery; public-domain corpus only.           |
-| 2026-09-24 | scaffold | Vite 7 instead of 8, and no jsx-a11y, because of MPL-2.0 dependencies. Superseded by ADR-002.                                                                                                                                                           |
-| 2026-09-24 | ADR-002  | MPL-2.0 allowed for dev-only tooling only (lockfile `dev` flag). OFL-1.1 allowed for fonts. Heavy files are measure and report for Rev 0. Test drawings are owner-supplied local files, with no URLs in the repo. Moved to Vite 8 and enabled jsx-a11y. |
-| 2026-09-24 | Rev 0.1  | ARCHITECTURE.md amended per ADR-001 and ADR-002 (owner-approved).                                                                                                                                                                                       |
+| Date       | Ref      | Decision                                                                                                                                                                                                                                                                                                                                                                                                                                                  |
+| ---------- | -------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| 2026-09-24 | ADR-001  | Session-1 clarifications B1–B16. Key ones: server-side analytics only; broader permissive allowlist; location-based redaction verification; EmbedPDF annotation and redaction sets; OPFS original + tail recovery; public-domain corpus only.                                                                                                                                                                                                             |
+| 2026-09-24 | scaffold | Vite 7 instead of 8, and no jsx-a11y, because of MPL-2.0 dependencies. Superseded by ADR-002.                                                                                                                                                                                                                                                                                                                                                             |
+| 2026-09-24 | ADR-002  | MPL-2.0 allowed for dev-only tooling only (lockfile `dev` flag). OFL-1.1 allowed for fonts. Heavy files are measure and report for Rev 0. Test drawings are owner-supplied local files, with no URLs in the repo. Moved to Vite 8 and enabled jsx-a11y.                                                                                                                                                                                                   |
+| 2026-09-24 | Rev 0.1  | ARCHITECTURE.md amended per ADR-001 and ADR-002 (owner-approved).                                                                                                                                                                                                                                                                                                                                                                                         |
+| 2026-09-24 | ADR-003  | S8: CSP unchanged; `fontFallback` always explicit; Regular-weight fallback fonts, CJK non-core; local `_headers` server instead of `wrangler` (LGPL). **Accepted**; ARCHITECTURE.md Rev 0.3.                                                                                                                                                                                                                                                              |
+| 2026-09-24 | ADR-004  | S3: hosted Render worker (our module + EmbedPDF `PdfiumNative`/`PdfEngine`); small tiles + queue abort + direct progressive render; respawn-based memory policy; optional COOP/COEP. **Accepted**; ARCHITECTURE.md Rev 0.3.                                                                                                                                                                                                                               |
+| 2026-09-24 | ADR-005  | S1: Ctrl+S = PDFium `FPDF_INCREMENTAL` + narrow tail (changed objects only, our own xref/trailer), verified in the Work worker with keep-all fallback; Save Optimized = `FPDF_NO_INCREMENTAL` via our writer. **Accepted**; ARCHITECTURE.md Rev 0.3.                                                                                                                                                                                                      |
+| 2026-09-24 | ADR-006  | S5: search in the Work worker (raw FPDFText extraction + session text cache + JS RegExp, viewport order, 50 ms batches, cancel between pages); ≤ 5,000 hits streamed with context; background indexing after open; EmbedPDF plugin-search not used. **Accepted**; ARCHITECTURE.md Rev 0.3.                                                                                                                                                                |
+| 2026-09-24 | ADR-007  | S2: own PDF object layer (reader, serializer, patch revision) writes `/Measure`, `/IT` and page `/VP`; label strategy and viewport semantics after owner interop; encrypted files need our own security handler (M3) or measurements are not saved there. **Accepted**; ARCHITECTURE.md Rev 0.3.                                                                                                                                                          |
+| 2026-09-24 | ADR-008  | S7: geometry extracted whole-page in the Work worker via raw PDFium exports and cached; snap queries answered by a new pure-JS snap worker holding transferred indexes (queries never wait for PDFium). **Accepted**; ARCHITECTURE.md Rev 0.2.                                                                                                                                                                                                            |
+| 2026-09-24 | Rev 0.3  | ARCHITECTURE.md amended per ADR-003 to ADR-007 and ADR-009 (owner-approved): hosted Render worker, render cancellation and memory policy, COOP/COEP, narrow-tail Ctrl+S, background search indexing and context cap, own Measure object layer, Oxide permission gate and own stream-table detector, font split.                                                                                                                                           |
+| 2026-09-24 | ADR-010  | S6: Fluent **Regular** icons (Filled for active states) instead of the deprecated, 19 %-coverage Color style; large buttons use native 32 px or scaled 28/24 px glyphs; 23 custom icons in the same line style; icon registry with per-icon path imports. **Accepted**; ARCHITECTURE.md Rev 0.4, CLAUDE.md rule 15.                                                                                                                                       |
+| 2026-09-24 | ADR-009  | S4: adopt PDF Oxide for text/Markdown/HTML (lazy, background warm-up); PDFium permission gate before every Oxide call; Oxide tables as the lattice candidate only, own stream detector; search stays on PDFium; pin 0.3.x and add notices. **Accepted**; ARCHITECTURE.md Rev 0.3.                                                                                                                                                                         |
+| 2026-09-25 | M1 plan  | M1 plan approved. M1-Q1: Ctrl+Alt+W / Ctrl+Alt+F4 close tab and Ctrl+Alt+PageUp/PageDown switch tab, alongside the §8.1 keys (ADR-001 B5). Q2: ribbon tabs hidden until they have a working command. Q3: test hook only in the `e2e` build mode. Q4: dependency list accepted. Q5: Select without text selection until M2. Q6: File → Properties in M2. Q7: CI uses generated self-made fixtures only. Q8: merge PR #1 and M0, then `m1/<task>` branches. |

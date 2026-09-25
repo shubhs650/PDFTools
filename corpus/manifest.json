@@ -1,0 +1,13 @@
+{
+  "$comment": "Public-domain test PDFs fetched by `npm run corpus` into corpus/files/ (git-ignored). sha256 is recorded on first successful download and verified afterwards. Never list owner-supplied drawings here (ADR-002).",
+  "files": [
+    {
+      "name": "far.pdf",
+      "profile": "contract",
+      "description": "Federal Acquisition Regulation, full text (~2,000 pages)",
+      "url": "https://www.acquisition.gov/sites/default/files/current/far/pdf/FAR.pdf",
+      "license": "US Government work, public domain (17 U.S.C. § 105)",
+      "sha256": null
+    }
+  ]
+}

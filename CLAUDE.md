@@ -18,7 +18,7 @@ You are building **PDFTools** (`pdf-tools.openengtools.com`): a free, offline, p
 12. **Every interactive control is keyboard-reachable with an accessible name.**
 13. **Test data is public or self-made PDFs only.** Never add company or client documents.
 14. **Do not work on revision compare** — parked pending IP clearance.
-15. **Do not copy PDF-XChange icons or artwork.** Use Fluent UI System Icons (Color); draw missing icons in the same style.
+15. **Do not copy PDF-XChange icons or artwork.** Use Fluent UI System Icons (Regular; Filled for active states — ADR-010); draw missing icons in the same style.
 
 ## Stack
 React + TypeScript (strict) + Vite · Zustand · Radix UI primitives · EmbedPDF headless (`@embedpdf/*`) · PDF Oxide WASM · ExcelJS · docx · remark · PKI.js · i18next · vite-plugin-pwa · Vitest · Playwright · Cloudflare Pages (+ Pages Functions for `/api/report`).
