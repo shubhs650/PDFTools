@@ -8,6 +8,8 @@ import { useState } from 'react';
 import { ChevronDown20Regular } from '@fluentui/react-icons/svg/chevron-down';
 import { Dismiss20Regular } from '@fluentui/react-icons/svg/dismiss';
 import { Save20Filled, Save20Regular } from '@fluentui/react-icons/svg/save';
+import { COMMANDS, isAvailable } from '../app/commands';
+import { iconFor } from '../ui/icons/registry';
 import {
   Button,
   Dialog,
@@ -144,6 +146,33 @@ export function Gallery() {
           <Spinner label={G.loading} />
           <ProgressBar label={G.progress} value={0.4} valueText="40%" />
         </div>
+        <section
+          aria-label="M1 command icons"
+          data-testid="icons"
+          style={{ marginTop: 'var(--space-6)' }}
+        >
+          {COMMANDS.filter(isAvailable).map((c) => {
+            const Small = iconFor(c.id);
+            const Large = iconFor(c.id, { large: true });
+            const Pressed = iconFor(c.id, { pressed: true });
+            return (
+              <span
+                key={c.id}
+                title={c.id}
+                style={{
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  gap: 'var(--space-2)',
+                  margin: 'var(--space-2)',
+                }}
+              >
+                <Large style={{ width: 'var(--icon-size-l)', height: 'var(--icon-size-l)' }} />
+                <Small />
+                {c.toggle ? <Pressed /> : null}
+              </span>
+            );
+          })}
+        </section>
         <output data-testid="log">{log.join(',')}</output>
         <Dialog
           open={open}

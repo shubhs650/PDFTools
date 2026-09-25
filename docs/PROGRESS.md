@@ -7,6 +7,14 @@ still open.
 
 ## Done
 
+- **Session 9 — M1-06 (icon registry and command table).** Branch `m1/06-icons`. Command table ported
+  from S6 (127 commands, milestone per command; only M1 is shown, M1-Q2) with English labels in
+  `en.json`; `scripts/gen-icons.ts` generates per-icon path imports (a renamed Fluent icon breaks
+  typecheck; a test keeps the file in sync); registry `iconFor(id, {large, pressed})` with Filled
+  glyphs for toggles; custom **Save Optimized** and **Continuous Facing** icons built with Fluent's
+  own `createFluentIcon` on the 20/32 px grid (the first badge design read as an "x" in review and
+  was redrawn). Root-barrel imports banned by test.
+
 - **Session 9 — M1-05 (design tokens and UI primitives).** Branch `m1/05-tokens-ui`. `src/ui/tokens.css`
   (colors, spacing, sizes, radius, type, elevation, motion; light default; dark set and
   `forced-colors` mapping override every color token). Radix-based primitives with required

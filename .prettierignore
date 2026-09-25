@@ -9,3 +9,4 @@ corpus/files
 docs/ui-reference
 ARCHITECTURE.md
 CLAUDE.md
+src/ui/icons/fluent.generated.ts
