@@ -58,7 +58,7 @@ describe('message keys (rule 11)', () => {
 
 describe('t()', () => {
   it('translates typed keys synchronously', () => {
-    expect(t('app.shell.label')).toBe('PDFTools application');
+    expect(t('frame.main')).toBe('Document area');
     // @ts-expect-error unknown keys are a type error
     expect(t('app.nope')).toBe('app.nope');
   });
@@ -132,6 +132,6 @@ describe('pseudo-locale (§8.2, +40 %)', () => {
 
   it('maps a whole resource tree', () => {
     const tree = pseudoResources(en);
-    expect(tree.app.shell.label).toMatch(/^\[ÞĎ|^\[Þ/);
+    expect(tree.frame.main.startsWith('[Ðóçúɱéñţ')).toBe(true);
   });
 });

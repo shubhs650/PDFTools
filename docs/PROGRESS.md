@@ -7,6 +7,14 @@ still open.
 
 ## Done
 
+- **Session 9 — M1-09 (app frame, stores, status bar, error boundary).** Branch `m1/09-frame`. Zustand
+  5.0.15 (MIT). Frame with named landmarks (banner, main, two complementary panes, contentinfo), a
+  document tablist with roving focus and separate close buttons, collapsible left rail, Properties
+  pane, status-bar slots; vanilla stores with pure transitions and selector hooks (a render-count
+  test proves view changes don't re-render tab readers); error boundary that records only
+  `{code, stack}` locally and offers Reload. Axe asked for a page-level heading (added, visually
+  hidden). No horizontal scroll at 1280 px, including the pseudo-locale.
+
 - **Session 9 — M1-08 (Work worker and memory policy).** Branch `m1/08-work-worker`. PDFium #2 with
   read-only copies (original transferred in, kept in the worker; tails applied lazily by reopening
   original + tail, never re-serialized); cooperative priority scheduler (interactive > save-verify >
