@@ -10,3 +10,6 @@ Playwright scenarios for the §12 acceptance targets, run with `npm run perf`.
   each scenario that must stay free of them has a test here.
 - Heavy-file numbers are measured and reported, not gated (ADR-002).
 - Inputs are self-made and generated at test time (`pdfs` fixture, `e2e/fixtures/generate.ts`).
+- CI writes a JSON report (`PLAYWRIGHT_JSON_OUTPUT_NAME=reports/perf.json`) and
+  `npm run perf-report` publishes each scenario with its annotations (M1-27). Record numbers with
+  `test.info().annotations.push({ type, description })`.

@@ -21,7 +21,7 @@ body {
 
 .app-frame {
   display: grid;
-  grid-template-rows: auto auto minmax(0, 1fr) auto;
+  grid-template-rows: auto minmax(0, 1fr) auto;
   /* A wide ribbon or tab row scrolls inside itself, never the page. */
   grid-template-columns: minmax(0, 1fr);
   height: 100%;
@@ -48,6 +48,11 @@ body {
   overflow-x: auto;
 }
 
+/* Only tabs inside (see TabStrip); its children join .tab-list's flex row. */
+.tab-tablist {
+  display: contents;
+}
+
 .tab {
   display: inline-flex;
   align-items: center;
@@ -58,6 +63,13 @@ body {
 
 .tab--active {
   background: var(--color-surface);
+}
+
+.tab-close {
+  display: inline-flex;
+  align-items: center;
+  padding-right: var(--space-2);
+  border-right: var(--border-width) solid var(--color-border);
 }
 
 .tab-button {

@@ -124,6 +124,10 @@ async function inspect(bytes: Uint8Array) {
 }
 
 const hasQpdf = spawnSync('qpdf', ['--version']).status === 0;
+// M1-27: CI installs qpdf in every job that runs this file; there it is required.
+if (!hasQpdf && process.env.CI) {
+  throw new Error('qpdf is required in CI (apt-get install qpdf) for the save matrix');
+}
 if (!hasQpdf) {
   console.warn(
     'qpdf not found: skipping `qpdf --check` in the save matrix (required in CI, M1-27)',

@@ -28,8 +28,8 @@ export function AppFrame({ ribbon, children, status }: AppFrameProps) {
         {/* Screen-reader page heading (the title bar shows the name visually later). */}
         <h1 className="ui-visually-hidden">{t('app.name')}</h1>
         {ribbon}
+        <TabStrip />
       </header>
-      <TabStrip />
       <div className="app-body">
         <LeftRail />
         <main
