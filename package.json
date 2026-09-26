@@ -32,7 +32,7 @@
   "devDependencies": {
     "@axe-core/playwright": "4.13.0",
     "@eslint/js": "^9.39.5",
-    "@playwright/test": "^1.63.0",
+    "@playwright/test": "1.62.1",
     "@testing-library/dom": "10.4.2",
     "@testing-library/react": "16.3.3",
     "@testing-library/user-event": "14.6.7",
@@ -92,5 +92,8 @@
     "react-dom": "^19.3.0",
     "react-i18next": "17.0.15",
     "zustand": "5.0.15"
+  },
+  "overrides": {
+    "playwright-core": "$@playwright/test"
   }
 }
