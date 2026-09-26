@@ -79,6 +79,18 @@ export interface WorkApi {
     { docId: string; pageIndex: number; hits: { start: number; length: number }[] },
     HitRect[][]
   >;
+  /**
+   * Background text indexing after open (M2-06, ADR-006 decision 3): fills
+   * the search cache page by page, viewport order first. Background priority;
+   * pauses while `activity` reports scrolling or zooming.
+   */
+  indexText: MethodSpec<
+    { docId: string; visible: number[] },
+    { pages: number; extracted: number; pausedMs: number; ms: number },
+    { done: number; total: number }
+  >;
+  /** The user is scrolling or zooming: background work backs off for `quietMs`. */
+  activity: MethodSpec<{ quietMs?: number }, null>;
   textStats: MethodSpec<
     { docId: string; priority?: WorkPriority },
     { pages: number; chars: number; ms: number },

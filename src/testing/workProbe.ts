@@ -4,6 +4,7 @@ import { createRenderEngine } from '../engine/createEngine';
 import { openDocument } from '../engine/renderClient';
 import { SearchSession } from '../engine/searchSession';
 import { WorkClient } from '../engine/workClient';
+import { indexStatus } from '../features/search/indexing';
 import { workClient } from '../features/view/host';
 import type { SearchOptions } from '../workers/work/searchCore';
 import type { TestHook } from './hook';
@@ -44,6 +45,8 @@ export function registerWorkProbe(hook: TestHook): void {
   // the normal way. Timings are taken on the main thread (what a user sees).
   const session = new SearchSession(workClient());
   hook.capabilities['search'] = {
+    /** Background indexing of a document (M2-06). */
+    indexStatus: (docId: string) => indexStatus(docId) ?? null,
     async run(docId: string, query: string, options: SearchOptions = {}, visible: number[] = [0]) {
       const t0 = performance.now();
       let firstHitMs: number | null = null;

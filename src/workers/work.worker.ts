@@ -12,6 +12,7 @@ import { digestDocument } from './render/save/digest';
 import { WorkDocs } from './work/docs';
 import { verifyCandidate } from './work/verify';
 import { Scheduler } from './work/scheduler';
+import { Activity, indexDocument } from './work/indexer';
 import { SearchEngine } from './work/search';
 
 let mod: WrappedPdfiumModule | undefined;
@@ -31,6 +32,7 @@ function wasmBytes(): number {
 
 const docs = new WorkDocs(need);
 const scheduler = new Scheduler();
+const activity = new Activity();
 const search = new SearchEngine(() => {
   if (!mod) throw new RpcError('not-initialized', 'The work worker is not initialized');
   return mod;
@@ -123,6 +125,23 @@ serve<WorkApi>(self, {
       const { doc } = await docs.get(docId);
       return search.rects(docId, doc, pageIndex, hits);
     }),
+
+  indexText: ({ docId, visible }, ctx) =>
+    scheduler.run('background', ctx.signal, async (slice) => {
+      const { doc } = await docs.get(docId);
+      try {
+        return await indexDocument(search, docId, doc, visible, slice, activity, (p) => {
+          ctx.progress(p);
+        });
+      } finally {
+        wasmBytes();
+      }
+    }),
+
+  activity: ({ quietMs }) => {
+    activity.poke(quietMs);
+    return null;
+  },
 
   textStats: ({ docId, priority = 'background' }, ctx) =>
     scheduler.run(priority, ctx.signal, async (slice) => {
