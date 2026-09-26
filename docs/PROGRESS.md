@@ -9,6 +9,18 @@ M0 and M1 owner runs are still open.
 
 ## Done
 
+- **Session 14 — M2-02 (security, forms and print spike).** Branch `m2/02-secure-print-spike`
+  (stacked on M2-01). _Works with workaround_, [ADR-013](adr/013-m2-security-forms-print.md)
+  (proposed). Passwords and owner unlock work on R2–R6 without reopening; saves after an unlock
+  stay encrypted, narrow and qpdf-clean. Found: our M1 tracker allowed form filling on an R2 file
+  that denies it (R2 needs its own permission rules, fixed in M2-03); `setFormFieldValue` ignores
+  read-only; a radio change saves narrow without its parent field, which M1-21 verification
+  catches (keep-all fallback, no data loss; dirty-set fix in M2-14); EmbedPDF renders ignore the
+  Print flag and `preparePrintDocument` drops markups. Flattening a copy is pixel-identical and
+  vector. Printing works under today's CSP as raster images in an `about:blank` iframe; vector
+  printing through the browser's viewer needs `frame-src blob:` (owner decision). Spike scripts
+  that import `/src` now run with `node --import ./spikes/shared/ts-ext.ts`.
+
 - **Session 14 — M2-01 (viewer-side spike).** Branch `m2/01-read-spike`. _Works with
   workaround_, [ADR-012](adr/012-m2-read-apis.md) (proposed). EmbedPDF 2.15.1 has every API the
   panes and text layer need, but the Render worker runs one call at a time: text geometry through
@@ -575,6 +587,10 @@ M0 and M1 owner runs are still open.
   Drawings are supplied locally by the owner anyway (ADR-002).
 
 ## Decisions needed (owner)
+
+- **CSP `frame-src blob:` (ADR-013 decision 7, M2-Q6).** Adds exactly `frame-src blob:` to §10.1 so
+  large or high-DPI jobs (drawings) can print at vector quality through the browser's PDF viewer.
+  Without it, M2-16 ships capped raster printing plus "Export Print-Ready PDF".
 
 0. **Layers pane (ADR-012 decision 5, M2-Q8).** PDFium can't toggle layers. Proposed: a
    list-only Layers pane in M2-11 (names and default visibility), plus an upstream request.

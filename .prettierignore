@@ -1,6 +1,7 @@
 node_modules
 dist
 dist-e2e
+dist-frame
 coverage
 test-results
 playwright-report

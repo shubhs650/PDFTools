@@ -14,8 +14,10 @@ export const S5_PORT = 4183;
 export const S7_PORT = 4184;
 export const S4_PORT = 4185;
 export const S9_PORT = 4186;
+export const S11_PORT = 4187;
+export const S11_FRAME_PORT = 4188;
 
-// SPIKE=s8|s3|s1|s5|s7|s4|s9 limits which spike gets built and served (default: both).
+// SPIKE=s8|s3|s1|s5|s7|s4|s9|s11 limits which spike gets built and served (default: both).
 const only = process.env.SPIKE;
 const want = (name: string): boolean => !only || only === name;
 
@@ -84,6 +86,11 @@ export default defineConfig({
         viewport: { width: 1600, height: 1000 },
       },
     },
+    {
+      name: 's11',
+      testMatch: ['s11-secure-print/**/*.spec.ts'],
+      use: { ...devices['Desktop Chrome'], baseURL: `http://localhost:${String(S11_PORT)}` },
+    },
   ],
   webServer: [
     ...(want('s8') ? [server('s8', 's8-csp', S8_PORT)] : []),
@@ -133,6 +140,20 @@ export default defineConfig({
             ' --corpus spikes/s9-plugins/out',
             'node spikes/s9-plugins/make-fixtures.ts && ',
           ),
+        ]
+      : []),
+    ...(want('s11')
+      ? [
+          server('s11', 's11-secure-print', S11_PORT, ' --coi'),
+          // The same build with only `frame-src blob:` added to the CSP (ADR-013 proposal).
+          {
+            command: `npx vite build --config spikes/s11-secure-print/vite.config.ts --outDir dist-frame && node spikes/s11-secure-print/frame-variant.ts && node spikes/shared/serve.ts --root spikes/s11-secure-print/dist-frame --port ${String(S11_FRAME_PORT)} --report --coi`,
+            cwd: '..',
+            url: `http://localhost:${String(S11_FRAME_PORT)}`,
+            reuseExistingServer: false,
+            timeout: 180_000,
+            name: 's11-frame',
+          },
         ]
       : []),
   ],
