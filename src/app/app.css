@@ -536,6 +536,14 @@ body {
 
 .page-content {
   position: relative;
+  user-select: none;
+}
+
+/* Page images never start a native image drag, which would cancel the pointer
+   stream the text selection (M2-04) and the Hand tool rely on. */
+.page-content img {
+  -webkit-user-drag: none;
+  pointer-events: none;
 }
 
 .page[data-hidden] {

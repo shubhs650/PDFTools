@@ -1,6 +1,7 @@
 // E2E-only probe for the viewer (M1-14): render counters, cache state and the
 // S5/S9 auto-scroll method (fixed px/s, blank visible pages counted per
 // frame). Never part of a production build.
+import type { SelectionCapability } from '@embedpdf/plugin-selection';
 import type { ZoomCapability } from '@embedpdf/plugin-zoom';
 import { capability, hostStore, renderEngine, tileCache } from '../features/view/host';
 import { renderStats, resetRenderStats, type KindStats } from '../features/view/renderStats';
@@ -75,6 +76,20 @@ export function registerViewProbe(hook: TestHook): void {
     },
     reset: () => {
       resetRenderStats();
+    },
+    /** The selection plugin's state for the active document (M2-04). */
+    selection: () => {
+      const registry = hostStore.getState().registry;
+      if (!registry) return null;
+      const id = registry.getStore().getState().core.activeDocumentId;
+      if (!id) return null;
+      const st = capability<SelectionCapability>(registry, 'selection').getState(id);
+      return {
+        selection: st.selection,
+        rects: Object.fromEntries(Object.entries(st.rects).map(([k, v]) => [k, v.length])),
+        geometryPages: Object.keys(st.geometry).map(Number),
+        selecting: st.selecting,
+      };
     },
     /**
      * Issues Render-engine calls on the active document's `pages`, `inFlight`

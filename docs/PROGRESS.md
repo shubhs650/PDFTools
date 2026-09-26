@@ -9,6 +9,19 @@ M0 and M1 owner runs are still open.
 
 ## Done
 
+- **Session 14 — M2-04 (text selection and copy).** Branch `m2/04-selection` (stacked on M2-03).
+  `@embedpdf/plugin-selection` 2.15.1 (MIT; license gate 642 packages) with the interaction
+  manager; per-page pointer provider and selection layer; the text geometry and text come from the
+  Work worker through a `RoutedPdfEngine` (ADR-012 decision 1), falling back to the Render worker
+  only when the Work worker has no copy. The Work worker now opens documents with
+  `normalizeRotation` like the Render worker (rotated pages had different coordinates). Ctrl+C
+  copies the selection (refused before text leaves a worker when copying is denied), Ctrl+A selects
+  the current page, Esc clears; Hand never selects. Found and fixed: page images started a native
+  image drag that cancelled every pointer stream after the first press. Tests: routed engine unit
+  tests, Work-client open-wait, e2e drag/copy, Ctrl+A, Hand, rotated page, copy denied; perf
+  scenarios for selection on the stand-in and the dense A0 sheet; the pane-load gate (geometry
+  load keeps tile p50 < 2× baseline + 5 ms; it was 3× through the Render queue).
+
 - **Session 14 — M2-03 (protected PDFs).** Branch `m2/03-protected` (stacked on M2-02). Open
   password prompt (masked, retry message, Cancel opens nothing); the same prompt on recovery and
   recent reopen. One revision-aware permission map for the UI and the Render worker's save
@@ -600,6 +613,9 @@ M0 and M1 owner runs are still open.
 
 ## Decisions needed (owner)
 
+- **Keyboard text selection (M2-04).** Caret-based selection (Shift+arrows) is not built; the
+  keyboard path is Ctrl+A (page text) + Ctrl+C. Accept as an exception to the M2-04 criterion, or
+  schedule caret selection (about one session).
 - **CSP `frame-src blob:` (ADR-013 decision 7, M2-Q6).** Adds exactly `frame-src blob:` to §10.1 so
   large or high-DPI jobs (drawings) can print at vector quality through the browser's PDF viewer.
   Without it, M2-16 ships capped raster printing plus "Export Print-Ready PDF".

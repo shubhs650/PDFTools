@@ -3,7 +3,7 @@
 // through selectors (useApp) so a change re-renders only its readers.
 import { createStore, useStore } from 'zustand';
 
-/** Pointer tools of M1 (M1-Q5: Select has no text selection until M2). */
+/** Pointer tools: Select (V) selects text since M2-04 (M1-Q5); Hand (H) pans. */
 export type Tool = 'select' | 'hand';
 
 export interface AppState {

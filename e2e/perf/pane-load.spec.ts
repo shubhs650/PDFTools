@@ -10,6 +10,11 @@ import { expect, test } from '../support/fixtures.ts';
 // load, and while zooming the dense A0 sheet with a thumbnail render queued.
 // Numbers go to test-results/m2-pane-load.json (informative, ADR-002); the gate
 // here is the perf guard (no main-thread task > 100 ms, rule 1).
+//
+// Since M2-04 the text geometry goes to the Work worker (RoutedPdfEngine), and
+// every scroll run already loads the text layer of the pages it passes. The
+// "geometry" run is a synthetic worst case (120 back-to-back calls): through
+// the Render queue it tripled tile p50; the gate keeps it well under that.
 
 const view = (page: Page, method: string, ...args: unknown[]) => cap(page, 'view', method, ...args);
 
@@ -81,4 +86,6 @@ test('pane and text-layer load through the Render queue vs visible tiles', async
   writeFileSync('test-results/m2-pane-load.json', JSON.stringify(result, null, 2));
   test.info().annotations.push({ type: 'm2-pane-load', description: JSON.stringify(result) });
   expect((contract.baseline.scroll as { blankFrames: number }).blankFrames).toBe(0);
+  const p50 = (run: Record<string, unknown>) => (run.tiles as TileStats['tiles']).p50;
+  expect(p50(contract.geometry)).toBeLessThan(2 * p50(contract.baseline) + 5);
 });

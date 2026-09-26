@@ -19,6 +19,15 @@ interface Entry {
   generation: number;
 }
 
+/**
+ * Like the Render worker's document manager: page coordinates in the unrotated
+ * (0°) space, so text geometry and hit rectangles from here line up with the
+ * viewer on rotated pages (M2-04, M2-05).
+ */
+function openOptions(password: string | undefined) {
+  return { normalizeRotation: true, ...(password === undefined ? {} : { password }) };
+}
+
 export function concat(a: ArrayBuffer, b: ArrayBuffer | null | undefined): ArrayBuffer {
   if (!b || b.byteLength === 0) return a.slice(0);
   const out = new Uint8Array(a.byteLength + b.byteLength);
@@ -51,7 +60,7 @@ export class WorkDocs {
     const doc = await this.native()
       .openDocumentBuffer(
         { id: `${docId}#${String(generation)}`, content: bytes },
-        password === undefined ? {} : { password },
+        openOptions(password),
       )
       .toPromise();
     if (ownerPassword !== undefined)
@@ -110,10 +119,7 @@ export class WorkDocs {
     const bytes = concat(concat(e.original, e.tail), piece);
     const candidateId = `${docId}#verify${String(++this.verifySeq)}`;
     const doc = await this.native()
-      .openDocumentBuffer(
-        { id: candidateId, content: bytes },
-        e.password === undefined ? {} : { password: e.password },
-      )
+      .openDocumentBuffer({ id: candidateId, content: bytes }, openOptions(e.password))
       .toPromise();
     try {
       return fn(candidateId, doc);

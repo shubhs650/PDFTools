@@ -37,7 +37,14 @@ const listeners = new Set<() => void>();
  * Actions reachable from the keyboard (and other code) that are not ribbon
  * commands: tab management and cancelling the current tool (§8.1).
  */
-export const INTERNAL_ACTIONS = ['tab.close', 'tab.next', 'tab.prev', 'tool.cancel'] as const;
+export const INTERNAL_ACTIONS = [
+  'tab.close',
+  'tab.next',
+  'tab.prev',
+  'tool.cancel',
+  'edit.copy',
+  'edit.selectAll',
+] as const;
 export type InternalAction = (typeof INTERNAL_ACTIONS)[number];
 
 const KNOWN = new Set<string>([...COMMANDS.map((c) => c.id), ...INTERNAL_ACTIONS]);

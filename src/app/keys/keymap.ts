@@ -52,6 +52,9 @@ export const KEYMAP: readonly Binding[] = [
   b('view.collapseRibbon', ['Ctrl+F1']),
   b('home.hand', ['H'], 'document'),
   b('home.select', ['V'], 'document'),
+  // Text selection (M2-04): in the document only, so text fields keep their own.
+  b('edit.copy', ['Ctrl+C'], 'document'),
+  b('edit.selectAll', ['Ctrl+A'], 'document'),
   { ...b('tool.cancel', ['Escape']), preventWhenDisabled: false },
   // Browser-reserved first, alternates after (M1-Q1).
   b('tab.close', ['Ctrl+F4', 'Ctrl+Alt+W', 'Ctrl+Alt+F4'], 'global', true),

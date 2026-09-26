@@ -84,6 +84,20 @@ serve<WorkApi>(self, {
       return { pageCount: doc.pageCount, appliedTailBytes };
     }),
 
+  pageGeometry: ({ docId, pageIndex, priority = 'interactive' }, ctx) =>
+    scheduler.run(priority, ctx.signal, async () => {
+      const { doc } = await docs.get(docId);
+      const page = doc.pages[pageIndex];
+      if (!page) throw new RpcError('page-out-of-range', 'No such page');
+      return need().getPageGeometry(doc, page).toPromise();
+    }),
+
+  textSlices: ({ docId, slices, priority = 'interactive' }, ctx) =>
+    scheduler.run(priority, ctx.signal, async () => {
+      const { doc } = await docs.get(docId);
+      return need().getTextSlices(doc, slices).toPromise();
+    }),
+
   textStats: ({ docId, priority = 'background' }, ctx) =>
     scheduler.run(priority, ctx.signal, async (slice) => {
       const { doc } = await docs.get(docId);

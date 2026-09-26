@@ -274,7 +274,9 @@
       "tabClose": "Close Tab",
       "tabNext": "Next Tab",
       "tabPrev": "Previous Tab",
-      "toolCancel": "Cancel Tool"
+      "toolCancel": "Cancel Tool",
+      "editCopy": "Copy Selected Text",
+      "editSelectAll": "Select Page Text"
     },
     "key": {
       "ctrl": "Ctrl",

@@ -8,6 +8,8 @@ interface FakeWorld {
   spawned: number;
   opened: { docId: string; original: number; tail: number; owner?: string }[];
   terminated: number;
+  jobsSeen: string[];
+  openDelayMs?: number;
 }
 
 const ports: MessagePort[] = [];
@@ -23,7 +25,9 @@ function fakeSpawn(world: FakeWorld) {
     ports.push(ch.port1, ch.port2);
     serve<WorkApi>(ch.port1, {
       init: () => ({ ms: 1, wasmBytes: 1 }),
-      open: ({ docId, original, tail, ownerPassword }) => {
+      open: async ({ docId, original, tail, ownerPassword }) => {
+        await new Promise((r) => setTimeout(r, world.openDelayMs ?? 0));
+        world.jobsSeen.push(`open:${docId}`);
         world.opened.push({
           docId,
           original: original.byteLength,
@@ -33,6 +37,11 @@ function fakeSpawn(world: FakeWorld) {
         return { pageCount: 3, wasmBytes: world.memory };
       },
       unlock: ({ ownerPassword }) => ({ unlocked: ownerPassword === 'owner' }),
+      pageGeometry: ({ docId }) => {
+        world.jobsSeen.push(`geometry:${docId}`);
+        return { runs: [] };
+      },
+      textSlices: ({ slices }) => slices.map(() => 'text'),
       refresh: () => ({ pending: true }),
       append: ({ piece }) => ({ tailBytes: piece.byteLength }),
       verify: () => ({ ok: true }),
@@ -65,7 +74,13 @@ const until = async (cond: () => boolean) => {
 
 describe('WorkClient lifecycle (ADR-004 decision 4)', () => {
   it('respawns when idle after a job above the threshold and reloads original + tail', async () => {
-    const world: FakeWorld = { memory: 10 * MB, spawned: 0, opened: [], terminated: 0 };
+    const world: FakeWorld = {
+      memory: 10 * MB,
+      spawned: 0,
+      opened: [],
+      terminated: 0,
+      jobsSeen: [],
+    };
     let reloads = 0;
     const c = new WorkClient({
       wasmUrl: 'http://x/pdfium.wasm',
@@ -97,7 +112,13 @@ describe('WorkClient lifecycle (ADR-004 decision 4)', () => {
   });
 
   it('never respawns while jobs are still running', async () => {
-    const world: FakeWorld = { memory: 300 * MB, spawned: 0, opened: [], terminated: 0 };
+    const world: FakeWorld = {
+      memory: 300 * MB,
+      spawned: 0,
+      opened: [],
+      terminated: 0,
+      jobsSeen: [],
+    };
     const c = new WorkClient({ wasmUrl: 'x', respawnAboveBytes: 64 * MB, spawn: fakeSpawn(world) });
     const a = c.run('textStats', { docId: 'none' });
     const b = c.run('textStats', { docId: 'none' });
@@ -109,7 +130,13 @@ describe('WorkClient lifecycle (ADR-004 decision 4)', () => {
   });
 
   it('respawns after evicting a document, reloading only the remaining ones', async () => {
-    const world: FakeWorld = { memory: 10 * MB, spawned: 0, opened: [], terminated: 0 };
+    const world: FakeWorld = {
+      memory: 10 * MB,
+      spawned: 0,
+      opened: [],
+      terminated: 0,
+      jobsSeen: [],
+    };
     const c = new WorkClient({ wasmUrl: 'x', spawn: fakeSpawn(world) });
     const src = { reload: () => Promise.resolve(new ArrayBuffer(5)) };
     await c.open('keep', new ArrayBuffer(5), src);
@@ -121,7 +148,7 @@ describe('WorkClient lifecycle (ADR-004 decision 4)', () => {
   });
 
   it('cancels a job through its handle', async () => {
-    const world: FakeWorld = { memory: 1, spawned: 0, opened: [], terminated: 0 };
+    const world: FakeWorld = { memory: 1, spawned: 0, opened: [], terminated: 0, jobsSeen: [] };
     const c = new WorkClient({ wasmUrl: 'x', spawn: fakeSpawn(world) });
     const job = c.run('textStats', { docId: 'd' });
     job.cancel();
@@ -130,7 +157,13 @@ describe('WorkClient lifecycle (ADR-004 decision 4)', () => {
   });
 
   it('an owner unlock survives a respawn: the reload unlocks again (§7.12, ADR-013 d3)', async () => {
-    const world: FakeWorld = { memory: 300 * MB, spawned: 0, opened: [], terminated: 0 };
+    const world: FakeWorld = {
+      memory: 300 * MB,
+      spawned: 0,
+      opened: [],
+      terminated: 0,
+      jobsSeen: [],
+    };
     const c = new WorkClient({
       wasmUrl: 'http://x/pdfium.wasm',
       respawnAboveBytes: 64 * MB,
@@ -147,6 +180,28 @@ describe('WorkClient lifecycle (ADR-004 decision 4)', () => {
     await until(() => c.respawns === 1 && world.opened.length === 2);
     expect(world.opened[0]?.owner).toBeUndefined();
     expect(world.opened[1]?.owner).toBe('owner');
+    c.terminate();
+  });
+
+  it('a job on a document waits for its open in flight (M2-04 text geometry)', async () => {
+    const world: FakeWorld = {
+      memory: MB,
+      spawned: 0,
+      opened: [],
+      terminated: 0,
+      jobsSeen: [],
+      openDelayMs: 30,
+    };
+    const c = new WorkClient({ wasmUrl: 'http://x/pdfium.wasm', spawn: fakeSpawn(world) });
+    const opened = c.open('doc', new ArrayBuffer(10), {
+      reload: () => Promise.resolve(new ArrayBuffer(10)),
+    });
+    expect(c.has('doc')).toBe(true); // known at once, so callers route here
+    const geo = await c.run('pageGeometry', { docId: 'doc', pageIndex: 0 }).promise;
+    await opened;
+    expect(geo).toEqual({ runs: [] });
+    expect(world.jobsSeen).toEqual(['open:doc', 'geometry:doc']);
+    expect(await c.run('textSlices', { docId: 'doc', slices: [] }).promise).toEqual([]);
     c.terminate();
   });
 });

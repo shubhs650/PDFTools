@@ -31,6 +31,7 @@
   --color-hover: #e8e8e8;
   --color-pressed: #dcdcdc;
   --color-selected: #d6e4f5;
+  --color-text-selection: #9fc6ec; /* multiplied over the page */
   --color-accent: #0f6cbd;
   --color-accent-hover: #115ea3;
   --color-focus: #0f6cbd;
@@ -123,6 +124,7 @@
   --color-hover: #3d3d3d;
   --color-pressed: #474747;
   --color-selected: #1a3a5c;
+  --color-text-selection: #9fc6ec; /* pages stay white in every theme */
   --color-accent: #479ef5;
   --color-accent-hover: #62abf5;
   --color-focus: #ffffff;
@@ -151,6 +153,7 @@
     --color-hover: Highlight;
     --color-pressed: Highlight;
     --color-selected: Highlight;
+    --color-text-selection: Highlight;
     --color-accent: Highlight;
     --color-accent-hover: Highlight;
     --color-focus: Highlight;

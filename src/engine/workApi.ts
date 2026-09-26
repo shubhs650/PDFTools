@@ -1,5 +1,6 @@
 // Work worker API (ARCHITECTURE §3.1, D-10): PDFium #2 with a read-only copy of
 // each document. M1 uses it for save verification (M1-21); M2 adds search.
+import type { PageTextSlice, PdfPageGeometry } from '@embedpdf/models';
 import type { DocDigest } from '../workers/render/save/digest';
 import type { VerifyResult } from '../workers/work/verifySave';
 import type { MethodSpec } from './protocol';
@@ -46,6 +47,20 @@ export interface WorkApi {
    * text stays in the worker). Cancellable between pages; the base of M2's
    * background indexing, and the "large job" of the memory tests.
    */
+  /**
+   * A page's text geometry (glyph runs) for the text layer and selection
+   * (M2-04, ADR-012 decision 1): served here so it never waits in, or blocks,
+   * the Render worker's one-call-at-a-time queue.
+   */
+  pageGeometry: MethodSpec<
+    { docId: string; pageIndex: number; priority?: WorkPriority },
+    PdfPageGeometry
+  >;
+  /** Text of glyph ranges (selection → clipboard). */
+  textSlices: MethodSpec<
+    { docId: string; slices: PageTextSlice[]; priority?: WorkPriority },
+    string[]
+  >;
   textStats: MethodSpec<
     { docId: string; priority?: WorkPriority },
     { pages: number; chars: number; ms: number },
