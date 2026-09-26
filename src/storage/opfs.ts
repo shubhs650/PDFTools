@@ -13,11 +13,12 @@
 // list() and removed by discard().
 
 import { AbortError } from '../engine/errors';
+import { RECOVERY_DIR } from './recoveryTypes';
 import type { RecoveryMeta, Snapshot, TailSlot, UiState } from './recoveryTypes';
 
 export type { RecoveryMeta, Snapshot, TailSlot, UiState };
 
-export const RECOVERY_DIR = 'recovery';
+export { RECOVERY_DIR };
 const CHUNK = 8 * 1024 * 1024;
 
 export interface WriteControl {

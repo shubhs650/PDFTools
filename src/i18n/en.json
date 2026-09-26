@@ -388,5 +388,57 @@
     "waitDescription": "The update restarts PDFTools, so it waits until every document is closed. It applies as soon as you close the last one, or the next time you start PDFTools.",
     "waitOk": "OK",
     "notNow": "Not now"
+  },
+  "settings": {
+    "localData": {
+      "title": "Data on this device",
+      "recent": "Recent files",
+      "snapshots": "Recovery snapshots",
+      "used": "Storage used by PDFTools",
+      "unknown": "Not reported by this browser",
+      "note": "Your PDF files stay where they are. PDFTools keeps only settings, the recent files list and recovery snapshots of unsaved changes. Storage used includes the offline copy of the app.",
+      "clear": "Clear all local data…",
+      "confirmTitle": "Clear all local data?",
+      "confirmDescription": "This deletes your settings, the recent files list and all recovery snapshots on this device. Your PDF files are not changed. The offline copy of the app is kept, so PDFTools keeps working offline.",
+      "warnOpen_one": "{{count}} document is open. It stays open.",
+      "warnOpen_other": "{{count}} documents are open. They stay open.",
+      "warnUnsaved_one": "{{count}} open document has unsaved changes. Its recovery snapshot is deleted too, so those changes could not be recovered after a crash until you change the document again.",
+      "warnUnsaved_other": "{{count}} open documents have unsaved changes. Their recovery snapshots are deleted too, so those changes could not be recovered after a crash until you change the documents again.",
+      "confirm": "Clear data",
+      "cancel": "Cancel",
+      "cleared": "Local data cleared.",
+      "failed": "Some local data could not be cleared. Try again, or clear this site's data in your browser settings."
+    }
+  },
+  "about": {
+    "version": "Version",
+    "license": "PDFTools is free software under the MIT License. It includes open-source components under their own permissive licenses.",
+    "notices": "Third-party notices (opens in a new tab)"
+  },
+  "privacy": {
+    "promise": {
+      "documents": "Your documents never leave this device. PDFTools opens, renders and saves them in your browser.",
+      "account": "No account, no login and no cookies.",
+      "telemetry": "No analytics scripts, no tracking and no telemetry.",
+      "network": "The only network requests PDFTools makes are checks for app updates on its own website."
+    },
+    "kind": {
+      "indexedDB": "IndexedDB",
+      "opfs": "Origin private file system",
+      "cache": "Cache Storage"
+    },
+    "data": {
+      "caption": "Data PDFTools keeps on this device",
+      "what": "What",
+      "where": "Where",
+      "cleared": "Deleted by “Clear all local data”",
+      "yes": "Yes",
+      "no": "No (delete it with your browser's site data)",
+      "settings": "Settings",
+      "recent": "Recent files: file name, size, when it was opened and the browser's permission handle to reopen it",
+      "recovery": "Recovery snapshots: a copy of a document with unsaved changes, deleted when you save, close or discard it",
+      "appFiles": "The offline copy of the app (program files only, no documents)"
+    },
+    "clearHint": "To delete this data, use File → Settings → Clear all local data."
   }
 }

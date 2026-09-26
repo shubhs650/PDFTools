@@ -4,9 +4,11 @@
 // in scripts/license-exceptions.json. Packages npm marks dev-only in
 // package-lock.json may additionally use DEV_ONLY_ALLOWED licenses (ADR-002).
 //
-// Usage: node scripts/check-licenses.ts [--verbose]
+// Usage: node scripts/check-licenses.ts [--verbose] [--notices <file>]
+// --notices also writes the third-party notices of every runtime package
+// (scripts/notices.ts; the build emits the same file, M1-26).
 
-import { existsSync, readFileSync, readdirSync } from 'node:fs';
+import { existsSync, readFileSync, readdirSync, writeFileSync } from 'node:fs';
 import { dirname, join, relative } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import {
@@ -16,9 +18,12 @@ import {
   type LicenseException,
   type PackageInfo,
 } from './license-policy.ts';
+import { collectNotices, renderNotices } from './notices.ts';
 
 const root = join(dirname(fileURLToPath(import.meta.url)), '..');
 const verbose = process.argv.includes('--verbose');
+const noticesAt = process.argv.indexOf('--notices');
+const noticesFile = noticesAt >= 0 ? process.argv[noticesAt + 1] : undefined;
 
 function readJson(file: string): Record<string, unknown> {
   return JSON.parse(readFileSync(file, 'utf8')) as Record<string, unknown>;
@@ -151,6 +156,13 @@ function main(): void {
   }
 
   if (failed) process.exit(1);
+  if (noticesFile) {
+    const notices = collectNotices(root);
+    writeFileSync(noticesFile, renderNotices(notices));
+    console.log(
+      `Third-party notices for ${String(notices.length)} runtime packages → ${noticesFile}`,
+    );
+  }
   console.log(
     `✔ All ${String(list.length)} packages comply (${String(result.devOnly.length)} dev-only, ` +
       `${String(result.excepted.length)} via reviewed exceptions).`,
