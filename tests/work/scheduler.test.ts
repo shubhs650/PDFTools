@@ -114,4 +114,27 @@ describe('Work-worker scheduler', () => {
     });
     expect(sleeps).toBe(5);
   });
+
+  it('a short job of the same priority gets a turn within yieldEveryMs (round robin)', async () => {
+    let t = 0;
+    const s = new Scheduler({ yieldEveryMs: 8, now: () => t, sleep: tick });
+    const log: string[] = [];
+    const ac = new AbortController();
+    const long = s.run('interactive', ac.signal, async (sl) => {
+      for (let i = 0; i < 20; i++) {
+        await sl.checkpoint();
+        t += 5; // 5 ms per page
+        log.push(`search${String(i)}`);
+      }
+    });
+    await tick();
+    const short = s.run('interactive', ac.signal, () => {
+      log.push('rects');
+      return Promise.resolve();
+    });
+    await Promise.all([long, short]);
+    expect(log.indexOf('rects')).toBeGreaterThan(0);
+    expect(log.indexOf('rects')).toBeLessThan(5); // not after the 20 pages
+    expect(log.filter((x) => x.startsWith('search'))).toHaveLength(20);
+  });
 });
