@@ -109,10 +109,33 @@ describe('indexDocument', () => {
         t += 50; // time passes while napping
         return Promise.resolve();
       },
+      Number.POSITIVE_INFINITY, // no duty-cycle naps here
     );
     expect(naps).toBe(6); // 300 ms quiet period / 50 ms naps
     expect(checkpoints).toBe(4 + 6); // one per page, one per nap
     expect(r.extracted).toBe(4);
+    await native.closeDocument(doc).toPromise();
+  });
+
+  it('naps as long as it worked after each ~8 ms of extraction (idle priority)', async () => {
+    const doc = await open(contractPdf(40));
+    const naps: number[] = [];
+    await indexDocument(
+      engine(),
+      doc.id,
+      doc,
+      [0],
+      freeSlice(),
+      new Activity(),
+      () => undefined,
+      (ms) => {
+        naps.push(ms);
+        return Promise.resolve();
+      },
+      0.001, // nap after every page
+    );
+    expect(naps.length).toBeGreaterThanOrEqual(39);
+    expect(naps.every((ms) => ms > 0)).toBe(true);
     await native.closeDocument(doc).toPromise();
   });
 
