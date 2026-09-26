@@ -42,6 +42,7 @@ type JobMethod =
   | 'listAttachments'
   | 'readAttachment'
   | 'listLayers'
+  | 'docProperties'
   | 'hitRects'
   | 'indexText';
 

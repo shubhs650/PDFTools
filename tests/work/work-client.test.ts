@@ -70,6 +70,9 @@ function fakeSpawn(world: FakeWorld) {
       searchExtras: () => [],
       listAttachments: () => [],
       listLayers: () => ({ encrypted: false, layers: [] }),
+      docProperties: () => {
+        throw new Error('unused');
+      },
       readAttachment: () => ({ bytes: new ArrayBuffer(0) }),
       indexText: () => ({ pages: 3, extracted: 3, pausedMs: 0, ms: 1 }),
       activity: () => {

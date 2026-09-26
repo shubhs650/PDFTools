@@ -8,8 +8,11 @@ describe('ribbon layout from the command table (§8, ADR-001 B6, M1-Q2)', () => 
   it('shows only tabs with an available command: Home, View, Help, and Protect from M2-03', () => {
     expect(m1.tabs.map((t) => t.tab)).toEqual(['home', 'view', 'protect', 'help']);
     const protect = m1.tabs.find((t) => t.tab === 'protect');
-    // Only what works: Unlock (M2-03); redaction (M4) and the rest stay omitted.
-    expect(protect?.groups.flatMap((g) => g.commands.map((c) => c.id))).toEqual(['protect.unlock']);
+    // Only what works: Security Info (M2-12), Unlock (M2-03); redaction (M4) and the rest stay omitted.
+    expect(protect?.groups.flatMap((g) => g.commands.map((c) => c.id))).toEqual([
+      'protect.securityInfo',
+      'protect.unlock',
+    ]);
   });
 
   it('omits unavailable commands instead of disabling them', () => {
@@ -41,6 +44,7 @@ describe('ribbon layout from the command table (§8, ADR-001 B6, M1-Q2)', () => 
       'file.save',
       'file.saveAs',
       'file.saveOptimized',
+      'file.properties',
       'file.settings',
       'file.about',
       'file.privacy',

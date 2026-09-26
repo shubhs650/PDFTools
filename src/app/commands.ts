@@ -177,6 +177,7 @@ export const COMMANDS: readonly CommandDef[] = [
     size: 'large',
     fluent: 'DocumentBulletList',
     milestone: 'M2',
+    shipped: true, // M2-12
   },
   {
     id: 'file.settings',
@@ -1025,6 +1026,7 @@ export const COMMANDS: readonly CommandDef[] = [
     size: 'large',
     fluent: 'LockShield',
     milestone: 'M2',
+    shipped: true, // M2-12
   },
   {
     id: 'protect.unlock',

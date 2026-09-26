@@ -10,6 +10,8 @@ M0 and M1 owner runs are still open.
 
 ## Done
 
+- **Session 14 — M2-12 Properties and Security Info.** Properties backstage section and Security Info dialog; byte-level facts (revisions, linearized, encryption method) with qpdf-verified RC4-40/128, AES-128/256. Unit 528, e2e 136, green; licenses OK.
+
 - **Session 14 — M2-11 attachments (layers waiting).** Attachments pane with 20-file self-made fixture (20 MB file, embedded PDF, annotation file). Layers: list-only pane (ADR-012 d5 accepted). Unit 516, e2e 131, perf 21, green; licenses OK.
 
 - **Session 14 — M2-10 bookmarks, links and view history.** Bookmarks tree pane, link layer with external-link confirmation, Previous/Next View. Self-made `outlinedPdf` fixture (500-entry 3-level outline, internal/named/URI links). Unit 511, e2e 129, perf 20, all green; licenses 642 OK.

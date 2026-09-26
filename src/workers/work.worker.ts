@@ -17,6 +17,7 @@ import { Activity, indexDocument } from './work/indexer';
 import { SearchEngine } from './work/search';
 import { listAttachments, readAttachment } from './work/attachments';
 import { readLayers } from '../model/ocg';
+import { readProperties } from './work/properties';
 
 let mod: WrappedPdfiumModule | undefined;
 let native: PdfiumNative | undefined;
@@ -142,6 +143,13 @@ serve<WorkApi>(self, {
       return listAttachments(mod, need(), doc, slice, (p) => {
         ctx.progress(p);
       });
+    }),
+
+  docProperties: ({ docId }, ctx) =>
+    scheduler.run('interactive', ctx.signal, async () => {
+      if (!mod) throw new RpcError('not-initialized', 'The work worker is not initialized');
+      const { doc } = await docs.get(docId);
+      return readProperties(mod, need(), doc, docs.bytes(docId));
     }),
 
   listLayers: ({ docId }, ctx) =>

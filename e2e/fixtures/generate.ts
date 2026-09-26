@@ -8,7 +8,7 @@ import { deflateSync } from 'node:zlib';
 export type PdfObject = string | { dict: string; stream: string };
 
 /** Writes a classic-xref PDF. Object 1 must be the catalog. */
-export function buildPdf(objects: PdfObject[]): Uint8Array {
+export function buildPdf(objects: PdfObject[], trailerExtra = ''): Uint8Array {
   const parts: string[] = ['%PDF-1.7\n%âãÏÓ\n'];
   const offsets: number[] = [];
   let length = (parts[0] ?? '').length;
@@ -24,7 +24,7 @@ export function buildPdf(objects: PdfObject[]): Uint8Array {
   });
   let xref = `xref\n0 ${String(objects.length + 1)}\n0000000000 65535 f \n`;
   for (const off of offsets) xref += `${String(off).padStart(10, '0')} 00000 n \n`;
-  xref += `trailer\n<< /Size ${String(objects.length + 1)} /Root 1 0 R >>\nstartxref\n${String(length)}\n%%EOF\n`;
+  xref += `trailer\n<< /Size ${String(objects.length + 1)} /Root 1 0 R${trailerExtra} >>\nstartxref\n${String(length)}\n%%EOF\n`;
   parts.push(xref);
   return latin1(parts.join(''));
 }
@@ -278,6 +278,38 @@ export function layersPdf(): Uint8Array {
     '<< /Type /OCG /Name (Hidden notes) >>',
     '<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica >>',
   ]);
+}
+
+/** Info values of propertiesPdf (M2-12). */
+export const PROPERTIES = {
+  title: 'Pump Station P-101 Datasheet',
+  author: 'Test Author',
+  subject: 'Self-made properties fixture',
+  keywords: 'pump, datasheet',
+  creator: 'PDFTools tests',
+  producer: 'generate.ts',
+  created: "D:20240102030405+01'00'",
+  modified: 'D:20240607080910Z',
+} as const;
+
+/** Two tagged A4 pages with a full Info dictionary (M2-12). */
+export function propertiesPdf(): Uint8Array {
+  const p = PROPERTIES;
+  const esc = (t: string) => t.replace(/[\\()]/g, (c) => `\\${c}`);
+  return buildPdf(
+    [
+      '<< /Type /Catalog /Pages 2 0 R /MarkInfo << /Marked true >> /StructTreeRoot 8 0 R >>',
+      '<< /Type /Pages /Kids [3 0 R 5 0 R] /Count 2 >>',
+      '<< /Type /Page /Parent 2 0 R /MediaBox [0 0 595 842] /Resources << /Font << /F1 7 0 R >> >> /Contents 4 0 R >>',
+      { dict: '<< >>', stream: 'BT /F1 36 Tf 72 740 Td (Page 1) Tj ET' },
+      '<< /Type /Page /Parent 2 0 R /MediaBox [0 0 842 595] /Resources << /Font << /F1 7 0 R >> >> /Contents 6 0 R >>',
+      { dict: '<< >>', stream: 'BT /F1 36 Tf 72 500 Td (Page 2) Tj ET' },
+      '<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica >>',
+      '<< /Type /StructTreeRoot >>',
+      `<< /Title (${esc(p.title)}) /Author (${esc(p.author)}) /Subject (${esc(p.subject)}) /Keywords (${esc(p.keywords)}) /Creator (${esc(p.creator)}) /Producer (${esc(p.producer)}) /CreationDate (${p.created}) /ModDate (${p.modified}) >>`,
+    ],
+    ' /Info 9 0 R',
+  );
 }
 
 // ------------------------------------------------------------ contract profile

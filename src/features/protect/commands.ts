@@ -3,10 +3,18 @@ import { registerCommand } from '../../app/commands/dispatch';
 import { documentStore, selectActive } from '../../app/store/documentStore';
 import { msg } from '../../i18n';
 import { restrictions } from '../../model/permissions';
+import { openSecurityInfo } from './securityInfoStore';
 import { openUnlockDialog } from './unlock';
 
 export function registerProtectCommands(): () => void {
   const offs = [
+    registerCommand('protect.securityInfo', {
+      requiresDocument: true,
+      run: () => {
+        const active = selectActive(documentStore.getState());
+        if (active) openSecurityInfo(active.meta.id);
+      },
+    }),
     registerCommand('protect.unlock', {
       requiresDocument: true,
       // Only a restricted document has something to unlock.

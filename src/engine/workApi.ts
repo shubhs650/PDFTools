@@ -4,6 +4,7 @@ import type { PageTextSlice, PdfPageGeometry } from '@embedpdf/models';
 import type { DocDigest } from '../workers/render/save/digest';
 import type { AttachmentInfo, AttachmentRef } from '../workers/work/attachments';
 import type { LayerList } from '../model/ocg';
+import type { DocProperties } from '../workers/work/properties';
 import type {
   ExtraHit,
   ExtrasRequest,
@@ -90,6 +91,8 @@ export interface WorkApi {
    * Walks the pages (progress, cancellable).
    */
   listAttachments: MethodSpec<{ docId: string }, AttachmentInfo[], { done: number; total: number }>;
+  /** Document Properties and Security Info facts (M2-12). */
+  docProperties: MethodSpec<{ docId: string }, DocProperties>;
   /** Optional content groups: names and default visibility (list-only, ADR-012 d5). */
   listLayers: MethodSpec<{ docId: string }, LayerList>;
   /** An attachment's bytes, transferred (never parsed or run here). */

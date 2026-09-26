@@ -8,6 +8,7 @@ import { OfflineStatus, UpdateWaitDialog } from '../features/offline/OfflineStat
 import { installRecovery } from '../features/recovery/recovery';
 import { registerProtectCommands } from '../features/protect/commands';
 import { PasswordDialog } from '../features/protect/PasswordDialog';
+import { SecurityInfoDialog } from '../features/protect/SecurityInfo';
 import { UnlockDialog } from '../features/protect/UnlockDialog';
 import { ExternalLinkDialog } from '../features/view/ExternalLinkDialog';
 import { RecoveryDialog } from '../features/recovery/RecoveryDialog';
@@ -112,6 +113,7 @@ export function App() {
         <OpenErrorDialog />
         <PasswordDialog />
         <UnlockDialog />
+        <SecurityInfoDialog />
         <ExternalLinkDialog />
         <SaveErrorDialog />
         <SaveOptimizedDialog />

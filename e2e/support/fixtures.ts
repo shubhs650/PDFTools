@@ -26,6 +26,7 @@ import {
   annotatedPdf,
   attachmentsPdf,
   layersPdf,
+  propertiesPdf,
   outlinedPdf,
   cjkFallbackPdf,
   contractPdf,
@@ -129,6 +130,8 @@ export interface Pdfs {
   attachments(): Buffer;
   /** Two optional content groups, one off by default (M2-11). */
   layers(): Buffer;
+  /** Known Info values, tagged, two page sizes (M2-12). */
+  properties(): Buffer;
   a0(segments: number): Buffer;
   cjk(): Buffer;
 }
@@ -150,6 +153,7 @@ function makePdfs(): Pdfs {
     outlined: () => memo('outlined', outlinedPdf),
     attachments: () => memo('attachments', () => attachmentsPdf()),
     layers: () => memo('layers', layersPdf),
+    properties: () => memo('properties', propertiesPdf),
     a0: (segments) => memo(`a0-${String(segments)}`, () => a0Sheet(segments)),
     cjk: () => memo('cjk', () => cjkFallbackPdf()),
   };

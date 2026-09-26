@@ -261,7 +261,8 @@
       "saveOptimized": "Rewrite the file compactly. Digital signatures would be invalidated.",
       "settings": "Settings and the data PDFTools keeps on this device.",
       "about": "About PDFTools: version and third-party notices.",
-      "privacy": "PDFTools works offline. Your documents are never uploaded."
+      "privacy": "PDFTools works offline. Your documents are never uploaded.",
+      "properties": "Facts about the open document: its description, file and structure."
     }
   },
   "shortcuts": {
@@ -596,5 +597,58 @@
     "note": "Shown as the document sets them. Switching layers on or off isn't available yet.",
     "shown": "Shown",
     "hidden": "Hidden"
+  },
+  "properties": {
+    "noDocument": "Open a document to see its properties.",
+    "loading": "Reading properties…",
+    "failed": "The properties couldn't be read.",
+    "none": "—",
+    "yes": "Yes",
+    "no": "No",
+    "title": "Title",
+    "author": "Author",
+    "subject": "Subject",
+    "keywords": "Keywords",
+    "creator": "Created with",
+    "producer": "PDF producer",
+    "created": "Created",
+    "modified": "Modified",
+    "version": "PDF version",
+    "pages": "Pages",
+    "pageSize": "Page size (page {{page}})",
+    "pageSizeValue": "{{w}} × {{h}} mm ({{wi}} × {{hi}} in)",
+    "fileSize": "File size",
+    "tagged": "Tagged (accessible structure)",
+    "linearized": "Fast web view",
+    "revisions": "Revisions"
+  },
+  "security": {
+    "title": "Security info",
+    "description": "Security settings of “{{name}}”.",
+    "encryption": "Encryption",
+    "none": "None",
+    "methodValue": "{{method}}, {{bits}}-bit key (security handler revision {{revision}})",
+    "methodUnknown": "Encrypted (security handler revision {{revision}})",
+    "ownerPassword": "Owner password",
+    "owner": {
+      "restricts": "Set: it restricts what can be done",
+      "unlocked": "Given for this session: no restrictions",
+      "notRestricting": "No restrictions set"
+    },
+    "signatures": "Digital signatures",
+    "permissions": "Allowed in this session",
+    "allowed": "Allowed",
+    "denied": "Not allowed",
+    "close": "Close",
+    "capability": {
+      "print": "Printing",
+      "printHighQuality": "High-quality printing",
+      "copy": "Copying text and images",
+      "accessibility": "Content access for accessibility",
+      "annotate": "Comments",
+      "fillForms": "Filling in forms",
+      "modify": "Changing the document",
+      "assemble": "Page changes (assembly)"
+    }
   }
 }
