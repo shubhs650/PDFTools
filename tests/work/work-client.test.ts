@@ -67,6 +67,11 @@ function fakeSpawn(world: FakeWorld) {
         };
       },
       searchContext: () => [],
+      indexText: () => ({ pages: 3, extracted: 3, pausedMs: 0, ms: 1 }),
+      activity: () => {
+        world.jobsSeen.push('activity');
+        return null;
+      },
       hitRects: ({ hits }) => hits.map(() => []),
       refresh: () => ({ pending: true }),
       append: ({ piece }) => ({ tailBytes: piece.byteLength }),

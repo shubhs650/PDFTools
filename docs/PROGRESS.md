@@ -10,6 +10,8 @@ M0 and M1 owner runs are still open.
 
 ## Done
 
+- **Session 14 — M2-06 (background text indexing).** Branch `m2/06-indexing` (stacked on M2-05). Indexer in the Work worker (background priority, viewport order, pauses while scrolling/zooming via a throttled `activity` RPC); started when a document's Work copy opens, cancelled on close; searches go visible → cached → rest. Tests: Activity, indexer on real PDFium (order, pause, cancel, preempted by a search that then finds cached pages first), perf scenario on the 2,000-page stand-in.
+
 - **Session 14 — M2-05 (search core in the Work worker).** Branch `m2/05-search` (stacked on
   M2-04). The S5 search promoted: `searchCore.ts` (query compile with error codes, matching, order,
   batcher), `search.ts` (session text cache, streaming search, context on demand past the 5,000

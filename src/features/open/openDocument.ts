@@ -19,6 +19,7 @@ import type { DocumentManagerCapability } from '@embedpdf/plugin-document-manage
 import { MAX_DOCUMENTS } from '../view/plugins';
 import { dropPageCosts } from '../view/progressivePreview';
 import { askPassword } from '../protect/passwordPrompt';
+import { startIndexing, stopIndexing } from '../search/indexing';
 import { HEADER_WINDOW, OpenError, classifyOpenError, hasPdfHeader } from './errors';
 import { advance, openStore, startJob } from './openStore';
 import { forgetSaveState } from '../save/save';
@@ -143,6 +144,9 @@ async function openInWorkWorker(docId: string, file: File, password?: string): P
       reload: async () => (await originalBlob(docId)).arrayBuffer(),
       ...(password === undefined ? {} : { password }),
     });
+    // Background indexing (M2-06): from the page in view, when the tab is still open.
+    const view = documentStore.getState().docs[docId]?.view;
+    if (view) startIndexing(docId, [view.page]);
   } catch {
     // The Work worker copy is opened again lazily by the first Work job that
     // needs it (M1-21); a failure here must not affect the open tab.
@@ -164,6 +168,7 @@ async function releaseEngineDocument(docId: string): Promise<void> {
 
 /** Closes a document now, without asking (see requestClose). */
 export async function closeDocument(docId: string): Promise<void> {
+  stopIndexing(docId);
   documentStore.getState().close(docId);
   forgetSaveState(docId);
   sources.delete(docId);

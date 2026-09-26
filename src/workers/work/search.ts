@@ -180,7 +180,7 @@ export class SearchEngine {
       emit({ searchId: req.searchId, hits, counts, pagesDone, pageCount });
       counts = [];
     }, BATCH_MS);
-    for (const page of searchOrder(pageCount, req.visible)) {
+    for (const page of this.order(req.docId, pageCount, req.visible)) {
       await slice.checkpoint();
       const text = this.text(req.docId, doc, page);
       const room = limit - detailed;
@@ -203,6 +203,19 @@ export class SearchEngine {
       ms: performance.now() - t0,
       firstHitMs,
     };
+  }
+
+  /**
+   * Visible pages first, then pages already in the text cache (background
+   * indexing, ADR-006 decision 3), then the rest in viewport order.
+   */
+  order(docId: string, pageCount: number, visible: readonly number[]): number[] {
+    const base = searchOrder(pageCount, visible);
+    const shown = new Set(visible);
+    const first = base.filter((p) => shown.has(p));
+    const cached = base.filter((p) => !shown.has(p) && this.cache.get(docId, p) !== undefined);
+    const rest = base.filter((p) => !shown.has(p) && this.cache.get(docId, p) === undefined);
+    return [...first, ...cached, ...rest];
   }
 
   /** Hits with context for `pages` (rows past the detail limit, fetched as the list scrolls). */

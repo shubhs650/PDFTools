@@ -13,6 +13,7 @@ import { useEffect, useMemo, useRef, useState, type KeyboardEvent, type PointerE
 import { appStore, useApp } from '../../app/store/appStore';
 import { isEditable } from '../../app/keys/useShortcuts';
 import { documentStore, useDocuments, type ZoomSetting } from '../../app/store/documentStore';
+import { reportActivity } from '../search/indexing';
 import { fitVisibleLevels, move, zoomTo } from './controller';
 import { capability, useHost } from './host';
 import { HAND_MODE, PAGE_GAP, POINTER_MODE } from './plugins';
@@ -168,12 +169,33 @@ export function DocumentView({ documentId }: { documentId: string }) {
         setViewFocus(documentId, page);
         documentStore.getState().setView(documentId, { page });
       }),
-      zoom.onStateChange(syncZoom),
+      zoom.onStateChange((state) => {
+        reportActivity();
+        syncZoom(state);
+      }),
     ];
     return () => {
       for (const off of offs) off();
     };
   }, [registry, documentId]);
+
+  // Scrolling, zooming and other input pause background indexing (M2-06, ADR-006).
+  useEffect(() => {
+    const el = host.current;
+    if (!el) return;
+    const onScroll = (): void => {
+      reportActivity();
+    };
+    el.addEventListener('scroll', onScroll, { capture: true, passive: true });
+    // Any input on the document counts too (clicks, keys, wheel before it scrolls).
+    for (const type of ['pointerdown', 'keydown', 'wheel'] as const)
+      el.addEventListener(type, onScroll, { capture: true, passive: true });
+    return () => {
+      el.removeEventListener('scroll', onScroll, { capture: true });
+      for (const type of ['pointerdown', 'keydown', 'wheel'] as const)
+        el.removeEventListener(type, onScroll, { capture: true });
+    };
+  }, [documentId]);
 
   // The pointer tool → EmbedPDF's interaction mode: Select selects text, Hand pans (M2-04).
   useEffect(() => {

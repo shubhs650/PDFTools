@@ -38,7 +38,8 @@ type JobMethod =
   | 'textSlices'
   | 'search'
   | 'searchContext'
-  | 'hitRects';
+  | 'hitRects'
+  | 'indexText';
 
 export interface WorkClientOptions {
   wasmUrl?: string;
@@ -145,6 +146,14 @@ export class WorkClient {
     d.tail = appendBytes(d.tail, piece);
     await this.whenReady();
     await this.rpc.call('append', { docId, piece: piece.slice(0) }).promise;
+  }
+
+  /** The user is scrolling or zooming (M2-06): background indexing backs off. Fire and forget. */
+  notifyActivity(quietMs?: number): void {
+    if (this.respawning) return;
+    this.rpc
+      .call('activity', quietMs === undefined ? {} : { quietMs })
+      .promise.catch(() => undefined);
   }
 
   /** Owner-password unlock of the worker's copy (§7.12); kept for respawn reloads. */
