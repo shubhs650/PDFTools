@@ -42,6 +42,32 @@ function fakeSpawn(world: FakeWorld) {
         return { runs: [] };
       },
       textSlices: ({ slices }) => slices.map(() => 'text'),
+      // Three batches, 10 ms apart; stops at a cancel like the real one (between pages).
+      search: async (req, ctx) => {
+        for (let page = 0; page < 3; page++) {
+          await new Promise((r) => setTimeout(r, 10));
+          ctx.throwIfAborted();
+          ctx.stream({
+            searchId: req.searchId,
+            hits: [
+              { page, start: 0, length: req.query.length, before: '', match: req.query, after: '' },
+            ],
+            counts: [],
+            pagesDone: page + 1,
+            pageCount: 3,
+          });
+        }
+        return {
+          searchId: req.searchId,
+          totalHits: 3,
+          detailedHits: 3,
+          pageCount: 3,
+          ms: 30,
+          firstHitMs: 10,
+        };
+      },
+      searchContext: () => [],
+      hitRects: ({ hits }) => hits.map(() => []),
       refresh: () => ({ pending: true }),
       append: ({ piece }) => ({ tailBytes: piece.byteLength }),
       verify: () => ({ ok: true }),

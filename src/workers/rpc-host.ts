@@ -21,6 +21,12 @@ export interface JobContext<P> {
   readonly signal: AbortSignal;
   /** Reports progress; sent at most every 100 ms (latest value wins). */
   progress(value: P): void;
+  /**
+   * Sends a progress message at once and in order, never dropped: for results
+   * streamed in batches whose rate the job limits itself (search, ADR-006:
+   * batches at least 50 ms apart). Don't mix with `progress` in one job.
+   */
+  stream(value: P): void;
   /** Throws AbortError if the call was cancelled. */
   throwIfAborted(): void;
 }
@@ -125,6 +131,10 @@ export function serve<Api extends ApiSpec<Api>>(
       progress: (value) => {
         state.reported = true;
         throttle.push(value);
+      },
+      stream: (value) => {
+        state.reported = true;
+        if (!ac.signal.aborted) send({ t: 'progress', id, progress: value });
       },
       throwIfAborted: () => {
         if (ac.signal.aborted) throw new AbortError();

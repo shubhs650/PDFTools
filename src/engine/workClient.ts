@@ -29,7 +29,16 @@ interface DocRecord extends WorkDocSource {
 }
 
 /** Job methods: the ones that run through the worker's scheduler. */
-type JobMethod = 'docState' | 'textStats' | 'verify' | 'digest' | 'pageGeometry' | 'textSlices';
+type JobMethod =
+  | 'docState'
+  | 'textStats'
+  | 'verify'
+  | 'digest'
+  | 'pageGeometry'
+  | 'textSlices'
+  | 'search'
+  | 'searchContext'
+  | 'hitRects';
 
 export interface WorkClientOptions {
   wasmUrl?: string;

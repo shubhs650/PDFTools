@@ -12,6 +12,7 @@ import { digestDocument } from './render/save/digest';
 import { WorkDocs } from './work/docs';
 import { verifyCandidate } from './work/verify';
 import { Scheduler } from './work/scheduler';
+import { SearchEngine } from './work/search';
 
 let mod: WrappedPdfiumModule | undefined;
 let native: PdfiumNative | undefined;
@@ -30,6 +31,10 @@ function wasmBytes(): number {
 
 const docs = new WorkDocs(need);
 const scheduler = new Scheduler();
+const search = new SearchEngine(() => {
+  if (!mod) throw new RpcError('not-initialized', 'The work worker is not initialized');
+  return mod;
+}, need);
 
 serve<WorkApi>(self, {
   init: async ({ wasmUrl }) => {
@@ -72,6 +77,7 @@ serve<WorkApi>(self, {
     }),
 
   close: async ({ docId }) => {
+    search.cache.drop(docId);
     await docs.close(docId);
     return { wasmBytes: wasmBytes() };
   },
@@ -96,6 +102,26 @@ serve<WorkApi>(self, {
     scheduler.run(priority, ctx.signal, async () => {
       const { doc } = await docs.get(docId);
       return need().getTextSlices(doc, slices).toPromise();
+    }),
+
+  search: (req, ctx) =>
+    scheduler.run('interactive', ctx.signal, async (slice) => {
+      const { doc } = await docs.get(req.docId);
+      return search.search(req, doc, slice, (batch) => {
+        ctx.stream(batch);
+      });
+    }),
+
+  searchContext: ({ docId, query, options, pages }, ctx) =>
+    scheduler.run('interactive', ctx.signal, async (slice) => {
+      const { doc } = await docs.get(docId);
+      return search.context(docId, doc, query, options, pages, slice);
+    }),
+
+  hitRects: ({ docId, pageIndex, hits }, ctx) =>
+    scheduler.run('interactive', ctx.signal, async () => {
+      const { doc } = await docs.get(docId);
+      return search.rects(docId, doc, pageIndex, hits);
     }),
 
   textStats: ({ docId, priority = 'background' }, ctx) =>

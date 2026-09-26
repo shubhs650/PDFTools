@@ -1,13 +1,26 @@
 # PDFTools — Progress
 
-_Last updated: 2026-09-26 (session 14: M2 plan drafted)_
+_Last updated: 2026-09-26 (session 14: M2 plan, M2-01 to M2-05)_
 
 **Current milestone:** M1 — Foundation is **complete on the agent side** and merged into `main`
 (M1-01 … M1-28; results and owner pack: [docs/acceptance/M1.md](acceptance/M1.md)). The
-[M2 plan](plan/M2.md) is drafted and **waiting for owner approval** (and answers to M2-Q1 … Q9).
+[M2 plan](plan/M2.md) is approved; **M2-01 to M2-05 are done** on stacked branches, waiting for
+review.
 M0 and M1 owner runs are still open.
 
 ## Done
+
+- **Session 14 — M2-05 (search core in the Work worker).** Branch `m2/05-search` (stacked on
+  M2-04). The S5 search promoted: `searchCore.ts` (query compile with error codes, matching, order,
+  batcher), `search.ts` (session text cache, streaming search, context on demand past the 5,000
+  cap, hit rectangles), Work RPCs `search`, `searchContext`, `hitRects`, and `SearchSession`
+  (cancel on new search, stale batches dropped). New `ctx.stream()` in the RPC host: the throttled
+  progress channel keeps only the latest value and would have dropped hit batches. Found: this
+  PDFium counts a non-BMP character as two chars, so the hand mapping ADR-006 suggested was wrong;
+  PDFium's own `FPDFText_GetCharIndexFromTextIndex` is used. Tests: ported S5 units, real-PDFium
+  search (needle, exact count past the cap, cancel, rotated page rects, non-BMP, bad regex),
+  session over a real channel, perf scenario on the 2,000-page stand-in (first hit 53–176 ms,
+  complete 5.1–5.7 s, 0 long tasks).
 
 - **Session 14 — M2-04 (text selection and copy).** Branch `m2/04-selection` (stacked on M2-03).
   `@embedpdf/plugin-selection` 2.15.1 (MIT; license gate 642 packages) with the interaction
@@ -480,14 +493,16 @@ M0 and M1 owner runs are still open.
 
 ## In progress
 
-- M0: the agent part of all eight spikes is done and all spike ADRs are accepted. Owner runs are
-  still open. The owner checks listed under Next are pending.
-- **M2 plan waiting for owner approval:** [docs/plan/M2.md](plan/M2.md), with owner questions
-  M2-Q1 … M2-Q9. M1 PRs #29–#32 are merged into `main`.
+- **M2 branches waiting for review and merge, in this order** (each is stacked on the one before):
+  `claude/m2-task-breakdown-ytspb5` (the plan) → `m2/01-read-spike` → `m2/02-secure-print-spike`
+  → `m2/03-protected` → `m2/04-selection` → `m2/05-search`. No pull requests opened yet.
 
 ## Session log
 
-- **Session 14 (2026-09-26):** M2 plan only (docs). `prettier --check` on the changed files.
+- **Session 14 (2026-09-26):** M2 plan (approved), then M2-01 to M2-05 on stacked `m2/…`
+  branches. Local checks on the last branch all pass: typecheck (app and spikes), lint, format,
+  472 unit tests, license gate (642 packages), build + `check:dist`, bundle report (core 6.72 MB),
+  116 e2e, 16 perf scenarios. qpdf installed in the container for the encrypted fixtures.
 
 - **Session 13 (2026-09-26):** M1-26, M1-27 and M1-28, on `m1/26-local-data`, `m1/27-ci` and
   `m1/28-acceptance` (stacked; one PR each). Local checks all pass on the last branch: typecheck,
@@ -556,15 +571,14 @@ M0 and M1 owner runs are still open.
      (`node spikes/s4-oxide/run-node.ts <files>`; dumps in `out/review/`, see ADR-009);
    - FAR, 500 MB and A0 through the S3 harness;
    - S8 Firefox check and Pages preview.
-3. **Owner:** review and approve the [M2 plan](plan/M2.md) and answer M2-Q1 … M2-Q9 (Oxide
-   timing, signature pane in M2, search scope, links, error-report back end, print CSP,
-   passwords, layers, branching).
+3. **Owner:** review and merge the M2 branches in order (see "In progress"), and decide the open
+   items under "Decisions needed" (layers, `frame-src blob:`, keyboard text selection).
 4. **Owner:** the M1 owner pack in [docs/acceptance/M1.md](acceptance/M1.md) §3 — heavy-file
    timings (`npm run owner:timings`), the installed app on Windows (file handler, offline, update,
    reserved keys), a Firefox smoke test, the Pages preview, and interop §M1 of
    `e2e/interop/CHECKLIST.md`.
-5. **Agent (after approval):** M2-01 and M2-02 spikes (ADR-012, ADR-013), and M2-05 search core
-   in parallel. Do not start M2 features before the plan is approved.
+5. **Agent:** M2-06 (background text indexing), then M2-07 (find bar) and M2-08 (pane framework
+   and thumbnails).
 
 ## Open issues
 
