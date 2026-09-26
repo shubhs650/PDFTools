@@ -1,6 +1,7 @@
 {
   "app": {
-    "name": "PDFTools"
+    "name": "PDFTools",
+    "description": "A free, offline, private PDF editor for engineers."
   },
   "ui": {
     "dialog": {
