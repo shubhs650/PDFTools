@@ -49,7 +49,10 @@ export interface RenderApi {
     }
   >;
   /** The tail of the last saveIncremental was written: it becomes the new base (M1-22). */
-  commitSave: MethodSpec<{ docId: string; tailLength: number }, { baseLength: number }>;
+  commitSave: MethodSpec<
+    { docId: string; tailLength: number; rewrite?: boolean },
+    { baseLength: number }
+  >;
   /** Save Optimized core (ADR-005 decision 3): the whole file rewritten. */
   saveRewrite: MethodSpec<{ docId: string }, { bytes: ArrayBuffer }>;
   /** Existing objects changed since the last save (tests and diagnostics; no content). */

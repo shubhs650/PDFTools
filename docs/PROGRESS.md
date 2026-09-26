@@ -7,6 +7,12 @@ still open.
 
 ## Done
 
+- **Session 12 — M1-23 (Save Optimized, growth prompt, large-save progress).** Branch
+  `m1/23-save-optimized`. Full rewrite as a new file or over the original (signature-count
+  warning), becoming the save base for later Ctrl+S; growth prompt at > 30 % with per-session
+  dismissal; chunked writes with progress and cancel before commit. Also fixed the tail
+  trailer's `/Size` (spec value, not PDFium's allocator).
+
 - **Session 12 — M1-22 (Ctrl+S and Save As).** Branch `m1/22-save`. Ctrl+S appends the verified
   tail to the file's handle; Save As writes original + all tails to a new file that becomes the
   document's (download on the fallback path); save state machine with cancel before commit;

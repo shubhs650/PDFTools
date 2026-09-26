@@ -112,8 +112,8 @@ serve<RenderApi>(self, {
     return new Transfer({ ...r, tail }, [tail]);
   },
 
-  commitSave: ({ docId, tailLength }) => ({
-    baseLength: ready().tracker.commit(docId, tailLength),
+  commitSave: ({ docId, tailLength, rewrite }) => ({
+    baseLength: ready().tracker.commit(docId, tailLength, rewrite ?? false),
   }),
 
   saveRewrite: ({ docId }) => {

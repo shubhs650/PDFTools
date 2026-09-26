@@ -135,14 +135,28 @@ export async function appendToHandle(
   });
 }
 
-/** Save As / Save Optimized to a chosen handle: replaces its content. */
+/** Chunk size for writes that report progress (M1-23). */
+export const WRITE_CHUNK = 8 * 1024 * 1024;
+
+/**
+ * Save As / Save Optimized to a chosen handle: replaces its content. Written
+ * in chunks with `progress`, and cancellable between chunks until the commit.
+ */
 export async function writeToHandle(
   handle: FileSystemFileHandle,
   bytes: Uint8Array<ArrayBuffer> | Blob,
   signal?: AbortSignal,
+  progress?: (done: number, total: number) => void,
 ): Promise<void> {
+  const blob = bytes instanceof Blob ? bytes : new Blob([bytes]);
   await commit(await handle.createWritable(), signal, async (w) => {
-    await w.write(bytes);
+    for (let at = 0; at < blob.size || at === 0; at += WRITE_CHUNK) {
+      if (signal?.aborted) throw new AbortError();
+      progress?.(at, blob.size);
+      await w.write(blob.slice(at, at + WRITE_CHUNK));
+      progress?.(Math.min(at + WRITE_CHUNK, blob.size), blob.size);
+      if (blob.size === 0) break;
+    }
   });
 }
 

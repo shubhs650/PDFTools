@@ -175,7 +175,10 @@ export function narrowTail(
   // Root/Encrypt/Info from PDFium's trailer (falling back to the base's); the
   // first /ID element stays the file's permanent identifier (ISO 32000-1 14.4).
   const pdfiumSize = Number(/\/Size\s+(\d+)/.exec(pdfiumTrailer)?.[1] ?? base.size);
-  const size = Math.max(pdfiumSize, (kept.at(-1) ?? 0) + 1, base.size);
+  // /Size is one more than the highest object number in the file (ISO 32000-1
+  // 7.5.5). PDFium's allocator (`pdfiumSize`) can be higher, e.g. after a
+  // rewrite dropped object-stream containers; it only decides `newFrom`.
+  const size = Math.max((kept.at(-1) ?? 0) + 1, base.size);
   const root = trailerRef(pdfiumTrailer, 'Root') ?? trailerRef(base.trailer, 'Root');
   const encrypt = trailerRef(pdfiumTrailer, 'Encrypt') ?? trailerRef(base.trailer, 'Encrypt');
   const info = trailerRef(pdfiumTrailer, 'Info') ?? trailerRef(base.trailer, 'Info');

@@ -130,7 +130,14 @@ export function Backstage({ open, onOpenChange }: BackstageProps) {
                   }}
                 />
               ) : (
-                <RibbonButton command={section} large tabIndex={0} />
+                <RibbonButton
+                  command={section}
+                  large
+                  tabIndex={0}
+                  onRan={() => {
+                    onOpenChange(false);
+                  }}
+                />
               )}
             </section>
           ) : null}

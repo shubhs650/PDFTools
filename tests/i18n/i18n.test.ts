@@ -39,8 +39,12 @@ function referencedKeys(): Set<string> {
   return found;
 }
 
+// i18next plural forms: `x_one` / `x_other` are one key `x` in code (`t('x', { count })`).
+const PLURAL = /_(zero|one|two|few|many|other)$/;
+const base = (k: string): string => k.replace(PLURAL, '');
+
 describe('message keys (rule 11)', () => {
-  const keys = new Set(leaves(en));
+  const keys = new Set(leaves(en).map(base));
   const used = referencedKeys();
 
   it('every key referenced in src exists in en.json', () => {
