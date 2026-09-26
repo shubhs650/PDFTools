@@ -5,7 +5,7 @@
 // working (and working offline) afterwards. Never touches the user's files.
 // Pure over its dependencies (the app's are in appClearDeps.ts).
 import { recordError } from '../../app/diagnostics';
-import { APP_FILES_CACHE } from './localData';
+import { APP_FILES_CACHE } from './storedData';
 
 export type ClearPart = 'recovery' | 'indexedDB' | 'caches';
 

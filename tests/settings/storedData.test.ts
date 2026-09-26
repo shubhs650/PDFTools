@@ -1,7 +1,7 @@
 import { IDBFactory } from 'fake-indexeddb';
 import { describe, expect, it } from 'vitest';
 import { clearAllLocalData, type ClearDeps } from '../../src/features/settings/clearAll';
-import { APP_FILES_CACHE, LOCAL_DATA } from '../../src/features/settings/localData';
+import { APP_FILES_CACHE, LOCAL_DATA } from '../../src/features/settings/storedData';
 import { deleteAppDb } from '../../src/storage/appDb';
 import { AppDb, DB_NAME } from '../../src/storage/idb';
 import { RECOVERY_DIR } from '../../src/storage/recoveryTypes';

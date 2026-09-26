@@ -1,5 +1,5 @@
 import { useTranslation } from 'react-i18next';
-import { LOCAL_DATA, type LocalDataKind } from '../../features/settings/localData';
+import { LOCAL_DATA, type LocalDataKind } from '../../features/settings/storedData';
 import { msg, type MessageKey } from '../../i18n';
 import { APP_VERSION } from '../version';
 
