@@ -16,6 +16,7 @@ import { UiProvider } from '../ui/components';
 import { AppFrame } from './AppFrame';
 import { Backstage } from './backstage/Backstage';
 import { registerBuiltinCommands } from './commands/builtins';
+import { registerCommand } from './commands/dispatch';
 import { BOUNDARY } from './diagnostics';
 import { ErrorBoundary } from './ErrorBoundary';
 import { ShortcutSheet } from './keys/ShortcutSheet';
@@ -29,8 +30,18 @@ const focusDocument = (): void => {
 };
 
 export function App() {
-  const [backstage, setBackstage] = useState(false);
+  // Open, and at which section (Help → Clear All Local Data opens Settings, M1-26).
+  const [backstage, setBackstage] = useState<{ section?: string } | null>(null);
   useEffect(() => registerBuiltinCommands(), []);
+  useEffect(
+    () =>
+      registerCommand('help.clearData', {
+        run: () => {
+          setBackstage({ section: 'file.settings' });
+        },
+      }),
+    [],
+  );
   useEffect(() => registerViewCommands(), []);
   useEffect(() => registerSaveCommands(), []);
   useEffect(() => installRecovery(), []);
@@ -71,7 +82,7 @@ export function App() {
               <QuickAccess />
               <Ribbon
                 onOpenBackstage={() => {
-                  setBackstage(true);
+                  setBackstage({});
                 }}
                 focusDocument={focusDocument}
               />
@@ -80,7 +91,13 @@ export function App() {
         >
           <DocumentArea />
         </AppFrame>
-        <Backstage open={backstage} onOpenChange={setBackstage} />
+        <Backstage
+          open={backstage !== null}
+          {...(backstage?.section ? { section: backstage.section } : {})}
+          onOpenChange={(open) => {
+            setBackstage(open ? {} : null);
+          }}
+        />
         <ShortcutSheet />
         <CloseDocumentDialog />
         <OpenErrorDialog />

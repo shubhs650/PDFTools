@@ -28,6 +28,8 @@ const HEADING_ID = 'backstage-heading';
 
 export interface BackstageProps {
   open: boolean;
+  /** Section to show when it opens (a command id, e.g. `file.settings`); the first otherwise. */
+  section?: string;
   onOpenChange: (open: boolean) => void;
 }
 
@@ -37,10 +39,18 @@ export interface BackstageProps {
  * the File button (Radix Dialog). Section content is filled by later tasks
  * (open M1-13, recent M1-18, save M1-22/23, settings, about and privacy M1-26).
  */
-export function Backstage({ open, onOpenChange }: BackstageProps) {
+export function Backstage({ open, section: initial, onOpenChange }: BackstageProps) {
   const { t } = useTranslation();
   const sections = useMemo(() => ribbonLayout().backstage, []);
   const [current, setCurrent] = useState(0);
+  // Each opening starts at the requested section (or keeps the last one).
+  const [shownFor, setShownFor] = useState<string | undefined>(undefined);
+  const want = open ? initial : undefined;
+  if (want !== shownFor) {
+    setShownFor(want);
+    const i = sections.findIndex((c) => c.id === want);
+    if (i >= 0) setCurrent(i);
+  }
   const navRefs = useRef<(HTMLButtonElement | null)[]>([]);
   const section = sections[current];
   // Focus goes back to whatever opened the backstage (the File button), as in

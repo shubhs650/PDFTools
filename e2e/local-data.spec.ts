@@ -147,3 +147,23 @@ test('Privacy lists every local store; About shows the version and serves the no
     expect(notices).toContain(needle);
   }
 });
+
+test('Help → Clear All Local Data opens File → Settings', async ({ page }) => {
+  await page.goto('/');
+  await page.getByRole('tab', { name: 'Help' }).click();
+  await page.getByRole('button', { name: 'Clear All Local Data' }).click();
+  await expect(
+    backstage(page).getByRole('heading', { name: 'Settings', exact: true }),
+  ).toBeVisible();
+  await expect(
+    backstage(page).getByRole('button', { name: 'Clear all local data…' }),
+  ).toBeVisible();
+  // Another section, close, and the command again: back at Settings.
+  await backstage(page).getByRole('button', { name: 'About', exact: true }).click();
+  await page.keyboard.press('Escape');
+  await expect(backstage(page)).toBeHidden();
+  await page.getByRole('button', { name: 'Clear All Local Data' }).click();
+  await expect(
+    backstage(page).getByRole('heading', { name: 'Settings', exact: true }),
+  ).toBeVisible();
+});
