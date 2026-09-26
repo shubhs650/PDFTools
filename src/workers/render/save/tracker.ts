@@ -12,6 +12,12 @@ import type { PdfiumNative } from '@embedpdf/engines/pdfium';
 import type { WrappedPdfiumModule } from '@embedpdf/pdfium';
 import { PdfErrorCode } from '@embedpdf/models';
 import { RpcError } from '../../../engine/errors';
+import {
+  ANNOTATION_METHODS,
+  FORM_METHODS,
+  OTHER_MUTATIONS,
+  isMutation,
+} from '../../../engine/mutations';
 import { PDFIUM_ERROR_PREFIX } from '../../../engine/renderApi';
 import { acquirePage, docPtrOf, rawCall, withWideString } from '../pdfium';
 import { latin1 } from './bytes';
@@ -25,38 +31,7 @@ const PERM_MODIFY = 1 << 3; // bit 4
 const PERM_ANNOTATE = 1 << 5; // bit 6
 const PERM_FILL_FORMS = 1 << 8; // bit 9
 
-export const ANNOTATION_METHODS = new Set([
-  'createPageAnnotation',
-  'updatePageAnnotation',
-  'removePageAnnotation',
-]);
-export const FORM_METHODS = new Set([
-  'setFormFieldValue',
-  'setFormFieldState',
-  'renameWidgetField',
-  'shareWidgetField',
-  'regenerateWidgetAppearances',
-]);
-/** Other document changes: allowed with bit 4; not tracked, so the next save keeps all. */
-export const OTHER_MUTATIONS = new Set([
-  'setMetadata',
-  'deletePage',
-  'importPages',
-  'flattenAnnotation',
-  'flattenPage',
-  'redactTextInRects',
-  'applyRedaction',
-  'applyAllRedactions',
-  'addAttachment',
-  'removeAttachment',
-  'setBookmarks',
-  'deleteBookmarks',
-  'setDocumentEncryption',
-  'removeEncryption',
-]);
-
-export const isMutation = (method: string): boolean =>
-  ANNOTATION_METHODS.has(method) || FORM_METHODS.has(method) || OTHER_MUTATIONS.has(method);
+export { ANNOTATION_METHODS, FORM_METHODS, OTHER_MUTATIONS, isMutation };
 
 interface DocState {
   /** Length of the bytes PDFium opened: its incremental output appends after this. */

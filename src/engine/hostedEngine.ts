@@ -5,6 +5,7 @@
 import { PdfEngine, type browserImageDataToBlobConverter } from '@embedpdf/engines/pdfium';
 import { PdfErrorCode, Task, TaskStage, type IPdfiumExecutor } from '@embedpdf/models';
 import { RpcError, isAbortError } from './errors';
+import { isMutation } from './mutations';
 import { PDFIUM_ERROR_PREFIX, type RenderApi } from './renderApi';
 import type { RpcClient } from './rpc';
 
@@ -31,7 +32,13 @@ export function transferablesFor(method: string, args: unknown[]): Transferable[
   return content instanceof ArrayBuffer ? [content] : [];
 }
 
-export function createHostedExecutor(rpc: RpcClient<RenderApi>): IPdfiumExecutor {
+/** Called after a document-changing call succeeded (the tab's dirty mark, M1-22). */
+export type MutationListener = (method: string, docId: string) => void;
+
+export function createHostedExecutor(
+  rpc: RpcClient<RenderApi>,
+  onMutation?: MutationListener,
+): IPdfiumExecutor {
   return new Proxy({} as IPdfiumExecutor, {
     get(_target, method) {
       if (typeof method !== 'string' || method === 'then') return undefined;
@@ -54,6 +61,10 @@ export function createHostedExecutor(rpc: RpcClient<RenderApi>): IPdfiumExecutor
         };
         job.promise.then(
           (value) => {
+            if (onMutation && isMutation(method)) {
+              const docId = (args[0] as { id?: unknown } | undefined)?.id;
+              if (typeof docId === 'string') onMutation(method, docId);
+            }
             if (task.state.stage === TaskStage.Pending) task.resolve(value);
           },
           (err: unknown) => {
@@ -72,8 +83,9 @@ export function createHostedExecutor(rpc: RpcClient<RenderApi>): IPdfiumExecutor
 export function createPdfEngine(
   rpc: RpcClient<RenderApi>,
   imageConverter: ImageConverter,
+  onMutation?: MutationListener,
 ): PdfEngine {
-  return new PdfEngine(createHostedExecutor(rpc), { imageConverter });
+  return new PdfEngine(createHostedExecutor(rpc, onMutation), { imageConverter });
 }
 
 export type { ImageConverter };

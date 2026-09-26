@@ -20,7 +20,8 @@ import { MAX_DOCUMENTS } from '../view/plugins';
 import { dropPageCosts } from '../view/progressivePreview';
 import { HEADER_WINDOW, OpenError, classifyOpenError, hasPdfHeader } from './errors';
 import { advance, openStore, startJob } from './openStore';
-import { findDuplicate, sources } from './sources';
+import { forgetSaveState } from '../save/save';
+import { findDuplicate, originalBlob, sources } from './sources';
 
 const newDocId = (): string => `doc-${crypto.randomUUID()}`;
 
@@ -89,7 +90,7 @@ async function openOne({ file, handle }: OpenedFile): Promise<string | undefined
 async function openInWorkWorker(docId: string, file: File): Promise<void> {
   try {
     await workClient().open(docId, await file.arrayBuffer(), {
-      reload: () => file.arrayBuffer(),
+      reload: async () => (await originalBlob(docId)).arrayBuffer(),
     });
   } catch {
     // The Work worker copy is opened again lazily by the first Work job that
@@ -113,6 +114,7 @@ async function releaseEngineDocument(docId: string): Promise<void> {
 /** Closes a document now, without asking (see requestClose). */
 export async function closeDocument(docId: string): Promise<void> {
   documentStore.getState().close(docId);
+  forgetSaveState(docId);
   sources.delete(docId);
   tileCache.dropDoc(docId);
   dropPageCosts(docId);

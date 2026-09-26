@@ -7,6 +7,12 @@ still open.
 
 ## Done
 
+- **Session 12 — M1-22 (Ctrl+S and Save As).** Branch `m1/22-save`. Ctrl+S appends the verified
+  tail to the file's handle; Save As writes original + all tails to a new file that becomes the
+  document's (download on the fallback path); save state machine with cancel before commit;
+  status-bar phase and localized error dialog offering Save As; tab dirty mark driven by the
+  engine proxy. 100 markups save in 134 ms locally.
+
 - **Session 12 — M1-21 (save verification and Work-worker refresh).** Branch `m1/21-save-verify`.
   Read-only per-page digest (raw PDFium) computed by the Render worker with each save; the Work
   worker reopens original + tail and compares; keep-all fallback with a content-free local log;

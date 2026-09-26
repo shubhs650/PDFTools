@@ -15,7 +15,10 @@ afterEach(() => {
   }
 });
 
-function executorWith(exec: (method: string) => unknown) {
+function executorWith(
+  exec: (method: string) => unknown,
+  onMutation?: (method: string, docId: string) => void,
+) {
   const ch = new MessageChannel();
   channels.push(ch);
   serve<RenderApi>(ch.port1, {
@@ -47,7 +50,7 @@ function executorWith(exec: (method: string) => unknown) {
     docInfo: () => ({ pageCount: 0, permissions: 0, signatureCount: 0 }),
     memory: () => ({ wasmBytes: 0 }),
   });
-  return createHostedExecutor(new RpcClient<RenderApi>(ch.port2, 'render'));
+  return createHostedExecutor(new RpcClient<RenderApi>(ch.port2, 'render'), onMutation);
 }
 
 describe('hosted executor proxy (ADR-004)', () => {
@@ -57,6 +60,25 @@ describe('hosted executor proxy (ADR-004)', () => {
       ex as unknown as Record<string, () => { toPromise(): Promise<unknown> }>
     ).getMetadata?.();
     expect(await task?.toPromise()).toEqual({ echoed: 'getMetadata' });
+  });
+
+  it('reports successful document changes (the dirty mark, M1-22), not reads or failures', async () => {
+    const seen: string[] = [];
+    const ex = executorWith(
+      (m) => {
+        if (m === 'removePageAnnotation') throw new RpcError('pdfium:5', 'refused');
+        return true;
+      },
+      (method, docId) => seen.push(`${method}:${docId}`),
+    ) as unknown as Record<string, (...a: unknown[]) => { toPromise(): Promise<unknown> }>;
+    const doc = { id: 'd1' };
+    await ex.createPageAnnotation?.(doc, { index: 0 }, {}).toPromise();
+    await ex.getPageAnnotations?.(doc, { index: 0 }).toPromise();
+    await ex
+      .removePageAnnotation?.(doc, { index: 0 }, {})
+      .toPromise()
+      .catch(() => undefined);
+    expect(seen).toEqual(['createPageAnnotation:d1']);
   });
 
   it('turns a pdfium:<code> RpcError back into the PdfErrorCode (e.g. password)', async () => {
