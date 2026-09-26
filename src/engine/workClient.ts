@@ -41,6 +41,7 @@ type JobMethod =
   | 'searchExtras'
   | 'listAttachments'
   | 'readAttachment'
+  | 'listLayers'
   | 'hitRects'
   | 'indexText';
 

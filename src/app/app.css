@@ -1263,3 +1263,38 @@ body {
   padding: var(--space-2) var(--space-3);
   font-size: var(--font-size-s);
 }
+
+/* ------------------------------------------------------------ layers (M2-11) */
+
+.layers-pane {
+  position: absolute;
+  inset: var(--space-0);
+  overflow-y: auto;
+}
+
+.layers-note {
+  margin: var(--space-0);
+  padding: var(--space-2) var(--space-3);
+  color: var(--color-text-muted);
+  font-size: var(--font-size-s);
+}
+
+.layer-list {
+  margin: var(--space-0);
+  padding: var(--space-0);
+  list-style: none;
+}
+
+.layer {
+  display: flex;
+  justify-content: space-between;
+  gap: var(--space-3);
+  padding: var(--space-2) var(--space-3);
+  border-bottom: var(--border-width) solid var(--color-border);
+  outline: none;
+}
+
+.layer-state {
+  color: var(--color-text-muted);
+  font-size: var(--font-size-s);
+}

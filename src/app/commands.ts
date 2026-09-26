@@ -1149,6 +1149,7 @@ export const COMMANDS: readonly CommandDef[] = [
     fluent: 'Layer',
     milestone: 'M2',
     toggle: true,
+    shipped: true, // M2-11 (list only, ADR-012 d5)
   },
   {
     id: 'status.readyOffline',

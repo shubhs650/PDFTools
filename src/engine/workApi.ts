@@ -3,6 +3,7 @@
 import type { PageTextSlice, PdfPageGeometry } from '@embedpdf/models';
 import type { DocDigest } from '../workers/render/save/digest';
 import type { AttachmentInfo, AttachmentRef } from '../workers/work/attachments';
+import type { LayerList } from '../model/ocg';
 import type {
   ExtraHit,
   ExtrasRequest,
@@ -89,6 +90,8 @@ export interface WorkApi {
    * Walks the pages (progress, cancellable).
    */
   listAttachments: MethodSpec<{ docId: string }, AttachmentInfo[], { done: number; total: number }>;
+  /** Optional content groups: names and default visibility (list-only, ADR-012 d5). */
+  listLayers: MethodSpec<{ docId: string }, LayerList>;
   /** An attachment's bytes, transferred (never parsed or run here). */
   readAttachment: MethodSpec<{ docId: string; ref: AttachmentRef }, { bytes: ArrayBuffer }>;
   /** Highlight rectangles for hits on one page, in the viewer's page space. */

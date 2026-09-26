@@ -584,5 +584,17 @@
       "notPdf": "This attachment isn't a PDF, so it can't open as a tab. Save it instead.",
       "failed": "The attachment couldn't be read."
     }
+  },
+  "layers": {
+    "list": "Layers",
+    "noDocument": "Open a document to see its layers.",
+    "loading": "Reading layers…",
+    "failed": "The layers couldn't be read.",
+    "encrypted": "Layers can't be listed in an encrypted document.",
+    "empty": "This document has no layers.",
+    "unnamed": "Unnamed layer",
+    "note": "Shown as the document sets them. Switching layers on or off isn't available yet.",
+    "shown": "Shown",
+    "hidden": "Hidden"
   }
 }

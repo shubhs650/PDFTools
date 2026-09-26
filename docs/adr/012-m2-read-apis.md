@@ -1,7 +1,7 @@
 # ADR-012: M2-01 — Text layer, thumbnails, bookmarks, links, attachments and layers
 
-- **Status:** Proposed. Decisions 1–4 follow the approved M2 plan and need no owner action;
-  **decision 5 (layers) needs an owner choice** (M2-Q8). No ARCHITECTURE.md change.
+- **Status:** Accepted (owner, 2026-09-26). Decision 5 (layers): **option 1, list-only pane**
+  (M2-Q8), built in M2-11. No ARCHITECTURE.md change.
 - **Date:** 2026-09-26
 - **Deciders:** Owner (M2-Q8); recorded by the coding agent
 - **Related decisions:** D-09, D-10, §5, §7.12 (rule 9); ADR-001 B14; ADR-004 decisions 3–4;
@@ -187,7 +187,7 @@ policy), transferring the bytes out; annotation-level files through direct PDFiu
    pages only.
 4. **Attachments:** in the Work worker (list, read, annotation-level files by direct PDFium calls
    per B14); bytes transferred, never structured-cloned; `plugin-attachment` is not added.
-5. _(Owner, M2-Q8)_ **Layers:** proposed **option 1** (list-only pane) for M2-11, with option 3's
+5. _(Owner, M2-Q8 — accepted 2026-09-26)_ **Layers:** **option 1** (list-only pane) for M2-11, with option 3's
    upstream request filed. M2-11's layer part waits for this answer.
 
 No new runtime dependency except `@embedpdf/plugin-selection` (added in M2-04, pinned exactly;

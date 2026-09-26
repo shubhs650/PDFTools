@@ -4,6 +4,7 @@
 import type { ComponentType } from 'react';
 import { AttachmentsPane } from '../features/attachments/AttachmentsPane';
 import { BookmarksPane } from '../features/bookmarks/BookmarksPane';
+import { LayersPane } from '../features/layers/LayersPane';
 import { SearchPane } from '../features/search/SearchPane';
 import { ThumbnailsPane } from '../features/thumbnails/ThumbnailsPane';
 
@@ -18,6 +19,7 @@ export const PANES: readonly PaneDef[] = [
   { id: 'rail.thumbnails', component: ThumbnailsPane },
   { id: 'rail.search', component: SearchPane },
   { id: 'rail.attachments', component: AttachmentsPane },
+  { id: 'rail.layers', component: LayersPane },
 ];
 
 export const paneById = (id: string): PaneDef | undefined => PANES.find((p) => p.id === id);

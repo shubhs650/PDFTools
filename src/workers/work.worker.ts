@@ -16,6 +16,7 @@ import { Scheduler } from './work/scheduler';
 import { Activity, indexDocument } from './work/indexer';
 import { SearchEngine } from './work/search';
 import { listAttachments, readAttachment } from './work/attachments';
+import { readLayers } from '../model/ocg';
 
 let mod: WrappedPdfiumModule | undefined;
 let native: PdfiumNative | undefined;
@@ -33,6 +34,12 @@ function wasmBytes(): number {
 }
 
 const docs = new WorkDocs(need);
+
+/** zlib inflate (FlateDecode) with the platform's DecompressionStream. */
+async function inflate(bytes: Uint8Array): Promise<Uint8Array> {
+  const stream = new Blob([bytes.slice()]).stream().pipeThrough(new DecompressionStream('deflate'));
+  return new Uint8Array(await new Response(stream).arrayBuffer());
+}
 const scheduler = new Scheduler();
 const activity = new Activity();
 const search = new SearchEngine(() => {
@@ -136,6 +143,9 @@ serve<WorkApi>(self, {
         ctx.progress(p);
       });
     }),
+
+  listLayers: ({ docId }, ctx) =>
+    scheduler.run('interactive', ctx.signal, () => readLayers(docs.bytes(docId), inflate)),
 
   readAttachment: ({ docId, ref }, ctx) =>
     scheduler.run('interactive', ctx.signal, async () => {

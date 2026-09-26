@@ -1,8 +1,8 @@
 # ADR-013: M2-02 — Passwords, owner unlock, forms, flatten and the print route
 
-- **Status:** Proposed. Decisions 1–6 follow the approved M2 plan. **Decision 7 changes the §10.1
-  CSP (`frame-src blob:`) and needs owner approval** (M2-Q6); only M2-16's browser-viewer route
-  waits for it.
+- **Status:** Accepted (owner, 2026-09-26), including decision 7 (the §10.1 CSP gains
+  `frame-src blob:` for M2-16's browser-viewer print route; ARCHITECTURE.md §10.1 is updated in
+  M2-16 when the route lands).
 - **Date:** 2026-09-26
 - **Deciders:** Owner (decision 7); recorded by the coding agent
 - **Related decisions:** D-19, D-25, D-26, §7.10, §7.12, §7.13, §10.1; ADR-001 B4, B13, B14;

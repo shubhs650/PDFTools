@@ -150,6 +150,12 @@ export class WorkDocs {
     return { doc: e.doc, appliedTailBytes: e.appliedTailBytes };
   }
 
+  /** The file as saved so far (original + tail): for readers of raw PDF syntax (M2-11, M2-12). */
+  bytes(docId: string): Uint8Array {
+    const e = this.require(docId);
+    return new Uint8Array(concat(e.original, e.tail));
+  }
+
   /** Unlocks the kept copy with the owner password; remembered for later reloads. */
   async unlock(docId: string, ownerPassword: string): Promise<boolean> {
     const e = this.require(docId);

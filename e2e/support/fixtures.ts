@@ -25,6 +25,7 @@ import {
   a0Sheet,
   annotatedPdf,
   attachmentsPdf,
+  layersPdf,
   outlinedPdf,
   cjkFallbackPdf,
   contractPdf,
@@ -126,6 +127,8 @@ export interface Pdfs {
   outlined(): Buffer;
   /** 20 embedded files incl. a 20 MB one and a PDF (M2-11). */
   attachments(): Buffer;
+  /** Two optional content groups, one off by default (M2-11). */
+  layers(): Buffer;
   a0(segments: number): Buffer;
   cjk(): Buffer;
 }
@@ -146,6 +149,7 @@ function makePdfs(): Pdfs {
     annotated: () => memo('annotated', annotatedPdf),
     outlined: () => memo('outlined', outlinedPdf),
     attachments: () => memo('attachments', () => attachmentsPdf()),
+    layers: () => memo('layers', layersPdf),
     a0: (segments) => memo(`a0-${String(segments)}`, () => a0Sheet(segments)),
     cjk: () => memo('cjk', () => cjkFallbackPdf()),
   };

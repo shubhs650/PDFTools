@@ -259,6 +259,27 @@ export function attachmentsPdf(bigBytes = 20 * 1024 * 1024): Uint8Array {
   return buildPdf(objs);
 }
 
+/**
+ * One page with two optional content groups (M2-11): "Dimensions" (on) and
+ * "Hidden notes" (off by default), each drawing a labelled box.
+ */
+export function layersPdf(): Uint8Array {
+  const content = [
+    'BT /F1 24 Tf 72 760 Td (Always shown) Tj ET',
+    '/OC /L1 BDC 0 0 1 rg 72 600 200 100 re f BT /F1 18 Tf 80 640 Td (Dimensions) Tj ET EMC',
+    '/OC /L2 BDC 1 0 0 rg 300 600 200 100 re f BT /F1 18 Tf 308 640 Td (Hidden notes) Tj ET EMC',
+  ].join('\n');
+  return buildPdf([
+    '<< /Type /Catalog /Pages 2 0 R /OCProperties << /OCGs [5 0 R 6 0 R] /D << /Order [5 0 R 6 0 R] /OFF [6 0 R] >> >> >>',
+    '<< /Type /Pages /Kids [3 0 R] /Count 1 >>',
+    '<< /Type /Page /Parent 2 0 R /MediaBox [0 0 595 842] /Resources << /Font << /F1 7 0 R >> /Properties << /L1 5 0 R /L2 6 0 R >> >> /Contents 4 0 R >>',
+    { dict: '<< >>', stream: content },
+    '<< /Type /OCG /Name (Dimensions) >>',
+    '<< /Type /OCG /Name (Hidden notes) >>',
+    '<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica >>',
+  ]);
+}
+
 // ------------------------------------------------------------ contract profile
 
 /** Appears only on the 0-based pages in NEEDLE_PAGES; "Contractor" is on every page. */
