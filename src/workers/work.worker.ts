@@ -6,6 +6,7 @@ import { PdfiumNative } from '@embedpdf/engines/pdfium';
 import { init, type WrappedPdfiumModule } from '@embedpdf/pdfium';
 import { RpcError } from '../engine/errors';
 import type { WorkApi } from '../engine/workApi';
+import { Transfer } from '../engine/protocol';
 import { serve } from './rpc-host';
 import { wasmMemory } from './render/pdfium';
 import { digestDocument } from './render/save/digest';
@@ -14,6 +15,7 @@ import { verifyCandidate } from './work/verify';
 import { Scheduler } from './work/scheduler';
 import { Activity, indexDocument } from './work/indexer';
 import { SearchEngine } from './work/search';
+import { listAttachments, readAttachment } from './work/attachments';
 
 let mod: WrappedPdfiumModule | undefined;
 let native: PdfiumNative | undefined;
@@ -124,6 +126,27 @@ serve<WorkApi>(self, {
     scheduler.run('interactive', ctx.signal, async (slice) => {
       const { doc } = await docs.get(req.docId);
       return search.extras(req, doc, slice);
+    }),
+
+  listAttachments: ({ docId }, ctx) =>
+    scheduler.run('interactive', ctx.signal, async (slice) => {
+      if (!mod) throw new RpcError('not-initialized', 'The work worker is not initialized');
+      const { doc } = await docs.get(docId);
+      return listAttachments(mod, need(), doc, slice, (p) => {
+        ctx.progress(p);
+      });
+    }),
+
+  readAttachment: ({ docId, ref }, ctx) =>
+    scheduler.run('interactive', ctx.signal, async () => {
+      if (!mod) throw new RpcError('not-initialized', 'The work worker is not initialized');
+      const { doc } = await docs.get(docId);
+      try {
+        const bytes = await readAttachment(mod, need(), doc, ref);
+        return new Transfer({ bytes }, [bytes]);
+      } finally {
+        wasmBytes(); // a large read grows the heap (ADR-004 respawn policy)
+      }
     }),
 
   hitRects: ({ docId, pageIndex, hits }, ctx) =>

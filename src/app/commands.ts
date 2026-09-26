@@ -1120,6 +1120,7 @@ export const COMMANDS: readonly CommandDef[] = [
     fluent: 'Attach',
     milestone: 'M2',
     toggle: true,
+    shipped: true, // M2-11
   },
   {
     id: 'rail.signatures',

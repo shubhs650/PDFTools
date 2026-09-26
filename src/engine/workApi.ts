@@ -2,6 +2,7 @@
 // each document. M1 uses it for save verification (M1-21); M2 adds search.
 import type { PageTextSlice, PdfPageGeometry } from '@embedpdf/models';
 import type { DocDigest } from '../workers/render/save/digest';
+import type { AttachmentInfo, AttachmentRef } from '../workers/work/attachments';
 import type {
   ExtraHit,
   ExtrasRequest,
@@ -83,6 +84,13 @@ export interface WorkApi {
   >;
   /** Annotation text and bookmark title hits (Advanced Search, M2-09, M2-Q3). */
   searchExtras: MethodSpec<ExtrasRequest, ExtraHit[]>;
+  /**
+   * Embedded files (M2-11): document-level and FileAttachment annotations.
+   * Walks the pages (progress, cancellable).
+   */
+  listAttachments: MethodSpec<{ docId: string }, AttachmentInfo[], { done: number; total: number }>;
+  /** An attachment's bytes, transferred (never parsed or run here). */
+  readAttachment: MethodSpec<{ docId: string; ref: AttachmentRef }, { bytes: ArrayBuffer }>;
   /** Highlight rectangles for hits on one page, in the viewer's page space. */
   hitRects: MethodSpec<
     { docId: string; pageIndex: number; hits: { start: number; length: number }[] },

@@ -568,5 +568,21 @@
     "open": "Open in Browser",
     "cancel": "Cancel",
     "blocked": "Only web (http, https) and email (mailto) links can be opened."
+  },
+  "attachments": {
+    "list": "Embedded files",
+    "noDocument": "Open a document to see its attachments.",
+    "loading": "Looking for attachments",
+    "progress": "Page {{done}} of {{total}}",
+    "failed": "The attachments couldn't be read.",
+    "empty": "This document has no attachments.",
+    "unnamed": "Unnamed file",
+    "onPage": "On page {{page}}",
+    "save": "Save…",
+    "open": "Open as Tab",
+    "error": {
+      "notPdf": "This attachment isn't a PDF, so it can't open as a tab. Save it instead.",
+      "failed": "The attachment couldn't be read."
+    }
   }
 }

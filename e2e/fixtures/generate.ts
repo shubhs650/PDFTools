@@ -195,6 +195,70 @@ export function outlinedPdf(): Uint8Array {
   return buildPdf(objs);
 }
 
+/** Content of attachmentsPdf's annotation-level file. */
+export const ANNOT_FILE_TEXT = 'Attached to page 1 by a FileAttachment annotation.';
+
+/**
+ * Two pages with 20 embedded files (M2-11): 19 in the document's
+ * EmbeddedFiles tree — "file-01.txt" … "file-17.txt", "big.bin" (`bigBytes`,
+ * 20 MB by default) and "inner.pdf" (a 2-page PDF) — and "note.txt" on a
+ * FileAttachment annotation on page 1.
+ */
+export function attachmentsPdf(bigBytes = 20 * 1024 * 1024): Uint8Array {
+  const latin = (u8: Uint8Array) => {
+    let out = '';
+    for (let i = 0; i < u8.length; i += 0x8000)
+      out += String.fromCharCode(...u8.subarray(i, i + 0x8000));
+    return out;
+  };
+  const big = new Uint8Array(bigBytes);
+  for (let i = 0; i < big.length; i++) big[i] = (i * 31 + (i >> 8)) & 0xff;
+  const files: { name: string; desc: string; data: string }[] = [];
+  for (let i = 1; i <= 17; i++) {
+    const n = String(i).padStart(2, '0');
+    files.push({
+      name: `file-${n}.txt`,
+      desc: `Text file ${n}`,
+      data: `Attachment ${n}\n`.repeat(i),
+    });
+  }
+  files.push({ name: 'big.bin', desc: 'Large binary', data: latin(big) });
+  files.push({ name: 'inner.pdf', desc: 'An embedded PDF', data: latin(simplePdf(2)) });
+  // 1 catalog, 2 pages, 3-6 two pages (page, contents), 7 font, then per file
+  // (filespec, stream), then the annotation's filespec + stream + annotation.
+  const first = 8;
+  const fileObj = (i: number) => first + i * 2;
+  const annotFs = first + files.length * 2;
+  const names = files.map((f, i) => `(${f.name}) ${String(fileObj(i))} 0 R`).join(' ');
+  const objs: PdfObject[] = [
+    `<< /Type /Catalog /Pages 2 0 R /Names << /EmbeddedFiles << /Names [${names}] >> >> >>`,
+    '<< /Type /Pages /Kids [3 0 R 5 0 R] /Count 2 >>',
+    `<< /Type /Page /Parent 2 0 R /MediaBox [0 0 595 842] /Resources << /Font << /F1 7 0 R >> >> /Contents 4 0 R /Annots [${String(annotFs + 2)} 0 R] >>`,
+    { dict: '<< >>', stream: 'BT /F1 36 Tf 72 740 Td (Page 1) Tj ET' },
+    '<< /Type /Page /Parent 2 0 R /MediaBox [0 0 595 842] /Resources << /Font << /F1 7 0 R >> >> /Contents 6 0 R >>',
+    { dict: '<< >>', stream: 'BT /F1 36 Tf 72 740 Td (Page 2) Tj ET' },
+    '<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica >>',
+  ];
+  files.forEach((f, i) => {
+    objs.push(
+      `<< /Type /Filespec /F (${f.name}) /UF (${f.name}) /Desc (${f.desc}) /EF << /F ${String(fileObj(i) + 1)} 0 R >> >>`,
+      {
+        dict: `<< /Type /EmbeddedFile /Params << /Size ${String(f.data.length)} /CreationDate (D:20240102030405Z) >> >>`,
+        stream: f.data,
+      },
+    );
+  });
+  objs.push(
+    `<< /Type /Filespec /F (note.txt) /UF (note.txt) /Desc (A note) /EF << /F ${String(annotFs + 1)} 0 R >> >>`,
+    {
+      dict: `<< /Type /EmbeddedFile /Params << /Size ${String(ANNOT_FILE_TEXT.length)} /CreationDate (D:20240506070809Z) >> >>`,
+      stream: ANNOT_FILE_TEXT,
+    },
+    `<< /Type /Annot /Subtype /FileAttachment /Rect [72 600 92 620] /FS ${String(annotFs)} 0 R /Contents (A note) /Name /Paperclip >>`,
+  );
+  return buildPdf(objs);
+}
+
 // ------------------------------------------------------------ contract profile
 
 /** Appears only on the 0-based pages in NEEDLE_PAGES; "Contractor" is on every page. */

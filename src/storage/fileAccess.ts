@@ -102,6 +102,26 @@ export async function pickSaveTarget(
   }
 }
 
+/**
+ * Save target for a file that isn't the document (an attachment, M2-11): any
+ * type, the name the file carries. undefined on the fallback path or if cancelled.
+ */
+export async function pickFileSaveTarget(
+  suggestedName: string,
+  win: Window = window,
+): Promise<FileSystemFileHandle | undefined> {
+  if (accessStrategy(win) !== 'fsa') return undefined;
+  try {
+    return await (win as PickerWindow).showSaveFilePicker?.({
+      suggestedName,
+      id: 'pdftools-attachment',
+    });
+  } catch (err) {
+    if (isAbort(err)) return undefined;
+    throw err;
+  }
+}
+
 /** Reopening a recent file asks for permission again (§4.1). */
 export async function ensurePermission(
   handle: FileSystemFileHandle,

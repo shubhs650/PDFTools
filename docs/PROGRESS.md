@@ -10,6 +10,8 @@ M0 and M1 owner runs are still open.
 
 ## Done
 
+- **Session 14 — M2-11 attachments (layers waiting).** Attachments pane with 20-file self-made fixture (20 MB file, embedded PDF, annotation file). Layers wait for the owner (M2-Q8). Unit 516, e2e 131, perf 21, green; licenses OK.
+
 - **Session 14 — M2-10 bookmarks, links and view history.** Bookmarks tree pane, link layer with external-link confirmation, Previous/Next View. Self-made `outlinedPdf` fixture (500-entry 3-level outline, internal/named/URI links). Unit 511, e2e 129, perf 20, all green; licenses 642 OK.
 
 - **Session 14 — M2-09 Advanced Search pane.** Advanced Search pane: options, all-tabs scope, comment and bookmark hits, virtual results with on-demand context, hand-off to Quick Find highlights. Self-made fixture `annotatedPdf` (comment + outline). Perf: common term on the 2,000-page stand-in, first rows < 1 s, 18,798 results < 15 s, 0 long tasks. Unit 502, e2e 126, perf 20 (the M2-06 indexing tile-p95 check missed once in a full run, passed 3/3 alone: watch it).

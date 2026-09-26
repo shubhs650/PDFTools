@@ -39,6 +39,8 @@ type JobMethod =
   | 'search'
   | 'searchContext'
   | 'searchExtras'
+  | 'listAttachments'
+  | 'readAttachment'
   | 'hitRects'
   | 'indexText';
 
