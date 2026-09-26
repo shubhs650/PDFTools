@@ -5,7 +5,9 @@
 import { createPluginRegistration } from '@embedpdf/core';
 import { DocumentManagerPluginPackage } from '@embedpdf/plugin-document-manager';
 import { RenderPluginPackage } from '@embedpdf/plugin-render';
+import { RotatePluginPackage } from '@embedpdf/plugin-rotate';
 import { ScrollPluginPackage } from '@embedpdf/plugin-scroll';
+import { SpreadPluginPackage } from '@embedpdf/plugin-spread';
 import { TilingPluginPackage } from '@embedpdf/plugin-tiling';
 import { ViewportPluginPackage } from '@embedpdf/plugin-viewport';
 import { ZoomMode, ZoomPluginPackage } from '@embedpdf/plugin-zoom';
@@ -34,6 +36,8 @@ export const PLUGINS = [
     extraRings: 0,
     defaultImageType: 'image/png',
   }),
+  createPluginRegistration(SpreadPluginPackage, {}),
+  createPluginRegistration(RotatePluginPackage, {}),
   createPluginRegistration(ZoomPluginPackage, {
     defaultZoomLevel: ZoomMode.FitWidth,
     minZoom: MIN_ZOOM,

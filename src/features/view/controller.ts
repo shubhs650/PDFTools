@@ -2,12 +2,15 @@
 // the status bar and the keyboard. Thin: the zoom and scroll plugins do the
 // work; fit visible and actual size are computed here (ADR-011 decision 5).
 import type { DocumentManagerCapability } from '@embedpdf/plugin-document-manager';
+import type { RotateCapability } from '@embedpdf/plugin-rotate';
 import type { ScrollCapability, ScrollScope } from '@embedpdf/plugin-scroll';
+import { SpreadMode, type SpreadCapability } from '@embedpdf/plugin-spread';
 import { ZoomMode, type ZoomCapability, type ZoomScope } from '@embedpdf/plugin-zoom';
-import { documentStore, type ZoomSetting } from '../../app/store/documentStore';
+import { documentStore, type ViewMode, type ZoomSetting } from '../../app/store/documentStore';
 import { capability, hostStore, renderEngine } from './host';
 import { movePage, type PageMove } from './navigation';
 import { PAGE_GAP } from './plugins';
+import { isFacing, rotateView, spreadIndexOf, spreadsFor, toQuarterTurns } from './viewModes';
 import { clampZoom, fitVisibleZoom, rotateBox, stepZoom, type Box } from './zoom';
 
 interface Active {
@@ -15,6 +18,8 @@ interface Active {
   zoom: ZoomScope;
   scroll: ScrollScope;
   dm: DocumentManagerCapability;
+  spread: SpreadCapability;
+  rotate: RotateCapability;
 }
 
 function active(): Active | null {
@@ -28,6 +33,8 @@ function active(): Active | null {
     dm,
     zoom: capability<ZoomCapability>(registry, 'zoom').forDocument(docId),
     scroll: capability<ScrollCapability>(registry, 'scroll').forDocument(docId),
+    spread: capability<SpreadCapability>(registry, 'spread'),
+    rotate: capability<RotateCapability>(registry, 'rotate'),
   };
 }
 
@@ -99,16 +106,67 @@ async function fitVisible(a: Active): Promise<void> {
   a.zoom.requestZoom(factor);
 }
 
+/** Jumps (no smooth scrolling: the page box and keys must land at once). */
 export function goToPage(index: number): void {
   const a = active();
   if (!a) return;
-  a.scroll.scrollToPage({ pageNumber: index + 1 });
+  // The store first: paged modes hold scrolling to the store's page.
+  documentStore.getState().setView(a.docId, { page: index });
+  a.scroll.scrollToPage({ pageNumber: index + 1, behavior: 'instant' });
 }
 
+/** First/previous/next/last page; in the facing modes previous/next move by spread. */
 export function move(m: PageMove): void {
   const a = active();
   if (!a) return;
   const doc = documentStore.getState().docs[a.docId];
   if (!doc) return;
-  goToPage(movePage(doc.view.page, m, doc.meta.pageCount));
+  const { page, mode } = doc.view;
+  if ((m === 'prev' || m === 'next') && isFacing(mode)) {
+    const spreads = spreadsFor(doc.meta.pageCount, true);
+    const i = spreadIndexOf(spreads, page) + (m === 'next' ? 1 : -1);
+    const target = spreads[Math.max(0, Math.min(spreads.length - 1, i))]?.[0];
+    if (target !== undefined) goToPage(target);
+    return;
+  }
+  goToPage(movePage(page, m, doc.meta.pageCount));
+}
+
+/** After a layout change (mode, rotation), bring `page` back into view. */
+function keepPage(a: Active, page: number): void {
+  let done = false;
+  const go = (): void => {
+    if (done) return;
+    done = true;
+    off();
+    a.scroll.scrollToPage({ pageNumber: page + 1, behavior: 'instant' });
+  };
+  const off = a.scroll.onLayoutChange(() => {
+    requestAnimationFrame(go);
+  });
+  // The layout may already be current (nothing to wait for).
+  setTimeout(go, 100);
+}
+
+/** §5 view modes; the current page stays in view (M1-16). */
+export function setViewMode(mode: ViewMode): void {
+  const a = active();
+  if (!a) return;
+  const view = documentStore.getState().docs[a.docId]?.view;
+  if (!view || view.mode === mode) return;
+  documentStore.getState().setView(a.docId, { mode });
+  a.spread.forDocument(a.docId).setSpreadMode(isFacing(mode) ? SpreadMode.Odd : SpreadMode.None);
+  keepPage(a, view.page);
+}
+
+/** Rotate view (not the page): view state only, never a document change or dirty flag. */
+export function rotate(dir: 1 | -1): void {
+  const a = active();
+  if (!a) return;
+  const view = documentStore.getState().docs[a.docId]?.view;
+  if (!view) return;
+  const rotation = rotateView(view.rotation, dir);
+  documentStore.getState().setView(a.docId, { rotation });
+  a.rotate.forDocument(a.docId).setRotation(toQuarterTurns(rotation));
+  keepPage(a, view.page);
 }

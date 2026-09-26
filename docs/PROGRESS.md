@@ -7,6 +7,14 @@ still open.
 
 ## Done
 
+- **Session 11 — M1-16 (view modes and rotate view).** Branch `m1/16-view-modes`. Four view modes
+  from the View tab and a status-bar switch, per document in the store; the current page stays in
+  view across mode and rotation changes; previous/next move by spread in facing modes; rotate view
+  clockwise/counterclockwise is view state only (never dirty). Found and fixed: rotated pages kept
+  their unrotated box (the layout's `rotatedWidth`/`rotatedHeight` are the box), and page jumps
+  used the scroll plugin's default smooth scrolling. Owner decisions recorded (zoom 100 %, PR #13
+  closed, single-core not a target).
+
 - **Session 10 — M1-15 (zoom, page navigation, hand tool).** Branch `m1/15-zoom-nav`. Zoom In/Out
   stops, Ctrl+0/1/2, Ctrl+wheel at the pointer, a zoom box ("150", "150 %", localized decimals) with
   a level menu (fit page / width / visible, actual size, presets), clamp 1 %–6400 %; status-bar page
@@ -411,13 +419,6 @@ still open.
 
 ## Open issues
 
-- **First-open main-thread contention on small CPUs** (M1-13/15 CI). With one core, opening files
-  shows 100–230 ms main-thread tasks while PDFium starts and pages render in the workers; on two
-  cores none reach 50 ms. The perf gate (serial) passes; the owner should confirm on the slowest
-  target machine. If it shows there, options: lower worker priority is not available on the web,
-  so stagger engine start (start the Render worker at boot idle time) or reduce first-render React
-  work (ribbon re-render when the first document opens).
-
 - **Committed corpus PDFs vs ADR-002.** Commit `cd52644` added six PDFs directly to `corpus/`,
   including CAD drawings. ADR-002 says drawings stay local and are never committed, and
   `.gitignore` excludes `*.pdf`, so these were force-added. S3 uses `bearing catalogue.pdf` and
@@ -472,6 +473,7 @@ still open.
 
 | Date       | Ref      | Decision                                                                                                                                                                                                                                                                                                                                                                                                                                                  |
 | ---------- | -------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| 2026-09-25 | M1-15    | Owner: zoom 100 % = one PDF point per CSS pixel (EmbedPDF scale 1, ADR-011's range), so Actual Size is not physical size. PR #13 (main → M0 branch) closed. Single-core machines are not a target; the one-core first-open contention from M1-13/15 CI needs no work.                                                                                                                                                                                     |
 | 2026-09-24 | ADR-001  | Session-1 clarifications B1–B16. Key ones: server-side analytics only; broader permissive allowlist; location-based redaction verification; EmbedPDF annotation and redaction sets; OPFS original + tail recovery; public-domain corpus only.                                                                                                                                                                                                             |
 | 2026-09-24 | scaffold | Vite 7 instead of 8, and no jsx-a11y, because of MPL-2.0 dependencies. Superseded by ADR-002.                                                                                                                                                                                                                                                                                                                                                             |
 | 2026-09-24 | ADR-002  | MPL-2.0 allowed for dev-only tooling only (lockfile `dev` flag). OFL-1.1 allowed for fonts. Heavy files are measure and report for Rev 0. Test drawings are owner-supplied local files, with no URLs in the repo. Moved to Vite 8 and enabled jsx-a11y.                                                                                                                                                                                                   |

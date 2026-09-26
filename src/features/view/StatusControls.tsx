@@ -3,10 +3,12 @@ import { useState, type KeyboardEvent } from 'react';
 import { useTranslation } from 'react-i18next';
 import { commandLabelKey } from '../../app/commandLabels';
 import { runCommand } from '../../app/commands/dispatch';
+import { useCommandState } from '../../app/commands/useCommandState';
 import { selectActive, useDocuments } from '../../app/store/documentStore';
 import { format } from '../../i18n';
 import { DropdownMenu, IconButton, type MenuEntry } from '../../ui/components';
 import { CommandIcon } from '../../ui/icons/CommandIcon';
+import { VIEW_MODE_COMMANDS } from './commands';
 import { goToPage, setZoom, zoomTo } from './controller';
 import { parsePageInput } from './navigation';
 import { ZOOM_PRESETS, parseZoomInput } from './zoom';
@@ -160,6 +162,36 @@ export function ZoomBox() {
         }
       />
       <CommandButton id="view.zoomIn" />
+    </div>
+  );
+}
+
+function ModeButton({ id }: { id: string }) {
+  const { t } = useTranslation();
+  const { pressed } = useCommandState(id);
+  return (
+    <IconButton
+      label={t(commandLabelKey(id))}
+      icon={<CommandIcon id={id} pressed={pressed} />}
+      size="small"
+      aria-pressed={pressed}
+      onClick={() => {
+        void runCommand(id);
+      }}
+    />
+  );
+}
+
+/** Status bar view-mode switch (§5): single, continuous, facing, continuous facing. */
+export function ViewModeSwitch() {
+  const { t } = useTranslation();
+  const doc = useDocuments(selectActive);
+  if (!doc) return null;
+  return (
+    <div role="group" aria-label={t('status.viewMode')} className="status-group">
+      {VIEW_MODE_COMMANDS.map(([id]) => (
+        <ModeButton key={id} id={id} />
+      ))}
     </div>
   );
 }

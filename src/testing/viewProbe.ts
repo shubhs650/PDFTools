@@ -17,7 +17,7 @@ const viewport = (): HTMLElement => {
 function blankVisiblePages(): number {
   const v = viewport().getBoundingClientRect();
   let blank = 0;
-  for (const el of viewport().querySelectorAll<HTMLElement>('[data-page]')) {
+  for (const el of viewport().querySelectorAll<HTMLElement>('[data-page]:not([data-hidden])')) {
     const r = el.getBoundingClientRect();
     if (r.bottom <= v.top || r.top >= v.bottom) continue;
     const img = el.querySelector('img');

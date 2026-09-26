@@ -318,6 +318,7 @@
     "pageNumber": "Page number",
     "pageOf": "of {{total}}",
     "zoom": "Zoom",
-    "zoomLevels": "Zoom levels"
+    "zoomLevels": "Zoom levels",
+    "viewMode": "View mode"
   }
 }
