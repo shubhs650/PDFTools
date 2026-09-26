@@ -152,8 +152,8 @@ test('closing a tab with unsaved changes asks first; Cancel keeps it, Don’t sa
   await page.getByRole('button', { name: 'Close draft.pdf' }).click();
   const dialog = page.getByRole('dialog', { name: 'Save changes to draft.pdf?' });
   await expect(dialog).toBeVisible();
-  // Save arrives with M1-22.
-  await expect(dialog.getByRole('button', { name: 'Save', exact: true })).toBeDisabled();
+  // Save (M1-22) is covered by e2e/save.spec.ts.
+  await expect(dialog.getByRole('button', { name: 'Save', exact: true })).toBeEnabled();
   await dialog.getByRole('button', { name: 'Cancel' }).click();
   await expect(dialog).toBeHidden();
   await expect(tabs(page)).toHaveCount(1);

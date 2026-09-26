@@ -7,7 +7,7 @@ import type { FontFallbackConfig } from '@embedpdf/engines/pdfium';
 import pdfiumWasmUrl from '@embedpdf/pdfium/pdfium.wasm?url';
 import { createEncoder } from './encoder';
 import type { EncoderApi } from './encoderApi';
-import { createPdfEngine } from './hostedEngine';
+import { createPdfEngine, type MutationListener } from './hostedEngine';
 import type { RenderApi } from './renderApi';
 import { RpcClient } from './rpc';
 
@@ -20,6 +20,8 @@ export interface RenderEngineOptions {
   fontFallback: FontFallbackConfig | null;
   /** Absolute URL of pdfium.wasm; defaults to the bundled asset on this origin. */
   wasmUrl?: string;
+  /** After each successful document change (M1-22: the tab's dirty mark). */
+  onMutation?: MutationListener;
 }
 
 export interface RenderEngine {
@@ -48,7 +50,7 @@ export function createRenderEngine(options: RenderEngineOptions): RenderEngine {
   const encoder = createEncoder();
   const wasmUrl = options.wasmUrl ?? new URL(pdfiumWasmUrl, location.origin).href;
   const ready = rpc.call('init', { wasmUrl, fontFallback: options.fontFallback }).promise;
-  const engine = createPdfEngine(rpc, encoder.converter);
+  const engine = createPdfEngine(rpc, encoder.converter, options.onMutation);
   return {
     engine,
     rpc,

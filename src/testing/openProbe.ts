@@ -25,6 +25,19 @@ export function registerOpenProbe(hook: TestHook): void {
       }
       return openFiles(opened);
     },
+    /** Bytes of a file written by openHandles (and saved over by the app), base64. */
+    async readFile(name: string) {
+      const root = await navigator.storage.getDirectory();
+      const dir = await root.getDirectoryHandle('e2e-files', { create: true });
+      const bytes = new Uint8Array(
+        await (await (await dir.getFileHandle(name)).getFile()).arrayBuffer(),
+      );
+      let s = '';
+      for (let i = 0; i < bytes.length; i += 0x8000) {
+        s += String.fromCharCode(...bytes.subarray(i, i + 0x8000));
+      }
+      return btoa(s);
+    },
     state() {
       const s = documentStore.getState();
       const registry = hostStore.getState().registry;

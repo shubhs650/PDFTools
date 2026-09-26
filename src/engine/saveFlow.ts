@@ -59,6 +59,8 @@ export class SaveVerifyError extends RpcError {
 
 export interface PrepareOptions {
   signal?: AbortSignal;
+  /** Called when the Work worker starts checking the tail (status: "verifying"). */
+  onVerify?: () => void;
   /** Test seam (e2e hook, unit tests): alters the first tail before it is verified. */
   tamper?: (tail: ArrayBuffer) => ArrayBuffer;
 }
@@ -81,6 +83,7 @@ export async function prepareSave(
   if (r.tail.byteLength === 0 || !r.expected) return null;
   throwIfAborted(signal);
   const first = opts.tamper ? opts.tamper(r.tail) : r.tail;
+  opts.onVerify?.();
   let v = await deps.verify(docId, first, r.expected, signal);
   let fellBack = false;
   if (!v.ok) {

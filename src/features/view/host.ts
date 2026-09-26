@@ -5,6 +5,7 @@
 import type { PluginRegistry } from '@embedpdf/core';
 import type { DocumentManagerCapability } from '@embedpdf/plugin-document-manager';
 import { createStore, useStore } from 'zustand';
+import { documentStore } from '../../app/store/documentStore';
 import { createRenderEngine, type RenderEngine } from '../../engine/createEngine';
 import { localFontConfig } from '../../engine/fonts';
 import { WorkClient } from '../../engine/workClient';
@@ -31,7 +32,12 @@ export const tileCache = new TileCache();
 export function renderEngine(): RenderEngine {
   const existing = hostStore.getState().render;
   if (existing) return existing;
-  const render = createRenderEngine({ fontFallback: localFontConfig(location.origin) });
+  const render = createRenderEngine({
+    fontFallback: localFontConfig(location.origin),
+    onMutation: (_method, docId) => {
+      documentStore.getState().markDirty(docId);
+    },
+  });
   instrumentEngine(render.engine, tileCache);
   installRanker(render.engine);
   hostStore.setState({ render });

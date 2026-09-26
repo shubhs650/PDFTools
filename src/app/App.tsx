@@ -3,6 +3,8 @@ import { CloseDocumentDialog, OpenErrorDialog } from '../features/open/dialogs';
 import { DocumentArea } from '../features/open/DocumentArea';
 import { DropZone } from '../features/open/DropZone';
 import { installLaunchQueue } from '../features/open/launchQueue';
+import { registerSaveCommands } from '../features/save/commands';
+import { SaveErrorDialog, SaveStatus } from '../features/save/SaveStatus';
 import { registerViewCommands } from '../features/view/commands';
 import { PageNav, ViewModeSwitch, ZoomBox } from '../features/view/StatusControls';
 import { UiProvider } from '../ui/components';
@@ -25,6 +27,7 @@ export function App() {
   const [backstage, setBackstage] = useState(false);
   useEffect(() => registerBuiltinCommands(), []);
   useEffect(() => registerViewCommands(), []);
+  useEffect(() => registerSaveCommands(), []);
   // After the commands exist: launched files open like any other (M1-19).
   useEffect(() => {
     installLaunchQueue();
@@ -35,6 +38,7 @@ export function App() {
       <ErrorBoundary where={BOUNDARY.app}>
         <AppFrame
           status={{
+            app: <SaveStatus />,
             pageNav: <PageNav />,
             view: (
               <>
@@ -61,6 +65,7 @@ export function App() {
         <ShortcutSheet />
         <CloseDocumentDialog />
         <OpenErrorDialog />
+        <SaveErrorDialog />
         <DropZone />
       </ErrorBoundary>
     </UiProvider>

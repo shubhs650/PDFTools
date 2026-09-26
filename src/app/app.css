@@ -669,3 +669,10 @@ body {
   border: var(--border-width) solid var(--color-danger);
   border-radius: var(--radius-m);
 }
+
+/* ------------------------------------------------------------ save (M1-22) */
+.save-status {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-4);
+}

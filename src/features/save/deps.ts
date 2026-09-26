@@ -3,15 +3,14 @@
 // here if its first open failed (openDocument.ts leaves that to the first job).
 import { recordEvent } from '../../app/diagnostics';
 import type { SaveFlowDeps } from '../../engine/saveFlow';
-import { sources } from '../open/sources';
+import { originalBlob } from '../open/sources';
 import { renderEngine, workClient } from '../view/host';
 
 async function ensureWorkCopy(docId: string): Promise<void> {
   const work = workClient();
   if (work.has(docId)) return;
-  const src = sources.get(docId);
-  if (!src) throw new Error('document source missing');
-  await work.open(docId, await src.file.arrayBuffer(), { reload: () => src.file.arrayBuffer() });
+  const read = async () => (await originalBlob(docId)).arrayBuffer();
+  await work.open(docId, await read(), { reload: read });
 }
 
 export function saveDeps(): SaveFlowDeps {

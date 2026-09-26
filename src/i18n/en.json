@@ -331,5 +331,24 @@
     "dismiss": "Dismiss",
     "denied": "Permission to open {{name}} was not granted.",
     "missing": "{{name}} is no longer available. It may have been moved, renamed or deleted."
+  },
+  "save": {
+    "phase": {
+      "saving": "Saving…",
+      "verifying": "Checking the saved file…",
+      "writing": "Writing…"
+    },
+    "cancel": "Cancel",
+    "error": {
+      "title": "Couldn't save {{name}}",
+      "permissionDenied": "PDFTools doesn't have permission to change this file. Save a copy with Save As instead.",
+      "missing": "The file can't be found. It may have been moved or deleted. Save a copy with Save As instead.",
+      "fileChanged": "The file was changed by another program since it was opened, so it wasn't overwritten. Save a copy with Save As instead.",
+      "verifyFailed": "The saved file could not be checked, so nothing was written. Your changes are still open.",
+      "needsRewrite": "This file's structure is damaged, so changes can't be appended to it. Use Save Optimized to write a repaired copy.",
+      "writeFailed": "The file could not be written. Your changes are still open. Save a copy with Save As instead.",
+      "saveAs": "Save As…",
+      "ok": "OK"
+    }
   }
 }

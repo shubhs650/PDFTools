@@ -66,6 +66,20 @@ describe('document store', () => {
     expect(s.getState().docs.a).toMatchObject({ dirty: false, save: 'idle', appendedBytes: 2044 });
   });
 
+  it('an edit made during a save keeps the document dirty; Save As renames the tab', () => {
+    const s = createDocumentStore();
+    s.getState().open(meta('a'));
+    s.getState().markDirty('a');
+    const atStart = s.getState().docs.a?.edits ?? 0;
+    s.getState().markDirty('a'); // while saving
+    s.getState().markSaved('a', 10, atStart);
+    expect(s.getState().docs.a?.dirty).toBe(true);
+    s.getState().markSaved('a', 10, s.getState().docs.a?.edits);
+    expect(s.getState().docs.a?.dirty).toBe(false);
+    s.getState().rename('a', 'copy.pdf');
+    expect(s.getState().docs.a?.meta.name).toBe('copy.pdf');
+  });
+
   it('ignores actions on unknown documents', () => {
     const s = createDocumentStore();
     const before = s.getState();

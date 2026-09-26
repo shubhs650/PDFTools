@@ -34,6 +34,8 @@ export interface DocumentSlice {
   meta: DocumentMeta;
   view: ViewState;
   dirty: boolean;
+  /** Counts document changes, so a save only clears `dirty` if nothing changed meanwhile. */
+  edits: number;
   save: SaveState;
   /** Bytes appended by incremental saves since open (D-06 growth prompt). */
   appendedBytes: number;
@@ -49,8 +51,11 @@ export interface DocumentsState {
   move(id: string, toIndex: number): void;
   setView(id: string, view: Partial<ViewState>): void;
   markDirty(id: string): void;
+  /** Tab name after Save As to a new file (M1-22). */
+  rename(id: string, name: string): void;
   setSaveState(id: string, save: SaveState): void;
-  markSaved(id: string, appended: number): void;
+  /** `editsAtStart`: the edit count when the save began (edits made during it stay dirty). */
+  markSaved(id: string, appended: number, editsAtStart?: number): void;
 }
 
 export const DEFAULT_VIEW: ViewState = {
@@ -86,6 +91,7 @@ export const createDocumentStore = () =>
               meta,
               view: { ...DEFAULT_VIEW },
               dirty: false,
+              edits: 0,
               save: 'idle',
               appendedBytes: 0,
             },
@@ -121,15 +127,18 @@ export const createDocumentStore = () =>
       set((s) => update(s, id, (d) => ({ view: { ...d.view, ...view } })));
     },
     markDirty: (id) => {
-      set((s) => update(s, id, () => ({ dirty: true })));
+      set((s) => update(s, id, (d) => ({ dirty: true, edits: d.edits + 1 })));
+    },
+    rename: (id, name) => {
+      set((s) => update(s, id, (d) => ({ meta: { ...d.meta, name } })));
     },
     setSaveState: (id, save) => {
       set((s) => update(s, id, () => ({ save })));
     },
-    markSaved: (id, appended) => {
+    markSaved: (id, appended, editsAtStart) => {
       set((s) =>
         update(s, id, (d) => ({
-          dirty: false,
+          dirty: editsAtStart !== undefined && d.edits !== editsAtStart,
           save: 'idle',
           appendedBytes: d.appendedBytes + appended,
         })),
