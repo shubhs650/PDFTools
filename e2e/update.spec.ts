@@ -70,10 +70,14 @@ const test = base.extend<
 });
 
 const status = (page: Page) => page.getByRole('contentinfo', { name: 'Status bar' });
+// While the update applies, the page reloads: an evaluate caught mid-navigation
+// throws ("execution context was destroyed"), so the poll just tries again.
 const build = (page: Page) =>
-  page.evaluate(
-    () => document.querySelector('meta[name="pdftools-build"]')?.getAttribute('content') ?? 'v1',
-  );
+  page
+    .evaluate(
+      () => document.querySelector('meta[name="pdftools-build"]')?.getAttribute('content') ?? 'v1',
+    )
+    .catch(() => 'reloading');
 
 test(
   'v2 deployed while v1 has a document open: "Update ready", no reload; applies after the last document closes',
