@@ -47,12 +47,13 @@ describe('ribbon layout from the command table (§8, ADR-001 B6, M1-Q2)', () => 
       'file.save',
       'file.saveAs',
       'file.saveOptimized',
+      'file.print', // M2-15
       'file.properties',
       'file.settings',
       'file.about',
       'file.privacy',
     ]);
-    expect(m1.quickAccess.map((c) => c.id)).toEqual(['qat.open', 'qat.save']);
+    expect(m1.quickAccess.map((c) => c.id)).toEqual(['qat.open', 'qat.save', 'qat.print']);
   });
 
   it('shows every §8 tab once every milestone is available', () => {

@@ -1436,3 +1436,51 @@ textarea.form-field {
 .form-reset-status p {
   margin: var(--space-0);
 }
+
+/* The print document's frame (M2-15): off screen, never visible. */
+.print-frame {
+  position: fixed;
+  width: 0;
+  height: 0;
+  border: none;
+  visibility: hidden;
+}
+
+.print-dialog-form {
+  display: grid;
+  gap: var(--space-4);
+}
+
+.print-dialog-form fieldset {
+  display: grid;
+  gap: var(--space-2);
+  margin: var(--space-0);
+  padding: var(--space-0);
+  border: none;
+}
+
+.print-dialog-form legend {
+  margin-bottom: var(--space-2);
+  font-weight: var(--font-weight-semibold);
+}
+
+.print-option {
+  display: flex;
+  gap: var(--space-3);
+  align-items: center;
+}
+
+.print-option input[type='text'],
+.print-option input[type='number'] {
+  width: 10em;
+}
+
+.print-error {
+  margin: var(--space-0);
+  color: var(--color-danger);
+}
+
+.print-note {
+  margin: var(--space-0);
+  color: var(--color-text-muted);
+}

@@ -187,3 +187,17 @@ in", Agree checked, the second Choice button on, Size = DN100, Material = Duplex
 | I3  | `form__filled.pdf`   | "readonly field" still shows "Fixed" and can't be edited; "required field" is marked required.                       |         |             |
 | I4  | `form__original.pdf` | Tab moves through the fields in row order (first, name, readonly, required, Agree, Choice, Size, Material), as here. |         |             |
 | I5  | `form__filled.pdf`   | The viewer's Reset Form gives: name "Default", first empty, Agree checked, Choice B, Size DN50 (the file's `/DV`s).  |         |             |
+
+### J. Printing (M2-15, owner: real print dialogs)
+
+Open `e2e/fixtures/self-made/m2-interop/form__filled.pdf` (or any self-made PDF) in the app, press
+Ctrl+P and print to a PDF printer ("Save as PDF" / "Microsoft Print to PDF"), then to a physical
+printer once.
+
+| #   | Check                                                                                                                           | Chrome/Edge | Firefox |
+| --- | ------------------------------------------------------------------------------------------------------------------------------- | ----------- | ------- |
+| J1  | The browser's print dialog opens after the app's Print dialog; its preview shows every chosen page, one per sheet, no app UI.   |             |         |
+| J2  | "Fit to paper" fills the sheet; "Actual size" prints A4 at 100 % (measure a 100 mm line); landscape pages print landscape.      |             |         |
+| J3  | "Document only" drops comments but keeps filled form values; "Markups only" prints only the comments.                           |             |         |
+| J4  | High quality (300 DPI) text and lines look sharp on paper; a protected file allowing low-quality printing offers Standard only. |             |         |
+| J5  | Cancel in the browser's dialog returns to the app; printing again works.                                                        |             |         |

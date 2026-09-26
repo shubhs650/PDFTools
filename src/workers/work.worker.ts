@@ -8,7 +8,7 @@ import { RpcError } from '../engine/errors';
 import type { WorkApi } from '../engine/workApi';
 import { Transfer } from '../engine/protocol';
 import { serve } from './rpc-host';
-import { wasmMemory } from './render/pdfium';
+import { docPtrOf, wasmMemory } from './render/pdfium';
 import { digestDocument } from './render/save/digest';
 import { WorkDocs } from './work/docs';
 import { verifyCandidate } from './work/verify';
@@ -18,6 +18,7 @@ import { SearchEngine } from './work/search';
 import { listAttachments, readAttachment } from './work/attachments';
 import { readFormFacts } from '../model/formFacts';
 import { readLayers } from '../model/ocg';
+import { pageBox, renderBand } from './work/print';
 import { readProperties } from './work/properties';
 import { checkSignatures } from './work/signatures';
 
@@ -166,6 +167,38 @@ serve<WorkApi>(self, {
 
   formFacts: ({ docId }, ctx) =>
     scheduler.run('interactive', ctx.signal, () => readFormFacts(docs.bytes(docId), inflate)),
+
+  printOpen: ({ docId, piece }, ctx) =>
+    scheduler.run('interactive', ctx.signal, async () => {
+      const { candidateId } = await docs.openCandidate(docId, piece ?? null);
+      return { printId: candidateId };
+    }),
+
+  printPages: ({ printId, pages }, ctx) =>
+    scheduler.run('interactive', ctx.signal, async () => {
+      if (!mod) throw new RpcError('not-initialized', 'The work worker is not initialized');
+      await Promise.resolve();
+      const m = mod;
+      const ptr = docPtrOf(need(), docs.candidate(printId).id);
+      return pages.map((i) => pageBox(m, ptr, i));
+    }),
+
+  printBand: ({ printId, ...req }, ctx) =>
+    scheduler.run('interactive', ctx.signal, async () => {
+      if (!mod) throw new RpcError('not-initialized', 'The work worker is not initialized');
+      await Promise.resolve();
+      try {
+        const band = renderBand(mod, docPtrOf(need(), docs.candidate(printId).id), req);
+        return new Transfer(band, [band.data.buffer]);
+      } finally {
+        wasmBytes(); // high-DPI bands grow the heap (ADR-004 respawn policy)
+      }
+    }),
+
+  printClose: async ({ printId }) => {
+    await docs.closeCandidate(printId);
+    return null;
+  },
 
   readAttachment: ({ docId, ref }, ctx) =>
     scheduler.run('interactive', ctx.signal, async () => {

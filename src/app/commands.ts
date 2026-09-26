@@ -96,6 +96,7 @@ export const COMMANDS: readonly CommandDef[] = [
     size: 'small',
     fluent: 'Print',
     milestone: 'M2',
+    shipped: true, // M2-15
   },
   {
     id: 'qat.undo',
@@ -161,6 +162,7 @@ export const COMMANDS: readonly CommandDef[] = [
     size: 'large',
     fluent: 'Print',
     milestone: 'M2',
+    shipped: true, // M2-15
   },
   {
     id: 'file.exportPrintReady',

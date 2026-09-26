@@ -10,6 +10,8 @@ M0 and M1 owner runs are still open.
 
 ## Done
 
+- **Session 14 — M2-15 print.** Print dialog and raster printing: `src/features/print/*`, Work-worker banded renders on a print copy with unsaved edits, encoder-worker PNGs, hidden-frame print; Ctrl+P bound; `file.print`/`qat.print` shipped. Unit: `tests/print` (range parser, raster/scale math, real-PDFium band renders); e2e: `e2e/print.spec.ts`; perf: `e2e/perf/print.spec.ts` (50 pages, no long tasks up to `print()`).
+
 - **Session 14 — M2-14 form filling.** Fill and save AcroForms (text, checkbox, radio, combo, list) from the keyboard in `/Tabs` order; narrow Ctrl+S with the radio field family in the dirty set; Reset Form (`home.resetForm`, shipped) to `/DV`; XFA banner; rule 9 for fill-forms; Space no longer swallowed on links and toggles over the page. Unit: `tests/forms`, `tests/save/form-save.test.ts`; e2e: `e2e/forms.spec.ts`.
 
 - **Session 14 — M2-13 Signatures pane.** Signatures pane with offline integrity check (PKI.js), signed-document banner, PKI.js-signed fixtures (valid, tampered, damaged, twice-signed, changed after signing, our Ctrl+S keeps it unchanged). Unit 535, e2e 140, green; licenses OK.
@@ -520,6 +522,10 @@ M0 and M1 owner runs are still open.
   they merge in that order once CI is green. PR #35 needed a scheduler fix found by CI: jobs of
   the same priority in the Work worker now take turns every 8 ms (hit highlights no longer wait
   for a whole search).
+- **M2-11 … M2-15 (session 14, continued):** M2-11 → PR #39, M2-12 → #40, M2-13 → #41,
+  M2-14 → #42, M2-15 → its own PR, each stacked on the previous one. PR #37 (M2-09) is waiting
+  for its perf job to be re-run: its pull_request run hit two one-off main-thread stalls
+  (249 ms, 198 ms) that the push run of the same commit, and local runs, don't show.
 - **Git in one paragraph (for the owner):** each task lives on its own _branch_ (a named line
   of commits). A _commit_ is a saved snapshot with a message; _push_ uploads the branch to
   GitHub; a _pull request_ (PR) asks to bring a branch into `main`, and GitHub runs the checks
@@ -532,6 +538,9 @@ M0 and M1 owner runs are still open.
   branches. Local checks on the last branch all pass: typecheck (app and spikes), lint, format,
   472 unit tests, license gate (642 packages), build + `check:dist`, bundle report (core 6.72 MB),
   116 e2e, 16 perf scenarios. qpdf installed in the container for the encrypted fixtures.
+  Continued with M2-06 to M2-15 (one PR each). On `m2/15-print`: typecheck, lint, format,
+  575 unit tests, license gate (642 packages); the affected e2e specs and the new print perf
+  scenario pass locally.
 
 - **Session 13 (2026-09-26):** M1-26, M1-27 and M1-28, on `m1/26-local-data`, `m1/27-ci` and
   `m1/28-acceptance` (stacked; one PR each). Local checks all pass on the last branch: typecheck,
@@ -606,11 +615,21 @@ M0 and M1 owner runs are still open.
    timings (`npm run owner:timings`), the installed app on Windows (file handler, offline, update,
    reserved keys), a Firefox smoke test, the Pages preview, and interop §M1 of
    `e2e/interop/CHECKLIST.md`.
-5. **Agent:** M2-06 (background text indexing), then M2-07 (find bar) and M2-08 (pane framework
-   and thumbnails).
+5. **Owner:** interop §M2 (`e2e/interop/CHECKLIST.md`: I. form files, J. real print dialogs),
+   and confirm the M2-15 interpretations ("selected area" = the text selection's bounds; "markups
+   only" = the difference of two renders).
+6. **Agent:** M2-16 (Export Print-Ready PDF and the browser-viewer print route, with the approved
+   `frame-src blob:`), then M2-17 to M2-19.
 
 ## Open issues
 
+- **CI perf stalls on pull_request runs:** one-off 200–400 ms main-thread tasks in scroll /
+  thumbnails / pane-load perf scenarios, only on the pull_request run while the push run of the
+  same commit (started at the same time) passes. Not reproduced locally. If it recurs on re-runs,
+  run CI once per commit (push for `main`, pull_request for PRs) to halve runner load, and look at
+  the traces in the `playwright-report` artifact.
+- **PDFium form limits (M2-14):** a combo box item can't be deselected (Reset Form leaves a combo
+  without `/DV` as it is), and a radio group with NoToggleToOff can't be switched off.
 - **Perf noise to watch:** the M2-06 indexing check (tiles p95 while indexing is paused vs idle)
   missed once in CI (164 ms vs a 142 ms limit) and once in a full local run; it passes alone.
   If it keeps missing, look at CPU contention from the Work worker between activity messages.

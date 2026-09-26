@@ -44,6 +44,8 @@ export const KEYMAP: readonly Binding[] = [
   b('file.open', ['Ctrl+O']),
   b('file.save', ['Ctrl+S']),
   b('file.saveAs', ['Ctrl+Shift+S']),
+  // Our print dialog (M2-15), not the browser's print of the app window.
+  b('file.print', ['Ctrl+P']),
   b('view.fitPage', ['Ctrl+0']),
   b('view.actualSize', ['Ctrl+1']),
   b('view.fitWidth', ['Ctrl+2']),

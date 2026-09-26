@@ -4,6 +4,7 @@ import type { PageTextSlice, PdfPageGeometry } from '@embedpdf/models';
 import type { DocDigest } from '../workers/render/save/digest';
 import type { AttachmentInfo, AttachmentRef } from '../workers/work/attachments';
 import type { FormFacts } from '../model/formFacts';
+import type { Band, BandRequest } from '../workers/work/print';
 import type { LayerList } from '../model/ocg';
 import type { DocProperties } from '../workers/work/properties';
 import type { SignatureInfo } from '../workers/work/signatures';
@@ -104,6 +105,19 @@ export interface WorkApi {
   listLayers: MethodSpec<{ docId: string }, LayerList>;
   /** Form facts EmbedPDF doesn't give: /Tabs per page, /DV per field (M2-14). */
   formFacts: MethodSpec<{ docId: string }, FormFacts>;
+  /**
+   * Printing (M2-15): a separate copy of the current revision, with the
+   * Render worker's unsaved edits (`piece`, a narrow tail) appended.
+   */
+  printOpen: MethodSpec<{ docId: string; piece?: ArrayBuffer }, { printId: string }>;
+  /** Displayed size (points, /Rotate applied) and rotation of each page. */
+  printPages: MethodSpec<
+    { printId: string; pages: number[] },
+    { width: number; height: number; rotation: number }[]
+  >;
+  /** One band of a printed page, RGBA, transferred. */
+  printBand: MethodSpec<{ printId: string } & BandRequest, Band>;
+  printClose: MethodSpec<{ printId: string }, null>;
   /** An attachment's bytes, transferred (never parsed or run here). */
   readAttachment: MethodSpec<{ docId: string; ref: AttachmentRef }, { bytes: ArrayBuffer }>;
   /** Highlight rectangles for hits on one page, in the viewer's page space. */

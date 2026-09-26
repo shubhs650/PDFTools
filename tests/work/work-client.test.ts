@@ -70,6 +70,10 @@ function fakeSpawn(world: FakeWorld) {
       searchExtras: () => [],
       listAttachments: () => [],
       listLayers: () => ({ encrypted: false, layers: [] }),
+      printOpen: () => ({ printId: 'p' }),
+      printPages: () => [],
+      printBand: () => ({ data: new Uint8ClampedArray(4), width: 1, height: 1 }),
+      printClose: () => null,
       formFacts: () => ({ tabs: [], annotated: [], defaults: {}, encrypted: false }),
       checkSignatures: () => [],
       docProperties: () => {

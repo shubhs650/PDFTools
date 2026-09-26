@@ -262,7 +262,8 @@
       "settings": "Settings and the data PDFTools keeps on this device.",
       "about": "About PDFTools: version and third-party notices.",
       "privacy": "PDFTools works offline. Your documents are never uploaded.",
-      "properties": "Facts about the open document: its description, file and structure."
+      "properties": "Facts about the open document: its description, file and structure.",
+      "print": "Print the document with your printer's dialog: choose pages, size, markups and quality first."
     }
   },
   "shortcuts": {
@@ -698,5 +699,56 @@
       "noFields": "This document has no form fields.",
       "stop": "Stop"
     }
+  },
+  "print": {
+    "title": "Print",
+    "description": "Print {{name}}. Pages are rendered on this device; nothing is sent anywhere.",
+    "range": {
+      "legend": "Pages",
+      "all": "All pages",
+      "current": "Current page",
+      "view": "Current view",
+      "area": "Selected area (text selection)",
+      "custom": "Pages:",
+      "customLabel": "Page range",
+      "customHint": "e.g. 1-3, 8"
+    },
+    "pageCount_one": "{{n}} page will print.",
+    "pageCount_other": "{{n}} pages will print.",
+    "scale": {
+      "legend": "Page size",
+      "fit": "Fit to paper",
+      "actual": "Actual size",
+      "custom": "Custom scale",
+      "percent": "Scale (%)"
+    },
+    "markups": {
+      "legend": "Comments and markups",
+      "on": "Document and markups",
+      "off": "Document only",
+      "only": "Markups only"
+    },
+    "quality": {
+      "legend": "Quality",
+      "standard": "Standard ({{dpi}} DPI)",
+      "high": "High, for drawings ({{dpi}} DPI)",
+      "denied": "The document's security settings allow standard quality only."
+    },
+    "orientation": "Orientation follows each page (portrait or landscape).",
+    "error": {
+      "empty": "Enter the pages to print.",
+      "syntax": "Use page numbers and ranges, e.g. 1-3, 8.",
+      "outOfRange": "Some pages are not in this document.",
+      "noView": "No part of a page is in view.",
+      "noSelection": "Select some text first; its area is printed.",
+      "noDocument": "The document is no longer open.",
+      "percent": "Enter a scale from {{min}} to {{max}} %."
+    },
+    "print": "Print",
+    "close": "Close",
+    "cancel": "Cancel",
+    "progressName": "Preparing pages for printing",
+    "progress": "Preparing pages: {{done}} of {{total}} parts",
+    "failed": "The pages could not be prepared for printing."
   }
 }
