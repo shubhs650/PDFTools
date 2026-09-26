@@ -248,3 +248,20 @@ describe.each(INPUTS)('save matrix: %s', (name) => {
     }
   });
 });
+
+describe('damaged trailer', () => {
+  it('opens (PDFium repairs it), refuses an incremental save, and rewrites', async () => {
+    const o = original('plain');
+    const text = new TextDecoder('latin1').decode(o);
+    const cut = text.lastIndexOf('startxref');
+    const damaged = o.slice(0, cut);
+    const doc = await open(damaged);
+    expect(() => tracker.saveIncremental(doc.id)).toThrow(
+      expect.objectContaining({ code: 'save-needs-rewrite' }) as Error,
+    );
+    expect(tracker.dirtyState(doc.id).baseLength).toBe(damaged.length);
+    const bytes = tracker.saveRewrite(doc.id);
+    await close(doc);
+    expect((await inspect(bytes)).squares).toBe((await inspect(o)).squares);
+  });
+});

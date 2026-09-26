@@ -60,7 +60,11 @@ export const isMutation = (method: string): boolean =>
 interface DocState {
   /** Length of the bytes PDFium opened: its incremental output appends after this. */
   openedLength: number;
-  base: SaveBase;
+  /**
+   * Undefined when the opened file's trailer could not be read (PDFium repaired
+   * it on open): an incremental save needs a valid /Prev, so only a rewrite works.
+   */
+  base: SaveBase | undefined;
   /** Existing objects changed since the base → sequence number of the last change. */
   dirty: Map<number, number>;
   /** Sequence numbers of the last mutation that set each flag (0 = not set). */
@@ -92,6 +96,14 @@ interface AnnotRef {
   id?: string;
 }
 
+function readBase(bytes: Uint8Array): SaveBase | undefined {
+  try {
+    return saveBaseOf(bytes);
+  } catch {
+    return undefined;
+  }
+}
+
 export class SaveTracker {
   private readonly docs = new Map<string, DocState>();
   private readonly mod: WrappedPdfiumModule;
@@ -106,7 +118,7 @@ export class SaveTracker {
   opened(docId: string, bytes: Uint8Array): void {
     this.docs.set(docId, {
       openedLength: bytes.length,
-      base: saveBaseOf(bytes),
+      base: readBase(bytes),
       dirty: new Map(),
       formEdited: 0,
       infoEdited: 0,
@@ -197,7 +209,7 @@ export class SaveTracker {
     return {
       dirty: [...s.dirty.keys()].sort((a, b) => a - b),
       untracked: s.untracked > 0,
-      baseLength: s.base.length,
+      baseLength: s.base?.length ?? s.openedLength,
     };
   }
 
@@ -207,6 +219,10 @@ export class SaveTracker {
     opts: { keepAll?: boolean; extra?: readonly ExtraObject[] } = {},
   ): IncrementalSave {
     const s = this.need(docId);
+    const base = s.base;
+    if (!base) {
+      throw new RpcError('save-needs-rewrite', 'The file needs a full save (damaged trailer)');
+    }
     const full = saveWithFlags(this.mod, docPtrOf(this.native, docId), FPDF_INCREMENTAL);
     const dirty = new Set(s.dirty.keys());
     const appended = latin1(full.subarray(s.openedLength));
@@ -214,7 +230,7 @@ export class SaveTracker {
       // Field values can change /AcroForm (e.g. NeedAppearances) or the catalog holding it.
       const acro = /\/AcroForm\s+(\d+)\s+\d+\s+R/.exec(appended);
       if (acro) dirty.add(Number(acro[1]));
-      const root = trailerRef(s.base.trailer, 'Root');
+      const root = trailerRef(base.trailer, 'Root');
       if (root) dirty.add(Number(root.split(/\s+/)[0]));
     }
     if (s.infoEdited) {
@@ -222,7 +238,7 @@ export class SaveTracker {
       if (info) dirty.add(Number(info[1]));
     }
     const keepAll = opts.keepAll === true || s.untracked > 0;
-    const r = narrowTail(s.base, full, s.openedLength, dirty, {
+    const r = narrowTail(base, full, s.openedLength, dirty, {
       keepAll,
       ...(opts.extra ? { extra: opts.extra } : {}),
     });
@@ -232,7 +248,7 @@ export class SaveTracker {
       mode: keepAll ? 'keep-all' : 'narrow',
       kept: r.kept,
       dropped: r.droppedNums.length,
-      baseLength: s.base.length,
+      baseLength: base.length,
     };
   }
 
@@ -252,7 +268,7 @@ export class SaveTracker {
     if (s.infoEdited <= p.seq) s.infoEdited = 0;
     if (s.untracked <= p.seq) s.untracked = 0;
     delete s.pending;
-    return s.base.length;
+    return p.next.length;
   }
 
   /** Save Optimized core (ADR-005 decision 3): a full rewrite through our writer. */
