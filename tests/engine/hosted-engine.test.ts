@@ -32,6 +32,7 @@ function executorWith(
     saveRewrite: () => {
       throw new Error('not used');
     },
+    snapshotTail: () => ({ tail: new ArrayBuffer(0), baseLength: 0 }),
     saveState: () => ({ dirty: [], untracked: false, baseLength: 0 }),
     renderProgressive: () => {
       throw new Error('not used');

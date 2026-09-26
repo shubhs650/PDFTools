@@ -124,7 +124,7 @@ export class FileChangedError extends Error {
 export async function appendToHandle(
   handle: FileSystemFileHandle,
   expectedSize: number,
-  tail: Uint8Array<ArrayBuffer>,
+  tail: Uint8Array<ArrayBuffer> | Blob,
   signal?: AbortSignal,
 ): Promise<void> {
   const current = (await handle.getFile()).size;

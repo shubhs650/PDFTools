@@ -7,6 +7,13 @@ still open.
 
 ## Done
 
+- **Session 12 — M1-24 (OPFS crash recovery).** Branch `m1/24-recovery`. Debounced snapshots
+  (original once + committed tails + an unsaved narrow tail from a new non-pending Render RPC +
+  view state) cleared on save or close; launch dialog with Recover / Discard; recovered documents
+  open dirty without a handle or re-linked to their unchanged file; `beforeunload` only while
+  dirty. Unit (lifecycle, debounce with fake timers, re-link) and e2e (reload → Recover restores
+  edit and page; Discard; save clears; re-link + Ctrl+S).
+
 - **Session 12 — M1-23 (Save Optimized, growth prompt, large-save progress).** Branch
   `m1/23-save-optimized`. Full rewrite as a new file or over the original (signature-count
   warning), becoming the save base for later Ctrl+S; growth prompt at > 30 % with per-session

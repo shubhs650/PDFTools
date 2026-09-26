@@ -367,5 +367,16 @@
       "optimize": "Save optimized…",
       "save": "Just save"
     }
+  },
+  "recovery": {
+    "title": "Recover unsaved changes?",
+    "description": "PDFTools closed while these documents had unsaved changes. Recover them to continue where you left off, or discard the changes.",
+    "item": "{{name}} — changes from {{when}}",
+    "recover": "Recover",
+    "discard": "Discard",
+    "recoverName": "Recover {{name}}",
+    "discardName": "Discard changes to {{name}}",
+    "later": "Decide later",
+    "untitled": "Recovered document.pdf"
   }
 }

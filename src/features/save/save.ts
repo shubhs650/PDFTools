@@ -203,14 +203,28 @@ export async function save(docId: string, skipGrowthCheck = false): Promise<Save
   return incremental(
     docId,
     async (p, signal) => {
-      if (!p) return;
+      const prefix = src.pendingPrefix;
+      if (!p && !prefix) return;
       if (!(await ensurePermission(handle, 'readwrite')))
         throw new SaveFailure('permission-denied');
-      await appendToHandle(handle, p.baseLength, new Uint8Array(p.tail), signal);
+      if (prefix) {
+        // A recovered document re-linked to its file (M1-24): the recovered
+        // bytes go first, at the file's current end.
+        const parts: BlobPart[] = [prefix.bytes, ...(p ? [p.tail] : [])];
+        await appendToHandle(handle, prefix.at, new Blob(parts), signal);
+        delete src.pendingPrefix;
+      } else if (p) {
+        await appendToHandle(handle, p.baseLength, new Uint8Array(p.tail), signal);
+      }
       src.written = true;
     },
-    false,
+    src.pendingPrefix !== undefined,
   );
+}
+
+/** Tails committed since open (or since the last optimized save): recovery snapshots (M1-24). */
+export function committedTails(docId: string): readonly ArrayBuffer[] {
+  return committed.get(docId) ?? [];
 }
 
 /** The picked target, or undefined (cancelled, or the fallback path). */

@@ -25,14 +25,29 @@ import { findDuplicate, originalBlob, sources } from './sources';
 
 const newDocId = (): string => `doc-${crypto.randomUUID()}`;
 
+/** A recovered document (M1-24): bytes from OPFS, maybe re-linked to its file. */
+export interface RecoveredOpen extends OpenedFile {
+  /**
+   * With a re-linked handle: the recovered tail not yet in the file on disk,
+   * which the first Ctrl+S writes at offset `at` before its own tail.
+   */
+  pendingPrefix?: { bytes: ArrayBuffer; at: number };
+  /** Recovered documents stay out of the recent list (it holds the file as on disk). */
+  recordRecent: false;
+}
+
 /** Opens files one after another, each in its own tab, in the given order. */
-export async function openFiles(files: readonly OpenedFile[]): Promise<(string | undefined)[]> {
+export async function openFiles(
+  files: readonly (OpenedFile | RecoveredOpen)[],
+): Promise<(string | undefined)[]> {
   const ids: (string | undefined)[] = [];
   for (const f of files) ids.push(await openOne(f));
   return ids;
 }
 
-async function openOne({ file, handle }: OpenedFile): Promise<string | undefined> {
+async function openOne(req: OpenedFile | RecoveredOpen): Promise<string | undefined> {
+  const { file, handle } = req;
+  const recovered = 'recordRecent' in req;
   const job = startJob(file.name);
   let header = true;
   let docId: string | undefined;
@@ -64,6 +79,7 @@ async function openOne({ file, handle }: OpenedFile): Promise<string | undefined
       ...(handle ? { handle } : {}),
       fingerprint,
       size: file.size,
+      ...(recovered && req.pendingPrefix ? { pendingPrefix: req.pendingPrefix } : {}),
     });
     documentStore.getState().open({
       id,
@@ -74,6 +90,7 @@ async function openOne({ file, handle }: OpenedFile): Promise<string | undefined
     });
     advance(job, { type: 'opened', docId: id });
     void openInWorkWorker(id, file);
+    if (recovered) return id;
     void import('../recent/recent')
       .then(({ recordOpened }) =>
         recordOpened({ file, ...(handle ? { handle } : {}), fingerprint }),
