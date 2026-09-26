@@ -4,6 +4,7 @@ import { DocumentArea } from '../features/open/DocumentArea';
 import { DropZone } from '../features/open/DropZone';
 import { installLaunchQueue } from '../features/open/launchQueue';
 import { registerSaveCommands } from '../features/save/commands';
+import { GrowthPrompt, SaveOptimizedDialog } from '../features/save/SaveDialogs';
 import { SaveErrorDialog, SaveStatus } from '../features/save/SaveStatus';
 import { registerViewCommands } from '../features/view/commands';
 import { PageNav, ViewModeSwitch, ZoomBox } from '../features/view/StatusControls';
@@ -66,6 +67,8 @@ export function App() {
         <CloseDocumentDialog />
         <OpenErrorDialog />
         <SaveErrorDialog />
+        <SaveOptimizedDialog />
+        <GrowthPrompt />
         <DropZone />
       </ErrorBoundary>
     </UiProvider>

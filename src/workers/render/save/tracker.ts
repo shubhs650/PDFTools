@@ -51,7 +51,8 @@ interface DocState {
   untracked: number;
   /** Increments on every recorded mutation. */
   seq: number;
-  pending?: { next: SaveBase; tailLength: number; seq: number };
+  /** A save or rewrite handed out and not yet committed (`rewrite`: a full rewrite). */
+  pending?: { next: SaveBase; tailLength: number; seq: number; rewrite?: boolean };
 }
 
 export interface IncrementalSave {
@@ -247,10 +248,10 @@ export class SaveTracker {
    * After the tail was written (M1-22): it becomes part of the base, and what
    * it saved is no longer dirty. Changes made after `saveIncremental` stay dirty.
    */
-  commit(docId: string, tailLength: number): number {
+  commit(docId: string, tailLength: number, rewrite = false): number {
     const s = this.need(docId);
     const p = s.pending;
-    if (p?.tailLength !== tailLength)
+    if (p?.tailLength !== tailLength || (p.rewrite ?? false) !== rewrite)
       throw new RpcError('save-not-pending', 'No matching save to commit');
     s.base = p.next;
     // Objects and flags changed again after the save stay dirty.
@@ -263,10 +264,21 @@ export class SaveTracker {
     return p.next.length;
   }
 
-  /** Save Optimized core (ADR-005 decision 3): a full rewrite through our writer. */
+  /**
+   * Save Optimized core (ADR-005 decision 3): a full rewrite through our
+   * writer. If the rewritten file becomes the document's file, `commit(…,
+   * true)` makes it the base: later Ctrl+S tails append to it. PDFium keeps
+   * object numbers in a rewrite (it only drops unreferenced objects), so the
+   * in-memory document still matches (M1-23, tests/save/optimized.test.ts).
+   */
   saveRewrite(docId: string): Uint8Array<ArrayBuffer> {
-    this.need(docId);
-    return saveWithFlags(this.mod, docPtrOf(this.native, docId), FPDF_NO_INCREMENTAL);
+    const s = this.need(docId);
+    const bytes = saveWithFlags(this.mod, docPtrOf(this.native, docId), FPDF_NO_INCREMENTAL);
+    const base = saveBaseOf(bytes);
+    // Objects PDFium allocated before the rewrite are not new afterwards.
+    const newFrom = Math.max(base.size, s.base?.newFrom ?? s.base?.size ?? 0);
+    s.pending = { next: { ...base, newFrom }, tailLength: bytes.length, seq: s.seq, rewrite: true };
+    return bytes;
   }
 
   private need(docId: string): DocState {

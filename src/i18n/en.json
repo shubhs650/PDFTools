@@ -336,7 +336,8 @@
     "phase": {
       "saving": "Saving…",
       "verifying": "Checking the saved file…",
-      "writing": "Writing…"
+      "writing": "Writing…",
+      "writingProgress": "Writing… {{percent}}"
     },
     "cancel": "Cancel",
     "error": {
@@ -348,7 +349,23 @@
       "needsRewrite": "This file's structure is damaged, so changes can't be appended to it. Use Save Optimized to write a repaired copy.",
       "writeFailed": "The file could not be written. Your changes are still open. Save a copy with Save As instead.",
       "saveAs": "Save As…",
-      "ok": "OK"
+      "ok": "OK",
+      "saveOptimized": "Save Optimized…"
+    },
+    "optimize": {
+      "title": "Save {{name}} optimized",
+      "description": "Rewrites the whole file compactly. You can save it as a new file or replace the original.",
+      "signatures_one": "This file has {{count}} digital signature. Saving it optimized will invalidate it. Continue?",
+      "signatures_other": "This file has {{count}} digital signatures. Saving it optimized will invalidate them. Continue?",
+      "copy": "Save as new file…",
+      "replace": "Replace original",
+      "cancel": "Cancel"
+    },
+    "growth": {
+      "title": "Save optimized instead?",
+      "description": "{{name}} has grown by more than 30 % since it was opened. Saving it optimized rewrites it compactly.",
+      "optimize": "Save optimized…",
+      "save": "Just save"
     }
   }
 }

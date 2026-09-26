@@ -51,6 +51,8 @@ export interface DocumentsState {
   move(id: string, toIndex: number): void;
   setView(id: string, view: Partial<ViewState>): void;
   markDirty(id: string): void;
+  /** After Save Optimized wrote the document's file: nothing appended since (M1-23). */
+  markOptimized(id: string, editsAtStart: number): void;
   /** Tab name after Save As to a new file (M1-22). */
   rename(id: string, name: string): void;
   setSaveState(id: string, save: SaveState): void;
@@ -128,6 +130,15 @@ export const createDocumentStore = () =>
     },
     markDirty: (id) => {
       set((s) => update(s, id, (d) => ({ dirty: true, edits: d.edits + 1 })));
+    },
+    markOptimized: (id, editsAtStart) => {
+      set((s) =>
+        update(s, id, (d) => ({
+          dirty: d.edits !== editsAtStart,
+          save: 'idle',
+          appendedBytes: 0,
+        })),
+      );
     },
     rename: (id, name) => {
       set((s) => update(s, id, (d) => ({ meta: { ...d.meta, name } })));

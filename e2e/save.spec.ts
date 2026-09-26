@@ -8,7 +8,8 @@ import { expect, test } from './support/fixtures.ts';
 
 // M1-22: Ctrl+S appends the verified tail to the file's own handle; Save As
 // writes a full copy to a new file. OPFS handles stand in for files on disk;
-// edits come from the e2e save probe.
+// edits come from the e2e save probe. The 20-page contract stand-in is large
+// enough that these saves stay under the 30 % growth prompt (M1-23).
 
 const tabs = (page: Page) => page.getByRole('tablist', { name: 'Open documents' }).getByRole('tab');
 
@@ -49,7 +50,7 @@ test('Ctrl+S appends to the original; a second Ctrl+S is a no-op; the dirty mark
   pdfs,
 }) => {
   await page.goto('/');
-  const original = pdfs.simple(2);
+  const original = pdfs.contract(20);
   const id = await openHandle(page, 'doc.pdf', original);
   expect(await cap(page, 'save', 'addSquares', id, 3)).toBeNull();
   await expect(tabs(page).first()).toHaveAccessibleName(/unsaved changes/);
@@ -83,7 +84,7 @@ test('Save As writes original + changes to a new file, which becomes the documen
   pdfs,
 }) => {
   await page.goto('/');
-  const original = pdfs.simple(1);
+  const original = pdfs.contract(20);
   const id = await openHandle(page, 'first.pdf', original);
   expect(await cap(page, 'save', 'addSquares', id, 2)).toBeNull();
   await saveAsTarget(page, 'copy.pdf');

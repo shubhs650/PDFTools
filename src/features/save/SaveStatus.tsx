@@ -1,9 +1,9 @@
 import { Dismiss20Regular } from '@fluentui/react-icons/svg/dismiss';
 import { useTranslation } from 'react-i18next';
 import { useDocuments } from '../../app/store/documentStore';
-import { msg, type MessageKey } from '../../i18n';
+import { format, msg, type MessageKey } from '../../i18n';
 import { Button, Dialog } from '../../ui/components';
-import { cancelSave, dismissSaveFailure, saveAs, useSave } from './save';
+import { cancelSave, dismissSaveFailure, openOptimizeDialog, saveAs, useSave } from './save';
 import type { SaveErrorKind } from './saveMachine';
 
 const PHASE: Record<'saving' | 'verifying' | 'writing', MessageKey> = {
@@ -26,12 +26,17 @@ export function SaveStatus() {
   const { t } = useTranslation();
   const id = useDocuments((s) => s.activeId);
   const phase = useSave((s) => (id ? s.phases[id] : undefined));
+  const progress = useSave((s) => (id ? s.progress[id] : undefined));
   if (!id || !phase || !(phase.phase in PHASE)) return null;
   const key = PHASE[phase.phase as keyof typeof PHASE];
+  const text =
+    phase.phase === 'writing' && progress !== undefined
+      ? t('save.phase.writingProgress', { percent: format.percent(progress, 0) })
+      : t(key);
   return (
     <span className="save-status" role="status">
-      <span>{t(key)}</span>
-      {phase.phase !== 'writing' ? (
+      <span>{text}</span>
+      {phase.phase !== 'done' ? (
         <Button
           size="small"
           variant="subtle"
@@ -63,6 +68,17 @@ export function SaveErrorDialog() {
       closeIcon={<Dismiss20Regular />}
       footer={
         <>
+          {failure?.kind === 'needs-rewrite' ? (
+            <Button
+              label={t('save.error.saveOptimized')}
+              variant="primary"
+              onClick={() => {
+                const docId = failure.docId;
+                dismissSaveFailure();
+                openOptimizeDialog(docId);
+              }}
+            />
+          ) : null}
           {offerSaveAs ? (
             <Button
               label={t('save.error.saveAs')}

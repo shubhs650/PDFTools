@@ -15,6 +15,8 @@ export interface RibbonButtonProps {
   tabIndex: number;
   /** Icon only (quick access toolbar); the label becomes the name and tooltip. */
   iconOnly?: boolean;
+  /** After the command started (the backstage closes, M1-22). */
+  onRan?: () => void;
 }
 
 /**
@@ -23,7 +25,7 @@ export interface RibbonButtonProps {
  * (rule 12). Toggles expose aria-pressed and the Filled icon (ADR-010).
  */
 export const RibbonButton = forwardRef<HTMLButtonElement, RibbonButtonProps>(function RibbonButton(
-  { command, large, tabIndex, iconOnly = false },
+  { command, large, tabIndex, iconOnly = false, onRan },
   ref,
 ) {
   const { t } = useTranslation();
@@ -44,7 +46,9 @@ export const RibbonButton = forwardRef<HTMLButtonElement, RibbonButtonProps>(fun
       aria-label={iconOnly ? label : undefined}
       {...(command.toggle ? { 'aria-pressed': state.pressed } : {})}
       onClick={() => {
-        if (!disabled) void runCommand(command.id);
+        if (disabled) return;
+        void runCommand(command.id);
+        onRan?.();
       }}
     >
       <CommandIcon id={command.id} large={large} pressed={state.pressed} className="ribbon-icon" />
