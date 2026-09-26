@@ -195,3 +195,69 @@ export function cjkFallbackPdf(): Uint8Array {
     '<< /Type /FontDescriptor /FontName /STSong-Light /Flags 6 /FontBBox [-25 -254 1000 880] /ItalicAngle 0 /Ascent 880 /Descent -120 /CapHeight 880 /StemV 93 >>',
   ]);
 }
+
+// ------------------------------------------------------------ forms (M2-02, M2-14)
+
+const FORM_PAGE = '/MediaBox [0 0 595 842] /Resources << /Font << /F1 3 0 R /Helv 3 0 R >> >>';
+
+const formBox = (w: number, h: number, body: string): PdfObject => ({
+  dict: `<< /Type /XObject /Subtype /Form /BBox [0 0 ${String(w)} ${String(h)}] /Resources << /Font << /Helv 3 0 R >> >> >>`,
+  stream: body,
+});
+
+/**
+ * One page with every AcroForm field type §7.10 names: text (plus read-only and
+ * required text), checkbox, a two-button radio group, a combo box and a list
+ * box. `/Tabs /R`, and `/Annots` deliberately **not** in row order, so tab
+ * order can be checked. Object numbers are fixed (see comments).
+ */
+export function fullFormPdf(): Uint8Array {
+  const tx = (n: number, name: string, y: number, v: string, ff = 0) =>
+    `<< /Type /Annot /Subtype /Widget /FT /Tx /T (${name}) /TU (${name} field) /V (${v}) /Ff ${String(ff)} /DA (/Helv 12 Tf 0 g) /Rect [60 ${String(y)} 300 ${String(y + 24)}] /F 4 /P 4 0 R /AP << /N ${String(n)} 0 R >> >>`;
+  const objs: PdfObject[] = [
+    // 1 catalog, 2 pages, 3 font, 4 page, 5 content
+    '<< /Type /Catalog /Pages 2 0 R /AcroForm << /Fields [8 0 R 6 0 R 7 0 R 9 0 R 10 0 R 13 0 R 14 0 R] /DA (/Helv 12 Tf 0 g) /DR << /Font << /Helv 3 0 R >> >> >> >>',
+    '<< /Type /Pages /Kids [4 0 R] /Count 1 >>',
+    '<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica /Encoding /WinAnsiEncoding >>',
+    `<< /Type /Page /Parent 2 0 R ${FORM_PAGE} /Contents 5 0 R /Tabs /R /Annots [9 0 R 8 0 R 6 0 R 7 0 R 11 0 R 12 0 R 14 0 R 10 0 R] >>`,
+    { dict: '<< >>', stream: 'BT /F1 16 Tf 60 790 Td (PDFTools M2 form) Tj ET' },
+    // 6 name (row 2), 7 readonly (row 3), 8 first (row 1), 9 required (row 4)
+    tx(15, 'name', 700, 'Initial'),
+    tx(16, 'readonly', 660, 'Fixed', 1),
+    tx(17, 'first', 740, 'Top'),
+    tx(18, 'required', 620, '', 2),
+    // 10 checkbox; 11 and 12 radio buttons, kids of the field 13
+    '<< /Type /Annot /Subtype /Widget /FT /Btn /T (agree) /TU (Agree) /V /Off /AS /Off /Rect [60 580 76 596] /F 4 /P 4 0 R /MK << /CA (4) >> /AP << /N << /Yes 19 0 R /Off 20 0 R >> >> >>',
+    '<< /Type /Annot /Subtype /Widget /Parent 13 0 R /AS /A /Rect [60 540 76 556] /F 4 /P 4 0 R /MK << /CA (l) >> /AP << /N << /A 19 0 R /Off 20 0 R >> >> >>',
+    '<< /Type /Annot /Subtype /Widget /Parent 13 0 R /AS /Off /Rect [120 540 136 556] /F 4 /P 4 0 R /MK << /CA (l) >> /AP << /N << /B 19 0 R /Off 20 0 R >> >> >>',
+    '<< /FT /Btn /Ff 49152 /T (choice) /TU (Choice) /V /A /Kids [11 0 R 12 0 R] >>',
+    // 14 combo box (/Ff bit 18 = combo); 15–21 appearance streams
+    '<< /Type /Annot /Subtype /Widget /FT /Ch /Ff 131072 /T (size) /TU (Size) /Opt [(DN50) (DN80) (DN100)] /V (DN80) /DA (/Helv 12 Tf 0 g) /Rect [60 490 300 514] /F 4 /P 4 0 R /AP << /N 21 0 R >> >>',
+    formBox(240, 24, '/Tx BMC BT /Helv 12 Tf 0 g 2 7 Td (Initial) Tj ET EMC'),
+    formBox(240, 24, '/Tx BMC BT /Helv 12 Tf 0 g 2 7 Td (Fixed) Tj ET EMC'),
+    formBox(240, 24, '/Tx BMC BT /Helv 12 Tf 0 g 2 7 Td (Top) Tj ET EMC'),
+    formBox(240, 24, '/Tx BMC EMC'),
+    formBox(16, 16, '0 g 1 w 0.5 0.5 15 15 re S 3 8 m 7 3 l 13 13 l S'),
+    formBox(16, 16, '0 g 1 w 0.5 0.5 15 15 re S'),
+    formBox(240, 24, '/Tx BMC BT /Helv 12 Tf 0 g 2 7 Td (DN80) Tj ET EMC'),
+  ];
+  // 22 list box (added last so the numbers above stay fixed), in /Fields and /Annots.
+  objs.push(
+    '<< /Type /Annot /Subtype /Widget /FT /Ch /T (material) /TU (Material) /Opt [(Carbon steel) (Stainless) (Duplex)] /V (Stainless) /DA (/Helv 12 Tf 0 g) /Rect [60 400 300 470] /F 4 /P 4 0 R >>',
+  );
+  objs[0] = (objs[0] as string).replace('14 0 R]', '14 0 R 22 0 R]');
+  objs[3] = (objs[3] as string).replace('10 0 R]', '10 0 R 22 0 R]');
+  return buildPdf(objs);
+}
+
+/** The field names in reading (row) order, i.e. `/Tabs /R` order. */
+export const ROW_ORDER = [
+  'first',
+  'name',
+  'readonly',
+  'required',
+  'agree',
+  'choice',
+  'size',
+  'material',
+];

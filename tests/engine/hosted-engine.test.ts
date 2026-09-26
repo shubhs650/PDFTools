@@ -48,7 +48,13 @@ function executorWith(
       }
       return exec(method);
     },
-    docInfo: () => ({ pageCount: 0, permissions: 0, signatureCount: 0 }),
+    docInfo: () => ({
+      pageCount: 0,
+      permissions: 0,
+      securityRevision: -1,
+      ownerUnlocked: false,
+      signatureCount: 0,
+    }),
     memory: () => ({ wasmBytes: 0 }),
   });
   return createHostedExecutor(new RpcClient<RenderApi>(ch.port2, 'render'), onMutation);

@@ -14,6 +14,8 @@ export interface Formatters {
   dateTime(value: Date | number): string;
   /** Relative to `now`: "3 minutes ago", "yesterday". */
   relative(value: Date | number, now?: Date | number): string;
+  /** ["a", "b", "c"] → "a, b, and c" (conjunction, locale-dependent). */
+  list(items: readonly string[]): string;
 }
 
 const BYTE_UNITS = ['byte', 'kilobyte', 'megabyte', 'gigabyte', 'terabyte'] as const;
@@ -41,9 +43,11 @@ export function createFormatters(locale: string): Formatters {
   const dateFmt = new Intl.DateTimeFormat(locale, { dateStyle: 'medium' });
   const dateTimeFmt = new Intl.DateTimeFormat(locale, { dateStyle: 'medium', timeStyle: 'short' });
   const rtf = new Intl.RelativeTimeFormat(locale, { numeric: 'auto' });
+  const lf = new Intl.ListFormat(locale, { style: 'long', type: 'conjunction' });
 
   return {
     locale,
+    list: (items) => lf.format(items),
     number: (value, max = 2) => nf(`n${String(max)}`, { maximumFractionDigits: max }).format(value),
     percent: (fraction, max = 1) =>
       nf(`p${String(max)}`, { style: 'percent', maximumFractionDigits: max }).format(fraction),

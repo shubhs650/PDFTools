@@ -41,10 +41,14 @@ serve<WorkApi>(self, {
     return { ms: performance.now() - t0, wasmBytes: wasmBytes() };
   },
 
-  open: async ({ docId, original, tail, password }) => {
-    const doc = await docs.open(docId, original, tail, password);
+  open: async ({ docId, original, tail, password, ownerPassword }) => {
+    const doc = await docs.open(docId, original, tail, password, ownerPassword);
     return { pageCount: doc.pageCount, wasmBytes: wasmBytes() };
   },
+
+  unlock: async ({ docId, ownerPassword }) => ({
+    unlocked: await docs.unlock(docId, ownerPassword),
+  }),
 
   refresh: ({ docId, tail }) => ({ pending: docs.refresh(docId, tail) }),
 

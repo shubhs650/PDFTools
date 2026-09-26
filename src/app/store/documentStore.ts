@@ -3,6 +3,7 @@
 // Tab order and the active document live here too. Pure transitions; the
 // open/save pipelines (M1-13, M1-22) call them.
 import { createStore, useStore } from 'zustand';
+import type { Security } from '../../model/permissions';
 
 export type ViewMode = 'single' | 'continuous' | 'facing' | 'continuousFacing';
 export type Rotation = 0 | 90 | 180 | 270;
@@ -13,7 +14,12 @@ export interface DocumentMeta {
   /** Display name for the tab (file name). Never logged or reported (rule 10). */
   name: string;
   pageCount: number;
+  /** `FPDF_GetDocPermissions` bits, read live after an owner unlock (rule 9, D-19). */
   permissions: number;
+  /** Security handler revision (`FPDF_GetSecurityHandlerRevision`); absent or -1: not encrypted. */
+  securityRevision?: number;
+  /** Full access for this session after the owner password was given (§7.12). */
+  ownerUnlocked?: boolean;
   signatureCount: number;
 }
 
@@ -56,6 +62,8 @@ export interface DocumentsState {
   /** Tab name after Save As to a new file (M1-22). */
   rename(id: string, name: string): void;
   setSaveState(id: string, save: SaveState): void;
+  /** Permissions after an owner-password unlock (read back from the Render worker). */
+  setSecurity(id: string, security: { permissions: number; ownerUnlocked: boolean }): void;
   /** `editsAtStart`: the edit count when the save began (edits made during it stay dirty). */
   markSaved(id: string, appended: number, editsAtStart?: number): void;
 }
@@ -146,6 +154,9 @@ export const createDocumentStore = () =>
     setSaveState: (id, save) => {
       set((s) => update(s, id, () => ({ save })));
     },
+    setSecurity: (id, { permissions, ownerUnlocked }) => {
+      set((s) => update(s, id, (d) => ({ meta: { ...d.meta, permissions, ownerUnlocked } })));
+    },
     markSaved: (id, appended, editsAtStart) => {
       set((s) =>
         update(s, id, (d) => ({
@@ -166,3 +177,9 @@ export function useDocuments<T>(selector: (s: DocumentsState) => T): T {
 /** The active document's slice, or null. */
 export const selectActive = (s: DocumentsState): DocumentSlice | null =>
   s.activeId ? (s.docs[s.activeId] ?? null) : null;
+
+/** The document's permission state for src/model/permissions.ts. */
+export const securityOf = (meta: DocumentMeta): Security => ({
+  permissions: meta.permissions,
+  revision: meta.securityRevision ?? -1,
+});

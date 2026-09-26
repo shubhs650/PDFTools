@@ -3,6 +3,8 @@ import { createRequire } from 'node:module';
 import { PdfiumNative } from '@embedpdf/engines/pdfium';
 import { init } from '@embedpdf/pdfium';
 import { beforeAll, describe, expect, it } from 'vitest';
+import { OWNER_PW, USER_PW, encryptedVariants, hasQpdf } from '../../e2e/fixtures/encrypted';
+import { simplePdf } from '../../e2e/fixtures/generate';
 import { WorkDocs, concat } from '../../src/workers/work/docs';
 
 const require = createRequire(import.meta.url);
@@ -71,5 +73,26 @@ describe('WorkDocs: original + tail, refreshed lazily (ADR-001 B11)', () => {
   it('refuses unknown documents with a typed error', () => {
     const docs = new WorkDocs(() => native);
     expect(() => docs.refresh('nope', new ArrayBuffer(1))).toThrow(/not open/);
+  });
+});
+
+describe.skipIf(!hasQpdf())('WorkDocs: owner unlock (§7.12, ADR-013 decision 3)', () => {
+  it('unlocks the kept copy and unlocks again after a lazy reload', async () => {
+    const v = encryptedVariants(simplePdf(1)).find((x) => x.name === 'R6-aes-256');
+    if (!v) throw new Error('R6');
+    const docs = new WorkDocs(() => native);
+    const bytes = (): ArrayBuffer => v.bytes.slice().buffer;
+    const perms = async () => {
+      const { doc } = await docs.get('enc');
+      return (await native.getDocPermissions(doc).toPromise()) >>> 0;
+    };
+    await docs.open('enc', bytes(), undefined, USER_PW);
+    expect(await perms()).toBe(0xfffff2c0);
+    expect(await docs.unlock('enc', 'wrong')).toBe(false);
+    expect(await docs.unlock('enc', OWNER_PW)).toBe(true);
+    expect(await perms()).toBe(0xfffffffc);
+    docs.refresh('enc', new ArrayBuffer(0)); // forces a reopen on the next access
+    expect(await perms()).toBe(0xfffffffc);
+    await docs.close('enc');
   });
 });

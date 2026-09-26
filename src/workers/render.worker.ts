@@ -135,6 +135,8 @@ serve<RenderApi>(self, {
     return {
       pageCount: rawCall(m, 'FPDF_GetPageCount', doc),
       permissions: rawCall(m, 'FPDF_GetDocPermissions', doc) >>> 0,
+      securityRevision: rawCall(m, 'FPDF_GetSecurityHandlerRevision', doc),
+      ownerUnlocked: Boolean(rawCall(m, 'EPDF_IsOwnerUnlocked', doc)),
       signatureCount: rawCall(m, 'FPDF_GetSignatureCount', doc),
     };
   },

@@ -6,6 +6,9 @@ import { installLaunchQueue } from '../features/open/launchQueue';
 import { startBackgroundPrecache, startOffline } from '../features/offline/offline';
 import { OfflineStatus, UpdateWaitDialog } from '../features/offline/OfflineStatus';
 import { installRecovery } from '../features/recovery/recovery';
+import { registerProtectCommands } from '../features/protect/commands';
+import { PasswordDialog } from '../features/protect/PasswordDialog';
+import { UnlockDialog } from '../features/protect/UnlockDialog';
 import { RecoveryDialog } from '../features/recovery/RecoveryDialog';
 import { registerSaveCommands } from '../features/save/commands';
 import { GrowthPrompt, SaveOptimizedDialog } from '../features/save/SaveDialogs';
@@ -44,6 +47,7 @@ export function App() {
   );
   useEffect(() => registerViewCommands(), []);
   useEffect(() => registerSaveCommands(), []);
+  useEffect(() => registerProtectCommands(), []);
   useEffect(() => installRecovery(), []);
   // §9: register the service worker; after the first render, precache the rest.
   useEffect(() => {
@@ -101,6 +105,8 @@ export function App() {
         <ShortcutSheet />
         <CloseDocumentDialog />
         <OpenErrorDialog />
+        <PasswordDialog />
+        <UnlockDialog />
         <SaveErrorDialog />
         <SaveOptimizedDialog />
         <GrowthPrompt />

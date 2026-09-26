@@ -10,9 +10,18 @@ export interface WorkApi {
   init: MethodSpec<{ wasmUrl: string }, { ms: number; wasmBytes: number }>;
   /** `original` is transferred (the worker keeps it); `tail` is the incremental tail so far. */
   open: MethodSpec<
-    { docId: string; original: ArrayBuffer; tail?: ArrayBuffer; password?: string },
+    {
+      docId: string;
+      original: ArrayBuffer;
+      tail?: ArrayBuffer;
+      password?: string;
+      /** Owner password given in this session: the copy is unlocked after every (re)load. */
+      ownerPassword?: string;
+    },
     { pageCount: number; wasmBytes: number }
   >;
+  /** Owner-password unlock of the kept copy (§7.12, ADR-013 decision 3). */
+  unlock: MethodSpec<{ docId: string; ownerPassword: string }, { unlocked: boolean }>;
   /** Replaces the document's tail (bytes appended since the original). Applied lazily (ADR-001 B11). */
   refresh: MethodSpec<{ docId: string; tail: ArrayBuffer }, { pending: boolean }>;
   /** Appends a saved tail piece to the document's tail (after a committed save). */

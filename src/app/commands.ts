@@ -8,6 +8,8 @@
 //   interim fallback until the milestone that ships the command draws it.
 // - `milestone`: when the command ships. Only AVAILABLE_MILESTONES are shown; later ones are
 //   omitted, not disabled (ADR-001 B6, M1-Q2).
+// - `shipped`: a command of a later milestone that already works (tasks land one by one);
+//   shown like an available milestone's commands.
 
 export type CommandSize = 'large' | 'small';
 export type Milestone = 'M1' | 'M2' | 'M3' | 'M4' | 'later';
@@ -35,6 +37,7 @@ export interface CommandDef {
   toggle?: true;
   custom?: string;
   customPending?: true;
+  shipped?: true;
 }
 
 /** Milestones whose commands are shown. Extend as milestones land. */
@@ -1019,6 +1022,7 @@ export const COMMANDS: readonly CommandDef[] = [
     size: 'large',
     fluent: 'LockOpen',
     milestone: 'M2',
+    shipped: true, // M2-03
   },
   {
     id: 'protect.signatures',
@@ -1157,4 +1161,5 @@ export const COMMANDS: readonly CommandDef[] = [
   },
 ];
 
-export const isAvailable = (c: CommandDef): boolean => AVAILABLE_MILESTONES.includes(c.milestone);
+export const isAvailable = (c: CommandDef): boolean =>
+  AVAILABLE_MILESTONES.includes(c.milestone) || c.shipped === true;

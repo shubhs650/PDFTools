@@ -9,6 +9,18 @@ M0 and M1 owner runs are still open.
 
 ## Done
 
+- **Session 14 — M2-03 (protected PDFs).** Branch `m2/03-protected` (stacked on M2-02). Open
+  password prompt (masked, retry message, Cancel opens nothing); the same prompt on recovery and
+  recent reopen. One revision-aware permission map for the UI and the Render worker's save
+  tracker, which fixes the R2 case found in M2-02 (qpdf R2 file: filling was allowed). Commands
+  can declare the capability they need and are disabled with a reason; a restrictions banner above
+  the document; Protect → Unlock with Owner Password in both workers, surviving Work-worker
+  reloads; the Protect tab shows with Unlock. New `TextField` primitive and `format.list`. Tests:
+  permission rules and real-PDFium checks on qpdf R2–R6 files; Work copy unlock across a reload
+  and a respawn; open-machine password transitions; e2e for the prompt, cancel, owner unlock
+  (edits refused until then), and a scan of IndexedDB, OPFS and web storage that finds no password
+  (with a negative control). The encrypted-fixture helper moved to `e2e/fixtures/encrypted.ts`.
+
 - **Session 14 — M2-02 (security, forms and print spike).** Branch `m2/02-secure-print-spike`
   (stacked on M2-01). _Works with workaround_, [ADR-013](adr/013-m2-security-forms-print.md)
   (proposed). Passwords and owner unlock work on R2–R6 without reopening; saves after an unlock

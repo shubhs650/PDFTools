@@ -47,9 +47,10 @@ describe('command table (M1-06)', () => {
     expect(missing).toEqual([]);
   });
 
-  it('shows only M1 commands for now; later milestones are omitted (M1-Q2)', () => {
+  it('shows M1 commands and shipped M2 ones; the rest are omitted (M1-Q2)', () => {
     expect(AVAILABLE_MILESTONES).toEqual(['M1']);
     const available = COMMANDS.filter(isAvailable).map((c) => c.id);
+    expect(available).toContain('protect.unlock'); // shipped in M2-03
     expect(available).toContain('file.saveOptimized');
     expect(available).toContain('view.zoomIn');
     expect(available).not.toContain('comment.highlight');

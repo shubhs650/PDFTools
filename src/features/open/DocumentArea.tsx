@@ -1,5 +1,6 @@
 import { useEffect } from 'react';
 import { documentStore, useDocuments } from '../../app/store/documentStore';
+import { PermissionBanner } from '../protect/PermissionBanner';
 import { DocumentHost } from '../view/DocumentHost';
 import { DocumentView } from '../view/DocumentView';
 import { capability, tileCache, useHost } from '../view/host';
@@ -29,7 +30,16 @@ export function DocumentArea() {
 
   return (
     <DocumentHost>
-      {activeId ? <DocumentView key={activeId} documentId={activeId} /> : <StartScreen />}
+      {activeId ? (
+        <div className="document-stack">
+          <PermissionBanner documentId={activeId} />
+          <div className="document-stack-view">
+            <DocumentView key={activeId} documentId={activeId} />
+          </div>
+        </div>
+      ) : (
+        <StartScreen />
+      )}
     </DocumentHost>
   );
 }

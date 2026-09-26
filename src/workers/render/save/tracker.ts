@@ -1,8 +1,9 @@
 // Save state per open document in the Render worker (M1-20, ADR-005, rules 7
 // and 9). Wraps the executor calls the main thread makes:
 //   - before a mutating call: refuse it if the document's permission flags
-//     forbid it (rule 9; bit 6 annotations/forms, bit 9 form filling, bit 4
-//     other changes);
+//     forbid it (rule 9; annotations need "annotate", form values "fill
+//     forms", other changes "modify", with each revision's rules from
+//     src/model/permissions.ts — ADR-013 decision 2);
 //   - after it: record the existing objects it changed (the dirty set the
 //     narrow tail keeps), or mark the document "untracked" so the next save
 //     keeps every object PDFium appends (always correct, just larger).
@@ -19,17 +20,13 @@ import {
   isMutation,
 } from '../../../engine/mutations';
 import { PDFIUM_ERROR_PREFIX } from '../../../engine/renderApi';
+import { allows, type Capability, type Security } from '../../../model/permissions';
 import { acquirePage, docPtrOf, rawCall, withWideString } from '../pdfium';
 import { latin1 } from './bytes';
 import { digestDocument, uncheckNames, type DocDigest } from './digest';
 import { narrowTail, type ExtraObject } from './narrowTail';
 import { FPDF_INCREMENTAL, FPDF_NO_INCREMENTAL, saveWithFlags } from './writer';
 import { saveBaseOf, trailerRef, type SaveBase } from './xref';
-
-/** ISO 32000-1 Table 22 permission bits. */
-const PERM_MODIFY = 1 << 3; // bit 4
-const PERM_ANNOTATE = 1 << 5; // bit 6
-const PERM_FILL_FORMS = 1 << 8; // bit 9
 
 export { ANNOTATION_METHODS, FORM_METHODS, OTHER_MUTATIONS, isMutation };
 
@@ -125,15 +122,24 @@ export class SaveTracker {
     return rawCall(this.mod, 'FPDF_GetDocPermissions', docPtrOf(this.native, docId)) >>> 0;
   }
 
+  /** Permission bits (read live, so an owner unlock counts) and the security revision. */
+  security(docId: string): Security {
+    const doc = docPtrOf(this.native, docId);
+    return {
+      permissions: rawCall(this.mod, 'FPDF_GetDocPermissions', doc) >>> 0,
+      revision: rawCall(this.mod, 'FPDF_GetSecurityHandlerRevision', doc),
+    };
+  }
+
   /** Throws before a mutation the document's permissions forbid (rule 9). */
   checkAllowed(method: string, docId: string): void {
     if (!isMutation(method)) return;
-    const p = this.permissions(docId);
-    const ok = ANNOTATION_METHODS.has(method)
-      ? (p & PERM_ANNOTATE) !== 0
+    const need: Capability = ANNOTATION_METHODS.has(method)
+      ? 'annotate'
       : FORM_METHODS.has(method)
-        ? (p & (PERM_ANNOTATE | PERM_FILL_FORMS)) !== 0
-        : (p & PERM_MODIFY) !== 0;
+        ? 'fillForms'
+        : 'modify';
+    const ok = allows(this.security(docId), need);
     if (!ok) {
       throw new RpcError(
         `${PDFIUM_ERROR_PREFIX}${String(PdfErrorCode.Security)}`,

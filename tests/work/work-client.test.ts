@@ -6,7 +6,7 @@ import { serve } from '../../src/workers/rpc-host';
 interface FakeWorld {
   memory: number;
   spawned: number;
-  opened: { docId: string; original: number; tail: number }[];
+  opened: { docId: string; original: number; tail: number; owner?: string }[];
   terminated: number;
 }
 
@@ -23,10 +23,16 @@ function fakeSpawn(world: FakeWorld) {
     ports.push(ch.port1, ch.port2);
     serve<WorkApi>(ch.port1, {
       init: () => ({ ms: 1, wasmBytes: 1 }),
-      open: ({ docId, original, tail }) => {
-        world.opened.push({ docId, original: original.byteLength, tail: tail?.byteLength ?? 0 });
+      open: ({ docId, original, tail, ownerPassword }) => {
+        world.opened.push({
+          docId,
+          original: original.byteLength,
+          tail: tail?.byteLength ?? 0,
+          ...(ownerPassword === undefined ? {} : { owner: ownerPassword }),
+        });
         return { pageCount: 3, wasmBytes: world.memory };
       },
+      unlock: ({ ownerPassword }) => ({ unlocked: ownerPassword === 'owner' }),
       refresh: () => ({ pending: true }),
       append: ({ piece }) => ({ tailBytes: piece.byteLength }),
       verify: () => ({ ok: true }),
@@ -120,6 +126,27 @@ describe('WorkClient lifecycle (ADR-004 decision 4)', () => {
     const job = c.run('textStats', { docId: 'd' });
     job.cancel();
     await expect(job.promise).rejects.toThrow(/cancelled/);
+    c.terminate();
+  });
+
+  it('an owner unlock survives a respawn: the reload unlocks again (§7.12, ADR-013 d3)', async () => {
+    const world: FakeWorld = { memory: 300 * MB, spawned: 0, opened: [], terminated: 0 };
+    const c = new WorkClient({
+      wasmUrl: 'http://x/pdfium.wasm',
+      respawnAboveBytes: 64 * MB,
+      spawn: fakeSpawn(world),
+    });
+    await c.open('doc', new ArrayBuffer(10), {
+      reload: () => Promise.resolve(new ArrayBuffer(10)),
+      password: 'user',
+    });
+    expect(await c.unlock('doc', 'wrong')).toBe(false);
+    expect(await c.unlock('doc', 'owner')).toBe(true);
+    expect(await c.unlock('missing', 'owner')).toBe(false);
+    await c.run('textStats', { docId: 'doc' }).promise;
+    await until(() => c.respawns === 1 && world.opened.length === 2);
+    expect(world.opened[0]?.owner).toBeUndefined();
+    expect(world.opened[1]?.owner).toBe('owner');
     c.terminate();
   });
 });

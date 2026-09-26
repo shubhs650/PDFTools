@@ -14,11 +14,12 @@ test('the ribbon, its tabs and the backstage pass axe', async ({ page }) => {
   expect((await new AxeBuilder({ page }).analyze()).violations.map((v) => v.id)).toEqual([]);
 });
 
-test('M1 shows File, Home, View and Help only (M1-Q2)', async ({ page }) => {
+test('shows File, Home, View, Protect (from M2-03) and Help only (M1-Q2)', async ({ page }) => {
   await page.goto('/');
   await expect(page.getByRole('tablist', { name: 'Ribbon tabs' }).getByRole('tab')).toHaveText([
     'Home',
     'View',
+    'Protect',
     'Help',
   ]);
 });

@@ -24,6 +24,8 @@ export interface WorkDocSource {
 
 interface DocRecord extends WorkDocSource {
   tail: ArrayBuffer | undefined;
+  /** Owner password once unlocked: re-applied after a respawn (memory only, M2-Q7). */
+  ownerPassword?: string;
 }
 
 /** Job methods: the ones that run through the worker's scheduler. */
@@ -121,6 +123,16 @@ export class WorkClient {
     d.tail = appendBytes(d.tail, piece);
     await this.whenReady();
     await this.rpc.call('append', { docId, piece: piece.slice(0) }).promise;
+  }
+
+  /** Owner-password unlock of the worker's copy (§7.12); kept for respawn reloads. */
+  async unlock(docId: string, ownerPassword: string): Promise<boolean> {
+    const d = this.docs.get(docId);
+    if (!d) return false;
+    await this.whenReady();
+    const { unlocked } = await this.rpc.call('unlock', { docId, ownerPassword }).promise;
+    if (unlocked) d.ownerPassword = ownerPassword;
+    return unlocked;
   }
 
   async close(docId: string): Promise<void> {
@@ -236,6 +248,7 @@ export class WorkClient {
           original,
           ...(d.tail ? { tail: d.tail.slice(0) } : {}),
           ...(d.password === undefined ? {} : { password: d.password }),
+          ...(d.ownerPassword === undefined ? {} : { ownerPassword: d.ownerPassword }),
         },
         { transfer: [original] },
       ).promise;
