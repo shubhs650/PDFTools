@@ -433,6 +433,12 @@ still open.
 
 ## Open issues
 
+- **Chromium 153 headless crash on stored file handles (M1-18).** Reading a
+  `FileSystemFileHandle` back from IndexedDB crashes the whole browser in headless Chromium and
+  Google Chrome 153 (OPFS and on-disk handles alike; CI diagnostic, PR #21). Chromium 141/151 and
+  headed Chrome/Edge 154 (owner check) are fine. `@playwright/test` is pinned to 1.62.1
+  (Chromium 151) with an override for `playwright-core`; re-test the recent-files e2e specs before
+  bumping Playwright.
 - **Committed corpus PDFs vs ADR-002.** Commit `cd52644` added six PDFs directly to `corpus/`,
   including CAD drawings. ADR-002 says drawings stay local and are never committed, and
   `.gitignore` excludes `*.pdf`, so these were force-added. S3 uses `bearing catalogue.pdf` and
@@ -488,6 +494,7 @@ still open.
 | Date       | Ref      | Decision                                                                                                                                                                                                                                                                                                                                                                                                                                                  |
 | ---------- | -------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | 2026-09-25 | M1-15    | Owner: zoom 100 % = one PDF point per CSS pixel (EmbedPDF scale 1, ADR-011's range), so Actual Size is not physical size. PR #13 (main → M0 branch) closed. Single-core machines are not a target; the one-core first-open contention from M1-13/15 CI needs no work.                                                                                                                                                                                     |
+| 2026-09-26 | M1-18    | Owner: headed Chrome/Edge 154 read stored file handles fine, so the Chromium 153 crash is headless/153-only; pin Playwright to 1.62.1 (Chromium 151) for CI rather than change the recent-files design (option 3).                                                                                                                                                                                                                                        |
 | 2026-09-24 | ADR-001  | Session-1 clarifications B1–B16. Key ones: server-side analytics only; broader permissive allowlist; location-based redaction verification; EmbedPDF annotation and redaction sets; OPFS original + tail recovery; public-domain corpus only.                                                                                                                                                                                                             |
 | 2026-09-24 | scaffold | Vite 7 instead of 8, and no jsx-a11y, because of MPL-2.0 dependencies. Superseded by ADR-002.                                                                                                                                                                                                                                                                                                                                                             |
 | 2026-09-24 | ADR-002  | MPL-2.0 allowed for dev-only tooling only (lockfile `dev` flag). OFL-1.1 allowed for fonts. Heavy files are measure and report for Rev 0. Test drawings are owner-supplied local files, with no URLs in the repo. Moved to Vite 8 and enabled jsx-a11y.                                                                                                                                                                                                   |
