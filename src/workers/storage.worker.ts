@@ -22,7 +22,8 @@ serve<StorageApi>(self, {
     }),
 
   writeTail: async ({ fp, tail, ui }) => {
-    await (await opfs()).writeTail(fp, tail, ui);
+    const bytes = tail instanceof Blob ? await tail.arrayBuffer() : tail;
+    await (await opfs()).writeTail(fp, bytes, ui);
     return null;
   },
 

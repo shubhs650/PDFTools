@@ -12,7 +12,8 @@ export interface StorageApi {
     number,
     { done: number; total: number }
   >;
-  writeTail: MethodSpec<{ fp: string; tail: ArrayBuffer; ui?: UiState }, null>;
+  /** A Blob tail is read in the worker (no main-thread copy of committed + new tails). */
+  writeTail: MethodSpec<{ fp: string; tail: ArrayBuffer | Blob; ui?: UiState }, null>;
   writeUiState: MethodSpec<{ fp: string; ui: UiState }, null>;
   list: MethodSpec<null, Snapshot[]>;
   read: MethodSpec<{ fp: string }, { original: ArrayBuffer; tail: ArrayBuffer; ui?: UiState }>;

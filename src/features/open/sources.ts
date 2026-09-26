@@ -14,6 +14,11 @@ export interface DocSource {
    * longer be read.
    */
   written?: boolean;
+  /**
+   * A recovered document re-linked to its file (M1-24): bytes the file on disk
+   * does not have yet; the next Ctrl+S writes them at `at` before its tail.
+   */
+  pendingPrefix?: { bytes: ArrayBuffer; at: number };
 }
 
 /**

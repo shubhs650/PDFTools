@@ -116,6 +116,12 @@ serve<RenderApi>(self, {
     baseLength: ready().tracker.commit(docId, tailLength, rewrite ?? false),
   }),
 
+  snapshotTail: ({ docId }) => {
+    const r = ready().tracker.snapshotTail(docId);
+    const tail = r.tail.buffer;
+    return new Transfer({ tail, baseLength: r.baseLength }, [tail]);
+  },
+
   saveRewrite: ({ docId }) => {
     const bytes = ready().tracker.saveRewrite(docId).buffer;
     return new Transfer({ bytes }, [bytes]);

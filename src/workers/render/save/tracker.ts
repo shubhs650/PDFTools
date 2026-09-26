@@ -206,14 +206,41 @@ export class SaveTracker {
     opts: { keepAll?: boolean; extra?: readonly ExtraObject[] } = {},
   ): IncrementalSave {
     const s = this.need(docId);
+    // Digest first: reading form fields can make PDFium add appearance streams,
+    // which then belong to this save rather than silently to the next one.
+    const pages = s.untracked > 0 ? 'all' : [...s.pages.keys()].sort((a, b) => a - b);
+    const digest = s.base ? digestDocument(this.mod, this.native, docId, pages) : null;
+    const { base, r, keepAll } = this.buildTail(docId, s, opts);
+    s.pending = { next: r.next, tailLength: r.tail.length, seq: s.seq };
+    return {
+      expected: r.tail.length === 0 || !digest ? null : uncheckNames(digest, new Set(r.kept)),
+      tail: r.tail,
+      mode: keepAll ? 'keep-all' : 'narrow',
+      kept: r.kept,
+      dropped: r.droppedNums.length,
+      baseLength: base.length,
+    };
+  }
+
+  /**
+   * Crash-recovery snapshot (M1-24, §4.3): the narrow tail against the file as
+   * last saved, without touching the pending save (a Ctrl+S may be running).
+   */
+  snapshotTail(docId: string): { tail: Uint8Array<ArrayBuffer>; baseLength: number } {
+    const s = this.need(docId);
+    const { base, r } = this.buildTail(docId, s, {});
+    return { tail: r.tail, baseLength: base.length };
+  }
+
+  private buildTail(
+    docId: string,
+    s: DocState,
+    opts: { keepAll?: boolean; extra?: readonly ExtraObject[] },
+  ) {
     const base = s.base;
     if (!base) {
       throw new RpcError('save-needs-rewrite', 'The file needs a full save (damaged trailer)');
     }
-    // Digest first: reading form fields can make PDFium add appearance streams,
-    // which then belong to this save rather than silently to the next one.
-    const pages = s.untracked > 0 ? 'all' : [...s.pages.keys()].sort((a, b) => a - b);
-    const digest = digestDocument(this.mod, this.native, docId, pages);
     const full = saveWithFlags(this.mod, docPtrOf(this.native, docId), FPDF_INCREMENTAL);
     const dirty = new Set(s.dirty.keys());
     const appended = latin1(full.subarray(s.openedLength));
@@ -233,15 +260,7 @@ export class SaveTracker {
       keepAll,
       ...(opts.extra ? { extra: opts.extra } : {}),
     });
-    s.pending = { next: r.next, tailLength: r.tail.length, seq: s.seq };
-    return {
-      expected: r.tail.length === 0 ? null : uncheckNames(digest, new Set(r.kept)),
-      tail: r.tail,
-      mode: keepAll ? 'keep-all' : 'narrow',
-      kept: r.kept,
-      dropped: r.droppedNums.length,
-      baseLength: base.length,
-    };
+    return { base, r, keepAll };
   }
 
   /**

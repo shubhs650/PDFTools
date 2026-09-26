@@ -3,6 +3,8 @@ import { CloseDocumentDialog, OpenErrorDialog } from '../features/open/dialogs';
 import { DocumentArea } from '../features/open/DocumentArea';
 import { DropZone } from '../features/open/DropZone';
 import { installLaunchQueue } from '../features/open/launchQueue';
+import { installRecovery } from '../features/recovery/recovery';
+import { RecoveryDialog } from '../features/recovery/RecoveryDialog';
 import { registerSaveCommands } from '../features/save/commands';
 import { GrowthPrompt, SaveOptimizedDialog } from '../features/save/SaveDialogs';
 import { SaveErrorDialog, SaveStatus } from '../features/save/SaveStatus';
@@ -29,6 +31,7 @@ export function App() {
   useEffect(() => registerBuiltinCommands(), []);
   useEffect(() => registerViewCommands(), []);
   useEffect(() => registerSaveCommands(), []);
+  useEffect(() => installRecovery(), []);
   // After the commands exist: launched files open like any other (M1-19).
   useEffect(() => {
     installLaunchQueue();
@@ -69,6 +72,7 @@ export function App() {
         <SaveErrorDialog />
         <SaveOptimizedDialog />
         <GrowthPrompt />
+        <RecoveryDialog />
         <DropZone />
       </ErrorBoundary>
     </UiProvider>
