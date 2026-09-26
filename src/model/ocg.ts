@@ -40,13 +40,27 @@ function indexesOf(hay: Uint8Array, needle: Uint8Array): number[] {
 
 const isDigit = (b: number | undefined): boolean => b !== undefined && b >= 48 && b <= 57;
 
-/** The text of every plain (not compressed) object "n g obj … endobj", by number (last wins). */
-function plainObject(bytes: Uint8Array, num: number): string | null {
-  const hits = indexesOf(bytes, ascii(`${String(num)} 0 obj`)).filter(
-    (i) => !isDigit(bytes[i - 1]),
-  );
-  const at = hits[hits.length - 1];
-  if (at === undefined) return null;
+/**
+ * Where each plain (not compressed) object "n g obj" starts, by number (last
+ * wins, as in an incrementally updated file). One pass over the bytes.
+ */
+function plainIndex(bytes: Uint8Array): Map<number, number> {
+  const out = new Map<number, number>();
+  const obj = ascii(' obj');
+  for (const i of indexesOf(bytes, obj)) {
+    // Walk back over "<generation> " and "<number> ".
+    let g = i - 1;
+    while (isDigit(bytes[g])) g--;
+    if (g === i - 1 || bytes[g] !== 32) continue;
+    let n = g - 1;
+    while (isDigit(bytes[n])) n--;
+    if (n === g - 1 || isDigit(bytes[n])) continue;
+    out.set(Number(latin1(bytes.subarray(n + 1, g))), n + 1);
+  }
+  return out;
+}
+
+function plainAt(bytes: Uint8Array, at: number): string {
   const text = latin1(bytes.subarray(at, at + 65536));
   const end = text.indexOf('endobj');
   return end > 0 ? text.slice(0, end) : text;
@@ -176,14 +190,33 @@ async function streamObjects(bytes: Uint8Array, inflate: Inflate): Promise<Map<n
   return out;
 }
 
-/** The document's layers in display order (/D /Order, else /OCGs). */
-export async function readLayers(bytes: Uint8Array, inflate: Inflate): Promise<LayerList> {
-  const hasEncrypt = indexesOf(bytes, ascii('/Encrypt')).some(
+export type ObjectReader = (num: number) => string | null;
+
+/** Every object's text by number: plain objects, then object streams' contents. */
+export async function objectReader(bytes: Uint8Array, inflate: Inflate): Promise<ObjectReader> {
+  const plain = plainIndex(bytes);
+  const packed = await streamObjects(bytes, inflate);
+  return (num) => {
+    const at = plain.get(num);
+    return at === undefined ? (packed.get(num) ?? null) : plainAt(bytes, at);
+  };
+}
+
+/** A /Encrypt key in the file (its strings and streams are then unreadable here). */
+export const isEncrypted = (bytes: Uint8Array): boolean =>
+  indexesOf(bytes, ascii('/Encrypt')).some(
     (i) => !/[A-Za-z]/.test(String.fromCharCode(bytes[i + 8] ?? 32)),
   );
-  if (hasEncrypt) return { encrypted: true, layers: [] };
+
+/** The document's layers in display order (/D /Order, else /OCGs). */
+export async function readLayers(bytes: Uint8Array, inflate: Inflate): Promise<LayerList> {
+  if (isEncrypted(bytes)) return { encrypted: true, layers: [] };
   const packed = await streamObjects(bytes, inflate);
-  const object = (num: number): string | null => plainObject(bytes, num) ?? packed.get(num) ?? null;
+  const plain = plainIndex(bytes);
+  const object = (num: number): string | null => {
+    const at = plain.get(num);
+    return at === undefined ? (packed.get(num) ?? null) : plainAt(bytes, at);
+  };
 
   // /OCProperties: in a plain catalog, or in a packed one.
   let props: string | null = null;

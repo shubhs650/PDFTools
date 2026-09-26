@@ -1380,3 +1380,59 @@ body {
 .signature--damaged .signature-integrity {
   font-weight: var(--font-weight-semibold);
 }
+
+/* Form fields over the page (M2-14): HTML controls on the widgets' rects. */
+.form-layer {
+  position: absolute;
+  inset: var(--space-0);
+  pointer-events: none;
+}
+
+.form-field {
+  position: absolute;
+  box-sizing: border-box;
+  margin: var(--space-0);
+  padding: var(--space-0) var(--space-1);
+  border: none;
+  background: var(--color-form-field);
+  color: var(--color-form-text);
+  font-family: Helvetica, Arial, sans-serif;
+  line-height: 1.1;
+  pointer-events: auto;
+}
+
+.form-field[aria-readonly='true'] {
+  background: var(--color-page);
+  cursor: default;
+}
+
+.form-checkbox,
+.form-radio {
+  padding: var(--space-0);
+  accent-color: var(--color-form-text);
+}
+
+textarea.form-field {
+  resize: none;
+}
+
+.form-field:focus-visible {
+  outline: var(--focus-width) solid var(--color-focus);
+}
+
+.form-reset-status {
+  position: fixed;
+  right: var(--space-4);
+  bottom: var(--space-4);
+  display: flex;
+  gap: var(--space-2);
+  align-items: center;
+  padding: var(--space-2) var(--space-3);
+  border: var(--border-width) solid var(--color-border);
+  border-radius: var(--radius-m);
+  background: var(--color-surface-raised);
+}
+
+.form-reset-status p {
+  margin: var(--space-0);
+}

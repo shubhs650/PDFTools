@@ -70,6 +70,7 @@ function fakeSpawn(world: FakeWorld) {
       searchExtras: () => [],
       listAttachments: () => [],
       listLayers: () => ({ encrypted: false, layers: [] }),
+      formFacts: () => ({ tabs: [], annotated: [], defaults: {}, encrypted: false }),
       checkSignatures: () => [],
       docProperties: () => {
         throw new Error('unused');

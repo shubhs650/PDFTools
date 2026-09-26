@@ -119,6 +119,7 @@ async function openOne(req: OpenedFile | RecoveredOpen): Promise<string | undefi
       securityRevision: info.securityRevision,
       ownerUnlocked: info.ownerUnlocked,
       signatureCount: info.signatureCount,
+      formType: info.formType,
     });
     advance(job, { type: 'opened', docId: id });
     void openInWorkWorker(id, file, password);

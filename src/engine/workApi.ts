@@ -3,6 +3,7 @@
 import type { PageTextSlice, PdfPageGeometry } from '@embedpdf/models';
 import type { DocDigest } from '../workers/render/save/digest';
 import type { AttachmentInfo, AttachmentRef } from '../workers/work/attachments';
+import type { FormFacts } from '../model/formFacts';
 import type { LayerList } from '../model/ocg';
 import type { DocProperties } from '../workers/work/properties';
 import type { SignatureInfo } from '../workers/work/signatures';
@@ -101,6 +102,8 @@ export interface WorkApi {
   docProperties: MethodSpec<{ docId: string }, DocProperties>;
   /** Optional content groups: names and default visibility (list-only, ADR-012 d5). */
   listLayers: MethodSpec<{ docId: string }, LayerList>;
+  /** Form facts EmbedPDF doesn't give: /Tabs per page, /DV per field (M2-14). */
+  formFacts: MethodSpec<{ docId: string }, FormFacts>;
   /** An attachment's bytes, transferred (never parsed or run here). */
   readAttachment: MethodSpec<{ docId: string; ref: AttachmentRef }, { bytes: ArrayBuffer }>;
   /** Highlight rectangles for hits on one page, in the viewer's page space. */

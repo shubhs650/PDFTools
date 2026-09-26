@@ -10,6 +10,8 @@ M0 and M1 owner runs are still open.
 
 ## Done
 
+- **Session 14 — M2-14 form filling.** Fill and save AcroForms (text, checkbox, radio, combo, list) from the keyboard in `/Tabs` order; narrow Ctrl+S with the radio field family in the dirty set; Reset Form (`home.resetForm`, shipped) to `/DV`; XFA banner; rule 9 for fill-forms; Space no longer swallowed on links and toggles over the page. Unit: `tests/forms`, `tests/save/form-save.test.ts`; e2e: `e2e/forms.spec.ts`.
+
 - **Session 14 — M2-13 Signatures pane.** Signatures pane with offline integrity check (PKI.js), signed-document banner, PKI.js-signed fixtures (valid, tampered, damaged, twice-signed, changed after signing, our Ctrl+S keeps it unchanged). Unit 535, e2e 140, green; licenses OK.
 
 - **Session 14 — M2-12 Properties and Security Info.** Properties backstage section and Security Info dialog; byte-level facts (revisions, linearized, encryption method) with qpdf-verified RC4-40/128, AES-128/256. Unit 528, e2e 136, green; licenses OK.

@@ -16,6 +16,7 @@ import { Scheduler } from './work/scheduler';
 import { Activity, indexDocument } from './work/indexer';
 import { SearchEngine } from './work/search';
 import { listAttachments, readAttachment } from './work/attachments';
+import { readFormFacts } from '../model/formFacts';
 import { readLayers } from '../model/ocg';
 import { readProperties } from './work/properties';
 import { checkSignatures } from './work/signatures';
@@ -162,6 +163,9 @@ serve<WorkApi>(self, {
 
   listLayers: ({ docId }, ctx) =>
     scheduler.run('interactive', ctx.signal, () => readLayers(docs.bytes(docId), inflate)),
+
+  formFacts: ({ docId }, ctx) =>
+    scheduler.run('interactive', ctx.signal, () => readFormFacts(docs.bytes(docId), inflate)),
 
   readAttachment: ({ docId, ref }, ctx) =>
     scheduler.run('interactive', ctx.signal, async () => {

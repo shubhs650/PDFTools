@@ -58,6 +58,7 @@ function executorWith(
       permissions: 0,
       securityRevision: -1,
       ownerUnlocked: false,
+      formType: 0,
       signatureCount: 0,
     }),
     memory: () => ({ wasmBytes: 0 }),

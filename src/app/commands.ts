@@ -264,6 +264,7 @@ export const COMMANDS: readonly CommandDef[] = [
     size: 'small',
     fluent: 'ArrowReset',
     milestone: 'M2',
+    shipped: true, // M2-14
   },
   {
     id: 'view.firstPage',

@@ -17,6 +17,8 @@
   --color-surface-sunken: #ebebeb;
   --color-canvas: #8a8a8a; /* area behind document pages */
   --color-page: #ffffff; /* paper under a page's preview: white in every theme */
+  --color-form-field: #e3ecfa; /* fillable form fields over the page (M2-14) */
+  --color-form-text: #000000;
 
   /* Color — content */
   --color-text: #1f1f1f;
@@ -117,6 +119,8 @@
   --color-surface-sunken: #141414;
   --color-canvas: #0f0f0f;
   --color-page: #ffffff;
+  --color-form-field: #e3ecfa; /* on the white page in every theme */
+  --color-form-text: #000000;
   --color-text: #ffffff;
   --color-text-muted: #c7c7c7;
   --color-text-disabled: #6e6e6e;
@@ -149,6 +153,8 @@
     --color-surface-sunken: Canvas;
     --color-canvas: Canvas;
     --color-page: Canvas;
+    --color-form-field: Field;
+    --color-form-text: FieldText;
     --color-text: CanvasText;
     --color-text-muted: CanvasText;
     --color-text-disabled: GrayText;

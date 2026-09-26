@@ -28,10 +28,11 @@ describe('ribbon layout from the command table (§8, ADR-001 B6, M1-Q2)', () => 
     expect(home?.groups.map((g) => `${g.tab}.${g.group}`)).toEqual([
       'home.tools',
       'home.find',
+      'home.forms',
       'view.zoom',
       'protect.security', // Signatures (M2-13)
     ]);
-    expect(home?.groups[2]?.commands.map((c) => c.id)).toEqual([
+    expect(home?.groups[3]?.commands.map((c) => c.id)).toEqual([
       'view.zoomIn',
       'view.zoomOut',
       'view.fitPage',

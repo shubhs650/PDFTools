@@ -54,7 +54,8 @@ describe('command table (M1-06)', () => {
     expect(available).toContain('file.saveOptimized');
     expect(available).toContain('view.zoomIn');
     expect(available).not.toContain('comment.highlight');
-    expect(available).not.toContain('home.resetForm');
+    expect(available).not.toContain('organize.delete'); // M4
+    expect(available).toContain('home.resetForm'); // shipped in M2-14
     expect(available).toContain('home.find'); // shipped in M2-07
     expect(available).toContain('home.advancedSearch'); // shipped in M2-09
   });

@@ -3,7 +3,7 @@
 // calls are possible (ADR-001 B14). The main thread drives it through
 // EmbedPDF's PdfEngine (src/engine/hostedEngine.ts) over our typed RPC.
 import { PdfiumNative } from '@embedpdf/engines/pdfium';
-import { PdfErrorCode, TaskRejectedError, type Task } from '@embedpdf/models';
+import { PDF_FORM_FIELD_FLAG, PdfErrorCode, TaskRejectedError, type Task } from '@embedpdf/models';
 import { init, type WrappedPdfiumModule } from '@embedpdf/pdfium';
 import { RpcError } from '../engine/errors';
 import { Transfer } from '../engine/protocol';
@@ -14,6 +14,10 @@ import { renderProgressive } from './render/progressive';
 import { SaveTracker, isMutation } from './render/save/tracker';
 
 const FPDF_PAGEOBJ_PATH = 2;
+/** `FPDF_GetFormType` for a dynamic (full) XFA form: nothing to fill (M2-14). */
+const FORMTYPE_XFA_FULL = 2;
+/** Calls that change a field's value (M2-14 read-only and XFA guard). */
+const FORM_VALUE_METHODS = new Set(['setFormFieldValue', 'setFormFieldState']);
 
 let mod: WrappedPdfiumModule | undefined;
 let native: PdfiumNative | undefined;
@@ -76,6 +80,14 @@ serve<RenderApi>(self, {
     const docId = (args[0] as { id?: unknown } | undefined)?.id;
     // Rule 9: a mutation the document's permissions forbid never reaches PDFium.
     if (isMutation(method) && typeof docId === 'string') t.checkAllowed(method, docId);
+    // M2-14 (ADR-013 decision 4): PDFium fills read-only fields and full XFA forms; we don't.
+    if (FORM_VALUE_METHODS.has(method) && typeof docId === 'string') {
+      const field = (args[2] as { field?: { flag?: unknown } } | undefined)?.field;
+      if (typeof field?.flag === 'number' && field.flag & PDF_FORM_FIELD_FLAG.READONLY)
+        throw new RpcError('form-readonly', 'The field is read-only');
+      if (rawCall(m, 'FPDF_GetFormType', docPtrOf(n, docId)) === FORMTYPE_XFA_FULL)
+        throw new RpcError('form-xfa', 'XFA forms are not filled');
+    }
     const fn = (
       n as unknown as Record<string, ((...a: unknown[]) => Task<unknown, unknown>) | undefined>
     )[method];
@@ -138,6 +150,7 @@ serve<RenderApi>(self, {
       securityRevision: rawCall(m, 'FPDF_GetSecurityHandlerRevision', doc),
       ownerUnlocked: Boolean(rawCall(m, 'EPDF_IsOwnerUnlocked', doc)),
       signatureCount: rawCall(m, 'FPDF_GetSignatureCount', doc),
+      formType: rawCall(m, 'FPDF_GetFormType', doc),
     };
   },
 

@@ -168,3 +168,22 @@ app refuses to add annotations to it (rule 9; checked by the same spec).
 | H4  | `form__*.pdf`                                                                                      | The text field shows "Edited by M1" and can still be edited.                                                                                      |         |             |
 | H5  | `annotated__*.pdf`                                                                                 | The original annotations are unchanged (count, text, author) next to the new squares.                                                             |         |             |
 | H6  | `X__ctrl-s.pdf` in Acrobat: File → Properties or the signature panel's revision list (signed only) | Two revisions after the original are listed or recoverable (for information).                                                                     |         |             |
+
+## M2 — form filling (D-26, §7.10, M2-14)
+
+Files: [`e2e/fixtures/self-made/m2-interop/`](../fixtures/self-made/m2-interop/), written by the
+real app with `M2_INTEROP_OUT=1 npm run owner:interop:m2` (`e2e/forms.spec.ts`).
+`form__original.pdf` is the self-made form (text, read-only and required text, checkbox, a
+two-button radio group, combo box and list box, `/Tabs /R`). `form__filled.pdf` is the same file
+after filling it from the keyboard and Ctrl+S (one incremental revision): "first field" = "Filled
+in", Agree checked, the second Choice button on, Size = DN100, Material = Duplex.
+
+### I. Form files (both viewers)
+
+| #   | File                 | Check                                                                                                                | Acrobat | PDF-XChange |
+| --- | -------------------- | -------------------------------------------------------------------------------------------------------------------- | ------- | ----------- |
+| I1  | `form__filled.pdf`   | Opens without a repair message; the values above are shown, and closing without edits doesn't ask "Save changes?".   |         |             |
+| I2  | `form__filled.pdf`   | The values are real field values: change one, save, reopen in the other viewer — it shows the change.                |         |             |
+| I3  | `form__filled.pdf`   | "readonly field" still shows "Fixed" and can't be edited; "required field" is marked required.                       |         |             |
+| I4  | `form__original.pdf` | Tab moves through the fields in row order (first, name, readonly, required, Agree, Choice, Size, Material), as here. |         |             |
+| I5  | `form__filled.pdf`   | The viewer's Reset Form gives: name "Default", first empty, Agree checked, Choice B, Size DN50 (the file's `/DV`s).  |         |             |

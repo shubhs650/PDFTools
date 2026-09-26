@@ -42,6 +42,7 @@ type JobMethod =
   | 'listAttachments'
   | 'readAttachment'
   | 'listLayers'
+  | 'formFacts'
   | 'docProperties'
   | 'checkSignatures'
   | 'hitRects'

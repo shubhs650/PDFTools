@@ -175,6 +175,11 @@ export class SaveTracker {
           const num = this.annotObjectNumber(ref.pagePtr, annot.id);
           if (num > 0) state.dirty.set(num, seq);
           else state.untracked = seq;
+          // A form value lives in the field (the widget's /Parent chain) and a
+          // radio change flips the siblings' /AS: all of them go in the tail
+          // (ADR-013 finding 3), or the narrow save reopens with the old value.
+          if (FORM_METHODS.has(method) && num > 0)
+            for (const n of this.fieldFamily(doc.id, ref, annot.id)) state.dirty.set(n, seq);
         }
       } finally {
         ref.release();
@@ -183,6 +188,69 @@ export class SaveTracker {
       state.untracked = seq;
     }
     if (FORM_METHODS.has(method)) state.formEdited = seq;
+  }
+
+  /**
+   * The widget's field (the dictionary holding /V; the widget itself when
+   * merged) and the page's other widgets of the same field (radio siblings),
+   * by object number.
+   */
+  private fieldFamily(
+    docId: string,
+    ref: { pagePtr: number; withFormHandle?: (fn: (form: number) => number[]) => number[] },
+    name: string,
+  ): number[] {
+    const run = (fn: (form: number) => number[]): number[] => {
+      if (typeof ref.withFormHandle === 'function') return ref.withFormHandle(fn);
+      // Same steps as EmbedPDF's PageContext.withFormHandle.
+      const info = rawCall(this.mod, 'PDFiumExt_OpenFormFillInfo');
+      const form = rawCall(
+        this.mod,
+        'PDFiumExt_InitFormFillEnvironment',
+        docPtrOf(this.native, docId),
+        info,
+      );
+      rawCall(this.mod, 'FORM_OnAfterLoadPage', ref.pagePtr, form);
+      try {
+        return fn(form);
+      } finally {
+        rawCall(this.mod, 'FORM_OnBeforeClosePage', ref.pagePtr, form);
+        rawCall(this.mod, 'PDFiumExt_ExitFormFillEnvironment', form);
+        rawCall(this.mod, 'PDFiumExt_CloseFormFillInfo', info);
+      }
+    };
+    return run((form) => this.familyWith(form, ref.pagePtr, name));
+  }
+
+  private familyWith(form: number, pagePtr: number, name: string): number[] {
+    const fieldOf = (annot: number): number =>
+      rawCall(this.mod, 'EPDFAnnot_GetFormFieldObjectNumber', form, annot);
+    const annot = withWideString(this.mod, name, (ptr) =>
+      rawCall(this.mod, 'EPDFPage_GetAnnotByName', pagePtr, ptr),
+    );
+    if (!annot) return [];
+    let field: number;
+    try {
+      field = fieldOf(annot);
+    } finally {
+      rawCall(this.mod, 'FPDFPage_CloseAnnot', annot);
+    }
+    if (field <= 0) return [];
+    const out = [field];
+    const count = rawCall(this.mod, 'FPDFPage_GetAnnotCount', pagePtr);
+    for (let i = 0; i < count; i++) {
+      const a = rawCall(this.mod, 'FPDFPage_GetAnnot', pagePtr, i);
+      if (!a) continue;
+      try {
+        if (fieldOf(a) === field) {
+          const num = rawCall(this.mod, 'EPDFAnnot_GetObjectNumber', a);
+          if (num > 0) out.push(num);
+        }
+      } finally {
+        rawCall(this.mod, 'FPDFPage_CloseAnnot', a);
+      }
+    }
+    return out;
   }
 
   private annotObjectNumber(pagePtr: number, name: string): number {

@@ -680,5 +680,23 @@
       "text_other": "This document has {{n}} digital signatures.",
       "show": "Show Signatures"
     }
+  },
+  "forms": {
+    "readOnly": "Read-only field",
+    "fillDenied": "The document's security settings don't allow filling forms",
+    "xfa": {
+      "name": "XFA form",
+      "full": "XFA forms are not supported.",
+      "hybrid": "XFA forms are not supported. The document's standard form fields can still be filled."
+    },
+    "reset": {
+      "title": "Reset Form",
+      "description": "Put every form field back to its default value?",
+      "confirm": "Reset",
+      "cancel": "Cancel",
+      "progress": "Resetting form fields ({{done}} of {{total}} pages)",
+      "noFields": "This document has no form fields.",
+      "stop": "Stop"
+    }
   }
 }

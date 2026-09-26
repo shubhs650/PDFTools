@@ -490,8 +490,49 @@ export function fullFormPdf(): Uint8Array {
     '<< /Type /Annot /Subtype /Widget /FT /Ch /T (material) /TU (Material) /Opt [(Carbon steel) (Stainless) (Duplex)] /V (Stainless) /DA (/Helv 12 Tf 0 g) /Rect [60 400 300 470] /F 4 /P 4 0 R >>',
   );
   objs[0] = (objs[0] as string).replace('14 0 R]', '14 0 R 22 0 R]');
+  // Defaults for Reset Form (M2-14): see FORM_DEFAULTS.
+  const dv = (i: number, entry: string): void => {
+    objs[i] = (objs[i] as string).replace(' /V ', ` /DV ${entry} /V `);
+  };
+  dv(5, '(Default)');
+  dv(9, '/Yes');
+  dv(12, '/B');
+  dv(13, '(DN50)');
   objs[3] = (objs[3] as string).replace('10 0 R]', '10 0 R 22 0 R]');
   return buildPdf(objs);
+}
+
+/** What Reset Form gives each field of `fullFormPdf` (no /DV: empty, off, none selected). */
+export const FORM_DEFAULTS = {
+  first: '',
+  name: 'Default',
+  readonly: 'Fixed', // read-only: reset leaves it
+  required: '',
+  agree: true,
+  choice: 'B',
+  size: 'DN50',
+  material: null,
+} as const;
+
+/**
+ * An XFA form (M2-14, ADR-013 finding): `full` sets /NeedsRendering (dynamic
+ * XFA, `FPDF_GetFormType` 2: nothing to fill); otherwise a hybrid (3) whose
+ * AcroForm text field "fallback" still fills.
+ */
+export function xfaPdf(full: boolean): Uint8Array {
+  return buildPdf([
+    `<< /Type /Catalog /Pages 2 0 R /AcroForm << /Fields [6 0 R] /XFA 5 0 R /DA (/Helv 12 Tf 0 g) /DR << /Font << /Helv 7 0 R >> >> >>${full ? ' /NeedsRendering true' : ''} >>`,
+    '<< /Type /Pages /Kids [3 0 R] /Count 1 >>',
+    '<< /Type /Page /Parent 2 0 R /MediaBox [0 0 595 842] /Resources << /Font << /F1 7 0 R >> >> /Contents 4 0 R /Annots [6 0 R] >>',
+    { dict: '<< >>', stream: 'BT /F1 16 Tf 60 790 Td (PDFTools XFA fixture) Tj ET' },
+    {
+      dict: '<< >>',
+      stream:
+        '<xdp:xdp xmlns:xdp="http://ns.adobe.com/xdp/"><template xmlns="http://www.xfa.org/schema/xfa-template/3.3/"/></xdp:xdp>',
+    },
+    '<< /Type /Annot /Subtype /Widget /FT /Tx /T (fallback) /TU (Fallback) /V (Hybrid) /DA (/Helv 12 Tf 0 g) /Rect [60 700 300 724] /F 4 /P 3 0 R >>',
+    '<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica /Encoding /WinAnsiEncoding >>',
+  ]);
 }
 
 /** The field names in reading (row) order, i.e. `/Tabs /R` order. */

@@ -6,6 +6,8 @@ import { installLaunchQueue } from '../features/open/launchQueue';
 import { startBackgroundPrecache, startOffline } from '../features/offline/offline';
 import { OfflineStatus, UpdateWaitDialog } from '../features/offline/OfflineStatus';
 import { installRecovery } from '../features/recovery/recovery';
+import { registerFormCommands } from '../features/forms/commands';
+import { ResetFormDialog } from '../features/forms/ResetFormDialog';
 import { registerProtectCommands } from '../features/protect/commands';
 import { PasswordDialog } from '../features/protect/PasswordDialog';
 import { SecurityInfoDialog } from '../features/protect/SecurityInfo';
@@ -52,6 +54,7 @@ export function App() {
   useEffect(() => registerViewCommands(), []);
   useEffect(() => registerSaveCommands(), []);
   useEffect(() => registerProtectCommands(), []);
+  useEffect(() => registerFormCommands(), []);
   useEffect(() => registerSelectionCommands(), []);
   useEffect(() => registerFindCommands(), []);
   useEffect(() => installRecovery(), []);
@@ -114,6 +117,7 @@ export function App() {
         <PasswordDialog />
         <UnlockDialog />
         <SecurityInfoDialog />
+        <ResetFormDialog />
         <ExternalLinkDialog />
         <SaveErrorDialog />
         <SaveOptimizedDialog />

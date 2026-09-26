@@ -16,6 +16,7 @@ import { documentStore, useDocuments, type ZoomSetting } from '../../app/store/d
 import { HighlightLayer } from '../search/HighlightLayer';
 import { reportActivity } from '../search/indexing';
 import { fitVisibleLevels, move, zoomTo } from './controller';
+import { FormLayer } from '../forms/FormLayer';
 import { LinkLayer } from './LinkLayer';
 import { capability, useHost } from './host';
 import { HAND_MODE, PAGE_GAP, POINTER_MODE } from './plugins';
@@ -100,6 +101,8 @@ function Page({
               />
               {/* Links (M2-10) sit above the text layer, so a click follows them. */}
               <LinkLayer documentId={documentId} pageIndex={layout.pageIndex} scale={scale} />
+              {/* Form fields (M2-14) on top: a field under a link is still filled. */}
+              <FormLayer documentId={documentId} pageIndex={layout.pageIndex} scale={scale} />
             </div>
           </PagePointerProvider>
         </Rotate>
@@ -298,7 +301,8 @@ export function DocumentView({ documentId }: { documentId: string }) {
     } else if (paged && (e.key === 'PageDown' || e.key === 'PageUp')) {
       e.preventDefault(); // paged modes turn the page (or spread)
       move(e.key === 'PageDown' ? 'next' : 'prev');
-    } else if (e.key === ' ') {
+    } else if (e.key === ' ' && !(e.target as Element).closest('button, input')) {
+      // Not on a control over the page (a link, a checkbox or radio field): Space presses it.
       e.preventDefault(); // no page-down scroll while Space means Hand
       if (!e.repeat) appStore.getState().setSpaceHand(true);
     }
