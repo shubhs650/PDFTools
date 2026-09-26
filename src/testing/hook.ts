@@ -51,10 +51,19 @@ export function installTestHook(): TestHook {
       calls: () => [...calls],
     };
   });
-  void Promise.all([import('../app/store/appStore'), import('../app/store/documentStore')]).then(
-    ([app, docs]) => {
-      hook.capabilities['stores'] = { app: app.appStore, documents: docs.documentStore };
-    },
-  );
+  void Promise.all([
+    import('../app/store/appStore'),
+    import('../app/store/documentStore'),
+    import('../features/search/findStore'),
+  ]).then(([app, docs, find]) => {
+    hook.capabilities['stores'] = { app: app.appStore, documents: docs.documentStore };
+    hook.capabilities['find'] = {
+      /** What the find bar has run (null: nothing yet) and its status (M2-07). */
+      state: () => {
+        const s = find.findStore.getState();
+        return { ran: s.ran, status: s.status, total: s.results.total, cursor: s.cursor };
+      },
+    };
+  });
   return hook;
 }

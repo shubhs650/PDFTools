@@ -238,7 +238,15 @@ export const COMMANDS: readonly CommandDef[] = [
     milestone: 'M3',
     toggle: true,
   },
-  { id: 'home.find', tab: 'home', group: 'find', size: 'small', fluent: 'Search', milestone: 'M2' },
+  {
+    id: 'home.find',
+    tab: 'home',
+    group: 'find',
+    size: 'small',
+    fluent: 'Search',
+    milestone: 'M2',
+    shipped: true, // M2-07
+  },
   {
     id: 'home.advancedSearch',
     tab: 'home',

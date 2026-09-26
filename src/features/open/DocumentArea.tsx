@@ -1,6 +1,7 @@
 import { useEffect } from 'react';
 import { documentStore, useDocuments } from '../../app/store/documentStore';
 import { PermissionBanner } from '../protect/PermissionBanner';
+import { FindBar } from '../search/FindBar';
 import { DocumentHost } from '../view/DocumentHost';
 import { DocumentView } from '../view/DocumentView';
 import { capability, tileCache, useHost } from '../view/host';
@@ -33,6 +34,7 @@ export function DocumentArea() {
       {activeId ? (
         <div className="document-stack">
           <PermissionBanner documentId={activeId} />
+          <FindBar />
           <div className="document-stack-view">
             <DocumentView key={activeId} documentId={activeId} />
           </div>

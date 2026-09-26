@@ -605,6 +605,52 @@ body {
   height: 100%;
 }
 
+/* Quick Find (M2-07) */
+.find-bar {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  padding: var(--space-2) var(--space-4);
+  border-bottom: var(--border-width) solid var(--color-border);
+  background: var(--color-surface);
+  color: var(--color-text);
+}
+
+.find-input {
+  width: calc(var(--control-height-m) * 8);
+  height: var(--control-height-s);
+  padding: var(--space-0) var(--space-2);
+  border: var(--border-width) solid var(--color-border-strong);
+  border-radius: var(--radius-m);
+  background: var(--color-surface);
+  color: var(--color-text);
+  font: inherit;
+}
+
+.find-status {
+  min-width: 0;
+  padding: var(--space-0) var(--space-2);
+  color: var(--color-text-muted);
+  font-size: var(--font-size-s);
+  white-space: nowrap;
+}
+
+.find-highlights {
+  position: absolute;
+  inset: var(--space-0);
+  mix-blend-mode: multiply;
+  pointer-events: none;
+}
+
+.find-hit {
+  position: absolute;
+  background: var(--color-find-hit);
+}
+
+.find-hit--current {
+  background: var(--color-find-current);
+}
+
 /* The active document under an optional banner (M2-03 restrictions). */
 .document-stack {
   display: flex;

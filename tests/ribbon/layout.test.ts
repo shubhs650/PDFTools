@@ -14,15 +14,19 @@ describe('ribbon layout from the command table (§8, ADR-001 B6, M1-Q2)', () => 
 
   it('omits unavailable commands instead of disabling them', () => {
     const ids = m1.tabs.flatMap((t) => t.groups.flatMap((g) => g.commands.map((c) => c.id)));
-    expect(ids).not.toContain('home.find');
+    expect(ids).not.toContain('home.advancedSearch');
     expect(ids).not.toContain('view.loupe');
     expect(ids).toContain('view.continuousFacing');
   });
 
   it('Home repeats available commands from other tabs under their own group labels', () => {
     const home = m1.tabs.find((t) => t.tab === 'home');
-    expect(home?.groups.map((g) => `${g.tab}.${g.group}`)).toEqual(['home.tools', 'view.zoom']);
-    expect(home?.groups[1]?.commands.map((c) => c.id)).toEqual([
+    expect(home?.groups.map((g) => `${g.tab}.${g.group}`)).toEqual([
+      'home.tools',
+      'home.find',
+      'view.zoom',
+    ]);
+    expect(home?.groups[2]?.commands.map((c) => c.id)).toEqual([
       'view.zoomIn',
       'view.zoomOut',
       'view.fitPage',

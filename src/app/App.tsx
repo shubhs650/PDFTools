@@ -11,6 +11,7 @@ import { PasswordDialog } from '../features/protect/PasswordDialog';
 import { UnlockDialog } from '../features/protect/UnlockDialog';
 import { RecoveryDialog } from '../features/recovery/RecoveryDialog';
 import { registerSaveCommands } from '../features/save/commands';
+import { registerFindCommands } from '../features/search/commands';
 import { registerSelectionCommands } from '../features/select/commands';
 import { GrowthPrompt, SaveOptimizedDialog } from '../features/save/SaveDialogs';
 import { SaveErrorDialog, SaveStatus } from '../features/save/SaveStatus';
@@ -50,6 +51,7 @@ export function App() {
   useEffect(() => registerSaveCommands(), []);
   useEffect(() => registerProtectCommands(), []);
   useEffect(() => registerSelectionCommands(), []);
+  useEffect(() => registerFindCommands(), []);
   useEffect(() => installRecovery(), []);
   // §9: register the service worker; after the first render, precache the rest.
   useEffect(() => {

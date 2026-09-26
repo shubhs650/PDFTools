@@ -44,6 +44,8 @@ export const INTERNAL_ACTIONS = [
   'tool.cancel',
   'edit.copy',
   'edit.selectAll',
+  'find.next',
+  'find.prev',
 ] as const;
 export type InternalAction = (typeof INTERNAL_ACTIONS)[number];
 

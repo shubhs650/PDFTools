@@ -10,6 +10,8 @@ M0 and M1 owner runs are still open.
 
 ## Done
 
+- **Session 14 — M2-07 (Quick Find).** Branch `m2/07-find` (stacked on M2-06). Quick Find bar (Ctrl+F; Enter-only; F3/Shift+F3; Esc), options, "n of N", highlights on pages in view with a distinct current hit, navigation in document order across the context cap. Tests: find model units, e2e (26 keystrokes → 0 searches, needle on pages 7/1,000/1,999, wrap, options, axe), perf scenario.
+
 - **Session 14 — M2-06 (background text indexing).** Branch `m2/06-indexing` (stacked on M2-05). Indexer in the Work worker (background priority, viewport order, pauses while scrolling/zooming via a throttled `activity` RPC); started when a document's Work copy opens, cancelled on close; searches go visible → cached → rest. Tests: Activity, indexer on real PDFium (order, pause, cancel, preempted by a search that then finds cached pages first), perf scenario on the 2,000-page stand-in.
 
 - **Session 14 — M2-05 (search core in the Work worker).** Branch `m2/05-search` (stacked on
@@ -495,9 +497,10 @@ M0 and M1 owner runs are still open.
 
 ## In progress
 
-- **M2 branches waiting for review and merge, in this order** (each is stacked on the one before):
+- **M2 branches:**
   `claude/m2-task-breakdown-ytspb5` (the plan) → `m2/01-read-spike` → `m2/02-secure-print-spike`
-  → `m2/03-protected` → `m2/04-selection` → `m2/05-search`. No pull requests opened yet.
+  → `m2/03-protected` → `m2/04-selection` → `m2/05-search` were merged into `main` (PR #33).
+  Since then each task gets its own PR to `main`, merged once CI is green.
 
 ## Session log
 

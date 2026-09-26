@@ -115,6 +115,23 @@ export function goToPage(index: number): void {
   a.scroll.scrollToPage({ pageNumber: index + 1, behavior: 'instant' });
 }
 
+/**
+ * Brings a point of a page (points from the unrotated page's top-left) into
+ * view, about a third down the window (a search hit, a link target, M2-07/10).
+ */
+export function goToPoint(index: number, x: number, y: number): void {
+  const a = active();
+  if (!a) return;
+  documentStore.getState().setView(a.docId, { page: index });
+  a.scroll.scrollToPage({
+    pageNumber: index + 1,
+    pageCoordinates: { x, y },
+    behavior: 'instant',
+    alignX: 50,
+    alignY: 30,
+  });
+}
+
 /** First/previous/next/last page; in the facing modes previous/next move by spread. */
 export function move(m: PageMove): void {
   const a = active();
