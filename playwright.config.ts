@@ -7,12 +7,13 @@ import { defineConfig, devices } from '@playwright/test';
 // Optional override for environments with a pre-installed browser that doesn't
 // match this Playwright version (e.g. cloud dev containers). CI uses the
 // browser installed by `npx playwright install`.
+//
+// @playwright/test is pinned to 1.62.1 (Chromium 151): Chromium/Chrome 153 in
+// headless mode crashes the whole browser when a FileSystemFileHandle is read
+// back from IndexedDB, which the recent-files list does (M1-18). Headed Chrome
+// and Edge 154 are fine. Re-test before bumping (docs/PROGRESS.md open issues).
 const executablePath = process.env.PW_CHROMIUM_EXECUTABLE;
 const launchOptions = executablePath ? { executablePath } : {};
-// Full Chromium in new headless mode, not the stripped-down headless shell:
-// it is what users run, and the shell lacks browser services the app uses
-// (it crashed storing File System Access handles in IndexedDB, M1-18).
-const channel = 'chromium';
 
 export default defineConfig({
   testDir: './e2e',
@@ -28,12 +29,12 @@ export default defineConfig({
     {
       name: 'e2e',
       testIgnore: ['perf/**'],
-      use: { ...devices['Desktop Chrome'], channel, viewport: { width: 1280, height: 800 } },
+      use: { ...devices['Desktop Chrome'], viewport: { width: 1280, height: 800 } },
     },
     {
       name: 'perf',
       testMatch: ['perf/**/*.spec.ts'],
-      use: { ...devices['Desktop Chrome'], channel, viewport: { width: 1920, height: 1080 } },
+      use: { ...devices['Desktop Chrome'], viewport: { width: 1920, height: 1080 } },
     },
   ],
 });
