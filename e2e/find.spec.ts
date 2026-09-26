@@ -73,6 +73,9 @@ test('whole word and match case; no results; a bad regex-like query is literal',
   await field(page).fill('CONTRACTOR');
   await field(page).press('Enter');
   await expect(status(page)).toHaveText(/^1 of \d+/);
+  // Totals only once the search is done ("1 of N" shows while it streams).
+  const finished = () => expect.poll(async () => (await findState(page)).status).toBe('done');
+  await finished();
   const all = (await findState(page)).total;
 
   await bar(page).getByRole('button', { name: 'Match Case' }).click();
@@ -84,6 +87,7 @@ test('whole word and match case; no results; a bad regex-like query is literal',
   await field(page).fill('contract');
   await field(page).press('Enter');
   await expect(status(page)).toHaveText(/^1 of \d+/);
+  await finished();
   expect((await findState(page)).total).toBeLessThan(all); // "contractor" no longer counts
 
   await field(page).fill('(');
