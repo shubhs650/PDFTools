@@ -7,6 +7,13 @@ still open.
 
 ## Done
 
+- **Session 11 — M1-20 (save core in the Render worker).** Branch `m1/20-save-core`. Ported S1 save
+  core (own FPDF_FILEWRITE, narrow tail, xref table/stream writer) with a committed _save base_ so
+  repeated Ctrl+S appends only new changes; dirty tracking and permission checks (rule 9) around
+  every mutating engine call; save RPCs (`saveIncremental`, `commitSave`, `saveRewrite`,
+  `saveState`) returning bytes by transfer. 8-input real-PDFium matrix (prefix, /Prev, /ID,
+  encryption, signature, qpdf) and an e2e save probe for later save/recovery tests.
+
 - **Session 11 — M1-19 (PWA manifest, file handler, launchQueue).** Branch `m1/19-pwa`. Installable
   manifest with a PDF file handler and focus-existing launch handling; own app icons (SVG source +
   generated PNGs); launchQueue consumer opening launched files as tabs; favicon and theme color in
@@ -432,9 +439,9 @@ still open.
    - FAR, 500 MB and A0 through the S3 harness;
    - S8 Firefox check and Pages preview.
 3. **Owner:** review and merge each new M1 PR (one per task) with "Create a merge commit". M1-01 to
-   M1-10 are merged into `main` (2026-09-25).
-4. **Agent:** M1-11 (keyboard shortcut manager), then M1-12 (storage) and M1-13 (open pipeline and
-   tabs), each on its own `m1/<task>` branch.
+   M1-15 are merged into `main`; M1-16 to M1-20 are open as stacked PRs.
+4. **Agent:** M1-21 (save verification and Work-worker refresh), then M1-22 (Ctrl+S and Save As)
+   on top of the M1-20 save core, each on its own `m1/<task>` branch.
 
 ## Open issues
 
