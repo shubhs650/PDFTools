@@ -429,7 +429,8 @@ the M1 PRs and approved the M2 plan. M0 and M1 owner runs are still open.
   still open. The owner checks listed under Next are pending.
 - **M1 PRs waiting for review and merge:** [#29](https://github.com/shubhs650/PDFTools/pull/29)
   (M1-26), [#30](https://github.com/shubhs650/PDFTools/pull/30) (M1-27, stacked on #29) and the
-  M1-28 PR (stacked on #30). Merge them in that order.
+  [#31](https://github.com/shubhs650/PDFTools/pull/31) (M1-28, stacked on #30). Merge them in that
+  order.
 
 ## Session log
 
@@ -500,7 +501,7 @@ the M1 PRs and approved the M2 plan. M0 and M1 owner runs are still open.
      (`node spikes/s4-oxide/run-node.ts <files>`; dumps in `out/review/`, see ADR-009);
    - FAR, 500 MB and A0 through the S3 harness;
    - S8 Firefox check and Pages preview.
-3. **Owner:** review and merge the M1 PRs in order, #29 → #30 → the M1-28 PR, with "Create a
+3. **Owner:** review and merge the M1 PRs in order, #29 → #30 → #31, with "Create a
    merge commit". M1-01 to M1-25 are merged into `main`.
 4. **Owner:** the M1 owner pack in [docs/acceptance/M1.md](acceptance/M1.md) §3 — heavy-file
    timings (`npm run owner:timings`), the installed app on Windows (file handler, offline, update,
