@@ -1,6 +1,11 @@
 // @vitest-environment jsdom
-import { beforeEach, describe, expect, it } from 'vitest';
-import { offlineStore, onMessage } from '../../src/features/offline/offline';
+import { beforeEach, describe, expect, it, vi } from 'vitest';
+import {
+  CHECK_MESSAGE_MS,
+  checkForUpdates,
+  offlineStore,
+  onMessage,
+} from '../../src/features/offline/offline';
 
 const msg = (data: unknown) => {
   onMessage({ data });
@@ -13,6 +18,7 @@ beforeEach(() => {
     priority: 0,
     update: 'none',
     explain: false,
+    check: null,
   });
 });
 
@@ -45,5 +51,49 @@ describe('service worker messages → status bar state (M1-25)', () => {
     expect(offlineStore.getState().phase).toBe('preparing');
     msg({ type: 'precache-failed' });
     expect(offlineStore.getState().phase).toBe('failed');
+  });
+});
+
+describe('Help → Check for Updates (M1-28)', () => {
+  const reg = (over: Partial<ServiceWorkerRegistration>) =>
+    ({
+      update: () => Promise.resolve(),
+      installing: null,
+      waiting: null,
+      ...over,
+    }) as unknown as ServiceWorkerRegistration;
+
+  it('reports up to date when nothing new installs', async () => {
+    expect(await checkForUpdates(reg({}), () => true)).toBe('current');
+    expect(offlineStore.getState()).toMatchObject({ check: 'current', update: 'none' });
+  });
+
+  it('a new waiting version is "found" and shows Update ready (never applied here)', async () => {
+    const waiting = {} as ServiceWorker;
+    expect(await checkForUpdates(reg({ waiting }), () => true)).toBe('found');
+    expect(offlineStore.getState()).toMatchObject({ check: 'found', update: 'ready' });
+  });
+
+  it('the very first install is not an update', async () => {
+    const waiting = {} as ServiceWorker;
+    expect(await checkForUpdates(reg({ waiting }), () => false)).toBe('current');
+  });
+
+  it('a failed check (offline) and a browser without a service worker say so', async () => {
+    const failing = reg({ update: () => Promise.reject(new Error('offline')) });
+    expect(await checkForUpdates(failing, () => true)).toBe('failed');
+    expect(await checkForUpdates(undefined)).toBe('unavailable');
+    expect(offlineStore.getState().check).toBe('unavailable');
+  });
+
+  it('the message clears after a few seconds', async () => {
+    vi.useFakeTimers();
+    try {
+      await checkForUpdates(reg({}), () => true);
+      vi.advanceTimersByTime(CHECK_MESSAGE_MS);
+      expect(offlineStore.getState().check).toBeNull();
+    } finally {
+      vi.useRealTimers();
+    }
   });
 });

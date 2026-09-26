@@ -25,6 +25,32 @@ export function registerOpenProbe(hook: TestHook): void {
       }
       return openFiles(opened);
     },
+    /**
+     * Streams the file chosen in an `<input type=file>` into OPFS (owner
+     * timings, M1-28: a large local file without base64 through the driver).
+     */
+    async copyFromInput(selector: string, name: string) {
+      const file = document.querySelector<HTMLInputElement>(selector)?.files?.[0];
+      if (!file) throw new Error('no file chosen');
+      const root = await navigator.storage.getDirectory();
+      const dir = await root.getDirectoryHandle('e2e-files', { create: true });
+      const handle = await dir.getFileHandle(name, { create: true });
+      await file.stream().pipeTo(await handle.createWritable());
+      return file.size;
+    },
+    /** Opens an OPFS file written before through its handle (the FSA path). */
+    async openNamed(name: string) {
+      const root = await navigator.storage.getDirectory();
+      const dir = await root.getDirectoryHandle('e2e-files', { create: true });
+      const handle = await dir.getFileHandle(name);
+      return openFiles([{ file: await handle.getFile(), handle }]);
+    },
+    /** Size of a file written by openHandles / openFromInput. */
+    async fileSize(name: string) {
+      const root = await navigator.storage.getDirectory();
+      const dir = await root.getDirectoryHandle('e2e-files', { create: true });
+      return (await (await dir.getFileHandle(name)).getFile()).size;
+    },
     /** Bytes of a file written by openHandles (and saved over by the app), base64. */
     async readFile(name: string) {
       const root = await navigator.storage.getDirectory();

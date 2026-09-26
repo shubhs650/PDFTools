@@ -1,5 +1,6 @@
 import AxeBuilder from '@axe-core/playwright';
 import { expect, test } from './support/fixtures.ts';
+import { cap } from './support/app.ts';
 
 // M1-10: ribbon framework and File backstage (§8, D-01, D-29, rule 12).
 
@@ -108,3 +109,48 @@ for (const q of ['/', '/?locale=pseudo']) {
     expect(overflow).toBe(0);
   });
 }
+
+test('every command M1 shows has a handler: none says "Not available yet" (M1-28)', async ({
+  page,
+  pdfs,
+}) => {
+  await page.goto('/');
+  await cap(page, 'open', 'openHandles', [
+    { name: 'doc.pdf', b64: pdfs.simple(1).toString('base64') },
+  ]);
+  await expect(page.getByRole('tablist', { name: 'Open documents' }).getByRole('tab')).toHaveCount(
+    1,
+  );
+  const notReady = async (): Promise<string[]> =>
+    page.evaluate(() =>
+      [...document.querySelectorAll<HTMLElement>('[data-command]')]
+        .filter((b) => {
+          const id = b.getAttribute('aria-describedby');
+          return id && document.getElementById(id)?.textContent === 'Not available yet';
+        })
+        .map((b) => b.dataset.command ?? '?'),
+    );
+  const seen = new Set<string>();
+  const collect = async () => {
+    for (const id of await page.evaluate(() =>
+      [...document.querySelectorAll<HTMLElement>('[data-command]')].map(
+        (b) => b.dataset.command ?? '',
+      ),
+    ))
+      seen.add(id);
+    expect(await notReady()).toEqual([]);
+  };
+  await collect(); // quick access + Home
+  for (const tab of ['View', 'Help']) {
+    await page.getByRole('tab', { name: tab }).click();
+    await collect();
+  }
+  await page.getByTestId('file-tab').click();
+  const nav = page.getByTestId('backstage').getByRole('navigation').getByRole('listitem');
+  for (const name of await nav.allInnerTexts()) {
+    await nav.getByText(name.trim(), { exact: true }).click();
+    await collect();
+  }
+  for (const id of ['qat.open', 'qat.save', 'help.updates', 'help.clearData', 'file.saveAs'])
+    expect(seen).toContain(id);
+});

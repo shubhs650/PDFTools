@@ -92,10 +92,12 @@ test(
     ).toHaveCount(1);
 
     deploy.toV2();
-    // The hourly / on-focus update check, now.
-    await page.evaluate(async () => {
-      await (await navigator.serviceWorker.getRegistration())?.update();
-    });
+    // The hourly / on-focus update check, now: Help → Check for Updates (M1-28).
+    await page.getByRole('tab', { name: 'Help' }).click();
+    await page.getByRole('button', { name: 'Check for Updates' }).click();
+    await expect(status(page).getByTestId('update-check')).toHaveText(
+      /Checking for updates|An update is ready/,
+    );
     const updateButton = status(page).getByRole('button', { name: 'Update ready' });
     await expect(updateButton).toBeVisible({ timeout: 60_000 });
     expect(
