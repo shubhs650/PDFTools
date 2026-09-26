@@ -129,3 +129,42 @@ Files:
    For each measurement it prints our recomputed value, the viewer's displayed value
    (`/Contents`), and the viewport our §7.4 rule picks.
 3. Record whether our values match the viewer's to display precision.
+
+## M1 — files saved by the app (D-06; [M1 acceptance](../../docs/acceptance/M1.md))
+
+Files: [`e2e/fixtures/self-made/m1-interop/`](../fixtures/self-made/m1-interop/). They were saved
+by the **real app** (not the spike harness), from the self-made S1 originals, by
+`M1_INTEROP_OUT=1 npm run owner:interop` (`e2e/interop-m1.spec.ts`). M1 has no annotation tools
+yet, so the edits are **red square annotations** on page 1 added through the test hook. Every file
+passes `qpdf --check`; encryption (R and P) is kept.
+
+For each input `X` (`plain`, `annotated`, `form`, `objstm`, `encrypted-aes256`,
+`encrypted-rc4-128`, `signed`):
+
+| File               | What it is                                                                           |
+| ------------------ | ------------------------------------------------------------------------------------ |
+| `X__ctrl-s.pdf`    | Ctrl+S twice: 2 squares, then 1 more — two incremental revisions after the original. |
+| `X__save-as.pdf`   | Then Save As to a new file with 1 more square (4 squares).                           |
+| `X__optimized.pdf` | Then Save Optimized → "Save as new file…": a full rewrite (4 squares).               |
+
+`form` also has its text field set to "Edited by M1". `encrypted-noannotate` has no outputs: the
+app refuses to add annotations to it (rule 9; checked by the same spec).
+
+### G. For every file (both viewers)
+
+| #   | Check                                                                                                                   | Acrobat | PDF-XChange |
+| --- | ----------------------------------------------------------------------------------------------------------------------- | ------- | ----------- |
+| G1  | Opens without a repair message, and closing without edits does **not** ask "Save changes?".                             |         |             |
+| G2  | Page 1 shows the red squares (3 in `__ctrl-s`, 4 in the others) along the bottom-left edge, plus any original content.  |         |             |
+| G3  | The squares are ordinary Square comments in the Comments list: they can be selected, moved, deleted and the file saved. |         |             |
+
+### H. Specific files
+
+| #   | File                                                                                               | Check                                                                                                                                             | Acrobat | PDF-XChange |
+| --- | -------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------- | ------- | ----------- |
+| H1  | `signed__ctrl-s.pdf`, `signed__save-as.pdf`                                                        | The signature is intact ("changes have been made after signing" is expected). It must **not** be reported invalid. Test cert warning is expected. |         |             |
+| H2  | `signed__optimized.pdf`                                                                            | The signature is reported **invalid/broken** — the app warned about this before saving (D-06).                                                    |         |             |
+| H3  | `encrypted-*__ctrl-s.pdf`, `encrypted-*__optimized.pdf`                                            | Opens without a password; Security still shows printing and copying **not allowed**, commenting allowed.                                          |         |             |
+| H4  | `form__*.pdf`                                                                                      | The text field shows "Edited by M1" and can still be edited.                                                                                      |         |             |
+| H5  | `annotated__*.pdf`                                                                                 | The original annotations are unchanged (count, text, author) next to the new squares.                                                             |         |             |
+| H6  | `X__ctrl-s.pdf` in Acrobat: File → Properties or the signature panel's revision list (signed only) | Two revisions after the original are listed or recoverable (for information).                                                                     |         |             |

@@ -2,10 +2,20 @@
 
 _Last updated: 2026-09-26 (session 13: M1-26 to M1-28)_
 
-**Current milestone:** M1 — Foundation (plan: [docs/plan/M1.md](plan/M1.md)). M0 owner runs are
-still open.
+**Current milestone:** M1 — Foundation is **complete on the agent side** (M1-01 … M1-28; results
+and owner pack: [docs/acceptance/M1.md](acceptance/M1.md)). Next is M2 once the owner has merged
+the M1 PRs and approved the M2 plan. M0 and M1 owner runs are still open.
 
 ## Done
+
+- **Session 13 — M1-28 (M1 acceptance pass and owner pack).** Branch `m1/28-acceptance`. All nine
+  M1 §12 rows met on typical files (offline start 227 ms, first page 872 ms, 0 blank frames, A0
+  first view 371 ms, sharp tiles ≤ 276 ms, 6400 %, Ctrl+S with 100 markups 131 ms, no long tasks,
+  offline proof), recomputed in CI by `npm run acceptance`. Every §13 M1 scope item checked; two
+  commands without handlers found and fixed (Quick Access Open, Help → Check for Updates) with a
+  test that catches any other. App-saved interop files (21, qpdf-clean) and checklist §M1; owner
+  timing harness for heavy files (`npm run owner:timings`); owner pack in
+  [docs/acceptance/M1.md](acceptance/M1.md).
 
 - **Session 13 — M1-27 (CI: bundle budget, perf, offline and accessibility).** Branch
   `m1/27-ci`. Bundle report per module (raw/gzip/brotli, reserved lines for Oxide/ExcelJS/docx)
@@ -417,12 +427,17 @@ still open.
 
 - M0: the agent part of all eight spikes is done and all spike ADRs are accepted. Owner runs are
   still open. The owner checks listed under Next are pending.
-- **M1 plan approved:** [docs/plan/M1.md](plan/M1.md). 28 one-session tasks (M1-01 … M1-28),
-  each with goal, files, acceptance criteria, tests and dependencies. It starts with an EmbedPDF
-  plugin-layer spike (M1-01 → ADR-011), because M0 only exercised the engine. The owner accepted
-  all proposals for M1-Q1 to M1-Q8 (see the Decisions log).
+- **M1 PRs waiting for review and merge:** [#29](https://github.com/shubhs650/PDFTools/pull/29)
+  (M1-26), [#30](https://github.com/shubhs650/PDFTools/pull/30) (M1-27, stacked on #29) and the
+  M1-28 PR (stacked on #30). Merge them in that order.
 
 ## Session log
+
+- **Session 13 (2026-09-26):** M1-26, M1-27 and M1-28, on `m1/26-local-data`, `m1/27-ci` and
+  `m1/28-acceptance` (stacked; one PR each). Local checks all pass on the last branch: typecheck,
+  lint, format, unit tests, license gate, build + `check:dist`, bundle report (within budget), e2e,
+  offline, a11y, perf, acceptance table. qpdf was installed in the container for this session, so
+  the save matrix and the interop outputs were checked with it.
 
 - **Session 9 (2026-09-25):** M1-02. Local checks all pass: typecheck (app and spikes), lint,
   format, unit tests, license gate, production build + `check:dist`, e2e (6/6) and perf (2/2).
@@ -485,10 +500,15 @@ still open.
      (`node spikes/s4-oxide/run-node.ts <files>`; dumps in `out/review/`, see ADR-009);
    - FAR, 500 MB and A0 through the S3 harness;
    - S8 Firefox check and Pages preview.
-3. **Owner:** review and merge each new M1 PR (one per task) with "Create a merge commit". M1-01 to
-   M1-15 are merged into `main`; M1-16 to M1-20 are open as stacked PRs.
-4. **Agent:** M1-21 (save verification and Work-worker refresh), then M1-22 (Ctrl+S and Save As)
-   on top of the M1-20 save core, each on its own `m1/<task>` branch.
+3. **Owner:** review and merge the M1 PRs in order, #29 → #30 → the M1-28 PR, with "Create a
+   merge commit". M1-01 to M1-25 are merged into `main`.
+4. **Owner:** the M1 owner pack in [docs/acceptance/M1.md](acceptance/M1.md) §3 — heavy-file
+   timings (`npm run owner:timings`), the installed app on Windows (file handler, offline, update,
+   reserved keys), a Firefox smoke test, the Pages preview, and interop §M1 of
+   `e2e/interop/CHECKLIST.md`.
+5. **Agent:** draft the M2 plan (`docs/plan/M2.md`: search + find bar, panes, print, protected
+   PDFs, signature pane, forms, error report) for owner approval. Do not start M2 features before
+   it is approved.
 
 ## Open issues
 
