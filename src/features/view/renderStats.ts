@@ -79,6 +79,13 @@ export function renderKey(method: string, args: unknown[]): string | null {
   return JSON.stringify([method, doc.id, page.index, ...rest]);
 }
 
+/** Documents whose first page preview has been drawn (background work waits for it, M2-08). */
+const previewed = new Set<string>();
+
+export function hasFirstPreview(docId: string): boolean {
+  return previewed.has(docId);
+}
+
 export function instrumentEngine(engine: PdfEngine, cache: TileCache): void {
   const wrap = (method: 'renderPage' | 'renderPageRect', stats: () => KindStats): void => {
     const target = engine as unknown as Record<string, RenderFn>;
@@ -102,6 +109,7 @@ export function instrumentEngine(engine: PdfEngine, cache: TileCache): void {
       task.wait(
         (blob) => {
           s.done++;
+          if (method === 'renderPage') previewed.add(doc.id);
           if (s.latencies.length < MAX_LATENCIES) s.latencies.push(performance.now() - t0);
           if (key) cache.set(key, doc.id, page.index, blob);
         },
