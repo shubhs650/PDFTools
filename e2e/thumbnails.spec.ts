@@ -1,6 +1,6 @@
 import AxeBuilder from '@axe-core/playwright';
 import type { Page } from '@playwright/test';
-import { drop } from './support/app.ts';
+import { cap, drop } from './support/app.ts';
 import { expect, test } from './support/fixtures.ts';
 
 // M2-08: the left pane framework and the Thumbnails pane (§5).
@@ -63,6 +63,8 @@ test('thumbnails and the pane are keyboard-only operable', async ({ page, pdfs }
   await expect(rail).toHaveAttribute('aria-pressed', 'false');
   await page.keyboard.press('Enter'); // opens it, focus goes into the pane
   await expect(thumb(page, '1')).toBeFocused();
+  // The document area just narrowed: let the view re-fit before jumping.
+  await cap(page, 'view', 'settle');
 
   await page.keyboard.press('ArrowDown');
   await page.keyboard.press('ArrowDown');
