@@ -514,5 +514,32 @@
   "thumbnails": {
     "list": "Page thumbnails",
     "empty": "Open a document to see its pages."
+  },
+  "search": {
+    "label": "Search for",
+    "run": "Search",
+    "options": "Search options",
+    "wildcards": "Wildcards (* and ?)",
+    "regex": "Regular Expressions",
+    "annotations": "Comment Text",
+    "bookmarks": "Bookmark Titles",
+    "scope": "Look in",
+    "scopeDocument": "Current document",
+    "scopeAll": "All open documents",
+    "results": "Search results",
+    "status": {
+      "searching": "Searching… {{percent}}, {{n}} found",
+      "cancelled": "Stopped: {{n}} found",
+      "count_one": "{{n}} result",
+      "count_other": "{{n}} results"
+    },
+    "row": {
+      "document": "{{name}} ({{n}})",
+      "page": "Page {{page}} ({{n}})",
+      "bookmark": "Bookmark, page {{page}}: ",
+      "bookmarkNoPage": "Bookmark: ",
+      "annotation": "Comment, page {{page}}: ",
+      "loading": "Loading…"
+    }
   }
 }

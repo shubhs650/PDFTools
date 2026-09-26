@@ -68,6 +68,39 @@ export function simplePdf(pages = 1): Uint8Array {
   return buildPdf(objs);
 }
 
+/** Words found only in annotatedPdf's comment and in its bookmark title. */
+export const COMMENT_WORD = 'MARGINALIA';
+export const BOOKMARK_WORD = 'GLOSSARIUM';
+
+/**
+ * Three pages ("Page n") with a sticky-note comment on page 2 whose text
+ * holds COMMENT_WORD, and a two-entry outline: "Introduction" → page 1 and
+ * "Appendix <BOOKMARK_WORD>" → page 3 (M2-09 search in comments and bookmarks).
+ */
+export function annotatedPdf(): Uint8Array {
+  const page = (contents: number, extra = '') =>
+    `<< /Type /Page /Parent 2 0 R /MediaBox [0 0 595 842] /Resources << /Font << /F1 13 0 R >> >> /Contents ${String(contents)} 0 R${extra} >>`;
+  const text = (n: number) => ({
+    dict: '<< >>',
+    stream: `BT /F1 36 Tf 72 740 Td (Page ${String(n)}) Tj ET`,
+  });
+  return buildPdf([
+    '<< /Type /Catalog /Pages 2 0 R /Outlines 10 0 R /PageMode /UseOutlines >>',
+    '<< /Type /Pages /Kids [3 0 R 5 0 R 7 0 R] /Count 3 >>',
+    page(4),
+    text(1),
+    page(6, ' /Annots [9 0 R]'),
+    text(2),
+    page(8),
+    text(3),
+    `<< /Type /Annot /Subtype /Text /Rect [300 600 324 624] /P 5 0 R /Name /Comment /Contents (Please check the ${COMMENT_WORD} note) /T (Tester) >>`,
+    '<< /Type /Outlines /First 11 0 R /Last 12 0 R /Count 2 >>',
+    '<< /Title (Introduction) /Parent 10 0 R /Next 12 0 R /Dest [3 0 R /XYZ 0 842 null] >>',
+    `<< /Title (Appendix ${BOOKMARK_WORD}) /Parent 10 0 R /Prev 11 0 R /Dest [7 0 R /XYZ 0 842 null] >>`,
+    '<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica >>',
+  ]);
+}
+
 // ------------------------------------------------------------ contract profile
 
 /** Appears only on the 0-based pages in NEEDLE_PAGES; "Contractor" is on every page. */

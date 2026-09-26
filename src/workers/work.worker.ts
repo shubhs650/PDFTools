@@ -120,6 +120,12 @@ serve<WorkApi>(self, {
       return search.context(docId, doc, query, options, pages, slice);
     }),
 
+  searchExtras: (req, ctx) =>
+    scheduler.run('interactive', ctx.signal, async (slice) => {
+      const { doc } = await docs.get(req.docId);
+      return search.extras(req, doc, slice);
+    }),
+
   hitRects: ({ docId, pageIndex, hits }, ctx) =>
     scheduler.run('interactive', ctx.signal, async () => {
       const { doc } = await docs.get(docId);

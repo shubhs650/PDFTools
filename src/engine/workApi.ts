@@ -2,7 +2,14 @@
 // each document. M1 uses it for save verification (M1-21); M2 adds search.
 import type { PageTextSlice, PdfPageGeometry } from '@embedpdf/models';
 import type { DocDigest } from '../workers/render/save/digest';
-import type { HitRect, SearchBatch, SearchRequest, SearchSummary } from '../workers/work/search';
+import type {
+  ExtraHit,
+  ExtrasRequest,
+  HitRect,
+  SearchBatch,
+  SearchRequest,
+  SearchSummary,
+} from '../workers/work/search';
 import type { Hit, SearchOptions } from '../workers/work/searchCore';
 import type { VerifyResult } from '../workers/work/verifySave';
 import type { MethodSpec } from './protocol';
@@ -74,6 +81,8 @@ export interface WorkApi {
     { docId: string; query: string; options: SearchOptions; pages: number[] },
     Hit[]
   >;
+  /** Annotation text and bookmark title hits (Advanced Search, M2-09, M2-Q3). */
+  searchExtras: MethodSpec<ExtrasRequest, ExtraHit[]>;
   /** Highlight rectangles for hits on one page, in the viewer's page space. */
   hitRects: MethodSpec<
     { docId: string; pageIndex: number; hits: { start: number; length: number }[] },

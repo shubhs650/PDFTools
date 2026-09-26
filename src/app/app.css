@@ -1006,3 +1006,118 @@ body {
 .privacy-data code {
   overflow-wrap: anywhere;
 }
+
+/* ------------------------------------------------------------ advanced search (M2-09) */
+
+.search-pane {
+  position: absolute;
+  inset: var(--space-0);
+  display: flex;
+  flex-direction: column;
+}
+
+.search-form {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  padding: var(--space-3);
+  border-bottom: var(--border-width) solid var(--color-border);
+}
+
+.search-row {
+  display: flex;
+  gap: var(--space-2);
+}
+
+.search-input {
+  flex: 1;
+  width: auto;
+  min-width: var(--space-0);
+}
+
+.search-options {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+  margin: var(--space-0);
+  padding: var(--space-0);
+  border: none;
+}
+
+.search-legend {
+  padding: var(--space-0);
+  font-size: var(--font-size-s);
+  font-weight: var(--font-weight-semibold);
+}
+
+.search-check {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  font-size: var(--font-size-s);
+}
+
+.search-status {
+  margin: var(--space-0);
+  padding: var(--space-2) var(--space-3);
+  color: var(--color-text-muted);
+  font-size: var(--font-size-s);
+}
+
+.search-results {
+  position: relative;
+  flex: 1;
+  min-height: var(--space-0);
+  overflow-y: auto;
+  overscroll-behavior: contain;
+}
+
+.search-results:focus-visible {
+  outline: var(--focus-width) solid var(--color-focus);
+  outline-offset: calc(-1 * var(--focus-width));
+}
+
+.search-results-content {
+  position: relative;
+}
+
+.search-result {
+  position: absolute;
+  left: var(--space-0);
+  right: var(--space-0);
+  display: flex;
+  align-items: center;
+  padding: var(--space-0) var(--space-3);
+  font-size: var(--font-size-s);
+  cursor: pointer;
+}
+
+.search-result--doc,
+.search-result--page {
+  font-weight: var(--font-weight-semibold);
+}
+
+.search-result--hit,
+.search-result--extra {
+  padding-left: calc(var(--space-3) * 2);
+}
+
+.search-result--active {
+  background: var(--color-selected);
+}
+
+.search-result-text {
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+.search-result-match {
+  background: var(--color-find-hit);
+  color: var(--color-find-hit-text);
+}
+
+.search-result-tag,
+.search-result-loading {
+  color: var(--color-text-muted);
+}

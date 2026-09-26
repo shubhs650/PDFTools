@@ -54,6 +54,8 @@ export const KEYMAP: readonly Binding[] = [
   b('home.find', ['Ctrl+F']),
   b('find.next', ['F3']),
   b('find.prev', ['Shift+F3']),
+  // Advanced Search pane (M2-09).
+  b('home.advancedSearch', ['Ctrl+Shift+F']),
   b('home.hand', ['H'], 'document'),
   b('home.select', ['V'], 'document'),
   // Text selection (M2-04): in the document only, so text fields keep their own.

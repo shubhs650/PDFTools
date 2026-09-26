@@ -254,6 +254,7 @@ export const COMMANDS: readonly CommandDef[] = [
     size: 'small',
     fluent: 'DocumentSearch',
     milestone: 'M2',
+    shipped: true, // M2-09
   },
   {
     id: 'home.resetForm',
@@ -1134,6 +1135,7 @@ export const COMMANDS: readonly CommandDef[] = [
     fluent: 'Search',
     milestone: 'M2',
     toggle: true,
+    shipped: true, // M2-09
   },
   {
     id: 'rail.layers',

@@ -10,6 +10,8 @@ M0 and M1 owner runs are still open.
 
 ## Done
 
+- **Session 14 — M2-09 Advanced Search pane.** Advanced Search pane: options, all-tabs scope, comment and bookmark hits, virtual results with on-demand context, hand-off to Quick Find highlights. Self-made fixture `annotatedPdf` (comment + outline). Perf: common term on the 2,000-page stand-in, first rows < 1 s, 18,798 results < 15 s, 0 long tasks. Unit 502, e2e 126, perf 20 (the M2-06 indexing tile-p95 check missed once in a full run, passed 3/3 alone: watch it).
+
 - **Session 14 — M2-08 pane framework and Thumbnails.** Pane framework (rail buttons, titled pane, Esc to rail, keyboard/pointer resizer) and the virtualized Thumbnails pane with an activity-aware, one-at-a-time thumbnail queue. Found on the way: an unconstrained list stretched the frame (fixed with an absolutely positioned list); the 2,000-page uncached Quick Find total needs ~5 s, so e2e/find.spec.ts waits up to 20 s for the total. Unit 493, e2e 122, perf 19, all green; licenses 642 OK.
 
 - **Session 14 — M2-07 (Quick Find).** Branch `m2/07-find` (stacked on M2-06). Quick Find bar (Ctrl+F; Enter-only; F3/Shift+F3; Esc), options, "n of N", highlights on pages in view with a distinct current hit, navigation in document order across the context cap. Tests: find model units, e2e (26 keystrokes → 0 searches, needle on pages 7/1,000/1,999, wrap, options, axe), perf scenario.

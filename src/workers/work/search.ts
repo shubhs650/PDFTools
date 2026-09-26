@@ -6,7 +6,13 @@
 // At most `detailLimit` hits (5,000) are sent with context; beyond that only
 // per-page counts, and the exact total (ADR-006 decision 2).
 import type { PdfiumNative } from '@embedpdf/engines/pdfium';
-import type { PdfDocumentObject } from '@embedpdf/models';
+import {
+  PdfActionType,
+  type PdfAnnotationObject,
+  type PdfBookmarkObject,
+  type PdfDocumentObject,
+  type PdfLinkTarget,
+} from '@embedpdf/models';
 import type { WrappedPdfiumModule } from '@embedpdf/pdfium';
 import { RpcError } from '../../engine/errors';
 import { acquirePage, rawCall } from '../render/pdfium';
@@ -55,6 +61,29 @@ export interface SearchSummary {
   ms: number;
   /** From the start of the search to the first page with a hit (null: none). */
   firstHitMs: number | null;
+}
+
+/**
+ * Advanced Search (M2-09, M2-Q3): a hit in an annotation's text or a
+ * bookmark title, read-only. `page` is the annotation's page or the
+ * bookmark's target page (-1: the bookmark goes nowhere in this document).
+ */
+export interface ExtraHit {
+  source: 'annotation' | 'bookmark';
+  page: number;
+  before: string;
+  match: string;
+  after: string;
+  /** The annotation's rectangle (viewer page space). */
+  rect?: HitRect;
+}
+
+export interface ExtrasRequest {
+  docId: string;
+  query: string;
+  options: SearchOptions;
+  annotations: boolean;
+  bookmarks: boolean;
 }
 
 /** Top-left page coordinates in points (the viewer's unrotated page space). */
@@ -237,6 +266,50 @@ export class SearchEngine {
     return out;
   }
 
+  /** Annotation text and bookmark title hits (M2-09); cancellable at every page. */
+  async extras(req: ExtrasRequest, doc: PdfDocumentObject, slice: JobSlice): Promise<ExtraHit[]> {
+    const re = compileOrThrow(req.query, req.options);
+    const out: ExtraHit[] = [];
+    const add = (source: ExtraHit['source'], page: number, text: string, rect?: HitRect) => {
+      for (const h of findInPage(text, page, re, 40)) {
+        const hit: ExtraHit = { source, page, before: h.before, match: h.match, after: h.after };
+        if (rect) hit.rect = rect;
+        out.push(hit);
+      }
+    };
+    if (req.bookmarks) {
+      await slice.checkpoint();
+      const { bookmarks } = (await this.native().getBookmarks(doc).toPromise()) as {
+        bookmarks: PdfBookmarkObject[];
+      };
+      const walk = (list: readonly PdfBookmarkObject[]): void => {
+        for (const b of list) {
+          add('bookmark', targetPage(b.target), b.title);
+          if (b.children) walk(b.children);
+        }
+      };
+      walk(bookmarks);
+    }
+    if (req.annotations) {
+      for (const page of doc.pages) {
+        await slice.checkpoint();
+        const annots = (await this.native()
+          .getPageAnnotations(doc, page)
+          .toPromise()) as PdfAnnotationObject[];
+        for (const a of annots) {
+          if (!a.contents) continue;
+          add('annotation', page.index, a.contents, {
+            x: a.rect.origin.x,
+            y: a.rect.origin.y,
+            width: a.rect.size.width,
+            height: a.rect.size.height,
+          });
+        }
+      }
+    }
+    return out;
+  }
+
   /** Highlight rectangles per hit on one page (FPDFText_CountRects / GetRect). */
   rects(
     _docId: string,
@@ -282,6 +355,13 @@ export class SearchEngine {
       }
     });
   }
+}
+
+/** The page a link target lands on in this document (-1: none, or another file). */
+export function targetPage(target: PdfLinkTarget | undefined): number {
+  if (!target) return -1;
+  if (target.type === 'destination') return target.destination.pageIndex;
+  return target.action.type === PdfActionType.Goto ? target.action.destination.pageIndex : -1;
 }
 
 /** A query error crosses as a code the UI can explain (no message text, rule 10). */

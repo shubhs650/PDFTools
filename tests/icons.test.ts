@@ -54,8 +54,9 @@ describe('command table (M1-06)', () => {
     expect(available).toContain('file.saveOptimized');
     expect(available).toContain('view.zoomIn');
     expect(available).not.toContain('comment.highlight');
+    expect(available).not.toContain('home.resetForm');
     expect(available).toContain('home.find'); // shipped in M2-07
-    expect(available).not.toContain('home.advancedSearch');
+    expect(available).toContain('home.advancedSearch'); // shipped in M2-09
   });
 
   it('keeps the §8 custom icons on the custom list', () => {

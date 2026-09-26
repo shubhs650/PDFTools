@@ -38,6 +38,7 @@ type JobMethod =
   | 'textSlices'
   | 'search'
   | 'searchContext'
+  | 'searchExtras'
   | 'hitRects'
   | 'indexText';
 
