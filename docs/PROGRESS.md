@@ -1,12 +1,20 @@
 # PDFTools — Progress
 
-_Last updated: 2026-09-26 (session 13: M1-26 to M1-28)_
+_Last updated: 2026-09-26 (session 14: M2 plan drafted)_
 
-**Current milestone:** M1 — Foundation is **complete on the agent side** (M1-01 … M1-28; results
-and owner pack: [docs/acceptance/M1.md](acceptance/M1.md)). Next is M2 once the owner has merged
-the M1 PRs and approved the M2 plan. M0 and M1 owner runs are still open.
+**Current milestone:** M1 — Foundation is **complete on the agent side** and merged into `main`
+(M1-01 … M1-28; results and owner pack: [docs/acceptance/M1.md](acceptance/M1.md)). The
+[M2 plan](plan/M2.md) is drafted and **waiting for owner approval** (and answers to M2-Q1 … Q9).
+M0 and M1 owner runs are still open.
 
 ## Done
+
+- **Session 14 — M2 plan.** Branch `claude/m2-task-breakdown-ytspb5`. Read PROGRESS,
+  ARCHITECTURE Rev 0.4 and ADR-001 to ADR-011; wrote [docs/plan/M2.md](plan/M2.md): 19 tasks
+  (two spikes → ADR-012/013, protected PDFs, text selection, search core + background indexing +
+  find bar + Advanced Search, panes, properties, signatures, forms, print, print-ready export,
+  error report, acceptance) with goals, files, acceptance criteria, tests and dependencies, plus
+  nine owner questions (M2-Q1 … Q9). No code.
 
 - **Session 13 — M1-28 (M1 acceptance pass and owner pack).** Branch `m1/28-acceptance`. All nine
   M1 §12 rows met on typical files (offline start 227 ms, first page 872 ms, 0 blank frames, A0
@@ -65,7 +73,7 @@ the M1 PRs and approved the M2 plan. M0 and M1 owner runs are still open.
   two-PDFium path) and e2e (Work sees the annotation; forced mismatch → keep-all, qpdf-clean).
 
 - **Session 11 — M1-20 (save core in the Render worker).** Branch `m1/20-save-core`. Ported S1 save
-  core (own FPDF_FILEWRITE, narrow tail, xref table/stream writer) with a committed _save base_ so
+  core (own FPDF*FILEWRITE, narrow tail, xref table/stream writer) with a committed \_save base* so
   repeated Ctrl+S appends only new changes; dirty tracking and permission checks (rule 9) around
   every mutating engine call; save RPCs (`saveIncremental`, `commitSave`, `saveRewrite`,
   `saveState`) returning bytes by transfer. 8-input real-PDFium matrix (prefix, /Prev, /ID,
@@ -427,12 +435,12 @@ the M1 PRs and approved the M2 plan. M0 and M1 owner runs are still open.
 
 - M0: the agent part of all eight spikes is done and all spike ADRs are accepted. Owner runs are
   still open. The owner checks listed under Next are pending.
-- **M1 PRs waiting for review and merge:** [#29](https://github.com/shubhs650/PDFTools/pull/29)
-  (M1-26), [#30](https://github.com/shubhs650/PDFTools/pull/30) (M1-27, stacked on #29) and the
-  [#31](https://github.com/shubhs650/PDFTools/pull/31) (M1-28, stacked on #30). Merge them in that
-  order.
+- **M2 plan waiting for owner approval:** [docs/plan/M2.md](plan/M2.md), with owner questions
+  M2-Q1 … M2-Q9. M1 PRs #29–#32 are merged into `main`.
 
 ## Session log
+
+- **Session 14 (2026-09-26):** M2 plan only (docs). `prettier --check` on the changed files.
 
 - **Session 13 (2026-09-26):** M1-26, M1-27 and M1-28, on `m1/26-local-data`, `m1/27-ci` and
   `m1/28-acceptance` (stacked; one PR each). Local checks all pass on the last branch: typecheck,
@@ -501,15 +509,15 @@ the M1 PRs and approved the M2 plan. M0 and M1 owner runs are still open.
      (`node spikes/s4-oxide/run-node.ts <files>`; dumps in `out/review/`, see ADR-009);
    - FAR, 500 MB and A0 through the S3 harness;
    - S8 Firefox check and Pages preview.
-3. **Owner:** review and merge the M1 PRs in order, #29 → #30 → #31, with "Create a
-   merge commit". M1-01 to M1-25 are merged into `main`.
+3. **Owner:** review and approve the [M2 plan](plan/M2.md) and answer M2-Q1 … M2-Q9 (Oxide
+   timing, signature pane in M2, search scope, links, error-report back end, print CSP,
+   passwords, layers, branching).
 4. **Owner:** the M1 owner pack in [docs/acceptance/M1.md](acceptance/M1.md) §3 — heavy-file
    timings (`npm run owner:timings`), the installed app on Windows (file handler, offline, update,
    reserved keys), a Firefox smoke test, the Pages preview, and interop §M1 of
    `e2e/interop/CHECKLIST.md`.
-5. **Agent:** draft the M2 plan (`docs/plan/M2.md`: search + find bar, panes, print, protected
-   PDFs, signature pane, forms, error report) for owner approval. Do not start M2 features before
-   it is approved.
+5. **Agent (after approval):** M2-01 and M2-02 spikes (ADR-012, ADR-013), and M2-05 search core
+   in parallel. Do not start M2 features before the plan is approved.
 
 ## Open issues
 
