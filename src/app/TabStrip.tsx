@@ -57,14 +57,19 @@ export function TabStrip() {
 
   return (
     <div className="tab-strip">
-      <div role="tablist" aria-label={t('frame.tabs')} className="tab-list">
-        {order.map((id, i) => {
-          const d = docs[id];
-          if (!d) return null;
-          const active = id === activeId;
-          return (
-            <span key={id} className={`tab${active ? ' tab--active' : ''}`}>
+      {/* The tablist holds only tabs (axe aria-required-children); each close
+          button follows it in the DOM and is placed after its tab with CSS
+          `order` (the tablist itself is `display: contents`). Keyboard: Tab
+          from the active tab reaches its close button. */}
+      <div className="tab-list">
+        <div role="tablist" aria-label={t('frame.tabs')} className="tab-tablist">
+          {order.map((id, i) => {
+            const d = docs[id];
+            if (!d) return null;
+            const active = id === activeId;
+            return (
               <button
+                key={id}
                 ref={(el) => {
                   if (el) refs.current.set(id, el);
                   else refs.current.delete(id);
@@ -76,7 +81,8 @@ export function TabStrip() {
                 aria-controls="document-panel"
                 aria-label={d.dirty ? t('frame.dirtyTab', { name: d.meta.name }) : d.meta.name}
                 tabIndex={active ? 0 : -1}
-                className="tab-button ui-focusable"
+                className={`tab-button ui-focusable${active ? ' tab--active' : ''}`}
+                style={{ order: 2 * i }}
                 onClick={() => {
                   documentStore.getState().activate(id);
                 }}
@@ -87,6 +93,19 @@ export function TabStrip() {
                 {d.dirty ? <span className="tab-dirty" aria-hidden="true" /> : null}
                 <span className="tab-name">{d.meta.name}</span>
               </button>
+            );
+          })}
+        </div>
+        {order.map((id, i) => {
+          const d = docs[id];
+          if (!d) return null;
+          const active = id === activeId;
+          return (
+            <span
+              key={id}
+              className={`tab-close${active ? ' tab--active' : ''}`}
+              style={{ order: 2 * i + 1 }}
+            >
               <IconButton
                 label={t('frame.closeTab', { name: d.meta.name })}
                 icon={<Dismiss16Regular />}

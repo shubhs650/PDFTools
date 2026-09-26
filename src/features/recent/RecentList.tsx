@@ -20,6 +20,7 @@ const PROBLEM: Record<RecentProblem, MessageKey> = {
 };
 
 const TEST_ID = 'recent-list';
+const TITLE_ID = 'recent-title';
 
 /**
  * Recent files (§8, M1-18): name and when it was last opened; Enter or click
@@ -54,14 +55,17 @@ export function RecentList({
   }, [supported]);
 
   if (!supported) return null;
+  const Root = labelledBy ? 'div' : 'section';
   return (
-    <section
+    // Inside the backstage the section around it is already the named region
+    // (a second one with the same name fails axe landmark-unique).
+    <Root
       className="recent"
-      aria-labelledby={labelledBy ?? 'recent-title'}
+      {...(labelledBy ? {} : { 'aria-labelledby': TITLE_ID })}
       data-testid={TEST_ID}
     >
       <div className="recent-header">
-        {labelledBy ? <span /> : <h3 id="recent-title">{t('recent.title')}</h3>}
+        {labelledBy ? <span /> : <h3 id={TITLE_ID}>{t('recent.title')}</h3>}
         {entries.length > 0 ? (
           <Button
             label={t('recent.clear')}
@@ -123,6 +127,6 @@ export function RecentList({
           ))}
         </ul>
       )}
-    </section>
+    </Root>
   );
 }

@@ -7,6 +7,14 @@ still open.
 
 ## Done
 
+- **Session 13 — M1-27 (CI: bundle budget, perf, offline and accessibility).** Branch
+  `m1/27-ci`. Bundle report per module (raw/gzip/brotli, reserved lines for Oxide/ExcelJS/docx)
+  with a 60 MB install budget and a 9 MB core budget (M1: 6.66 MB core, 30.25 MB installed) in
+  the job summary; perf report of every scenario's numbers; offline and axe steps of their own; qpdf
+  required for the save matrix in CI. The new axe spec (light/dark, every backstage section and M1
+  dialog) found four problems, all fixed: close buttons inside the document tablist, the tab strip
+  outside any landmark, tile images without `alt`, and a duplicate region name in backstage Recent.
+
 - **Session 13 — M1-26 (local data and privacy page).** Branch `m1/26-local-data`. File →
   Settings shows what is stored and "Clear all local data…" (confirmation, open/unsaved-document
   warning): OPFS recovery snapshots, the IndexedDB database and non-app caches go; the service

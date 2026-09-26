@@ -14,7 +14,7 @@ concurrency:
 
 jobs:
   checks:
-    name: Typecheck · Lint · Unit tests · Licenses · Build
+    name: Typecheck · Lint · Unit tests · Licenses · Build · Bundle budget
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -23,6 +23,8 @@ jobs:
           node-version-file: .nvmrc
           cache: npm
       - run: npm ci
+      - name: Install qpdf (the save matrix checks every saved file; not a dependency)
+        run: sudo apt-get install -y qpdf
       - name: Typecheck
         run: npm run typecheck
       - name: Lint
@@ -37,9 +39,19 @@ jobs:
         run: npm run build
       - name: No test hook or other forbidden strings in the build (M1-02)
         run: npm run check:dist
+      - name: Bundle report and install budget (M1-27, §9)
+        run: |
+          mkdir -p reports
+          npm run bundle-report -- --json reports/bundle.json --markdown reports/bundle.md
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: bundle-report
+          path: reports/
+          retention-days: 30
 
   e2e:
-    name: E2E (Playwright, Chromium)
+    name: E2E · Offline · Accessibility · Perf (Playwright, Chromium)
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -53,11 +65,32 @@ jobs:
       - name: Install qpdf (test fixtures only; not a dependency)
         run: sudo apt-get install -y qpdf
       - name: E2E tests (built app under the production _headers)
-        run: npm run e2e
-      - name: Perf gate (no main-thread task > 100 ms after boot)
-        run: npm run perf
+        run: npm run e2e -- --grep-invert "@offline|@a11y"
+      - name: Offline and update flow (§9, D-17, D-18)
+        if: success() || failure()
+        run: npm run e2e:offline
         env:
           E2E_SKIP_BUILD: '1'
+      - name: Accessibility gate (axe, rule 12)
+        if: success() || failure()
+        run: npm run e2e:a11y
+        env:
+          E2E_SKIP_BUILD: '1'
+      - name: Perf gate (no main-thread task > 100 ms after boot)
+        if: success() || failure()
+        run: npm run perf -- --reporter=github,json
+        env:
+          E2E_SKIP_BUILD: '1'
+          PLAYWRIGHT_JSON_OUTPUT_NAME: reports/perf.json
+      - name: Perf report (numbers are report-only, ADR-002)
+        if: always()
+        run: npm run perf-report -- reports/perf.json --json reports/perf-rows.json
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: perf-report
+          path: reports/
+          retention-days: 30
       - uses: actions/upload-artifact@v4
         if: failure()
         with:

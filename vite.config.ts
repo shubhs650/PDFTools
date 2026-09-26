@@ -2,6 +2,7 @@ import { defineConfig } from 'vite';
 import react from '@vitejs/plugin-react';
 import { VitePWA } from 'vite-plugin-pwa';
 import { MANIFEST } from './src/app/manifest.ts';
+import { PRECACHE_EXTENSIONS } from './src/sw/precacheSplit.ts';
 import { selfHostedAssets, thirdPartyNotices } from './scripts/vite-assets.ts';
 import { appVersion } from './scripts/app-version.ts';
 
@@ -22,7 +23,7 @@ export default defineConfig({
       srcDir: 'src/sw',
       filename: 'sw.ts',
       injectManifest: {
-        globPatterns: ['**/*.{html,js,css,wasm,ttf,otf,png,svg,webmanifest,txt}'],
+        globPatterns: [`**/*.{${PRECACHE_EXTENSIONS.join(',')}}`],
         // pdfium.wasm is 4.6 MB and the largest CJK font 8.4 MB (ADR-003).
         maximumFileSizeToCacheInBytes: 10 * 1024 * 1024,
       },

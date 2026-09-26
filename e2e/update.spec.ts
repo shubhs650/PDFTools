@@ -75,48 +75,48 @@ const build = (page: Page) =>
     () => document.querySelector('meta[name="pdftools-build"]')?.getAttribute('content') ?? 'v1',
   );
 
-test('v2 deployed while v1 has a document open: "Update ready", no reload; applies after the last document closes', async ({
-  page,
-  pdfs,
-  deploy,
-}) => {
-  await page.goto('/?sw');
-  await expect(status(page).getByText('✓ Ready offline')).toBeVisible({ timeout: 60_000 });
-  await page.evaluate(() => {
-    (window as unknown as { __sameLoad: boolean }).__sameLoad = true;
-  });
-  await cap(page, 'open', 'openHandles', [
-    { name: 'open.pdf', b64: pdfs.simple(1).toString('base64') },
-  ]);
-  await expect(page.getByRole('tablist', { name: 'Open documents' }).getByRole('tab')).toHaveCount(
-    1,
-  );
+test(
+  'v2 deployed while v1 has a document open: "Update ready", no reload; applies after the last document closes',
+  { tag: '@offline' },
+  async ({ page, pdfs, deploy }) => {
+    await page.goto('/?sw');
+    await expect(status(page).getByText('✓ Ready offline')).toBeVisible({ timeout: 60_000 });
+    await page.evaluate(() => {
+      (window as unknown as { __sameLoad: boolean }).__sameLoad = true;
+    });
+    await cap(page, 'open', 'openHandles', [
+      { name: 'open.pdf', b64: pdfs.simple(1).toString('base64') },
+    ]);
+    await expect(
+      page.getByRole('tablist', { name: 'Open documents' }).getByRole('tab'),
+    ).toHaveCount(1);
 
-  deploy.toV2();
-  // The hourly / on-focus update check, now.
-  await page.evaluate(async () => {
-    await (await navigator.serviceWorker.getRegistration())?.update();
-  });
-  const updateButton = status(page).getByRole('button', { name: 'Update ready' });
-  await expect(updateButton).toBeVisible({ timeout: 60_000 });
-  expect(
-    await page.evaluate(() => (window as unknown as { __sameLoad?: boolean }).__sameLoad),
-  ).toBe(true);
-  expect(await build(page)).toBe('v1');
+    deploy.toV2();
+    // The hourly / on-focus update check, now.
+    await page.evaluate(async () => {
+      await (await navigator.serviceWorker.getRegistration())?.update();
+    });
+    const updateButton = status(page).getByRole('button', { name: 'Update ready' });
+    await expect(updateButton).toBeVisible({ timeout: 60_000 });
+    expect(
+      await page.evaluate(() => (window as unknown as { __sameLoad?: boolean }).__sameLoad),
+    ).toBe(true);
+    expect(await build(page)).toBe('v1');
 
-  await updateButton.click();
-  const dialog = page.getByRole('dialog', { name: 'Close your documents to update' });
-  await expect(dialog).toBeVisible();
-  await dialog.getByRole('button', { name: 'OK' }).click();
-  await expect(dialog).toBeHidden();
-  expect(await build(page)).toBe('v1');
-  expect(
-    await page.evaluate(() => (window as unknown as { __sameLoad?: boolean }).__sameLoad),
-  ).toBe(true);
+    await updateButton.click();
+    const dialog = page.getByRole('dialog', { name: 'Close your documents to update' });
+    await expect(dialog).toBeVisible();
+    await dialog.getByRole('button', { name: 'OK' }).click();
+    await expect(dialog).toBeHidden();
+    expect(await build(page)).toBe('v1');
+    expect(
+      await page.evaluate(() => (window as unknown as { __sameLoad?: boolean }).__sameLoad),
+    ).toBe(true);
 
-  await page.getByRole('button', { name: 'Close open.pdf' }).click();
-  await expect.poll(() => build(page), { timeout: 30_000 }).toBe('v2');
-  expect(
-    await page.evaluate(() => (window as unknown as { __sameLoad?: boolean }).__sameLoad),
-  ).toBeUndefined();
-});
+    await page.getByRole('button', { name: 'Close open.pdf' }).click();
+    await expect.poll(() => build(page), { timeout: 30_000 }).toBe('v2');
+    expect(
+      await page.evaluate(() => (window as unknown as { __sameLoad?: boolean }).__sameLoad),
+    ).toBeUndefined();
+  },
+);

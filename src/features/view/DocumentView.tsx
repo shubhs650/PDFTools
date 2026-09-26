@@ -78,6 +78,9 @@ function Page({
               documentId={documentId}
               pageIndex={layout.pageIndex}
               className="page-tiles"
+              // Sharp copies of the preview (whose <img> has alt=""): EmbedPDF's
+              // tiles have no alt, so the whole layer is hidden from assistive tech.
+              aria-hidden
             />
           </div>
         </Rotate>
