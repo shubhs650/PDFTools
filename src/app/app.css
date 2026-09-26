@@ -122,7 +122,102 @@ body {
 }
 
 .left-pane {
-  width: var(--pane-width);
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  width: var(--pane-width); /* the resizable width is set inline (M2-08) */
+  min-height: var(--space-0);
+}
+
+.left-pane-body {
+  position: relative;
+  flex: 1;
+  min-height: var(--space-0);
+  overflow: hidden;
+}
+
+.pane-resizer {
+  position: absolute;
+  top: var(--space-0);
+  right: calc(var(--space-1) * -1);
+  bottom: var(--space-0);
+  z-index: 1;
+  width: var(--space-2);
+  cursor: col-resize;
+  touch-action: none;
+}
+
+.pane-resizer:hover,
+.pane-resizer:focus-visible {
+  background: var(--color-accent);
+  outline: none;
+}
+
+.pane-empty {
+  margin: var(--space-0);
+  padding: var(--space-3);
+  color: var(--color-text-muted);
+  font-size: var(--font-size-s);
+}
+
+/* ------------------------------------------------------------ thumbnails */
+
+.thumb-list {
+  position: absolute;
+  inset: var(--space-0); /* never sizes the pane (2,000 pages would stretch the frame) */
+  overflow-y: auto;
+  overscroll-behavior: contain;
+}
+
+.thumb-content {
+  position: relative;
+}
+
+.thumb {
+  position: absolute;
+  left: var(--space-0);
+  right: var(--space-0);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--space-1);
+  padding-top: var(--space-2);
+  cursor: pointer;
+  outline: none;
+}
+
+.thumb-image {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  border: var(--border-width) solid var(--color-border);
+  background: var(--color-page);
+}
+
+.thumb--current .thumb-image {
+  border-color: var(--color-accent);
+  box-shadow: 0 0 0 var(--border-width) var(--color-accent);
+}
+
+.thumb:focus-visible .thumb-image {
+  outline: var(--focus-width) solid var(--color-focus);
+  outline-offset: var(--space-1);
+}
+
+.thumb-img {
+  flex: none;
+  pointer-events: none;
+  -webkit-user-drag: none;
+}
+
+.thumb-label {
+  font-size: var(--font-size-s);
+  font-variant-numeric: tabular-nums;
+}
+
+.thumb--current .thumb-label {
+  font-weight: var(--font-weight-semibold);
 }
 
 .document-area {

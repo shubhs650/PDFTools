@@ -38,7 +38,8 @@ test('typing never searches; Enter finds the needle far away; F3 and Shift+F3 wa
 
   await field(page).fill(NEEDLE);
   await field(page).press('Enter');
-  await expect(status(page)).toHaveText('1 of 3');
+  // The total needs the whole uncached search (~5 s here), not just the first hit.
+  await expect(status(page)).toHaveText('1 of 3', { timeout: 20_000 });
   await expect(pageBox(page)).toHaveValue('7'); // the first hit after page 1
   await expect(page.locator('[data-page="6"] .find-hit--current')).toBeVisible();
 

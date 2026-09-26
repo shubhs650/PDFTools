@@ -240,7 +240,9 @@
     "hideLeftPanes": "Hide navigation panes",
     "properties": "Properties",
     "closeProperties": "Close the Properties pane",
-    "statusBar": "Status bar"
+    "statusBar": "Status bar",
+    "closePane": "Close the navigation pane",
+    "resizePane": "Resize the navigation pane"
   },
   "error": {
     "title": "Something went wrong",
@@ -508,5 +510,9 @@
       "matchesEmpty": "That pattern would match nothing but empty text.",
       "failed": "The search didn't finish. Try again."
     }
+  },
+  "thumbnails": {
+    "list": "Page thumbnails",
+    "empty": "Open a document to see its pages."
   }
 }

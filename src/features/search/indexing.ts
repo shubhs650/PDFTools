@@ -2,6 +2,7 @@
 // one indexing job per open document, started once its Work copy exists and
 // cancelled when it closes; scrolling and zooming are reported (throttled) so
 // the Work worker backs off meanwhile.
+import { noteActivity } from '../view/activity';
 import { startedWorkClient, workClient } from '../view/host';
 
 export type IndexState = 'indexing' | 'done' | 'stopped' | 'failed';
@@ -77,6 +78,7 @@ export function indexStatus(docId: string): IndexStatus | undefined {
 
 /** The user is scrolling or zooming (called from the view on every such event). */
 export function reportActivity(now = performance.now()): void {
+  noteActivity(now);
   if (now - lastActivity < ACTIVITY_THROTTLE_MS) return;
   lastActivity = now;
   startedWorkClient()?.notifyActivity();
