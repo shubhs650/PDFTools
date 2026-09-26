@@ -6,6 +6,7 @@ import { AttachmentsPane } from '../features/attachments/AttachmentsPane';
 import { BookmarksPane } from '../features/bookmarks/BookmarksPane';
 import { LayersPane } from '../features/layers/LayersPane';
 import { SearchPane } from '../features/search/SearchPane';
+import { SignaturesPane } from '../features/signatures/SignaturesPane';
 import { ThumbnailsPane } from '../features/thumbnails/ThumbnailsPane';
 
 export interface PaneDef {
@@ -20,6 +21,7 @@ export const PANES: readonly PaneDef[] = [
   { id: 'rail.search', component: SearchPane },
   { id: 'rail.attachments', component: AttachmentsPane },
   { id: 'rail.layers', component: LayersPane },
+  { id: 'rail.signatures', component: SignaturesPane },
 ];
 
 export const paneById = (id: string): PaneDef | undefined => PANES.find((p) => p.id === id);

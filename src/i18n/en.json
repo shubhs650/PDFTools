@@ -650,5 +650,35 @@
       "modify": "Changing the document",
       "assemble": "Page changes (assembly)"
     }
+  },
+  "signatures": {
+    "list": "Signatures",
+    "noDocument": "Open a document to see its signatures.",
+    "checking": "Checking signatures",
+    "failed": "The signatures couldn't be checked.",
+    "none": "This document has no digital signatures.",
+    "unknownSigner": "Unknown signer",
+    "integrityLabel": "Integrity",
+    "integrity": {
+      "unchanged": "Unchanged since signing",
+      "modified": "Modified after signing",
+      "damaged": "Signature is damaged"
+    },
+    "trustLabel": "Signer identity",
+    "trust": "Not verified (offline)",
+    "signedAt": "Signed",
+    "reason": "Reason",
+    "location": "Location",
+    "covers": "Covers",
+    "revision": "Revision {{n}} of {{m}}",
+    "after": "Later changes",
+    "changedAfter": "The document was changed after signing",
+    "notChangedAfter": "None",
+    "banner": {
+      "name": "Digital signatures",
+      "text_one": "This document has {{n}} digital signature.",
+      "text_other": "This document has {{n}} digital signatures.",
+      "show": "Show Signatures"
+    }
   }
 }

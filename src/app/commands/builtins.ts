@@ -17,17 +17,23 @@ export function registerBuiltinCommands(): () => void {
       isPressed: () => appStore.getState().leftPaneOpen,
     }),
     // Left panes (M2-08): choosing the pane shown closes the pane area.
-    ...['rail.bookmarks', 'rail.thumbnails', 'rail.search', 'rail.attachments', 'rail.layers'].map(
-      (id) =>
-        registerCommand(id, {
-          run: () => {
-            appStore.getState().choosePane(id);
-          },
-          isPressed: () => {
-            const s = appStore.getState();
-            return s.leftPaneOpen && s.leftPane === id;
-          },
-        }),
+    ...[
+      'rail.bookmarks',
+      'rail.thumbnails',
+      'rail.search',
+      'rail.attachments',
+      'rail.layers',
+      'rail.signatures',
+    ].map((id) =>
+      registerCommand(id, {
+        run: () => {
+          appStore.getState().choosePane(id);
+        },
+        isPressed: () => {
+          const s = appStore.getState();
+          return s.leftPaneOpen && s.leftPane === id;
+        },
+      }),
     ),
     registerCommand('view.propertiesPane', {
       run: () => {

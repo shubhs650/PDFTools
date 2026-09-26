@@ -43,6 +43,7 @@ type JobMethod =
   | 'readAttachment'
   | 'listLayers'
   | 'docProperties'
+  | 'checkSignatures'
   | 'hitRects'
   | 'indexText';
 

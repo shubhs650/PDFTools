@@ -1345,3 +1345,38 @@ body {
 .backstage-note {
   color: var(--color-text-muted);
 }
+
+/* ------------------------------------------------------------ signatures (M2-13) */
+
+.signatures-pane {
+  position: absolute;
+  inset: var(--space-0);
+  overflow-y: auto;
+}
+
+.signature-list {
+  margin: var(--space-0);
+  padding: var(--space-0);
+  list-style: none;
+}
+
+.signature {
+  padding: var(--space-3);
+  border-bottom: var(--border-width) solid var(--color-border);
+  outline: none;
+}
+
+.signature-signer {
+  margin-bottom: var(--space-2);
+  font-weight: var(--font-weight-semibold);
+}
+
+.facts--compact .fact {
+  grid-template-columns: 1fr 1.4fr;
+  font-size: var(--font-size-s);
+}
+
+.signature--modified .signature-integrity,
+.signature--damaged .signature-integrity {
+  font-weight: var(--font-weight-semibold);
+}

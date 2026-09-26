@@ -8,10 +8,11 @@ describe('ribbon layout from the command table (§8, ADR-001 B6, M1-Q2)', () => 
   it('shows only tabs with an available command: Home, View, Help, and Protect from M2-03', () => {
     expect(m1.tabs.map((t) => t.tab)).toEqual(['home', 'view', 'protect', 'help']);
     const protect = m1.tabs.find((t) => t.tab === 'protect');
-    // Only what works: Security Info (M2-12), Unlock (M2-03); redaction (M4) and the rest stay omitted.
+    // Only what works: Security Info (M2-12), Unlock (M2-03), Signatures (M2-13); redaction (M4) and the rest stay omitted.
     expect(protect?.groups.flatMap((g) => g.commands.map((c) => c.id))).toEqual([
       'protect.securityInfo',
       'protect.unlock',
+      'protect.signatures',
     ]);
   });
 
@@ -28,6 +29,7 @@ describe('ribbon layout from the command table (§8, ADR-001 B6, M1-Q2)', () => 
       'home.tools',
       'home.find',
       'view.zoom',
+      'protect.security', // Signatures (M2-13)
     ]);
     expect(home?.groups[2]?.commands.map((c) => c.id)).toEqual([
       'view.zoomIn',

@@ -1044,6 +1044,7 @@ export const COMMANDS: readonly CommandDef[] = [
     size: 'large',
     fluent: 'Signature',
     milestone: 'M2',
+    shipped: true, // M2-13
   },
   {
     id: 'help.help',
@@ -1131,6 +1132,7 @@ export const COMMANDS: readonly CommandDef[] = [
     size: 'small',
     fluent: 'Signature',
     milestone: 'M2',
+    shipped: true, // M2-13
     toggle: true,
   },
   {

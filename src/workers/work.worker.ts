@@ -18,6 +18,7 @@ import { SearchEngine } from './work/search';
 import { listAttachments, readAttachment } from './work/attachments';
 import { readLayers } from '../model/ocg';
 import { readProperties } from './work/properties';
+import { checkSignatures } from './work/signatures';
 
 let mod: WrappedPdfiumModule | undefined;
 let native: PdfiumNative | undefined;
@@ -144,6 +145,13 @@ serve<WorkApi>(self, {
         ctx.progress(p);
       });
     }),
+
+  checkSignatures: ({ docId }, ctx) =>
+    scheduler.run('interactive', ctx.signal, (slice) =>
+      checkSignatures(docs.bytes(docId), slice, (p) => {
+        ctx.progress(p);
+      }),
+    ),
 
   docProperties: ({ docId }, ctx) =>
     scheduler.run('interactive', ctx.signal, async () => {
