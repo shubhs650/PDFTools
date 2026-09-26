@@ -181,7 +181,7 @@ export function DocumentView({ documentId }: { documentId: string }) {
     };
   }, [registry, documentId]);
 
-  // Scrolling and zooming pause background indexing (M2-06, ADR-006: CPU contention).
+  // Scrolling, zooming and other input pause background indexing (M2-06, ADR-006).
   useEffect(() => {
     const el = host.current;
     if (!el) return;
@@ -189,8 +189,13 @@ export function DocumentView({ documentId }: { documentId: string }) {
       reportActivity();
     };
     el.addEventListener('scroll', onScroll, { capture: true, passive: true });
+    // Any input on the document counts too (clicks, keys, wheel before it scrolls).
+    for (const type of ['pointerdown', 'keydown', 'wheel'] as const)
+      el.addEventListener(type, onScroll, { capture: true, passive: true });
     return () => {
       el.removeEventListener('scroll', onScroll, { capture: true });
+      for (const type of ['pointerdown', 'keydown', 'wheel'] as const)
+        el.removeEventListener(type, onScroll, { capture: true });
     };
   }, [documentId]);
 
