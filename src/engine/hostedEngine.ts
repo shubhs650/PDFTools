@@ -32,6 +32,23 @@ export function transferablesFor(method: string, args: unknown[]): Transferable[
   return content instanceof ArrayBuffer ? [content] : [];
 }
 
+/**
+ * Arguments as sent to the Render worker: an EmbedPDF document object loses
+ * its `pages` array. PdfEngine passes the whole document with every call, and
+ * cloning 2,000 page entries per render request made zoom thrash a main-thread
+ * long task (rule 1); the worker's PDFium engine reads only `id`, `pageCount`
+ * and `normalizedRotation` from it.
+ */
+export function slimArgs(args: unknown[]): unknown[] {
+  return args.map((a) => {
+    if (!a || typeof a !== 'object' || !('pages' in a) || !Array.isArray(a.pages)) return a;
+    if (typeof (a as { id?: unknown }).id !== 'string') return a;
+    const rest: Record<string, unknown> = { ...a };
+    delete rest['pages'];
+    return rest;
+  });
+}
+
 /** Called after a document-changing call succeeded (the tab's dirty mark, M1-22). */
 export type MutationListener = (method: string, docId: string) => void;
 
@@ -46,7 +63,7 @@ export function createHostedExecutor(
         const task = new Task<unknown, { code: PdfErrorCode; message: string }>();
         const job = rpc.call(
           'exec',
-          { method, args },
+          { method, args: slimArgs(args) },
           {
             transfer: transferablesFor(method, args),
             onProgress: (p) => {
