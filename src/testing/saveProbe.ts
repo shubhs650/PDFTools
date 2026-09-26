@@ -8,7 +8,10 @@ import {
   TaskRejectedError,
   type PdfDocumentObject,
 } from '@embedpdf/models';
-import { documentManager, renderEngine } from '../features/view/host';
+import { diagnostics } from '../app/diagnostics';
+import { finishSave, prepareSave } from '../engine/saveFlow';
+import { saveDeps } from '../features/save/deps';
+import { documentManager, renderEngine, workClient } from '../features/view/host';
 import type { TestHook } from './hook';
 
 const toB64 = (buf: ArrayBuffer): string => {
@@ -25,6 +28,12 @@ async function docOf(docId: string): Promise<PdfDocumentObject> {
 }
 
 const rpc = () => renderEngine().rpc;
+
+function blankHalf(tail: ArrayBuffer): ArrayBuffer {
+  const b = new Uint8Array(tail.slice(0));
+  b.fill(0x20, 0, Math.floor(b.length / 2));
+  return b.buffer;
+}
 
 /**
  * Returns the error code instead of throwing (permission refusals): the engine
@@ -95,5 +104,30 @@ export function registerSaveProbe(hook: TestHook): void {
       return toB64((await rpc().call('saveRewrite', { docId }).promise).bytes);
     },
     state: (docId: string) => rpc().call('saveState', { docId }).promise,
+    /**
+     * The M1-21 flow: save, verify in the Work worker (keep-all fallback), then
+     * commit as if written. `corrupt` blanks half of the first tail first.
+     */
+    async verifiedSave(docId: string, corrupt = false) {
+      const deps = saveDeps();
+      const p = await prepareSave(docId, deps, corrupt ? { tamper: blankHalf } : {});
+      if (!p) return null;
+      const baseLength = await finishSave(p, deps);
+      return {
+        mode: p.mode,
+        fellBack: p.fellBack,
+        from: p.baseLength,
+        baseLength,
+        tail: toB64(p.tail),
+        tailLength: p.tail.byteLength,
+      };
+    },
+    workDigest: (docId: string, pages: number[]) =>
+      workClient().run('digest', { docId, pages }).promise,
+    workState: (docId: string) => workClient().run('docState', { docId }).promise,
+    fallbacks: () =>
+      diagnostics()
+        .filter((e) => e.where === 'save')
+        .map(({ code, counts }) => ({ code, counts })),
   };
 }

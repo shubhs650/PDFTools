@@ -2,7 +2,7 @@ import { PdfErrorCode } from '@embedpdf/models';
 import { afterEach, describe, expect, it } from 'vitest';
 import { createRenderEngine } from '../../src/engine/createEngine';
 import { RpcError } from '../../src/engine/errors';
-import { createHostedExecutor } from '../../src/engine/hostedEngine';
+import { createHostedExecutor, slimArgs } from '../../src/engine/hostedEngine';
 import type { RenderApi } from '../../src/engine/renderApi';
 import { RpcClient } from '../../src/engine/rpc';
 import { serve } from '../../src/workers/rpc-host';
@@ -79,6 +79,21 @@ describe('hosted executor proxy (ADR-004)', () => {
     task?.abort({ code: PdfErrorCode.Cancelled, message: 'x' });
     const err = await task?.toPromise().catch((e: unknown) => e);
     expect((err as { reason?: { code?: number } }).reason?.code).toBe(PdfErrorCode.Cancelled);
+  });
+});
+
+describe('slimArgs (rule 1)', () => {
+  it('drops the pages array of a document argument and leaves everything else', () => {
+    const pages = Array.from({ length: 2000 }, (_, index) => ({ index }));
+    const doc = { id: 'd1', pageCount: 2000, normalizedRotation: false, pages };
+    const page = pages[3];
+    const file = { id: 'f', content: new ArrayBuffer(8) };
+    const [slim, p, opts, f] = slimArgs([doc, page, { scaleFactor: 2 }, file]);
+    expect(slim).toEqual({ id: 'd1', pageCount: 2000, normalizedRotation: false });
+    expect(p).toBe(page);
+    expect(opts).toEqual({ scaleFactor: 2 });
+    expect(f).toBe(file);
+    expect(doc.pages).toBe(pages); // the caller's object is untouched
   });
 });
 

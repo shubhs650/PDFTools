@@ -2,6 +2,7 @@
 // executor behind our typed RPC, plus direct PDFium calls EmbedPDF does not
 // expose (ADR-001 B14).
 import type { FontFallbackConfig } from '@embedpdf/engines/pdfium';
+import type { DocDigest } from '../workers/render/save/digest';
 import type { MethodSpec } from './protocol';
 
 export interface DocumentInfo {
@@ -43,6 +44,8 @@ export interface RenderApi {
       kept: number[];
       dropped: number;
       baseLength: number;
+      /** What the saved file must show (M1-21); null when the tail is empty. */
+      expected: DocDigest | null;
     }
   >;
   /** The tail of the last saveIncremental was written: it becomes the new base (M1-22). */

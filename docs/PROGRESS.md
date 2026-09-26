@@ -7,6 +7,12 @@ still open.
 
 ## Done
 
+- **Session 12 — M1-21 (save verification and Work-worker refresh).** Branch `m1/21-save-verify`.
+  Read-only per-page digest (raw PDFium) computed by the Render worker with each save; the Work
+  worker reopens original + tail and compares; keep-all fallback with a content-free local log;
+  committed tails refresh the Work copy lazily. Unit (comparison, fallback selection, real
+  two-PDFium path) and e2e (Work sees the annotation; forced mismatch → keep-all, qpdf-clean).
+
 - **Session 11 — M1-20 (save core in the Render worker).** Branch `m1/20-save-core`. Ported S1 save
   core (own FPDF_FILEWRITE, narrow tail, xref table/stream writer) with a committed _save base_ so
   repeated Ctrl+S appends only new changes; dirty tracking and permission checks (rule 9) around
@@ -507,6 +513,7 @@ still open.
 | ---------- | -------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | 2026-09-25 | M1-15    | Owner: zoom 100 % = one PDF point per CSS pixel (EmbedPDF scale 1, ADR-011's range), so Actual Size is not physical size. PR #13 (main → M0 branch) closed. Single-core machines are not a target; the one-core first-open contention from M1-13/15 CI needs no work.                                                                                                                                                                                     |
 | 2026-09-26 | M1-18    | Owner: headed Chrome/Edge 154 read stored file handles fine, so the Chromium 153 crash is headless/153-only; pin Playwright to 1.62.1 (Chromium 151) for CI rather than change the recent-files design (option 3).                                                                                                                                                                                                                                        |
+| 2026-09-26 | M1-14    | Owner: the CI first-preview check for the 2,000-page stand-in gets a 2 s margin (shared runners measured 1.50–1.54 s); the value is still recorded, and the §12 1.5 s target stays authoritative on the owner's machine (ADR-002). M1-27 sets the final gating.                                                                                                                                                                                           |
 | 2026-09-24 | ADR-001  | Session-1 clarifications B1–B16. Key ones: server-side analytics only; broader permissive allowlist; location-based redaction verification; EmbedPDF annotation and redaction sets; OPFS original + tail recovery; public-domain corpus only.                                                                                                                                                                                                             |
 | 2026-09-24 | scaffold | Vite 7 instead of 8, and no jsx-a11y, because of MPL-2.0 dependencies. Superseded by ADR-002.                                                                                                                                                                                                                                                                                                                                                             |
 | 2026-09-24 | ADR-002  | MPL-2.0 allowed for dev-only tooling only (lockfile `dev` flag). OFL-1.1 allowed for fonts. Heavy files are measure and report for Rev 0. Test drawings are owner-supplied local files, with no URLs in the repo. Moved to Vite 8 and enabled jsx-a11y.                                                                                                                                                                                                   |

@@ -8,7 +8,9 @@ import { RpcError } from '../engine/errors';
 import type { WorkApi } from '../engine/workApi';
 import { serve } from './rpc-host';
 import { wasmMemory } from './render/pdfium';
+import { digestDocument } from './render/save/digest';
 import { WorkDocs } from './work/docs';
+import { verifyCandidate } from './work/verify';
 import { Scheduler } from './work/scheduler';
 
 let mod: WrappedPdfiumModule | undefined;
@@ -45,6 +47,25 @@ serve<WorkApi>(self, {
   },
 
   refresh: ({ docId, tail }) => ({ pending: docs.refresh(docId, tail) }),
+
+  append: ({ docId, piece }) => ({ tailBytes: docs.append(docId, piece) }),
+
+  verify: ({ docId, piece, expected }, ctx) =>
+    scheduler.run('save-verify', ctx.signal, async () => {
+      if (!mod) throw new RpcError('not-initialized', 'The work worker is not initialized');
+      try {
+        return await verifyCandidate(mod, need(), docs, docId, piece, expected);
+      } finally {
+        wasmBytes();
+      }
+    }),
+
+  digest: ({ docId, pages, priority = 'interactive' }, ctx) =>
+    scheduler.run(priority, ctx.signal, async () => {
+      if (!mod) throw new RpcError('not-initialized', 'The work worker is not initialized');
+      const { doc } = await docs.get(docId);
+      return digestDocument(mod, need(), doc.id, pages);
+    }),
 
   close: async ({ docId }) => {
     await docs.close(docId);

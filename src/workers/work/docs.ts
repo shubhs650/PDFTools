@@ -8,6 +8,8 @@ import { RpcError } from '../../engine/errors';
 interface Entry {
   original: ArrayBuffer;
   password: string | undefined;
+  /** Bytes appended to the original so far (the latest saved tail). */
+  tail: ArrayBuffer | null;
   /** Tail waiting to be applied (null: nothing pending). */
   pendingTail: ArrayBuffer | null;
   appliedTailBytes: number;
@@ -25,6 +27,7 @@ export function concat(a: ArrayBuffer, b: ArrayBuffer | null | undefined): Array
 
 export class WorkDocs {
   private readonly entries = new Map<string, Entry>();
+  private verifySeq = 0;
   private readonly native: () => PdfiumNative;
 
   constructor(native: () => PdfiumNative) {
@@ -61,6 +64,7 @@ export class WorkDocs {
     this.entries.set(docId, {
       original,
       password,
+      tail: tail ?? null,
       pendingTail: null,
       appliedTailBytes: tail?.byteLength ?? 0,
       doc,
@@ -71,8 +75,43 @@ export class WorkDocs {
 
   refresh(docId: string, tail: ArrayBuffer): boolean {
     const e = this.require(docId);
+    e.tail = tail;
     e.pendingTail = tail;
     return true;
+  }
+
+  /** A saved tail piece appended after the current tail; applied lazily like refresh. */
+  append(docId: string, piece: ArrayBuffer): number {
+    const e = this.require(docId);
+    const tail = concat(e.tail ?? new ArrayBuffer(0), piece);
+    e.tail = tail;
+    e.pendingTail = tail;
+    return tail.byteLength;
+  }
+
+  /**
+   * Opens original + current tail + `piece` as a throwaway document, runs
+   * `fn` on it and closes it (M1-21 save verification). The kept copy is untouched.
+   */
+  async withCandidate<T>(
+    docId: string,
+    piece: ArrayBuffer,
+    fn: (candidateId: string, doc: PdfDocumentObject) => T,
+  ): Promise<T> {
+    const e = this.require(docId);
+    const bytes = concat(concat(e.original, e.tail), piece);
+    const candidateId = `${docId}#verify${String(++this.verifySeq)}`;
+    const doc = await this.native()
+      .openDocumentBuffer(
+        { id: candidateId, content: bytes },
+        e.password === undefined ? {} : { password: e.password },
+      )
+      .toPromise();
+    try {
+      return fn(candidateId, doc);
+    } finally {
+      await this.native().closeDocument(doc).toPromise();
+    }
   }
 
   /** The document with any pending tail applied (reopens original + tail). */
