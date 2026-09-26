@@ -697,3 +697,38 @@ body {
   min-width: 0;
   overflow-wrap: anywhere;
 }
+
+/* ------------------------------------------------------------ offline (M1-25) */
+.status-bar-slot--start {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-4);
+}
+
+.offline-status {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-4);
+  white-space: nowrap;
+}
+
+.offline-spinner {
+  inline-size: 12px;
+  block-size: 12px;
+  border: 2px solid currentColor;
+  border-inline-end-color: transparent;
+  border-radius: 50%;
+  animation: offline-spin 0.8s linear infinite;
+}
+
+@keyframes offline-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .offline-spinner {
+    animation: none;
+  }
+}

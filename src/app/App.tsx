@@ -3,6 +3,8 @@ import { CloseDocumentDialog, OpenErrorDialog } from '../features/open/dialogs';
 import { DocumentArea } from '../features/open/DocumentArea';
 import { DropZone } from '../features/open/DropZone';
 import { installLaunchQueue } from '../features/open/launchQueue';
+import { startBackgroundPrecache, startOffline } from '../features/offline/offline';
+import { OfflineStatus, UpdateWaitDialog } from '../features/offline/OfflineStatus';
 import { installRecovery } from '../features/recovery/recovery';
 import { RecoveryDialog } from '../features/recovery/RecoveryDialog';
 import { registerSaveCommands } from '../features/save/commands';
@@ -32,6 +34,14 @@ export function App() {
   useEffect(() => registerViewCommands(), []);
   useEffect(() => registerSaveCommands(), []);
   useEffect(() => installRecovery(), []);
+  // §9: register the service worker; after the first render, precache the rest.
+  useEffect(() => {
+    void startOffline().then(() => {
+      setTimeout(() => {
+        void startBackgroundPrecache();
+      }, 1000);
+    });
+  }, []);
   // After the commands exist: launched files open like any other (M1-19).
   useEffect(() => {
     installLaunchQueue();
@@ -42,7 +52,12 @@ export function App() {
       <ErrorBoundary where={BOUNDARY.app}>
         <AppFrame
           status={{
-            app: <SaveStatus />,
+            app: (
+              <>
+                <SaveStatus />
+                <OfflineStatus />
+              </>
+            ),
             pageNav: <PageNav />,
             view: (
               <>
@@ -73,6 +88,7 @@ export function App() {
         <SaveOptimizedDialog />
         <GrowthPrompt />
         <RecoveryDialog />
+        <UpdateWaitDialog />
         <DropZone />
       </ErrorBoundary>
     </UiProvider>

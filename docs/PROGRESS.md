@@ -7,6 +7,12 @@ still open.
 
 ## Done
 
+- **Session 12 — M1-25 (PWA offline precache and update flow).** Branch `m1/25-offline`. Own
+  service worker (core precache at install, background precache after first render, cache-first
+  same-origin fetch, on-demand fetch spinner); status bar "Preparing offline… n %" / "✓ Ready
+  offline"; "Update ready" applies only on click and never with documents open. e2e: offline
+  document work with zero outbound requests; two-build update flow.
+
 - **Session 12 — M1-24 (OPFS crash recovery).** Branch `m1/24-recovery`. Debounced snapshots
   (original once + committed tails + an unsaved narrow tail from a new non-pending Render RPC +
   view state) cleared on save or close; launch dialog with Recover / Discard; recovered documents

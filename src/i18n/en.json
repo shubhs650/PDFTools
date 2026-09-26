@@ -378,5 +378,15 @@
     "discardName": "Discard changes to {{name}}",
     "later": "Decide later",
     "untitled": "Recovered document.pdf"
+  },
+  "offline": {
+    "preparing": "Preparing offline… {{percent}}",
+    "ready": "✓ Ready offline",
+    "downloading": "Downloading a component…",
+    "updateReady": "Update ready",
+    "waitTitle": "Close your documents to update",
+    "waitDescription": "The update restarts PDFTools, so it waits until every document is closed. It applies as soon as you close the last one, or the next time you start PDFTools.",
+    "waitOk": "OK",
+    "notNow": "Not now"
   }
 }
