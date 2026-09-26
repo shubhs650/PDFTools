@@ -10,6 +10,8 @@ import { documentStore } from '../../app/store/documentStore';
 
 export type OfflinePhase = 'off' | 'preparing' | 'ready' | 'failed';
 export type UpdateState = 'none' | 'ready' | 'waiting-for-close';
+/** Help → Check for Updates, shown in the status bar for a few seconds (M1-28). */
+export type UpdateCheck = 'checking' | 'current' | 'found' | 'failed' | 'unavailable';
 
 interface OfflineStoreState {
   phase: OfflinePhase;
@@ -20,6 +22,7 @@ interface OfflineStoreState {
   update: UpdateState;
   /** The "close your documents first" explanation is shown. */
   explain: boolean;
+  check: UpdateCheck | null;
 }
 
 export const offlineStore = createStore<OfflineStoreState>()(() => ({
@@ -28,6 +31,7 @@ export const offlineStore = createStore<OfflineStoreState>()(() => ({
   priority: 0,
   update: 'none',
   explain: false,
+  check: null,
 }));
 
 export function useOffline<T>(selector: (s: OfflineStoreState) => T): T {
@@ -183,4 +187,64 @@ export function postponeUpdate(): void {
 /** "OK": the explanation closes; the update still applies once the last document closes. */
 export function dismissUpdateExplanation(): void {
   offlineStore.setState({ explain: false });
+}
+
+/** How long the result of a manual check stays in the status bar. */
+export const CHECK_MESSAGE_MS = 8000;
+const INSTALL_WAIT_MS = 120_000;
+let clearCheck: ReturnType<typeof setTimeout> | undefined;
+
+function showCheck(check: UpdateCheck): void {
+  clearTimeout(clearCheck);
+  offlineStore.setState({ check });
+  if (check !== 'checking') {
+    clearCheck = setTimeout(() => {
+      offlineStore.setState({ check: null });
+    }, CHECK_MESSAGE_MS);
+  }
+}
+
+/** Resolves once a worker that is installing has finished (installed or redundant). */
+function installed(sw: ServiceWorker): Promise<void> {
+  return new Promise((resolve) => {
+    const done = (): void => {
+      if (sw.state !== 'installing') {
+        sw.removeEventListener('statechange', done);
+        clearTimeout(timer);
+        resolve();
+      }
+    };
+    const timer = setTimeout(resolve, INSTALL_WAIT_MS);
+    sw.addEventListener('statechange', done);
+    done();
+  });
+}
+
+/**
+ * Help → Check for Updates (M1-28, §9): the same same-origin check the app
+ * runs hourly (rule 4), now, with its outcome in the status bar. A new version
+ * installs in the background and shows "Update ready" as usual; it is never
+ * applied from here.
+ */
+export async function checkForUpdates(
+  reg: ServiceWorkerRegistration | undefined = swEnabled() ? registration : undefined,
+  hasController: () => boolean = () => Boolean(navigator.serviceWorker.controller),
+): Promise<UpdateCheck> {
+  if (!reg) {
+    showCheck('unavailable');
+    return 'unavailable';
+  }
+  showCheck('checking');
+  let result: UpdateCheck;
+  try {
+    await reg.update();
+    if (reg.installing) await installed(reg.installing);
+    result = reg.waiting && hasController() ? 'found' : 'current';
+    if (result === 'found') offlineStore.setState({ update: 'ready' });
+  } catch (err) {
+    recordError('offline', err);
+    result = 'failed';
+  }
+  showCheck(result);
+  return result;
 }

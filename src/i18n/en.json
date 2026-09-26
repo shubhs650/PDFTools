@@ -387,7 +387,14 @@
     "waitTitle": "Close your documents to update",
     "waitDescription": "The update restarts PDFTools, so it waits until every document is closed. It applies as soon as you close the last one, or the next time you start PDFTools.",
     "waitOk": "OK",
-    "notNow": "Not now"
+    "notNow": "Not now",
+    "check": {
+      "checking": "Checking for updates…",
+      "current": "PDFTools is up to date.",
+      "found": "An update is ready. It applies when you choose Update ready.",
+      "failed": "Couldn't check for updates. Check your connection and try again.",
+      "unavailable": "Updates aren't available in this browser."
+    }
   },
   "settings": {
     "localData": {

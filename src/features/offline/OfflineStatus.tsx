@@ -1,8 +1,22 @@
 import { Dismiss20Regular } from '@fluentui/react-icons/svg/dismiss';
 import { useTranslation } from 'react-i18next';
-import { format } from '../../i18n';
+import { format, msg, type MessageKey } from '../../i18n';
 import { Button, Dialog } from '../../ui/components';
-import { applyUpdate, dismissUpdateExplanation, postponeUpdate, useOffline } from './offline';
+import {
+  applyUpdate,
+  dismissUpdateExplanation,
+  postponeUpdate,
+  useOffline,
+  type UpdateCheck,
+} from './offline';
+
+const CHECK_TEXT: Record<UpdateCheck, MessageKey> = {
+  checking: msg('offline.check.checking'),
+  current: msg('offline.check.current'),
+  found: msg('offline.check.found'),
+  failed: msg('offline.check.failed'),
+  unavailable: msg('offline.check.unavailable'),
+};
 
 /**
  * Status bar (§9, M1-25): offline readiness, on-demand downloads and
@@ -14,8 +28,14 @@ export function OfflineStatus() {
   const progress = useOffline((s) => s.progress);
   const priority = useOffline((s) => s.priority);
   const update = useOffline((s) => s.update);
+  const check = useOffline((s) => s.check);
   return (
     <>
+      {check ? (
+        <span className="offline-status" role="status" data-testid="update-check">
+          {t(CHECK_TEXT[check])}
+        </span>
+      ) : null}
       {priority > 0 ? (
         <span className="offline-status" role="status">
           <span className="offline-spinner" aria-hidden="true" />

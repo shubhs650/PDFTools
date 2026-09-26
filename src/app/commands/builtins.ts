@@ -1,5 +1,7 @@
 // Handlers that exist in M1-10 (window and ribbon toggles). Feature tasks add
-// theirs (save M1-22, view M1-15/16, help M1-11/25/26).
+// theirs (save M1-22, view M1-15/16, help M1-11/25/26; QAT Open and Check for
+// Updates M1-28).
+import { checkForUpdates } from '../../features/offline/offline';
 import { openFiles, requestClose } from '../../features/open/openDocument';
 import { pickPdfFiles } from '../../storage/fileAccess';
 import { appStore } from '../store/appStore';
@@ -34,6 +36,17 @@ export function registerBuiltinCommands(): () => void {
     registerCommand('file.open', {
       run: async () => {
         await openFiles(await pickPdfFiles());
+      },
+    }),
+    // Quick access toolbar (§8): the same command as File → Open.
+    registerCommand('qat.open', {
+      run: async () => {
+        await openFiles(await pickPdfFiles());
+      },
+    }),
+    registerCommand('help.updates', {
+      run: async () => {
+        await checkForUpdates();
       },
     }),
     registerCommand('tab.close', {
