@@ -7,6 +7,14 @@ still open.
 
 ## Done
 
+- **Session 11 — M1-17 (progressive render for heavy renders).** Branch `m1/17-progressive`. Cost model
+  (objects, path segments, pixels) routes heavy previews to PDFium's progressive path in the Render
+  worker, cancellable between 10 ms slices; the page comes from EmbedPDF's page cache via a second
+  accessor next to `docPtrOf`; pixels are encoded in the encoder worker and cached. Unit tests run
+  real PDFium in Node (pixel-equal to EmbedPDF's render, multi-slice, cancel at a slice boundary).
+  The accepted in-flight tile exception is documented in code. Dense A0 thrash: 7 of 8
+  progressive renders cancelled, longest slice 13 ms, no long tasks.
+
 - **Session 11 — M1-16 (view modes and rotate view).** Branch `m1/16-view-modes`. Four view modes
   from the View tab and a status-bar switch, per document in the store; the current page stays in
   view across mode and rotation changes; previous/next move by spread in facing modes; rotate view

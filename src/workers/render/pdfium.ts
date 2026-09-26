@@ -5,8 +5,15 @@
 import type { PdfiumNative } from '@embedpdf/engines/pdfium';
 import type { WrappedPdfiumModule } from '@embedpdf/pdfium';
 
+interface PageRef {
+  pagePtr: number;
+  release(): void;
+}
+
 interface NativeInternals {
-  cache?: { getContext(id: string): { docPtr: number } | undefined };
+  cache?: {
+    getContext(id: string): { docPtr: number; acquirePage?(index: number): PageRef } | undefined;
+  };
 }
 
 /** PDFium `FPDF_DOCUMENT` pointer of an open EmbedPDF document. */
@@ -21,6 +28,24 @@ export function docPtrOf(native: PdfiumNative, docId: string): number {
     throw new Error('EmbedPDF internals changed: context.docPtr is not a pointer');
   }
   return ctx.docPtr;
+}
+
+/**
+ * A page from EmbedPDF's own page cache (the same `FPDF_PAGE` its renders
+ * use, so a heavy page is parsed once). Hold it with `release()` in a
+ * `finally`; the cache closes the page after its TTL once released.
+ */
+export function acquirePage(native: PdfiumNative, docId: string, pageIndex: number): PageRef {
+  const ctx = (native as unknown as NativeInternals).cache?.getContext(docId);
+  if (!ctx) throw new Error('Document is not open');
+  if (typeof ctx.acquirePage !== 'function') {
+    throw new Error('EmbedPDF internals changed: context.acquirePage is missing');
+  }
+  const ref = ctx.acquirePage(pageIndex);
+  if (typeof ref.pagePtr !== 'number' || ref.pagePtr === 0 || typeof ref.release !== 'function') {
+    throw new Error('EmbedPDF internals changed: page context has no pagePtr/release');
+  }
+  return ref;
 }
 
 type RawFn = (...args: (number | string)[]) => number;

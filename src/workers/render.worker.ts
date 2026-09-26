@@ -9,7 +9,10 @@ import { RpcError } from '../engine/errors';
 import { Transfer } from '../engine/protocol';
 import { PDFIUM_ERROR_PREFIX, type RenderApi } from '../engine/renderApi';
 import { serve } from './rpc-host';
-import { docPtrOf, rawCall, wasmMemory } from './render/pdfium';
+import { acquirePage, docPtrOf, rawCall, wasmMemory } from './render/pdfium';
+import { renderProgressive } from './render/progressive';
+
+const FPDF_PAGEOBJ_PATH = 2;
 
 let mod: WrappedPdfiumModule | undefined;
 let native: PdfiumNative | undefined;
@@ -134,6 +137,39 @@ serve<RenderApi>(self, {
     } finally {
       m.pdfium.wasmExports.free(buf);
       rawCall(m, 'FPDF_ClosePage', page);
+    }
+  },
+
+  pageCost: ({ docId, pageIndex }) => {
+    const { mod: m, native: n } = ready();
+    const page = acquirePage(n, docId, pageIndex);
+    try {
+      const objects = rawCall(m, 'FPDFPage_CountObjects', page.pagePtr);
+      let segments = 0;
+      for (let i = 0; i < objects; i++) {
+        const obj = rawCall(m, 'FPDFPage_GetObject', page.pagePtr, i);
+        if (obj && rawCall(m, 'FPDFPageObj_GetType', obj) === FPDF_PAGEOBJ_PATH)
+          segments += Math.max(0, rawCall(m, 'FPDFPath_CountSegments', obj));
+      }
+      return { objects, segments };
+    } finally {
+      page.release();
+    }
+  },
+
+  renderProgressive: async ({ docId, pageIndex, scale, sliceMs }, ctx) => {
+    const { mod: m, native: n } = ready();
+    const page = acquirePage(n, docId, pageIndex);
+    try {
+      const size = {
+        width: rawCall(m, 'FPDF_GetPageWidthF', page.pagePtr),
+        height: rawCall(m, 'FPDF_GetPageHeightF', page.pagePtr),
+      };
+      const out = await renderProgressive(m, page.pagePtr, size, scale, ctx.signal, sliceMs);
+      ctx.progress({ slices: out.slices });
+      return new Transfer(out, [out.data.buffer]);
+    } finally {
+      page.release();
     }
   },
 
