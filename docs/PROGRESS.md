@@ -1,11 +1,19 @@
 # PDFTools — Progress
 
-_Last updated: 2026-09-25 (session 8: M1 plan drafted and approved)_
+_Last updated: 2026-09-26 (session 13: M1-26 to M1-28)_
 
 **Current milestone:** M1 — Foundation (plan: [docs/plan/M1.md](plan/M1.md)). M0 owner runs are
 still open.
 
 ## Done
+
+- **Session 13 — M1-26 (local data and privacy page).** Branch `m1/26-local-data`. File →
+  Settings shows what is stored and "Clear all local data…" (confirmation, open/unsaved-document
+  warning): OPFS recovery snapshots, the IndexedDB database and non-app caches go; the service
+  worker's app files stay, so the app keeps working offline. File → About (version + build commit,
+  third-party notices) and File → Privacy (promises and a table of every local store, checked
+  against the code by a unit test). Third-party notices for all 127 runtime packages, generated at
+  build time (PDFium and the fonts' OFL text included).
 
 - **Session 12 — M1-25 (PWA offline precache and update flow).** Branch `m1/25-offline`. Own
   service worker (core precache at install, background precache after first render, cache-first

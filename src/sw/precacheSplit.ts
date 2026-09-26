@@ -2,7 +2,7 @@
 // worker caches at install (the core: shell, UI, Render worker, PDFium WASM,
 // Latin/Arabic/Hebrew fonts) and what it caches in the background after the
 // first render (Work worker, CJK fonts; later milestones add PDF Oxide,
-// ExcelJS, docx). Shared by the service worker and its unit test.
+// ExcelJS, docx) and the third-party notices (File → About). Shared by the service worker and its unit test.
 
 export interface PrecacheEntry {
   url: string;
@@ -10,7 +10,11 @@ export interface PrecacheEntry {
 }
 
 /** Background modules: needed later than the first page, or only for some documents. */
-const BACKGROUND = [/(^|\/)assets\/work\.worker-[\w-]+\.js$/, /(^|\/)fonts\/(sc|tc|jp|kr)\//];
+const BACKGROUND = [
+  /(^|\/)assets\/work\.worker-[\w-]+\.js$/,
+  /(^|\/)fonts\/(sc|tc|jp|kr)\//,
+  /(^|\/)third-party-notices\.txt$/,
+];
 
 /** Never precached: the service worker itself, and font license texts. */
 const SKIP = [/(^|\/)sw\.js$/, /(^|\/)workbox-[\w-]+\.js$/, /(^|\/)LICENSE$/, /(^|\/)_headers$/];

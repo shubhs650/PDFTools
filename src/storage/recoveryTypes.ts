@@ -24,3 +24,6 @@ export interface Snapshot {
   ui: UiState | undefined;
   updated: number;
 }
+
+/** OPFS directory of the recovery snapshots (opfs.ts; listed on the Privacy page, M1-26). */
+export const RECOVERY_DIR = 'recovery';

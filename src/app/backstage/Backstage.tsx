@@ -7,6 +7,8 @@ import { CommandIcon } from '../../ui/icons/CommandIcon';
 import { commandLabelKey } from '../commandLabels';
 import { ribbonLayout } from '../ribbon/layout';
 import { RecentList } from '../../features/recent/RecentList';
+import { LocalData } from '../../features/settings/LocalData';
+import { About, Privacy } from './AboutPrivacy';
 import { RibbonButton } from '../ribbon/RibbonButton';
 
 /** One description per backstage section (content arrives with each feature task). */
@@ -33,7 +35,7 @@ export interface BackstageProps {
  * File backstage (§8): a full-window modal with a section list on the left.
  * Focus is trapped while open; Esc or "Back" closes it and returns focus to
  * the File button (Radix Dialog). Section content is filled by later tasks
- * (open M1-13, recent M1-18, save M1-22/23, settings and privacy M1-26).
+ * (open M1-13, recent M1-18, save M1-22/23, settings, about and privacy M1-26).
  */
 export function Backstage({ open, onOpenChange }: BackstageProps) {
   const { t } = useTranslation();
@@ -129,6 +131,12 @@ export function Backstage({ open, onOpenChange }: BackstageProps) {
                     onOpenChange(false);
                   }}
                 />
+              ) : section.id === 'file.settings' ? (
+                <LocalData />
+              ) : section.id === 'file.about' ? (
+                <About />
+              ) : section.id === 'file.privacy' ? (
+                <Privacy />
               ) : (
                 <RibbonButton
                   command={section}
