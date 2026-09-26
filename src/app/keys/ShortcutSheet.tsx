@@ -14,6 +14,8 @@ const ACTION_LABELS: Record<InternalAction, MessageKey> = {
   'tab.next': msg('shortcuts.action.tabNext'),
   'tab.prev': msg('shortcuts.action.tabPrev'),
   'tool.cancel': msg('shortcuts.action.toolCancel'),
+  'edit.copy': msg('shortcuts.action.editCopy'),
+  'edit.selectAll': msg('shortcuts.action.editSelectAll'),
 };
 
 /** Printable list of every binding, generated from the keymap (§8.1). */

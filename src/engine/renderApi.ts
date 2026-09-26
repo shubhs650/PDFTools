@@ -9,6 +9,10 @@ export interface DocumentInfo {
   pageCount: number;
   /** `FPDF_GetDocPermissions` bits (rule 9, D-19). 0xFFFFFFFF when unrestricted. */
   permissions: number;
+  /** `FPDF_GetSecurityHandlerRevision`: -1 when the file is not encrypted (ADR-013). */
+  securityRevision: number;
+  /** Opened with, or unlocked by, the owner password (`EPDF_IsOwnerUnlocked`). */
+  ownerUnlocked: boolean;
   /** Number of signature fields (D-06: Save Optimized warns when > 0). */
   signatureCount: number;
 }

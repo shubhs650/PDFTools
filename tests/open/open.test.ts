@@ -7,7 +7,13 @@ import {
   classifyOpenError,
   hasPdfHeader,
 } from '../../src/features/open/errors';
-import { INITIAL, transition, type OpenPhase } from '../../src/features/open/openMachine';
+import {
+  INITIAL,
+  isFinal,
+  transition,
+  type OpenEvent,
+  type OpenPhase,
+} from '../../src/features/open/openMachine';
 import { findDuplicate, type Candidate } from '../../src/features/open/sources';
 import en from '../../src/i18n/en.json';
 
@@ -48,6 +54,50 @@ describe('open state machine (M1-13)', () => {
     expect(transition(ready, { type: 'failed', kind: 'unknown' })).toBe(ready);
     const failed: OpenPhase = { phase: 'error', kind: 'damaged' };
     expect(transition(failed, { type: 'read' })).toBe(failed);
+  });
+});
+
+describe('open state machine: passwords (M2-03, D-19)', () => {
+  const run = (...events: OpenEvent[]) => events.reduce(transition, INITIAL);
+
+  it('opening → password → opening → ready', () => {
+    expect(run({ type: 'read' }, { type: 'needs-password', retry: false })).toEqual({
+      phase: 'password',
+      retry: false,
+    });
+    expect(
+      run(
+        { type: 'read' },
+        { type: 'needs-password', retry: false },
+        { type: 'password-given' },
+        { type: 'needs-password', retry: true },
+      ),
+    ).toEqual({ phase: 'password', retry: true });
+    expect(
+      run(
+        { type: 'read' },
+        { type: 'needs-password', retry: false },
+        { type: 'password-given' },
+        { type: 'opened', docId: 'd' },
+      ),
+    ).toEqual({ phase: 'ready', docId: 'd' });
+  });
+
+  it('cancelling the prompt ends the job without an error', () => {
+    const s = run(
+      { type: 'read' },
+      { type: 'needs-password', retry: false },
+      { type: 'cancelled' },
+    );
+    expect(s).toEqual({ phase: 'cancelled' });
+    expect(isFinal(s)).toBe(true);
+    expect(transition(s, { type: 'failed', kind: 'damaged' })).toBe(s);
+  });
+
+  it('password events only apply where they make sense', () => {
+    expect(run({ type: 'needs-password', retry: false })).toEqual({ phase: 'reading' });
+    expect(run({ type: 'read' }, { type: 'password-given' })).toEqual({ phase: 'opening' });
+    expect(run({ type: 'read' }, { type: 'cancelled' })).toEqual({ phase: 'opening' });
   });
 });
 

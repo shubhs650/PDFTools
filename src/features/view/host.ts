@@ -5,8 +5,13 @@
 import type { PluginRegistry } from '@embedpdf/core';
 import type { DocumentManagerCapability } from '@embedpdf/plugin-document-manager';
 import { createStore, useStore } from 'zustand';
-import { documentStore } from '../../app/store/documentStore';
+import { PdfErrorCode } from '@embedpdf/models';
+import { documentStore, securityOf } from '../../app/store/documentStore';
 import { createRenderEngine, type RenderEngine } from '../../engine/createEngine';
+import { RpcError } from '../../engine/errors';
+import type { TextSource } from '../../engine/hostedEngine';
+import { PDFIUM_ERROR_PREFIX } from '../../engine/renderApi';
+import { allows } from '../../model/permissions';
 import { localFontConfig } from '../../engine/fonts';
 import { WorkClient } from '../../engine/workClient';
 import { instrumentEngine } from './renderStats';
@@ -29,6 +34,31 @@ let work: WorkClient | undefined;
 /** Rendered previews and tiles of every open document (§5). */
 export const tileCache = new TileCache();
 
+/**
+ * The text layer's geometry and text come from the Work worker (ADR-012
+ * decision 1); without a Work copy of the document, from the Render worker.
+ * Text is refused before it leaves a worker when the document forbids copying
+ * (rule 9; the selection plugin checks too).
+ */
+const textSource: TextSource = {
+  pageGeometry: (doc, page) => {
+    const w = startedWorkClient();
+    return w?.has(doc.id) ? w.run('pageGeometry', { docId: doc.id, pageIndex: page.index }) : null;
+  },
+  textSlices: (doc, slices) => {
+    const meta = documentStore.getState().docs[doc.id]?.meta;
+    if (meta && !allows(securityOf(meta), 'copy')) {
+      const refused = new RpcError(
+        `${PDFIUM_ERROR_PREFIX}${String(PdfErrorCode.Security)}`,
+        'Copying is not allowed',
+      );
+      return { promise: Promise.reject(refused), cancel: () => undefined };
+    }
+    const w = startedWorkClient();
+    return w?.has(doc.id) ? w.run('textSlices', { docId: doc.id, slices }) : null;
+  },
+};
+
 export function renderEngine(): RenderEngine {
   const existing = hostStore.getState().render;
   if (existing) return existing;
@@ -37,6 +67,7 @@ export function renderEngine(): RenderEngine {
     onMutation: (_method, docId) => {
       documentStore.getState().markDirty(docId);
     },
+    text: textSource,
   });
   instrumentEngine(render.engine, tileCache);
   installRanker(render.engine);

@@ -1,7 +1,3 @@
-import { execFileSync } from 'node:child_process';
-import { mkdtempSync, readFileSync, writeFileSync } from 'node:fs';
-import { tmpdir } from 'node:os';
-import { join } from 'node:path';
 import type { Page } from '@playwright/test';
 import { cap, drop } from './support/app.ts';
 import { expect, test } from './support/fixtures.ts';
@@ -192,36 +188,6 @@ test('a text file and a truncated PDF get localized messages; no tab opens', asy
   const s = await state(page);
   expect(s.names).toEqual([]);
   expect(s.engineOrder).toEqual([]);
-});
-
-test('a password-protected file says it is not supported yet', async ({ page, pdfs }) => {
-  let qpdf = true;
-  try {
-    execFileSync('qpdf', ['--version']);
-  } catch {
-    qpdf = false;
-  }
-  test.skip(!qpdf, 'qpdf is needed to make the encrypted fixture');
-  const dir = mkdtempSync(join(tmpdir(), 'pdftools-open-'));
-  writeFileSync(join(dir, 'in.pdf'), pdfs.simple(1));
-  execFileSync('qpdf', [
-    '--encrypt',
-    'u',
-    'o',
-    '256',
-    '--',
-    join(dir, 'in.pdf'),
-    join(dir, 'out.pdf'),
-  ]);
-  await page.goto('/');
-  await drop(page, [
-    { name: 'locked.pdf', b64: readFileSync(join(dir, 'out.pdf')).toString('base64') },
-  ]);
-  const dialog = page.getByRole('dialog');
-  await expect(dialog).toHaveAccessibleName("Couldn't open locked.pdf");
-  await expect(dialog).toContainText('password-protected');
-  await dialog.getByRole('button', { name: 'OK' }).click();
-  expect((await state(page)).engineOrder).toEqual([]);
 });
 
 // Long tasks during open are gated in e2e/perf/open.spec.ts (serial, perf project).

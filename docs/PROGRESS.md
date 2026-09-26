@@ -1,12 +1,80 @@
 # PDFTools — Progress
 
-_Last updated: 2026-09-26 (session 13: M1-26 to M1-28)_
+_Last updated: 2026-09-26 (session 14: M2 plan, M2-01 to M2-05)_
 
-**Current milestone:** M1 — Foundation is **complete on the agent side** (M1-01 … M1-28; results
-and owner pack: [docs/acceptance/M1.md](acceptance/M1.md)). Next is M2 once the owner has merged
-the M1 PRs and approved the M2 plan. M0 and M1 owner runs are still open.
+**Current milestone:** M1 — Foundation is **complete on the agent side** and merged into `main`
+(M1-01 … M1-28; results and owner pack: [docs/acceptance/M1.md](acceptance/M1.md)). The
+[M2 plan](plan/M2.md) is approved; **M2-01 to M2-05 are done** on stacked branches, waiting for
+review.
+M0 and M1 owner runs are still open.
 
 ## Done
+
+- **Session 14 — M2-05 (search core in the Work worker).** Branch `m2/05-search` (stacked on
+  M2-04). The S5 search promoted: `searchCore.ts` (query compile with error codes, matching, order,
+  batcher), `search.ts` (session text cache, streaming search, context on demand past the 5,000
+  cap, hit rectangles), Work RPCs `search`, `searchContext`, `hitRects`, and `SearchSession`
+  (cancel on new search, stale batches dropped). New `ctx.stream()` in the RPC host: the throttled
+  progress channel keeps only the latest value and would have dropped hit batches. Found: this
+  PDFium counts a non-BMP character as two chars, so the hand mapping ADR-006 suggested was wrong;
+  PDFium's own `FPDFText_GetCharIndexFromTextIndex` is used. Tests: ported S5 units, real-PDFium
+  search (needle, exact count past the cap, cancel, rotated page rects, non-BMP, bad regex),
+  session over a real channel, perf scenario on the 2,000-page stand-in (first hit 53–176 ms,
+  complete 5.1–5.7 s, 0 long tasks).
+
+- **Session 14 — M2-04 (text selection and copy).** Branch `m2/04-selection` (stacked on M2-03).
+  `@embedpdf/plugin-selection` 2.15.1 (MIT; license gate 642 packages) with the interaction
+  manager; per-page pointer provider and selection layer; the text geometry and text come from the
+  Work worker through a `RoutedPdfEngine` (ADR-012 decision 1), falling back to the Render worker
+  only when the Work worker has no copy. The Work worker now opens documents with
+  `normalizeRotation` like the Render worker (rotated pages had different coordinates). Ctrl+C
+  copies the selection (refused before text leaves a worker when copying is denied), Ctrl+A selects
+  the current page, Esc clears; Hand never selects. Found and fixed: page images started a native
+  image drag that cancelled every pointer stream after the first press. Tests: routed engine unit
+  tests, Work-client open-wait, e2e drag/copy, Ctrl+A, Hand, rotated page, copy denied; perf
+  scenarios for selection on the stand-in and the dense A0 sheet; the pane-load gate (geometry
+  load keeps tile p50 < 2× baseline + 5 ms; it was 3× through the Render queue).
+
+- **Session 14 — M2-03 (protected PDFs).** Branch `m2/03-protected` (stacked on M2-02). Open
+  password prompt (masked, retry message, Cancel opens nothing); the same prompt on recovery and
+  recent reopen. One revision-aware permission map for the UI and the Render worker's save
+  tracker, which fixes the R2 case found in M2-02 (qpdf R2 file: filling was allowed). Commands
+  can declare the capability they need and are disabled with a reason; a restrictions banner above
+  the document; Protect → Unlock with Owner Password in both workers, surviving Work-worker
+  reloads; the Protect tab shows with Unlock. New `TextField` primitive and `format.list`. Tests:
+  permission rules and real-PDFium checks on qpdf R2–R6 files; Work copy unlock across a reload
+  and a respawn; open-machine password transitions; e2e for the prompt, cancel, owner unlock
+  (edits refused until then), and a scan of IndexedDB, OPFS and web storage that finds no password
+  (with a negative control). The encrypted-fixture helper moved to `e2e/fixtures/encrypted.ts`.
+
+- **Session 14 — M2-02 (security, forms and print spike).** Branch `m2/02-secure-print-spike`
+  (stacked on M2-01). _Works with workaround_, [ADR-013](adr/013-m2-security-forms-print.md)
+  (proposed). Passwords and owner unlock work on R2–R6 without reopening; saves after an unlock
+  stay encrypted, narrow and qpdf-clean. Found: our M1 tracker allowed form filling on an R2 file
+  that denies it (R2 needs its own permission rules, fixed in M2-03); `setFormFieldValue` ignores
+  read-only; a radio change saves narrow without its parent field, which M1-21 verification
+  catches (keep-all fallback, no data loss; dirty-set fix in M2-14); EmbedPDF renders ignore the
+  Print flag and `preparePrintDocument` drops markups. Flattening a copy is pixel-identical and
+  vector. Printing works under today's CSP as raster images in an `about:blank` iframe; vector
+  printing through the browser's viewer needs `frame-src blob:` (owner decision). Spike scripts
+  that import `/src` now run with `node --import ./spikes/shared/ts-ext.ts`.
+
+- **Session 14 — M2-01 (viewer-side spike).** Branch `m2/01-read-spike`. _Works with
+  workaround_, [ADR-012](adr/012-m2-read-apis.md) (proposed). EmbedPDF 2.15.1 has every API the
+  panes and text layer need, but the Render worker runs one call at a time: text geometry through
+  it tripled visible-tile p50 (14 → 43 ms), one dense-A0 thumbnail doubled zoom-tile p50, and a
+  20 MB attachment read is one 0.4 s call. So: `plugin-selection` with text geometry from the Work
+  worker; own thumbnails at lower priority; bookmarks/links straight from the engine (500 entries
+  in 11 ms); attachments in the Work worker. **Layers can't be toggled** (no optional-content API
+  in this PDFium) — owner choice needed (ADR-012 decision 5). New perf scenario
+  `e2e/perf/pane-load.spec.ts`; e2e-only probe `view.engineLoad`.
+
+- **Session 14 — M2 plan.** Branch `claude/m2-task-breakdown-ytspb5`. Read PROGRESS,
+  ARCHITECTURE Rev 0.4 and ADR-001 to ADR-011; wrote [docs/plan/M2.md](plan/M2.md): 19 tasks
+  (two spikes → ADR-012/013, protected PDFs, text selection, search core + background indexing +
+  find bar + Advanced Search, panes, properties, signatures, forms, print, print-ready export,
+  error report, acceptance) with goals, files, acceptance criteria, tests and dependencies, plus
+  nine owner questions (M2-Q1 … Q9). No code.
 
 - **Session 13 — M1-28 (M1 acceptance pass and owner pack).** Branch `m1/28-acceptance`. All nine
   M1 §12 rows met on typical files (offline start 227 ms, first page 872 ms, 0 blank frames, A0
@@ -65,7 +133,7 @@ the M1 PRs and approved the M2 plan. M0 and M1 owner runs are still open.
   two-PDFium path) and e2e (Work sees the annotation; forced mismatch → keep-all, qpdf-clean).
 
 - **Session 11 — M1-20 (save core in the Render worker).** Branch `m1/20-save-core`. Ported S1 save
-  core (own FPDF_FILEWRITE, narrow tail, xref table/stream writer) with a committed _save base_ so
+  core (own FPDF*FILEWRITE, narrow tail, xref table/stream writer) with a committed \_save base* so
   repeated Ctrl+S appends only new changes; dirty tracking and permission checks (rule 9) around
   every mutating engine call; save RPCs (`saveIncremental`, `commitSave`, `saveRewrite`,
   `saveState`) returning bytes by transfer. 8-input real-PDFium matrix (prefix, /Prev, /ID,
@@ -425,14 +493,16 @@ the M1 PRs and approved the M2 plan. M0 and M1 owner runs are still open.
 
 ## In progress
 
-- M0: the agent part of all eight spikes is done and all spike ADRs are accepted. Owner runs are
-  still open. The owner checks listed under Next are pending.
-- **M1 PRs waiting for review and merge:** [#29](https://github.com/shubhs650/PDFTools/pull/29)
-  (M1-26), [#30](https://github.com/shubhs650/PDFTools/pull/30) (M1-27, stacked on #29) and the
-  [#31](https://github.com/shubhs650/PDFTools/pull/31) (M1-28, stacked on #30). Merge them in that
-  order.
+- **M2 branches waiting for review and merge, in this order** (each is stacked on the one before):
+  `claude/m2-task-breakdown-ytspb5` (the plan) → `m2/01-read-spike` → `m2/02-secure-print-spike`
+  → `m2/03-protected` → `m2/04-selection` → `m2/05-search`. No pull requests opened yet.
 
 ## Session log
+
+- **Session 14 (2026-09-26):** M2 plan (approved), then M2-01 to M2-05 on stacked `m2/…`
+  branches. Local checks on the last branch all pass: typecheck (app and spikes), lint, format,
+  472 unit tests, license gate (642 packages), build + `check:dist`, bundle report (core 6.72 MB),
+  116 e2e, 16 perf scenarios. qpdf installed in the container for the encrypted fixtures.
 
 - **Session 13 (2026-09-26):** M1-26, M1-27 and M1-28, on `m1/26-local-data`, `m1/27-ci` and
   `m1/28-acceptance` (stacked; one PR each). Local checks all pass on the last branch: typecheck,
@@ -501,15 +571,14 @@ the M1 PRs and approved the M2 plan. M0 and M1 owner runs are still open.
      (`node spikes/s4-oxide/run-node.ts <files>`; dumps in `out/review/`, see ADR-009);
    - FAR, 500 MB and A0 through the S3 harness;
    - S8 Firefox check and Pages preview.
-3. **Owner:** review and merge the M1 PRs in order, #29 → #30 → #31, with "Create a
-   merge commit". M1-01 to M1-25 are merged into `main`.
+3. **Owner:** review and merge the M2 branches in order (see "In progress"), and decide the open
+   items under "Decisions needed" (layers, `frame-src blob:`, keyboard text selection).
 4. **Owner:** the M1 owner pack in [docs/acceptance/M1.md](acceptance/M1.md) §3 — heavy-file
    timings (`npm run owner:timings`), the installed app on Windows (file handler, offline, update,
    reserved keys), a Firefox smoke test, the Pages preview, and interop §M1 of
    `e2e/interop/CHECKLIST.md`.
-5. **Agent:** draft the M2 plan (`docs/plan/M2.md`: search + find bar, panes, print, protected
-   PDFs, signature pane, forms, error report) for owner approval. Do not start M2 features before
-   it is approved.
+5. **Agent:** M2-06 (background text indexing), then M2-07 (find bar) and M2-08 (pane framework
+   and thumbnails).
 
 ## Open issues
 
@@ -558,6 +627,17 @@ the M1 PRs and approved the M2 plan. M0 and M1 owner runs are still open.
 
 ## Decisions needed (owner)
 
+- **Keyboard text selection (M2-04).** Caret-based selection (Shift+arrows) is not built; the
+  keyboard path is Ctrl+A (page text) + Ctrl+C. Accept as an exception to the M2-04 criterion, or
+  schedule caret selection (about one session).
+- **CSP `frame-src blob:` (ADR-013 decision 7, M2-Q6).** Adds exactly `frame-src blob:` to §10.1 so
+  large or high-DPI jobs (drawings) can print at vector quality through the browser's PDF viewer.
+  Without it, M2-16 ships capped raster printing plus "Export Print-Ready PDF".
+
+0. **Layers pane (ADR-012 decision 5, M2-Q8).** PDFium can't toggle layers. Proposed: a
+   list-only Layers pane in M2-11 (names and default visibility), plus an upstream request.
+   Alternatives in the ADR: render from a patched copy (not recommended), or drop the pane from
+   Rev 0.
 1. **Committed corpus PDFs.** Either confirm that all six files in `corpus/` are public domain and
    may stay in git, and amend ADR-002 to say so, or move them to the git-ignored `corpus/files/`
    (drawings to `corpus/files/drawings/`) and remove them from history. The S3 spec skips if they
@@ -590,4 +670,5 @@ the M1 PRs and approved the M2 plan. M0 and M1 owner runs are still open.
 | 2026-09-24 | ADR-010  | S6: Fluent **Regular** icons (Filled for active states) instead of the deprecated, 19 %-coverage Color style; large buttons use native 32 px or scaled 28/24 px glyphs; 23 custom icons in the same line style; icon registry with per-icon path imports. **Accepted**; ARCHITECTURE.md Rev 0.4, CLAUDE.md rule 15.                                                                                                                                       |
 | 2026-09-24 | ADR-009  | S4: adopt PDF Oxide for text/Markdown/HTML (lazy, background warm-up); PDFium permission gate before every Oxide call; Oxide tables as the lattice candidate only, own stream detector; search stays on PDFium; pin 0.3.x and add notices. **Accepted**; ARCHITECTURE.md Rev 0.3.                                                                                                                                                                         |
 | 2026-09-25 | M1 plan  | M1 plan approved. M1-Q1: Ctrl+Alt+W / Ctrl+Alt+F4 close tab and Ctrl+Alt+PageUp/PageDown switch tab, alongside the §8.1 keys (ADR-001 B5). Q2: ribbon tabs hidden until they have a working command. Q3: test hook only in the `e2e` build mode. Q4: dependency list accepted. Q5: Select without text selection until M2. Q6: File → Properties in M2. Q7: CI uses generated self-made fixtures only. Q8: merge PR #1 and M0, then `m1/<task>` branches. |
+| 2026-09-26 | M2 plan  | M2 plan approved. M2-Q1: no Oxide in M2 (M4). Q2: signature pane in M2. Q3: search reads existing annotation text and bookmark titles. Q4: internal links navigate; external links confirm first. Q5: agent writes the Pages Function, owner provisions Cloudflare. Q6: `frame-src blob:` only after ADR-013 approval. Q7: passwords in worker memory only. Q8: layers per M2-01. Q9: `m2/<task>` branches.                                               |
 | 2026-09-25 | ADR-011  | M1-01: adopt the EmbedPDF plugin stack (pinned 2.15.1, one registry + document manager, no per-document permission overrides); own bounded PreviewLayer, own encoder worker, own paged mode for single/facing. **Accepted**; no ARCHITECTURE.md change.                                                                                                                                                                                                   |

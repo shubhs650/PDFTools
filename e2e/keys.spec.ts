@@ -97,7 +97,8 @@ test('the shortcut sheet opens from Help and lists every binding', async ({ page
   const dialog = page.getByRole('dialog', { name: 'Keyboard shortcuts' });
   await expect(dialog).toBeVisible();
   const rows = dialog.getByTestId('shortcut-sheet').locator('tbody tr');
-  await expect(rows).toHaveCount(15);
+  await expect(rows).toHaveCount(17);
+  await expect(dialog.getByRole('row', { name: /Copy Selected Text/ })).toContainText('Ctrl+C');
   await expect(dialog.getByRole('rowheader', { name: 'Close Tab' })).toBeVisible();
   await expect(dialog.getByRole('row', { name: /Close Tab/ })).toContainText('Ctrl+Alt+W');
   await expect(dialog.getByRole('button', { name: 'Print' })).toBeVisible();

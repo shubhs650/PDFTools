@@ -24,10 +24,21 @@ export interface WorkDocSource {
 
 interface DocRecord extends WorkDocSource {
   tail: ArrayBuffer | undefined;
+  /** Owner password once unlocked: re-applied after a respawn (memory only, M2-Q7). */
+  ownerPassword?: string;
 }
 
 /** Job methods: the ones that run through the worker's scheduler. */
-type JobMethod = 'docState' | 'textStats' | 'verify' | 'digest';
+type JobMethod =
+  | 'docState'
+  | 'textStats'
+  | 'verify'
+  | 'digest'
+  | 'pageGeometry'
+  | 'textSlices'
+  | 'search'
+  | 'searchContext'
+  | 'hitRects';
 
 export interface WorkClientOptions {
   wasmUrl?: string;
@@ -49,6 +60,8 @@ export class WorkClient {
   private rpc!: RpcClient<WorkApi>;
   private ready!: Promise<unknown>;
   private readonly docs = new Map<string, DocRecord>();
+  /** Opens in flight: jobs on those documents wait for them (the worker needs the copy). */
+  private readonly opening = new Map<string, Promise<unknown>>();
   private readonly wasmUrl: string;
   private readonly threshold: number;
   private readonly spawnWorker: () => Worker;
@@ -86,18 +99,29 @@ export class WorkClient {
     bytes: ArrayBuffer,
     source: WorkDocSource,
   ): Promise<{ pageCount: number }> {
-    await this.whenReady();
     this.docs.set(docId, { ...source, tail: undefined });
-    const { pageCount } = await this.rpc.call(
-      'open',
-      {
-        docId,
-        original: bytes,
-        ...(source.password === undefined ? {} : { password: source.password }),
-      },
-      { transfer: [bytes] },
-    ).promise;
-    return { pageCount };
+    const opened = (async () => {
+      await this.whenReady();
+      return this.rpc.call(
+        'open',
+        {
+          docId,
+          original: bytes,
+          ...(source.password === undefined ? {} : { password: source.password }),
+        },
+        { transfer: [bytes] },
+      ).promise;
+    })();
+    this.opening.set(docId, opened);
+    try {
+      const { pageCount } = await opened;
+      return { pageCount };
+    } catch (err) {
+      this.docs.delete(docId);
+      throw err;
+    } finally {
+      this.opening.delete(docId);
+    }
   }
 
   /** New incremental tail after a save or edit (§3.1): the worker applies it on its next job. */
@@ -121,6 +145,16 @@ export class WorkClient {
     d.tail = appendBytes(d.tail, piece);
     await this.whenReady();
     await this.rpc.call('append', { docId, piece: piece.slice(0) }).promise;
+  }
+
+  /** Owner-password unlock of the worker's copy (§7.12); kept for respawn reloads. */
+  async unlock(docId: string, ownerPassword: string): Promise<boolean> {
+    const d = this.docs.get(docId);
+    if (!d) return false;
+    await this.whenReady();
+    const { unlocked } = await this.rpc.call('unlock', { docId, ownerPassword }).promise;
+    if (unlocked) d.ownerPassword = ownerPassword;
+    return unlocked;
   }
 
   async close(docId: string): Promise<void> {
@@ -154,6 +188,8 @@ export class WorkClient {
     this.active++;
     const promise = (async () => {
       try {
+        const docId = (args as { docId?: unknown }).docId;
+        if (typeof docId === 'string') await this.opening.get(docId);
         await this.whenReady();
         job = this.rpc.call(method, args, { ...options, signal: ac.signal });
         return await job.promise;
@@ -236,6 +272,7 @@ export class WorkClient {
           original,
           ...(d.tail ? { tail: d.tail.slice(0) } : {}),
           ...(d.password === undefined ? {} : { password: d.password }),
+          ...(d.ownerPassword === undefined ? {} : { ownerPassword: d.ownerPassword }),
         },
         { transfer: [original] },
       ).promise;

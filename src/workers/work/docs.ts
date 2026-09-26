@@ -8,6 +8,8 @@ import { RpcError } from '../../engine/errors';
 interface Entry {
   original: ArrayBuffer;
   password: string | undefined;
+  /** Owner password once unlocked (session memory only, M2-Q7); applied after every reload. */
+  ownerPassword: string | undefined;
   /** Bytes appended to the original so far (the latest saved tail). */
   tail: ArrayBuffer | null;
   /** Tail waiting to be applied (null: nothing pending). */
@@ -15,6 +17,15 @@ interface Entry {
   appliedTailBytes: number;
   doc: PdfDocumentObject;
   generation: number;
+}
+
+/**
+ * Like the Render worker's document manager: page coordinates in the unrotated
+ * (0°) space, so text geometry and hit rectangles from here line up with the
+ * viewer on rotated pages (M2-04, M2-05).
+ */
+function openOptions(password: string | undefined) {
+  return { normalizeRotation: true, ...(password === undefined ? {} : { password }) };
 }
 
 export function concat(a: ArrayBuffer, b: ArrayBuffer | null | undefined): ArrayBuffer {
@@ -43,14 +54,18 @@ export class WorkDocs {
     bytes: ArrayBuffer,
     password: string | undefined,
     generation: number,
+    ownerPassword?: string,
   ) {
     // Each (re)load gets a fresh engine id, so a stale handle can never be reused.
-    return this.native()
+    const doc = await this.native()
       .openDocumentBuffer(
         { id: `${docId}#${String(generation)}`, content: bytes },
-        password === undefined ? {} : { password },
+        openOptions(password),
       )
       .toPromise();
+    if (ownerPassword !== undefined)
+      await this.native().unlockOwnerPermissions(doc, ownerPassword).toPromise();
+    return doc;
   }
 
   async open(
@@ -58,12 +73,14 @@ export class WorkDocs {
     original: ArrayBuffer,
     tail: ArrayBuffer | undefined,
     password?: string,
+    ownerPassword?: string,
   ) {
     if (this.entries.has(docId)) await this.close(docId);
-    const doc = await this.load(docId, concat(original, tail), password, 0);
+    const doc = await this.load(docId, concat(original, tail), password, 0, ownerPassword);
     this.entries.set(docId, {
       original,
       password,
+      ownerPassword,
       tail: tail ?? null,
       pendingTail: null,
       appliedTailBytes: tail?.byteLength ?? 0,
@@ -102,10 +119,7 @@ export class WorkDocs {
     const bytes = concat(concat(e.original, e.tail), piece);
     const candidateId = `${docId}#verify${String(++this.verifySeq)}`;
     const doc = await this.native()
-      .openDocumentBuffer(
-        { id: candidateId, content: bytes },
-        e.password === undefined ? {} : { password: e.password },
-      )
+      .openDocumentBuffer({ id: candidateId, content: bytes }, openOptions(e.password))
       .toPromise();
     try {
       return fn(candidateId, doc);
@@ -120,7 +134,13 @@ export class WorkDocs {
     if (e.pendingTail) {
       const tail = e.pendingTail;
       const generation = e.generation + 1;
-      const doc = await this.load(docId, concat(e.original, tail), e.password, generation);
+      const doc = await this.load(
+        docId,
+        concat(e.original, tail),
+        e.password,
+        generation,
+        e.ownerPassword,
+      );
       await this.native().closeDocument(e.doc).toPromise();
       e.doc = doc;
       e.generation = generation;
@@ -128,6 +148,14 @@ export class WorkDocs {
       e.pendingTail = null;
     }
     return { doc: e.doc, appliedTailBytes: e.appliedTailBytes };
+  }
+
+  /** Unlocks the kept copy with the owner password; remembered for later reloads. */
+  async unlock(docId: string, ownerPassword: string): Promise<boolean> {
+    const e = this.require(docId);
+    const ok = await this.native().unlockOwnerPermissions(e.doc, ownerPassword).toPromise();
+    if (ok) e.ownerPassword = ownerPassword;
+    return ok;
   }
 
   async close(docId: string): Promise<void> {

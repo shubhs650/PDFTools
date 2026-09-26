@@ -82,6 +82,7 @@
     "@embedpdf/plugin-render": "2.15.1",
     "@embedpdf/plugin-rotate": "2.15.1",
     "@embedpdf/plugin-scroll": "2.15.1",
+    "@embedpdf/plugin-selection": "2.15.1",
     "@embedpdf/plugin-spread": "2.15.1",
     "@embedpdf/plugin-tiling": "2.15.1",
     "@embedpdf/plugin-viewport": "2.15.1",

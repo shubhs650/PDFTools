@@ -536,6 +536,14 @@ body {
 
 .page-content {
   position: relative;
+  user-select: none;
+}
+
+/* Page images never start a native image drag, which would cancel the pointer
+   stream the text selection (M2-04) and the Hand tool rely on. */
+.page-content img {
+  -webkit-user-drag: none;
+  pointer-events: none;
 }
 
 .page[data-hidden] {
@@ -595,6 +603,36 @@ body {
 
 .document-host {
   height: 100%;
+}
+
+/* The active document under an optional banner (M2-03 restrictions). */
+.document-stack {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+}
+
+.document-stack-view {
+  flex: 1;
+  min-height: 0;
+}
+
+.permission-banner {
+  display: flex;
+  align-items: center;
+  gap: var(--space-4);
+  padding: var(--space-2) var(--space-4);
+  border-bottom: var(--border-width) solid var(--color-border);
+  border-left: var(--focus-width) solid var(--color-accent);
+  background: var(--color-surface);
+  color: var(--color-text);
+}
+
+.permission-banner-text {
+  flex: 1;
+  min-width: 0;
+  margin: var(--space-0);
+  font-size: var(--font-size-m);
 }
 
 .document-host[data-tool='hand'] .viewport {

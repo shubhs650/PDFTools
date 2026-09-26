@@ -1,6 +1,9 @@
 // Work worker API (ARCHITECTURE §3.1, D-10): PDFium #2 with a read-only copy of
 // each document. M1 uses it for save verification (M1-21); M2 adds search.
+import type { PageTextSlice, PdfPageGeometry } from '@embedpdf/models';
 import type { DocDigest } from '../workers/render/save/digest';
+import type { HitRect, SearchBatch, SearchRequest, SearchSummary } from '../workers/work/search';
+import type { Hit, SearchOptions } from '../workers/work/searchCore';
 import type { VerifyResult } from '../workers/work/verifySave';
 import type { MethodSpec } from './protocol';
 
@@ -10,9 +13,18 @@ export interface WorkApi {
   init: MethodSpec<{ wasmUrl: string }, { ms: number; wasmBytes: number }>;
   /** `original` is transferred (the worker keeps it); `tail` is the incremental tail so far. */
   open: MethodSpec<
-    { docId: string; original: ArrayBuffer; tail?: ArrayBuffer; password?: string },
+    {
+      docId: string;
+      original: ArrayBuffer;
+      tail?: ArrayBuffer;
+      password?: string;
+      /** Owner password given in this session: the copy is unlocked after every (re)load. */
+      ownerPassword?: string;
+    },
     { pageCount: number; wasmBytes: number }
   >;
+  /** Owner-password unlock of the kept copy (§7.12, ADR-013 decision 3). */
+  unlock: MethodSpec<{ docId: string; ownerPassword: string }, { unlocked: boolean }>;
   /** Replaces the document's tail (bytes appended since the original). Applied lazily (ADR-001 B11). */
   refresh: MethodSpec<{ docId: string; tail: ArrayBuffer }, { pending: boolean }>;
   /** Appends a saved tail piece to the document's tail (after a committed save). */
@@ -37,6 +49,36 @@ export interface WorkApi {
    * text stays in the worker). Cancellable between pages; the base of M2's
    * background indexing, and the "large job" of the memory tests.
    */
+  /**
+   * A page's text geometry (glyph runs) for the text layer and selection
+   * (M2-04, ADR-012 decision 1): served here so it never waits in, or blocks,
+   * the Render worker's one-call-at-a-time queue.
+   */
+  pageGeometry: MethodSpec<
+    { docId: string; pageIndex: number; priority?: WorkPriority },
+    PdfPageGeometry
+  >;
+  /** Text of glyph ranges (selection → clipboard). */
+  textSlices: MethodSpec<
+    { docId: string; slices: PageTextSlice[]; priority?: WorkPriority },
+    string[]
+  >;
+  /**
+   * Search (D-08, §6, ADR-006): runs at interactive priority, streams
+   * `SearchBatch`es (≥ 50 ms apart; all delivered), resolves with the summary.
+   * Cancel it to stop between pages. Query errors reject with `search-*` codes.
+   */
+  search: MethodSpec<SearchRequest, SearchSummary, SearchBatch>;
+  /** Hits with context for pages past the 5,000-hit context cap (ADR-006 decision 2). */
+  searchContext: MethodSpec<
+    { docId: string; query: string; options: SearchOptions; pages: number[] },
+    Hit[]
+  >;
+  /** Highlight rectangles for hits on one page, in the viewer's page space. */
+  hitRects: MethodSpec<
+    { docId: string; pageIndex: number; hits: { start: number; length: number }[] },
+    HitRect[][]
+  >;
   textStats: MethodSpec<
     { docId: string; priority?: WorkPriority },
     { pages: number; chars: number; ms: number },

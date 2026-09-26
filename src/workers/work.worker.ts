@@ -12,6 +12,7 @@ import { digestDocument } from './render/save/digest';
 import { WorkDocs } from './work/docs';
 import { verifyCandidate } from './work/verify';
 import { Scheduler } from './work/scheduler';
+import { SearchEngine } from './work/search';
 
 let mod: WrappedPdfiumModule | undefined;
 let native: PdfiumNative | undefined;
@@ -30,6 +31,10 @@ function wasmBytes(): number {
 
 const docs = new WorkDocs(need);
 const scheduler = new Scheduler();
+const search = new SearchEngine(() => {
+  if (!mod) throw new RpcError('not-initialized', 'The work worker is not initialized');
+  return mod;
+}, need);
 
 serve<WorkApi>(self, {
   init: async ({ wasmUrl }) => {
@@ -41,10 +46,14 @@ serve<WorkApi>(self, {
     return { ms: performance.now() - t0, wasmBytes: wasmBytes() };
   },
 
-  open: async ({ docId, original, tail, password }) => {
-    const doc = await docs.open(docId, original, tail, password);
+  open: async ({ docId, original, tail, password, ownerPassword }) => {
+    const doc = await docs.open(docId, original, tail, password, ownerPassword);
     return { pageCount: doc.pageCount, wasmBytes: wasmBytes() };
   },
+
+  unlock: async ({ docId, ownerPassword }) => ({
+    unlocked: await docs.unlock(docId, ownerPassword),
+  }),
 
   refresh: ({ docId, tail }) => ({ pending: docs.refresh(docId, tail) }),
 
@@ -68,6 +77,7 @@ serve<WorkApi>(self, {
     }),
 
   close: async ({ docId }) => {
+    search.cache.drop(docId);
     await docs.close(docId);
     return { wasmBytes: wasmBytes() };
   },
@@ -78,6 +88,40 @@ serve<WorkApi>(self, {
     scheduler.run(priority, ctx.signal, async () => {
       const { doc, appliedTailBytes } = await docs.get(docId);
       return { pageCount: doc.pageCount, appliedTailBytes };
+    }),
+
+  pageGeometry: ({ docId, pageIndex, priority = 'interactive' }, ctx) =>
+    scheduler.run(priority, ctx.signal, async () => {
+      const { doc } = await docs.get(docId);
+      const page = doc.pages[pageIndex];
+      if (!page) throw new RpcError('page-out-of-range', 'No such page');
+      return need().getPageGeometry(doc, page).toPromise();
+    }),
+
+  textSlices: ({ docId, slices, priority = 'interactive' }, ctx) =>
+    scheduler.run(priority, ctx.signal, async () => {
+      const { doc } = await docs.get(docId);
+      return need().getTextSlices(doc, slices).toPromise();
+    }),
+
+  search: (req, ctx) =>
+    scheduler.run('interactive', ctx.signal, async (slice) => {
+      const { doc } = await docs.get(req.docId);
+      return search.search(req, doc, slice, (batch) => {
+        ctx.stream(batch);
+      });
+    }),
+
+  searchContext: ({ docId, query, options, pages }, ctx) =>
+    scheduler.run('interactive', ctx.signal, async (slice) => {
+      const { doc } = await docs.get(docId);
+      return search.context(docId, doc, query, options, pages, slice);
+    }),
+
+  hitRects: ({ docId, pageIndex, hits }, ctx) =>
+    scheduler.run('interactive', ctx.signal, async () => {
+      const { doc } = await docs.get(docId);
+      return search.rects(docId, doc, pageIndex, hits);
     }),
 
   textStats: ({ docId, priority = 'background' }, ctx) =>

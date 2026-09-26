@@ -2,7 +2,12 @@ import { PdfErrorCode } from '@embedpdf/models';
 import { afterEach, describe, expect, it } from 'vitest';
 import { createRenderEngine } from '../../src/engine/createEngine';
 import { RpcError } from '../../src/engine/errors';
-import { createHostedExecutor, slimArgs } from '../../src/engine/hostedEngine';
+import {
+  RoutedPdfEngine,
+  createHostedExecutor,
+  slimArgs,
+  type TextSource,
+} from '../../src/engine/hostedEngine';
 import type { RenderApi } from '../../src/engine/renderApi';
 import { RpcClient } from '../../src/engine/rpc';
 import { serve } from '../../src/workers/rpc-host';
@@ -48,7 +53,13 @@ function executorWith(
       }
       return exec(method);
     },
-    docInfo: () => ({ pageCount: 0, permissions: 0, signatureCount: 0 }),
+    docInfo: () => ({
+      pageCount: 0,
+      permissions: 0,
+      securityRevision: -1,
+      ownerUnlocked: false,
+      signatureCount: 0,
+    }),
     memory: () => ({ wasmBytes: 0 }),
   });
   return createHostedExecutor(new RpcClient<RenderApi>(ch.port2, 'render'), onMutation);
@@ -127,5 +138,86 @@ describe('createRenderEngine (ADR-003 decision 2)', () => {
     expect(() => createRenderEngine({ fontFallback: undefined as unknown as null })).toThrow(
       /fontFallback must be null or a local config/,
     );
+  });
+});
+
+describe('RoutedPdfEngine: text geometry off the Render queue (ADR-012 decision 1)', () => {
+  const doc = { id: 'd', pageCount: 1, pages: [] } as unknown as Parameters<
+    RoutedPdfEngine['getPageGeometry']
+  >[0];
+  const page = { index: 0 } as unknown as Parameters<RoutedPdfEngine['getPageGeometry']>[1];
+  const converter = () => Promise.resolve(new Blob());
+
+  it('answers getPageGeometry and getTextSlices from the text source; the executor is never called', async () => {
+    const called: string[] = [];
+    let cancelled = 0;
+    const text: TextSource = {
+      pageGeometry: () => ({ promise: Promise.resolve({ runs: [] }), cancel: () => cancelled++ }),
+      textSlices: (_d, slices) => ({
+        promise: Promise.resolve(slices.map(() => 'abc')),
+        cancel: () => cancelled++,
+      }),
+    };
+    const engine = new RoutedPdfEngine(
+      executorWith((m) => {
+        called.push(m);
+        return null;
+      }),
+      { imageConverter: converter },
+      text,
+    );
+    expect(await engine.getPageGeometry(doc, page).toPromise()).toEqual({ runs: [] });
+    expect(
+      await engine.getTextSlices(doc, [{ pageIndex: 0, charIndex: 0, charCount: 3 }]).toPromise(),
+    ).toEqual(['abc']);
+    expect(called).toEqual([]);
+    expect(cancelled).toBe(0);
+  });
+
+  it('falls back to the Render worker when the source has no copy; aborting cancels the job', async () => {
+    const called: string[] = [];
+    let cancelled = 0;
+    let serve = true;
+    const text: TextSource = {
+      pageGeometry: () =>
+        serve ? { promise: new Promise(() => undefined), cancel: () => cancelled++ } : null,
+      textSlices: () => null,
+    };
+    const engine = new RoutedPdfEngine(
+      executorWith((m) => {
+        called.push(m);
+        return { runs: [{ fromRender: true }] };
+      }),
+      { imageConverter: converter },
+      text,
+    );
+    const pending = engine.getPageGeometry(doc, page);
+    pending.abort({ code: PdfErrorCode.Cancelled, message: 'x' });
+    expect(cancelled).toBe(1);
+    serve = false;
+    expect(await engine.getPageGeometry(doc, page).toPromise()).toEqual({
+      runs: [{ fromRender: true }],
+    });
+    expect(called).toEqual(['getPageGeometry']);
+  });
+
+  it('a refused job rejects with its PDFium code (copy denied, rule 9)', async () => {
+    const text: TextSource = {
+      pageGeometry: () => null,
+      textSlices: () => ({
+        promise: Promise.reject(new RpcError(`pdfium:${String(PdfErrorCode.Security)}`, 'no')),
+        cancel: () => undefined,
+      }),
+    };
+    const engine = new RoutedPdfEngine(
+      executorWith(() => null),
+      { imageConverter: converter },
+      text,
+    );
+    const err = await engine
+      .getTextSlices(doc, [])
+      .toPromise()
+      .catch((e: unknown) => e);
+    expect((err as { reason?: { code?: number } }).reason?.code).toBe(PdfErrorCode.Security);
   });
 });

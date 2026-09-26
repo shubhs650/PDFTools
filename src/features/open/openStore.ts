@@ -49,7 +49,7 @@ export function advance(id: number, event: OpenEvent): OpenPhase {
     if (!job) return {};
     const state = transition(job.state, event);
     result = state;
-    if (state.phase === 'reading' || state.phase === 'opening') {
+    if (state.phase === 'reading' || state.phase === 'opening' || state.phase === 'password') {
       return { jobs: s.jobs.map((j) => (j.id === id ? { ...j, state } : j)) };
     }
     return {
@@ -66,3 +66,7 @@ export function advance(id: number, event: OpenEvent): OpenPhase {
 export function dismissFailure(id: number): void {
   openStore.setState((s) => ({ failures: s.failures.filter((f) => f.id !== id) }));
 }
+
+/** The file waiting for its open password (one at a time: files open in order). */
+export const selectPasswordJob = (s: OpenStoreState): OpenJob | undefined =>
+  s.jobs.find((j) => j.state.phase === 'password');

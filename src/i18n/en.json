@@ -274,7 +274,9 @@
       "tabClose": "Close Tab",
       "tabNext": "Next Tab",
       "tabPrev": "Previous Tab",
-      "toolCancel": "Cancel Tool"
+      "toolCancel": "Cancel Tool",
+      "editCopy": "Copy Selected Text",
+      "editSelectAll": "Select Page Text"
     },
     "key": {
       "ctrl": "Ctrl",
@@ -293,7 +295,7 @@
     "error": {
       "notPdf": "This file is not a PDF.",
       "damaged": "This PDF is damaged and can't be opened.",
-      "needsPassword": "This PDF is password-protected. Opening protected PDFs is not supported yet.",
+      "needsPassword": "This PDF needs a password to open.",
       "unreadable": "The file could not be read. It may have been moved, deleted or changed.",
       "tooMany": "Too many documents are open. Close one and try again.",
       "unknown": "Something went wrong while opening this file."
@@ -447,5 +449,40 @@
       "appFiles": "The offline copy of the app (program files only, no documents)"
     },
     "clearHint": "To delete this data, use File → Settings → Clear all local data."
+  },
+  "protect": {
+    "restricted": "Not allowed by this document's security settings",
+    "notRestricted": "This document has no restrictions to unlock",
+    "password": {
+      "title": "Password required",
+      "description": "“{{name}}” is protected. Enter its password to open it.",
+      "label": "Password",
+      "incorrect": "That password is not correct. Try again.",
+      "open": "Open",
+      "cancel": "Cancel"
+    },
+    "unlockDialog": {
+      "title": "Unlock with owner password",
+      "description": "The owner password of “{{name}}” lifts its restrictions until you close it.",
+      "label": "Owner password",
+      "incorrect": "That owner password is not correct.",
+      "unlock": "Unlock",
+      "cancel": "Cancel"
+    },
+    "banner": {
+      "name": "Document restrictions",
+      "text": "This document's security settings don't allow {{list}}.",
+      "unlock": "Unlock…"
+    },
+    "capability": {
+      "print": "printing",
+      "printHighQuality": "high-quality printing",
+      "copy": "copying text and images",
+      "accessibility": "content access for accessibility tools",
+      "annotate": "comments",
+      "fillForms": "filling in forms",
+      "modify": "changes",
+      "assemble": "page changes"
+    }
   }
 }

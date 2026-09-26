@@ -5,8 +5,11 @@ import { ribbonLayout } from '../../src/app/ribbon/layout';
 describe('ribbon layout from the command table (§8, ADR-001 B6, M1-Q2)', () => {
   const m1 = ribbonLayout();
 
-  it('shows only tabs with an available command: Home, View, Help in M1', () => {
-    expect(m1.tabs.map((t) => t.tab)).toEqual(['home', 'view', 'help']);
+  it('shows only tabs with an available command: Home, View, Help, and Protect from M2-03', () => {
+    expect(m1.tabs.map((t) => t.tab)).toEqual(['home', 'view', 'protect', 'help']);
+    const protect = m1.tabs.find((t) => t.tab === 'protect');
+    // Only what works: Unlock (M2-03); redaction (M4) and the rest stay omitted.
+    expect(protect?.groups.flatMap((g) => g.commands.map((c) => c.id))).toEqual(['protect.unlock']);
   });
 
   it('omits unavailable commands instead of disabling them', () => {

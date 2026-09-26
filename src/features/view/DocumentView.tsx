@@ -1,8 +1,11 @@
 import { useDocumentState } from '@embedpdf/core/react';
 import type { DocumentManagerCapability } from '@embedpdf/plugin-document-manager';
+import type { InteractionManagerCapability } from '@embedpdf/plugin-interaction-manager';
+import { PagePointerProvider } from '@embedpdf/plugin-interaction-manager/react';
 import { Rotate } from '@embedpdf/plugin-rotate/react';
 import { Scroller, type PageLayout } from '@embedpdf/plugin-scroll/react';
 import type { ScrollCapability } from '@embedpdf/plugin-scroll';
+import { TextSelection } from '@embedpdf/plugin-selection/react';
 import { TilingLayer } from '@embedpdf/plugin-tiling/react';
 import { Viewport } from '@embedpdf/plugin-viewport/react';
 import { ZoomMode, type ZoomCapability, type ZoomDocumentState } from '@embedpdf/plugin-zoom';
@@ -12,7 +15,7 @@ import { isEditable } from '../../app/keys/useShortcuts';
 import { documentStore, useDocuments, type ZoomSetting } from '../../app/store/documentStore';
 import { fitVisibleLevels, move, zoomTo } from './controller';
 import { capability, useHost } from './host';
-import { PAGE_GAP } from './plugins';
+import { HAND_MODE, PAGE_GAP, POINTER_MODE } from './plugins';
 import { PreviewLayer } from './PreviewLayer';
 import { setViewFocus } from './tileScheduler';
 import {
@@ -41,6 +44,8 @@ function zoomSetting(docId: string, state: ZoomDocumentState): ZoomSetting {
 }
 
 const VIEW_TEST_ID = 'document-view';
+/** Selected text: a token, drawn with multiply over the page (rules 11–12: no literal colors). */
+const SELECTION_COLOR = 'var(--color-text-selection)';
 const REGION = 'region';
 
 /**
@@ -69,20 +74,28 @@ function Page({
     >
       {hidden || !size ? null : (
         <Rotate documentId={documentId} pageIndex={layout.pageIndex}>
-          <div
-            className="page-content"
-            style={{ width: size.width * scale, height: size.height * scale }}
-          >
-            <PreviewLayer documentId={documentId} pageIndex={layout.pageIndex} />
-            <TilingLayer
-              documentId={documentId}
-              pageIndex={layout.pageIndex}
-              className="page-tiles"
-              // Sharp copies of the preview (whose <img> has alt=""): EmbedPDF's
-              // tiles have no alt, so the whole layer is hidden from assistive tech.
-              aria-hidden
-            />
-          </div>
+          <PagePointerProvider documentId={documentId} pageIndex={layout.pageIndex}>
+            <div
+              className="page-content"
+              style={{ width: size.width * scale, height: size.height * scale }}
+            >
+              <PreviewLayer documentId={documentId} pageIndex={layout.pageIndex} />
+              <TilingLayer
+                documentId={documentId}
+                pageIndex={layout.pageIndex}
+                className="page-tiles"
+                // Sharp copies of the preview (whose <img> has alt=""): EmbedPDF's
+                // tiles have no alt, so the whole layer is hidden from assistive tech.
+                aria-hidden
+              />
+              {/* Text selection (M2-04): geometry loads for pages laid out here only. */}
+              <TextSelection
+                documentId={documentId}
+                pageIndex={layout.pageIndex}
+                background={SELECTION_COLOR}
+              />
+            </div>
+          </PagePointerProvider>
         </Rotate>
       )}
     </div>
@@ -161,6 +174,15 @@ export function DocumentView({ documentId }: { documentId: string }) {
       for (const off of offs) off();
     };
   }, [registry, documentId]);
+
+  // The pointer tool → EmbedPDF's interaction mode: Select selects text, Hand pans (M2-04).
+  useEffect(() => {
+    if (!registry) return;
+    const dm = capability<DocumentManagerCapability>(registry, 'document-manager');
+    if (!dm.isDocumentOpen(documentId)) return;
+    const im = capability<InteractionManagerCapability>(registry, 'interaction-manager');
+    im.forDocument(documentId).activate(tool === 'hand' ? HAND_MODE : POINTER_MODE);
+  }, [registry, documentId, tool]);
 
   // Ctrl+wheel (and trackpad pinch) zooms at the pointer instead of the browser page.
   useEffect(() => {

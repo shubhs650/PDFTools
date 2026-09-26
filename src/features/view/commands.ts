@@ -1,5 +1,6 @@
 // View commands (§5, §8.1, M1-15): zoom, page navigation, Hand and Select.
 import { registerCommand } from '../../app/commands/dispatch';
+import { clearSelection } from '../select/commands';
 import { appStore } from '../../app/store/appStore';
 import { documentStore, selectActive, type ZoomSetting } from '../../app/store/documentStore';
 import type { ViewMode } from '../../app/store/documentStore';
@@ -81,6 +82,7 @@ export function registerViewCommands(): () => void {
     }),
     registerCommand('home.select', {
       run: () => {
+        clearSelection();
         appStore.getState().setTool('select');
       },
       isPressed: () => appStore.getState().tool === 'select',
@@ -89,6 +91,7 @@ export function registerViewCommands(): () => void {
     registerCommand('tool.cancel', {
       requiresDocument: true,
       run: () => {
+        clearSelection();
         appStore.getState().setTool('select');
       },
     }),

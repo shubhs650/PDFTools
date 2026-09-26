@@ -2,7 +2,10 @@
 // of a production build.
 import { createRenderEngine } from '../engine/createEngine';
 import { openDocument } from '../engine/renderClient';
+import { SearchSession } from '../engine/searchSession';
 import { WorkClient } from '../engine/workClient';
+import { workClient } from '../features/view/host';
+import type { SearchOptions } from '../workers/work/searchCore';
 import type { TestHook } from './hook';
 
 let client: WorkClient | undefined;
@@ -35,5 +38,52 @@ export function registerWorkProbe(hook: TestHook): void {
     memory: () => client?.memory(),
     respawns: () => client?.respawns ?? 0,
     lastCheckedBytes: () => client?.lastCheckedBytes ?? 0,
+  };
+
+  // M2-05: search through the app's own Work client, on a document opened
+  // the normal way. Timings are taken on the main thread (what a user sees).
+  const session = new SearchSession(workClient());
+  hook.capabilities['search'] = {
+    async run(docId: string, query: string, options: SearchOptions = {}, visible: number[] = [0]) {
+      const t0 = performance.now();
+      let firstHitMs: number | null = null;
+      let hits = 0;
+      let counted = 0;
+      let batches = 0;
+      const { promise } = session.start({ docId, query, options, visible }, (b) => {
+        batches++;
+        hits += b.hits.length;
+        counted += b.counts.reduce((n, [, c]) => n + c, 0);
+        if (firstHitMs === null && (b.hits.length > 0 || b.counts.length > 0))
+          firstHitMs = performance.now() - t0;
+      });
+      const summary = await promise;
+      return { firstHitMs, totalMs: performance.now() - t0, hits, counted, batches, summary };
+    },
+    /** Starts `a`, then `b` after `afterMs`: how fast `a` stops, and whether any of its batches came after. */
+    async supersede(docId: string, a: string, b: string, afterMs: number) {
+      const seen: string[] = [];
+      const first = session.start({ docId, query: a, options: {}, visible: [0] }, () => {
+        seen.push('a');
+      });
+      const firstEnd = first.promise.then(
+        () => 'finished',
+        () => 'cancelled',
+      );
+      await new Promise((r) => setTimeout(r, afterMs));
+      const t = performance.now();
+      const second = session.start({ docId, query: b, options: {}, visible: [0] }, () => {
+        seen.push('b');
+      });
+      const outcome = await firstEnd;
+      const stopMs = performance.now() - t;
+      await second.promise;
+      const firstB = seen.indexOf('b');
+      return {
+        outcome,
+        stopMs,
+        staleAfterNew: firstB < 0 ? 0 : seen.slice(firstB).filter((x) => x === 'a').length,
+      };
+    },
   };
 }

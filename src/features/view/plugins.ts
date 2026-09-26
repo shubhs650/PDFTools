@@ -4,9 +4,11 @@
 // and never with per-document `permissions` overrides (rule 9).
 import { createPluginRegistration } from '@embedpdf/core';
 import { DocumentManagerPluginPackage } from '@embedpdf/plugin-document-manager';
+import { InteractionManagerPluginPackage } from '@embedpdf/plugin-interaction-manager/react';
 import { RenderPluginPackage } from '@embedpdf/plugin-render';
 import { RotatePluginPackage } from '@embedpdf/plugin-rotate';
 import { ScrollPluginPackage } from '@embedpdf/plugin-scroll';
+import { SelectionPluginPackage } from '@embedpdf/plugin-selection/react';
 import { SpreadPluginPackage } from '@embedpdf/plugin-spread';
 import { TilingPluginPackage } from '@embedpdf/plugin-tiling';
 import { ViewportPluginPackage } from '@embedpdf/plugin-viewport';
@@ -24,6 +26,13 @@ export const TILE_SIZE = 256;
 /** §5: 1 %–6400 % (ADR-011 decision 5). */
 export const MIN_ZOOM = 0.01;
 export const MAX_ZOOM = 64;
+
+/** Pages whose text geometry the selection plugin keeps (it loads visible pages only). */
+export const SELECTION_PAGES = 30;
+
+/** Interaction modes: Select (EmbedPDF's default, with text selection) and Hand. */
+export const POINTER_MODE = 'pointerMode';
+export const HAND_MODE = 'handMode';
 
 export const PLUGINS = [
   createPluginRegistration(DocumentManagerPluginPackage, { maxDocuments: MAX_DOCUMENTS }),
@@ -43,4 +52,9 @@ export const PLUGINS = [
     minZoom: MIN_ZOOM,
     maxZoom: MAX_ZOOM,
   }),
+  // Text selection (M2-04, ADR-012 decision 1): pointer events per page, text
+  // geometry from the Work worker (RoutedPdfEngine). The React package adds the
+  // clipboard writer.
+  createPluginRegistration(InteractionManagerPluginPackage, {}),
+  createPluginRegistration(SelectionPluginPackage, { maxCachedGeometries: SELECTION_PAGES }),
 ];

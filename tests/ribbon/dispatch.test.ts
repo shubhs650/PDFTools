@@ -66,3 +66,49 @@ describe('command dispatch (D-01)', () => {
     );
   });
 });
+
+describe('permission-gated commands (rule 9, D-19, M2-03)', () => {
+  const open = (permissions: number, securityRevision?: number) => {
+    documentStore.getState().open({
+      id: 'r',
+      name: 'r.pdf',
+      pageCount: 1,
+      permissions,
+      ...(securityRevision === undefined ? {} : { securityRevision }),
+      signatureCount: 0,
+    });
+  };
+
+  it('a command whose capability the document denies is disabled with the restricted reason', () => {
+    const off = registerCommand('file.print', { requires: 'print', run: () => undefined });
+    expect(commandState('file.print')).toMatchObject({ reason: 'ribbon.needsDocument' });
+    open(0xfffff2c0, 6); // qpdf R6: print denied
+    expect(commandState('file.print')).toMatchObject({
+      enabled: false,
+      reason: 'protect.restricted',
+    });
+    documentStore.getState().setSecurity('r', { permissions: 0xfffffffc, ownerUnlocked: true });
+    expect(commandState('file.print')).toEqual({ enabled: true, pressed: false });
+    off();
+  });
+
+  it('an unencrypted document is never restricted, whatever its bits', () => {
+    const off = registerCommand('file.print', { requires: 'print', run: () => undefined });
+    open(0);
+    expect(commandState('file.print').enabled).toBe(true);
+    off();
+  });
+
+  it('Unlock is enabled only for a restricted document', async () => {
+    const { registerProtectCommands } = await import('../../src/features/protect/commands');
+    const off = registerProtectCommands();
+    open(0xffffffff);
+    expect(commandState('protect.unlock')).toMatchObject({ reason: 'protect.notRestricted' });
+    documentStore.getState().close('r');
+    open(0xffffffc0, 2);
+    expect(commandState('protect.unlock').enabled).toBe(true);
+    documentStore.getState().setSecurity('r', { permissions: 0xfffffffc, ownerUnlocked: true });
+    expect(commandState('protect.unlock')).toMatchObject({ reason: 'protect.notRestricted' });
+    off();
+  });
+});

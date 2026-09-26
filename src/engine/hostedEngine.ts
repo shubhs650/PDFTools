@@ -3,7 +3,17 @@
 // render.worker.ts over our RPC, wrapped in EmbedPDF's PdfEngine orchestrator
 // (priority queue, encoding). The headless plugins see an ordinary PdfEngine.
 import { PdfEngine, type browserImageDataToBlobConverter } from '@embedpdf/engines/pdfium';
-import { PdfErrorCode, Task, TaskStage, type IPdfiumExecutor } from '@embedpdf/models';
+import {
+  PdfErrorCode,
+  Task,
+  TaskStage,
+  type IPdfiumExecutor,
+  type PageTextSlice,
+  type PdfDocumentObject,
+  type PdfPageGeometry,
+  type PdfPageObject,
+  type PdfTask,
+} from '@embedpdf/models';
 import { RpcError, isAbortError } from './errors';
 import { isMutation } from './mutations';
 import { PDFIUM_ERROR_PREFIX, type RenderApi } from './renderApi';
@@ -97,12 +107,81 @@ export function createHostedExecutor(
   });
 }
 
+/** A running job: its result, and a way to cancel it. */
+export interface TextJob<T> {
+  promise: Promise<T>;
+  cancel(): void;
+}
+
+/**
+ * Where text geometry comes from instead of the Render worker (ADR-012
+ * decision 1). Returning null falls back to the Render worker (e.g. the Work
+ * worker has no copy of the document).
+ */
+export interface TextSource {
+  pageGeometry(doc: PdfDocumentObject, page: PdfPageObject): TextJob<PdfPageGeometry> | null;
+  textSlices(doc: PdfDocumentObject, slices: PageTextSlice[]): TextJob<string[]> | null;
+}
+
+/** An EmbedPDF task driven by one of our jobs; aborting the task cancels the job. */
+export function taskFromJob<T>(job: TextJob<T>): PdfTask<T> {
+  const task = new Task<T, { code: PdfErrorCode; message: string }>();
+  const abort = task.abort.bind(task);
+  task.abort = (reason) => {
+    job.cancel();
+    abort(reason);
+  };
+  job.promise.then(
+    (value) => {
+      if (task.state.stage === TaskStage.Pending) task.resolve(value);
+    },
+    (err: unknown) => {
+      if (task.state.stage !== TaskStage.Pending) return;
+      if (isAbortError(err)) task.abort({ code: PdfErrorCode.Cancelled, message: 'cancelled' });
+      else task.reject(toPdfError(err));
+    },
+  );
+  return task;
+}
+
+/**
+ * EmbedPDF's orchestrator with the text-layer calls answered by `text`
+ * (the Work worker). Through the Render worker's one-call-at-a-time queue they
+ * tripled visible-tile latency (ADR-012 finding 1).
+ */
+export class RoutedPdfEngine extends PdfEngine {
+  private readonly text: TextSource;
+
+  constructor(
+    executor: IPdfiumExecutor,
+    options: { imageConverter: ImageConverter },
+    text: TextSource,
+  ) {
+    super(executor, options);
+    this.text = text;
+  }
+
+  override getPageGeometry(doc: PdfDocumentObject, page: PdfPageObject): PdfTask<PdfPageGeometry> {
+    const job = this.text.pageGeometry(doc, page);
+    return job ? taskFromJob(job) : super.getPageGeometry(doc, page);
+  }
+
+  override getTextSlices(doc: PdfDocumentObject, slices: PageTextSlice[]): PdfTask<string[]> {
+    const job = this.text.textSlices(doc, slices);
+    return job ? taskFromJob(job) : super.getTextSlices(doc, slices);
+  }
+}
+
 export function createPdfEngine(
   rpc: RpcClient<RenderApi>,
   imageConverter: ImageConverter,
   onMutation?: MutationListener,
+  text?: TextSource,
 ): PdfEngine {
-  return new PdfEngine(createHostedExecutor(rpc, onMutation), { imageConverter });
+  const executor = createHostedExecutor(rpc, onMutation);
+  return text
+    ? new RoutedPdfEngine(executor, { imageConverter }, text)
+    : new PdfEngine(executor, { imageConverter });
 }
 
 export type { ImageConverter };

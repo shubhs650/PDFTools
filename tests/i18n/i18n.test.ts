@@ -87,6 +87,7 @@ describe('format helpers (Intl only)', () => {
     bytes: (v: number) => sp(deRaw.bytes(v)),
     date: (v: Date) => sp(deRaw.date(v)),
     relative: (v: number, now: number) => sp(deRaw.relative(v, now)),
+    list: (v: string[]) => sp(deRaw.list(v)),
   };
 
   it('numbers and percentages follow the locale', () => {
@@ -117,6 +118,11 @@ describe('format helpers (Intl only)', () => {
     expect(us.relative(now - 3 * 60_000, now)).toBe('3 minutes ago');
     expect(us.relative(now - 86_400_000, now)).toBe('yesterday');
     expect(de.relative(now - 86_400_000, now)).toBe('gestern');
+  });
+
+  it('lists (M2-03 restriction banner)', () => {
+    expect(us.list(['printing', 'copying', 'changes'])).toBe('printing, copying, and changes');
+    expect(de.list(['Drucken', 'Kopieren'])).toBe('Drucken und Kopieren');
   });
 });
 

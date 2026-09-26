@@ -18,6 +18,7 @@ import {
 import type { DocumentManagerCapability } from '@embedpdf/plugin-document-manager';
 import { MAX_DOCUMENTS } from '../view/plugins';
 import { dropPageCosts } from '../view/progressivePreview';
+import { askPassword } from '../protect/passwordPrompt';
 import { HEADER_WINDOW, OpenError, classifyOpenError, hasPdfHeader } from './errors';
 import { advance, openStore, startJob } from './openStore';
 import { forgetSaveState } from '../save/save';
@@ -62,16 +63,44 @@ async function openOne(req: OpenedFile | RecoveredOpen): Promise<string | undefi
     if (documentStore.getState().order.length >= MAX_DOCUMENTS) throw new OpenError('too-many');
     header = hasPdfHeader(new Uint8Array(await file.slice(0, HEADER_WINDOW).arrayBuffer()));
     if (!header) throw new OpenError('not-pdf');
-    const buffer = await file.arrayBuffer();
     advance(job, { type: 'read' });
 
+    // Open; on "password" (PDFium code 4, for a missing and a wrong password
+    // alike — ADR-013) ask and open again with fresh bytes: the buffer is
+    // transferred to the Render worker on every attempt (rule 1).
     const dm = await documentManager();
-    const id = newDocId();
-    docId = id;
-    const res = await dm
-      .openDocumentBuffer({ buffer, name: file.name, documentId: id, autoActivate: false })
-      .toPromise();
-    await res.task.toPromise();
+    let password: string | undefined;
+    let id = '';
+    for (;;) {
+      const buffer = await file.arrayBuffer();
+      id = newDocId();
+      docId = id;
+      try {
+        const res = await dm
+          .openDocumentBuffer({
+            buffer,
+            name: file.name,
+            documentId: id,
+            autoActivate: false,
+            ...(password === undefined ? {} : { password }),
+          })
+          .toPromise();
+        await res.task.toPromise();
+        break;
+      } catch (err) {
+        if (classifyOpenError(err, header) !== 'needs-password') throw err;
+        await releaseEngineDocument(id);
+        docId = undefined;
+        advance(job, { type: 'needs-password', retry: password !== undefined });
+        const answer = await askPassword(job);
+        if (answer === null) {
+          advance(job, { type: 'cancelled' });
+          return undefined;
+        }
+        password = answer;
+        advance(job, { type: 'password-given' });
+      }
+    }
     const info = await renderEngine().rpc.call('docInfo', { docId: id }).promise;
 
     sources.set(id, {
@@ -86,10 +115,12 @@ async function openOne(req: OpenedFile | RecoveredOpen): Promise<string | undefi
       name: file.name,
       pageCount: info.pageCount,
       permissions: info.permissions, // rule 9: stored with the document, never overridden
+      securityRevision: info.securityRevision,
+      ownerUnlocked: info.ownerUnlocked,
       signatureCount: info.signatureCount,
     });
     advance(job, { type: 'opened', docId: id });
-    void openInWorkWorker(id, file);
+    void openInWorkWorker(id, file, password);
     if (recovered) return id;
     void import('../recent/recent')
       .then(({ recordOpened }) =>
@@ -104,10 +135,13 @@ async function openOne(req: OpenedFile | RecoveredOpen): Promise<string | undefi
   }
 }
 
-async function openInWorkWorker(docId: string, file: File): Promise<void> {
+async function openInWorkWorker(docId: string, file: File, password?: string): Promise<void> {
   try {
+    // The Work client keeps the password in memory for its respawn reloads
+    // (ADR-004 decision 4); it is never written anywhere (M2-Q7).
     await workClient().open(docId, await file.arrayBuffer(), {
       reload: async () => (await originalBlob(docId)).arrayBuffer(),
+      ...(password === undefined ? {} : { password }),
     });
   } catch {
     // The Work worker copy is opened again lazily by the first Work job that
