@@ -1097,6 +1097,7 @@ export const COMMANDS: readonly CommandDef[] = [
     fluent: 'SlideMultiple',
     milestone: 'M2',
     toggle: true,
+    shipped: true, // M2-08
   },
   {
     id: 'rail.comments',

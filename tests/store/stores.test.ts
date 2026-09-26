@@ -1,5 +1,10 @@
 import { describe, expect, it } from 'vitest';
-import { createAppStore } from '../../src/app/store/appStore';
+import {
+  createAppStore,
+  PANE_WIDTH_DEFAULT,
+  PANE_WIDTH_MAX,
+  PANE_WIDTH_MIN,
+} from '../../src/app/store/appStore';
 import { DEFAULT_VIEW, createDocumentStore, selectActive } from '../../src/app/store/documentStore';
 
 const meta = (id: string) => ({
@@ -110,5 +115,27 @@ describe('app store', () => {
     });
     s.getState().setProperties(false);
     expect(s.getState().propertiesOpen).toBe(false);
+  });
+
+  it('chooses a left pane; choosing the pane shown closes the area (M2-08)', () => {
+    const s = createAppStore();
+    expect(s.getState()).toMatchObject({ leftPaneOpen: true, leftPane: 'rail.thumbnails' });
+    s.getState().choosePane('rail.thumbnails');
+    expect(s.getState().leftPaneOpen).toBe(false);
+    s.getState().choosePane('rail.bookmarks');
+    expect(s.getState()).toMatchObject({ leftPaneOpen: true, leftPane: 'rail.bookmarks' });
+    s.getState().choosePane('rail.thumbnails');
+    expect(s.getState()).toMatchObject({ leftPaneOpen: true, leftPane: 'rail.thumbnails' });
+  });
+
+  it('clamps the left pane width', () => {
+    const s = createAppStore();
+    expect(s.getState().leftPaneWidth).toBe(PANE_WIDTH_DEFAULT);
+    s.getState().setLeftPaneWidth(10);
+    expect(s.getState().leftPaneWidth).toBe(PANE_WIDTH_MIN);
+    s.getState().setLeftPaneWidth(9999);
+    expect(s.getState().leftPaneWidth).toBe(PANE_WIDTH_MAX);
+    s.getState().setLeftPaneWidth(250.4);
+    expect(s.getState().leftPaneWidth).toBe(250);
   });
 });
