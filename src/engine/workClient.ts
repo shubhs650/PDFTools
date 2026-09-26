@@ -27,13 +27,21 @@ interface DocRecord extends WorkDocSource {
 }
 
 /** Job methods: the ones that run through the worker's scheduler. */
-type JobMethod = 'docState' | 'textStats';
+type JobMethod = 'docState' | 'textStats' | 'verify' | 'digest';
 
 export interface WorkClientOptions {
   wasmUrl?: string;
   respawnAboveBytes?: number;
   /** Test seam: how to start a worker. */
   spawn?: () => Worker;
+}
+
+function appendBytes(a: ArrayBuffer | undefined, b: ArrayBuffer): ArrayBuffer {
+  if (!a || a.byteLength === 0) return b.slice(0);
+  const out = new Uint8Array(a.byteLength + b.byteLength);
+  out.set(new Uint8Array(a), 0);
+  out.set(new Uint8Array(b), a.byteLength);
+  return out.buffer;
 }
 
 export class WorkClient {
@@ -99,6 +107,20 @@ export class WorkClient {
     d.tail = tail;
     await this.whenReady();
     await this.rpc.call('refresh', { docId, tail: tail.slice(0) }).promise;
+  }
+
+  /** Whether the document has a copy here (opening it can fail without affecting the tab). */
+  has(docId: string): boolean {
+    return this.docs.has(docId);
+  }
+
+  /** A committed save's tail piece (M1-21): appended to the tail, applied on the next job. */
+  async append(docId: string, piece: ArrayBuffer): Promise<void> {
+    const d = this.docs.get(docId);
+    if (!d) return;
+    d.tail = appendBytes(d.tail, piece);
+    await this.whenReady();
+    await this.rpc.call('append', { docId, piece: piece.slice(0) }).promise;
   }
 
   async close(docId: string): Promise<void> {

@@ -7,6 +7,8 @@ import { toErrorData, type RpcErrorData } from '../engine/errors';
 export interface DiagnosticEntry extends RpcErrorData {
   at: number;
   where: string;
+  /** Counts only (e.g. a save fallback's object count and tail size), never content. */
+  counts?: Record<string, number>;
 }
 
 /** Where an error boundary sits (diagnostics only, never shown). */
@@ -25,4 +27,16 @@ export function recordError(where: string, err: unknown): DiagnosticEntry {
 
 export function diagnostics(): readonly DiagnosticEntry[] {
   return entries;
+}
+
+/** A notable event that is not an error (e.g. a save fallback, M1-21): a code and counts only. */
+export function recordEvent(
+  where: string,
+  code: string,
+  counts: Record<string, number>,
+): DiagnosticEntry {
+  const entry: DiagnosticEntry = { code, message: code, at: Date.now(), where, counts };
+  entries.push(entry);
+  if (entries.length > MAX) entries.shift();
+  return entry;
 }

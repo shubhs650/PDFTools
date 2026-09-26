@@ -15,6 +15,7 @@ import { RpcError } from '../../../engine/errors';
 import { PDFIUM_ERROR_PREFIX } from '../../../engine/renderApi';
 import { acquirePage, docPtrOf, rawCall, withWideString } from '../pdfium';
 import { latin1 } from './bytes';
+import { digestDocument, uncheckNames, type DocDigest } from './digest';
 import { narrowTail, type ExtraObject } from './narrowTail';
 import { FPDF_INCREMENTAL, FPDF_NO_INCREMENTAL, saveWithFlags } from './writer';
 import { saveBaseOf, trailerRef, type SaveBase } from './xref';
@@ -67,6 +68,8 @@ interface DocState {
   base: SaveBase | undefined;
   /** Existing objects changed since the base → sequence number of the last change. */
   dirty: Map<number, number>;
+  /** Pages with changes since the base → sequence number (the pages a save verifies). */
+  pages: Map<number, number>;
   /** Sequence numbers of the last mutation that set each flag (0 = not set). */
   formEdited: number;
   infoEdited: number;
@@ -84,6 +87,12 @@ export interface IncrementalSave {
   dropped: number;
   /** Length of the file this tail appends to. */
   baseLength: number;
+  /**
+   * What the saved file must show on the changed pages (all pages after an
+   * untracked change), for the Work worker's check (M1-21). Null when the
+   * tail is empty.
+   */
+  expected: DocDigest | null;
 }
 
 interface DocRef {
@@ -120,6 +129,7 @@ export class SaveTracker {
       openedLength: bytes.length,
       base: readBase(bytes),
       dirty: new Map(),
+      pages: new Map(),
       formEdited: 0,
       infoEdited: 0,
       untracked: 0,
@@ -173,6 +183,7 @@ export class SaveTracker {
       state.untracked = seq;
       return;
     }
+    state.pages.set(page.index, seq);
     try {
       const ref = acquirePage(this.native, doc.id, page.index);
       try {
@@ -223,6 +234,10 @@ export class SaveTracker {
     if (!base) {
       throw new RpcError('save-needs-rewrite', 'The file needs a full save (damaged trailer)');
     }
+    // Digest first: reading form fields can make PDFium add appearance streams,
+    // which then belong to this save rather than silently to the next one.
+    const pages = s.untracked > 0 ? 'all' : [...s.pages.keys()].sort((a, b) => a - b);
+    const digest = digestDocument(this.mod, this.native, docId, pages);
     const full = saveWithFlags(this.mod, docPtrOf(this.native, docId), FPDF_INCREMENTAL);
     const dirty = new Set(s.dirty.keys());
     const appended = latin1(full.subarray(s.openedLength));
@@ -244,6 +259,7 @@ export class SaveTracker {
     });
     s.pending = { next: r.next, tailLength: r.tail.length, seq: s.seq };
     return {
+      expected: r.tail.length === 0 ? null : uncheckNames(digest, new Set(r.kept)),
       tail: r.tail,
       mode: keepAll ? 'keep-all' : 'narrow',
       kept: r.kept,
@@ -264,6 +280,7 @@ export class SaveTracker {
     s.base = p.next;
     // Objects and flags changed again after the save stay dirty.
     for (const [n, seq] of s.dirty) if (seq <= p.seq) s.dirty.delete(n);
+    for (const [n, seq] of s.pages) if (seq <= p.seq) s.pages.delete(n);
     if (s.formEdited <= p.seq) s.formEdited = 0;
     if (s.infoEdited <= p.seq) s.infoEdited = 0;
     if (s.untracked <= p.seq) s.untracked = 0;

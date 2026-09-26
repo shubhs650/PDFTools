@@ -28,6 +28,9 @@ function fakeSpawn(world: FakeWorld) {
         return { pageCount: 3, wasmBytes: world.memory };
       },
       refresh: () => ({ pending: true }),
+      append: ({ piece }) => ({ tailBytes: piece.byteLength }),
+      verify: () => ({ ok: true }),
+      digest: () => ({ pageCount: 3, pages: [] }),
       close: () => ({ wasmBytes: world.memory }),
       memory: () => ({ wasmBytes: world.memory, peakWasmBytes: world.memory }),
       docState: () => ({ pageCount: 3, appliedTailBytes: 0 }),

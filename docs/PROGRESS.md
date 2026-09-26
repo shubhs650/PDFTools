@@ -7,6 +7,12 @@ still open.
 
 ## Done
 
+- **Session 12 — M1-21 (save verification and Work-worker refresh).** Branch `m1/21-save-verify`.
+  Read-only per-page digest (raw PDFium) computed by the Render worker with each save; the Work
+  worker reopens original + tail and compares; keep-all fallback with a content-free local log;
+  committed tails refresh the Work copy lazily. Unit (comparison, fallback selection, real
+  two-PDFium path) and e2e (Work sees the annotation; forced mismatch → keep-all, qpdf-clean).
+
 - **Session 11 — M1-20 (save core in the Render worker).** Branch `m1/20-save-core`. Ported S1 save
   core (own FPDF_FILEWRITE, narrow tail, xref table/stream writer) with a committed _save base_ so
   repeated Ctrl+S appends only new changes; dirty tracking and permission checks (rule 9) around

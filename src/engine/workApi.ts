@@ -1,5 +1,7 @@
 // Work worker API (ARCHITECTURE §3.1, D-10): PDFium #2 with a read-only copy of
 // each document. M1 uses it for save verification (M1-21); M2 adds search.
+import type { DocDigest } from '../workers/render/save/digest';
+import type { VerifyResult } from '../workers/work/verifySave';
 import type { MethodSpec } from './protocol';
 
 export type WorkPriority = 'interactive' | 'save-verify' | 'background';
@@ -13,6 +15,15 @@ export interface WorkApi {
   >;
   /** Replaces the document's tail (bytes appended since the original). Applied lazily (ADR-001 B11). */
   refresh: MethodSpec<{ docId: string; tail: ArrayBuffer }, { pending: boolean }>;
+  /** Appends a saved tail piece to the document's tail (after a committed save). */
+  append: MethodSpec<{ docId: string; piece: ArrayBuffer }, { tailBytes: number }>;
+  /**
+   * Save verification (M1-21, ADR-005 decision 2): reopens original + tail +
+   * `piece` and compares it with the Render worker's `expected` digest.
+   */
+  verify: MethodSpec<{ docId: string; piece: ArrayBuffer; expected: DocDigest }, VerifyResult>;
+  /** Digest of pages of the kept copy (hashes and counts only; tests and diagnostics). */
+  digest: MethodSpec<{ docId: string; pages: number[]; priority?: WorkPriority }, DocDigest>;
   close: MethodSpec<{ docId: string }, { wasmBytes: number }>;
   /** Current and peak WASM memory (ADR-004 decision 4). */
   memory: MethodSpec<null, { wasmBytes: number; peakWasmBytes: number }>;
