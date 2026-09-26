@@ -2,7 +2,6 @@ import { useEffect, useLayoutEffect, useMemo, useRef, useState, type KeyboardEve
 import { useTranslation } from 'react-i18next';
 import { useDocuments } from '../../app/store/documentStore';
 import { format } from '../../i18n';
-import { onActivity } from '../view/activity';
 import { goToPage } from '../view/controller';
 import { useHost } from '../view/host';
 import { thumbLayout, visibleRange } from './layout';
@@ -61,22 +60,14 @@ export function ThumbnailsPane() {
   const [scrollTop, setScrollTop] = useState(0);
   const [viewHeight, setViewHeight] = useState(600);
   const [focused, setFocused] = useState(current);
-  // The focused item follows the page in view (adjusted while rendering, not in an effect).
-  // Not while the user steers through the list with the keyboard, though,
-  // until they work the document again.
+  // The roving tab stop follows the page in view (adjusted while rendering),
+  // but never while focus is in the list: keyboard focus is the user's.
   const [followed, setFollowed] = useState(current);
-  const [steering, setSteering] = useState(false);
+  const [inList, setInList] = useState(false);
   if (followed !== current) {
     setFollowed(current);
-    if (!steering) setFocused(current);
+    if (!inList) setFocused(current);
   }
-  useEffect(
-    () =>
-      onActivity(() => {
-        setSteering(false);
-      }),
-    [],
-  );
   const focusAfterMove = useRef(false);
 
   useLayoutEffect(() => {
@@ -95,13 +86,12 @@ export function ThumbnailsPane() {
   useEffect(() => {
     thumbnails.reprioritize((r) => Math.abs(r.pageIndex - current));
     const el = list.current;
-    if (steering) return;
     const top = layout.tops[current];
     const bottom = layout.tops[current + 1];
     if (!el || top === undefined || bottom === undefined) return;
     if (top < el.scrollTop || bottom > el.scrollTop + el.clientHeight)
       el.scrollTop = Math.max(0, top - GAP);
-  }, [current, layout, steering]);
+  }, [current, layout]);
 
   // Keyboard moves: focus the item once it is rendered (move() scrolled it into view).
   useEffect(() => {
@@ -128,7 +118,6 @@ export function ThumbnailsPane() {
       setScrollTop(el.scrollTop); // render the items there now, not on the scroll event
     }
     focusAfterMove.current = true;
-    setSteering(true);
     setFocused(i);
   };
   const onKeyDown = (e: KeyboardEvent): void => {
@@ -165,8 +154,12 @@ export function ThumbnailsPane() {
     action();
   };
 
+  // The focused item stays rendered (and focused) when the list scrolls elsewhere.
+  const indexes = [];
+  for (let i = first; i <= last; i++) indexes.push(i);
+  if (focused < first || focused > last) indexes.push(focused);
   const items = [];
-  for (let i = first; i <= last; i++) {
+  for (const i of indexes) {
     const s = shown[i];
     const p = pages[i];
     if (!s || !p) continue;
@@ -207,8 +200,11 @@ export function ThumbnailsPane() {
       role="listbox"
       aria-label={t('thumbnails.list')}
       tabIndex={-1}
+      onFocus={() => {
+        setInList(true);
+      }}
       onBlur={(e) => {
-        if (!e.currentTarget.contains(e.relatedTarget)) setSteering(false);
+        if (!e.currentTarget.contains(e.relatedTarget)) setInList(false);
       }}
       onClick={(e) => {
         const item = (e.target as HTMLElement).closest<HTMLElement>('[data-thumb]');
