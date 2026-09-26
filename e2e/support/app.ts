@@ -62,3 +62,45 @@ export async function drop(page: Page, files: DropFile[]): Promise<void> {
   await stage(page, files);
   await dropStaged(page);
 }
+
+/**
+ * Starts watching, in the page, for page 1's preview image to load and be
+ * painted (the frame after its `load`). Playwright's own waits poll with a
+ * growing interval (up to 500 ms), so "first page visible" timed from them
+ * measures the polling as much as the app. Call before dropping the file.
+ */
+export async function watchFirstPreview(page: Page): Promise<void> {
+  await page.evaluate(() => {
+    const w = window as unknown as { __firstPreviewAt: number | null };
+    w.__firstPreviewAt = null;
+    const seen = new WeakSet<HTMLImageElement>();
+    const painted = (): void => {
+      requestAnimationFrame(() => {
+        w.__firstPreviewAt ??= performance.now();
+      });
+    };
+    const check = (): void => {
+      const img = document.querySelector<HTMLImageElement>('[data-page="0"] img.page-preview');
+      if (!img || seen.has(img)) return;
+      seen.add(img);
+      if (img.complete && img.naturalWidth > 0) painted();
+      else img.addEventListener('load', painted, { once: true });
+    };
+    new MutationObserver(check).observe(document.body, {
+      subtree: true,
+      childList: true,
+      attributes: true,
+      attributeFilter: ['src'],
+    });
+  });
+}
+
+/** When page 1's preview was first painted (page time, ms), waiting for it. */
+export async function firstPreviewAt(page: Page): Promise<number> {
+  const handle = await page.waitForFunction(
+    () => (window as unknown as { __firstPreviewAt: number | null }).__firstPreviewAt,
+  );
+  const at = await handle.jsonValue();
+  if (at === null) throw new Error('no first preview');
+  return at;
+}
