@@ -2,7 +2,10 @@
 // ADR-006 decision 3). The worker has one thread, so one job runs at a time.
 // Long jobs call `checkpoint()` at every page boundary: there a waiting job of
 // higher priority takes over, background work stays parked while a save is
-// being verified, and cancellation is checked (CLAUDE.md rule 2).
+// being verified, and cancellation is checked (CLAUDE.md rule 2). Every
+// `yieldEveryMs` a job also lets a waiting job of the same priority take a
+// turn, so a short request (hit rectangles, a page's text geometry) never
+// waits for a whole-document search to finish.
 
 import { AbortError } from '../../engine/errors';
 
@@ -75,7 +78,7 @@ export class Scheduler {
             // Let cancel and new-job messages in (they arrive as events).
             await this.sleep();
             lastYield = this.now();
-            if (this.mustYield(priority)) {
+            if (this.mustYield(priority, true)) {
               this.release();
               await this.acquire(priority, signal);
               lastYield = this.now();
@@ -105,10 +108,17 @@ export class Scheduler {
     return !(p === 'background' && this.saves > 0);
   }
 
-  /** A waiting job outranks the running one, or background must park for a save. */
-  private mustYield(p: Priority): boolean {
+  /**
+   * A waiting job outranks the running one (or, with `turns`, has the same
+   * priority: round robin), or background must park for a save.
+   */
+  private mustYield(p: Priority, turns = false): boolean {
     if (!this.eligible(p)) return true;
-    return this.waiting.some((w) => RANK[w.priority] < RANK[p] && this.eligible(w.priority));
+    return this.waiting.some(
+      (w) =>
+        (RANK[w.priority] < RANK[p] || (turns && RANK[w.priority] === RANK[p])) &&
+        this.eligible(w.priority),
+    );
   }
 
   private acquire(priority: Priority, signal: AbortSignal): Promise<void> {
