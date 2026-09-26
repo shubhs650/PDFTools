@@ -32,6 +32,8 @@
   --color-pressed: #dcdcdc;
   --color-selected: #d6e4f5;
   --color-text-selection: #9fc6ec; /* multiplied over the page */
+  --color-find-hit: #ffe27a; /* search hits, multiplied over the page */
+  --color-find-current: #ffa040;
   --color-accent: #0f6cbd;
   --color-accent-hover: #115ea3;
   --color-focus: #0f6cbd;
@@ -125,6 +127,8 @@
   --color-pressed: #474747;
   --color-selected: #1a3a5c;
   --color-text-selection: #9fc6ec; /* pages stay white in every theme */
+  --color-find-hit: #ffe27a;
+  --color-find-current: #ffa040;
   --color-accent: #479ef5;
   --color-accent-hover: #62abf5;
   --color-focus: #ffffff;
@@ -154,6 +158,8 @@
     --color-pressed: Highlight;
     --color-selected: Highlight;
     --color-text-selection: Highlight;
+    --color-find-hit: Mark;
+    --color-find-current: Highlight;
     --color-accent: Highlight;
     --color-accent-hover: Highlight;
     --color-focus: Highlight;

@@ -276,7 +276,9 @@
       "tabPrev": "Previous Tab",
       "toolCancel": "Cancel Tool",
       "editCopy": "Copy Selected Text",
-      "editSelectAll": "Select Page Text"
+      "editSelectAll": "Select Page Text",
+      "findNext": "Find Next",
+      "findPrev": "Find Previous"
     },
     "key": {
       "ctrl": "Ctrl",
@@ -483,6 +485,28 @@
       "fillForms": "filling in forms",
       "modify": "changes",
       "assemble": "page changes"
+    }
+  },
+  "find": {
+    "barName": "Find in document",
+    "label": "Find",
+    "placeholder": "Find in document",
+    "matchCase": "Match Case",
+    "wholeWord": "Whole Words Only",
+    "next": "Next Result",
+    "prev": "Previous Result",
+    "stop": "Stop Searching",
+    "close": "Close Find Bar",
+    "status": {
+      "count": "{{n}} of {{total}}",
+      "none": "No results",
+      "searching": "Searching… {{percent}}"
+    },
+    "error": {
+      "empty": "Type something to find.",
+      "invalid": "That search pattern isn't valid.",
+      "matchesEmpty": "That pattern would match nothing but empty text.",
+      "failed": "The search didn't finish. Try again."
     }
   }
 }

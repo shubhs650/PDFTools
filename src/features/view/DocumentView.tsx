@@ -13,6 +13,7 @@ import { useEffect, useMemo, useRef, useState, type KeyboardEvent, type PointerE
 import { appStore, useApp } from '../../app/store/appStore';
 import { isEditable } from '../../app/keys/useShortcuts';
 import { documentStore, useDocuments, type ZoomSetting } from '../../app/store/documentStore';
+import { HighlightLayer } from '../search/HighlightLayer';
 import { reportActivity } from '../search/indexing';
 import { fitVisibleLevels, move, zoomTo } from './controller';
 import { capability, useHost } from './host';
@@ -89,6 +90,7 @@ function Page({
                 // tiles have no alt, so the whole layer is hidden from assistive tech.
                 aria-hidden
               />
+              <HighlightLayer documentId={documentId} pageIndex={layout.pageIndex} scale={scale} />
               {/* Text selection (M2-04): geometry loads for pages laid out here only. */}
               <TextSelection
                 documentId={documentId}

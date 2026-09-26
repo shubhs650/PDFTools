@@ -50,6 +50,10 @@ export const KEYMAP: readonly Binding[] = [
   b('view.zoomIn', ['Ctrl+=', 'Ctrl++']),
   b('view.zoomOut', ['Ctrl+-']),
   b('view.collapseRibbon', ['Ctrl+F1']),
+  // Quick Find (M2-07, §8.1): runs only on Enter in the bar; F3 walks the results.
+  b('home.find', ['Ctrl+F']),
+  b('find.next', ['F3']),
+  b('find.prev', ['Shift+F3']),
   b('home.hand', ['H'], 'document'),
   b('home.select', ['V'], 'document'),
   // Text selection (M2-04): in the document only, so text fields keep their own.
