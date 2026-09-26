@@ -17,7 +17,7 @@ export function registerBuiltinCommands(): () => void {
       isPressed: () => appStore.getState().leftPaneOpen,
     }),
     // Left panes (M2-08): choosing the pane shown closes the pane area.
-    ...['rail.thumbnails', 'rail.search'].map((id) =>
+    ...['rail.bookmarks', 'rail.thumbnails', 'rail.search'].map((id) =>
       registerCommand(id, {
         run: () => {
           appStore.getState().choosePane(id);

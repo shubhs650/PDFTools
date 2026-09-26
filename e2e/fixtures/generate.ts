@@ -101,6 +101,100 @@ export function annotatedPdf(): Uint8Array {
   ]);
 }
 
+/** The external address of outlinedPdf's URI link. */
+export const LINK_URL = 'https://example.com/spec?section=4.2';
+
+/**
+ * 50 pages ("Page n") with a 500-entry, 3-level outline — 5 parts × 9
+ * sections × 10 items, "Item p.s.i" → page (p·9+s) mod 50 at the top (/XYZ) —
+ * and three links on page 1: to page 30 (/XYZ), to the named destination
+ * "chap3" (page 3, /Fit) and to LINK_URL (M2-10).
+ */
+export function outlinedPdf(): Uint8Array {
+  const pages = 50;
+  // Objects: 1 catalog, 2 pages, 3.. pages (page, contents) pairs, then font,
+  // 3 link annotations, the outline root and the outline items.
+  const pageObj = (i: number) => 3 + i * 2;
+  const font = 3 + pages * 2;
+  const links = [font + 1, font + 2, font + 3];
+  const root = font + 4;
+  const objs: PdfObject[] = [
+    `<< /Type /Catalog /Pages 2 0 R /Outlines ${String(root)} 0 R /Dests << /chap3 [${String(pageObj(2))} 0 R /Fit] >> >>`,
+    `<< /Type /Pages /Kids [${Array.from({ length: pages }, (_, i) => `${String(pageObj(i))} 0 R`).join(' ')}] /Count ${String(pages)} >>`,
+  ];
+  for (let i = 0; i < pages; i++) {
+    const annots = i === 0 ? ` /Annots [${links.map((n) => `${String(n)} 0 R`).join(' ')}]` : '';
+    objs.push(
+      `<< /Type /Page /Parent 2 0 R /MediaBox [0 0 595 842] /Resources << /Font << /F1 ${String(font)} 0 R >> >> /Contents ${String(4 + i * 2)} 0 R${annots} >>`,
+      {
+        dict: '<< >>',
+        stream:
+          `BT /F1 36 Tf 72 740 Td (Page ${String(i + 1)}) Tj ET` +
+          (i === 0
+            ? ' BT /F1 14 Tf 72 600 Td (Go to page 30) Tj 0 -40 Td (Chapter 3) Tj 0 -40 Td (Specification online) Tj ET'
+            : ''),
+      },
+    );
+  }
+  objs.push('<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica >>');
+  objs.push(
+    `<< /Type /Annot /Subtype /Link /Rect [70 595 250 615] /Border [0 0 0] /Dest [${String(pageObj(29))} 0 R /XYZ 0 842 0] >>`,
+    '<< /Type /Annot /Subtype /Link /Rect [70 555 250 575] /Border [0 0 0] /Dest /chap3 >>',
+    `<< /Type /Annot /Subtype /Link /Rect [70 515 250 535] /Border [0 0 0] /A << /S /URI /URI (${LINK_URL}) >> >>`,
+  );
+  // Outline tree, depth-first object numbers after the root.
+  interface Node {
+    title: string;
+    page: number;
+    children: Node[];
+    num?: number;
+  }
+  const tree: Node[] = Array.from({ length: 5 }, (_, p) => ({
+    title: `Part ${String(p + 1)}`,
+    page: (p * 9) % pages,
+    children: Array.from({ length: 9 }, (_, s) => ({
+      title: `Section ${String(p + 1)}.${String(s + 1)}`,
+      page: (p * 9 + s) % pages,
+      children: Array.from({ length: 10 }, (_, k) => ({
+        title: `Item ${String(p + 1)}.${String(s + 1)}.${String(k + 1)}`,
+        page: (p * 9 + s) % pages,
+        children: [],
+      })),
+    })),
+  }));
+  let next = root + 1;
+  const number = (list: Node[]) => {
+    for (const n of list) {
+      n.num = next++;
+      number(n.children);
+    }
+  };
+  number(tree);
+  const items: string[] = [];
+  const emit = (list: Node[], parent: number) => {
+    list.forEach((n, i) => {
+      const prev = list[i - 1]?.num;
+      const nxt = list[i + 1]?.num;
+      const kids = n.children.length
+        ? ` /First ${String(n.children[0]?.num)} 0 R /Last ${String(n.children[n.children.length - 1]?.num)} 0 R /Count -${String(n.children.length)}`
+        : '';
+      items[(n.num ?? 0) - root - 1] =
+        `<< /Title (${n.title}) /Parent ${String(parent)} 0 R` +
+        (prev ? ` /Prev ${String(prev)} 0 R` : '') +
+        (nxt ? ` /Next ${String(nxt)} 0 R` : '') +
+        kids +
+        ` /Dest [${String(pageObj(n.page))} 0 R /XYZ 0 842 0] >>`;
+      emit(n.children, n.num ?? 0);
+    });
+  };
+  emit(tree, root);
+  objs.push(
+    `<< /Type /Outlines /First ${String(tree[0]?.num)} 0 R /Last ${String(tree[tree.length - 1]?.num)} 0 R /Count 5 >>`,
+    ...items,
+  );
+  return buildPdf(objs);
+}
+
 // ------------------------------------------------------------ contract profile
 
 /** Appears only on the 0-based pages in NEEDLE_PAGES; "Contractor" is on every page. */

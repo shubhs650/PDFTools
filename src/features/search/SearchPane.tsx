@@ -111,6 +111,7 @@ export function SearchPane() {
         <div className="search-row">
           <input
             ref={input}
+            data-pane-focus
             className="find-input search-input"
             type="search"
             aria-label={t('search.label')}

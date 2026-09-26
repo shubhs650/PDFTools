@@ -11,6 +11,7 @@ import { SearchSession } from '../../engine/searchSession';
 import type { ExtraHit } from '../../workers/work/search';
 import type { Hit, SearchOptions } from '../../workers/work/searchCore';
 import { goToPage, goToPoint } from '../view/controller';
+import { recordJump } from '../view/viewHistory';
 import { workClient } from '../view/host';
 import { addBatch, emptyResults, fillPage } from './findModel';
 import { showResults } from './findStore';
@@ -248,10 +249,16 @@ export function requestContext(pages: readonly { docId: string; page: number }[]
   }
 }
 
-/** Waits until `docId` is the active tab's document view (after activating it). */
+/**
+ * Makes `docId` the active tab's document view; a jump within the active
+ * document is recorded for Previous View (M2-10).
+ */
 async function activate(docId: string): Promise<void> {
   const docs = documentStore.getState();
-  if (docs.activeId === docId) return;
+  if (docs.activeId === docId) {
+    recordJump();
+    return;
+  }
   docs.activate(docId);
   // The document view mounts on the next frames.
   for (let i = 0; i < 3; i++) await new Promise((r) => requestAnimationFrame(r));

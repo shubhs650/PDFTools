@@ -290,7 +290,9 @@
       "option": "Option",
       "pageUp": "Page Up",
       "pageDown": "Page Down",
-      "escape": "Esc"
+      "escape": "Esc",
+      "arrowLeft": "Left Arrow",
+      "arrowRight": "Right Arrow"
     }
   },
   "open": {
@@ -541,5 +543,30 @@
       "annotation": "Comment, page {{page}}: ",
       "loading": "Loading…"
     }
+  },
+  "view": {
+    "history": {
+      "noPrevious": "No earlier view to go back to",
+      "noNext": "No later view to go forward to"
+    }
+  },
+  "bookmarks": {
+    "tree": "Bookmarks",
+    "empty": "This document has no bookmarks.",
+    "noDocument": "Open a document to see its bookmarks.",
+    "loading": "Loading bookmarks…",
+    "failed": "The bookmarks couldn't be read.",
+    "expandAll": "Expand All",
+    "collapseAll": "Collapse All"
+  },
+  "links": {
+    "toPage": "Link to page {{page}}",
+    "external": "Link to {{url}}",
+    "otherFile": "Link to another file",
+    "dialogTitle": "Open this link in your browser?",
+    "dialogBody": "This document links to the address below. PDFTools does not open it itself: your browser does, in a new tab.",
+    "open": "Open in Browser",
+    "cancel": "Cancel",
+    "blocked": "Only web (http, https) and email (mailto) links can be opened."
   }
 }

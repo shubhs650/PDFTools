@@ -10,6 +10,8 @@ M0 and M1 owner runs are still open.
 
 ## Done
 
+- **Session 14 — M2-10 bookmarks, links and view history.** Bookmarks tree pane, link layer with external-link confirmation, Previous/Next View. Self-made `outlinedPdf` fixture (500-entry 3-level outline, internal/named/URI links). Unit 511, e2e 129, perf 20, all green; licenses 642 OK.
+
 - **Session 14 — M2-09 Advanced Search pane.** Advanced Search pane: options, all-tabs scope, comment and bookmark hits, virtual results with on-demand context, hand-off to Quick Find highlights. Self-made fixture `annotatedPdf` (comment + outline). Perf: common term on the 2,000-page stand-in, first rows < 1 s, 18,798 results < 15 s, 0 long tasks. Unit 502, e2e 126, perf 20 (the M2-06 indexing tile-p95 check missed once in a full run, passed 3/3 alone: watch it).
 
 - **Session 14 — M2-08 pane framework and Thumbnails.** Pane framework (rail buttons, titled pane, Esc to rail, keyboard/pointer resizer) and the virtualized Thumbnails pane with an activity-aware, one-at-a-time thumbnail queue. Found on the way: an unconstrained list stretched the frame (fixed with an absolutely positioned list); the 2,000-page uncached Quick Find total needs ~5 s, so e2e/find.spec.ts waits up to 20 s for the total. Unit 493, e2e 122, perf 19, all green; licenses 642 OK.
@@ -505,6 +507,16 @@ M0 and M1 owner runs are still open.
   `claude/m2-task-breakdown-ytspb5` (the plan) → `m2/01-read-spike` → `m2/02-secure-print-spike`
   → `m2/03-protected` → `m2/04-selection` → `m2/05-search` were merged into `main` (PR #33).
   Since then each task gets its own PR to `main`, merged once CI is green.
+- **M2-06 … M2-10 (session 14):** M2-06 merged (PR #34). M2-07 → PR #35, M2-08 → PR #36,
+  M2-09 → PR #37, M2-10 → its own PR; each branch is built on the previous one ("stacked"), so
+  they merge in that order once CI is green. PR #35 needed a scheduler fix found by CI: jobs of
+  the same priority in the Work worker now take turns every 8 ms (hit highlights no longer wait
+  for a whole search).
+- **Git in one paragraph (for the owner):** each task lives on its own _branch_ (a named line
+  of commits). A _commit_ is a saved snapshot with a message; _push_ uploads the branch to
+  GitHub; a _pull request_ (PR) asks to bring a branch into `main`, and GitHub runs the checks
+  (CI) on it; _merge_ adds it to `main` once the checks are green. Stacked PRs (#35 → #36 → #37 →
+  M2-10) are merged oldest first; each later PR then shows only its own changes.
 
 ## Session log
 
@@ -591,6 +603,11 @@ M0 and M1 owner runs are still open.
 
 ## Open issues
 
+- **Perf noise to watch:** the M2-06 indexing check (tiles p95 while indexing is paused vs idle)
+  missed once in CI (164 ms vs a 142 ms limit) and once in a full local run; it passes alone.
+  If it keeps missing, look at CPU contention from the Work worker between activity messages.
+- **Quick Find total** on the uncached 2,000-page stand-in takes ~5 s (first hit ~50–180 ms);
+  e2e waits up to 20 s for the total.
 - **Chromium 153 headless crash on stored file handles (M1-18).** Reading a
   `FileSystemFileHandle` back from IndexedDB crashes the whole browser in headless Chromium and
   Google Chrome 153 (OPFS and on-disk handles alike; CI diagnostic, PR #21). Chromium 141/151 and

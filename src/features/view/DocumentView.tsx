@@ -16,6 +16,7 @@ import { documentStore, useDocuments, type ZoomSetting } from '../../app/store/d
 import { HighlightLayer } from '../search/HighlightLayer';
 import { reportActivity } from '../search/indexing';
 import { fitVisibleLevels, move, zoomTo } from './controller';
+import { LinkLayer } from './LinkLayer';
 import { capability, useHost } from './host';
 import { HAND_MODE, PAGE_GAP, POINTER_MODE } from './plugins';
 import { PreviewLayer } from './PreviewLayer';
@@ -97,6 +98,8 @@ function Page({
                 pageIndex={layout.pageIndex}
                 background={SELECTION_COLOR}
               />
+              {/* Links (M2-10) sit above the text layer, so a click follows them. */}
+              <LinkLayer documentId={documentId} pageIndex={layout.pageIndex} scale={scale} />
             </div>
           </PagePointerProvider>
         </Rotate>

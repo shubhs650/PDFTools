@@ -1121,3 +1121,98 @@ body {
 .search-result-loading {
   color: var(--color-text-muted);
 }
+
+/* ------------------------------------------------------------ bookmarks and links (M2-10) */
+
+.bookmarks-pane {
+  position: absolute;
+  inset: var(--space-0);
+  display: flex;
+  flex-direction: column;
+}
+
+.bookmarks-toolbar {
+  display: flex;
+  gap: var(--space-2);
+  padding: var(--space-2) var(--space-3);
+  border-bottom: var(--border-width) solid var(--color-border);
+}
+
+.bookmark-tree {
+  flex: 1;
+  min-height: var(--space-0);
+  padding: var(--space-2) var(--space-0);
+  overflow-y: auto;
+  overscroll-behavior: contain;
+}
+
+.bookmark {
+  display: flex;
+  align-items: center;
+  gap: var(--space-1);
+  min-height: var(--control-height-s);
+  padding-right: var(--space-3);
+  font-size: var(--font-size-s);
+  cursor: pointer;
+  outline: none;
+}
+
+.bookmark--focused {
+  background: var(--color-selected);
+}
+
+.bookmark:focus-visible {
+  outline: var(--focus-width) solid var(--color-focus);
+  outline-offset: calc(-1 * var(--focus-width));
+}
+
+.bookmark-twisty {
+  display: inline-flex;
+  flex: none;
+  justify-content: center;
+  width: var(--space-4);
+  margin-left: var(--space-2);
+}
+
+.bookmark-title {
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+.link-layer {
+  position: absolute;
+  inset: var(--space-0);
+  pointer-events: none;
+}
+
+.link-hit {
+  position: absolute;
+  padding: var(--space-0);
+  border: none;
+  background: transparent;
+  cursor: pointer;
+  pointer-events: auto;
+}
+
+.link-hit:hover {
+  background: var(--color-find-hit);
+  opacity: 0.3;
+}
+
+.link-hit:focus-visible {
+  outline: var(--focus-width) solid var(--color-focus);
+}
+
+.link-url {
+  margin: var(--space-0);
+  padding: var(--space-2) var(--space-3);
+  border: var(--border-width) solid var(--color-border);
+  border-radius: var(--radius-m);
+  font-family: ui-monospace, monospace;
+  overflow-wrap: anywhere;
+}
+
+.link-blocked {
+  color: var(--color-text-muted);
+}

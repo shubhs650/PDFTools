@@ -10,6 +10,7 @@ import { DropdownMenu, IconButton, type MenuEntry } from '../../ui/components';
 import { CommandIcon } from '../../ui/icons/CommandIcon';
 import { VIEW_MODE_COMMANDS } from './commands';
 import { goToPage, setZoom, zoomTo } from './controller';
+import { recordJump } from './viewHistory';
 import { parsePageInput } from './navigation';
 import { ZOOM_PRESETS, parseZoomInput } from './zoom';
 
@@ -100,6 +101,7 @@ export function PageNav() {
         commit={(text) => {
           const index = parsePageInput(text, count, format.locale);
           if (index === null) return false;
+          recordJump();
           goToPage(index);
           return true;
         }}

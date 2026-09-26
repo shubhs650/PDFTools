@@ -8,6 +8,8 @@ import { SpreadMode, type SpreadCapability } from '@embedpdf/plugin-spread';
 import { ZoomMode, type ZoomCapability, type ZoomScope } from '@embedpdf/plugin-zoom';
 import { documentStore, type ViewMode, type ZoomSetting } from '../../app/store/documentStore';
 import { capability, hostStore, renderEngine } from './host';
+import type { ViewTarget } from './destination';
+import type { ViewEntry } from './history';
 import { movePage, type PageMove } from './navigation';
 import { PAGE_GAP } from './plugins';
 import { isFacing, rotateView, spreadIndexOf, spreadsFor, toQuarterTurns } from './viewModes';
@@ -119,7 +121,7 @@ export function goToPage(index: number): void {
  * Brings a point of a page (points from the unrotated page's top-left) into
  * view, about a third down the window (a search hit, a link target, M2-07/10).
  */
-export function goToPoint(index: number, x: number, y: number): void {
+export function goToPoint(index: number, x: number, y: number, alignY = 30): void {
   const a = active();
   if (!a) return;
   documentStore.getState().setView(a.docId, { page: index });
@@ -127,9 +129,80 @@ export function goToPoint(index: number, x: number, y: number): void {
     pageNumber: index + 1,
     pageCoordinates: { x, y },
     behavior: 'instant',
-    alignX: 50,
-    alignY: 30,
+    alignX: alignY === 0 ? 0 : 50,
+    alignY,
   });
+}
+
+/** Runs `fn` once the scroller has laid out again (after a zoom), or soon if nothing changes. */
+function afterLayout(a: Active, fn: () => void): void {
+  let done = false;
+  const go = (): void => {
+    if (done) return;
+    done = true;
+    off();
+    fn();
+  };
+  const off = a.scroll.onLayoutChange(() => {
+    requestAnimationFrame(go);
+  });
+  setTimeout(go, 150);
+}
+
+/** A destination (bookmark, link, M2-10): its zoom first, then its point at the top. */
+export function goToTarget(t: ViewTarget): void {
+  const a = active();
+  if (!a) return;
+  const go = (): void => {
+    if (t.point) goToPoint(t.page, t.point.x, t.point.y, 0);
+    else goToPage(t.page);
+  };
+  if (t.zoom === 'keep') {
+    go();
+    return;
+  }
+  fitVisibleLevels.delete(a.docId);
+  if (t.zoom === 'fitPage') a.zoom.requestZoom(ZoomMode.FitPage);
+  else if (t.zoom === 'fitWidth') a.zoom.requestZoom(ZoomMode.FitWidth);
+  else a.zoom.requestZoom(clampZoom(t.zoom));
+  afterLayout(a, go);
+}
+
+/** The active document's view as a history entry (M2-10). */
+export function currentView(): { docId: string; entry: ViewEntry } | null {
+  const a = active();
+  const vp = viewportElement();
+  const page = a ? documentStore.getState().docs[a.docId]?.view.page : undefined;
+  if (!a || !vp || page === undefined) return null;
+  return {
+    docId: a.docId,
+    entry: {
+      page,
+      scale: a.zoom.getState().currentZoomLevel,
+      scrollLeft: vp.scrollLeft,
+      scrollTop: vp.scrollTop,
+    },
+  };
+}
+
+/** Previous / Next View: the zoom, then the exact scroll position. */
+export function restoreView(e: ViewEntry): void {
+  const a = active();
+  if (!a) return;
+  const place = (): void => {
+    const vp = viewportElement();
+    if (!vp) return;
+    vp.scrollLeft = e.scrollLeft;
+    vp.scrollTop = e.scrollTop;
+  };
+  documentStore.getState().setView(a.docId, { page: e.page });
+  if (Math.abs(a.zoom.getState().currentZoomLevel - e.scale) < 1e-6) {
+    place();
+    return;
+  }
+  fitVisibleLevels.delete(a.docId);
+  a.zoom.requestZoom(e.scale);
+  afterLayout(a, place);
 }
 
 /** First/previous/next/last page; in the facing modes previous/next move by spread. */

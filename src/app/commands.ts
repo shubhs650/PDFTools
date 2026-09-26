@@ -303,6 +303,7 @@ export const COMMANDS: readonly CommandDef[] = [
     size: 'small',
     fluent: 'ArrowCircleLeft',
     milestone: 'M2',
+    shipped: true, // M2-10
   },
   {
     id: 'view.nextView',
@@ -311,6 +312,7 @@ export const COMMANDS: readonly CommandDef[] = [
     size: 'small',
     fluent: 'ArrowCircleRight',
     milestone: 'M2',
+    shipped: true, // M2-10
   },
   {
     id: 'view.actualSize',
@@ -1089,6 +1091,7 @@ export const COMMANDS: readonly CommandDef[] = [
     fluent: 'Bookmark',
     milestone: 'M2',
     toggle: true,
+    shipped: true, // M2-10
   },
   {
     id: 'rail.thumbnails',

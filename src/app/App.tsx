@@ -9,6 +9,7 @@ import { installRecovery } from '../features/recovery/recovery';
 import { registerProtectCommands } from '../features/protect/commands';
 import { PasswordDialog } from '../features/protect/PasswordDialog';
 import { UnlockDialog } from '../features/protect/UnlockDialog';
+import { ExternalLinkDialog } from '../features/view/ExternalLinkDialog';
 import { RecoveryDialog } from '../features/recovery/RecoveryDialog';
 import { registerSaveCommands } from '../features/save/commands';
 import { registerFindCommands } from '../features/search/commands';
@@ -111,6 +112,7 @@ export function App() {
         <OpenErrorDialog />
         <PasswordDialog />
         <UnlockDialog />
+        <ExternalLinkDialog />
         <SaveErrorDialog />
         <SaveOptimizedDialog />
         <GrowthPrompt />
