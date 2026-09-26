@@ -67,6 +67,10 @@ test('2,000-page stand-in: indexing while scrolling, then a rare term far away',
   // ADR-006: rare term anywhere < 1 s once indexed (warm).
   expect(rare.summary.totalHits).toBe(3);
   expect(rare.firstHitMs).toBeLessThan(1000);
-  // Tiles while indexing is paused vs idle (loose: shared runners are noisy).
-  expect(during.tiles.p95).toBeLessThan(idle.tiles.p95 * 1.5 + 20);
+  // Tiles while indexing is paused vs idle. Medians, as the ADR-012 pane-load
+  // gate: a p95 of ~55 tiles in a 3 s window is one or two outliers, and CI
+  // runners showed 160 ms p95 with nothing in the background at all. The p95
+  // keeps a hard ceiling for a real regression.
+  expect(during.tiles.p50).toBeLessThan(idle.tiles.p50 * 1.5 + 20);
+  expect(during.tiles.p95).toBeLessThan(400);
 });
