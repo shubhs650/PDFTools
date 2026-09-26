@@ -7,6 +7,11 @@ import { defineConfig, devices } from '@playwright/test';
 // Optional override for environments with a pre-installed browser that doesn't
 // match this Playwright version (e.g. cloud dev containers). CI uses the
 // browser installed by `npx playwright install`.
+//
+// @playwright/test is pinned to 1.62.1 (Chromium 151): Chromium/Chrome 153 in
+// headless mode crashes the whole browser when a FileSystemFileHandle is read
+// back from IndexedDB, which the recent-files list does (M1-18). Headed Chrome
+// and Edge 154 are fine. Re-test before bumping (docs/PROGRESS.md open issues).
 const executablePath = process.env.PW_CHROMIUM_EXECUTABLE;
 const launchOptions = executablePath ? { executablePath } : {};
 

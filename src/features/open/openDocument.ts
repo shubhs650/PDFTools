@@ -73,6 +73,11 @@ async function openOne({ file, handle }: OpenedFile): Promise<string | undefined
     });
     advance(job, { type: 'opened', docId: id });
     void openInWorkWorker(id, file);
+    void import('../recent/recent')
+      .then(({ recordOpened }) =>
+        recordOpened({ file, ...(handle ? { handle } : {}), fingerprint }),
+      )
+      .catch(() => undefined); // the recent list is best effort
     return id;
   } catch (err) {
     if (docId) void releaseEngineDocument(docId);

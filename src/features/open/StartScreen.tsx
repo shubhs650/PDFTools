@@ -2,10 +2,11 @@ import { useTranslation } from 'react-i18next';
 import { runCommand } from '../../app/commands/dispatch';
 import { Button } from '../../ui/components';
 import { CommandIcon } from '../../ui/icons/CommandIcon';
+import { RecentList } from '../recent/RecentList';
 
 const OPEN = 'file.open';
 
-/** Shown when no document is open. M1-18 adds the recent-files list. */
+/** Shown when no document is open (§8): Open, the drop hint and recent files. */
 export function StartScreen() {
   const { t } = useTranslation();
   return (
@@ -20,6 +21,7 @@ export function StartScreen() {
           void runCommand(OPEN);
         }}
       />
+      <RecentList />
     </section>
   );
 }
