@@ -9,6 +9,16 @@ M0 and M1 owner runs are still open.
 
 ## Done
 
+- **Session 14 — M2-01 (viewer-side spike).** Branch `m2/01-read-spike`. _Works with
+  workaround_, [ADR-012](adr/012-m2-read-apis.md) (proposed). EmbedPDF 2.15.1 has every API the
+  panes and text layer need, but the Render worker runs one call at a time: text geometry through
+  it tripled visible-tile p50 (14 → 43 ms), one dense-A0 thumbnail doubled zoom-tile p50, and a
+  20 MB attachment read is one 0.4 s call. So: `plugin-selection` with text geometry from the Work
+  worker; own thumbnails at lower priority; bookmarks/links straight from the engine (500 entries
+  in 11 ms); attachments in the Work worker. **Layers can't be toggled** (no optional-content API
+  in this PDFium) — owner choice needed (ADR-012 decision 5). New perf scenario
+  `e2e/perf/pane-load.spec.ts`; e2e-only probe `view.engineLoad`.
+
 - **Session 14 — M2 plan.** Branch `claude/m2-task-breakdown-ytspb5`. Read PROGRESS,
   ARCHITECTURE Rev 0.4 and ADR-001 to ADR-011; wrote [docs/plan/M2.md](plan/M2.md): 19 tasks
   (two spikes → ADR-012/013, protected PDFs, text selection, search core + background indexing +
@@ -566,6 +576,10 @@ M0 and M1 owner runs are still open.
 
 ## Decisions needed (owner)
 
+0. **Layers pane (ADR-012 decision 5, M2-Q8).** PDFium can't toggle layers. Proposed: a
+   list-only Layers pane in M2-11 (names and default visibility), plus an upstream request.
+   Alternatives in the ADR: render from a patched copy (not recommended), or drop the pane from
+   Rev 0.
 1. **Committed corpus PDFs.** Either confirm that all six files in `corpus/` are public domain and
    may stay in git, and amend ADR-002 to say so, or move them to the git-ignored `corpus/files/`
    (drawings to `corpus/files/drawings/`) and remove them from history. The S3 spec skips if they

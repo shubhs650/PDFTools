@@ -2,7 +2,7 @@
 // S5/S9 auto-scroll method (fixed px/s, blank visible pages counted per
 // frame). Never part of a production build.
 import type { ZoomCapability } from '@embedpdf/plugin-zoom';
-import { capability, hostStore, tileCache } from '../features/view/host';
+import { capability, hostStore, renderEngine, tileCache } from '../features/view/host';
 import { renderStats, resetRenderStats, type KindStats } from '../features/view/renderStats';
 import { viewFocus } from '../features/view/tileScheduler';
 import type { TestHook } from './hook';
@@ -75,6 +75,50 @@ export function registerViewProbe(hook: TestHook): void {
     },
     reset: () => {
       resetRenderStats();
+    },
+    /**
+     * Issues Render-engine calls on the active document's `pages`, `inFlight`
+     * at a time, and returns each call's latency (queue wait included). The
+     * M2-01 spike uses it to measure what panes and the text layer cost the
+     * visible tiles; later perf scenarios use it as background load.
+     */
+    engineLoad: async (
+      method: 'geometry' | 'thumbnail' | 'textRects' | 'bookmarks',
+      pages: number[],
+      inFlight = 1,
+    ) => {
+      const registry = hostStore.getState().registry;
+      if (!registry) throw new Error('no registry');
+      const core = registry.getStore().getState().core;
+      const doc = core.activeDocumentId ? core.documents[core.activeDocumentId]?.document : null;
+      if (!doc) throw new Error('no active document');
+      const engine = renderEngine().engine;
+      const ms: number[] = [];
+      const queue = [...pages];
+      const one = async (): Promise<void> => {
+        for (let i = queue.shift(); i !== undefined; i = queue.shift()) {
+          const page = doc.pages[i];
+          if (!page) continue;
+          const t0 = performance.now();
+          if (method === 'geometry') await engine.getPageGeometry(doc, page).toPromise();
+          else if (method === 'textRects') await engine.getPageTextRects(doc, page).toPromise();
+          else if (method === 'bookmarks') await engine.getBookmarks(doc).toPromise();
+          // Raw (unencoded, uncached, not counted as a tile) at the stock
+          // thumbnail plugin's priority: renderPageRect's HIGH, like tiles.
+          else
+            await engine
+              .renderPageRectRaw(
+                doc,
+                page,
+                { origin: { x: 0, y: 0 }, size: page.size },
+                { scaleFactor: 150 / page.size.width },
+              )
+              .toPromise();
+          ms.push(performance.now() - t0);
+        }
+      };
+      await Promise.all(Array.from({ length: inFlight }, one));
+      return { n: ms.length, p50: pct(ms, 50), p95: pct(ms, 95), max: pct(ms, 100) };
     },
     docCacheBytes: (docId: string) => tileCache.docBytes(docId),
     blankVisiblePages,
