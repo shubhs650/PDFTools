@@ -8,7 +8,9 @@
 import { ignore, PdfErrorCode, type PdfDocumentObject } from '@embedpdf/models';
 import { AbortError } from '../../engine/errors';
 import { isHeavy } from '../../workers/render/costModel';
+import { documentStore } from '../../app/store/documentStore';
 import { onActivity, quietFor } from '../view/activity';
+import { hasFirstPreview } from '../view/renderStats';
 import { hostStore, renderEngine, tileCache } from '../view/host';
 import { pageCost, progressivePreview } from '../view/progressivePreview';
 import { ThumbnailQueue, type RenderThumb } from './queue';
@@ -72,7 +74,17 @@ export const renderThumb: RenderThumb = (r) => {
   };
 };
 
-export const thumbnails = new ThumbnailQueue(renderThumb, () => quietFor(QUIET_MS), tileCache);
+/**
+ * Thumbnails start only once the document shows its first preview (they would
+ * otherwise race it on the Render worker at open, §12 "first page < 1.5 s")
+ * and after QUIET_MS without scrolling or zooming.
+ */
+const ready = (): boolean => {
+  const docId = documentStore.getState().activeId;
+  return quietFor(QUIET_MS) && (docId === null || hasFirstPreview(docId));
+};
+
+export const thumbnails = new ThumbnailQueue(renderThumb, ready, tileCache);
 onActivity(() => {
   thumbnails.interrupt();
 });
