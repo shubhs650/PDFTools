@@ -1,13 +1,24 @@
 # PDFTools — Progress
 
-_Last updated: 2026-09-27 (session 15: M2-16 to M2-19, M2 complete)_
+_Last updated: 2026-09-27 (session 16: M3 plan drafted, waiting for approval)_
 
 **Current milestone:** M2 — Read is **complete on the agent side** (M2-01 … M2-19; results and
 owner pack: [docs/acceptance/M2.md](acceptance/M2.md)). M1 is merged into `main`; M2-01 … M2-15
 are merged; M2-16 … M2-19 are on `claude/m2-tasks-16-19-wt8d51`, waiting for review. M0, M1 and M2
-owner runs are open. Next: the M3 plan (after the owner's review of M2).
+owner runs are open. The **M3 plan** ([docs/plan/M3.md](plan/M3.md)) is drafted and waiting for
+the owner's approval and answers to M3-Q1 … M3-Q10; no M3 code yet.
 
 ## Done
+
+- **Session 16 — M3 plan.** Branch `claude/m3-task-breakdown-tlyokp`. Read PROGRESS,
+  ARCHITECTURE Rev 0.4 and ADR-001 to ADR-013; wrote [docs/plan/M3.md](plan/M3.md): 20 tasks (two
+  spikes → ADR-014 annotations/history/comment data path and ADR-015 stamps/CRS/snapshots; object
+  layer port with single-revision merge; Standard security handler; annotation core with undo;
+  custom icons; reviewer profile; text markup, note/drawing/link tools; properties pane; comments
+  pane with auto-numbering; replies and review status; status schemes; stamps; scale model;
+  measurement tools; scale viewports; snapping with the Snap worker; CRS export; acceptance) with
+  goals, files, acceptance criteria, tests and dependencies, plus ten owner questions
+  (M3-Q1 … Q10). No code.
 
 - **Session 15 — M2-19 M2 acceptance pass and owner pack.** [docs/acceptance/M2.md](acceptance/M2.md): every §12 row met on typical files (search on the 2,000-page stand-in: first hits 52 ms, complete 5.9 s; 23 of 23 perf scenarios without a long task; M1 rows still met), every §13 M2 item mapped, owner pack (FAR / 500 MB search via `npm run owner:timings`, interop §M2 I–K, signatures after form save, live error report, Firefox). `scripts/acceptance.ts` has the M2 rows (search, M2 offline proof); new M2 offline proof in `e2e/offline.spec.ts`; the a11y gate covers every M2 pane, the find bar and the M2 dialogs in light, dark and pseudo-locale; the handler test covers every M2 command; `AVAILABLE_MILESTONES` = M1, M2. Found and fixed: Ctrl+S/O/P/F did nothing inside text fields (form fields now save with Ctrl+S, committing the typed value first); a save could overtake a form value still being committed (`pendingEdits.ts`); Home → Select Text had no handler. New perf scenario: 50-page print-ready export. Bundle 6.84 MB core / 30.85 MB installed, within budget.
 
@@ -529,6 +540,9 @@ owner runs are open. Next: the M3 plan (after the owner's review of M2).
 
 ## Session log
 
+- **Session 16 (2026-09-27):** M3 plan only (docs); no code, so no checks beyond Prettier on the
+  changed Markdown.
+
 - **Session 15 (2026-09-27):** M2-16, M2-17, M2-18 and M2-19 on `claude/m2-tasks-16-19-wt8d51`
   (one commit each). Local checks on the last commit: typecheck (app, node, functions), lint,
   format, 623 unit tests, license gate (642 packages), build + `check:dist`, bundle report
@@ -614,7 +628,11 @@ owner runs are open. Next: the M3 plan (after the owner's review of M2).
    - S8 Firefox check and Pages preview.
 4. **Owner:** decide the items under "Decisions needed" (keyboard text selection, committed
    corpus PDFs, Pages project).
-5. **Agent:** the M3 plan (`docs/plan/M3.md`), once M2 is reviewed.
+5. **Owner:** review [docs/plan/M3.md](plan/M3.md) and answer M3-Q1 … M3-Q10 (annotation export
+   in M4, measurement label defaults before interop §D/§F, review status vs scheme codes, stamp
+   appearance route, auto-numbering, keyboard creation of markups, profile → `/T`, own MD5/RC4,
+   ExcelJS, branching).
+6. **Agent:** after approval, M3-01 and M3-02 (spikes) and M3-03 (object layer) in parallel.
 
 ## Open issues
 
@@ -681,6 +699,8 @@ owner runs are open. Next: the M3 plan (after the owner's review of M2).
 
 ## Decisions needed (owner)
 
+- **M3 plan (M3-Q1 … M3-Q10)** in [docs/plan/M3.md](plan/M3.md#owner-decisions-needed). M3-Q2
+  depends on the still-open S2 interop run (§D/§F); the plan proceeds with the ADR-007 defaults.
 - **Keyboard text selection (M2-04).** Caret-based selection (Shift+arrows) is not built; the
   keyboard path is Ctrl+A (page text) + Ctrl+C. Accept as an exception to the M2-04 criterion, or
   schedule caret selection (about one session).
