@@ -10,6 +10,8 @@ M0 and M1 owner runs are still open.
 
 ## Done
 
+- **Session 15 — M2-18 error-report endpoint.** Pages Function `functions/api/report.ts` (validate with the shared schema, same-origin, ≤ 16 KB, 5/IP/hour with a salted IP hash, D1 store, optional e-mail binding), `functions/api/schema.sql`, `functions/tsconfig.json` in `tsc -b`, owner steps in [docs/deploy/error-report.md](deploy/error-report.md). Unit: `tests/functions/report.test.ts` (in-memory D1 and mail). Unit 622, green; no dependency added.
+
 - **Session 15 — M2-17 error-report dialog and Help.** `src/features/report/*` (payload builder, sanitizer, sender, dialog), schema shared with the endpoint in `src/model/report.ts`; the error boundary offers the report; Help → Help (`src/features/help`). e2e-only `CrashProbe` (dropped from production builds; `check:dist` clean). Unit: `tests/report` (nasty-input corpus, schema, sender); e2e: `e2e/report.spec.ts` (exact JSON posted only on Send, offline/429 with Copy report, Help). Unit 613, green.
 
 - **Session 15 — M2-16 print-ready export and viewer print route.** File → Export Print-Ready PDF flattens a Work-worker copy (unsaved edits included; `FPDFPage_Flatten` print mode, full rewrite, `/AcroForm` and unreachable objects dropped by `src/model/printReady.ts`) and saves it as a new file; the open document is untouched; signed documents warn. Print dialog "Print with: the browser's PDF viewer" prints that copy from a `blob:` frame; §10.1 CSP gains `frame-src blob:` (ADR-013 d7). Unit: `tests/print/print-ready.test.ts` (real PDFium: 0 annots/fields, pixels, vector, object streams, encrypted, rule 9), `frame-src.test.ts`; e2e: `e2e/print-ready.spec.ts`, negative control for other frame sources. Unit 598, e2e 153, green; licenses 642 OK.

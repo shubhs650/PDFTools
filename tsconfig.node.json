@@ -30,6 +30,7 @@
     "playwright.config.ts",
     "scripts",
     "tests",
-    "e2e"
+    "e2e",
+    "types"
   ]
 }
