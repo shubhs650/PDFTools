@@ -154,8 +154,9 @@ export function viewerBlock(
   highQualityAllowed: boolean,
   viewerAvailable = true,
 ): ViewerBlock | null {
-  if (!viewerAvailable) return 'noViewer';
+  // The document's own restriction first (rule 9): it holds in every browser.
   if (!highQualityAllowed) return 'quality';
+  if (!viewerAvailable) return 'noViewer';
   if (opts.range === 'view' || opts.range === 'area') return 'range';
   if (opts.markups === 'only') return 'markups';
   return null;

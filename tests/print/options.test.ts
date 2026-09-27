@@ -117,5 +117,6 @@ describe('viewerBlock (M2-16)', () => {
     expect(viewerBlock({ range: 'all', markups: 'on' }, false)).toBe('quality');
     // No built-in PDF viewer (navigator.pdfViewerEnabled false): never offered.
     expect(viewerBlock({ range: 'all', markups: 'on' }, true, false)).toBe('noViewer');
+    expect(viewerBlock({ range: 'all', markups: 'on' }, false, false)).toBe('quality');
   });
 });
