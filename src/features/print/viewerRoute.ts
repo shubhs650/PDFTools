@@ -5,6 +5,8 @@
 // (tests/print/frame-src.test.ts keeps it that way).
 
 const FRAME_CLASS = 'print-viewer-frame';
+/** A viewer that never loads the file (disabled, blocked) fails the job instead of hanging it. */
+const LOAD_TIMEOUT_MS = 15_000;
 
 let current: { frame: HTMLIFrameElement; url: string } | null = null;
 
@@ -39,7 +41,20 @@ export async function openViewerFrame(
   });
   frame.src = url;
   document.body.append(frame);
-  await loaded;
+  let timer: ReturnType<typeof setTimeout> | undefined;
+  const timeout = new Promise<never>((_, reject) => {
+    timer = setTimeout(() => {
+      reject(new Error('viewer frame did not load'));
+    }, LOAD_TIMEOUT_MS);
+  });
+  try {
+    await Promise.race([loaded, timeout]);
+  } catch (err) {
+    disposeViewerFrame();
+    throw err;
+  } finally {
+    clearTimeout(timer);
+  }
   if (signal.aborted) {
     disposeViewerFrame();
     throw new DOMException('cancelled', 'AbortError');

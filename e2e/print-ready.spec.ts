@@ -9,6 +9,7 @@ import { fullFormPdf, printPdf } from './fixtures/generate.ts';
 import { makeSigner, signedPdf } from './fixtures/signed.ts';
 import { cap, drop } from './support/app.ts';
 import { expect, test } from './support/fixtures.ts';
+import { printCalls, stubFramePrint } from './support/printStub.ts';
 import { savedFiles, stubSavePicker } from './support/savePicker.ts';
 
 // M2-16 (D-25, §7.13, ADR-013 decisions 6–7): Export Print-Ready PDF flattens
@@ -134,6 +135,12 @@ test('print via the browser PDF viewer: the print-ready copy in a blob: frame, n
     }
   });
   await page.goto('/');
+  // CI's headless Chromium has no built-in PDF viewer: there the route is not
+  // offered at all (next test); this one needs a browser that has one.
+  test.skip(
+    !(await page.evaluate(() => navigator.pdfViewerEnabled)),
+    'this browser has no built-in PDF viewer',
+  );
   await drop(page, [{ name: 'print.pdf', b64: b64(printPdf()) }]);
   await page.locator('[data-page="0"] img.page-preview').waitFor();
   await page.keyboard.press('Control+P');
@@ -166,6 +173,26 @@ test('print via the browser PDF viewer: the print-ready copy in a blob: frame, n
     .toBe(1);
   // The frame loaded under the CSP: the fixture's guard fails the test on any violation.
   expect(await guard.documentCspViolations()).toEqual([]);
+});
+
+test('a browser without a built-in PDF viewer: the viewer route is not offered; raster prints', async ({
+  page,
+}) => {
+  await page.addInitScript(() => {
+    Object.defineProperty(Navigator.prototype, 'pdfViewerEnabled', { get: () => false });
+  });
+  await stubFramePrint(page);
+  await page.goto('/');
+  await drop(page, [{ name: 'print.pdf', b64: b64(printPdf()) }]);
+  await page.locator('[data-page="0"] img.page-preview').waitFor();
+  await page.keyboard.press('Control+P');
+  const d = page.getByRole('dialog', { name: 'Print' });
+  await expect(d.getByRole('radio', { name: /browser's PDF viewer/ })).toBeDisabled();
+  await expect(d.getByRole('radio', { name: /This app/ })).toBeChecked();
+  await expect(d).toContainText('This browser has no built-in PDF viewer');
+  await d.getByRole('button', { name: 'Print', exact: true }).click();
+  await expect.poll(() => printCalls(page)).toBe(1);
+  await expect(page.locator('iframe.print-viewer-frame')).toHaveCount(0);
 });
 
 test('rule 9: print denied disables the export; standard-quality only disables the viewer route', async ({

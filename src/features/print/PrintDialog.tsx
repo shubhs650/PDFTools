@@ -47,6 +47,7 @@ const METHODS: [Method, MessageKey][] = [
   ['viewer', msg('print.method.viewer')],
 ];
 const VIEWER_BLOCKED: Record<string, MessageKey> = {
+  noViewer: msg('print.method.blocked.noViewer'),
   range: msg('print.method.blocked.range'),
   markups: msg('print.method.blocked.markups'),
   quality: msg('print.method.blocked.quality'),

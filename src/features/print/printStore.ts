@@ -51,7 +51,11 @@ export function cancelPrint(): void {
 /** Whether the browser-viewer route can print `docId` with `opts` (null) or why not. */
 export function viewerBlockFor(docId: string, opts: PrintOptions) {
   const meta = documentStore.getState().docs[docId]?.meta;
-  return viewerBlock(opts, !!meta && allows(securityOf(meta), 'printHighQuality'));
+  return viewerBlock(
+    opts,
+    !!meta && allows(securityOf(meta), 'printHighQuality'),
+    navigator.pdfViewerEnabled,
+  );
 }
 
 /**

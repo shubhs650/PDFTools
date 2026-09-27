@@ -744,6 +744,7 @@
       "rasterNote": "Pages are rendered as images at the quality chosen above.",
       "viewerNote": "A print-ready copy opens in your browser's own print dialog, which sets the paper size and scale. Lines and text stay sharp at any size.",
       "blocked": {
+        "noViewer": "This browser has no built-in PDF viewer, so pages print as images.",
         "range": "The browser's PDF viewer prints whole pages only.",
         "markups": "The browser's PDF viewer can't print markups only.",
         "quality": "The document's security settings allow standard quality only, so the browser's PDF viewer isn't used."

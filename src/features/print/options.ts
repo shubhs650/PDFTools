@@ -140,18 +140,21 @@ export const isPercentValid = (p: number): boolean =>
 /** Orientation auto: a landscape page prints on landscape paper. */
 export const isLandscape = (r: Pick<Region, 'width' | 'height'>): boolean => r.width > r.height;
 
-export type ViewerBlock = 'range' | 'markups' | 'quality';
+export type ViewerBlock = 'noViewer' | 'range' | 'markups' | 'quality';
 
 /**
  * Why the browser-viewer route can't print these options (null: it can). It
  * prints whole pages of the flattened copy, with or without markups, at full
  * (vector) quality: not a view or an area, not markups only, and not when
- * the document allows only standard-quality printing (rule 9).
+ * the document allows only standard-quality printing (rule 9). Browsers
+ * without a built-in PDF viewer (`navigator.pdfViewerEnabled` false) can't.
  */
 export function viewerBlock(
   opts: Pick<PrintOptions, 'range' | 'markups'>,
   highQualityAllowed: boolean,
+  viewerAvailable = true,
 ): ViewerBlock | null {
+  if (!viewerAvailable) return 'noViewer';
   if (!highQualityAllowed) return 'quality';
   if (opts.range === 'view' || opts.range === 'area') return 'range';
   if (opts.markups === 'only') return 'markups';

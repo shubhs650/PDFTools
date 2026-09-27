@@ -172,11 +172,14 @@ test(
         .getByRole('button', { name: 'Send Error Report' })
         .click();
       const report = page.getByRole('dialog', { name: 'Send Error Report' });
+      // Nothing left the device before the user's own Send.
+      expect(outbound).toEqual([]);
       await report.getByRole('button', { name: 'Send' }).click();
       await expect(report.getByRole('alert')).toHaveText(/You're offline/);
       await expect(report.getByRole('button', { name: 'Copy report' })).toBeVisible();
-
-      expect(outbound).toEqual([]);
+      // Send may try its one same-origin POST (browsers differ on navigator.onLine
+      // while offline); it fails, and nothing else is requested.
+      expect(outbound.filter((u) => !/^failed https?:\/\/[^/]+\/api\/report$/.test(u))).toEqual([]);
     } finally {
       await context.setOffline(false);
     }
