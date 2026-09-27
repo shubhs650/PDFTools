@@ -4,17 +4,18 @@ Throwaway spike code for [docs/plan/M0.md](../docs/plan/M0.md) (S1–S8) and M1-
 [docs/plan/M1.md](../docs/plan/M1.md)). Nothing here is imported by
 `/src` or shipped. Each spike ends with an ADR in `docs/adr/`.
 
-| Spike | Folder                               | ADR                                                  | Outcome               |
-| ----- | ------------------------------------ | ---------------------------------------------------- | --------------------- |
-| S8    | [`s8-csp/`](s8-csp/)                 | [ADR-003](../docs/adr/003-s8-csp-wasm-workers-sw.md) | Works with workaround |
-| S3    | [`s3-two-engines/`](s3-two-engines/) | [ADR-004](../docs/adr/004-s3-two-engines.md)         | Works with workaround |
-| S1    | [`s1-save/`](s1-save/)               | [ADR-005](../docs/adr/005-s1-incremental-save.md)    | Works with workaround |
-| S5    | [`s5-search/`](s5-search/)           | [ADR-006](../docs/adr/006-s5-search-work-worker.md)  | Works with workaround |
-| S2    | [`s2-measure/`](s2-measure/)         | [ADR-007](../docs/adr/007-s2-measure-viewport.md)    | Works with workaround |
-| S7    | [`s7-snap/`](s7-snap/)               | [ADR-008](../docs/adr/008-s7-snap-geometry.md)       | Works with workaround |
-| S4    | [`s4-oxide/`](s4-oxide/)             | [ADR-009](../docs/adr/009-s4-pdf-oxide.md)           | Works with workaround |
-| S6    | [`s6-icons/`](s6-icons/)             | [ADR-010](../docs/adr/010-s6-fluent-icons.md)        | Works with workaround |
-| S9    | [`s9-plugins/`](s9-plugins/) (M1-01) | [ADR-011](../docs/adr/011-m1-embedpdf-plugins.md)    | Works with workaround |
+| Spike | Folder                                   | ADR                                                  | Outcome               |
+| ----- | ---------------------------------------- | ---------------------------------------------------- | --------------------- |
+| S8    | [`s8-csp/`](s8-csp/)                     | [ADR-003](../docs/adr/003-s8-csp-wasm-workers-sw.md) | Works with workaround |
+| S3    | [`s3-two-engines/`](s3-two-engines/)     | [ADR-004](../docs/adr/004-s3-two-engines.md)         | Works with workaround |
+| S1    | [`s1-save/`](s1-save/)                   | [ADR-005](../docs/adr/005-s1-incremental-save.md)    | Works with workaround |
+| S5    | [`s5-search/`](s5-search/)               | [ADR-006](../docs/adr/006-s5-search-work-worker.md)  | Works with workaround |
+| S2    | [`s2-measure/`](s2-measure/)             | [ADR-007](../docs/adr/007-s2-measure-viewport.md)    | Works with workaround |
+| S7    | [`s7-snap/`](s7-snap/)                   | [ADR-008](../docs/adr/008-s7-snap-geometry.md)       | Works with workaround |
+| S4    | [`s4-oxide/`](s4-oxide/)                 | [ADR-009](../docs/adr/009-s4-pdf-oxide.md)           | Works with workaround |
+| S6    | [`s6-icons/`](s6-icons/)                 | [ADR-010](../docs/adr/010-s6-fluent-icons.md)        | Works with workaround |
+| S9    | [`s9-plugins/`](s9-plugins/) (M1-01)     | [ADR-011](../docs/adr/011-m1-embedpdf-plugins.md)    | Works with workaround |
+| S12   | [`s12-annotate/`](s12-annotate/) (M3-01) | [ADR-014](../docs/adr/014-m3-annotations.md)         | Works with workaround |
 
 ## Shared pieces (`shared/`)
 

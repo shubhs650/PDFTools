@@ -10,6 +10,21 @@ the owner's approval and answers to M3-Q1 … M3-Q10; no M3 code yet.
 
 ## Done
 
+- **Session 16 — M3-01 annotation spike.** _Works with workaround_,
+  [ADR-014](adr/014-m3-annotations.md) (proposed). All 21 EmbedPDF tools (with appearance
+  streams), replies (`/IRT` object reference, `/RT /R`) and review states (`/StateModel`,
+  `/State`) round-trip through the narrow Ctrl+S and verify; Acrobat-style replies are read;
+  `plugin-history` gives per-document unlimited undo. Found: the plugin loads **every**
+  annotation through the Render queue on open (500-page chunks of 178–195 ms; 10,000 markups
+  load in 0.73–0.77 s in the browser, tile p95 23 → 169–178 ms); today's tiles are rendered
+  without annotations and the stock layer draws per-markup bitmaps at the current zoom
+  (a sheet-size cloud = 384 MP at 800 %); PDFium's own annotation flag costs 330–410 ms per tile
+  on a 1,000-markup page. Proposed: load via the Work worker (deterministic ids for `/NM`-less
+  annotations) and our own **annotation tiles** (`EPDF_RenderAnnotBitmap` for the markups meeting
+  a tile: 0.2–3.5 ms, pixel-equal within 3/255). New self-made fixtures `markedContractPdf`
+  (2,000 × 5 markups) and `markedSheetPdf` (A0, 1,000 markups); perf scenario
+  `e2e/perf/annotation-load.spec.ts`; e2e-only probe `view.engineLoad('allAnnotations')`.
+
 - **Session 16 — M3-03 PDF object layer + single-revision merge.** `src/model/pdf/` (values,
   parser, serializer, async reader over `DecompressionStream`, RPC wire form) ported from S2;
   staged patches (`src/workers/render/objects/patches.ts`, Render RPC `stageObjects`) applied to
