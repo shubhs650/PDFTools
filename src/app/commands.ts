@@ -734,6 +734,7 @@ export const COMMANDS: readonly CommandDef[] = [
     size: 'small',
     fluent: 'PersonEdit',
     milestone: 'M3',
+    shipped: true, // M3-07
   },
   {
     id: 'comment.exportAnnotations',

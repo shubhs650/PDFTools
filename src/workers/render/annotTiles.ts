@@ -43,18 +43,22 @@ const SKIP_SUBTYPES = new Set([2, 16, 20]);
 const HIDDEN = 1 << 1;
 const NO_VIEW = 1 << 5;
 
-function readNm(mod: WrappedPdfiumModule, annot: number): string {
+/** A text-string key of an annotation dictionary ('' when absent). */
+export function readAnnotString(mod: WrappedPdfiumModule, annot: number, key: string): string {
   const heap = mod.pdfium as unknown as Heap;
-  const len = rawCall(mod, 'FPDFAnnot_GetStringValue', annot, 'NM', 0, 0);
+  const len = rawCall(mod, 'FPDFAnnot_GetStringValue', annot, key, 0, 0);
   if (len <= 2) return '';
   const ptr = heap.wasmExports.malloc(len + 2);
   try {
-    rawCall(mod, 'FPDFAnnot_GetStringValue', annot, 'NM', ptr, len + 2);
+    rawCall(mod, 'FPDFAnnot_GetStringValue', annot, key, ptr, len + 2);
     return heap.UTF16ToString(ptr);
   } finally {
     heap.wasmExports.free(ptr);
   }
 }
+
+const readNm = (mod: WrappedPdfiumModule, annot: number): string =>
+  readAnnotString(mod, annot, 'NM');
 
 /** The drawable annotations of a page, with their boxes (cached by the caller). */
 export function annotBoxes(

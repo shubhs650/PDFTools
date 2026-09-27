@@ -8,6 +8,7 @@ import { notify, registerCommand, type CommandHandler } from '../../app/commands
 import { appStore } from '../../app/store/appStore';
 import { documentStore, selectActive } from '../../app/store/documentStore';
 import { msg } from '../../i18n';
+import { openProfileDialog } from '../settings/profile/profileStore';
 import { capability, hostStore } from '../view/host';
 import { annotationCapability, annotationState } from './selection';
 import { cycleTarget, pageAnnotations } from './model';
@@ -111,6 +112,9 @@ export function registerAnnotateCommands(): () => void {
         const id = activeId();
         if (id) history(id)?.redo();
       },
+    }),
+    registerCommand('comment.reviewerProfile', {
+      run: openProfileDialog,
     }),
     registerCommand('annotation.delete', {
       ...withSelection,

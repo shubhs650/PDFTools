@@ -42,7 +42,7 @@ for (const theme of THEMES) {
       await page.goto(url);
       await expect(page.getByTestId('start-screen')).toBeVisible();
       await axe(page, 'start screen');
-      for (const tab of ['Home', 'View', 'Help']) {
+      for (const tab of ['Home', 'View', 'Comment', 'Help']) {
         await page.getByRole('tab', { name: tab }).click();
         await axe(page, `ribbon: ${tab}`);
       }
@@ -100,6 +100,16 @@ for (const theme of THEMES) {
       await expect(clear.getByTestId('local-data-warning')).toBeVisible();
       await axe(page, 'clear local data');
       await clear.getByRole('button', { name: 'Cancel' }).click();
+
+      // Reviewer profile (M3-07), with a field error showing.
+      await backstage.getByRole('button', { name: 'Edit reviewer profile…' }).click();
+      const profile = page.getByRole('dialog', { name: 'Reviewer profile' });
+      await expect(profile).toBeVisible();
+      await axe(page, 'reviewer profile');
+      await profile.getByRole('button', { name: 'Save' }).click();
+      await expect(profile.getByRole('alert')).toBeVisible();
+      await axe(page, 'reviewer profile error');
+      await profile.getByRole('button', { name: 'Cancel' }).click();
       await page.keyboard.press('Escape');
       await expect(backstage).toBeHidden();
 

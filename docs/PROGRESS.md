@@ -9,6 +9,13 @@ M0–M2 are merged into `main` (M2 complete on the agent side, owner pack in
 
 ## Done
 
+- **Session 16 — M3-07 reviewer profile (D-16, M3-Q7).** Asked before the first markup of a
+  session (Skip = "Anonymous" until the next session), stored on this device only (IndexedDB v2,
+  new `profile` store, listed on the Privacy page, cleared with local data), edited in Settings
+  or Comment → Reviewer Profile (the Comment tab now shows). New annotations get `/T` = name.
+  Fixed: EmbedPDF re-authored any markup it edited; edits now keep the original author in the
+  store and in the file. Dark `--color-danger` raised to 5.6:1. Unit + `e2e/profile.spec.ts`.
+
 - **Session 16 — M3-06 custom icons.** The 15 M3 icons ADR-010 lists as missing, in Fluent's
   Regular line style with Filled variants for toggles (`src/ui/icons/custom/m3.ts`, drawn with
   `draw.ts` at 20 and 32 px directly; no third-party artwork, rule 15); no M3 command is

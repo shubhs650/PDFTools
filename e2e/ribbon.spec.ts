@@ -14,11 +14,14 @@ test('the ribbon, its tabs and the backstage pass axe', async ({ page }) => {
   expect((await new AxeBuilder({ page }).analyze()).violations.map((v) => v.id)).toEqual([]);
 });
 
-test('shows File, Home, View, Protect (from M2-03) and Help only (M1-Q2)', async ({ page }) => {
+test('shows File, Home, View, Comment (from M3-07), Protect (from M2-03) and Help only (M1-Q2)', async ({
+  page,
+}) => {
   await page.goto('/');
   await expect(page.getByRole('tablist', { name: 'Ribbon tabs' }).getByRole('tab')).toHaveText([
     'Home',
     'View',
+    'Comment',
     'Protect',
     'Help',
   ]);
@@ -142,7 +145,7 @@ test('every command M1 and M2 show has a handler: none says "Not available yet" 
     expect(await notReady()).toEqual([]);
   };
   await collect(); // quick access + Home
-  for (const tab of ['View', 'Protect', 'Help']) {
+  for (const tab of ['View', 'Comment', 'Protect', 'Help']) {
     await page.getByRole('tab', { name: tab }).click();
     await collect();
   }

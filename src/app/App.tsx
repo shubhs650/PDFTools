@@ -24,6 +24,7 @@ import { registerSaveCommands } from '../features/save/commands';
 import { registerFindCommands } from '../features/search/commands';
 import { registerSelectionCommands } from '../features/select/commands';
 import { registerAnnotateCommands } from '../features/annotate/commands';
+import { ProfileDialog } from '../features/settings/profile/ProfileDialog';
 import { GrowthPrompt, SaveOptimizedDialog } from '../features/save/SaveDialogs';
 import { SaveErrorDialog, SaveStatus } from '../features/save/SaveStatus';
 import { registerViewCommands } from '../features/view/commands';
@@ -140,6 +141,7 @@ export function App() {
         <SaveOptimizedDialog />
         <GrowthPrompt />
         <RecoveryDialog />
+        <ProfileDialog />
         <UpdateWaitDialog />
         <DropZone />
         <HelpPage />

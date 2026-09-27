@@ -16,10 +16,28 @@ const entry = (id: string, lastOpened: number): RecentEntry => ({
 });
 
 describe('AppDb (M1-12)', () => {
-  it('creates schema v1 with settings and recent', async () => {
+  it('creates the schema with settings, recent and profile', async () => {
     const db = await AppDb.open({ factory: new IDBFactory() });
     expect(db.db.version).toBe(MIGRATIONS.length);
-    expect([...db.db.objectStoreNames].sort()).toEqual(['recent', 'settings']);
+    expect([...db.db.objectStoreNames].sort()).toEqual(['profile', 'recent', 'settings']);
+    db.close();
+  });
+
+  it('migrates v1 to v2 (M3-07) keeping settings and recent files', async () => {
+    const factory = new IDBFactory();
+    const v1 = await AppDb.open({ factory, migrations: MIGRATIONS.slice(0, 1) });
+    await v1.setSetting('theme', 'dark');
+    await v1.putRecent(entry('a', 1));
+    v1.close();
+    const db = await AppDb.open({ factory });
+    expect(db.db.version).toBe(2);
+    expect(await db.getSetting('theme')).toBe('dark');
+    expect((await db.listRecent()).map((e) => e.id)).toEqual(['a']);
+    expect(await db.getProfile()).toBeUndefined();
+    await db.setProfile({ name: 'Ana' });
+    expect(await db.getProfile()).toEqual({ name: 'Ana' });
+    await db.clearAll();
+    expect(await db.getProfile()).toBeUndefined();
     db.close();
   });
 
@@ -68,13 +86,13 @@ describe('AppDb (M1-12)', () => {
     await v1.putRecent(entry('a', 1));
     v1.close();
 
-    const v2: Migration = (db, tx) => {
-      db.createObjectStore('profile');
+    const next: Migration = (db, tx) => {
+      db.createObjectStore('notes');
       tx.objectStore('recent').createIndex('name', 'name');
     };
-    const upgraded = await AppDb.open({ factory, migrations: [...MIGRATIONS, v2] });
-    expect(upgraded.db.version).toBe(2);
-    expect(upgraded.db.objectStoreNames.contains('profile')).toBe(true);
+    const upgraded = await AppDb.open({ factory, migrations: [...MIGRATIONS, next] });
+    expect(upgraded.db.version).toBe(MIGRATIONS.length + 1);
+    expect(upgraded.db.objectStoreNames.contains('notes')).toBe(true);
     expect(await upgraded.getSetting('theme')).toBe('light');
     expect((await upgraded.listRecent()).map((e) => e.id)).toEqual(['a']);
     upgraded.close();
@@ -84,7 +102,7 @@ describe('AppDb (M1-12)', () => {
     const factory = new IDBFactory();
     const old = await AppDb.open({ factory });
     const next = await AppDb.open({ factory, migrations: [...MIGRATIONS, () => undefined] });
-    expect(next.db.version).toBe(2);
+    expect(next.db.version).toBe(MIGRATIONS.length + 1);
     next.close();
     expect(() => old.db.transaction('settings')).toThrow();
   });

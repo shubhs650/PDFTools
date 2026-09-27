@@ -2,6 +2,7 @@ import { EmbedPDF } from '@embedpdf/core/react';
 import type { ReactNode } from 'react';
 import type { InteractionManagerCapability } from '@embedpdf/plugin-interaction-manager';
 import { HAND_MODE, PLUGINS } from './plugins';
+import { installAuthoring } from '../annotate/authoring';
 import { capability, setRegistry, useHost } from './host';
 
 const onInitialized = (registry: Parameters<typeof setRegistry>[0]): Promise<void> => {
@@ -13,6 +14,7 @@ const onInitialized = (registry: Parameters<typeof setRegistry>[0]): Promise<voi
       scope: 'page',
       exclusive: false,
     });
+    installAuthoring(registry);
   }
   setRegistry(registry);
   return Promise.resolve();

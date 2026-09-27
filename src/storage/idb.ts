@@ -1,5 +1,5 @@
-// IndexedDB: small app data only (ARCHITECTURE §10.3, D-04). Settings and the
-// recent-files list (file handles + display metadata). Never document bytes:
+// IndexedDB: small app data only (ARCHITECTURE §10.3, D-04). Settings, the
+// recent-files list (file handles + display metadata) and the reviewer profile. Never document bytes:
 // those live in the user's file and, for recovery, in OPFS (§4.3).
 //
 // The schema is versioned by the MIGRATIONS list: version N runs migrations
@@ -28,7 +28,13 @@ export const MIGRATIONS: readonly Migration[] = [
     const recent = db.createObjectStore('recent', { keyPath: 'id' });
     recent.createIndex('lastOpened', 'lastOpened');
   },
+  // v2 (M3-07): the reviewer profile (D-16), key → value; one entry, `reviewer`.
+  (db) => {
+    db.createObjectStore('profile');
+  },
 ];
+
+const PROFILE_KEY = 'reviewer';
 
 export const MAX_RECENT = 20;
 
@@ -97,6 +103,18 @@ export class AppDb {
   async setSetting(key: string, value: unknown): Promise<void> {
     const tx = this.db.transaction('settings', 'readwrite');
     tx.objectStore('settings').put(value, key);
+    await done(tx);
+  }
+
+  /** The reviewer profile as stored (validate it: reviewerProfile.ts). */
+  async getProfile(): Promise<unknown> {
+    const tx = this.db.transaction('profile', 'readonly');
+    return request(tx.objectStore('profile').get(PROFILE_KEY));
+  }
+
+  async setProfile(value: unknown): Promise<void> {
+    const tx = this.db.transaction('profile', 'readwrite');
+    tx.objectStore('profile').put(value, PROFILE_KEY);
     await done(tx);
   }
 
