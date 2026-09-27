@@ -189,5 +189,6 @@ describe('indexDocument', () => {
     expect(order[2]).toBe('indexed 1100');
     expect(e.order(doc.id, 10, [4]).slice(0, 1)).toEqual([4]);
     await native.closeDocument(doc).toPromise();
-  });
+    // Indexes 1,100 real pages: ~5 s on a 4-core runner, right at Vitest's default timeout.
+  }, 30_000);
 });
