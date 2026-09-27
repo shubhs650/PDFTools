@@ -8,10 +8,12 @@ import { notify, registerCommand, type CommandHandler } from '../../app/commands
 import { appStore } from '../../app/store/appStore';
 import { documentStore, selectActive } from '../../app/store/documentStore';
 import { msg } from '../../i18n';
-import { openProfileDialog } from '../settings/profile/profileStore';
+import { openProfileDialog, requestProfile } from '../settings/profile/profileStore';
 import { capability, hostStore } from '../view/host';
 import { annotationCapability, annotationState } from './selection';
 import { cycleTarget, pageAnnotations } from './model';
+import { MARKUP_TOOLS } from './tools/markupModel';
+import { markupFromSelection } from './tools/textMarkup';
 
 const activeId = (): string | null => selectActive(documentStore.getState())?.meta.id ?? null;
 
@@ -113,6 +115,24 @@ export function registerAnnotateCommands(): () => void {
         if (id) history(id)?.redo();
       },
     }),
+    // Text markup tools (M3-08): selected text becomes the markup at once;
+    // otherwise the tool turns on (profile first, M3-07) or, if on, off.
+    ...MARKUP_TOOLS.map((tool) =>
+      registerCommand(`comment.${tool}`, {
+        requires: 'annotate',
+        isPressed: () => appStore.getState().tool === tool,
+        run: async () => {
+          const id = activeId();
+          if (!id || markupFromSelection(id, tool)) return;
+          if (appStore.getState().tool === tool) {
+            appStore.getState().setTool('select');
+            return;
+          }
+          await requestProfile();
+          appStore.getState().setTool(tool);
+        },
+      }),
+    ),
     registerCommand('comment.reviewerProfile', {
       run: openProfileDialog,
     }),

@@ -877,7 +877,13 @@
       "ink": "Pencil drawing",
       "other": "Comment"
     },
-    "anonymous": "Anonymous"
+    "anonymous": "Anonymous",
+    "caret": {
+      "title": "Text to insert",
+      "label": "Inserted text",
+      "ok": "Insert",
+      "cancel": "Cancel"
+    }
   },
   "profile": {
     "title": "Reviewer profile",

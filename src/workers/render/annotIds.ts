@@ -72,6 +72,23 @@ export function nameTargets(
 }
 
 /**
+ * No app-private keys in the file (rule 6): EmbedPDF writes an annotation's
+ * `custom` object as JSON to its own /EPDFCustom key (its text tools put the
+ * selected text there). We never send it; a `custom` value from EmbedPDF's
+ * tools is dropped here. An /EPDFCustom already in a file is left as it is.
+ */
+export function dropCustom(method: string, args: unknown[]): unknown[] {
+  if (method !== 'createPageAnnotation' && method !== 'updatePageAnnotation') return args;
+  const annot = args[2];
+  if (typeof annot !== 'object' || annot === null || !('custom' in annot)) return args;
+  const rest: Record<string, unknown> = { ...annot };
+  delete rest['custom'];
+  const out = [...args];
+  out[2] = rest;
+  return out;
+}
+
+/**
  * An edit never changes who wrote the annotation (D-03: /T round-trips).
  * EmbedPDF's plugin puts its configured author into every update patch, so a
  * resize of someone else's markup would re-author it; the Render worker keeps
@@ -89,23 +106,66 @@ export function keepAuthor(
   const annot = args[2] as { id?: unknown; author?: unknown } | undefined;
   if (typeof docId !== 'string' || typeof page !== 'number' || typeof annot?.id !== 'string')
     return args;
-  const id = annot.id;
-  const ref = acquirePage(native, docId, page);
-  try {
-    const a = withWideString(mod, id, (ptr) =>
-      rawCall(mod, 'EPDFPage_GetAnnotByName', ref.pagePtr, ptr),
-    );
-    if (!a) return args;
-    try {
+  return (
+    withAnnotByName(mod, native, docId, page, annot.id, (a) => {
       const author = readAnnotString(mod, a, 'T');
       if (author === annot.author) return args;
       const out = [...args];
       out[2] = { ...annot, author };
       return out;
+    }) ?? args
+  );
+}
+
+/** Runs `fn` with the page's annotation named `id`; undefined when there is none. */
+function withAnnotByName<T>(
+  mod: WrappedPdfiumModule,
+  native: PdfiumNative,
+  docId: string,
+  page: number,
+  id: string,
+  fn: (annot: number) => T,
+): T | undefined {
+  const ref = acquirePage(native, docId, page);
+  try {
+    const a = withWideString(mod, id, (ptr) =>
+      rawCall(mod, 'EPDFPage_GetAnnotByName', ref.pagePtr, ptr),
+    );
+    if (!a) return undefined;
+    try {
+      return fn(a);
     } finally {
       rawCall(mod, 'FPDFPage_CloseAnnot', a);
     }
   } finally {
     ref.release();
   }
+}
+
+// FPDF_ANNOT_HIGHLIGHT … FPDF_ANNOT_STRIKEOUT.
+const TEXT_MARKUP_SUBTYPES = new Set([9, 10, 11, 12]);
+
+/**
+ * EmbedPDF writes /IT for most annotations but not for text markups; Replace
+ * Text's StrikeOut needs /IT /StrikeOutTextEdit (as Acrobat and PDF-XChange
+ * write it, M3-08). Called after the engine made or changed the annotation.
+ */
+export function writeMarkupIntent(
+  mod: WrappedPdfiumModule,
+  native: PdfiumNative,
+  method: string,
+  args: unknown[],
+): void {
+  if (method !== 'createPageAnnotation' && method !== 'updatePageAnnotation') return;
+  const docId = (args[0] as { id?: unknown } | undefined)?.id;
+  const page = (args[1] as { index?: unknown } | undefined)?.index;
+  const annot = args[2] as { id?: unknown; type?: unknown; intent?: unknown } | undefined;
+  if (typeof docId !== 'string' || typeof page !== 'number' || typeof annot?.id !== 'string')
+    return;
+  const { intent, type } = annot;
+  if (typeof intent !== 'string' || typeof type !== 'number' || !TEXT_MARKUP_SUBTYPES.has(type))
+    return;
+  withAnnotByName(mod, native, docId, page, annot.id, (a) =>
+    rawCall(mod, 'EPDFAnnot_SetIntent', a, intent),
+  );
 }

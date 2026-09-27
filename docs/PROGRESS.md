@@ -1,13 +1,22 @@
 # PDFTools — Progress
 
-_Last updated: 2026-09-27 (session 16: M3 plan approved; M3-01 … M3-03)_
+_Last updated: 2026-09-27 (session 16: M3 plan approved; M3-01 … M3-08)_
 
-**Current milestone:** M3 — Review. Plan approved (2026-09-27); M3-01 … M3-03 done in session 16
-on `claude/m3-task-breakdown-tlyokp` (ADR-014 and ADR-015 proposed, waiting for the owner).
+**Current milestone:** M3 — Review. Plan approved (2026-09-27); M3-01 … M3-08 done in session 16
+on `claude/m3-task-breakdown-tlyokp` (ADR-014 and ADR-015 accepted).
 M0–M2 are merged into `main` (M2 complete on the agent side, owner pack in
 [docs/acceptance/M2.md](acceptance/M2.md)); the M0, M1 and M2 owner runs are open.
 
 ## Done
+
+- **Session 16 — M3-08 text markup tools.** Highlight, Underline, Strikeout, Squiggly, Insert
+  Text and Replace Text on the Comment tab (Highlight also on Home), keys G/U/K/Q/I/R. Select
+  text first (drag, or Ctrl+A from the keyboard) and run the tool, or turn the tool on and drag
+  (on until Esc). Standard annotations with `/QuadPoints` per line, `/T` from the profile and the
+  selected text in `/Contents` only when copying is allowed; Replace = Caret + StrikeOut grouped
+  (`/IRT`, `/RT /Group`, `/IT /StrikeOutTextEdit`). Fixed EmbedPDF writing the selected text to
+  its private `/EPDFCustom` key (rule 6) and omitting `/IT` on text markups. Unit + e2e
+  `e2e/text-markup.spec.ts`.
 
 - **Session 16 — M3-07 reviewer profile (D-16, M3-Q7).** Asked before the first markup of a
   session (Skip = "Anonymous" until the next session), stored on this device only (IndexedDB v2,
@@ -611,7 +620,7 @@ M0–M2 are merged into `main` (M2 complete on the agent side, owner pack in
 
 ## In progress
 
-- **M3 (session 16):** M3-01, M3-02 and M3-03 as one commit each on
+- **M3 (session 16):** M3-01 … M3-08 as one commit each on
   `claude/m3-task-breakdown-tlyokp` (the session's branch; the plan's `m3/<task>` branches were
   not used because this session may only push to its own branch), pushed; no PR opened yet.
 - **Git in one paragraph (for the owner):** each task lives on its own _branch_ (a named line
@@ -719,9 +728,14 @@ M0–M2 are merged into `main` (M2 complete on the agent side, owner pack in
 4. **Owner:** decide the items under "Decisions needed" (keyboard text selection, committed
    corpus PDFs, Pages project).
 5. **Owner:** the S2 interop run (§D/§F) before M3-16/M3-20 (M3-Q2 defaults are in use until then).
-6. **Agent:** M3-05 … M3-08 (in progress, session 16).
+6. **Agent:** M3-09 (note, text, drawing, ink and link tools) next, then M3-10 … M3-20 in plan order.
 
 ## Open issues
+
+- **M3-08 tool keys** (G highlight, U underline, K strikeout, Q squiggly, I insert text,
+  R replace text) are our choice — §8.1 names none. Owner may prefer others (the keymap is one
+  table). M3-09 will need letters for note/text box/shapes; R may move if rectangle wants it.
+- **Markups in previews:** page previews and thumbnails still show no markups (M3-05 follow-up).
 
 - **Send-email binding on Pages (M2-18):** not verified that the dashboard offers a Send email
   binding for Pages projects. Without it, reports are stored in D1 only (the function skips the

@@ -113,6 +113,20 @@ for (const theme of THEMES) {
       await page.keyboard.press('Escape');
       await expect(backstage).toBeHidden();
 
+      // Insert Text (M3-08): the first-markup profile prompt, then the text to insert.
+      await page.getByTestId('document-view').focus();
+      await page.keyboard.press('Control+A');
+      await page.keyboard.press('i');
+      const first = page.getByRole('dialog', { name: 'Who is reviewing?' });
+      await expect(first).toBeVisible();
+      await axe(page, 'first-markup profile prompt');
+      await first.getByRole('button', { name: 'Skip for now' }).click();
+      const caret = page.getByRole('dialog', { name: 'Text to insert' });
+      await expect(caret).toBeVisible();
+      await axe(page, 'insert text');
+      await caret.getByRole('button', { name: 'Cancel' }).click();
+      await expect(caret).toBeHidden();
+
       // Close with unsaved changes.
       await page.getByRole('button', { name: 'Close report.pdf' }).click();
       const close = page.getByRole('dialog', { name: 'Save changes to report.pdf?' });

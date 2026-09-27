@@ -22,6 +22,7 @@ import { AnnotationLayer } from '../annotate/AnnotationLayer';
 import { AnnotationTileLayer } from '../annotate/AnnotationTileLayer';
 import { SelectionAnnouncer } from '../annotate/SelectionAnnouncer';
 import { annotationCapability } from '../annotate/selection';
+import { isMarkupTool } from '../annotate/tools/markupModel';
 import { LinkLayer } from './LinkLayer';
 import { capability, useHost } from './host';
 import { HAND_MODE, PAGE_GAP, POINTER_MODE } from './plugins';
@@ -224,7 +225,10 @@ export function DocumentView({ documentId }: { documentId: string }) {
     const dm = capability<DocumentManagerCapability>(registry, 'document-manager');
     if (!dm.isDocumentOpen(documentId)) return;
     const im = capability<InteractionManagerCapability>(registry, 'interaction-manager');
-    im.forDocument(documentId).activate(tool === 'hand' ? HAND_MODE : POINTER_MODE);
+    // A text markup tool is the annotation plugin's interaction mode of the same id (M3-08).
+    im.forDocument(documentId).activate(
+      tool === 'hand' ? HAND_MODE : isMarkupTool(tool) ? tool : POINTER_MODE,
+    );
     // Select Text and Hand never pick up annotations (M3-05); Select and Select Objects do.
     try {
       annotationCapability()

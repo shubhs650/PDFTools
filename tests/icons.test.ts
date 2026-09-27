@@ -57,7 +57,8 @@ describe('command table (M1-06)', () => {
     expect(available).toContain('protect.unlock'); // shipped in M2-03
     expect(available).toContain('file.saveOptimized');
     expect(available).toContain('view.zoomIn');
-    expect(available).not.toContain('comment.highlight');
+    expect(available).toContain('comment.highlight'); // shipped in M3-08
+    expect(available).not.toContain('comment.cloud');
     expect(available).not.toContain('organize.delete'); // M4
     expect(available).toContain('home.resetForm'); // shipped in M2-14
     expect(available).toContain('home.find'); // shipped in M2-07

@@ -8,7 +8,11 @@ import {
   type PdfSquareAnnoObject,
 } from '@embedpdf/models';
 import type { HistoryCapability } from '@embedpdf/plugin-history';
-import { profileStore, requestProfile } from '../features/settings/profile/profileStore';
+import {
+  profileStore,
+  requestProfile,
+  saveProfile,
+} from '../features/settings/profile/profileStore';
 import { annotationCapability, annotationState } from '../features/annotate/selection';
 import { capability, hostStore } from '../features/view/host';
 import type { TestHook } from './hook';
@@ -61,6 +65,7 @@ export function registerAnnotateProbe(hook: TestHook): void {
       annotationCapability()?.forDocument(docId).createAnnotation(page, annot);
       return annot.id;
     },
+    setProfile: (name: string) => saveProfile({ name, initials: '', discipline: '', company: '' }),
     profile: () => {
       const s = profileStore.getState();
       return { profile: s.profile, skipped: s.skipped, dialog: s.dialog };

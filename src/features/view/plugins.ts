@@ -15,6 +15,8 @@ import { SpreadPluginPackage } from '@embedpdf/plugin-spread';
 import { TilingPluginPackage } from '@embedpdf/plugin-tiling';
 import { ViewportPluginPackage } from '@embedpdf/plugin-viewport';
 import { ZoomMode, ZoomPluginPackage } from '@embedpdf/plugin-zoom';
+import { MARKUP_TOOLS } from '../annotate/tools/markupModel';
+import { markupSelectionHandler } from '../annotate/tools/textMarkup';
 
 /** Open documents at once; the next open is refused with a message. */
 export const MAX_DOCUMENTS = 32;
@@ -69,5 +71,8 @@ export const PLUGINS = [
     autoCommit: true,
     autoOpenLinks: false,
     selectAfterCreate: true,
+    // Text markups are made by our handler (M3-08): our defaults, the
+    // reviewer profile first, the text in /Contents only if copying is allowed.
+    tools: MARKUP_TOOLS.map((id) => ({ id, selectionHandler: markupSelectionHandler(id) })),
   }),
 ];

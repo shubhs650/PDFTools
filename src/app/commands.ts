@@ -478,6 +478,7 @@ export const COMMANDS: readonly CommandDef[] = [
     fluent: 'Highlight',
     milestone: 'M3',
     toggle: true,
+    shipped: true, // M3-08
   },
   {
     id: 'comment.underline',
@@ -487,6 +488,7 @@ export const COMMANDS: readonly CommandDef[] = [
     fluent: 'TextUnderline',
     milestone: 'M3',
     toggle: true,
+    shipped: true, // M3-08
   },
   {
     id: 'comment.strikeout',
@@ -496,6 +498,7 @@ export const COMMANDS: readonly CommandDef[] = [
     fluent: 'TextStrikethrough',
     milestone: 'M3',
     toggle: true,
+    shipped: true, // M3-08
   },
   {
     id: 'comment.squiggly',
@@ -505,6 +508,7 @@ export const COMMANDS: readonly CommandDef[] = [
     fluent: 'TextUnderline',
     milestone: 'M3',
     toggle: true,
+    shipped: true, // M3-08
     custom: 'comment.squiggly', // M3-06
   },
   {
@@ -515,6 +519,7 @@ export const COMMANDS: readonly CommandDef[] = [
     fluent: 'TextAdd',
     milestone: 'M3',
     toggle: true,
+    shipped: true, // M3-08
   },
   {
     id: 'comment.replaceText',
@@ -524,6 +529,7 @@ export const COMMANDS: readonly CommandDef[] = [
     fluent: 'TextEditStyle',
     milestone: 'M3',
     toggle: true,
+    shipped: true, // M3-08
     custom: 'comment.replaceText', // M3-06
   },
   {

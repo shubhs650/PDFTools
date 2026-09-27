@@ -25,6 +25,7 @@ import { registerFindCommands } from '../features/search/commands';
 import { registerSelectionCommands } from '../features/select/commands';
 import { registerAnnotateCommands } from '../features/annotate/commands';
 import { ProfileDialog } from '../features/settings/profile/ProfileDialog';
+import { CaretTextDialog } from '../features/annotate/tools/CaretTextDialog';
 import { GrowthPrompt, SaveOptimizedDialog } from '../features/save/SaveDialogs';
 import { SaveErrorDialog, SaveStatus } from '../features/save/SaveStatus';
 import { registerViewCommands } from '../features/view/commands';
@@ -142,6 +143,7 @@ export function App() {
         <GrowthPrompt />
         <RecoveryDialog />
         <ProfileDialog />
+        <CaretTextDialog />
         <UpdateWaitDialog />
         <DropZone />
         <HelpPage />

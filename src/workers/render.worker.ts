@@ -13,7 +13,7 @@ import { serve } from './rpc-host';
 import { acquirePage, docPtrOf, rawCall, wasmMemory } from './render/pdfium';
 import { renderProgressive } from './render/progressive';
 import { AnnotBoxCache, annotBoxes, renderAnnotTile } from './render/annotTiles';
-import { keepAuthor, nameTargets } from './render/annotIds';
+import { dropCustom, keepAuthor, nameTargets, writeMarkupIntent } from './render/annotIds';
 import { SaveTracker, isMutation } from './render/save/tracker';
 
 const FPDF_PAGEOBJ_PATH = 2;
@@ -99,8 +99,9 @@ serve<RenderApi>(self, {
       throw new RpcError('unknown-method', `Unknown executor method ${method}`);
     // Stable ids (ADR-014 d2): name the targeted annotation before EmbedPDF looks it up.
     if (typeof docId === 'string') nameTargets(m, n, method, args);
-    // An edit keeps the annotation's own author (D-03).
-    const callArgs = typeof docId === 'string' ? keepAuthor(m, n, method, args) : args;
+    // An edit keeps the annotation's own author (D-03); no private keys (rule 6).
+    const callArgs =
+      typeof docId === 'string' ? keepAuthor(m, n, method, dropCustom(method, args)) : args;
     const task = fn.apply(n, callArgs);
     task.onProgress((p) => {
       ctx.progress(p);
@@ -114,6 +115,7 @@ serve<RenderApi>(self, {
     } catch (err) {
       throw toRpcError(err);
     }
+    if (typeof docId === 'string') writeMarkupIntent(m, n, method, callArgs);
     // Save bookkeeping (M1-20): the opened bytes' trailer, and what each edit changed.
     if (method === 'openDocumentBuffer') {
       const file = args[0] as { id: string; content: ArrayBuffer };

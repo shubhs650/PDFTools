@@ -99,6 +99,14 @@ export const KEYMAP: readonly Binding[] = [
     ...b('annotation.nudgeDownFar', ['Shift+ArrowDown'], 'document'),
     preventWhenDisabled: false,
   },
+  // Text markup tools (M3-08): with text selected they mark it up, otherwise
+  // they turn the tool on; Esc turns it off (tool.cancel).
+  b('comment.highlight', ['G'], 'document'),
+  b('comment.underline', ['U'], 'document'),
+  b('comment.strikeout', ['K'], 'document'),
+  b('comment.squiggly', ['Q'], 'document'),
+  b('comment.insertText', ['I'], 'document'),
+  b('comment.replaceText', ['R'], 'document'),
   // Browser-reserved first, alternates after (M1-Q1).
   b('tab.close', ['Ctrl+F4', 'Ctrl+Alt+W', 'Ctrl+Alt+F4'], 'global', true),
   b('tab.next', ['Ctrl+PageDown', 'Ctrl+Alt+PageDown'], 'global', true),
