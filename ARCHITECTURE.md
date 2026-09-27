@@ -14,6 +14,8 @@
 
 > **Rev 0.4 amendment** — [ADR-010](docs/adr/010-s6-fluent-icons.md) (owner-approved): Fluent **Regular** icons (Filled for active states) replace the deprecated Color style (D-20, §8).
 
+> **Rev 0.4 amendment (M2-16)** — [ADR-013](docs/adr/013-m2-security-forms-print.md) decision 7 (owner-approved 2026-09-26): §10.1's CSP gains `frame-src blob:` for printing the print-ready copy through the browser's PDF viewer.
+
 ---
 
 ## 1. Product definition
@@ -338,8 +340,9 @@ No user-visible string literals in components — all via i18n keys in `en.json`
 ```
 default-src 'self'; script-src 'self' 'wasm-unsafe-eval'; worker-src 'self' blob:;
 connect-src 'self'; img-src 'self' blob: data:; font-src 'self'; style-src 'self' 'unsafe-inline';
-object-src 'none'; base-uri 'none'; frame-ancestors 'none'; form-action 'none'
+frame-src blob:; object-src 'none'; base-uri 'none'; frame-ancestors 'none'; form-action 'none'
 ```
+`frame-src blob:` exists only for printing the print-ready copy through the browser's PDF viewer (ADR-013 decision 7): one helper frames a `blob:` of type `application/pdf` made from our own flattened copy; every other frame source stays blocked.
 Additional headers: `Cross-Origin-Opener-Policy: same-origin` and `Cross-Origin-Embedder-Policy: require-corp` (hardening; enables whole-tab memory measurement — ADR-004).
 
 Analytics uses **Cloudflare's server-side request analytics only**. No beacon script is injected (Web Analytics automatic setup stays off), so the CSP above needs **no exception** (ADR-001 B1).

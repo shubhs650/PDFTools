@@ -74,6 +74,7 @@ function fakeSpawn(world: FakeWorld) {
       printPages: () => [],
       printBand: () => ({ data: new Uint8ClampedArray(4), width: 1, height: 1 }),
       printClose: () => null,
+      printReady: () => ({ bytes: new ArrayBuffer(0) }),
       formFacts: () => ({ tabs: [], annotated: [], defaults: {}, encrypted: false }),
       checkSignatures: () => [],
       docProperties: () => {

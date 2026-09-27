@@ -5,6 +5,7 @@ import type { DocDigest } from '../workers/render/save/digest';
 import type { AttachmentInfo, AttachmentRef } from '../workers/work/attachments';
 import type { FormFacts } from '../model/formFacts';
 import type { Band, BandRequest } from '../workers/work/print';
+import type { FlattenOptions } from '../workers/work/flatten';
 import type { LayerList } from '../model/ocg';
 import type { DocProperties } from '../workers/work/properties';
 import type { SignatureInfo } from '../workers/work/signatures';
@@ -118,6 +119,17 @@ export interface WorkApi {
   /** One band of a printed page, RGBA, transferred. */
   printBand: MethodSpec<{ printId: string } & BandRequest, Band>;
   printClose: MethodSpec<{ printId: string }, null>;
+  /**
+   * Export Print-Ready PDF (M2-16, ADR-013 decision 6): a copy of the current
+   * revision plus `piece` (unsaved edits) with annotations and form fields
+   * flattened, rewritten in full, /AcroForm dropped. Progress counts pages;
+   * cancellable between pages. The kept copy is untouched.
+   */
+  printReady: MethodSpec<
+    { docId: string; piece?: ArrayBuffer } & FlattenOptions,
+    { bytes: ArrayBuffer },
+    { done: number; total: number }
+  >;
   /** An attachment's bytes, transferred (never parsed or run here). */
   readAttachment: MethodSpec<{ docId: string; ref: AttachmentRef }, { bytes: ArrayBuffer }>;
   /** Highlight rectangles for hits on one page, in the viewer's page space. */

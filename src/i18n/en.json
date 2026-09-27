@@ -263,7 +263,8 @@
       "about": "About PDFTools: version and third-party notices.",
       "privacy": "PDFTools works offline. Your documents are never uploaded.",
       "properties": "Facts about the open document: its description, file and structure.",
-      "print": "Print the document with your printer's dialog: choose pages, size, markups and quality first."
+      "print": "Print the document with your printer's dialog: choose pages, size, markups and quality first.",
+      "exportPrintReady": "Save a copy with comments, markups and form fields burned into the pages, to print or share elsewhere."
     }
   },
   "shortcuts": {
@@ -735,6 +736,18 @@
       "denied": "The document's security settings allow standard quality only."
     },
     "orientation": "Orientation follows each page (portrait or landscape).",
+    "method": {
+      "legend": "Print with",
+      "raster": "This app (pages as images)",
+      "viewer": "The browser's PDF viewer (sharp lines, for large sheets)",
+      "rasterNote": "Pages are rendered as images at the quality chosen above.",
+      "viewerNote": "A print-ready copy opens in your browser's own print dialog, which sets the paper size and scale. Lines and text stay sharp at any size.",
+      "blocked": {
+        "range": "The browser's PDF viewer prints whole pages only.",
+        "markups": "The browser's PDF viewer can't print markups only.",
+        "quality": "The document's security settings allow standard quality only, so the browser's PDF viewer isn't used."
+      }
+    },
     "error": {
       "empty": "Enter the pages to print.",
       "syntax": "Use page numbers and ranges, e.g. 1-3, 8.",
@@ -750,5 +763,18 @@
     "progressName": "Preparing pages for printing",
     "progress": "Preparing pages: {{done}} of {{total}} parts",
     "failed": "The pages could not be prepared for printing."
+  },
+  "printReady": {
+    "title": "Export Print-Ready PDF",
+    "description": "Save a print-ready copy of {{name}}.",
+    "details": "Comments, markups and filled-in form fields are burned into the pages as they print, and the fields can no longer be edited. The open document is not changed; the copy is saved as a new file.",
+    "signed": "This document is digitally signed. The copy carries no valid signature.",
+    "fileName": "{{base}} (print-ready).pdf",
+    "export": "Export…",
+    "close": "Close",
+    "cancel": "Cancel",
+    "progressName": "Preparing the print-ready copy",
+    "progress": "Preparing pages: {{done}} of {{total}}",
+    "failed": "The print-ready copy could not be made."
   }
 }

@@ -9,6 +9,7 @@ import { installRecovery } from '../features/recovery/recovery';
 import { registerFormCommands } from '../features/forms/commands';
 import { registerPrintCommands } from '../features/print/commands';
 import { PrintDialog } from '../features/print/PrintDialog';
+import { PrintReadyDialog } from '../features/print/PrintReadyDialog';
 import { ResetFormDialog } from '../features/forms/ResetFormDialog';
 import { registerProtectCommands } from '../features/protect/commands';
 import { PasswordDialog } from '../features/protect/PasswordDialog';
@@ -122,6 +123,7 @@ export function App() {
         <SecurityInfoDialog />
         <ResetFormDialog />
         <PrintDialog />
+        <PrintReadyDialog />
         <ExternalLinkDialog />
         <SaveErrorDialog />
         <SaveOptimizedDialog />

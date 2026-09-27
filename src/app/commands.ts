@@ -171,6 +171,7 @@ export const COMMANDS: readonly CommandDef[] = [
     size: 'large',
     fluent: 'DocumentBorderPrint',
     milestone: 'M2',
+    shipped: true, // M2-16
   },
   {
     id: 'file.properties',

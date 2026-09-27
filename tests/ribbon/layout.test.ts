@@ -48,6 +48,7 @@ describe('ribbon layout from the command table (§8, ADR-001 B6, M1-Q2)', () => 
       'file.saveAs',
       'file.saveOptimized',
       'file.print', // M2-15
+      'file.exportPrintReady', // M2-16
       'file.properties',
       'file.settings',
       'file.about',

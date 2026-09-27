@@ -18,6 +18,7 @@ import { SearchEngine } from './work/search';
 import { listAttachments, readAttachment } from './work/attachments';
 import { readFormFacts } from '../model/formFacts';
 import { readLayers } from '../model/ocg';
+import { flattenCopy } from './work/flatten';
 import { pageBox, renderBand } from './work/print';
 import { readProperties } from './work/properties';
 import { checkSignatures } from './work/signatures';
@@ -199,6 +200,28 @@ serve<WorkApi>(self, {
     await docs.closeCandidate(printId);
     return null;
   },
+
+  printReady: ({ docId, piece, pages, markups }, ctx) =>
+    scheduler.run('interactive', ctx.signal, async (slice) => {
+      if (!mod) throw new RpcError('not-initialized', 'The work worker is not initialized');
+      const m = mod;
+      const { candidateId } = await docs.openCandidate(docId, piece ?? null);
+      try {
+        const out = await flattenCopy(
+          m,
+          docPtrOf(need(), candidateId),
+          { pages, markups },
+          slice,
+          (p) => {
+            ctx.progress(p);
+          },
+        );
+        return new Transfer({ bytes: out.buffer }, [out.buffer]);
+      } finally {
+        await docs.closeCandidate(candidateId);
+        wasmBytes(); // a large copy grows the heap (ADR-004 respawn policy)
+      }
+    }),
 
   readAttachment: ({ docId, ref }, ctx) =>
     scheduler.run('interactive', ctx.signal, async () => {

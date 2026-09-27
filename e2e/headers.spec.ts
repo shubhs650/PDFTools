@@ -8,7 +8,7 @@ import { expect, test } from './support/fixtures.ts';
 const CSP =
   "default-src 'self'; script-src 'self' 'wasm-unsafe-eval'; worker-src 'self' blob:; " +
   "connect-src 'self'; img-src 'self' blob: data:; font-src 'self'; " +
-  "style-src 'self' 'unsafe-inline'; object-src 'none'; base-uri 'none'; " +
+  "style-src 'self' 'unsafe-inline'; frame-src blob:; object-src 'none'; base-uri 'none'; " +
   "frame-ancestors 'none'; form-action 'none'";
 
 test('the built _headers carry the §10.1 CSP verbatim plus COOP/COEP', () => {

@@ -47,6 +47,7 @@ type JobMethod =
   | 'printPages'
   | 'printBand'
   | 'printClose'
+  | 'printReady'
   | 'docProperties'
   | 'checkSignatures'
   | 'hitRects'

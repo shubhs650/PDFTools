@@ -10,6 +10,8 @@ M0 and M1 owner runs are still open.
 
 ## Done
 
+- **Session 15 — M2-16 print-ready export and viewer print route.** File → Export Print-Ready PDF flattens a Work-worker copy (unsaved edits included; `FPDFPage_Flatten` print mode, full rewrite, `/AcroForm` and unreachable objects dropped by `src/model/printReady.ts`) and saves it as a new file; the open document is untouched; signed documents warn. Print dialog "Print with: the browser's PDF viewer" prints that copy from a `blob:` frame; §10.1 CSP gains `frame-src blob:` (ADR-013 d7). Unit: `tests/print/print-ready.test.ts` (real PDFium: 0 annots/fields, pixels, vector, object streams, encrypted, rule 9), `frame-src.test.ts`; e2e: `e2e/print-ready.spec.ts`, negative control for other frame sources. Unit 598, e2e 153, green; licenses 642 OK.
+
 - **Session 14 — M2-15 print.** Print dialog and raster printing: `src/features/print/*`, Work-worker banded renders on a print copy with unsaved edits, encoder-worker PNGs, hidden-frame print; Ctrl+P bound; `file.print`/`qat.print` shipped. Unit: `tests/print` (range parser, raster/scale math, real-PDFium band renders); e2e: `e2e/print.spec.ts`; perf: `e2e/perf/print.spec.ts` (50 pages, no long tasks up to `print()`).
 
 - **Session 14 — M2-14 form filling.** Fill and save AcroForms (text, checkbox, radio, combo, list) from the keyboard in `/Tabs` order; narrow Ctrl+S with the radio field family in the dirty set; Reset Form (`home.resetForm`, shipped) to `/DV`; XFA banner; rule 9 for fill-forms; Space no longer swallowed on links and toggles over the page. Unit: `tests/forms`, `tests/save/form-save.test.ts`; e2e: `e2e/forms.spec.ts`.
