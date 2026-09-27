@@ -34,9 +34,22 @@ export interface PageDigest {
   fields: FieldDigest[];
 }
 
+/**
+ * Keys our object layer wrote into an object (M3-03): key → hash of the
+ * serialized value, or ABSENT for a removed key. Checked by the Work worker
+ * with our own reader (PDFium can't read nested dictionaries).
+ */
+export interface ObjectDigest {
+  obj: number;
+  keys: Record<string, string>;
+}
+
+export const ABSENT = '-';
+
 export interface DocDigest {
   pageCount: number;
   pages: PageDigest[];
+  objects?: ObjectDigest[];
 }
 
 const WIDGET = 20; // FPDF_ANNOT_WIDGET

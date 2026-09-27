@@ -12,6 +12,7 @@ import { diagnostics } from '../app/diagnostics';
 import { finishSave, prepareSave } from '../engine/saveFlow';
 import { saveDeps } from '../features/save/deps';
 import { documentManager, renderEngine, workClient } from '../features/view/host';
+import type { PdfJson } from '../model/pdf/wire';
 import type { TestHook } from './hook';
 
 const toB64 = (buf: ArrayBuffer): string => {
@@ -104,6 +105,21 @@ export function registerSaveProbe(hook: TestHook): void {
       return toB64((await rpc().call('saveRewrite', { docId }).promise).bytes);
     },
     state: (docId: string) => rpc().call('saveState', { docId }).promise,
+    /** Stages object-layer keys (M3-03); resolves the error code or null. */
+    async stage(
+      docId: string,
+      target: { page: number; annot?: string },
+      set: Record<string, PdfJson>,
+      remove?: string[],
+    ) {
+      try {
+        await rpc().call('stageObjects', { docId, target, set, ...(remove ? { remove } : {}) })
+          .promise;
+        return null;
+      } catch (e) {
+        return (e as { code?: string }).code ?? String(e);
+      }
+    },
     /**
      * The M1-21 flow: save, verify in the Work worker (keep-all fallback), then
      * commit as if written. `corrupt` blanks half of the first tail first.

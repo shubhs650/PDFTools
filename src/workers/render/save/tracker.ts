@@ -22,9 +22,18 @@ import {
 import { PDFIUM_ERROR_PREFIX } from '../../../engine/renderApi';
 import { allows, type Capability, type Security } from '../../../model/permissions';
 import { acquirePage, docPtrOf, rawCall, withWideString } from '../pdfium';
-import { latin1 } from './bytes';
-import { digestDocument, uncheckNames, type DocDigest } from './digest';
-import { narrowTail, type ExtraObject } from './narrowTail';
+import { concatBytes, latin1 } from './bytes';
+import type { PdfValue } from '../../../model/pdf/objects';
+import {
+  PatchError,
+  PatchSet,
+  applyPatch,
+  patchDigest,
+  type Patch,
+  type PatchTarget,
+} from '../objects/patches';
+import { digestDocument, uncheckNames, type DocDigest, type ObjectDigest } from './digest';
+import { narrowTail, type ExtraObject, type ObjectPatch } from './narrowTail';
 import { FPDF_INCREMENTAL, FPDF_NO_INCREMENTAL, saveWithFlags } from './writer';
 import { saveBaseOf, trailerRef, type SaveBase } from './xref';
 
@@ -48,6 +57,8 @@ interface DocState {
   untracked: number;
   /** Increments on every recorded mutation. */
   seq: number;
+  /** Keys our object layer adds to PDFium's objects (M3-03, ADR-007). */
+  patches: PatchSet;
   /** A save or rewrite handed out and not yet committed (`rewrite`: a full rewrite). */
   pending?: { next: SaveBase; tailLength: number; seq: number; rewrite?: boolean };
 }
@@ -86,6 +97,27 @@ function readBase(bytes: Uint8Array): SaveBase | undefined {
   }
 }
 
+/**
+ * PDFium's objects never hold our keys, so a full rewrite drops them: the
+ * patched objects follow as one small incremental section (object numbers
+ * survive a rewrite, M1-23).
+ */
+function withPatches(
+  bytes: Uint8Array<ArrayBuffer>,
+  resolved: readonly { num: number; patch: Patch }[],
+): Uint8Array<ArrayBuffer> {
+  const first = /\d+\s+\d+\s+obj\b/.exec(latin1(bytes.subarray(0, 1024)));
+  if (!first) throw new RpcError('save-rewrite', 'The rewritten file has no objects');
+  const r = narrowTail(saveBaseOf(bytes), bytes, first.index, [], {
+    patches: resolved.map(({ num, patch }) => ({
+      num,
+      force: true,
+      apply: (b) => applyPatch(b, patch),
+    })),
+  });
+  return concatBytes([bytes, r.tail]);
+}
+
 export class SaveTracker {
   private readonly docs = new Map<string, DocState>();
   private readonly mod: WrappedPdfiumModule;
@@ -107,6 +139,7 @@ export class SaveTracker {
       infoEdited: 0,
       untracked: 0,
       seq: 0,
+      patches: new PatchSet(),
     });
   }
 
@@ -265,12 +298,76 @@ export class SaveTracker {
     }
   }
 
-  dirtyState(docId: string): { dirty: number[]; untracked: boolean; baseLength: number } {
+  /**
+   * Stages object-layer keys on a page or annotation (M3-03, ADR-007): written
+   * with the next Ctrl+S, in the same revision, and again whenever a later save
+   * rewrites the object. Needs the annotate permission (rule 9): measurements
+   * are markups.
+   */
+  stagePatch(
+    docId: string,
+    target: PatchTarget,
+    set: ReadonlyMap<string, PdfValue>,
+    remove: readonly string[] = [],
+  ): void {
+    const s = this.need(docId);
+    const security = this.security(docId);
+    if (!allows(security, 'annotate')) {
+      throw new RpcError(
+        `${PDFIUM_ERROR_PREFIX}${String(PdfErrorCode.Security)}`,
+        'The document does not allow this change',
+      );
+    }
+    const pageCount = rawCall(this.mod, 'FPDF_GetPageCount', docPtrOf(this.native, docId));
+    if (!Number.isInteger(target.page) || target.page < 0 || target.page >= pageCount)
+      throw new RpcError('patch-target', 'No such page');
+    const seq = s.seq + 1;
+    try {
+      s.patches.stage(target, set, remove, seq, security.revision >= 0);
+    } catch (err) {
+      if (err instanceof PatchError) throw new RpcError(err.code, err.message);
+      throw err;
+    }
+    s.seq = seq;
+    s.pages.set(target.page, seq);
+  }
+
+  /**
+   * Object numbers of the staged patches' targets. Loading the page (and the
+   * annotation) also makes PDFium serialize the object in its incremental
+   * output, where the patch is applied. A patch whose annotation no longer
+   * exists (deleted, or undone) is skipped; it applies again if an undo brings
+   * the annotation back under the same id.
+   */
+  private resolvePatches(docId: string, s: DocState): { num: number; patch: Patch }[] {
+    const out: { num: number; patch: Patch }[] = [];
+    for (const patch of s.patches.all()) {
+      const ref = acquirePage(this.native, docId, patch.target.page);
+      try {
+        const num =
+          patch.target.annot === undefined
+            ? rawCall(this.mod, 'EPDFPage_GetObjectNumber', ref.pagePtr)
+            : this.annotObjectNumber(ref.pagePtr, patch.target.annot);
+        if (num > 0) out.push({ num, patch });
+      } finally {
+        ref.release();
+      }
+    }
+    return out;
+  }
+
+  dirtyState(docId: string): {
+    dirty: number[];
+    untracked: boolean;
+    baseLength: number;
+    staged: number;
+  } {
     const s = this.need(docId);
     return {
       dirty: [...s.dirty.keys()].sort((a, b) => a - b),
       untracked: s.untracked > 0,
       baseLength: s.base?.length ?? s.openedLength,
+      staged: s.patches.pending,
     };
   }
 
@@ -284,10 +381,12 @@ export class SaveTracker {
     // which then belong to this save rather than silently to the next one.
     const pages = s.untracked > 0 ? 'all' : [...s.pages.keys()].sort((a, b) => a - b);
     const digest = s.base ? digestDocument(this.mod, this.native, docId, pages) : null;
-    const { base, r, keepAll } = this.buildTail(docId, s, opts);
+    const { base, r, keepAll, objects } = this.buildTail(docId, s, opts);
     s.pending = { next: r.next, tailLength: r.tail.length, seq: s.seq };
+    const expected = r.tail.length === 0 || !digest ? null : uncheckNames(digest, new Set(r.kept));
+    if (expected && objects.length > 0) expected.objects = objects;
     return {
-      expected: r.tail.length === 0 || !digest ? null : uncheckNames(digest, new Set(r.kept)),
+      expected,
       tail: r.tail,
       mode: keepAll ? 'keep-all' : 'narrow',
       kept: r.kept,
@@ -315,6 +414,8 @@ export class SaveTracker {
     if (!base) {
       throw new RpcError('save-needs-rewrite', 'The file needs a full save (damaged trailer)');
     }
+    // Before PDFium serializes: loading the targets puts them in its output.
+    const resolved = this.resolvePatches(docId, s);
     const full = saveWithFlags(this.mod, docPtrOf(this.native, docId), FPDF_INCREMENTAL);
     const dirty = new Set(s.dirty.keys());
     const appended = latin1(full.subarray(s.openedLength));
@@ -330,11 +431,18 @@ export class SaveTracker {
       if (info) dirty.add(Number(info[1]));
     }
     const keepAll = opts.keepAll === true || s.untracked > 0;
+    const patches: ObjectPatch[] = resolved.map(({ num, patch }) => ({
+      num,
+      force: !patch.clean,
+      apply: (bytes) => applyPatch(bytes, patch),
+    }));
     const r = narrowTail(base, full, s.openedLength, dirty, {
       keepAll,
+      patches,
       ...(opts.extra ? { extra: opts.extra } : {}),
     });
-    return { base, r, keepAll };
+    const objects: ObjectDigest[] = resolved.map(({ num, patch }) => patchDigest(num, patch));
+    return { base, r, keepAll, objects };
   }
 
   /**
@@ -353,6 +461,7 @@ export class SaveTracker {
     if (s.formEdited <= p.seq) s.formEdited = 0;
     if (s.infoEdited <= p.seq) s.infoEdited = 0;
     if (s.untracked <= p.seq) s.untracked = 0;
+    s.patches.committed(p.seq);
     delete s.pending;
     return p.next.length;
   }
@@ -366,7 +475,9 @@ export class SaveTracker {
    */
   saveRewrite(docId: string): Uint8Array<ArrayBuffer> {
     const s = this.need(docId);
-    const bytes = saveWithFlags(this.mod, docPtrOf(this.native, docId), FPDF_NO_INCREMENTAL);
+    const resolved = this.resolvePatches(docId, s);
+    let bytes = saveWithFlags(this.mod, docPtrOf(this.native, docId), FPDF_NO_INCREMENTAL);
+    if (resolved.length > 0) bytes = withPatches(bytes, resolved);
     const base = saveBaseOf(bytes);
     // Objects PDFium allocated before the rewrite are not new afterwards.
     const newFrom = Math.max(base.size, s.base?.newFrom ?? s.base?.size ?? 0);

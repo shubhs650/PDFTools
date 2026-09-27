@@ -5,7 +5,7 @@ import { join } from 'node:path';
 import { inflateSync } from 'node:zlib';
 import { describe, expect, it } from 'vitest';
 import { hasQpdf, qpdfEncrypt } from '../../e2e/fixtures/encrypted';
-import { layersPdf, simplePdf } from '../../e2e/fixtures/generate';
+import { buildPdf, layersPdf, simplePdf } from '../../e2e/fixtures/generate';
 import { decodeString, dictAt, readLayers, refsIn } from '../../src/model/ocg';
 
 // M2-11: the list-only Layers pane's reader (ADR-012 decision 5, option 1).
@@ -31,6 +31,38 @@ describe('readLayers', () => {
         { name: 'Hidden notes', on: false },
       ],
     });
+  });
+
+  it('follows indirect /D and /Order through the shared reader (M3-03)', async () => {
+    // /D, /Order and a name as indirect objects: only an object reader resolves them.
+    const bytes = buildPdf([
+      '<< /Type /Catalog /Pages 2 0 R /OCProperties << /OCGs [5 0 R 6 0 R] /D 7 0 R >> >>',
+      '<< /Type /Pages /Kids [3 0 R] /Count 1 >>',
+      '<< /Type /Page /Parent 2 0 R /MediaBox [0 0 595 842] >>',
+      '<< >>',
+      '<< /Type /OCG /Name 9 0 R >>',
+      '<< /Type /OCG /Name (Beta) >>',
+      '<< /Order 8 0 R /OFF [5 0 R] >>',
+      '[6 0 R 5 0 R]',
+      '(Alpha \\(A\\))',
+    ]);
+    expect(await readLayers(bytes, inflate)).toEqual({
+      encrypted: false,
+      layers: [
+        { name: 'Beta', on: true },
+        { name: 'Alpha (A)', on: false },
+      ],
+    });
+  });
+
+  it('falls back to the scanner when the cross-reference is damaged', async () => {
+    const good = layersPdf();
+    const text = new TextDecoder('latin1').decode(good);
+    const damaged = good.slice(0, text.lastIndexOf('startxref'));
+    expect((await readLayers(damaged, inflate)).layers.map((l) => l.name)).toEqual([
+      'Dimensions',
+      'Hidden notes',
+    ]);
   });
 
   it('a file without layers has none', async () => {

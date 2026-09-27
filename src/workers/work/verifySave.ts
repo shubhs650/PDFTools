@@ -8,7 +8,8 @@ import {
   type FieldDigest,
 } from '../render/save/digest';
 
-export type MismatchReason = 'unparsable' | 'page-count' | 'missing-page' | 'annotations' | 'form';
+export type MismatchReason =
+  'unparsable' | 'page-count' | 'missing-page' | 'annotations' | 'form' | 'objects';
 
 export type VerifyResult = { ok: true } | { ok: false; reason: MismatchReason; page?: number };
 

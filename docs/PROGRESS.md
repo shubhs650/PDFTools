@@ -1,6 +1,6 @@
 # PDFTools — Progress
 
-_Last updated: 2026-09-27 (session 16: M3 plan drafted, waiting for approval)_
+_Last updated: 2026-09-27 (session 16: M3 plan approved; M3-01 … M3-03)_
 
 **Current milestone:** M2 — Read is **complete on the agent side** (M2-01 … M2-19; results and
 owner pack: [docs/acceptance/M2.md](acceptance/M2.md)). M1 is merged into `main`; M2-01 … M2-15
@@ -9,6 +9,21 @@ owner runs are open. The **M3 plan** ([docs/plan/M3.md](plan/M3.md)) is drafted 
 the owner's approval and answers to M3-Q1 … M3-Q10; no M3 code yet.
 
 ## Done
+
+- **Session 16 — M3-03 PDF object layer + single-revision merge.** `src/model/pdf/` (values,
+  parser, serializer, async reader over `DecompressionStream`, RPC wire form) ported from S2;
+  staged patches (`src/workers/render/objects/patches.ts`, Render RPC `stageObjects`) applied to
+  PDFium's own serialization of the object inside the one narrow Ctrl+S tail. Patches are sticky
+  (re-applied when a later save rewrites the object; appended after a Save Optimized rewrite,
+  which would otherwise drop them), limited to measurement keys on annotations and `/VP` on pages,
+  need the annotate permission, and refuse strings in encrypted files until M3-04. The Work
+  worker checks the staged keys with our reader (`verifyObjects.ts`). The Layers pane uses the
+  shared reader (scanner as fallback). Unit: `tests/objects/*` (parser, serializer, wire, reader
+  incl. `/Prev`, object streams, predictors, and a qpdf cross-check of every committed fixture and
+  corpus PDF), `tests/save/patch-save.test.ts` (real PDFium: 5 plain + 2 encrypted S1 originals,
+  one revision, qpdf-clean, sticky re-apply, Save Optimized, undo by removal, deleted annotation,
+  recovery tail, verification mismatch, rule 9); e2e: staged keys through the workers on an
+  xref-stream file. Unit 705, green; no dependency added.
 
 - **Session 16 — M3 plan.** Branch `claude/m3-task-breakdown-tlyokp`. Read PROGRESS,
   ARCHITECTURE Rev 0.4 and ADR-001 to ADR-013; wrote [docs/plan/M3.md](plan/M3.md): 20 tasks (two
@@ -720,6 +735,7 @@ the owner's approval and answers to M3-Q1 … M3-Q10; no M3 code yet.
 
 | Date       | Ref              | Decision                                                                                                                                                                                                                                                                                                                                                                                                                                                  |
 | ---------- | ---------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| 2026-09-27 | M3 plan          | M3 plan approved with M3-Q1 … Q10 as proposed: annotation export in M4; ADR-007 label/viewport defaults until the interop run; review status = standard `/StateModel /Review` replies, schemes drive stamps and the CRS header; image-stamp route (spike first); derived auto-numbers; keyboard creation for note/text box/stamp only; `/T` = reviewer name; own MD5/RC4; ExcelJS in the Work worker (non-core); `m3/<task>` branches.                    |
 | 2026-09-26 | ADR-012, ADR-013 | Owner approved all pending ADRs. ADR-012 decision 5: list-only Layers pane (M2-11). ADR-013 decision 7: §10.1 CSP gains `frame-src blob:` for M2-16's browser-viewer print route (ARCHITECTURE.md updated with M2-16).                                                                                                                                                                                                                                    |
 | 2026-09-25 | M1-15            | Owner: zoom 100 % = one PDF point per CSS pixel (EmbedPDF scale 1, ADR-011's range), so Actual Size is not physical size. PR #13 (main → M0 branch) closed. Single-core machines are not a target; the one-core first-open contention from M1-13/15 CI needs no work.                                                                                                                                                                                     |
 | 2026-09-26 | M1-18            | Owner: headed Chrome/Edge 154 read stored file handles fine, so the Chromium 153 crash is headless/153-only; pin Playwright to 1.62.1 (Chromium 151) for CI rather than change the recent-files design (option 3).                                                                                                                                                                                                                                        |

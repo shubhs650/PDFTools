@@ -114,7 +114,7 @@ export class WorkDocs {
   async withCandidate<T>(
     docId: string,
     piece: ArrayBuffer,
-    fn: (candidateId: string, doc: PdfDocumentObject) => T,
+    fn: (candidateId: string, doc: PdfDocumentObject, bytes: ArrayBuffer) => T,
   ): Promise<T> {
     const e = this.require(docId);
     const bytes = concat(concat(e.original, e.tail), piece);
@@ -123,7 +123,7 @@ export class WorkDocs {
       .openDocumentBuffer({ id: candidateId, content: bytes }, openOptions(e.password))
       .toPromise();
     try {
-      return fn(candidateId, doc);
+      return fn(candidateId, doc, bytes);
     } finally {
       await this.native().closeDocument(doc).toPromise();
     }

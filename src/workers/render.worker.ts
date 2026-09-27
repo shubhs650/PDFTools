@@ -8,6 +8,7 @@ import { init, type WrappedPdfiumModule } from '@embedpdf/pdfium';
 import { RpcError } from '../engine/errors';
 import { Transfer } from '../engine/protocol';
 import { PDFIUM_ERROR_PREFIX, type RenderApi } from '../engine/renderApi';
+import { fromJson } from '../model/pdf/wire';
 import { serve } from './rpc-host';
 import { acquirePage, docPtrOf, rawCall, wasmMemory } from './render/pdfium';
 import { renderProgressive } from './render/progressive';
@@ -140,6 +141,20 @@ serve<RenderApi>(self, {
   },
 
   saveState: ({ docId }) => ready().tracker.dirtyState(docId),
+
+  stageObjects: ({ docId, target, set, remove }) => {
+    const t = ready().tracker;
+    const values = new Map(Object.entries(set).map(([k, v]) => [k, fromJson(v)]));
+    t.stagePatch(
+      docId,
+      target.annot === undefined
+        ? { page: target.page }
+        : { page: target.page, annot: target.annot },
+      values,
+      remove ?? [],
+    );
+    return { staged: t.dirtyState(docId).staged };
+  },
 
   docInfo: ({ docId }) => {
     const { mod: m, native: n } = ready();

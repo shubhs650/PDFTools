@@ -89,6 +89,18 @@ export interface NarrowOptions {
   keepAll?: boolean;
   /** Patched objects from our object layer (ADR-007 d5). */
   extra?: readonly ExtraObject[];
+  /**
+   * Object-layer patches applied to PDFium's serialization of an object
+   * (M3-03). `force` puts the object in the tail (the patch changed since the
+   * base); otherwise it is applied only if the object is kept anyway.
+   */
+  patches?: readonly ObjectPatch[];
+}
+
+export interface ObjectPatch {
+  num: number;
+  force: boolean;
+  apply(objectBytes: Uint8Array): Uint8Array;
 }
 
 /**
@@ -124,7 +136,13 @@ export function narrowTail(
   const newFrom = base.newFrom ?? base.size;
   const isNew = (n: number): boolean => n >= newFrom;
 
+  const patches = new Map((opts.patches ?? []).map((p) => [p.num, p]));
+  for (const p of patches.values()) {
+    if (p.force && !spans.has(p.num) && !extra.has(p.num))
+      throw new Error(`narrowTail: patched object ${String(p.num)} is not in PDFium's save`);
+  }
   const keep = new Set<number>(extra.keys());
+  for (const p of patches.values()) if (p.force) keep.add(p.num);
   for (const num of spans.keys()) if (opts.keepAll || isNew(num)) keep.add(num);
   for (const d of dirty) if (spans.has(d)) keep.add(d);
   for (const num of spans.keys()) {
@@ -167,7 +185,8 @@ export function narrowTail(
       push(e.bytes);
     } else if (o) {
       offsets.set(num, [pos, o.gen]);
-      push(full.subarray(o.start, o.end));
+      const patch = patches.get(num);
+      push(patch ? patch.apply(full.subarray(o.start, o.end)) : full.subarray(o.start, o.end));
     } else continue;
     push(encodeLatin1('\r\n'));
   }

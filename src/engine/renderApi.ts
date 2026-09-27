@@ -2,6 +2,7 @@
 // executor behind our typed RPC, plus direct PDFium calls EmbedPDF does not
 // expose (ADR-001 B14).
 import type { FontFallbackConfig } from '@embedpdf/engines/pdfium';
+import type { PdfJson } from '../model/pdf/wire';
 import type { DocDigest } from '../workers/render/save/digest';
 import type { MethodSpec } from './protocol';
 
@@ -66,7 +67,22 @@ export interface RenderApi {
   /** Existing objects changed since the last save (tests and diagnostics; no content). */
   saveState: MethodSpec<
     { docId: string },
-    { dirty: number[]; untracked: boolean; baseLength: number }
+    { dirty: number[]; untracked: boolean; baseLength: number; staged: number }
+  >;
+  /**
+   * Object-layer keys EmbedPDF/PDFium can't write (M3-03, ADR-007): measurement
+   * keys on an annotation (by EmbedPDF id) or `/VP` on a page. Saved with the
+   * next Ctrl+S in the same revision; `remove` deletes keys (undo). Needs the
+   * annotate permission (rule 9). The caller marks the document dirty.
+   */
+  stageObjects: MethodSpec<
+    {
+      docId: string;
+      target: { page: number; annot?: string };
+      set: Record<string, PdfJson>;
+      remove?: string[];
+    },
+    { staged: number }
   >;
   /** What a render of this page costs (M1-17 cost model): objects and path segments. */
   pageCost: MethodSpec<{ docId: string; pageIndex: number }, { objects: number; segments: number }>;
