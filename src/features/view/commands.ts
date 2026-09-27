@@ -4,7 +4,9 @@ import { clearSelection } from '../select/commands';
 import { appStore } from '../../app/store/appStore';
 import { documentStore, selectActive, type ZoomSetting } from '../../app/store/documentStore';
 import type { ViewMode } from '../../app/store/documentStore';
+import { msg } from '../../i18n';
 import { move, rotate, setViewMode, setZoom, zoomStep, type ZoomTarget } from './controller';
+import { canGoBack, canGoForward, nextView, previousView } from './viewHistory';
 
 const modeIs = (m: ViewMode): boolean => selectActive(documentStore.getState())?.view.mode === m;
 
@@ -53,6 +55,17 @@ export function registerViewCommands(): () => void {
     nav('view.prevPage', 'prev'),
     nav('view.nextPage', 'next'),
     nav('view.lastPage', 'last'),
+    // Previous / Next View (M2-10): back and forward through jumps.
+    registerCommand('view.prevView', {
+      requiresDocument: true,
+      run: previousView,
+      disabledReason: () => (canGoBack() ? null : msg('view.history.noPrevious')),
+    }),
+    registerCommand('view.nextView', {
+      requiresDocument: true,
+      run: nextView,
+      disabledReason: () => (canGoForward() ? null : msg('view.history.noNext')),
+    }),
     ...VIEW_MODE_COMMANDS.map(([id, mode]) =>
       registerCommand(id, {
         requiresDocument: true,

@@ -1,6 +1,8 @@
 import { useEffect } from 'react';
 import { documentStore, useDocuments } from '../../app/store/documentStore';
 import { PermissionBanner } from '../protect/PermissionBanner';
+import { XfaBanner } from '../forms/XfaBanner';
+import { SignatureBanner } from '../signatures/SignatureBanner';
 import { FindBar } from '../search/FindBar';
 import { DocumentHost } from '../view/DocumentHost';
 import { DocumentView } from '../view/DocumentView';
@@ -34,6 +36,8 @@ export function DocumentArea() {
       {activeId ? (
         <div className="document-stack">
           <PermissionBanner documentId={activeId} />
+          <SignatureBanner documentId={activeId} />
+          <XfaBanner documentId={activeId} />
           <FindBar />
           <div className="document-stack-view">
             <DocumentView key={activeId} documentId={activeId} />

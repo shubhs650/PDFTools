@@ -1,12 +1,30 @@
 // Protect tab commands shipped in M2-03 (§7.12): Unlock with Owner Password.
 import { registerCommand } from '../../app/commands/dispatch';
+import { appStore } from '../../app/store/appStore';
 import { documentStore, selectActive } from '../../app/store/documentStore';
 import { msg } from '../../i18n';
 import { restrictions } from '../../model/permissions';
+import { openSecurityInfo } from './securityInfoStore';
 import { openUnlockDialog } from './unlock';
 
 export function registerProtectCommands(): () => void {
   const offs = [
+    // Opens (never toggles) the Signatures pane (M2-13).
+    registerCommand('protect.signatures', {
+      requiresDocument: true,
+      run: () => {
+        const app = appStore.getState();
+        if (!app.leftPaneOpen || app.leftPane !== 'rail.signatures')
+          app.choosePane('rail.signatures');
+      },
+    }),
+    registerCommand('protect.securityInfo', {
+      requiresDocument: true,
+      run: () => {
+        const active = selectActive(documentStore.getState());
+        if (active) openSecurityInfo(active.meta.id);
+      },
+    }),
     registerCommand('protect.unlock', {
       requiresDocument: true,
       // Only a restricted document has something to unlock.

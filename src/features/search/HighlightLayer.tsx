@@ -16,7 +16,7 @@ export function HighlightLayer({
   pageIndex: number;
   scale: number;
 }) {
-  const ours = useFind((s) => s.open && s.docId === documentId);
+  const ours = useFind((s) => s.highlights && s.docId === documentId);
   const count = useFind((s) => s.results.pages.get(pageIndex)?.count ?? 0);
   const generation = useFind((s) => s.generation);
   const current = useFind((s) => (s.cursor?.page === pageIndex ? s.cursor.index : -1));

@@ -8,7 +8,7 @@ import { deflateSync } from 'node:zlib';
 export type PdfObject = string | { dict: string; stream: string };
 
 /** Writes a classic-xref PDF. Object 1 must be the catalog. */
-export function buildPdf(objects: PdfObject[]): Uint8Array {
+export function buildPdf(objects: PdfObject[], trailerExtra = ''): Uint8Array {
   const parts: string[] = ['%PDF-1.7\n%âãÏÓ\n'];
   const offsets: number[] = [];
   let length = (parts[0] ?? '').length;
@@ -24,7 +24,7 @@ export function buildPdf(objects: PdfObject[]): Uint8Array {
   });
   let xref = `xref\n0 ${String(objects.length + 1)}\n0000000000 65535 f \n`;
   for (const off of offsets) xref += `${String(off).padStart(10, '0')} 00000 n \n`;
-  xref += `trailer\n<< /Size ${String(objects.length + 1)} /Root 1 0 R >>\nstartxref\n${String(length)}\n%%EOF\n`;
+  xref += `trailer\n<< /Size ${String(objects.length + 1)} /Root 1 0 R${trailerExtra} >>\nstartxref\n${String(length)}\n%%EOF\n`;
   parts.push(xref);
   return latin1(parts.join(''));
 }
@@ -66,6 +66,250 @@ export function simplePdf(pages = 1): Uint8Array {
   }
   objs.push('<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica >>');
   return buildPdf(objs);
+}
+
+/** Words found only in annotatedPdf's comment and in its bookmark title. */
+export const COMMENT_WORD = 'MARGINALIA';
+export const BOOKMARK_WORD = 'GLOSSARIUM';
+
+/**
+ * Three pages ("Page n") with a sticky-note comment on page 2 whose text
+ * holds COMMENT_WORD, and a two-entry outline: "Introduction" → page 1 and
+ * "Appendix <BOOKMARK_WORD>" → page 3 (M2-09 search in comments and bookmarks).
+ */
+export function annotatedPdf(): Uint8Array {
+  const page = (contents: number, extra = '') =>
+    `<< /Type /Page /Parent 2 0 R /MediaBox [0 0 595 842] /Resources << /Font << /F1 13 0 R >> >> /Contents ${String(contents)} 0 R${extra} >>`;
+  const text = (n: number) => ({
+    dict: '<< >>',
+    stream: `BT /F1 36 Tf 72 740 Td (Page ${String(n)}) Tj ET`,
+  });
+  return buildPdf([
+    '<< /Type /Catalog /Pages 2 0 R /Outlines 10 0 R /PageMode /UseOutlines >>',
+    '<< /Type /Pages /Kids [3 0 R 5 0 R 7 0 R] /Count 3 >>',
+    page(4),
+    text(1),
+    page(6, ' /Annots [9 0 R]'),
+    text(2),
+    page(8),
+    text(3),
+    `<< /Type /Annot /Subtype /Text /Rect [300 600 324 624] /P 5 0 R /Name /Comment /Contents (Please check the ${COMMENT_WORD} note) /T (Tester) >>`,
+    '<< /Type /Outlines /First 11 0 R /Last 12 0 R /Count 2 >>',
+    '<< /Title (Introduction) /Parent 10 0 R /Next 12 0 R /Dest [3 0 R /XYZ 0 842 null] >>',
+    `<< /Title (Appendix ${BOOKMARK_WORD}) /Parent 10 0 R /Prev 11 0 R /Dest [7 0 R /XYZ 0 842 null] >>`,
+    '<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica >>',
+  ]);
+}
+
+/** The external address of outlinedPdf's URI link. */
+export const LINK_URL = 'https://example.com/spec?section=4.2';
+
+/**
+ * 50 pages ("Page n") with a 500-entry, 3-level outline — 5 parts × 9
+ * sections × 10 items, "Item p.s.i" → page (p·9+s) mod 50 at the top (/XYZ) —
+ * and three links on page 1: to page 30 (/XYZ), to the named destination
+ * "chap3" (page 3, /Fit) and to LINK_URL (M2-10).
+ */
+export function outlinedPdf(): Uint8Array {
+  const pages = 50;
+  // Objects: 1 catalog, 2 pages, 3.. pages (page, contents) pairs, then font,
+  // 3 link annotations, the outline root and the outline items.
+  const pageObj = (i: number) => 3 + i * 2;
+  const font = 3 + pages * 2;
+  const links = [font + 1, font + 2, font + 3];
+  const root = font + 4;
+  const objs: PdfObject[] = [
+    `<< /Type /Catalog /Pages 2 0 R /Outlines ${String(root)} 0 R /Dests << /chap3 [${String(pageObj(2))} 0 R /Fit] >> >>`,
+    `<< /Type /Pages /Kids [${Array.from({ length: pages }, (_, i) => `${String(pageObj(i))} 0 R`).join(' ')}] /Count ${String(pages)} >>`,
+  ];
+  for (let i = 0; i < pages; i++) {
+    const annots = i === 0 ? ` /Annots [${links.map((n) => `${String(n)} 0 R`).join(' ')}]` : '';
+    objs.push(
+      `<< /Type /Page /Parent 2 0 R /MediaBox [0 0 595 842] /Resources << /Font << /F1 ${String(font)} 0 R >> >> /Contents ${String(4 + i * 2)} 0 R${annots} >>`,
+      {
+        dict: '<< >>',
+        stream:
+          `BT /F1 36 Tf 72 740 Td (Page ${String(i + 1)}) Tj ET` +
+          (i === 0
+            ? ' BT /F1 14 Tf 72 600 Td (Go to page 30) Tj 0 -40 Td (Chapter 3) Tj 0 -40 Td (Specification online) Tj ET'
+            : ''),
+      },
+    );
+  }
+  objs.push('<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica >>');
+  objs.push(
+    `<< /Type /Annot /Subtype /Link /Rect [70 595 250 615] /Border [0 0 0] /Dest [${String(pageObj(29))} 0 R /XYZ 0 842 0] >>`,
+    '<< /Type /Annot /Subtype /Link /Rect [70 555 250 575] /Border [0 0 0] /Dest /chap3 >>',
+    `<< /Type /Annot /Subtype /Link /Rect [70 515 250 535] /Border [0 0 0] /A << /S /URI /URI (${LINK_URL}) >> >>`,
+  );
+  // Outline tree, depth-first object numbers after the root.
+  interface Node {
+    title: string;
+    page: number;
+    children: Node[];
+    num?: number;
+  }
+  const tree: Node[] = Array.from({ length: 5 }, (_, p) => ({
+    title: `Part ${String(p + 1)}`,
+    page: (p * 9) % pages,
+    children: Array.from({ length: 9 }, (_, s) => ({
+      title: `Section ${String(p + 1)}.${String(s + 1)}`,
+      page: (p * 9 + s) % pages,
+      children: Array.from({ length: 10 }, (_, k) => ({
+        title: `Item ${String(p + 1)}.${String(s + 1)}.${String(k + 1)}`,
+        page: (p * 9 + s) % pages,
+        children: [],
+      })),
+    })),
+  }));
+  let next = root + 1;
+  const number = (list: Node[]) => {
+    for (const n of list) {
+      n.num = next++;
+      number(n.children);
+    }
+  };
+  number(tree);
+  const items: string[] = [];
+  const emit = (list: Node[], parent: number) => {
+    list.forEach((n, i) => {
+      const prev = list[i - 1]?.num;
+      const nxt = list[i + 1]?.num;
+      const kids = n.children.length
+        ? ` /First ${String(n.children[0]?.num)} 0 R /Last ${String(n.children[n.children.length - 1]?.num)} 0 R /Count -${String(n.children.length)}`
+        : '';
+      items[(n.num ?? 0) - root - 1] =
+        `<< /Title (${n.title}) /Parent ${String(parent)} 0 R` +
+        (prev ? ` /Prev ${String(prev)} 0 R` : '') +
+        (nxt ? ` /Next ${String(nxt)} 0 R` : '') +
+        kids +
+        ` /Dest [${String(pageObj(n.page))} 0 R /XYZ 0 842 0] >>`;
+      emit(n.children, n.num ?? 0);
+    });
+  };
+  emit(tree, root);
+  objs.push(
+    `<< /Type /Outlines /First ${String(tree[0]?.num)} 0 R /Last ${String(tree[tree.length - 1]?.num)} 0 R /Count 5 >>`,
+    ...items,
+  );
+  return buildPdf(objs);
+}
+
+/** Content of attachmentsPdf's annotation-level file. */
+export const ANNOT_FILE_TEXT = 'Attached to page 1 by a FileAttachment annotation.';
+
+/**
+ * Two pages with 20 embedded files (M2-11): 19 in the document's
+ * EmbeddedFiles tree — "file-01.txt" … "file-17.txt", "big.bin" (`bigBytes`,
+ * 20 MB by default) and "inner.pdf" (a 2-page PDF) — and "note.txt" on a
+ * FileAttachment annotation on page 1.
+ */
+export function attachmentsPdf(bigBytes = 20 * 1024 * 1024): Uint8Array {
+  const latin = (u8: Uint8Array) => {
+    let out = '';
+    for (let i = 0; i < u8.length; i += 0x8000)
+      out += String.fromCharCode(...u8.subarray(i, i + 0x8000));
+    return out;
+  };
+  const big = new Uint8Array(bigBytes);
+  for (let i = 0; i < big.length; i++) big[i] = (i * 31 + (i >> 8)) & 0xff;
+  const files: { name: string; desc: string; data: string }[] = [];
+  for (let i = 1; i <= 17; i++) {
+    const n = String(i).padStart(2, '0');
+    files.push({
+      name: `file-${n}.txt`,
+      desc: `Text file ${n}`,
+      data: `Attachment ${n}\n`.repeat(i),
+    });
+  }
+  files.push({ name: 'big.bin', desc: 'Large binary', data: latin(big) });
+  files.push({ name: 'inner.pdf', desc: 'An embedded PDF', data: latin(simplePdf(2)) });
+  // 1 catalog, 2 pages, 3-6 two pages (page, contents), 7 font, then per file
+  // (filespec, stream), then the annotation's filespec + stream + annotation.
+  const first = 8;
+  const fileObj = (i: number) => first + i * 2;
+  const annotFs = first + files.length * 2;
+  const names = files.map((f, i) => `(${f.name}) ${String(fileObj(i))} 0 R`).join(' ');
+  const objs: PdfObject[] = [
+    `<< /Type /Catalog /Pages 2 0 R /Names << /EmbeddedFiles << /Names [${names}] >> >> >>`,
+    '<< /Type /Pages /Kids [3 0 R 5 0 R] /Count 2 >>',
+    `<< /Type /Page /Parent 2 0 R /MediaBox [0 0 595 842] /Resources << /Font << /F1 7 0 R >> >> /Contents 4 0 R /Annots [${String(annotFs + 2)} 0 R] >>`,
+    { dict: '<< >>', stream: 'BT /F1 36 Tf 72 740 Td (Page 1) Tj ET' },
+    '<< /Type /Page /Parent 2 0 R /MediaBox [0 0 595 842] /Resources << /Font << /F1 7 0 R >> >> /Contents 6 0 R >>',
+    { dict: '<< >>', stream: 'BT /F1 36 Tf 72 740 Td (Page 2) Tj ET' },
+    '<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica >>',
+  ];
+  files.forEach((f, i) => {
+    objs.push(
+      `<< /Type /Filespec /F (${f.name}) /UF (${f.name}) /Desc (${f.desc}) /EF << /F ${String(fileObj(i) + 1)} 0 R >> >>`,
+      {
+        dict: `<< /Type /EmbeddedFile /Params << /Size ${String(f.data.length)} /CreationDate (D:20240102030405Z) >> >>`,
+        stream: f.data,
+      },
+    );
+  });
+  objs.push(
+    `<< /Type /Filespec /F (note.txt) /UF (note.txt) /Desc (A note) /EF << /F ${String(annotFs + 1)} 0 R >> >>`,
+    {
+      dict: `<< /Type /EmbeddedFile /Params << /Size ${String(ANNOT_FILE_TEXT.length)} /CreationDate (D:20240506070809Z) >> >>`,
+      stream: ANNOT_FILE_TEXT,
+    },
+    `<< /Type /Annot /Subtype /FileAttachment /Rect [72 600 92 620] /FS ${String(annotFs)} 0 R /Contents (A note) /Name /Paperclip >>`,
+  );
+  return buildPdf(objs);
+}
+
+/**
+ * One page with two optional content groups (M2-11): "Dimensions" (on) and
+ * "Hidden notes" (off by default), each drawing a labelled box.
+ */
+export function layersPdf(): Uint8Array {
+  const content = [
+    'BT /F1 24 Tf 72 760 Td (Always shown) Tj ET',
+    '/OC /L1 BDC 0 0 1 rg 72 600 200 100 re f BT /F1 18 Tf 80 640 Td (Dimensions) Tj ET EMC',
+    '/OC /L2 BDC 1 0 0 rg 300 600 200 100 re f BT /F1 18 Tf 308 640 Td (Hidden notes) Tj ET EMC',
+  ].join('\n');
+  return buildPdf([
+    '<< /Type /Catalog /Pages 2 0 R /OCProperties << /OCGs [5 0 R 6 0 R] /D << /Order [5 0 R 6 0 R] /OFF [6 0 R] >> >> >>',
+    '<< /Type /Pages /Kids [3 0 R] /Count 1 >>',
+    '<< /Type /Page /Parent 2 0 R /MediaBox [0 0 595 842] /Resources << /Font << /F1 7 0 R >> /Properties << /L1 5 0 R /L2 6 0 R >> >> /Contents 4 0 R >>',
+    { dict: '<< >>', stream: content },
+    '<< /Type /OCG /Name (Dimensions) >>',
+    '<< /Type /OCG /Name (Hidden notes) >>',
+    '<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica >>',
+  ]);
+}
+
+/** Info values of propertiesPdf (M2-12). */
+export const PROPERTIES = {
+  title: 'Pump Station P-101 Datasheet',
+  author: 'Test Author',
+  subject: 'Self-made properties fixture',
+  keywords: 'pump, datasheet',
+  creator: 'PDFTools tests',
+  producer: 'generate.ts',
+  created: "D:20240102030405+01'00'",
+  modified: 'D:20240607080910Z',
+} as const;
+
+/** Two tagged A4 pages with a full Info dictionary (M2-12). */
+export function propertiesPdf(): Uint8Array {
+  const p = PROPERTIES;
+  const esc = (t: string) => t.replace(/[\\()]/g, (c) => `\\${c}`);
+  return buildPdf(
+    [
+      '<< /Type /Catalog /Pages 2 0 R /MarkInfo << /Marked true >> /StructTreeRoot 8 0 R >>',
+      '<< /Type /Pages /Kids [3 0 R 5 0 R] /Count 2 >>',
+      '<< /Type /Page /Parent 2 0 R /MediaBox [0 0 595 842] /Resources << /Font << /F1 7 0 R >> >> /Contents 4 0 R >>',
+      { dict: '<< >>', stream: 'BT /F1 36 Tf 72 740 Td (Page 1) Tj ET' },
+      '<< /Type /Page /Parent 2 0 R /MediaBox [0 0 842 595] /Resources << /Font << /F1 7 0 R >> >> /Contents 6 0 R >>',
+      { dict: '<< >>', stream: 'BT /F1 36 Tf 72 500 Td (Page 2) Tj ET' },
+      '<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica >>',
+      '<< /Type /StructTreeRoot >>',
+      `<< /Title (${esc(p.title)}) /Author (${esc(p.author)}) /Subject (${esc(p.subject)}) /Keywords (${esc(p.keywords)}) /Creator (${esc(p.creator)}) /Producer (${esc(p.producer)}) /CreationDate (${p.created}) /ModDate (${p.modified}) >>`,
+    ],
+    ' /Info 9 0 R',
+  );
 }
 
 // ------------------------------------------------------------ contract profile
@@ -246,8 +490,49 @@ export function fullFormPdf(): Uint8Array {
     '<< /Type /Annot /Subtype /Widget /FT /Ch /T (material) /TU (Material) /Opt [(Carbon steel) (Stainless) (Duplex)] /V (Stainless) /DA (/Helv 12 Tf 0 g) /Rect [60 400 300 470] /F 4 /P 4 0 R >>',
   );
   objs[0] = (objs[0] as string).replace('14 0 R]', '14 0 R 22 0 R]');
+  // Defaults for Reset Form (M2-14): see FORM_DEFAULTS.
+  const dv = (i: number, entry: string): void => {
+    objs[i] = (objs[i] as string).replace(' /V ', ` /DV ${entry} /V `);
+  };
+  dv(5, '(Default)');
+  dv(9, '/Yes');
+  dv(12, '/B');
+  dv(13, '(DN50)');
   objs[3] = (objs[3] as string).replace('10 0 R]', '10 0 R 22 0 R]');
   return buildPdf(objs);
+}
+
+/** What Reset Form gives each field of `fullFormPdf` (no /DV: empty, off, none selected). */
+export const FORM_DEFAULTS = {
+  first: '',
+  name: 'Default',
+  readonly: 'Fixed', // read-only: reset leaves it
+  required: '',
+  agree: true,
+  choice: 'B',
+  size: 'DN50',
+  material: null,
+} as const;
+
+/**
+ * An XFA form (M2-14, ADR-013 finding): `full` sets /NeedsRendering (dynamic
+ * XFA, `FPDF_GetFormType` 2: nothing to fill); otherwise a hybrid (3) whose
+ * AcroForm text field "fallback" still fills.
+ */
+export function xfaPdf(full: boolean): Uint8Array {
+  return buildPdf([
+    `<< /Type /Catalog /Pages 2 0 R /AcroForm << /Fields [6 0 R] /XFA 5 0 R /DA (/Helv 12 Tf 0 g) /DR << /Font << /Helv 7 0 R >> >> >>${full ? ' /NeedsRendering true' : ''} >>`,
+    '<< /Type /Pages /Kids [3 0 R] /Count 1 >>',
+    '<< /Type /Page /Parent 2 0 R /MediaBox [0 0 595 842] /Resources << /Font << /F1 7 0 R >> >> /Contents 4 0 R /Annots [6 0 R] >>',
+    { dict: '<< >>', stream: 'BT /F1 16 Tf 60 790 Td (PDFTools XFA fixture) Tj ET' },
+    {
+      dict: '<< >>',
+      stream:
+        '<xdp:xdp xmlns:xdp="http://ns.adobe.com/xdp/"><template xmlns="http://www.xfa.org/schema/xfa-template/3.3/"/></xdp:xdp>',
+    },
+    '<< /Type /Annot /Subtype /Widget /FT /Tx /T (fallback) /TU (Fallback) /V (Hybrid) /DA (/Helv 12 Tf 0 g) /Rect [60 700 300 724] /F 4 /P 3 0 R >>',
+    '<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica /Encoding /WinAnsiEncoding >>',
+  ]);
 }
 
 /** The field names in reading (row) order, i.e. `/Tabs /R` order. */
@@ -261,3 +546,33 @@ export const ROW_ORDER = [
   'size',
   'material',
 ];
+
+// ------------------------------------------------------------ printing (M2-15)
+
+/**
+ * Print fixture: page 1 (A4 portrait) has black page content (a bar at the
+ * top left), a printable red square annotation (/F 4) and a screen-only blue
+ * one (/F 0); page 2 is A4 landscape with a grey bar; page 3 is a portrait
+ * page shown landscape by /Rotate 90. Points: page 1's red square is
+ * x 50–150, y 42–142 from the top; the black bar is x 50–300, y 200–240.
+ */
+export function printPdf(): Uint8Array {
+  const ap = (rgb: string): PdfObject => ({
+    dict: '<< /Type /XObject /Subtype /Form /BBox [0 0 100 100] >>',
+    stream: `${rgb} rg 0 0 100 100 re f`,
+  });
+  return buildPdf([
+    '<< /Type /Catalog /Pages 2 0 R >>',
+    '<< /Type /Pages /Kids [3 0 R 8 0 R 10 0 R] /Count 3 >>',
+    '<< /Type /Page /Parent 2 0 R /MediaBox [0 0 595 842] /Contents 4 0 R /Annots [5 0 R 6 0 R] >>',
+    { dict: '<< >>', stream: '0 g 50 602 250 40 re f' },
+    '<< /Type /Annot /Subtype /Square /Rect [50 700 150 800] /F 4 /C [1 0 0] /AP << /N 7 0 R >> >>',
+    '<< /Type /Annot /Subtype /Square /Rect [400 50 500 150] /F 0 /C [0 0 1] /AP << /N 12 0 R >> >>',
+    ap('1 0 0'),
+    '<< /Type /Page /Parent 2 0 R /MediaBox [0 0 842 595] /Contents 9 0 R >>',
+    { dict: '<< >>', stream: '0.5 g 50 500 400 40 re f' },
+    '<< /Type /Page /Parent 2 0 R /MediaBox [0 0 595 842] /Rotate 90 /Contents 11 0 R >>',
+    { dict: '<< >>', stream: '0 g 50 50 100 100 re f' },
+    ap('0 0 1'),
+  ]);
+}

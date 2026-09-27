@@ -9,6 +9,7 @@ import { ribbonLayout } from '../ribbon/layout';
 import { RecentList } from '../../features/recent/RecentList';
 import { LocalData } from '../../features/settings/LocalData';
 import { About, Privacy } from './AboutPrivacy';
+import { Properties } from './Properties';
 import { RibbonButton } from '../ribbon/RibbonButton';
 
 /** One description per backstage section (content arrives with each feature task). */
@@ -18,6 +19,8 @@ const DESCRIPTIONS: Record<string, MessageKey> = {
   'file.save': msg('backstage.section.save'),
   'file.saveAs': msg('backstage.section.saveAs'),
   'file.saveOptimized': msg('backstage.section.saveOptimized'),
+  'file.print': msg('backstage.section.print'),
+  'file.properties': msg('backstage.section.properties'),
   'file.settings': msg('backstage.section.settings'),
   'file.about': msg('backstage.section.about'),
   'file.privacy': msg('backstage.section.privacy'),
@@ -141,6 +144,8 @@ export function Backstage({ open, section: initial, onOpenChange }: BackstagePro
                     onOpenChange(false);
                   }}
                 />
+              ) : section.id === 'file.properties' ? (
+                <Properties />
               ) : section.id === 'file.settings' ? (
                 <LocalData />
               ) : section.id === 'file.about' ? (

@@ -30,6 +30,7 @@
     "acceptance": "node scripts/acceptance.ts",
     "owner:timings": "playwright test --project=e2e e2e/owner --workers=1 --reporter=list",
     "owner:interop": "playwright test --project=e2e e2e/interop-m1.spec.ts --workers=1",
+    "owner:interop:m2": "playwright test --project=e2e e2e/forms.spec.ts --workers=1",
     "licenses": "node scripts/check-licenses.ts",
     "spikes": "playwright test -c spikes/playwright.config.ts",
     "typecheck:spikes": "tsc -p spikes",

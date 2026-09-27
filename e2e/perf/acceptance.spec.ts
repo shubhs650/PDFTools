@@ -1,5 +1,5 @@
 import type { Page } from '@playwright/test';
-import { cap, dropStaged, stage } from '../support/app.ts';
+import { cap, dropStaged, firstPreviewAt, stage, watchFirstPreview } from '../support/app.ts';
 import { expect, test } from '../support/fixtures.ts';
 
 // M1-28: the §12 targets the other perf scenarios do not measure (D-27).
@@ -56,10 +56,11 @@ test('dense A0 sheet: first view < 2 s, then sharp tiles', async ({ page, pdfs, 
 
   await stage(page, [{ name: 'a0.pdf', b64: pdfs.a0(20_000).toString('base64') }]);
   await guard.startMeasuring();
+  await watchFirstPreview(page);
   const t0 = await page.evaluate(() => performance.now());
   await dropStaged(page);
+  const firstView = Math.round((await firstPreviewAt(page)) - t0);
   await expect(page.locator('[data-page="0"] img.page-preview')).toBeVisible();
-  const firstView = Math.round((await page.evaluate(() => performance.now())) - t0);
   await cap(page, 'view', 'settle', 400);
   const sharp = Math.round((await page.evaluate(() => performance.now())) - t0 - 400);
   expect(await cap(page, 'view', 'sharpVisiblePages')).toBeGreaterThan(0);

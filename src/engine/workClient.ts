@@ -38,6 +38,17 @@ type JobMethod =
   | 'textSlices'
   | 'search'
   | 'searchContext'
+  | 'searchExtras'
+  | 'listAttachments'
+  | 'readAttachment'
+  | 'listLayers'
+  | 'formFacts'
+  | 'printOpen'
+  | 'printPages'
+  | 'printBand'
+  | 'printClose'
+  | 'docProperties'
+  | 'checkSignatures'
   | 'hitRects'
   | 'indexText';
 
@@ -181,6 +192,23 @@ export class WorkClient {
 
   memory(): Promise<{ wasmBytes: number; peakWasmBytes: number }> {
     return this.whenReady().then(() => this.rpc.call('memory', null).promise);
+  }
+
+  /**
+   * Keeps the worker from respawning between the jobs of a longer task (a
+   * print job's copy lives in it). Call the returned function when done.
+   */
+  hold(): () => void {
+    this.active++;
+    let held = true;
+    return () => {
+      if (!held) return;
+      held = false;
+      this.active--;
+      this.maybeRespawn().catch((err: unknown) => {
+        console.error('[work] respawn check failed', err);
+      });
+    };
   }
 
   /** Runs a scheduled job. Respawn checks happen when the worker becomes idle. */

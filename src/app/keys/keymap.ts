@@ -44,6 +44,8 @@ export const KEYMAP: readonly Binding[] = [
   b('file.open', ['Ctrl+O']),
   b('file.save', ['Ctrl+S']),
   b('file.saveAs', ['Ctrl+Shift+S']),
+  // Our print dialog (M2-15), not the browser's print of the app window.
+  b('file.print', ['Ctrl+P']),
   b('view.fitPage', ['Ctrl+0']),
   b('view.actualSize', ['Ctrl+1']),
   b('view.fitWidth', ['Ctrl+2']),
@@ -54,6 +56,11 @@ export const KEYMAP: readonly Binding[] = [
   b('home.find', ['Ctrl+F']),
   b('find.next', ['F3']),
   b('find.prev', ['Shift+F3']),
+  // Advanced Search pane (M2-09).
+  b('home.advancedSearch', ['Ctrl+Shift+F']),
+  // Previous / Next View (M2-10).
+  b('view.prevView', ['Alt+ArrowLeft']),
+  b('view.nextView', ['Alt+ArrowRight']),
   b('home.hand', ['H'], 'document'),
   b('home.select', ['V'], 'document'),
   // Text selection (M2-04): in the document only, so text fields keep their own.

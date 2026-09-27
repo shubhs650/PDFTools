@@ -30,13 +30,23 @@ export function LeftRail() {
   /** Set by a rail button: focus moves into the pane it opens. */
   const focusPane = useRef(false);
 
+  // A pane marks where focus goes with `data-pane-focus`; it may render it a
+  // little later (content loads), so look for a few frames.
   useEffect(() => {
     if (!open || !focusPane.current) return;
     focusPane.current = false;
-    const target = body.current?.querySelector<HTMLElement>(
-      '[tabindex="0"], button, input, [href], select, textarea',
-    );
-    target?.focus();
+    let frames = 30;
+    let raf = 0;
+    const tryFocus = (): void => {
+      const target = body.current?.querySelector<HTMLElement>('[data-pane-focus]');
+      if (target) target.focus();
+      else if (--frames > 0) raf = requestAnimationFrame(tryFocus);
+      else body.current?.querySelector<HTMLElement>('[tabindex="0"], button, input')?.focus();
+    };
+    tryFocus();
+    return () => {
+      cancelAnimationFrame(raf);
+    };
   }, [open, paneId]);
 
   // Esc anywhere in the pane returns to its rail button.

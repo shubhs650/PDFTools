@@ -29,6 +29,8 @@ export function ShortcutSheet() {
     PageUp: msg('shortcuts.key.pageUp'),
     PageDown: msg('shortcuts.key.pageDown'),
     Escape: msg('shortcuts.key.escape'),
+    ArrowLeft: msg('shortcuts.key.arrowLeft'),
+    ArrowRight: msg('shortcuts.key.arrowRight'),
   };
   const labels: KeyLabels = {
     ctrl: mac ? t('shortcuts.key.cmd') : t('shortcuts.key.ctrl'),

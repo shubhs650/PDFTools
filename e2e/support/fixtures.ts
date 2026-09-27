@@ -21,7 +21,17 @@ import {
   type LongTask,
   type PageProbe,
 } from './probes.ts';
-import { a0Sheet, cjkFallbackPdf, contractPdf, simplePdf } from '../fixtures/generate.ts';
+import {
+  a0Sheet,
+  annotatedPdf,
+  attachmentsPdf,
+  layersPdf,
+  propertiesPdf,
+  outlinedPdf,
+  cjkFallbackPdf,
+  contractPdf,
+  simplePdf,
+} from '../fixtures/generate.ts';
 
 export class Guard {
   readonly thirdPartyRequests: string[] = [];
@@ -112,6 +122,16 @@ export class Guard {
 export interface Pdfs {
   simple(pages?: number): Buffer;
   contract(pages?: number): Buffer;
+  /** Sticky-note comment and a two-entry outline (M2-09). */
+  annotated(): Buffer;
+  /** 500-entry 3-level outline and three links (M2-10). */
+  outlined(): Buffer;
+  /** 20 embedded files incl. a 20 MB one and a PDF (M2-11). */
+  attachments(): Buffer;
+  /** Two optional content groups, one off by default (M2-11). */
+  layers(): Buffer;
+  /** Known Info values, tagged, two page sizes (M2-12). */
+  properties(): Buffer;
   a0(segments: number): Buffer;
   cjk(): Buffer;
 }
@@ -129,6 +149,11 @@ function makePdfs(): Pdfs {
   return {
     simple: (pages = 1) => memo(`simple-${String(pages)}`, () => simplePdf(pages)),
     contract: (pages = 2000) => memo(`contract-${String(pages)}`, () => contractPdf(pages)),
+    annotated: () => memo('annotated', annotatedPdf),
+    outlined: () => memo('outlined', outlinedPdf),
+    attachments: () => memo('attachments', () => attachmentsPdf()),
+    layers: () => memo('layers', layersPdf),
+    properties: () => memo('properties', propertiesPdf),
     a0: (segments) => memo(`a0-${String(segments)}`, () => a0Sheet(segments)),
     cjk: () => memo('cjk', () => cjkFallbackPdf()),
   };

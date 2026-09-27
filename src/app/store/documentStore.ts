@@ -21,6 +21,8 @@ export interface DocumentMeta {
   /** Full access for this session after the owner password was given (§7.12). */
   ownerUnlocked?: boolean;
   signatureCount: number;
+  /** `FPDF_GetFormType` (M2-14): 2 full XFA, 3 hybrid XFA → banner; absent: none. */
+  formType?: number;
 }
 
 export interface ViewState {

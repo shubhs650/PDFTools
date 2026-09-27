@@ -38,6 +38,7 @@ export function concat(a: ArrayBuffer, b: ArrayBuffer | null | undefined): Array
 
 export class WorkDocs {
   private readonly entries = new Map<string, Entry>();
+  private readonly candidates = new Map<string, PdfDocumentObject>();
   private verifySeq = 0;
   private readonly native: () => PdfiumNative;
 
@@ -128,6 +129,45 @@ export class WorkDocs {
     }
   }
 
+  /**
+   * Opens original + current tail + `piece` as a separate document that stays
+   * open until closeCandidate (M2-15 printing: the current revision with
+   * unsaved edits, rendered over many jobs). The kept copy is untouched.
+   */
+  async openCandidate(
+    docId: string,
+    piece: ArrayBuffer | null,
+  ): Promise<{ candidateId: string; doc: PdfDocumentObject }> {
+    const e = this.require(docId);
+    const bytes = concat(concat(e.original, e.tail), piece);
+    const candidateId = `${docId}#print${String(++this.verifySeq)}`;
+    // Unnormalized: raw print renders use the page as displayed (its /Rotate applied).
+    const doc = await this.native()
+      .openDocumentBuffer(
+        { id: candidateId, content: bytes },
+        e.password === undefined ? {} : { password: e.password },
+      )
+      .toPromise();
+    if (e.ownerPassword !== undefined) {
+      await this.native().unlockOwnerPermissions(doc, e.ownerPassword).toPromise();
+    }
+    this.candidates.set(candidateId, doc);
+    return { candidateId, doc };
+  }
+
+  candidate(candidateId: string): PdfDocumentObject {
+    const doc = this.candidates.get(candidateId);
+    if (!doc) throw new RpcError('not-open', 'The print document is not open');
+    return doc;
+  }
+
+  async closeCandidate(candidateId: string): Promise<void> {
+    const doc = this.candidates.get(candidateId);
+    if (!doc) return;
+    this.candidates.delete(candidateId);
+    await this.native().closeDocument(doc).toPromise();
+  }
+
   /** The document with any pending tail applied (reopens original + tail). */
   async get(docId: string): Promise<{ doc: PdfDocumentObject; appliedTailBytes: number }> {
     const e = this.require(docId);
@@ -148,6 +188,12 @@ export class WorkDocs {
       e.pendingTail = null;
     }
     return { doc: e.doc, appliedTailBytes: e.appliedTailBytes };
+  }
+
+  /** The file as saved so far (original + tail): for readers of raw PDF syntax (M2-11, M2-12). */
+  bytes(docId: string): Uint8Array {
+    const e = this.require(docId);
+    return new Uint8Array(concat(e.original, e.tail));
   }
 
   /** Unlocks the kept copy with the owner password; remembered for later reloads. */

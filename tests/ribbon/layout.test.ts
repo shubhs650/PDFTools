@@ -8,13 +8,17 @@ describe('ribbon layout from the command table (§8, ADR-001 B6, M1-Q2)', () => 
   it('shows only tabs with an available command: Home, View, Help, and Protect from M2-03', () => {
     expect(m1.tabs.map((t) => t.tab)).toEqual(['home', 'view', 'protect', 'help']);
     const protect = m1.tabs.find((t) => t.tab === 'protect');
-    // Only what works: Unlock (M2-03); redaction (M4) and the rest stay omitted.
-    expect(protect?.groups.flatMap((g) => g.commands.map((c) => c.id))).toEqual(['protect.unlock']);
+    // Only what works: Security Info (M2-12), Unlock (M2-03), Signatures (M2-13); redaction (M4) and the rest stay omitted.
+    expect(protect?.groups.flatMap((g) => g.commands.map((c) => c.id))).toEqual([
+      'protect.securityInfo',
+      'protect.unlock',
+      'protect.signatures',
+    ]);
   });
 
   it('omits unavailable commands instead of disabling them', () => {
     const ids = m1.tabs.flatMap((t) => t.groups.flatMap((g) => g.commands.map((c) => c.id)));
-    expect(ids).not.toContain('home.advancedSearch');
+    expect(ids).toContain('home.advancedSearch'); // shipped in M2-09
     expect(ids).not.toContain('view.loupe');
     expect(ids).toContain('view.continuousFacing');
   });
@@ -24,9 +28,11 @@ describe('ribbon layout from the command table (§8, ADR-001 B6, M1-Q2)', () => 
     expect(home?.groups.map((g) => `${g.tab}.${g.group}`)).toEqual([
       'home.tools',
       'home.find',
+      'home.forms',
       'view.zoom',
+      'protect.security', // Signatures (M2-13)
     ]);
-    expect(home?.groups[2]?.commands.map((c) => c.id)).toEqual([
+    expect(home?.groups[3]?.commands.map((c) => c.id)).toEqual([
       'view.zoomIn',
       'view.zoomOut',
       'view.fitPage',
@@ -41,11 +47,13 @@ describe('ribbon layout from the command table (§8, ADR-001 B6, M1-Q2)', () => 
       'file.save',
       'file.saveAs',
       'file.saveOptimized',
+      'file.print', // M2-15
+      'file.properties',
       'file.settings',
       'file.about',
       'file.privacy',
     ]);
-    expect(m1.quickAccess.map((c) => c.id)).toEqual(['qat.open', 'qat.save']);
+    expect(m1.quickAccess.map((c) => c.id)).toEqual(['qat.open', 'qat.save', 'qat.print']);
   });
 
   it('shows every §8 tab once every milestone is available', () => {

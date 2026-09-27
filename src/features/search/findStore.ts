@@ -26,12 +26,14 @@ export type FindStatus = 'idle' | 'searching' | 'done' | 'error';
 
 export interface FindState {
   open: boolean;
+  /** Hits are drawn: the bar is open, or Advanced Search jumped to a hit (M2-09). */
+  highlights: boolean;
   /** Document the results belong to. */
   docId: string | null;
   query: string;
   options: Pick<SearchOptions, 'matchCase' | 'wholeWord'>;
   /** Query and options of the results shown (null before the first search). */
-  ran: { query: string; options: FindState['options'] } | null;
+  ran: { query: string; options: SearchOptions } | null;
   status: FindStatus;
   /** A `search-*` error code (never a message, rule 10). */
   error: string | null;
@@ -47,6 +49,7 @@ export interface FindState {
 
 const initial = (): FindState => ({
   open: false,
+  highlights: false,
   docId: null,
   query: '',
   options: {},
@@ -80,12 +83,17 @@ export function openFind(): void {
   const docId = activeDocId();
   const s = findStore.getState();
   if (docId !== s.docId) resetResults(docId);
-  findStore.setState((cur) => ({ open: true, docId, focusRequest: cur.focusRequest + 1 }));
+  findStore.setState((cur) => ({
+    open: true,
+    highlights: true,
+    docId,
+    focusRequest: cur.focusRequest + 1,
+  }));
 }
 
 export function closeFind(): void {
   cancelFind();
-  findStore.setState({ open: false });
+  findStore.setState({ open: false, highlights: false });
 }
 
 export function setQuery(query: string): void {
@@ -221,6 +229,36 @@ async function show(c: Cursor): Promise<void> {
   if (s.generation !== gen || s.cursor?.page !== c.page || s.cursor.index !== c.index) return;
   const r = rects[c.index]?.[0];
   goToPoint(c.page, r?.x ?? 0, r?.y ?? 0);
+}
+
+/**
+ * Advanced Search (M2-09) shows one of its hits: its results for that
+ * document become the current results (highlighted; F3 walks them), and the
+ * view scrolls to the hit.
+ */
+export async function showResults(
+  docId: string,
+  ran: { query: string; options: SearchOptions },
+  results: FindResults,
+  cursor: Cursor,
+): Promise<void> {
+  if (session && findStore.getState().status === 'searching') session.cancel();
+  rectCache.clear();
+  findStore.setState((s) => ({
+    highlights: true,
+    docId,
+    query: ran.query,
+    options: { matchCase: !!ran.options.matchCase, wholeWord: !!ran.options.wholeWord },
+    ran,
+    status: 'done',
+    error: null,
+    results,
+    cursor,
+    pagesDone: 0,
+    pageCount: 0,
+    generation: s.generation + 1,
+  }));
+  await show(cursor);
 }
 
 /** 1-based position of the current hit ("n" of "n of N"; the total is results.total). */

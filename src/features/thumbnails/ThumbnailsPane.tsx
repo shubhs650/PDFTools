@@ -169,6 +169,7 @@ export function ThumbnailsPane() {
         role="option"
         aria-selected={i === current}
         tabIndex={i === focused ? 0 : -1}
+        data-pane-focus={i === focused || undefined}
         data-thumb={i}
         className={i === current ? 'thumb thumb--current' : 'thumb'}
         style={{ top: layout.tops[i] }}

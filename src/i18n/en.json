@@ -261,7 +261,9 @@
       "saveOptimized": "Rewrite the file compactly. Digital signatures would be invalidated.",
       "settings": "Settings and the data PDFTools keeps on this device.",
       "about": "About PDFTools: version and third-party notices.",
-      "privacy": "PDFTools works offline. Your documents are never uploaded."
+      "privacy": "PDFTools works offline. Your documents are never uploaded.",
+      "properties": "Facts about the open document: its description, file and structure.",
+      "print": "Print the document with your printer's dialog: choose pages, size, markups and quality first."
     }
   },
   "shortcuts": {
@@ -290,7 +292,9 @@
       "option": "Option",
       "pageUp": "Page Up",
       "pageDown": "Page Down",
-      "escape": "Esc"
+      "escape": "Esc",
+      "arrowLeft": "Left Arrow",
+      "arrowRight": "Right Arrow"
     }
   },
   "open": {
@@ -514,5 +518,237 @@
   "thumbnails": {
     "list": "Page thumbnails",
     "empty": "Open a document to see its pages."
+  },
+  "search": {
+    "label": "Search for",
+    "run": "Search",
+    "options": "Search options",
+    "wildcards": "Wildcards (* and ?)",
+    "regex": "Regular Expressions",
+    "annotations": "Comment Text",
+    "bookmarks": "Bookmark Titles",
+    "scope": "Look in",
+    "scopeDocument": "Current document",
+    "scopeAll": "All open documents",
+    "results": "Search results",
+    "status": {
+      "searching": "Searching… {{percent}}, {{n}} found",
+      "cancelled": "Stopped: {{n}} found",
+      "count_one": "{{n}} result",
+      "count_other": "{{n}} results"
+    },
+    "row": {
+      "document": "{{name}} ({{n}})",
+      "page": "Page {{page}} ({{n}})",
+      "bookmark": "Bookmark, page {{page}}: ",
+      "bookmarkNoPage": "Bookmark: ",
+      "annotation": "Comment, page {{page}}: ",
+      "loading": "Loading…"
+    }
+  },
+  "view": {
+    "history": {
+      "noPrevious": "No earlier view to go back to",
+      "noNext": "No later view to go forward to"
+    }
+  },
+  "bookmarks": {
+    "tree": "Bookmarks",
+    "empty": "This document has no bookmarks.",
+    "noDocument": "Open a document to see its bookmarks.",
+    "loading": "Loading bookmarks…",
+    "failed": "The bookmarks couldn't be read.",
+    "expandAll": "Expand All",
+    "collapseAll": "Collapse All"
+  },
+  "links": {
+    "toPage": "Link to page {{page}}",
+    "external": "Link to {{url}}",
+    "otherFile": "Link to another file",
+    "dialogTitle": "Open this link in your browser?",
+    "dialogBody": "This document links to the address below. PDFTools does not open it itself: your browser does, in a new tab.",
+    "open": "Open in Browser",
+    "cancel": "Cancel",
+    "blocked": "Only web (http, https) and email (mailto) links can be opened."
+  },
+  "attachments": {
+    "list": "Embedded files",
+    "noDocument": "Open a document to see its attachments.",
+    "loading": "Looking for attachments",
+    "progress": "Page {{done}} of {{total}}",
+    "failed": "The attachments couldn't be read.",
+    "empty": "This document has no attachments.",
+    "unnamed": "Unnamed file",
+    "onPage": "On page {{page}}",
+    "save": "Save…",
+    "open": "Open as Tab",
+    "error": {
+      "notPdf": "This attachment isn't a PDF, so it can't open as a tab. Save it instead.",
+      "failed": "The attachment couldn't be read."
+    }
+  },
+  "layers": {
+    "list": "Layers",
+    "noDocument": "Open a document to see its layers.",
+    "loading": "Reading layers…",
+    "failed": "The layers couldn't be read.",
+    "encrypted": "Layers can't be listed in an encrypted document.",
+    "empty": "This document has no layers.",
+    "unnamed": "Unnamed layer",
+    "note": "Shown as the document sets them. Switching layers on or off isn't available yet.",
+    "shown": "Shown",
+    "hidden": "Hidden"
+  },
+  "properties": {
+    "noDocument": "Open a document to see its properties.",
+    "loading": "Reading properties…",
+    "failed": "The properties couldn't be read.",
+    "none": "—",
+    "yes": "Yes",
+    "no": "No",
+    "title": "Title",
+    "author": "Author",
+    "subject": "Subject",
+    "keywords": "Keywords",
+    "creator": "Created with",
+    "producer": "PDF producer",
+    "created": "Created",
+    "modified": "Modified",
+    "version": "PDF version",
+    "pages": "Pages",
+    "pageSize": "Page size (page {{page}})",
+    "pageSizeValue": "{{w}} × {{h}} mm ({{wi}} × {{hi}} in)",
+    "fileSize": "File size",
+    "tagged": "Tagged (accessible structure)",
+    "linearized": "Fast web view",
+    "revisions": "Revisions"
+  },
+  "security": {
+    "title": "Security info",
+    "description": "Security settings of “{{name}}”.",
+    "encryption": "Encryption",
+    "none": "None",
+    "methodValue": "{{method}}, {{bits}}-bit key (security handler revision {{revision}})",
+    "methodUnknown": "Encrypted (security handler revision {{revision}})",
+    "ownerPassword": "Owner password",
+    "owner": {
+      "restricts": "Set: it restricts what can be done",
+      "unlocked": "Given for this session: no restrictions",
+      "notRestricting": "No restrictions set"
+    },
+    "signatures": "Digital signatures",
+    "permissions": "Allowed in this session",
+    "allowed": "Allowed",
+    "denied": "Not allowed",
+    "close": "Close",
+    "capability": {
+      "print": "Printing",
+      "printHighQuality": "High-quality printing",
+      "copy": "Copying text and images",
+      "accessibility": "Content access for accessibility",
+      "annotate": "Comments",
+      "fillForms": "Filling in forms",
+      "modify": "Changing the document",
+      "assemble": "Page changes (assembly)"
+    }
+  },
+  "signatures": {
+    "list": "Signatures",
+    "noDocument": "Open a document to see its signatures.",
+    "checking": "Checking signatures",
+    "failed": "The signatures couldn't be checked.",
+    "none": "This document has no digital signatures.",
+    "unknownSigner": "Unknown signer",
+    "integrityLabel": "Integrity",
+    "integrity": {
+      "unchanged": "Unchanged since signing",
+      "modified": "Modified after signing",
+      "damaged": "Signature is damaged"
+    },
+    "trustLabel": "Signer identity",
+    "trust": "Not verified (offline)",
+    "signedAt": "Signed",
+    "reason": "Reason",
+    "location": "Location",
+    "covers": "Covers",
+    "revision": "Revision {{n}} of {{m}}",
+    "after": "Later changes",
+    "changedAfter": "The document was changed after signing",
+    "notChangedAfter": "None",
+    "banner": {
+      "name": "Digital signatures",
+      "text_one": "This document has {{n}} digital signature.",
+      "text_other": "This document has {{n}} digital signatures.",
+      "show": "Show Signatures"
+    }
+  },
+  "forms": {
+    "readOnly": "Read-only field",
+    "fillDenied": "The document's security settings don't allow filling forms",
+    "xfa": {
+      "name": "XFA form",
+      "full": "XFA forms are not supported.",
+      "hybrid": "XFA forms are not supported. The document's standard form fields can still be filled."
+    },
+    "reset": {
+      "title": "Reset Form",
+      "description": "Put every form field back to its default value?",
+      "confirm": "Reset",
+      "cancel": "Cancel",
+      "progress": "Resetting form fields ({{done}} of {{total}} pages)",
+      "noFields": "This document has no form fields.",
+      "stop": "Stop"
+    }
+  },
+  "print": {
+    "title": "Print",
+    "description": "Print {{name}}. Pages are rendered on this device; nothing is sent anywhere.",
+    "range": {
+      "legend": "Pages",
+      "all": "All pages",
+      "current": "Current page",
+      "view": "Current view",
+      "area": "Selected area (text selection)",
+      "custom": "Pages:",
+      "customLabel": "Page range",
+      "customHint": "e.g. 1-3, 8"
+    },
+    "pageCount_one": "{{n}} page will print.",
+    "pageCount_other": "{{n}} pages will print.",
+    "scale": {
+      "legend": "Page size",
+      "fit": "Fit to paper",
+      "actual": "Actual size",
+      "custom": "Custom scale",
+      "percent": "Scale (%)"
+    },
+    "markups": {
+      "legend": "Comments and markups",
+      "on": "Document and markups",
+      "off": "Document only",
+      "only": "Markups only"
+    },
+    "quality": {
+      "legend": "Quality",
+      "standard": "Standard ({{dpi}} DPI)",
+      "high": "High, for drawings ({{dpi}} DPI)",
+      "denied": "The document's security settings allow standard quality only."
+    },
+    "orientation": "Orientation follows each page (portrait or landscape).",
+    "error": {
+      "empty": "Enter the pages to print.",
+      "syntax": "Use page numbers and ranges, e.g. 1-3, 8.",
+      "outOfRange": "Some pages are not in this document.",
+      "noView": "No part of a page is in view.",
+      "noSelection": "Select some text first; its area is printed.",
+      "noDocument": "The document is no longer open.",
+      "percent": "Enter a scale from {{min}} to {{max}} %."
+    },
+    "print": "Print",
+    "close": "Close",
+    "cancel": "Cancel",
+    "progressName": "Preparing pages for printing",
+    "progress": "Preparing pages: {{done}} of {{total}} parts",
+    "failed": "The pages could not be prepared for printing."
   }
 }

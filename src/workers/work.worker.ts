@@ -6,14 +6,21 @@ import { PdfiumNative } from '@embedpdf/engines/pdfium';
 import { init, type WrappedPdfiumModule } from '@embedpdf/pdfium';
 import { RpcError } from '../engine/errors';
 import type { WorkApi } from '../engine/workApi';
+import { Transfer } from '../engine/protocol';
 import { serve } from './rpc-host';
-import { wasmMemory } from './render/pdfium';
+import { docPtrOf, wasmMemory } from './render/pdfium';
 import { digestDocument } from './render/save/digest';
 import { WorkDocs } from './work/docs';
 import { verifyCandidate } from './work/verify';
 import { Scheduler } from './work/scheduler';
 import { Activity, indexDocument } from './work/indexer';
 import { SearchEngine } from './work/search';
+import { listAttachments, readAttachment } from './work/attachments';
+import { readFormFacts } from '../model/formFacts';
+import { readLayers } from '../model/ocg';
+import { pageBox, renderBand } from './work/print';
+import { readProperties } from './work/properties';
+import { checkSignatures } from './work/signatures';
 
 let mod: WrappedPdfiumModule | undefined;
 let native: PdfiumNative | undefined;
@@ -31,6 +38,12 @@ function wasmBytes(): number {
 }
 
 const docs = new WorkDocs(need);
+
+/** zlib inflate (FlateDecode) with the platform's DecompressionStream. */
+async function inflate(bytes: Uint8Array): Promise<Uint8Array> {
+  const stream = new Blob([bytes.slice()]).stream().pipeThrough(new DecompressionStream('deflate'));
+  return new Uint8Array(await new Response(stream).arrayBuffer());
+}
 const scheduler = new Scheduler();
 const activity = new Activity();
 const search = new SearchEngine(() => {
@@ -118,6 +131,85 @@ serve<WorkApi>(self, {
     scheduler.run('interactive', ctx.signal, async (slice) => {
       const { doc } = await docs.get(docId);
       return search.context(docId, doc, query, options, pages, slice);
+    }),
+
+  searchExtras: (req, ctx) =>
+    scheduler.run('interactive', ctx.signal, async (slice) => {
+      const { doc } = await docs.get(req.docId);
+      return search.extras(req, doc, slice);
+    }),
+
+  listAttachments: ({ docId }, ctx) =>
+    scheduler.run('interactive', ctx.signal, async (slice) => {
+      if (!mod) throw new RpcError('not-initialized', 'The work worker is not initialized');
+      const { doc } = await docs.get(docId);
+      return listAttachments(mod, need(), doc, slice, (p) => {
+        ctx.progress(p);
+      });
+    }),
+
+  checkSignatures: ({ docId }, ctx) =>
+    scheduler.run('interactive', ctx.signal, (slice) =>
+      checkSignatures(docs.bytes(docId), slice, (p) => {
+        ctx.progress(p);
+      }),
+    ),
+
+  docProperties: ({ docId }, ctx) =>
+    scheduler.run('interactive', ctx.signal, async () => {
+      if (!mod) throw new RpcError('not-initialized', 'The work worker is not initialized');
+      const { doc } = await docs.get(docId);
+      return readProperties(mod, need(), doc, docs.bytes(docId));
+    }),
+
+  listLayers: ({ docId }, ctx) =>
+    scheduler.run('interactive', ctx.signal, () => readLayers(docs.bytes(docId), inflate)),
+
+  formFacts: ({ docId }, ctx) =>
+    scheduler.run('interactive', ctx.signal, () => readFormFacts(docs.bytes(docId), inflate)),
+
+  printOpen: ({ docId, piece }, ctx) =>
+    scheduler.run('interactive', ctx.signal, async () => {
+      const { candidateId } = await docs.openCandidate(docId, piece ?? null);
+      return { printId: candidateId };
+    }),
+
+  printPages: ({ printId, pages }, ctx) =>
+    scheduler.run('interactive', ctx.signal, async () => {
+      if (!mod) throw new RpcError('not-initialized', 'The work worker is not initialized');
+      await Promise.resolve();
+      const m = mod;
+      const ptr = docPtrOf(need(), docs.candidate(printId).id);
+      return pages.map((i) => pageBox(m, ptr, i));
+    }),
+
+  printBand: ({ printId, ...req }, ctx) =>
+    scheduler.run('interactive', ctx.signal, async () => {
+      if (!mod) throw new RpcError('not-initialized', 'The work worker is not initialized');
+      await Promise.resolve();
+      try {
+        const band = renderBand(mod, docPtrOf(need(), docs.candidate(printId).id), req);
+        return new Transfer(band, [band.data.buffer]);
+      } finally {
+        wasmBytes(); // high-DPI bands grow the heap (ADR-004 respawn policy)
+      }
+    }),
+
+  printClose: async ({ printId }) => {
+    await docs.closeCandidate(printId);
+    return null;
+  },
+
+  readAttachment: ({ docId, ref }, ctx) =>
+    scheduler.run('interactive', ctx.signal, async () => {
+      if (!mod) throw new RpcError('not-initialized', 'The work worker is not initialized');
+      const { doc } = await docs.get(docId);
+      try {
+        const bytes = await readAttachment(mod, need(), doc, ref);
+        return new Transfer({ bytes }, [bytes]);
+      } finally {
+        wasmBytes(); // a large read grows the heap (ADR-004 respawn policy)
+      }
     }),
 
   hitRects: ({ docId, pageIndex, hits }, ctx) =>

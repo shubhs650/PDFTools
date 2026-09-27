@@ -6,9 +6,15 @@ import { installLaunchQueue } from '../features/open/launchQueue';
 import { startBackgroundPrecache, startOffline } from '../features/offline/offline';
 import { OfflineStatus, UpdateWaitDialog } from '../features/offline/OfflineStatus';
 import { installRecovery } from '../features/recovery/recovery';
+import { registerFormCommands } from '../features/forms/commands';
+import { registerPrintCommands } from '../features/print/commands';
+import { PrintDialog } from '../features/print/PrintDialog';
+import { ResetFormDialog } from '../features/forms/ResetFormDialog';
 import { registerProtectCommands } from '../features/protect/commands';
 import { PasswordDialog } from '../features/protect/PasswordDialog';
+import { SecurityInfoDialog } from '../features/protect/SecurityInfo';
 import { UnlockDialog } from '../features/protect/UnlockDialog';
+import { ExternalLinkDialog } from '../features/view/ExternalLinkDialog';
 import { RecoveryDialog } from '../features/recovery/RecoveryDialog';
 import { registerSaveCommands } from '../features/save/commands';
 import { registerFindCommands } from '../features/search/commands';
@@ -50,6 +56,8 @@ export function App() {
   useEffect(() => registerViewCommands(), []);
   useEffect(() => registerSaveCommands(), []);
   useEffect(() => registerProtectCommands(), []);
+  useEffect(() => registerFormCommands(), []);
+  useEffect(() => registerPrintCommands(), []);
   useEffect(() => registerSelectionCommands(), []);
   useEffect(() => registerFindCommands(), []);
   useEffect(() => installRecovery(), []);
@@ -111,6 +119,10 @@ export function App() {
         <OpenErrorDialog />
         <PasswordDialog />
         <UnlockDialog />
+        <SecurityInfoDialog />
+        <ResetFormDialog />
+        <PrintDialog />
+        <ExternalLinkDialog />
         <SaveErrorDialog />
         <SaveOptimizedDialog />
         <GrowthPrompt />

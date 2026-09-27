@@ -2,7 +2,20 @@
 // each document. M1 uses it for save verification (M1-21); M2 adds search.
 import type { PageTextSlice, PdfPageGeometry } from '@embedpdf/models';
 import type { DocDigest } from '../workers/render/save/digest';
-import type { HitRect, SearchBatch, SearchRequest, SearchSummary } from '../workers/work/search';
+import type { AttachmentInfo, AttachmentRef } from '../workers/work/attachments';
+import type { FormFacts } from '../model/formFacts';
+import type { Band, BandRequest } from '../workers/work/print';
+import type { LayerList } from '../model/ocg';
+import type { DocProperties } from '../workers/work/properties';
+import type { SignatureInfo } from '../workers/work/signatures';
+import type {
+  ExtraHit,
+  ExtrasRequest,
+  HitRect,
+  SearchBatch,
+  SearchRequest,
+  SearchSummary,
+} from '../workers/work/search';
 import type { Hit, SearchOptions } from '../workers/work/searchCore';
 import type { VerifyResult } from '../workers/work/verifySave';
 import type { MethodSpec } from './protocol';
@@ -74,6 +87,39 @@ export interface WorkApi {
     { docId: string; query: string; options: SearchOptions; pages: number[] },
     Hit[]
   >;
+  /** Annotation text and bookmark title hits (Advanced Search, M2-09, M2-Q3). */
+  searchExtras: MethodSpec<ExtrasRequest, ExtraHit[]>;
+  /**
+   * Embedded files (M2-11): document-level and FileAttachment annotations.
+   * Walks the pages (progress, cancellable).
+   */
+  listAttachments: MethodSpec<{ docId: string }, AttachmentInfo[], { done: number; total: number }>;
+  /**
+   * Signatures with an offline integrity check (D-24, M2-13): one at a time,
+   * progress per signature, cancellable between them. Never fetches anything.
+   */
+  checkSignatures: MethodSpec<{ docId: string }, SignatureInfo[], { done: number; total: number }>;
+  /** Document Properties and Security Info facts (M2-12). */
+  docProperties: MethodSpec<{ docId: string }, DocProperties>;
+  /** Optional content groups: names and default visibility (list-only, ADR-012 d5). */
+  listLayers: MethodSpec<{ docId: string }, LayerList>;
+  /** Form facts EmbedPDF doesn't give: /Tabs per page, /DV per field (M2-14). */
+  formFacts: MethodSpec<{ docId: string }, FormFacts>;
+  /**
+   * Printing (M2-15): a separate copy of the current revision, with the
+   * Render worker's unsaved edits (`piece`, a narrow tail) appended.
+   */
+  printOpen: MethodSpec<{ docId: string; piece?: ArrayBuffer }, { printId: string }>;
+  /** Displayed size (points, /Rotate applied) and rotation of each page. */
+  printPages: MethodSpec<
+    { printId: string; pages: number[] },
+    { width: number; height: number; rotation: number }[]
+  >;
+  /** One band of a printed page, RGBA, transferred. */
+  printBand: MethodSpec<{ printId: string } & BandRequest, Band>;
+  printClose: MethodSpec<{ printId: string }, null>;
+  /** An attachment's bytes, transferred (never parsed or run here). */
+  readAttachment: MethodSpec<{ docId: string; ref: AttachmentRef }, { bytes: ArrayBuffer }>;
   /** Highlight rectangles for hits on one page, in the viewer's page space. */
   hitRects: MethodSpec<
     { docId: string; pageIndex: number; hits: { start: number; length: number }[] },

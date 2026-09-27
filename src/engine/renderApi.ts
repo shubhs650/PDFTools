@@ -15,6 +15,8 @@ export interface DocumentInfo {
   ownerUnlocked: boolean;
   /** Number of signature fields (D-06: Save Optimized warns when > 0). */
   signatureCount: number;
+  /** `FPDF_GetFormType`: 0 none, 1 AcroForm, 2 full XFA, 3 hybrid XFA (ADR-013). */
+  formType: number;
 }
 
 export interface RenderApi {

@@ -96,6 +96,7 @@ export const COMMANDS: readonly CommandDef[] = [
     size: 'small',
     fluent: 'Print',
     milestone: 'M2',
+    shipped: true, // M2-15
   },
   {
     id: 'qat.undo',
@@ -161,6 +162,7 @@ export const COMMANDS: readonly CommandDef[] = [
     size: 'large',
     fluent: 'Print',
     milestone: 'M2',
+    shipped: true, // M2-15
   },
   {
     id: 'file.exportPrintReady',
@@ -177,6 +179,7 @@ export const COMMANDS: readonly CommandDef[] = [
     size: 'large',
     fluent: 'DocumentBulletList',
     milestone: 'M2',
+    shipped: true, // M2-12
   },
   {
     id: 'file.settings',
@@ -254,6 +257,7 @@ export const COMMANDS: readonly CommandDef[] = [
     size: 'small',
     fluent: 'DocumentSearch',
     milestone: 'M2',
+    shipped: true, // M2-09
   },
   {
     id: 'home.resetForm',
@@ -262,6 +266,7 @@ export const COMMANDS: readonly CommandDef[] = [
     size: 'small',
     fluent: 'ArrowReset',
     milestone: 'M2',
+    shipped: true, // M2-14
   },
   {
     id: 'view.firstPage',
@@ -302,6 +307,7 @@ export const COMMANDS: readonly CommandDef[] = [
     size: 'small',
     fluent: 'ArrowCircleLeft',
     milestone: 'M2',
+    shipped: true, // M2-10
   },
   {
     id: 'view.nextView',
@@ -310,6 +316,7 @@ export const COMMANDS: readonly CommandDef[] = [
     size: 'small',
     fluent: 'ArrowCircleRight',
     milestone: 'M2',
+    shipped: true, // M2-10
   },
   {
     id: 'view.actualSize',
@@ -1022,6 +1029,7 @@ export const COMMANDS: readonly CommandDef[] = [
     size: 'large',
     fluent: 'LockShield',
     milestone: 'M2',
+    shipped: true, // M2-12
   },
   {
     id: 'protect.unlock',
@@ -1039,6 +1047,7 @@ export const COMMANDS: readonly CommandDef[] = [
     size: 'large',
     fluent: 'Signature',
     milestone: 'M2',
+    shipped: true, // M2-13
   },
   {
     id: 'help.help',
@@ -1088,6 +1097,7 @@ export const COMMANDS: readonly CommandDef[] = [
     fluent: 'Bookmark',
     milestone: 'M2',
     toggle: true,
+    shipped: true, // M2-10
   },
   {
     id: 'rail.thumbnails',
@@ -1116,6 +1126,7 @@ export const COMMANDS: readonly CommandDef[] = [
     fluent: 'Attach',
     milestone: 'M2',
     toggle: true,
+    shipped: true, // M2-11
   },
   {
     id: 'rail.signatures',
@@ -1124,6 +1135,7 @@ export const COMMANDS: readonly CommandDef[] = [
     size: 'small',
     fluent: 'Signature',
     milestone: 'M2',
+    shipped: true, // M2-13
     toggle: true,
   },
   {
@@ -1134,6 +1146,7 @@ export const COMMANDS: readonly CommandDef[] = [
     fluent: 'Search',
     milestone: 'M2',
     toggle: true,
+    shipped: true, // M2-09
   },
   {
     id: 'rail.layers',
@@ -1143,6 +1156,7 @@ export const COMMANDS: readonly CommandDef[] = [
     fluent: 'Layer',
     milestone: 'M2',
     toggle: true,
+    shipped: true, // M2-11 (list only, ADR-012 d5)
   },
   {
     id: 'status.readyOffline',
