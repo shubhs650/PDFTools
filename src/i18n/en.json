@@ -289,7 +289,8 @@
       "annotationNext": "Next Comment on the Page",
       "annotationPrev": "Previous Comment on the Page",
       "annotationNudge": "Move Selected Comments (1 pt)",
-      "annotationNudgeFar": "Move Selected Comments (10 pt)"
+      "annotationNudgeFar": "Move Selected Comments (10 pt)",
+      "toolEnter": "Place a note or text box, or finish a polyline"
     },
     "key": {
       "ctrl": "Ctrl",
@@ -883,6 +884,28 @@
       "label": "Inserted text",
       "ok": "Insert",
       "cancel": "Cancel"
+    },
+    "note": {
+      "title": "Note",
+      "label": "Note text",
+      "ok": "OK"
+    },
+    "freeText": {
+      "title": "Text box",
+      "label": "Text",
+      "placeholder": "Type here"
+    },
+    "link": {
+      "title": "Link",
+      "description": "Where does this link go?",
+      "goesTo": "Goes to",
+      "page": "A page in this document",
+      "url": "A web address",
+      "pageNumber": "Page (1 to {{count}})",
+      "pageRange": "Enter a page from 1 to {{count}}.",
+      "address": "Web address",
+      "badUrl": "Enter a web address such as https://example.com.",
+      "ok": "Create link"
     }
   },
   "profile": {

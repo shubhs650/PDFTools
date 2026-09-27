@@ -76,7 +76,7 @@ test('Highlight tool: on until Esc; drag makes a highlight saved with quads, /T 
   await page.getByRole('tab', { name: 'Comment' }).click();
   const highlight = page
     .getByRole('toolbar', { name: 'Comment commands' })
-    .getByRole('button', { name: 'Highlight' });
+    .getByRole('button', { name: 'Highlight', exact: true });
   await highlight.click();
   await expect(highlight).toHaveAttribute('aria-pressed', 'true');
   await expect(page.locator('.document-host')).toHaveAttribute('data-tool', 'highlight');

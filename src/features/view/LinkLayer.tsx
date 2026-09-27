@@ -3,7 +3,7 @@ import { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { format } from '../../i18n';
 import { externalUrl, followTarget, internalDestination } from './links';
-import { linksOf, SETTLE_MS, type PageLink } from './pageLinks';
+import { linksOf, onLinksInvalidated, SETTLE_MS, type PageLink } from './pageLinks';
 
 /**
  * Link annotations of one page as buttons over the page (M2-10): internal
@@ -21,6 +21,15 @@ export function LinkLayer({
 }) {
   const { t } = useTranslation();
   const [links, setLinks] = useState<PageLink[]>([]);
+  // Bumped when links change (the Link tool, M3-09), so the page reads them again.
+  const [version, setVersion] = useState(0);
+  useEffect(
+    () =>
+      onLinksInvalidated(() => {
+        setVersion((v) => v + 1);
+      }),
+    [],
+  );
 
   useEffect(() => {
     let live = true;
@@ -36,7 +45,7 @@ export function LinkLayer({
       live = false;
       clearTimeout(timer);
     };
-  }, [documentId, pageIndex]);
+  }, [documentId, pageIndex, version]);
 
   if (links.length === 0) return null;
   const name = (target: PdfLinkTarget | undefined): string => {

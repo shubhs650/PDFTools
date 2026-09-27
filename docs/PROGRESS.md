@@ -1,6 +1,6 @@
 # PDFTools — Progress
 
-_Last updated: 2026-09-27 (session 16: M3 plan approved; M3-01 … M3-08)_
+_Last updated: 2026-09-27 (session 16: M3-01 … M3-08 merged; M3-09 … M3-15 in progress)_
 
 **Current milestone:** M3 — Review. Plan approved (2026-09-27); M3-01 … M3-08 done in session 16
 on `claude/m3-task-breakdown-tlyokp` (ADR-014 and ADR-015 accepted).
@@ -8,6 +8,12 @@ M0–M2 are merged into `main` (M2 complete on the agent side, owner pack in
 [docs/acceptance/M2.md](acceptance/M2.md)); the M0, M1 and M2 owner runs are open.
 
 ## Done
+
+- **Session 16 — M3-09 note, text, drawing, ink and link tools.** Sticky note, text box,
+  callout, line, arrow, polyline, polygon, rectangle, oval, cloud, pencil, ink highlighter and
+  link on the Comment tab; Shift constrains, Enter/Esc finish/drop polylines, keyboard creation
+  of notes and text boxes (N/T then Enter). Link dialog: page or web address (unsafe schemes
+  refused). Unit + `e2e/draw-tools.spec.ts` + ink perf scenario.
 
 - **Session 16 — perf gate fix before merging M3.** CI's perf gate tripped on 3 of 6 branch
   runs. A HEAD-vs-main comparison (longest main-thread task per scenario, two full perf runs

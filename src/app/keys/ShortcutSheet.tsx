@@ -14,6 +14,7 @@ const ACTION_LABELS: Record<InternalAction, MessageKey> = {
   'tab.next': msg('shortcuts.action.tabNext'),
   'tab.prev': msg('shortcuts.action.tabPrev'),
   'tool.cancel': msg('shortcuts.action.toolCancel'),
+  'tool.enter': msg('shortcuts.action.toolEnter'),
   'edit.copy': msg('shortcuts.action.editCopy'),
   'edit.selectAll': msg('shortcuts.action.editSelectAll'),
   'find.next': msg('shortcuts.action.findNext'),

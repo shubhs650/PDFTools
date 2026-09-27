@@ -12,6 +12,8 @@ import { openProfileDialog, requestProfile } from '../settings/profile/profileSt
 import { capability, hostStore } from '../view/host';
 import { annotationCapability, annotationState } from './selection';
 import { cycleTarget, pageAnnotations } from './model';
+import { DRAW_COMMANDS, isDrawTool, KEYBOARD_PLACED, VERTEX_TOOLS } from './tools/drawModel';
+import { finishDrawing, placeAtCentre } from './tools/drawTools';
 import { MARKUP_TOOLS } from './tools/markupModel';
 import { markupFromSelection } from './tools/textMarkup';
 
@@ -133,6 +135,45 @@ export function registerAnnotateCommands(): () => void {
         },
       }),
     ),
+    // Note, text and drawing tools (M3-09): on until Esc or the command again.
+    ...Object.entries(DRAW_COMMANDS).map(([command, tool]) =>
+      registerCommand(command, {
+        requires: 'annotate',
+        isPressed: () => appStore.getState().tool === tool,
+        run: async () => {
+          if (appStore.getState().tool === tool) {
+            appStore.getState().setTool('select');
+            return;
+          }
+          await requestProfile();
+          appStore.getState().setTool(tool);
+        },
+      }),
+    ),
+    // Enter on the page: place a note or text box at its centre (M3-Q6), or
+    // finish the polyline/polygon being drawn. Otherwise Enter keeps its job.
+    registerCommand('tool.enter', {
+      requires: 'annotate',
+      disabledReason: () => {
+        const t = appStore.getState().tool;
+        return isDrawTool(t) && (KEYBOARD_PLACED.has(t) || VERTEX_TOOLS.has(t))
+          ? null
+          : msg('annotate.noneSelected');
+      },
+      run: async () => {
+        const t = appStore.getState().tool;
+        const id = activeId();
+        const registry = hostStore.getState().registry;
+        if (!isDrawTool(t) || !id || !registry) return;
+        if (VERTEX_TOOLS.has(t)) {
+          finishDrawing();
+          return;
+        }
+        if (t !== 'textComment' && t !== 'freeText') return;
+        await requestProfile();
+        placeAtCentre(registry, id, documentStore.getState().docs[id]?.view.page ?? 0, t);
+      },
+    }),
     registerCommand('comment.reviewerProfile', {
       run: openProfileDialog,
     }),
