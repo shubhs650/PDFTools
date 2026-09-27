@@ -1057,6 +1057,7 @@ export const COMMANDS: readonly CommandDef[] = [
     size: 'large',
     fluent: 'QuestionCircle',
     milestone: 'M2',
+    shipped: true, // M2-17
   },
   {
     id: 'help.shortcuts',
@@ -1073,6 +1074,7 @@ export const COMMANDS: readonly CommandDef[] = [
     size: 'large',
     fluent: 'Bug',
     milestone: 'M2',
+    shipped: true, // M2-17
   },
   {
     id: 'help.updates',
