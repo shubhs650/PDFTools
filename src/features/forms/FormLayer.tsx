@@ -151,6 +151,13 @@ export function FormLayer({
   );
 }
 
+/**
+ * Ctrl+S and Ctrl+P work from a text field (keymap `inText`): the typed value
+ * is committed first, so the save or print includes it.
+ */
+const commitsFirst = (e: KeyboardEvent<HTMLElement>): boolean =>
+  (e.ctrlKey || e.metaKey) && !e.altKey && ['s', 'p'].includes(e.key.toLowerCase());
+
 type Common = Record<string, unknown> & { onKeyDown: (e: KeyboardEvent<HTMLElement>) => void };
 
 function Field({
@@ -208,6 +215,10 @@ function Field({
           setFocused(false);
           save();
         }}
+        onKeyDown={(e) => {
+          if (commitsFirst(e)) save();
+          common.onKeyDown(e);
+        }}
       />
     ) : (
       <input
@@ -228,7 +239,7 @@ function Field({
           save();
         }}
         onKeyDown={(e) => {
-          if (e.key === 'Enter') save();
+          if (e.key === 'Enter' || commitsFirst(e)) save();
           common.onKeyDown(e);
         }}
       />

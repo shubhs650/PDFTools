@@ -139,3 +139,70 @@ for (const theme of THEMES) {
     await axe(page, 'recovery dialog');
   });
 }
+
+// M2-19: the M2 panes, the find bar and the M2 dialogs, in light, dark and the
+// pseudo-locale (longer strings, accents). Reached by command id and data
+// attributes, so the same steps work whatever the language.
+for (const [variant, url] of [
+  ['light', '/'],
+  ['dark', '/?theme=dark'],
+  ['pseudo-locale', '/?locale=pseudo'],
+] as const) {
+  test(`M2 panes, find bar and dialogs (${variant})`, { tag: '@a11y' }, async ({ page }) => {
+    const { outlinedPdf } = await import('./fixtures/generate.ts');
+    await page.goto(url);
+    // Not openHandle(): its tab name differs in the pseudo-locale.
+    await cap(page, 'open', 'openHandles', [
+      { name: 'outlined.pdf', b64: Buffer.from(outlinedPdf()).toString('base64') },
+    ]);
+    await expect(page.locator('[data-page="0"] img.page-preview')).toBeVisible();
+    const run = (id: string) =>
+      page.evaluate(
+        (cmd) =>
+          (
+            window as unknown as {
+              __pdftoolsTest: { capabilities: { commands: { run(id: string): Promise<boolean> } } };
+            }
+          ).__pdftoolsTest.capabilities.commands.run(cmd),
+        id,
+      );
+
+    for (const pane of [
+      'rail.thumbnails',
+      'rail.bookmarks',
+      'rail.search',
+      'rail.attachments',
+      'rail.layers',
+      'rail.signatures',
+    ]) {
+      const button = page.locator(`[data-rail="${pane}"] button`);
+      // By command, not a click: the previous button's tooltip may cover this one.
+      if ((await button.getAttribute('aria-pressed')) !== 'true') await run(pane);
+      await expect(button).toHaveAttribute('aria-pressed', 'true');
+      await expect(page.getByTestId('left-pane')).toBeVisible();
+      await page.waitForTimeout(200); // let the pane's list settle
+      await axe(page, `pane ${pane}`);
+    }
+
+    await page.getByTestId('document-view').focus();
+    await page.keyboard.press('Control+F');
+    await expect(page.locator('.find-bar')).toBeVisible();
+    await axe(page, 'find bar');
+    await page.keyboard.press('Escape');
+
+    for (const id of [
+      'file.print',
+      'file.exportPrintReady',
+      'protect.securityInfo',
+      'help.errorReport',
+      'help.help',
+    ]) {
+      expect(await run(id)).toBe(true);
+      const dialog = page.getByRole('dialog');
+      await expect(dialog).toBeVisible();
+      await axe(page, `dialog ${id}`);
+      await page.keyboard.press('Escape');
+      await expect(dialog).toHaveCount(0);
+    }
+  });
+}

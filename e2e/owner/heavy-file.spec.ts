@@ -11,6 +11,10 @@ import { expect, test } from '../support/fixtures.ts';
 //
 //   PowerShell: $env:OWNER_PDF="C:\drawings\a0.pdf;C:\contracts\far.pdf"; npm run owner:timings
 //
+// M2-19 adds search (§12: first hits < 1 s, complete < 15 s on typical files):
+// a cold search for OWNER_SEARCH (default "the"), then the same search warm.
+// The search word is not written to the report.
+//
 // Each file is first copied into the browser's private storage (OPFS, not
 // timed), then opened through its file handle, as Chromium/Edge open a file
 // from disk: OPFS stands in for the disk file, and Ctrl+S appends to it with
@@ -21,6 +25,7 @@ const FILES = (process.env.OWNER_PDF ?? '')
   .map((f) => f.trim())
   .filter(Boolean);
 const LONG = 10 * 60_000;
+const SEARCH_TERM = process.env.OWNER_SEARCH ?? 'the';
 const view = (page: Page, method: string, ...args: unknown[]) => cap(page, 'view', method, ...args);
 const zoomBox = (page: Page) =>
   page.getByRole('contentinfo', { name: 'Status bar' }).getByRole('textbox', { name: 'Zoom' });
@@ -75,6 +80,22 @@ FILES.forEach((file, n) => {
       sharpAfterZoomMs[z] = Math.round((await now(page)) - z0 - 400);
     }
 
+    // Search (M2-19): cold (text extracted on the way), then warm (cached).
+    const searchRun = async () => {
+      const r = (await cap(page, 'search', 'run', docId, SEARCH_TERM)) as {
+        firstHitMs: number | null;
+        totalMs: number;
+        summary: { totalHits: number };
+      };
+      return {
+        firstHitMs: r.firstHitMs === null ? null : Math.round(r.firstHitMs),
+        totalMs: Math.round(r.totalMs),
+        hits: r.summary.totalHits,
+      };
+    };
+    const searchCold = await searchRun();
+    const searchWarm = await searchRun();
+
     // Ctrl+S with 100 markups (incremental append through the file handle).
     expect(await cap(page, 'save', 'addSquares', docId, 100)).toBeNull();
     await expect(firstTab(page)).toHaveAccessibleName('owner.pdf, unsaved changes');
@@ -99,6 +120,8 @@ FILES.forEach((file, n) => {
       scroll900,
       scroll3000,
       sharpAfterZoomMs,
+      searchCold,
+      searchWarm,
       save100MarkupsMs,
       bytesAppended: savedBytes - bytes,
       longTasksOver100ms: await guard.longTasksOverLimit(),

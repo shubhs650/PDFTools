@@ -201,3 +201,15 @@ printer once.
 | J3  | "Document only" drops comments but keeps filled form values; "Markups only" prints only the comments.                           |             |         |
 | J4  | High quality (300 DPI) text and lines look sharp on paper; a protected file allowing low-quality printing offers Standard only. |             |         |
 | J5  | Cancel in the browser's dialog returns to the app; printing again works.                                                        |             |         |
+
+### K. Print-ready export and the browser-viewer route (M2-16, owner)
+
+Open `form__filled.pdf` in the app, add nothing, then File → Export Print-Ready PDF, and save the
+copy. Then Ctrl+P → "Print with: The browser's PDF viewer" → Print.
+
+| #   | Check                                                                                                                               | Acrobat / Chrome-Edge | PDF-XChange / Firefox |
+| --- | ----------------------------------------------------------------------------------------------------------------------------------- | --------------------- | --------------------- |
+| K1  | The exported copy opens without a repair message in both viewers, shows the filled values, and has no form fields or comments left. |                       |                       |
+| K2  | Zoomed to 800 % the copy's text and lines stay sharp (vector, not an image).                                                        |                       |                       |
+| K3  | Viewer route: the browser's own print dialog opens with the chosen pages; printing to a PDF printer gives sharp lines.              |                       |                       |
+| K4  | Viewer route in a browser without a built-in PDF viewer (or with it turned off): note what happens; the raster route still works.   |                       |                       |

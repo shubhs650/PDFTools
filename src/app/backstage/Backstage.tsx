@@ -20,6 +20,7 @@ const DESCRIPTIONS: Record<string, MessageKey> = {
   'file.saveAs': msg('backstage.section.saveAs'),
   'file.saveOptimized': msg('backstage.section.saveOptimized'),
   'file.print': msg('backstage.section.print'),
+  'file.exportPrintReady': msg('backstage.section.exportPrintReady'),
   'file.properties': msg('backstage.section.properties'),
   'file.settings': msg('backstage.section.settings'),
   'file.about': msg('backstage.section.about'),

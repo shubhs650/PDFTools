@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { lazy, Suspense, useEffect, useState } from 'react';
 import { CloseDocumentDialog, OpenErrorDialog } from '../features/open/dialogs';
 import { DocumentArea } from '../features/open/DocumentArea';
 import { DropZone } from '../features/open/DropZone';
@@ -9,6 +9,10 @@ import { installRecovery } from '../features/recovery/recovery';
 import { registerFormCommands } from '../features/forms/commands';
 import { registerPrintCommands } from '../features/print/commands';
 import { PrintDialog } from '../features/print/PrintDialog';
+import { PrintReadyDialog } from '../features/print/PrintReadyDialog';
+import { HelpPage } from '../features/help/HelpPage';
+import { registerReportCommands } from '../features/report/commands';
+import { ReportDialog } from '../features/report/ReportDialog';
 import { ResetFormDialog } from '../features/forms/ResetFormDialog';
 import { registerProtectCommands } from '../features/protect/commands';
 import { PasswordDialog } from '../features/protect/PasswordDialog';
@@ -40,6 +44,11 @@ const focusDocument = (): void => {
   document.getElementById('document-panel')?.focus();
 };
 
+// e2e builds only (M1-Q3): a component that throws on request (M2-17 tests).
+// Statically null elsewhere, so the import is dropped from production builds.
+const CrashProbe =
+  import.meta.env.MODE === 'e2e' ? lazy(() => import('../testing/CrashProbe')) : null;
+
 export function App() {
   // Open, and at which section (Help → Clear All Local Data opens Settings, M1-26).
   const [backstage, setBackstage] = useState<{ section?: string } | null>(null);
@@ -58,6 +67,7 @@ export function App() {
   useEffect(() => registerProtectCommands(), []);
   useEffect(() => registerFormCommands(), []);
   useEffect(() => registerPrintCommands(), []);
+  useEffect(() => registerReportCommands(), []);
   useEffect(() => registerSelectionCommands(), []);
   useEffect(() => registerFindCommands(), []);
   useEffect(() => installRecovery(), []);
@@ -122,6 +132,7 @@ export function App() {
         <SecurityInfoDialog />
         <ResetFormDialog />
         <PrintDialog />
+        <PrintReadyDialog />
         <ExternalLinkDialog />
         <SaveErrorDialog />
         <SaveOptimizedDialog />
@@ -129,7 +140,15 @@ export function App() {
         <RecoveryDialog />
         <UpdateWaitDialog />
         <DropZone />
+        <HelpPage />
+        {CrashProbe ? (
+          <Suspense fallback={null}>
+            <CrashProbe />
+          </Suspense>
+        ) : null}
       </ErrorBoundary>
+      {/* Outside the boundary: its report offer must work while the app is down. */}
+      <ReportDialog />
     </UiProvider>
   );
 }

@@ -49,6 +49,8 @@ export function installTestHook(): TestHook {
         }
       },
       calls: () => [...calls],
+      /** Runs a command as the ribbon would (e2e: reach dialogs in any locale). */
+      run: (id: string) => d.runCommand(id),
     };
   });
   void Promise.all([

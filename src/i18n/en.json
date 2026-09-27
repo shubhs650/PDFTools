@@ -247,7 +247,8 @@
   "error": {
     "title": "Something went wrong",
     "body": "This part of PDFTools stopped working. Your open files are not changed. Reload it to continue.",
-    "reload": "Reload"
+    "reload": "Reload",
+    "report": "Send Error Report…"
   },
   "backstage": {
     "label": "File",
@@ -263,7 +264,8 @@
       "about": "About PDFTools: version and third-party notices.",
       "privacy": "PDFTools works offline. Your documents are never uploaded.",
       "properties": "Facts about the open document: its description, file and structure.",
-      "print": "Print the document with your printer's dialog: choose pages, size, markups and quality first."
+      "print": "Print the document with your printer's dialog: choose pages, size, markups and quality first.",
+      "exportPrintReady": "Save a copy with comments, markups and form fields burned into the pages, to print or share elsewhere."
     }
   },
   "shortcuts": {
@@ -735,6 +737,19 @@
       "denied": "The document's security settings allow standard quality only."
     },
     "orientation": "Orientation follows each page (portrait or landscape).",
+    "method": {
+      "legend": "Print with",
+      "raster": "This app (pages as images)",
+      "viewer": "The browser's PDF viewer (sharp lines, for large sheets)",
+      "rasterNote": "Pages are rendered as images at the quality chosen above.",
+      "viewerNote": "A print-ready copy opens in your browser's own print dialog, which sets the paper size and scale. Lines and text stay sharp at any size.",
+      "blocked": {
+        "noViewer": "This browser has no built-in PDF viewer, so pages print as images.",
+        "range": "The browser's PDF viewer prints whole pages only.",
+        "markups": "The browser's PDF viewer can't print markups only.",
+        "quality": "The document's security settings allow standard quality only, so the browser's PDF viewer isn't used."
+      }
+    },
     "error": {
       "empty": "Enter the pages to print.",
       "syntax": "Use page numbers and ranges, e.g. 1-3, 8.",
@@ -750,5 +765,82 @@
     "progressName": "Preparing pages for printing",
     "progress": "Preparing pages: {{done}} of {{total}} parts",
     "failed": "The pages could not be prepared for printing."
+  },
+  "printReady": {
+    "title": "Export Print-Ready PDF",
+    "description": "Save a print-ready copy of {{name}}.",
+    "details": "Comments, markups and filled-in form fields are burned into the pages as they print, and the fields can no longer be edited. The open document is not changed; the copy is saved as a new file.",
+    "signed": "This document is digitally signed. The copy carries no valid signature.",
+    "fileName": "{{base}} (print-ready).pdf",
+    "export": "Export…",
+    "close": "Close",
+    "cancel": "Cancel",
+    "progressName": "Preparing the print-ready copy",
+    "progress": "Preparing pages: {{done}} of {{total}}",
+    "failed": "The print-ready copy could not be made."
+  },
+  "report": {
+    "title": "Send Error Report",
+    "description": "Nothing is sent until you press Send. Below is exactly what will be sent; it never contains your documents, their names or their text.",
+    "descriptionLabel": "What were you doing? (optional)",
+    "descriptionHint": "Please don't paste text from your documents. Up to {{max}} characters.",
+    "payload": "The report, exactly as it will be sent",
+    "send": "Send",
+    "copy": "Copy report",
+    "cancel": "Cancel",
+    "close": "Close",
+    "copied": "The report was copied. You can paste it into an e-mail.",
+    "status": {
+      "sending": "Sending…",
+      "sent": "Thank you. The report was sent.",
+      "offline": "You're offline, so the report can't be sent now. Try again later, or copy it.",
+      "rateLimited": "Too many reports were sent from here recently. Try again in an hour, or copy it.",
+      "failed": "The report couldn't be sent. Try again later, or copy it."
+    }
+  },
+  "help": {
+    "title": "PDFTools Help",
+    "description": "A free PDF viewer and editor that works offline. Your documents never leave this device.",
+    "close": "Close",
+    "shortcuts": "Keyboard shortcuts",
+    "report": "Send Error Report…",
+    "section": {
+      "start": {
+        "title": "Opening files",
+        "body": "Press Ctrl+O, drop PDF files on the window, or open a recent file from File → Recent. Each file opens in its own tab. Password-protected files ask for their password."
+      },
+      "view": {
+        "title": "Viewing",
+        "body": "Zoom with Ctrl+plus and Ctrl+minus or Ctrl+mouse wheel; Ctrl+0 fits the page and Ctrl+2 the width. Hold Space or press H to pan. The View tab has page layouts and rotation."
+      },
+      "find": {
+        "title": "Finding text",
+        "body": "Ctrl+F opens Quick Find; press Enter to search and F3 for the next hit. Ctrl+Shift+F opens Advanced Search, which also looks in comments, bookmarks and other open documents."
+      },
+      "panes": {
+        "title": "Side panes",
+        "body": "The rail on the left opens Thumbnails, Bookmarks, Attachments, Layers, Signatures and Search. Esc returns to the rail."
+      },
+      "forms": {
+        "title": "Forms",
+        "body": "Click a form field or press Tab to move through the fields. Ctrl+S saves the values. Home → Reset Form restores the defaults."
+      },
+      "save": {
+        "title": "Saving",
+        "body": "Ctrl+S adds your changes to the end of the file, so earlier signatures stay valid. Save As writes a copy; Save Optimized rewrites the file compactly. Unsaved work is kept on this device in case the browser closes."
+      },
+      "print": {
+        "title": "Printing",
+        "body": "Ctrl+P opens the print dialog: choose pages, size, markups and quality. Large drawings print sharpest through the browser's PDF viewer. File → Export Print-Ready PDF saves a copy with markups and form values burned in."
+      },
+      "protect": {
+        "title": "Protected and signed files",
+        "body": "Protect → Security Info shows what a file allows. Signatures are checked on this device; the Signatures pane shows whether each signed part is unchanged."
+      },
+      "privacy": {
+        "title": "Privacy",
+        "body": "PDFTools makes no network requests with your documents. Error reports are sent only when you choose to, and you see every word of them first."
+      }
+    }
   }
 }

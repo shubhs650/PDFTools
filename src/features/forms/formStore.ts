@@ -6,6 +6,7 @@ import type { FormFieldValue, PdfWidgetAnnoObject } from '@embedpdf/models';
 import { createStore, useStore } from 'zustand';
 import { documentStore } from '../../app/store/documentStore';
 import type { FormFacts } from '../../model/formFacts';
+import { trackEdit } from '../save/pendingEdits';
 import { hostStore, renderEngine, workClient } from '../view/host';
 import { fieldKey, resetCalls } from './fields';
 
@@ -109,7 +110,8 @@ export async function fill(
   value: FormFieldValue,
 ): Promise<void> {
   try {
-    await setValue(docId, pageIndex, widget, value);
+    // Saves, prints and exports wait for it (a Ctrl+S from the field, M2-19).
+    await trackEdit(setValue(docId, pageIndex, widget, value));
   } finally {
     // Siblings (radio buttons, fields sharing the name) show the new value.
     forgetPage(docId, pageIndex);

@@ -10,12 +10,20 @@ import {
   PERCENT_MIN,
   isPercentValid,
   type Markups,
+  type Method,
   type Quality,
   type RangeKind,
   type ScaleMode,
 } from './options';
 import { targetsOf } from './printJob';
-import { cancelPrint, closePrint, setOptions, startPrint, usePrint } from './printStore';
+import {
+  cancelPrint,
+  closePrint,
+  setOptions,
+  startPrint,
+  usePrint,
+  viewerBlockFor,
+} from './printStore';
 
 const RANGES: [RangeKind, MessageKey][] = [
   ['all', msg('print.range.all')],
@@ -34,6 +42,16 @@ const MARKUPS: [Markups, MessageKey][] = [
   ['off', msg('print.markups.off')],
   ['only', msg('print.markups.only')],
 ];
+const METHODS: [Method, MessageKey][] = [
+  ['raster', msg('print.method.raster')],
+  ['viewer', msg('print.method.viewer')],
+];
+const VIEWER_BLOCKED: Record<string, MessageKey> = {
+  noViewer: msg('print.method.blocked.noViewer'),
+  range: msg('print.method.blocked.range'),
+  markups: msg('print.method.blocked.markups'),
+  quality: msg('print.method.blocked.quality'),
+};
 const QUALITIES: Quality[] = ['standard', 'high'];
 const QUALITY_LABEL: Record<Quality, MessageKey> = {
   standard: msg('print.quality.standard'),
@@ -44,6 +62,7 @@ const NAME = {
   scale: 'print-scale',
   markups: 'print-markups',
   quality: 'print-quality',
+  method: 'print-method',
 };
 const ERRORS: Record<string, MessageKey> = {
   empty: msg('print.error.empty'),
@@ -73,6 +92,9 @@ export function PrintDialog() {
   const rangeError = targets.ok ? null : t(ERRORS[targets.error] ?? msg('print.error.syntax'));
   const pages = targets.ok ? targets.targets.length : 0;
   const busy = running !== null;
+  const blocked = viewerBlockFor(docId, o);
+  const method: Method = blocked ? 'raster' : o.method;
+  const viewer = method === 'viewer';
 
   return (
     <Dialog
@@ -91,7 +113,7 @@ export function PrintDialog() {
             <Button
               label={t('print.print')}
               variant="primary"
-              disabled={!targets.ok || !percentOk}
+              disabled={!targets.ok || (!viewer && !percentOk)}
               onClick={() => {
                 void startPrint();
               }}
@@ -105,7 +127,7 @@ export function PrintDialog() {
         className="print-dialog-form"
         onSubmit={(e) => {
           e.preventDefault();
-          if (targets.ok && percentOk) void startPrint();
+          if (targets.ok && (viewer || percentOk)) void startPrint();
         }}
       >
         <fieldset>
@@ -153,7 +175,7 @@ export function PrintDialog() {
               value={k}
               current={o.scale}
               label={t(label)}
-              disabled={busy}
+              disabled={busy || viewer}
               onPick={(scale) => {
                 setOptions({ scale });
               }}
@@ -166,7 +188,7 @@ export function PrintDialog() {
               min={PERCENT_MIN}
               max={PERCENT_MAX}
               value={Number.isFinite(o.percent) ? String(o.percent) : ''}
-              disabled={busy}
+              disabled={busy || viewer}
               error={
                 percentOk
                   ? undefined
@@ -208,7 +230,7 @@ export function PrintDialog() {
               value={k}
               current={highAllowed ? o.quality : 'standard'}
               label={t(QUALITY_LABEL[k], { dpi: format.number(DPI[k], 0) })}
-              disabled={busy || (k === 'high' && !highAllowed)}
+              disabled={busy || viewer || (k === 'high' && !highAllowed)}
               onPick={(quality) => {
                 setOptions({ quality });
               }}
@@ -216,6 +238,28 @@ export function PrintDialog() {
           ))}
           {highAllowed ? null : <p className="print-note">{t('print.quality.denied')}</p>}
           <p className="print-note">{t('print.orientation')}</p>
+        </fieldset>
+
+        <fieldset>
+          <legend>{t('print.method.legend')}</legend>
+          {METHODS.map(([k, label]) => (
+            <Choice
+              key={k}
+              name={NAME.method}
+              value={k}
+              current={method}
+              label={t(label)}
+              disabled={busy || (k === 'viewer' && blocked !== null)}
+              onPick={(m) => {
+                setOptions({ method: m });
+              }}
+            />
+          ))}
+          <p className="print-note">
+            {blocked
+              ? t(VIEWER_BLOCKED[blocked] ?? msg('print.method.blocked.range'))
+              : t(viewer ? msg('print.method.viewerNote') : msg('print.method.rasterNote'))}
+          </p>
         </fieldset>
 
         {running ? (

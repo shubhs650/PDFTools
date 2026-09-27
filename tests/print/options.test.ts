@@ -9,6 +9,7 @@ import {
   parseRange,
   printedSize,
   rasterSize,
+  viewerBlock,
 } from '../../src/features/print/options';
 
 describe('parseRange', () => {
@@ -102,5 +103,20 @@ describe('printedSize', () => {
   it('orientation auto follows the page', () => {
     expect(isLandscape(a4)).toBe(false);
     expect(isLandscape({ width: 842, height: 595 })).toBe(true);
+  });
+});
+
+describe('viewerBlock (M2-16)', () => {
+  it('whole pages with or without markups, when high quality is allowed', () => {
+    expect(viewerBlock({ range: 'all', markups: 'on' }, true)).toBeNull();
+    expect(viewerBlock({ range: 'custom', markups: 'off' }, true)).toBeNull();
+    expect(viewerBlock({ range: 'current', markups: 'on' }, true)).toBeNull();
+    expect(viewerBlock({ range: 'view', markups: 'on' }, true)).toBe('range');
+    expect(viewerBlock({ range: 'area', markups: 'on' }, true)).toBe('range');
+    expect(viewerBlock({ range: 'all', markups: 'only' }, true)).toBe('markups');
+    expect(viewerBlock({ range: 'all', markups: 'on' }, false)).toBe('quality');
+    // No built-in PDF viewer (navigator.pdfViewerEnabled false): never offered.
+    expect(viewerBlock({ range: 'all', markups: 'on' }, true, false)).toBe('noViewer');
+    expect(viewerBlock({ range: 'all', markups: 'on' }, false, false)).toBe('quality');
   });
 });

@@ -46,6 +46,28 @@ test('dragging over text selects it; Ctrl+C copies it', async ({ page, context }
   await expect.poll(() => clipboard(context, page)).toBe('Page 1');
 });
 
+test('Home → Select Text selects text too; Esc returns to Select', async ({ page, context }) => {
+  await openDoc(page, 'simple.pdf', simplePdf(1));
+  await clipboard(context, page, 'before');
+  const tools = page.getByRole('toolbar', { name: 'Home commands' });
+  const selectText = tools.getByRole('button', { name: 'Select Text' });
+  await selectText.click();
+  await expect(selectText).toHaveAttribute('aria-pressed', 'true');
+  await expect(page.locator('.document-host')).toHaveAttribute('data-tool', 'selectText');
+  const from = await at(page, 66, 752);
+  const to = await at(page, 190, 752);
+  await page.mouse.move(from.x, from.y);
+  await page.mouse.down();
+  await page.mouse.move(to.x, to.y, { steps: 8 });
+  await page.mouse.up();
+  await view(page).focus();
+  await page.keyboard.press('Control+C');
+  await expect.poll(() => clipboard(context, page)).toBe('Page 1');
+  await page.keyboard.press('Escape');
+  await expect(selectText).toHaveAttribute('aria-pressed', 'false');
+  await expect(page.locator('.document-host')).toHaveAttribute('data-tool', 'select');
+});
+
 test('Ctrl+A selects the current page text; Esc clears it', async ({ page, context }) => {
   await openDoc(page, 'contract.pdf', contractPdf(3));
   await clipboard(context, page, 'before');

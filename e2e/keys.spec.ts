@@ -76,7 +76,9 @@ test('H and V act only when the document has focus', async ({ page }) => {
   expect(await calls(page)).toEqual(['home.hand', 'home.select']);
 });
 
-test('shortcuts do not fire while typing in a text field (Esc still does)', async ({ page }) => {
+test('shortcuts do not fire while typing in a text field (Esc and file chords like Ctrl+S still do)', async ({
+  page,
+}) => {
   await spy(page);
   await page.evaluate(() => {
     const input = document.createElement('input');
@@ -84,10 +86,11 @@ test('shortcuts do not fire while typing in a text field (Esc still does)', asyn
     document.body.append(input);
     input.focus();
   });
-  await page.keyboard.press('Control+s');
+  await page.keyboard.press('Control+a');
   await page.keyboard.type('hv');
+  await page.keyboard.press('Control+s'); // saves, as in a form field (M2-19)
   await page.keyboard.press('Escape');
-  expect(await calls(page)).toEqual(['tool.cancel']);
+  expect(await calls(page)).toEqual(['file.save', 'tool.cancel']);
 });
 
 test('the shortcut sheet opens from Help and lists every binding', async ({ page }) => {

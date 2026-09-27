@@ -6,6 +6,8 @@ export type RangeKind = 'all' | 'current' | 'view' | 'area' | 'custom';
 export type ScaleMode = 'fit' | 'actual' | 'custom';
 export type Markups = 'on' | 'off' | 'only';
 export type Quality = 'standard' | 'high';
+/** Raster pages in our print frame, or the print-ready copy in the browser's PDF viewer (M2-16). */
+export type Method = 'raster' | 'viewer';
 
 export interface PrintOptions {
   range: RangeKind;
@@ -16,6 +18,7 @@ export interface PrintOptions {
   percent: number;
   markups: Markups;
   quality: Quality;
+  method: Method;
 }
 
 export const DEFAULT_OPTIONS: PrintOptions = {
@@ -25,6 +28,7 @@ export const DEFAULT_OPTIONS: PrintOptions = {
   percent: 100,
   markups: 'on',
   quality: 'standard',
+  method: 'raster',
 };
 
 /** Raster resolution per quality (ADR-013 finding 5). */
@@ -135,3 +139,25 @@ export const isPercentValid = (p: number): boolean =>
 
 /** Orientation auto: a landscape page prints on landscape paper. */
 export const isLandscape = (r: Pick<Region, 'width' | 'height'>): boolean => r.width > r.height;
+
+export type ViewerBlock = 'noViewer' | 'range' | 'markups' | 'quality';
+
+/**
+ * Why the browser-viewer route can't print these options (null: it can). It
+ * prints whole pages of the flattened copy, with or without markups, at full
+ * (vector) quality: not a view or an area, not markups only, and not when
+ * the document allows only standard-quality printing (rule 9). Browsers
+ * without a built-in PDF viewer (`navigator.pdfViewerEnabled` false) can't.
+ */
+export function viewerBlock(
+  opts: Pick<PrintOptions, 'range' | 'markups'>,
+  highQualityAllowed: boolean,
+  viewerAvailable = true,
+): ViewerBlock | null {
+  // The document's own restriction first (rule 9): it holds in every browser.
+  if (!highQualityAllowed) return 'quality';
+  if (!viewerAvailable) return 'noViewer';
+  if (opts.range === 'view' || opts.range === 'area') return 'range';
+  if (opts.markups === 'only') return 'markups';
+  return null;
+}

@@ -35,6 +35,7 @@ import {
   type SaveEvent,
   type SavePhase,
 } from './saveMachine';
+import { editsSettled } from './pendingEdits';
 
 interface SaveStoreState {
   phases: Record<string, SavePhase>;
@@ -127,6 +128,8 @@ async function runJob(
   docId: string,
   job: (ctx: JobContext) => Promise<SaveEvent>,
 ): Promise<SavePhase> {
+  // A form value committed by the same key press (Ctrl+S in a field) goes first.
+  await editsSettled();
   if (isActive(phaseOf(docId))) return phaseOf(docId);
   const ac = new AbortController();
   controllers.set(docId, ac);

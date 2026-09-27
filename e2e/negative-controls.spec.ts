@@ -30,3 +30,25 @@ test('a request to another origin is reported', async ({ page, guard }) => {
   expect(Object.keys(await guard.problems(false))).toContain('third-party requests (rule 4)');
   await guard.acknowledge();
 });
+
+test('frames other than blob: stay blocked by frame-src (ADR-013 decision 7)', async ({
+  page,
+  guard,
+}) => {
+  await page.goto('/');
+  await page.evaluate(() => {
+    for (const src of ['data:text/html,<p>x</p>', 'https://example.com/']) {
+      const f = document.createElement('iframe');
+      f.src = src;
+      document.body.append(f);
+    }
+  });
+  // Each is reported by the policy and its Report-Only copy; data: has no blockedURI.
+  await expect
+    .poll(async () => {
+      const v = await guard.documentCspViolations();
+      return [...new Set(v.map((x) => `${x.directive} ${x.blockedURI || '(data)'}`))].sort();
+    })
+    .toEqual(['frame-src (data)', 'frame-src https://example.com']);
+  await guard.acknowledge();
+});

@@ -95,10 +95,20 @@ describe('keymap (D-29, §8.1, M1-Q1)', () => {
 
 describe('resolveBinding: scopes and text fields', () => {
   const focus = { editable: false, inDocument: false };
-  it('ignores shortcuts while typing, except Esc', () => {
-    expect(
-      resolveBinding(ev('s', { ctrlKey: true }), { ...focus, editable: true }, false),
-    ).toBeUndefined();
+  it('ignores shortcuts while typing, except Esc and the inText file/find chords', () => {
+    const typing = { ...focus, editable: true };
+    for (const [key, mods] of [
+      ['a', { ctrlKey: true }],
+      ['c', { ctrlKey: true }],
+      ['0', { ctrlKey: true }],
+      ['h', {}],
+      ['F3', {}],
+    ] as const)
+      expect(resolveBinding(ev(key, mods), typing, false)).toBeUndefined();
+    // Ctrl+S in a form field saves (M2-19); Ctrl+O, Ctrl+P, Ctrl+F likewise.
+    expect(resolveBinding(ev('s', { ctrlKey: true }), typing, false)?.target).toBe('file.save');
+    expect(resolveBinding(ev('p', { ctrlKey: true }), typing, false)?.target).toBe('file.print');
+    expect(resolveBinding(ev('f', { ctrlKey: true }), typing, false)?.target).toBe('home.find');
     expect(resolveBinding(ev('Escape'), { ...focus, editable: true }, false)?.target).toBe(
       'tool.cancel',
     );

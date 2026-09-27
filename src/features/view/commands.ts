@@ -100,6 +100,13 @@ export function registerViewCommands(): () => void {
       },
       isPressed: () => appStore.getState().tool === 'select',
     }),
+    // Select Text (M2): drag selects text, the same selection and copy as Select.
+    registerCommand('home.selectText', {
+      run: () => {
+        appStore.getState().setTool('selectText');
+      },
+      isPressed: () => appStore.getState().tool === 'selectText',
+    }),
     // Esc (§8.1): back to Select. Only claims Esc when a document is open.
     registerCommand('tool.cancel', {
       requiresDocument: true,
