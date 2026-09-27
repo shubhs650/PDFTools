@@ -24,6 +24,8 @@ export async function sendReport(
     if (res.status === 429) return 'rateLimited';
     return res.ok ? 'sent' : 'failed';
   } catch {
-    return online() ? 'failed' : 'offline';
+    // The request never reached the server (no network, or it is unreachable):
+    // reported as offline whatever navigator.onLine says (browsers disagree).
+    return 'offline';
   }
 }

@@ -237,6 +237,7 @@ describe('sendReport', () => {
     expect(await sendReport('{}', status(429) as typeof fetch, () => true)).toBe('rateLimited');
     expect(await sendReport('{}', status(500) as typeof fetch, () => true)).toBe('failed');
     const reject = () => Promise.reject(new TypeError('network'));
-    expect(await sendReport('{}', reject as typeof fetch, () => true)).toBe('failed');
+    // A request that never reaches the server is offline, whatever navigator.onLine says.
+    expect(await sendReport('{}', reject as typeof fetch, () => true)).toBe('offline');
   });
 });
