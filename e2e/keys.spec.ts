@@ -100,12 +100,16 @@ test('the shortcut sheet opens from Help and lists every binding', async ({ page
   const dialog = page.getByRole('dialog', { name: 'Keyboard shortcuts' });
   await expect(dialog).toBeVisible();
   const rows = dialog.getByTestId('shortcut-sheet').locator('tbody tr');
-  await expect(rows).toHaveCount(24);
+  await expect(rows).toHaveCount(37); // + undo, redo and 11 annotation keys (M3-05)
   await expect(dialog.getByRole('row', { name: /^Print/ })).toContainText('Ctrl+P'); // M2-15
   await expect(dialog.getByRole('row', { name: /Find Next/ })).toContainText('F3');
   await expect(dialog.getByRole('row', { name: /Copy Selected Text/ })).toContainText('Ctrl+C');
   await expect(dialog.getByRole('rowheader', { name: 'Close Tab' })).toBeVisible();
   await expect(dialog.getByRole('row', { name: /Close Tab/ })).toContainText('Ctrl+Alt+W');
+  await expect(dialog.getByRole('row', { name: /^Undo/ })).toContainText('Ctrl+Z');
+  await expect(dialog.getByRole('row', { name: /Delete Selected Comments/ })).toContainText(
+    'Delete',
+  );
   await expect(dialog.getByRole('button', { name: 'Print' })).toBeVisible();
 });
 

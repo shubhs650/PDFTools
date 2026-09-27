@@ -3,6 +3,7 @@
 // expose (ADR-001 B14).
 import type { FontFallbackConfig } from '@embedpdf/engines/pdfium';
 import type { PdfJson } from '../model/pdf/wire';
+import type { AnnotTileRequest } from '../workers/render/annotTiles';
 import type { DocDigest } from '../workers/render/save/digest';
 import type { MethodSpec } from './protocol';
 
@@ -83,6 +84,18 @@ export interface RenderApi {
       remove?: string[];
     },
     { staged: number }
+  >;
+  /**
+   * An annotation tile (M3-05, ADR-014 decision 3): RGBA pixels (straight
+   * alpha) of the markups meeting a tile, or null when none does. `frame` is
+   * the page's height and crop-box origin (EmbedPDF's page object).
+   */
+  annotationTile: MethodSpec<
+    {
+      docId: string;
+      frame: { height: number; originX: number; originY: number };
+    } & AnnotTileRequest,
+    { data: Uint8ClampedArray<ArrayBuffer>; drawn: number } | null
   >;
   /** What a render of this page costs (M1-17 cost model): objects and path segments. */
   pageCost: MethodSpec<{ docId: string; pageIndex: number }, { objects: number; segments: number }>;

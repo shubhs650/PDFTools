@@ -9,6 +9,22 @@ M0–M2 are merged into `main` (M2 complete on the agent side, owner pack in
 
 ## Done
 
+- **Session 16 — M3-05 annotation layer core (ADR-014).** `@embedpdf/plugin-annotation` and
+  `plugin-history` 2.15.1. Annotations load through the Work worker (new Work RPC `annotations`;
+  `RoutedPdfEngine` overrides `getAllAnnotations` and returns no stock appearance bitmaps), with
+  stable `obj-<n>` ids for `/NM`-less markups that the Render worker names before an edit
+  (`src/workers/render/annotIds.ts`). Markups are drawn by our annotation tiles
+  (`src/features/annotate/AnnotationTileLayer.tsx`, Render RPC `annotationTile`,
+  `src/workers/render/annotTiles.ts`); the plugin layer draws only hit areas, handles and the
+  selected body. Commands: Select Comments (shipped), Undo/Redo (Quick Access, Ctrl+Z/Y/Shift+Z),
+  Delete, arrow nudge, Tab/Shift+Tab, Esc; all need the annotate permission (rule 9); a live region
+  names the selection. Found and fixed: the plugin's transparent link bodies sat over our link
+  layer. Unit: `tests/annotate/*` (keyboard order, stable ids, annotation tiles equal PDFium's own
+  render within 4/255 on plain, rotated and crop-offset pages, Work/Render id agreement); e2e:
+  `e2e/annotations.spec.ts` (tiles, stable id, click-select, nudge, undo/redo, delete, Tab, save
+  with `/NM` persisted, annotate-denied file); perf gate in `annotation-load` (tile p95 +13 % while
+  loading 10,000 markups; was 7×). Unit 740, e2e 171, green; bundle core 7.07 MB.
+
 - **Session 16 — M3-04 Standard security handler.** `src/model/pdf/security/` (own MD5, RC4,
   AES-CBC; WebCrypto SHA-2 for R5/R6): file keys for R2–R6 from the user or owner password, RC4 /
   AESV2 / AESV3 / Identity crypt filters. `PdfReader.open(bytes, inflate, { password })`

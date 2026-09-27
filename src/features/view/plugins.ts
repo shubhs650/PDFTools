@@ -3,6 +3,8 @@
 // manager's openDocumentBuffer from our open pipeline, never its file dialog,
 // and never with per-document `permissions` overrides (rule 9).
 import { createPluginRegistration } from '@embedpdf/core';
+import { AnnotationPluginPackage } from '@embedpdf/plugin-annotation/react';
+import { HistoryPluginPackage } from '@embedpdf/plugin-history';
 import { DocumentManagerPluginPackage } from '@embedpdf/plugin-document-manager';
 import { InteractionManagerPluginPackage } from '@embedpdf/plugin-interaction-manager/react';
 import { RenderPluginPackage } from '@embedpdf/plugin-render';
@@ -57,4 +59,15 @@ export const PLUGINS = [
   // clipboard writer.
   createPluginRegistration(InteractionManagerPluginPackage, {}),
   createPluginRegistration(SelectionPluginPackage, { maxCachedGeometries: SELECTION_PAGES }),
+  // Annotations (M3-05, ADR-014): the plugin's store, tools, selection and
+  // handles, with per-document undo from plugin-history. Its annotations load
+  // from the Work worker and are drawn by our annotation tiles (RoutedPdfEngine,
+  // AnnotationTileLayer). URI links never open by themselves: the link layer
+  // asks first (M2-10, rule 4).
+  createPluginRegistration(HistoryPluginPackage, {}),
+  createPluginRegistration(AnnotationPluginPackage, {
+    autoCommit: true,
+    autoOpenLinks: false,
+    selectAfterCreate: true,
+  }),
 ];

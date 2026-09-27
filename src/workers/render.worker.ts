@@ -12,6 +12,8 @@ import { fromJson } from '../model/pdf/wire';
 import { serve } from './rpc-host';
 import { acquirePage, docPtrOf, rawCall, wasmMemory } from './render/pdfium';
 import { renderProgressive } from './render/progressive';
+import { AnnotBoxCache, annotBoxes, renderAnnotTile } from './render/annotTiles';
+import { nameTargets } from './render/annotIds';
 import { SaveTracker, isMutation } from './render/save/tracker';
 
 const FPDF_PAGEOBJ_PATH = 2;
@@ -23,6 +25,7 @@ const FORM_VALUE_METHODS = new Set(['setFormFieldValue', 'setFormFieldState']);
 let mod: WrappedPdfiumModule | undefined;
 let native: PdfiumNative | undefined;
 let tracker: SaveTracker | undefined;
+const annotBoxCache = new AnnotBoxCache();
 
 function ready(): { mod: WrappedPdfiumModule; native: PdfiumNative; tracker: SaveTracker } {
   if (!mod || !native || !tracker)
@@ -94,6 +97,8 @@ serve<RenderApi>(self, {
     )[method];
     if (typeof fn !== 'function')
       throw new RpcError('unknown-method', `Unknown executor method ${method}`);
+    // Stable ids (ADR-014 d2): name the targeted annotation before EmbedPDF looks it up.
+    if (typeof docId === 'string') nameTargets(m, n, method, args);
     const task = fn.apply(n, args);
     task.onProgress((p) => {
       ctx.progress(p);
@@ -122,6 +127,9 @@ serve<RenderApi>(self, {
     } else if (isMutation(method)) {
       t.recordMutation(method, args);
     }
+    // Any change (or close) can move, add or remove markups: annotation tiles re-read boxes.
+    if (typeof docId === 'string' && (isMutation(method) || method === 'closeDocument'))
+      annotBoxCache.drop(docId);
     return new Transfer(value, transferables(value, wasmMemory(m)?.buffer));
   },
 
@@ -213,6 +221,20 @@ serve<RenderApi>(self, {
       m.pdfium.wasmExports.free(buf);
       rawCall(m, 'FPDF_ClosePage', page);
     }
+  },
+
+  annotationTile: ({ docId, frame, ...req }) => {
+    const { mod: m, native: n } = ready();
+    const boxes = annotBoxCache.get(docId, req.pageIndex, () => {
+      const ref = acquirePage(n, docId, req.pageIndex);
+      try {
+        return annotBoxes(m, ref.pagePtr, frame);
+      } finally {
+        ref.release();
+      }
+    });
+    const tile = renderAnnotTile(m, n, docId, boxes, req);
+    return tile ? new Transfer(tile, [tile.data.buffer]) : null;
   },
 
   pageCost: ({ docId, pageIndex }) => {

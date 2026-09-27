@@ -8,7 +8,7 @@ import { createStore, useStore } from 'zustand';
 import { PdfErrorCode } from '@embedpdf/models';
 import { documentStore, securityOf } from '../../app/store/documentStore';
 import { createRenderEngine, type RenderEngine } from '../../engine/createEngine';
-import { RpcError } from '../../engine/errors';
+import { RpcError, isAbortError } from '../../engine/errors';
 import type { TextSource } from '../../engine/hostedEngine';
 import { PDFIUM_ERROR_PREFIX } from '../../engine/renderApi';
 import { allows } from '../../model/permissions';
@@ -57,7 +57,40 @@ const textSource: TextSource = {
     const w = startedWorkClient();
     return w?.has(doc.id) ? w.run('textSlices', { docId: doc.id, slices }) : null;
   },
+  // plugin-annotation's load of every annotation (ADR-014 decision 2). The
+  // plugin asks as the tab opens, a moment before the open pipeline adds the
+  // Work copy, so this waits for it; without one, the Render worker lists them.
+  allAnnotations: (doc, fallback) => {
+    const w = workClient();
+    const state: { inner: { cancel(): void } | null; cancelled: boolean } = {
+      inner: null,
+      cancelled: false,
+    };
+    const promise = (async () => {
+      if (await w.whenAdded(doc.id, WORK_COPY_WAIT_MS)) {
+        const job = w.run('annotations', { docId: doc.id });
+        state.inner = job;
+        if (state.cancelled) job.cancel();
+        try {
+          return await job.promise;
+        } catch (err) {
+          if (state.cancelled || isAbortError(err)) throw err;
+        }
+      }
+      return fallback();
+    })();
+    return {
+      promise,
+      cancel: () => {
+        state.cancelled = true;
+        state.inner?.cancel();
+      },
+    };
+  },
 };
+
+/** How long the annotation load waits for the Work copy before using the Render worker. */
+const WORK_COPY_WAIT_MS = 10_000;
 
 export function renderEngine(): RenderEngine {
   const existing = hostStore.getState().render;

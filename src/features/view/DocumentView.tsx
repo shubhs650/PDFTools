@@ -17,6 +17,11 @@ import { HighlightLayer } from '../search/HighlightLayer';
 import { reportActivity } from '../search/indexing';
 import { fitVisibleLevels, move, zoomTo } from './controller';
 import { FormLayer } from '../forms/FormLayer';
+import { LockModeType } from '@embedpdf/plugin-annotation';
+import { AnnotationLayer } from '../annotate/AnnotationLayer';
+import { AnnotationTileLayer } from '../annotate/AnnotationTileLayer';
+import { SelectionAnnouncer } from '../annotate/SelectionAnnouncer';
+import { annotationCapability } from '../annotate/selection';
 import { LinkLayer } from './LinkLayer';
 import { capability, useHost } from './host';
 import { HAND_MODE, PAGE_GAP, POINTER_MODE } from './plugins';
@@ -92,6 +97,12 @@ function Page({
                 // tiles have no alt, so the whole layer is hidden from assistive tech.
                 aria-hidden
               />
+              {/* Markups (M3-05, ADR-014): our annotation tiles over the content tiles. */}
+              <AnnotationTileLayer
+                documentId={documentId}
+                pageIndex={layout.pageIndex}
+                scale={scale}
+              />
               <HighlightLayer documentId={documentId} pageIndex={layout.pageIndex} scale={scale} />
               {/* Text selection (M2-04): geometry loads for pages laid out here only. */}
               <TextSelection
@@ -99,6 +110,8 @@ function Page({
                 pageIndex={layout.pageIndex}
                 background={SELECTION_COLOR}
               />
+              {/* Annotation hit areas, selection and handles (M3-05) above the text layer. */}
+              <AnnotationLayer documentId={documentId} pageIndex={layout.pageIndex} scale={scale} />
               {/* Links (M2-10) sit above the text layer, so a click follows them. */}
               <LinkLayer documentId={documentId} pageIndex={layout.pageIndex} scale={scale} />
               {/* Form fields (M2-14) on top: a field under a link is still filled. */}
@@ -212,6 +225,18 @@ export function DocumentView({ documentId }: { documentId: string }) {
     if (!dm.isDocumentOpen(documentId)) return;
     const im = capability<InteractionManagerCapability>(registry, 'interaction-manager');
     im.forDocument(documentId).activate(tool === 'hand' ? HAND_MODE : POINTER_MODE);
+    // Select Text and Hand never pick up annotations (M3-05); Select and Select Objects do.
+    try {
+      annotationCapability()
+        ?.forDocument(documentId)
+        .setLocked(
+          tool === 'select' || tool === 'selectObjects'
+            ? { type: LockModeType.None }
+            : { type: LockModeType.All },
+        );
+    } catch {
+      // The plugin's document state comes with the document's load.
+    }
   }, [registry, documentId, tool]);
 
   // Ctrl+wheel (and trackpad pinch) zooms at the pointer instead of the browser page.
@@ -341,6 +366,7 @@ export function DocumentView({ documentId }: { documentId: string }) {
       data-panning={panning || undefined}
       data-mode={mode}
     >
+      <SelectionAnnouncer documentId={documentId} />
       <Viewport
         documentId={documentId}
         className="viewport ui-focusable"

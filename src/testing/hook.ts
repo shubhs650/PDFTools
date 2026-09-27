@@ -35,6 +35,9 @@ export function installTestHook(): TestHook {
   void import('./saveProbe').then((m) => {
     m.registerSaveProbe(hook);
   });
+  void import('./annotateProbe').then((m) => {
+    m.registerAnnotateProbe(hook);
+  });
   void import('../app/commands/dispatch').then((d) => {
     const calls: string[] = [];
     hook.capabilities['commands'] = {

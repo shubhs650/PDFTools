@@ -40,6 +40,7 @@ function executorWith(
     snapshotTail: () => ({ tail: new ArrayBuffer(0), baseLength: 0 }),
     saveState: () => ({ dirty: [], untracked: false, baseLength: 0, staged: 0 }),
     stageObjects: () => ({ staged: 0 }),
+    annotationTile: () => null,
     renderProgressive: () => {
       throw new Error('not used');
     },

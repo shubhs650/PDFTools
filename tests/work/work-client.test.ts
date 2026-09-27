@@ -94,6 +94,7 @@ function fakeSpawn(world: FakeWorld) {
       close: () => ({ wasmBytes: world.memory }),
       memory: () => ({ wasmBytes: world.memory, peakWasmBytes: world.memory }),
       docState: () => ({ pageCount: 3, appliedTailBytes: 0 }),
+      annotations: () => ({}),
       textStats: async (_a, ctx) => {
         await new Promise((r) => setTimeout(r, 5));
         ctx.throwIfAborted();

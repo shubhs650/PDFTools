@@ -105,6 +105,7 @@ export const COMMANDS: readonly CommandDef[] = [
     size: 'small',
     fluent: 'ArrowUndo',
     milestone: 'M3',
+    shipped: true, // M3-05
   },
   {
     id: 'qat.redo',
@@ -113,6 +114,7 @@ export const COMMANDS: readonly CommandDef[] = [
     size: 'small',
     fluent: 'ArrowRedo',
     milestone: 'M3',
+    shipped: true, // M3-05
   },
   {
     id: 'file.open',
@@ -241,6 +243,7 @@ export const COMMANDS: readonly CommandDef[] = [
     size: 'large',
     fluent: 'Cursor',
     milestone: 'M3',
+    shipped: true, // M3-05
     toggle: true,
   },
   {

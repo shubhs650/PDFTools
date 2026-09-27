@@ -284,7 +284,12 @@
       "editCopy": "Copy Selected Text",
       "editSelectAll": "Select Page Text",
       "findNext": "Find Next",
-      "findPrev": "Find Previous"
+      "findPrev": "Find Previous",
+      "annotationDelete": "Delete Selected Comments",
+      "annotationNext": "Next Comment on the Page",
+      "annotationPrev": "Previous Comment on the Page",
+      "annotationNudge": "Move Selected Comments (1 pt)",
+      "annotationNudgeFar": "Move Selected Comments (10 pt)"
     },
     "key": {
       "ctrl": "Ctrl",
@@ -296,7 +301,11 @@
       "pageDown": "Page Down",
       "escape": "Esc",
       "arrowLeft": "Left Arrow",
-      "arrowRight": "Right Arrow"
+      "arrowRight": "Right Arrow",
+      "arrowUp": "Up Arrow",
+      "arrowDown": "Down Arrow",
+      "delete": "Delete",
+      "tab": "Tab"
     }
   },
   "open": {
@@ -841,6 +850,31 @@
         "title": "Privacy",
         "body": "PDFTools makes no network requests with your documents. Error reports are sent only when you choose to, and you see every word of them first."
       }
+    }
+  },
+  "annotate": {
+    "noneSelected": "Select a comment first",
+    "nothingToUndo": "Nothing to undo",
+    "nothingToRedo": "Nothing to redo",
+    "selectedOne": "{{type}} by {{author}} on page {{page}}, selected",
+    "selectedMany": "{{count}} comments selected",
+    "noAuthor": "an unknown author",
+    "type": {
+      "note": "Note",
+      "freeText": "Text box",
+      "line": "Line",
+      "rectangle": "Rectangle",
+      "oval": "Oval",
+      "polygon": "Polygon",
+      "polyline": "Polyline",
+      "highlight": "Highlight",
+      "underline": "Underline",
+      "squiggly": "Squiggly underline",
+      "strikeout": "Strikeout",
+      "stamp": "Stamp",
+      "caret": "Inserted text",
+      "ink": "Pencil drawing",
+      "other": "Comment"
     }
   }
 }

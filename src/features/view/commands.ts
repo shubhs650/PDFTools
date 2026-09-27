@@ -1,4 +1,5 @@
 // View commands (§5, §8.1, M1-15): zoom, page navigation, Hand and Select.
+import { deselectAnnotations } from '../annotate/commands';
 import { registerCommand } from '../../app/commands/dispatch';
 import { clearSelection } from '../select/commands';
 import { appStore } from '../../app/store/appStore';
@@ -96,6 +97,7 @@ export function registerViewCommands(): () => void {
     registerCommand('home.select', {
       run: () => {
         clearSelection();
+        deselectAnnotations();
         appStore.getState().setTool('select');
       },
       isPressed: () => appStore.getState().tool === 'select',
@@ -112,6 +114,7 @@ export function registerViewCommands(): () => void {
       requiresDocument: true,
       run: () => {
         clearSelection();
+        deselectAnnotations();
         appStore.getState().setTool('select');
       },
     }),

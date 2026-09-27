@@ -4,10 +4,11 @@
 import { createStore, useStore } from 'zustand';
 
 /**
- * Pointer tools: Select (V) selects text since M2-04 (M1-Q5) until M3 gives it
- * objects; Select Text only ever selects text; Hand (H) pans.
+ * Pointer tools: Select (V) selects text and annotations (M3-05); Select Text
+ * only ever selects text; Select Objects selects annotations (text selection
+ * still works on the page between them); Hand (H) pans.
  */
-export type Tool = 'select' | 'selectText' | 'hand';
+export type Tool = 'select' | 'selectText' | 'selectObjects' | 'hand';
 
 export const PANE_WIDTH_MIN = 160;
 export const PANE_WIDTH_MAX = 480;

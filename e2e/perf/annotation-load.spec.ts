@@ -9,8 +9,13 @@ import { expect, test } from '../support/fixtures.ts';
 // worker's one-call-at-a-time queue. What does that cost the visible tiles while
 // scrolling the 2,000-page stand-in with 10,000 markups (5 per page), and the
 // main thread when 10,000 annotation objects arrive? Numbers go to
-// test-results/m3-annotation-load.json (informative, ADR-002); the gate is the
-// perf guard (no main-thread task > 100 ms, rule 1).
+// test-results/m3-annotation-load.json (informative, ADR-002).
+//
+// Since M3-05 (ADR-014 decision 2) RoutedPdfEngine answers the load from the
+// Work worker, so it no longer holds the Render queue: tile p95 while loading
+// must stay within +25 % of the slower baseline run (+10 ms for noise). The
+// plugin's own load of the same 10,000 markups (store update included) happens
+// right after open, inside the measured window of the perf guard (rule 1).
 
 const view = (page: Page, method: string, ...args: unknown[]) => cap(page, 'view', method, ...args);
 
@@ -29,7 +34,7 @@ async function scrollWith(page: Page, from: number, withLoad: boolean) {
   return { scroll: s, tiles: ((await view(page, 'stats')) as TileStats).tiles, load: l };
 }
 
-test('loading every annotation through the Render queue vs visible tiles', async ({
+test('loading every annotation (Work worker since M3-05) vs visible tiles', async ({
   page,
   pdfs,
   guard,
@@ -40,6 +45,7 @@ test('loading every annotation through the Render queue vs visible tiles', async
   await drop(page, [{ name: 'marked.pdf', b64: pdfs.markedContract(2000, 5).toString('base64') }]);
   await page.locator('[data-page="0"] img.page-preview').waitFor();
   await view(page, 'settle');
+  // The plugin's Work-worker load (~2 s here) is still running: inside the window.
   await guard.startMeasuring();
 
   const contract = {
@@ -52,4 +58,7 @@ test('loading every annotation through the Render queue vs visible tiles', async
   writeFileSync('test-results/m3-annotation-load.json', JSON.stringify(result, null, 2));
   test.info().annotations.push({ type: 'm3-annotation-load', description: JSON.stringify(result) });
   expect((contract.baseline.scroll as { blankFrames: number }).blankFrames).toBe(0);
+  const p95 = (run: { tiles: TileStats['tiles'] }) => run.tiles.p95;
+  const base = Math.max(p95(contract.baseline), p95(contract.baselineAgain));
+  expect(p95(contract.allAnnotations)).toBeLessThan(base * 1.25 + 10);
 });

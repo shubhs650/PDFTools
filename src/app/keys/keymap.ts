@@ -73,6 +73,32 @@ export const KEYMAP: readonly Binding[] = [
   b('edit.copy', ['Ctrl+C'], 'document'),
   b('edit.selectAll', ['Ctrl+A'], 'document'),
   { ...b('tool.cancel', ['Escape']), preventWhenDisabled: false },
+  // Annotations (M3-05, §7.1): undo/redo per document; in the document, the
+  // selected annotations are deleted, nudged (1 pt, Shift: 10 pt) and Tab walks
+  // a page's annotations. Without a selection the keys keep their usual job
+  // (scrolling, focus), so they are never swallowed then.
+  b('qat.undo', ['Ctrl+Z']),
+  b('qat.redo', ['Ctrl+Y', 'Ctrl+Shift+Z']),
+  { ...b('annotation.delete', ['Delete'], 'document'), preventWhenDisabled: false },
+  { ...b('annotation.next', ['Tab'], 'document'), preventWhenDisabled: false },
+  { ...b('annotation.prev', ['Shift+Tab'], 'document'), preventWhenDisabled: false },
+  { ...b('annotation.nudgeLeft', ['ArrowLeft'], 'document'), preventWhenDisabled: false },
+  { ...b('annotation.nudgeRight', ['ArrowRight'], 'document'), preventWhenDisabled: false },
+  { ...b('annotation.nudgeUp', ['ArrowUp'], 'document'), preventWhenDisabled: false },
+  { ...b('annotation.nudgeDown', ['ArrowDown'], 'document'), preventWhenDisabled: false },
+  {
+    ...b('annotation.nudgeLeftFar', ['Shift+ArrowLeft'], 'document'),
+    preventWhenDisabled: false,
+  },
+  {
+    ...b('annotation.nudgeRightFar', ['Shift+ArrowRight'], 'document'),
+    preventWhenDisabled: false,
+  },
+  { ...b('annotation.nudgeUpFar', ['Shift+ArrowUp'], 'document'), preventWhenDisabled: false },
+  {
+    ...b('annotation.nudgeDownFar', ['Shift+ArrowDown'], 'document'),
+    preventWhenDisabled: false,
+  },
   // Browser-reserved first, alternates after (M1-Q1).
   b('tab.close', ['Ctrl+F4', 'Ctrl+Alt+W', 'Ctrl+Alt+F4'], 'global', true),
   b('tab.next', ['Ctrl+PageDown', 'Ctrl+Alt+PageDown'], 'global', true),
