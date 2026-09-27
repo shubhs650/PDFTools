@@ -80,7 +80,7 @@ function fakeSpawn(world: FakeWorld) {
       docProperties: () => {
         throw new Error('unused');
       },
-      readAttachment: () => ({ bytes: new ArrayBuffer(0) }),
+      readAttachment: () => ({ blob: new Blob([]) }),
       indexText: () => ({ pages: 3, extracted: 3, pausedMs: 0, ms: 1 }),
       activity: () => {
         world.jobsSeen.push('activity');

@@ -243,7 +243,8 @@ serve<WorkApi>(self, {
       const { doc } = await docs.get(docId);
       try {
         const bytes = await readAttachment(mod, need(), doc, ref);
-        return new Transfer({ bytes }, [bytes]);
+        // The Blob copy of a large file happens here, off the main thread.
+        return { blob: new Blob([bytes], { type: 'application/octet-stream' }) };
       } finally {
         wasmBytes(); // a large read grows the heap (ADR-004 respawn policy)
       }

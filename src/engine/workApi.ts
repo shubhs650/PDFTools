@@ -139,8 +139,11 @@ export interface WorkApi {
     { bytes: ArrayBuffer },
     { done: number; total: number }
   >;
-  /** An attachment's bytes, transferred (never parsed or run here). */
-  readAttachment: MethodSpec<{ docId: string; ref: AttachmentRef }, { bytes: ArrayBuffer }>;
+  /**
+   * An attachment's content as a Blob made here (never parsed or run): the
+   * main thread gets a handle, never a copy of a large file (rule 1).
+   */
+  readAttachment: MethodSpec<{ docId: string; ref: AttachmentRef }, { blob: Blob }>;
   /** Highlight rectangles for hits on one page, in the viewer's page space. */
   hitRects: MethodSpec<
     { docId: string; pageIndex: number; hits: { start: number; length: number }[] },

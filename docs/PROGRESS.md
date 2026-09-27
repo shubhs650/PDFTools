@@ -9,6 +9,13 @@ M0–M2 are merged into `main` (M2 complete on the agent side, owner pack in
 
 ## Done
 
+- **Session 16 — perf gate fix before merging M3.** CI's perf gate tripped on 3 of 6 branch
+  runs. A HEAD-vs-main comparison (longest main-thread task per scenario, two full perf runs
+  each) singled out Save attachment: the main thread built a 20 MB `Blob` from the transferred
+  bytes (22–27 ms on main, but 180 ms+ in 2 of 6 HEAD runs). The Work worker now returns the
+  Blob itself (`readAttachment` → `{ blob }`), so the main thread only gets a handle: 0 tasks
+  over 50 ms in 8 of 8 runs. Other scenarios matched main within noise.
+
 - **Session 16 — M3-08 text markup tools.** Highlight, Underline, Strikeout, Squiggly, Insert
   Text and Replace Text on the Comment tab (Highlight also on Home), keys G/U/K/Q/I/R. Select
   text first (drag, or Ctrl+A from the keyboard) and run the tool, or turn the tool on and drag
