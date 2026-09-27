@@ -1,6 +1,6 @@
 import { mkdirSync, writeFileSync } from 'node:fs';
 import type { Page } from '@playwright/test';
-import { cap, dropStaged, stage } from '../support/app.ts';
+import { cap, dropStaged, firstPreviewAt, stage, watchFirstPreview } from '../support/app.ts';
 import { expect, test } from '../support/fixtures.ts';
 
 // §12 / M1-14: scroll the 2,000-page stand-in at 900 px/s (the S5/S9 method)
@@ -18,10 +18,10 @@ test('2,000-page stand-in: first preview, then 900 px/s with no blank page frame
   await page.goto('/');
   await stage(page, [{ name: 'contract.pdf', b64: pdfs.contract(2000).toString('base64') }]);
   await guard.startMeasuring();
+  await watchFirstPreview(page);
   const t0 = await page.evaluate(() => performance.now());
   await dropStaged(page);
-  await page.locator('[data-page="0"] img.page-preview').waitFor();
-  const firstPreviewMs = Math.round((await page.evaluate(() => performance.now())) - t0);
+  const firstPreviewMs = Math.round((await firstPreviewAt(page)) - t0);
   await view(page, 'settle');
   await view(page, 'reset');
 
