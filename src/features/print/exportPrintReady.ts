@@ -14,6 +14,7 @@ import {
   writeToHandle,
 } from '../../storage/fileAccess';
 import type { FlattenOptions } from '../../workers/work/flatten';
+import { editsSettled } from '../save/pendingEdits';
 import { renderEngine, workClient } from '../view/host';
 
 /**
@@ -26,6 +27,7 @@ export async function buildPrintReady(
   signal: AbortSignal,
   onProgress: (p: { done: number; total: number }) => void,
 ): Promise<Uint8Array<ArrayBuffer>> {
+  await editsSettled();
   // Unsaved edits: the Render worker's narrow tail, appended to the copy.
   const { tail } = await renderEngine().rpc.call('snapshotTail', { docId }).promise;
   signal.throwIfAborted();

@@ -1,6 +1,7 @@
-// M1 acceptance table (M1-28, §12, D-27, ADR-002): reads Playwright JSON
-// reports (the perf project, plus the @offline run for the offline proof)
-// and checks the M1-relevant §12 targets on typical, self-made files.
+// M1 + M2 acceptance table (M1-28, M2-19, §12, D-27, ADR-002): reads
+// Playwright JSON reports (the perf project, plus the @offline run for the
+// offline proofs) and checks the M1- and M2-relevant §12 targets on typical,
+// self-made files.
 //
 // Usage: node scripts/acceptance.ts <report.json>... [--json <file>] [--markdown <file>]
 // Missing numbers are "not measured" and fail the table, like a missed target.
@@ -59,6 +60,11 @@ function under(
   };
 }
 
+interface SearchRun {
+  firstHitMs: number | null;
+  totalMs: number;
+}
+
 interface ScrollResult {
   firstPreviewMs?: number;
   scroll900?: { blankFrames: number; frames: number };
@@ -70,7 +76,11 @@ export function evaluate(rows: readonly PerfRow[]): TargetResult[] {
   const scroll = json(m, 'm1-scroll') as ScrollResult | undefined;
   const sharp = json(m, 'sharp-after-zoom-ms') as Record<string, number> | undefined;
   const perf = rows.filter((r) => r.file.includes('perf/'));
-  const offline = rows.filter((r) => r.title.includes('zero outbound requests'));
+  const offline = rows.filter(
+    (r) => r.title.includes('zero outbound requests') && !r.title.startsWith('M2 offline'),
+  );
+  const offlineM2 = rows.filter((r) => r.title.startsWith('M2 offline'));
+  const search = (json(m, 'm2-search') as { common?: SearchRun } | undefined)?.common;
   const blank = scroll?.scroll900 && scroll.scroll3000;
   const out: TargetResult[] = [
     under(
@@ -153,6 +163,33 @@ export function evaluate(rows: readonly PerfRow[]): TargetResult[] {
           : 'missed',
       source: 'offline.spec.ts',
     },
+    // M2 (M2-19)
+    under(
+      'Search the 2,000-page stand-in (common word, cold)',
+      'first hits < 1 s',
+      search?.firstHitMs ?? undefined,
+      1000,
+      'perf/search.spec.ts',
+    ),
+    under(
+      'Search the 2,000-page stand-in (common word, cold)',
+      'complete < 15 s',
+      search?.totalMs,
+      15_000,
+      'perf/search.spec.ts',
+    ),
+    {
+      area: 'Offline proof (M2)',
+      target:
+        'network off → protected open, search, panes, forms save, print, export work; report fails gracefully; zero outbound requests',
+      measured: offlineM2.length ? offlineM2.map((r) => r.status).join(', ') : '—',
+      verdict: !offlineM2.length
+        ? 'not measured'
+        : offlineM2.every((r) => r.status === 'passed')
+          ? 'met'
+          : 'missed',
+      source: 'offline.spec.ts',
+    },
   ];
   return out;
 }
@@ -161,7 +198,7 @@ const MARK: Record<Verdict, string> = { met: '✅', missed: '❌', 'not measured
 
 export function renderAcceptance(results: readonly TargetResult[]): string {
   return [
-    '### M1 acceptance: §12 targets on typical (self-made) files',
+    '### M1 + M2 acceptance: §12 targets on typical (self-made) files',
     '',
     '| Area | Target | Measured | Result |',
     '| --- | --- | --- | --- |',

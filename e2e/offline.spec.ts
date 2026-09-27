@@ -1,6 +1,10 @@
 import type { Page } from '@playwright/test';
-import { cap } from './support/app.ts';
+import { hasQpdf, qpdfEncrypt } from './fixtures/encrypted.ts';
+import { NEEDLE, fullFormPdf, outlinedPdf } from './fixtures/generate.ts';
+import { cap, drop } from './support/app.ts';
 import { expect, test } from './support/fixtures.ts';
+import { printCalls, stubFramePrint } from './support/printStub.ts';
+import { savedFiles, stubSavePicker } from './support/savePicker.ts';
 
 // M1-25 (§9, D-17): the service worker precaches the core at install and the
 // rest after the first render; offline, a reload opens, renders, saves and
@@ -60,6 +64,118 @@ test(
           timeout: 10_000,
         })
         .toBe(1);
+      expect(outbound).toEqual([]);
+    } finally {
+      await context.setOffline(false);
+    }
+  },
+);
+
+test(
+  'M2 offline: protected open, search, panes, form fill + save, print, print-ready export; a report fails gracefully; zero outbound requests',
+  { tag: '@offline' },
+  async ({ page, context, pdfs }) => {
+    test.skip(!hasQpdf(), 'qpdf is needed to make the encrypted fixture');
+    test.setTimeout(120_000);
+    await stubFramePrint(page);
+    await page.goto('/?sw');
+    await expect(status(page).getByText('✓ Ready offline')).toBeVisible({ timeout: 60_000 });
+
+    await context.setOffline(true);
+    const outbound: string[] = [];
+    page.on('requestfailed', (r) => {
+      if (/^https?:/.test(r.url())) outbound.push(`failed ${r.url()}`);
+    });
+    page.on('response', (r) => {
+      if (/^https?:/.test(r.url()) && !r.fromServiceWorker()) outbound.push(r.url());
+    });
+    const b64 = (u: Uint8Array) => Buffer.from(u).toString('base64');
+    try {
+      await page.reload();
+      await expect(page.getByTestId('start-screen')).toBeVisible();
+      await stubSavePicker(page);
+
+      // Protected open (M2-03).
+      const locked = qpdfEncrypt(pdfs.contract(12), 'user-pw', 'owner-pw', ['256']);
+      await drop(page, [{ name: 'locked.pdf', b64: b64(locked) }]);
+      const prompt = page.getByRole('dialog', { name: 'Password required' });
+      await prompt.getByLabel('Password').fill('user-pw');
+      await prompt.getByRole('button', { name: 'Open' }).click();
+      await expect(page.locator('[data-page="0"] img.page-preview')).toBeVisible();
+
+      // Quick Find (M2-07) and the Thumbnails pane (M2-08).
+      await page.getByTestId('document-view').focus();
+      await page.keyboard.press('Control+F');
+      const find = page.getByRole('region', { name: 'Find in document' });
+      await find.getByRole('searchbox', { name: 'Find' }).fill(NEEDLE);
+      await find.getByRole('searchbox', { name: 'Find' }).press('Enter');
+      await expect(find.getByRole('status')).toHaveText(/of \d+/, { timeout: 20_000 });
+      await find.getByRole('searchbox', { name: 'Find' }).press('Escape');
+      const rail = page.getByRole('complementary', { name: 'Navigation panes' });
+      // Thumbnails is the pane shown by default.
+      const thumbs = rail.getByRole('button', { name: 'Thumbnails' });
+      if ((await thumbs.getAttribute('aria-pressed')) !== 'true') await thumbs.click();
+      await expect(
+        page
+          .getByRole('listbox', { name: 'Page thumbnails' })
+          .getByRole('option')
+          .first()
+          .locator('img'),
+      ).toBeVisible();
+
+      // Bookmarks pane (M2-10).
+      await drop(page, [{ name: 'outlined.pdf', b64: b64(outlinedPdf()) }]);
+      await expect(page.getByRole('tab', { name: 'outlined.pdf' })).toBeVisible();
+      await rail.getByRole('button', { name: 'Bookmarks' }).click();
+      await expect(
+        page.getByRole('tree', { name: 'Bookmarks' }).getByRole('treeitem').first(),
+      ).toBeVisible();
+
+      // Form fill + Ctrl+S (M2-14), then print (M2-15) and export (M2-16).
+      const [formId] = (await cap(page, 'open', 'openHandles', [
+        { name: 'form.pdf', b64: b64(fullFormPdf()) },
+      ])) as string[];
+      if (!formId) throw new Error('not opened');
+      const name = page.getByRole('textbox', { name: 'name field' });
+      await name.fill('Offline');
+      await name.press('Enter');
+      await expect(tabs(page).last()).toHaveAccessibleName(/unsaved/);
+      await page.keyboard.press('Control+S');
+      const growth = page.getByRole('dialog', { name: 'Save optimized instead?' });
+      await expect(
+        growth.or(page.getByRole('tab', { name: 'form.pdf', exact: true })),
+      ).toBeVisible();
+      if (await growth.isVisible()) await growth.getByRole('button', { name: 'Just save' }).click();
+      await expect(page.getByRole('tab', { name: 'form.pdf', exact: true })).toBeVisible();
+
+      await page.keyboard.press('Control+P');
+      const print = page.getByRole('dialog', { name: 'Print' });
+      await print.getByRole('button', { name: 'Print', exact: true }).click();
+      await expect.poll(() => printCalls(page)).toBe(1);
+
+      await page.getByTestId('file-tab').click();
+      const backstage = page.getByTestId('backstage');
+      await backstage.getByRole('button', { name: 'Export Print-Ready PDF' }).first().click();
+      await backstage
+        .getByRole('region')
+        .getByRole('button', { name: 'Export Print-Ready PDF' })
+        .click();
+      const exportDialog = page.getByRole('dialog', { name: 'Export Print-Ready PDF' });
+      await exportDialog.getByRole('button', { name: 'Export…' }).click();
+      await expect(exportDialog).toHaveCount(0);
+      expect((await savedFiles(page)).map((f) => f.name)).toEqual(['form (print-ready).pdf']);
+
+      // The error report can't be sent offline: a message and Copy report (M2-17).
+      await page.getByRole('tab', { name: 'Help' }).click();
+      await page
+        .getByRole('toolbar', { name: 'Help commands' })
+        .getByRole('button', { name: 'Send Error Report' })
+        .click();
+      const report = page.getByRole('dialog', { name: 'Send Error Report' });
+      await report.getByRole('button', { name: 'Send' }).click();
+      await expect(report.getByRole('alert')).toHaveText(/You're offline/);
+      await expect(report.getByRole('button', { name: 'Copy report' })).toBeVisible();
+
       expect(outbound).toEqual([]);
     } finally {
       await context.setOffline(false);

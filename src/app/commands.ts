@@ -41,7 +41,7 @@ export interface CommandDef {
 }
 
 /** Milestones whose commands are shown. Extend as milestones land. */
-export const AVAILABLE_MILESTONES: readonly Milestone[] = ['M1'];
+export const AVAILABLE_MILESTONES: readonly Milestone[] = ['M1', 'M2'];
 
 /** Ribbon tabs in order (§8, authoritative). */
 export const RIBBON_TABS = [
@@ -231,6 +231,7 @@ export const COMMANDS: readonly CommandDef[] = [
     size: 'large',
     fluent: 'TextT',
     milestone: 'M2',
+    shipped: true, // M2-19 (text selection itself: M2-04)
     toggle: true,
   },
   {

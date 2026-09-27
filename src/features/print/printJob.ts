@@ -6,6 +6,7 @@
 import type { SelectionCapability } from '@embedpdf/plugin-selection';
 import { documentStore, securityOf } from '../../app/store/documentStore';
 import { allows } from '../../model/permissions';
+import { editsSettled } from '../save/pendingEdits';
 import { capability, hostStore, renderEngine, workClient } from '../view/host';
 import {
   DPI,
@@ -133,6 +134,7 @@ export async function renderTargets(
     if (signal.aborted) throw new PrintCancelled();
   };
   const dpi = dpiFor(docId, opts);
+  await editsSettled();
   // Unsaved edits: the Render worker's narrow tail, appended to the print copy.
   const { tail } = await renderEngine().rpc.call('snapshotTail', { docId }).promise;
   check();

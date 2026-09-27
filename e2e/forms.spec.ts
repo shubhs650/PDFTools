@@ -204,3 +204,21 @@ test('a document that forbids form filling shows fields read-only with the reaso
       .getByRole('button', { name: 'Reset Form' }),
   ).toHaveAttribute('aria-disabled', 'true');
 });
+
+test('Ctrl+S from inside a text field saves the value being typed (no Enter, no blur)', async ({
+  page,
+}) => {
+  const original = fullFormPdf();
+  await page.goto('/');
+  await openHandle(page, 'typed.pdf', original);
+  const name = page.getByRole('textbox', { name: 'name field' });
+  await name.fill('Typed then saved');
+  await expect(name).toBeFocused();
+  await page.keyboard.press('Control+S');
+  await saved(page, 'typed.pdf');
+  await expect(name).toBeFocused();
+  const bytes = Buffer.from((await cap(page, 'open', 'readFile', 'typed.pdf')) as string, 'base64');
+  expect(bytes.length).toBeGreaterThan(original.length);
+  expect(bytes.subarray(original.length).toString('latin1')).toContain('(Typed then saved)');
+  expect(qpdfCheck(bytes)).not.toBe(2);
+});

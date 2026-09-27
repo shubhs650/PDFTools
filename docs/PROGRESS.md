@@ -1,14 +1,15 @@
 # PDFTools — Progress
 
-_Last updated: 2026-09-26 (session 14: M2 plan, M2-01 to M2-05)_
+_Last updated: 2026-09-27 (session 15: M2-16 to M2-19, M2 complete)_
 
-**Current milestone:** M1 — Foundation is **complete on the agent side** and merged into `main`
-(M1-01 … M1-28; results and owner pack: [docs/acceptance/M1.md](acceptance/M1.md)). The
-[M2 plan](plan/M2.md) is approved; **M2-01 to M2-05 are done** on stacked branches, waiting for
-review.
-M0 and M1 owner runs are still open.
+**Current milestone:** M2 — Read is **complete on the agent side** (M2-01 … M2-19; results and
+owner pack: [docs/acceptance/M2.md](acceptance/M2.md)). M1 is merged into `main`; M2-01 … M2-15
+are merged; M2-16 … M2-19 are on `claude/m2-tasks-16-19-wt8d51`, waiting for review. M0, M1 and M2
+owner runs are open. Next: the M3 plan (after the owner's review of M2).
 
 ## Done
+
+- **Session 15 — M2-19 M2 acceptance pass and owner pack.** [docs/acceptance/M2.md](acceptance/M2.md): every §12 row met on typical files (search on the 2,000-page stand-in: first hits 52 ms, complete 5.9 s; 23 of 23 perf scenarios without a long task; M1 rows still met), every §13 M2 item mapped, owner pack (FAR / 500 MB search via `npm run owner:timings`, interop §M2 I–K, signatures after form save, live error report, Firefox). `scripts/acceptance.ts` has the M2 rows (search, M2 offline proof); new M2 offline proof in `e2e/offline.spec.ts`; the a11y gate covers every M2 pane, the find bar and the M2 dialogs in light, dark and pseudo-locale; the handler test covers every M2 command; `AVAILABLE_MILESTONES` = M1, M2. Found and fixed: Ctrl+S/O/P/F did nothing inside text fields (form fields now save with Ctrl+S, committing the typed value first); a save could overtake a form value still being committed (`pendingEdits.ts`); Home → Select Text had no handler. New perf scenario: 50-page print-ready export. Bundle 6.84 MB core / 30.85 MB installed, within budget.
 
 - **Session 15 — M2-18 error-report endpoint.** Pages Function `functions/api/report.ts` (validate with the shared schema, same-origin, ≤ 16 KB, 5/IP/hour with a salted IP hash, D1 store, optional e-mail binding), `functions/api/schema.sql`, `functions/tsconfig.json` in `tsc -b`, owner steps in [docs/deploy/error-report.md](deploy/error-report.md). Unit: `tests/functions/report.test.ts` (in-memory D1 and mail). Unit 622, green; no dependency added.
 
@@ -519,26 +520,20 @@ M0 and M1 owner runs are still open.
 
 ## In progress
 
-- **M2 branches:**
-  `claude/m2-task-breakdown-ytspb5` (the plan) → `m2/01-read-spike` → `m2/02-secure-print-spike`
-  → `m2/03-protected` → `m2/04-selection` → `m2/05-search` were merged into `main` (PR #33).
-  Since then each task gets its own PR to `main`, merged once CI is green.
-- **M2-06 … M2-10 (session 14):** M2-06 merged (PR #34). M2-07 → PR #35, M2-08 → PR #36,
-  M2-09 → PR #37, M2-10 → its own PR; each branch is built on the previous one ("stacked"), so
-  they merge in that order once CI is green. PR #35 needed a scheduler fix found by CI: jobs of
-  the same priority in the Work worker now take turns every 8 ms (hit highlights no longer wait
-  for a whole search).
-- **M2-11 … M2-15 (session 14, continued):** M2-11 → PR #39, M2-12 → #40, M2-13 → #41,
-  M2-14 → #42, M2-15 → its own PR, each stacked on the previous one. PR #37 (M2-09) is waiting
-  for its perf job to be re-run: its pull_request run hit two one-off main-thread stalls
-  (249 ms, 198 ms) that the push run of the same commit, and local runs, don't show.
+- **M2-16 … M2-19 (session 15):** one commit per task on `claude/m2-tasks-16-19-wt8d51` (from
+  `main` after PRs #37–#43), pushed once at the end of the session; no PR opened yet.
 - **Git in one paragraph (for the owner):** each task lives on its own _branch_ (a named line
   of commits). A _commit_ is a saved snapshot with a message; _push_ uploads the branch to
   GitHub; a _pull request_ (PR) asks to bring a branch into `main`, and GitHub runs the checks
-  (CI) on it; _merge_ adds it to `main` once the checks are green. Stacked PRs (#35 → #36 → #37 →
-  M2-10) are merged oldest first; each later PR then shows only its own changes.
+  (CI) on it; _merge_ adds it to `main` once the checks are green.
 
 ## Session log
+
+- **Session 15 (2026-09-27):** M2-16, M2-17, M2-18 and M2-19 on `claude/m2-tasks-16-19-wt8d51`
+  (one commit each). Local checks on the last commit: typecheck (app, node, functions), lint,
+  format, 623 unit tests, license gate (642 packages), build + `check:dist`, bundle report
+  (within budget), 163 e2e (incl. 3 offline and 9 a11y), 23 perf scenarios, acceptance table all
+  met. qpdf installed in the container for the fixtures.
 
 - **Session 14 (2026-09-26):** M2 plan (approved), then M2-01 to M2-05 on stacked `m2/…`
   branches. Local checks on the last branch all pass: typecheck (app and spikes), lint, format,
@@ -601,13 +596,15 @@ M0 and M1 owner runs are still open.
 
 ## Next
 
-1. **Owner decisions:** none open on the spikes. ADR-003 to ADR-010 are accepted
-   (ARCHITECTURE.md Rev 0.4). ADR-007 decisions 2–3 are accepted as defaults, to be confirmed by
-   the S2 interop run below.
-2. **Owner runs:**
+1. **Owner:** review and merge `claude/m2-tasks-16-19-wt8d51` (M2-16 … M2-19).
+2. **Owner:** the M2 owner pack in [docs/acceptance/M2.md](acceptance/M2.md) §4 — FAR / 500 MB
+   search timings, interop §M2 (I–K and signatures after a form save), the live error report
+   (Cloudflare setup in [docs/deploy/error-report.md](deploy/error-report.md)), Firefox smoke.
+3. **Owner:** the M1 owner pack in [docs/acceptance/M1.md](acceptance/M1.md) §3 and the M0 owner
+   runs:
    - **S1 interop checklist** (`e2e/interop/CHECKLIST.md`) in Acrobat Reader and PDF-XChange;
    - S1 FSA button on the 500 MB contract;
-   - **S5 search on the FAR and the 500 MB contract** (ADR-006, "Owner runs");
+   - **S5 search on the FAR and the 500 MB contract** (now also in `npm run owner:timings`);
    - **S2 interop checklist** §D and §F (`e2e/fixtures/self-made/s2-interop/`);
    - **S7 on the four local CAD drawings and the dense P&ID**
      (`node spikes/s7-snap/run-node.ts <files>`, plus the browser page; see ADR-008);
@@ -615,20 +612,18 @@ M0 and M1 owner runs are still open.
      (`node spikes/s4-oxide/run-node.ts <files>`; dumps in `out/review/`, see ADR-009);
    - FAR, 500 MB and A0 through the S3 harness;
    - S8 Firefox check and Pages preview.
-3. **Owner:** review and merge the M2 branches in order (see "In progress"), and decide the open
-   items under "Decisions needed" (layers, `frame-src blob:`, keyboard text selection).
-4. **Owner:** the M1 owner pack in [docs/acceptance/M1.md](acceptance/M1.md) §3 — heavy-file
-   timings (`npm run owner:timings`), the installed app on Windows (file handler, offline, update,
-   reserved keys), a Firefox smoke test, the Pages preview, and interop §M1 of
-   `e2e/interop/CHECKLIST.md`.
-5. **Owner:** interop §M2 (`e2e/interop/CHECKLIST.md`: I. form files, J. real print dialogs),
-   and confirm the M2-15 interpretations ("selected area" = the text selection's bounds; "markups
-   only" = the difference of two renders).
-6. **Agent:** M2-16 (Export Print-Ready PDF and the browser-viewer print route, with the approved
-   `frame-src blob:`), then M2-17 to M2-19.
+4. **Owner:** decide the items under "Decisions needed" (keyboard text selection, committed
+   corpus PDFs, Pages project).
+5. **Agent:** the M3 plan (`docs/plan/M3.md`), once M2 is reviewed.
 
 ## Open issues
 
+- **Send-email binding on Pages (M2-18):** not verified that the dashboard offers a Send email
+  binding for Pages projects. Without it, reports are stored in D1 only (the function skips the
+  e-mail); the alternative is a small Worker behind a Service binding.
+- **Browser-viewer print route (M2-16):** prints the chosen pages in document order (a custom
+  order like "3, 1" keeps its order only on the raster route); browsers without a built-in PDF
+  viewer need the owner check in interop §K4.
 - **CI perf stalls on pull_request runs:** one-off 200–400 ms main-thread tasks in scroll /
   thumbnails / pane-load perf scenarios, only on the pull_request run while the push run of the
   same commit (started at the same time) passes. Not reproduced locally. If it recurs on re-runs,

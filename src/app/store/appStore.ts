@@ -3,8 +3,11 @@
 // through selectors (useApp) so a change re-renders only its readers.
 import { createStore, useStore } from 'zustand';
 
-/** Pointer tools: Select (V) selects text since M2-04 (M1-Q5); Hand (H) pans. */
-export type Tool = 'select' | 'hand';
+/**
+ * Pointer tools: Select (V) selects text since M2-04 (M1-Q5) until M3 gives it
+ * objects; Select Text only ever selects text; Hand (H) pans.
+ */
+export type Tool = 'select' | 'selectText' | 'hand';
 
 export const PANE_WIDTH_MIN = 160;
 export const PANE_WIDTH_MAX = 480;

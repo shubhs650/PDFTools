@@ -31,7 +31,7 @@ export function resolveBinding(
   const binding = keymap.find((bnd) => bnd.chords.some((c) => matches(c, e, mac)));
   if (!binding) return undefined;
   const isEscape = e.key === 'Escape';
-  if (focus.editable && !isEscape) return undefined;
+  if (focus.editable && !isEscape && binding.inText !== true) return undefined;
   if (binding.scope === 'document' && !focus.inDocument) return undefined;
   return binding;
 }

@@ -111,7 +111,7 @@ for (const q of ['/', '/?locale=pseudo']) {
   });
 }
 
-test('every command M1 shows has a handler: none says "Not available yet" (M1-28)', async ({
+test('every command M1 and M2 show has a handler: none says "Not available yet" (M1-28, M2-19)', async ({
   page,
   pdfs,
 }) => {
@@ -142,7 +142,7 @@ test('every command M1 shows has a handler: none says "Not available yet" (M1-28
     expect(await notReady()).toEqual([]);
   };
   await collect(); // quick access + Home
-  for (const tab of ['View', 'Help']) {
+  for (const tab of ['View', 'Protect', 'Help']) {
     await page.getByRole('tab', { name: tab }).click();
     await collect();
   }
@@ -152,6 +152,27 @@ test('every command M1 shows has a handler: none says "Not available yet" (M1-28
     await nav.getByText(name.trim(), { exact: true }).click();
     await collect();
   }
-  for (const id of ['qat.open', 'qat.save', 'help.updates', 'help.clearData', 'file.saveAs'])
+  for (const id of [
+    'qat.open',
+    'qat.save',
+    'help.updates',
+    'help.clearData',
+    'file.saveAs',
+    // M2
+    'qat.print',
+    'file.print',
+    'file.exportPrintReady',
+    'home.selectText',
+    'home.find',
+    'home.advancedSearch',
+    'home.resetForm',
+    'view.prevView',
+    'view.nextView',
+    'protect.securityInfo',
+    'protect.unlock',
+    'protect.signatures',
+    'help.help',
+    'help.errorReport',
+  ])
     expect(seen).toContain(id);
 });

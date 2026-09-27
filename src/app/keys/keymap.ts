@@ -26,6 +26,12 @@ export interface Binding {
    * false so the browser keeps it when nothing in the app uses it.
    */
   preventWhenDisabled?: boolean;
+  /**
+   * Also while typing in a text field (a form field, the find box): Ctrl
+   * chords that no text field uses for editing, so Ctrl+S in a form field
+   * saves instead of reaching the browser's "Save page".
+   */
+  inText?: boolean;
 }
 
 const b = (
@@ -41,11 +47,11 @@ const b = (
 });
 
 export const KEYMAP: readonly Binding[] = [
-  b('file.open', ['Ctrl+O']),
-  b('file.save', ['Ctrl+S']),
-  b('file.saveAs', ['Ctrl+Shift+S']),
+  { ...b('file.open', ['Ctrl+O']), inText: true },
+  { ...b('file.save', ['Ctrl+S']), inText: true },
+  { ...b('file.saveAs', ['Ctrl+Shift+S']), inText: true },
   // Our print dialog (M2-15), not the browser's print of the app window.
-  b('file.print', ['Ctrl+P']),
+  { ...b('file.print', ['Ctrl+P']), inText: true },
   b('view.fitPage', ['Ctrl+0']),
   b('view.actualSize', ['Ctrl+1']),
   b('view.fitWidth', ['Ctrl+2']),
@@ -53,11 +59,11 @@ export const KEYMAP: readonly Binding[] = [
   b('view.zoomOut', ['Ctrl+-']),
   b('view.collapseRibbon', ['Ctrl+F1']),
   // Quick Find (M2-07, §8.1): runs only on Enter in the bar; F3 walks the results.
-  b('home.find', ['Ctrl+F']),
+  { ...b('home.find', ['Ctrl+F']), inText: true },
   b('find.next', ['F3']),
   b('find.prev', ['Shift+F3']),
   // Advanced Search pane (M2-09).
-  b('home.advancedSearch', ['Ctrl+Shift+F']),
+  { ...b('home.advancedSearch', ['Ctrl+Shift+F']), inText: true },
   // Previous / Next View (M2-10).
   b('view.prevView', ['Alt+ArrowLeft']),
   b('view.nextView', ['Alt+ArrowRight']),
