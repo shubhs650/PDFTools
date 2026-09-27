@@ -9,6 +9,11 @@ M0–M2 are merged into `main` (M2 complete on the agent side, owner pack in
 
 ## Done
 
+- **Session 16 — M3-06 custom icons.** The 15 M3 icons ADR-010 lists as missing, in Fluent's
+  Regular line style with Filled variants for toggles (`src/ui/icons/custom/m3.ts`, drawn with
+  `draw.ts` at 20 and 32 px directly; no third-party artwork, rule 15); no M3 command is
+  `customPending` any more (unit test). Owner visual review pending.
+
 - **Session 16 — M3-05 annotation layer core (ADR-014).** `@embedpdf/plugin-annotation` and
   `plugin-history` 2.15.1. Annotations load through the Work worker (new Work RPC `annotations`;
   `RoutedPdfEngine` overrides `getAllAnnotations` and returns no stock appearance bitmaps), with
