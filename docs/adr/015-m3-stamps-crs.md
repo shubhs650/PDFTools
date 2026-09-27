@@ -1,9 +1,9 @@
 # ADR-015: M3-02 — Dynamic stamps, the CRS workbook (ExcelJS) and markup snapshots
 
-- **Status:** Proposed (2026-09-27). **Decision 2 needs the owner:** ExcelJS as it installs today
-  fails the license gate (M3-Q9: stop and report). ExcelJS is **not** added to `package.json`.
+- **Status:** Accepted (owner, 2026-09-27): decision 1 option 1 (PNG image stamps at 4×),
+  decision 2 option 2a (ExcelJS 4.4.0 with the `unzipper@0.12.3` override, added in M3-19).
 - **Date:** 2026-09-27
-- **Deciders:** Owner (decisions 1 and 2); recorded by the coding agent
+- **Deciders:** Owner (decisions 1 and 2, accepted 2026-09-27); recorded by the coding agent
 - **Related decisions:** D-12, D-15, D-23, §3.1, §3.2, §7.3, §7.5; ADR-001 B7; ADR-002; ADR-003;
   ADR-013 decision 6 (Work copy with unsaved edits); ADR-014 decision 3 (annotation tiles);
   CLAUDE.md rules 1, 2, 4, 5 and 10; M3-Q4, M3-Q9

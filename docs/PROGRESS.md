@@ -9,6 +9,17 @@ M0–M2 are merged into `main` (M2 complete on the agent side, owner pack in
 
 ## Done
 
+- **Session 16 — M3-04 Standard security handler.** `src/model/pdf/security/` (own MD5, RC4,
+  AES-CBC; WebCrypto SHA-2 for R5/R6): file keys for R2–R6 from the user or owner password, RC4 /
+  AESV2 / AESV3 / Identity crypt filters. `PdfReader.open(bytes, inflate, { password })`
+  decrypts strings and streams; the Render worker's tracker derives the key from the open
+  password (worker memory only, M2-Q7) and encrypts only the staged values, so measurement
+  strings and `/VP` now save in encrypted files (R, P and method unchanged, qpdf-clean). Unit:
+  RFC 1321 / RFC 6229 / FIPS-197 vectors, CBC vs WebCrypto, qpdf R2/R3/R4/R6/owner-only files
+  (plain and object streams) read back against `qpdf --decrypt`, encrypted saves incl. Save
+  Optimized and rule 9 with the user password; e2e: an AES-128 file opened with its owner
+  password saves encrypted keys and verifies. New probe `view.activeDocId`. Unit 733, green.
+
 - **Session 16 — M3-02 stamps, CRS workbook and snapshots spike.** _Works with workaround_,
   [ADR-015](adr/015-m3-stamps-crs.md) (proposed; decisions 1–2 need the owner). Stamp PNG drawn
   in a worker with the bundled Noto Sans Regular: at 4× the placed size as sharp as vector text
@@ -680,8 +691,7 @@ M0–M2 are merged into `main` (M2 complete on the agent side, owner pack in
 4. **Owner:** decide the items under "Decisions needed" (keyboard text selection, committed
    corpus PDFs, Pages project).
 5. **Owner:** the S2 interop run (§D/§F) before M3-16/M3-20 (M3-Q2 defaults are in use until then).
-6. **Agent:** M3-04 (Standard security handler) and M3-05 (annotation core per ADR-014), then
-   M3-06/M3-07; M3-14 and M3-19 wait for the ADR-015 decisions.
+6. **Agent:** M3-05 … M3-08 (in progress, session 16).
 
 ## Open issues
 
@@ -748,16 +758,6 @@ M0–M2 are merged into `main` (M2 complete on the agent side, owner pack in
 
 ## Decisions needed (owner)
 
-- **ADR-015 decision 2 — CRS workbook library.** ExcelJS 4.4.0 fails the license gate
-  (`buffers@0.1.1` has no license, via its Node-only `unzipper` reader). Options: (a) ExcelJS
-  with the npm override `unzipper@0.12.3` (gate passes; recommended); (b) our own minimal XLSX
-  writer (no dependency; changes §3.2).
-- **ADR-015 decision 1 — stamp appearance.** PNG image stamp at 4× (no B7 exception; softer
-  beyond 400 %) or a small vector stamp appearance of our own (B7 exception for stamps).
-- **ADR-014** — accept loading annotations through the Work worker and drawing markups as our own
-  annotation tiles (replaces two stock plugin behaviours; no ARCHITECTURE.md change).
-- **M3 plan (M3-Q1 … M3-Q10)** in [docs/plan/M3.md](plan/M3.md#owner-decisions-needed). M3-Q2
-  depends on the still-open S2 interop run (§D/§F); the plan proceeds with the ADR-007 defaults.
 - **Keyboard text selection (M2-04).** Caret-based selection (Shift+arrows) is not built; the
   keyboard path is Ctrl+A (page text) + Ctrl+C. Accept as an exception to the M2-04 criterion, or
   schedule caret selection (about one session).
@@ -777,6 +777,7 @@ M0–M2 are merged into `main` (M2 complete on the agent side, owner pack in
 
 | Date       | Ref              | Decision                                                                                                                                                                                                                                                                                                                                                                                                                                                  |
 | ---------- | ---------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| 2026-09-27 | ADR-014, ADR-015 | Owner accepted ADR-014 (annotations loaded through the Work worker; markups drawn as our own annotation tiles) and ADR-015 (PNG image stamps at 4×; ExcelJS 4.4.0 with an npm override `unzipper@0.12.3`, added in M3-19). Proceed with M3-04 … M3-08.                                                                                                                                                                                                    |
 | 2026-09-27 | M3 plan          | M3 plan approved with M3-Q1 … Q10 as proposed: annotation export in M4; ADR-007 label/viewport defaults until the interop run; review status = standard `/StateModel /Review` replies, schemes drive stamps and the CRS header; image-stamp route (spike first); derived auto-numbers; keyboard creation for note/text box/stamp only; `/T` = reviewer name; own MD5/RC4; ExcelJS in the Work worker (non-core); `m3/<task>` branches.                    |
 | 2026-09-26 | ADR-012, ADR-013 | Owner approved all pending ADRs. ADR-012 decision 5: list-only Layers pane (M2-11). ADR-013 decision 7: §10.1 CSP gains `frame-src blob:` for M2-16's browser-viewer print route (ARCHITECTURE.md updated with M2-16).                                                                                                                                                                                                                                    |
 | 2026-09-25 | M1-15            | Owner: zoom 100 % = one PDF point per CSS pixel (EmbedPDF scale 1, ADR-011's range), so Actual Size is not physical size. PR #13 (main → M0 branch) closed. Single-core machines are not a target; the one-core first-open contention from M1-13/15 CI needs no work.                                                                                                                                                                                     |

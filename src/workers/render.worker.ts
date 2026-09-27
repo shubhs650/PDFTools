@@ -110,7 +110,13 @@ serve<RenderApi>(self, {
     // Save bookkeeping (M1-20): the opened bytes' trailer, and what each edit changed.
     if (method === 'openDocumentBuffer') {
       const file = args[0] as { id: string; content: ArrayBuffer };
-      t.opened(file.id, new Uint8Array(file.content));
+      // The open password (memory only, M2-Q7) derives our object layer's file key (M3-04).
+      const password = (args[1] as { password?: unknown } | undefined)?.password;
+      t.opened(
+        file.id,
+        new Uint8Array(file.content),
+        typeof password === 'string' ? password : undefined,
+      );
     } else if (method === 'closeDocument' && typeof docId === 'string') {
       t.closed(docId);
     } else if (isMutation(method)) {
@@ -142,8 +148,9 @@ serve<RenderApi>(self, {
 
   saveState: ({ docId }) => ready().tracker.dirtyState(docId),
 
-  stageObjects: ({ docId, target, set, remove }) => {
+  stageObjects: async ({ docId, target, set, remove }) => {
     const t = ready().tracker;
+    await t.securityReady(docId);
     const values = new Map(Object.entries(set).map(([k, v]) => [k, fromJson(v)]));
     t.stagePatch(
       docId,

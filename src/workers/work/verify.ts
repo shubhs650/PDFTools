@@ -26,7 +26,12 @@ export async function verifyCandidate(
     });
     // Our object layer's keys (M3-03): read back with our own reader.
     if (!r.ok || !expected.objects?.length || !bytes) return r;
-    return await verifyObjects(expected.objects, new Uint8Array(bytes));
+    return await verifyObjects(
+      expected.objects,
+      new Uint8Array(bytes),
+      undefined,
+      docs.passwordOf(docId),
+    );
   } catch (err) {
     if (err instanceof RpcError && err.code === 'unknown-document') throw err;
     // A tail PDFium cannot open or read fails verification (never a success).

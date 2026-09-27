@@ -77,6 +77,9 @@ export function registerViewProbe(hook: TestHook): void {
     reset: () => {
       resetRenderStats();
     },
+    /** The active document's engine id (M3-04: probes that take a docId). */
+    activeDocId: () =>
+      hostStore.getState().registry?.getStore().getState().core.activeDocumentId ?? null,
     /** The selection plugin's state for the active document (M2-04). */
     selection: () => {
       const registry = hostStore.getState().registry;

@@ -18,8 +18,10 @@ import {
 } from '@embedpdf/models';
 import { init, type WrappedPdfiumModule } from '@embedpdf/pdfium';
 import { beforeAll, describe, expect, it } from 'vitest';
+import { OWNER_PW, USER_PW, encryptedVariants } from '../../e2e/fixtures/encrypted';
+import { simplePdf } from '../../e2e/fixtures/generate';
 import { RpcError } from '../../src/engine/errors';
-import { D, N, S, isDict, nameOf, type PdfValue } from '../../src/model/pdf/objects';
+import { D, N, PdfString, S, isDict, nameOf, type PdfValue } from '../../src/model/pdf/objects';
 import { PdfReader } from '../../src/model/pdf/reader';
 import { concatBytes } from '../../src/workers/render/save/bytes';
 import { SaveTracker } from '../../src/workers/render/save/tracker';
@@ -44,10 +46,16 @@ beforeAll(async () => {
 const original = (name: string): Uint8Array =>
   new Uint8Array(readFileSync(`${DIR}/original__${name}.pdf`));
 
-async function open(bytes: Uint8Array): Promise<PdfDocumentObject> {
+async function open(bytes: Uint8Array, password?: string): Promise<PdfDocumentObject> {
   const id = `p${String(++seq)}`;
-  const doc = await native.openDocumentBuffer({ id, content: bytes.slice().buffer }).toPromise();
-  tracker.opened(id, bytes);
+  const doc = await native
+    .openDocumentBuffer(
+      { id, content: bytes.slice().buffer },
+      password === undefined ? {} : { password },
+    )
+    .toPromise();
+  tracker.opened(id, bytes, password);
+  await tracker.securityReady(id);
   return doc;
 }
 
@@ -120,10 +128,31 @@ const revisionsAfter = (o: Uint8Array, saved: Uint8Array): number =>
 
 const hasQpdf = spawnSync('qpdf', ['--version']).status === 0;
 const tmp = mkdtempSync(join(tmpdir(), 'pdftools-patch-'));
-function qpdfCheck(bytes: Uint8Array, name: string): number | null {
+function qpdfCheck(bytes: Uint8Array, name: string, password?: string): number | null {
   const file = join(tmp, name);
   writeFileSync(file, bytes);
-  return spawnSync('qpdf', ['--check', file]).status;
+  const pw = password === undefined ? [] : [`--password=${password}`];
+  return spawnSync('qpdf', [...pw, '--check', file]).status;
+}
+
+/** R, P and method, as qpdf reports them (unchanged by our saves). */
+function qpdfEncryption(bytes: Uint8Array): string {
+  const file = join(tmp, `enc-${String(++seq)}.pdf`);
+  writeFileSync(file, bytes);
+  const out = spawnSync('qpdf', [
+    `--password=${OWNER_PW}`,
+    '--show-encryption',
+    file,
+  ]).stdout.toString();
+  const pick = (k: string) => new RegExp(`^${k}(?: =|:) (.*)$`, 'm').exec(out)?.[1] ?? '';
+  return `${pick('R')}/${pick('P')}/${pick('stream encryption method')}`;
+}
+
+function qpdfDecrypt(bytes: Uint8Array, password: string): Uint8Array {
+  const src = join(tmp, `dec-${String(++seq)}.pdf`);
+  writeFileSync(src, bytes);
+  spawnSync('qpdf', ['--decrypt', `--password=${password}`, src, `${src}.out`]);
+  return new Uint8Array(readFileSync(`${src}.out`));
 }
 
 describe.each(PLAIN)('staged keys: %s', (name) => {
@@ -304,21 +333,49 @@ describe('staging rules', () => {
   });
 });
 
-describe.each(ENCRYPTED)('encrypted file: %s', (name) => {
-  it('refuses strings until M3-04, writes names and numbers', async () => {
+/** The saved file's /Measure unit strings, decrypted by our reader (and so by qpdf's check). */
+async function measureUnits(bytes: Uint8Array, id: string, password?: string) {
+  const r = await PdfReader.open(bytes, undefined, password === undefined ? {} : { password });
+  const [page] = await r.pages();
+  const annots = await r.resolve(page?.dict.get('Annots'));
+  for (const ref of Array.isArray(annots) ? annots : []) {
+    const a = await r.resolve(ref);
+    if (!isDict(a) || (a.get('NM') as PdfString | undefined)?.text() !== id) continue;
+    const m = a.get('Measure');
+    const x = isDict(m) ? (m.get('X') as Map<string, PdfValue>[] | undefined)?.[0] : undefined;
+    return {
+      unit: (x?.get('U') as PdfString | undefined)?.text(),
+      ratio: isDict(m) ? (m.get('R') as PdfString | undefined)?.text() : undefined,
+    };
+  }
+  return null;
+}
+
+describe.each(ENCRYPTED)('encrypted file (owner password only): %s', (name) => {
+  it('writes strings encrypted with the file key (M3-04); qpdf-clean; verified', async () => {
     const o = original(name);
     const doc = await open(o);
-    await mutate(doc, 'createPageAnnotation', line('m3-03-e'));
-    const target = { page: 0, annot: 'm3-03-e' };
-    expect(() => {
-      tracker.stagePatch(doc.id, target, new Map([['Measure', measure()]]));
-    }).toThrow(expect.objectContaining({ code: 'patch-encrypted' }) as Error);
-    tracker.stagePatch(doc.id, target, new Map([['IT', N('LineDimension')]]));
+    await mutate(doc, 'createPageAnnotation', line('m3-04-e'));
+    tracker.stagePatch(
+      doc.id,
+      { page: 0, annot: 'm3-04-e' },
+      new Map([
+        ['IT', N('LineDimension')],
+        ['Measure', measure()],
+      ]),
+    );
+    tracker.stagePatch(doc.id, { page: 0 }, new Map([['VP', viewport()]]));
     const r = tracker.saveIncremental(doc.id);
     const saved = concatBytes([o, r.tail]);
     expect(revisionsAfter(o, saved)).toBe(1);
+    // The plaintext is not in the file.
+    expect(Buffer.from(r.tail).toString('latin1')).not.toContain('1 mm = 100 mm');
+    expect(await measureUnits(saved, 'm3-04-e')).toEqual({ unit: 'm', ratio: '1 mm = 100 mm' });
     expect(await verifyObjects(r.expected?.objects ?? [], saved)).toEqual({ ok: true });
-    if (hasQpdf) expect([0, 3]).toContain(qpdfCheck(saved, `${name}__patched.pdf`));
+    if (hasQpdf) {
+      expect([0, 3]).toContain(qpdfCheck(saved, `${name}__patched.pdf`));
+      expect(qpdfEncryption(saved)).toBe(qpdfEncryption(o));
+    }
     // PDFium reopens it with the annotation intact.
     const reopened = await native
       .openDocumentBuffer({ id: `r${String(++seq)}`, content: saved.slice().buffer })
@@ -328,8 +385,49 @@ describe.each(ENCRYPTED)('encrypted file: %s', (name) => {
     const annots = (await native
       .getPageAnnotations(reopened, page0)
       .toPromise()) as PdfAnnotationObject[];
-    expect(annots.some((a) => a.id === 'm3-03-e')).toBe(true);
+    expect(annots.some((a) => a.id === 'm3-04-e')).toBe(true);
     await native.closeDocument(reopened).toPromise();
+    // Save Optimized keeps them too.
+    const rewritten = tracker.saveRewrite(doc.id);
+    expect(await measureUnits(rewritten, 'm3-04-e')).toEqual({ unit: 'm', ratio: '1 mm = 100 mm' });
     await close(doc);
+  });
+});
+
+describe.skipIf(!hasQpdf)('qpdf-encrypted files R2–R6 (M3-04)', () => {
+  const variants = encryptedVariants(simplePdf(1)).filter((v) => v.name !== 'R6-owner-only');
+
+  it.each(variants.map((v) => [v.name, v] as const))('%s', async (vname, v) => {
+    // With the user password the document denies annotations (rule 9) …
+    const restricted = await open(v.bytes, USER_PW);
+    expect(() => {
+      tracker.stagePatch(restricted.id, { page: 0 }, new Map([['VP', viewport()]]));
+    }).toThrow(expect.objectContaining({ code: 'pdfium:5' }) as Error);
+    await close(restricted);
+    // … with the owner password it allows them, and strings are encrypted with the file key.
+    const doc = await open(v.bytes, OWNER_PW);
+    await mutate(doc, 'createPageAnnotation', line('m3-04-q'));
+    tracker.stagePatch(doc.id, { page: 0, annot: 'm3-04-q' }, new Map([['Measure', measure()]]));
+    tracker.stagePatch(doc.id, { page: 0 }, new Map([['VP', viewport()]]));
+    const r = tracker.saveIncremental(doc.id);
+    const saved = concatBytes([v.bytes, r.tail]);
+    await close(doc);
+    expect([0, 3]).toContain(qpdfCheck(saved, `${vname}__patched.pdf`, OWNER_PW));
+    expect(qpdfEncryption(saved)).toBe(qpdfEncryption(v.bytes));
+    for (const pw of [USER_PW, OWNER_PW])
+      expect(await measureUnits(saved, 'm3-04-q', pw)).toEqual({
+        unit: 'm',
+        ratio: '1 mm = 100 mm',
+      });
+    expect(await verifyObjects(r.expected?.objects ?? [], saved, undefined, OWNER_PW)).toEqual({
+      ok: true,
+    });
+    // qpdf's own decryption agrees.
+    const plain = qpdfDecrypt(saved, OWNER_PW);
+    expect(await measureUnits(plain, 'm3-04-q')).toEqual({ unit: 'm', ratio: '1 mm = 100 mm' });
+    const vp = (await (await PdfReader.open(plain)).pages())[0]?.dict.get('VP');
+    const name0 =
+      Array.isArray(vp) && isDict(vp[0]) ? (vp[0].get('Name') as PdfString).text() : null;
+    expect(name0).toBe('Sheet');
   });
 });

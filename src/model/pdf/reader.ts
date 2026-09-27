@@ -2,10 +2,12 @@
 // M0-S2 spike: classic xref tables, xref streams (PNG predictors), /Prev
 // chains, hybrid /XRefStm, object streams. Async because inflate is async in
 // the workers (DecompressionStream; ADR-007 "Inflate"). It fails loudly on
-// anything it can't read rather than misreading: in encrypted files it reads
-// the xref (never encrypted) and plain objects, whose strings stay ciphertext
-// (`encrypted` is set), and refuses encrypted streams until the Standard
-// security handler lands (M3-04).
+// anything it can't read rather than misreading. Encrypted files (M3-04):
+// with the Standard security handler and a password that opens the file (the
+// empty user password for owner-only files), strings and streams are
+// decrypted per object; without one, `readable` is false, strings stay
+// ciphertext and streams are refused.
+import { StandardCrypt } from './security/standard';
 import {
   Parser,
   PdfRef,
@@ -85,6 +87,12 @@ export class PdfReader {
   readonly xref = new Map<number, XrefEntry>();
   trailer: PdfDict = new Map();
   encrypted = false;
+  /** Strings and streams can be decrypted (unencrypted files: always true). */
+  readable = true;
+  /** The file key's owner (null when unencrypted or unreadable). */
+  crypt: StandardCrypt | null = null;
+  private encryptNum = -1;
+  private readonly streamIds = new WeakMap<PdfStream, [number, number]>();
   private readonly inflate: Inflate;
   private readonly cache = new Map<number, Promise<PdfValue>>();
   private readonly objStmCache = new Map<number, Promise<Map<number, PdfValue>>>();
@@ -95,7 +103,11 @@ export class PdfReader {
   }
 
   /** Reads the cross-reference chain from the newest `startxref` back. */
-  static async open(bytes: Uint8Array, inflate: Inflate = inflateStream): Promise<PdfReader> {
+  static async open(
+    bytes: Uint8Array,
+    inflate: Inflate = inflateStream,
+    opts: { password?: string } = {},
+  ): Promise<PdfReader> {
     const r = new PdfReader(bytes, inflate);
     const m = [...tailText(bytes).matchAll(/startxref\s+(\d+)/g)].pop();
     if (!m) throw new Error('no startxref');
@@ -115,6 +127,20 @@ export class PdfReader {
       at = numOf(trailer.get('Prev'));
     }
     r.encrypted = r.trailer.has('Encrypt');
+    if (r.encrypted) {
+      const ref = r.trailer.get('Encrypt');
+      if (ref instanceof PdfRef) r.encryptNum = ref.num;
+      const enc = await r.resolve(ref);
+      try {
+        if (isDict(enc))
+          r.crypt = await StandardCrypt.open(enc, r.trailer.get('ID'), opts.password);
+      } catch {
+        r.crypt = null;
+      }
+      r.readable = r.crypt !== null;
+      // Anything read while opening (the /Encrypt dict, lengths) was read raw.
+      r.cache.clear();
+    }
     return r;
   }
 
@@ -211,9 +237,13 @@ export class PdfReader {
 
   /** A stream's decoded data (Flate + PNG predictors only). */
   async decode(s: PdfStream): Promise<Uint8Array> {
-    if (this.encrypted && nameOf(s.dict.get('Type')) !== 'XRef')
-      throw new Error('encrypted streams are not supported yet (ADR-007, M3-04)');
-    return this.decodeRaw(s);
+    const type = nameOf(s.dict.get('Type'));
+    if (!this.encrypted || type === 'XRef') return this.decodeRaw(s);
+    if (!this.crypt) throw new Error('encrypted stream: the document could not be decrypted');
+    const ids = this.streamIds.get(s);
+    const plainMetadata = type === 'Metadata' && !this.crypt.info.encryptMetadata;
+    if (!ids || plainMetadata) return this.decodeRaw(s);
+    return this.decodeRaw(new PdfStream(s.dict, this.crypt.decryptStream(ids[0], ids[1], s.raw)));
   }
 
   get(ref: PdfRef | number): Promise<PdfValue> {
@@ -228,7 +258,19 @@ export class PdfReader {
 
   private async load(num: number): Promise<PdfValue> {
     const e = this.xref.get(num);
-    if (e?.type === 1) return (await this.parseIndirectAt(e.offset)).value;
+    if (e?.type === 1) {
+      const v = (await this.parseIndirectAt(e.offset)).value;
+      if (!this.crypt || num === this.encryptNum) return v;
+      // Strings of a plain object are encrypted with its number and generation;
+      // objects inside object streams are not (the stream is).
+      if (v instanceof PdfStream) {
+        const dict = this.crypt.mapStrings(v.dict, num, e.gen, false) as PdfDict;
+        const out = new PdfStream(dict, v.raw);
+        this.streamIds.set(out, [num, e.gen]);
+        return out;
+      }
+      return this.crypt.mapStrings(v, num, e.gen, false);
+    }
     if (e?.type === 2) return (await this.fromObjStm(e.stream)).get(num) ?? null;
     return null;
   }

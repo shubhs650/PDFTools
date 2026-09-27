@@ -10,11 +10,13 @@ export async function verifyObjects(
   expected: readonly ObjectDigest[],
   bytes: Uint8Array,
   inflate?: Inflate,
+  password?: string,
 ): Promise<VerifyResult> {
   if (expected.length === 0) return { ok: true };
   let reader: PdfReader;
   try {
-    reader = await PdfReader.open(bytes, inflate);
+    // Encrypted files: strings are decrypted with the open password's file key (M3-04).
+    reader = await PdfReader.open(bytes, inflate, password === undefined ? {} : { password });
   } catch {
     return { ok: false, reason: 'unparsable' };
   }

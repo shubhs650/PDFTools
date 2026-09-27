@@ -24,6 +24,8 @@ import { allows, type Capability, type Security } from '../../../model/permissio
 import { acquirePage, docPtrOf, rawCall, withWideString } from '../pdfium';
 import { concatBytes, latin1 } from './bytes';
 import type { PdfValue } from '../../../model/pdf/objects';
+import { PdfReader, inflateStream } from '../../../model/pdf/reader';
+import type { StandardCrypt } from '../../../model/pdf/security/standard';
 import {
   PatchError,
   PatchSet,
@@ -59,6 +61,14 @@ interface DocState {
   seq: number;
   /** Keys our object layer adds to PDFium's objects (M3-03, ADR-007). */
   patches: PatchSet;
+  /**
+   * The file key for our object layer's strings in an encrypted file (M3-04),
+   * from the password the document was opened with; memory only (M2-Q7).
+   * Null when the file isn't encrypted or its handler isn't supported.
+   */
+  crypt: StandardCrypt | null;
+  /** Resolves once `crypt` is known. */
+  cryptReady: Promise<void>;
   /** A save or rewrite handed out and not yet committed (`rewrite`: a full rewrite). */
   pending?: { next: SaveBase; tailLength: number; seq: number; rewrite?: boolean };
 }
@@ -89,6 +99,10 @@ interface AnnotRef {
   id?: string;
 }
 
+/** The newest trailer names /Encrypt (the reader then derives the file key). */
+const namesEncrypt = (base: SaveBase | undefined): boolean =>
+  base !== undefined && /\/Encrypt\s+\d+\s+\d+\s+R/.test(base.trailer);
+
 function readBase(bytes: Uint8Array): SaveBase | undefined {
   try {
     return saveBaseOf(bytes);
@@ -105,6 +119,7 @@ function readBase(bytes: Uint8Array): SaveBase | undefined {
 function withPatches(
   bytes: Uint8Array<ArrayBuffer>,
   resolved: readonly { num: number; patch: Patch }[],
+  crypt: StandardCrypt | null,
 ): Uint8Array<ArrayBuffer> {
   const first = /\d+\s+\d+\s+obj\b/.exec(latin1(bytes.subarray(0, 1024)));
   if (!first) throw new RpcError('save-rewrite', 'The rewritten file has no objects');
@@ -112,7 +127,7 @@ function withPatches(
     patches: resolved.map(({ num, patch }) => ({
       num,
       force: true,
-      apply: (b) => applyPatch(b, patch),
+      apply: (b) => applyPatch(b, patch, crypt),
     })),
   });
   return concatBytes([bytes, r.tail]);
@@ -129,8 +144,8 @@ export class SaveTracker {
   }
 
   /** The bytes a document was opened from (their newest trailer is read, nothing kept). */
-  opened(docId: string, bytes: Uint8Array): void {
-    this.docs.set(docId, {
+  opened(docId: string, bytes: Uint8Array, password?: string): void {
+    const state: DocState = {
       openedLength: bytes.length,
       base: readBase(bytes),
       dirty: new Map(),
@@ -140,7 +155,27 @@ export class SaveTracker {
       untracked: 0,
       seq: 0,
       patches: new PatchSet(),
-    });
+      crypt: null,
+      cryptReady: Promise.resolve(),
+    };
+    // Only the trailer and /Encrypt are read; `bytes` is not kept once the key is known.
+    if (namesEncrypt(state.base)) {
+      state.cryptReady = PdfReader.open(
+        bytes,
+        inflateStream,
+        password === undefined ? {} : { password },
+      )
+        .then((r) => {
+          state.crypt = r.crypt;
+        })
+        .catch(() => undefined);
+    }
+    this.docs.set(docId, state);
+  }
+
+  /** Waits until the document's file key is known (stagePatch needs it). */
+  async securityReady(docId: string): Promise<void> {
+    await this.need(docId).cryptReady;
   }
 
   closed(docId: string): void {
@@ -323,7 +358,7 @@ export class SaveTracker {
       throw new RpcError('patch-target', 'No such page');
     const seq = s.seq + 1;
     try {
-      s.patches.stage(target, set, remove, seq, security.revision >= 0);
+      s.patches.stage(target, set, remove, seq, security.revision >= 0 && !s.crypt);
     } catch (err) {
       if (err instanceof PatchError) throw new RpcError(err.code, err.message);
       throw err;
@@ -434,7 +469,7 @@ export class SaveTracker {
     const patches: ObjectPatch[] = resolved.map(({ num, patch }) => ({
       num,
       force: !patch.clean,
-      apply: (bytes) => applyPatch(bytes, patch),
+      apply: (bytes) => applyPatch(bytes, patch, s.crypt),
     }));
     const r = narrowTail(base, full, s.openedLength, dirty, {
       keepAll,
@@ -477,7 +512,7 @@ export class SaveTracker {
     const s = this.need(docId);
     const resolved = this.resolvePatches(docId, s);
     let bytes = saveWithFlags(this.mod, docPtrOf(this.native, docId), FPDF_NO_INCREMENTAL);
-    if (resolved.length > 0) bytes = withPatches(bytes, resolved);
+    if (resolved.length > 0) bytes = withPatches(bytes, resolved, s.crypt);
     const base = saveBaseOf(bytes);
     // Objects PDFium allocated before the rewrite are not new afterwards.
     const newFrom = Math.max(base.size, s.base?.newFrom ?? s.base?.size ?? 0);

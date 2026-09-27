@@ -14,6 +14,7 @@ import {
   serializeIndirect,
   type PdfValue,
 } from '../../../model/pdf/objects';
+import type { StandardCrypt } from '../../../model/pdf/security/standard';
 import { ABSENT, hashText, type ObjectDigest } from '../save/digest';
 
 /** A page (its dictionary) or one annotation on it, by EmbedPDF id (/NM). */
@@ -62,8 +63,9 @@ export class PatchSet {
   }
 
   /**
-   * Merges keys into the target's patch. `encrypted`: strings can't be written
-   * yet (their encryption comes with M3-04), so values holding one are refused.
+   * Merges keys into the target's patch. `encrypted`: the document is encrypted
+   * and we have no file key for it (a handler other than Standard, M3-04), so
+   * values holding a string are refused.
    */
   stage(
     target: PatchTarget,
@@ -79,7 +81,7 @@ export class PatchSet {
     if (encrypted && [...set.values()].some(containsString))
       throw new PatchError(
         'patch-encrypted',
-        'Strings can not be written into encrypted documents yet',
+        'Strings can not be written into this encrypted document',
       );
     const key = targetKey(target);
     const p = this.byTarget.get(key) ?? {
@@ -117,12 +119,21 @@ export class PatchError extends Error {
 }
 
 /** PDFium's serialization of the object with the patch applied (same number and generation). */
-export function applyPatch(objectBytes: Uint8Array, p: Patch): Uint8Array {
+/**
+ * PDFium's serialization of the object with the patch applied (same number and
+ * generation). In an encrypted file PDFium's own strings are already
+ * ciphertext; only our values are encrypted, with this object's key (M3-04).
+ */
+export function applyPatch(
+  objectBytes: Uint8Array,
+  p: Patch,
+  crypt?: StandardCrypt | null,
+): Uint8Array {
   const { num, gen, value } = parseIndirect(objectBytes);
   if (!isDict(value))
     throw new PatchError('patch-target', 'The patched object is not a dictionary');
   for (const k of p.remove) value.delete(k);
-  for (const [k, v] of p.set) value.set(k, v);
+  for (const [k, v] of p.set) value.set(k, crypt ? crypt.mapStrings(v, num, gen, true) : v);
   return serializeIndirect(num, gen, value);
 }
 

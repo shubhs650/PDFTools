@@ -91,6 +91,12 @@ export class WorkDocs {
     return doc;
   }
 
+  /** The open (or owner) password, for our own reader's file key (M3-04); memory only. */
+  passwordOf(docId: string): string | undefined {
+    const e = this.require(docId);
+    return e.password ?? e.ownerPassword;
+  }
+
   refresh(docId: string, tail: ArrayBuffer): boolean {
     const e = this.require(docId);
     e.tail = tail;

@@ -1,10 +1,10 @@
 # ADR-014: M3-01 — Annotation plugin, undo history, drawing markups and the comment data path
 
-- **Status:** Proposed (2026-09-27). Decisions 2 and 3 replace parts of the stock plugin with our
+- **Status:** Accepted (owner, 2026-09-27). Decisions 2 and 3 replace parts of the stock plugin with our
   own code; neither changes ARCHITECTURE.md (§5 tiled rendering, §7.1, D-09 "replace that plugin
   only; drop to engine level for that subsystem").
 - **Date:** 2026-09-27
-- **Deciders:** Owner (to accept); recorded by the coding agent
+- **Deciders:** Owner (accepted 2026-09-27); recorded by the coding agent
 - **Related decisions:** D-03, D-09, D-10, §5, §7.1; ADR-001 B7 and B14; ADR-004; ADR-005 (`/NM`);
   ADR-011; ADR-012; CLAUDE.md rules 1, 2, 6, 7, 9 and 12
 - **Related spike / milestone:** M3-01 (feeds M3-05, M3-08 … M3-12)
