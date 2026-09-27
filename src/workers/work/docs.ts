@@ -91,6 +91,12 @@ export class WorkDocs {
     return doc;
   }
 
+  /** The open (or owner) password, for our own reader's file key (M3-04); memory only. */
+  passwordOf(docId: string): string | undefined {
+    const e = this.require(docId);
+    return e.password ?? e.ownerPassword;
+  }
+
   refresh(docId: string, tail: ArrayBuffer): boolean {
     const e = this.require(docId);
     e.tail = tail;
@@ -114,7 +120,7 @@ export class WorkDocs {
   async withCandidate<T>(
     docId: string,
     piece: ArrayBuffer,
-    fn: (candidateId: string, doc: PdfDocumentObject) => T,
+    fn: (candidateId: string, doc: PdfDocumentObject, bytes: ArrayBuffer) => T,
   ): Promise<T> {
     const e = this.require(docId);
     const bytes = concat(concat(e.original, e.tail), piece);
@@ -123,7 +129,7 @@ export class WorkDocs {
       .openDocumentBuffer({ id: candidateId, content: bytes }, openOptions(e.password))
       .toPromise();
     try {
-      return fn(candidateId, doc);
+      return fn(candidateId, doc, bytes);
     } finally {
       await this.native().closeDocument(doc).toPromise();
     }

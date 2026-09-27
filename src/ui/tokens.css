@@ -138,7 +138,7 @@
   --color-accent: #479ef5;
   --color-accent-hover: #62abf5;
   --color-focus: #ffffff;
-  --color-danger: #f1707b;
+  --color-danger: #ff8a94; /* 5.6:1 on --color-surface-raised (M3-07) */
   --color-backdrop: rgb(0 0 0 / 0.6);
   --color-tooltip-bg: #e0e0e0;
   --color-tooltip-text: #1f1f1f;

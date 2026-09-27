@@ -647,9 +647,27 @@ body {
 }
 
 .page-preview,
-.page-tiles {
+.page-tiles,
+.annotation-tiles {
   position: absolute;
   inset: var(--space-0);
+}
+
+/* Markups (M3-05, ADR-014): drawn by the annotation tiles; the plugin's layer on
+   top shows an annotation's body only while it is selected (the tiles then
+   leave it out). Invisible bodies still take the click that selects them. */
+.annotation-tiles {
+  pointer-events: none;
+}
+
+.annotation-body {
+  position: absolute;
+  inset: var(--space-0);
+  opacity: 0;
+}
+
+.annotation-body[data-selected] {
+  opacity: 1;
 }
 
 .page-preview {
@@ -954,8 +972,35 @@ body {
   margin: var(--space-0);
 }
 
-.local-data > .ui-button {
+.local-data > .ui-button,
+.profile-section > .ui-button {
   justify-self: start;
+}
+
+/* ------------------------------------------------------------ reviewer profile (M3-07) */
+.settings-sections {
+  display: grid;
+  gap: var(--space-7);
+}
+
+.profile-section {
+  display: grid;
+  gap: var(--space-4);
+  max-width: calc(var(--dialog-max-width) * 1.5);
+}
+
+.profile-row {
+  display: contents;
+}
+
+.profile-form {
+  display: grid;
+  gap: var(--space-4);
+}
+
+.profile-failed {
+  margin: var(--space-0);
+  color: var(--color-danger);
 }
 
 .local-data-note,

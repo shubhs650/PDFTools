@@ -78,8 +78,9 @@ export const isPdf = (bytes: ArrayBuffer): boolean =>
   new TextDecoder('latin1').decode(new Uint8Array(bytes, 0, Math.min(5, bytes.byteLength))) ===
   '%PDF-';
 
-async function read(docId: string, item: AttachmentInfo): Promise<ArrayBuffer> {
-  return (await workClient().run('readAttachment', { docId, ref: item.ref }).promise).bytes;
+/** The attachment as a Blob made in the Work worker: no large copy on the main thread (rule 1). */
+async function read(docId: string, item: AttachmentInfo): Promise<Blob> {
+  return (await workClient().run('readAttachment', { docId, ref: item.ref }).promise).blob;
 }
 
 async function withBusy(index: number, fn: () => Promise<void>): Promise<void> {
@@ -106,8 +107,7 @@ export function saveAttachment(docId: string, item: AttachmentInfo, index: numbe
     const fsa =
       typeof (window as { showSaveFilePicker?: unknown }).showSaveFilePicker === 'function';
     if (fsa && !handle) return; // cancelled
-    const bytes = await read(docId, item);
-    const blob = new Blob([bytes], { type: 'application/octet-stream' });
+    const blob = await read(docId, item);
     if (handle) await writeToHandle(handle, blob);
     else downloadBytes(blob, item.name || 'attachment');
   });
@@ -116,10 +116,12 @@ export function saveAttachment(docId: string, item: AttachmentInfo, index: numbe
 /** Opens a PDF attachment as a new tab. */
 export function openAttachment(docId: string, item: AttachmentInfo, index: number): Promise<void> {
   return withBusy(index, async () => {
-    const bytes = await read(docId, item);
-    if (!isPdf(bytes)) throw Object.assign(new Error('not a PDF'), { code: 'attachment-not-pdf' });
+    const blob = await read(docId, item);
+    if (!isPdf(await blob.slice(0, 5).arrayBuffer()))
+      throw Object.assign(new Error('not a PDF'), { code: 'attachment-not-pdf' });
+    // A File over the same Blob data: no copy.
     await openFiles([
-      { file: new File([bytes], item.name || 'attachment.pdf', { type: 'application/pdf' }) },
+      { file: new File([blob], item.name || 'attachment.pdf', { type: 'application/pdf' }) },
     ]);
   });
 }

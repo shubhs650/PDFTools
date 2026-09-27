@@ -8,6 +8,7 @@ import { commandLabelKey } from '../commandLabels';
 import { ribbonLayout } from '../ribbon/layout';
 import { RecentList } from '../../features/recent/RecentList';
 import { LocalData } from '../../features/settings/LocalData';
+import { ProfileSection } from '../../features/settings/profile/ProfileSection';
 import { About, Privacy } from './AboutPrivacy';
 import { Properties } from './Properties';
 import { RibbonButton } from '../ribbon/RibbonButton';
@@ -148,7 +149,10 @@ export function Backstage({ open, section: initial, onOpenChange }: BackstagePro
               ) : section.id === 'file.properties' ? (
                 <Properties />
               ) : section.id === 'file.settings' ? (
-                <LocalData />
+                <div className="settings-sections">
+                  <ProfileSection />
+                  <LocalData />
+                </div>
               ) : section.id === 'file.about' ? (
                 <About />
               ) : section.id === 'file.privacy' ? (

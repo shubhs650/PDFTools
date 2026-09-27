@@ -80,7 +80,7 @@ function fakeSpawn(world: FakeWorld) {
       docProperties: () => {
         throw new Error('unused');
       },
-      readAttachment: () => ({ bytes: new ArrayBuffer(0) }),
+      readAttachment: () => ({ blob: new Blob([]) }),
       indexText: () => ({ pages: 3, extracted: 3, pausedMs: 0, ms: 1 }),
       activity: () => {
         world.jobsSeen.push('activity');
@@ -94,6 +94,7 @@ function fakeSpawn(world: FakeWorld) {
       close: () => ({ wasmBytes: world.memory }),
       memory: () => ({ wasmBytes: world.memory, peakWasmBytes: world.memory }),
       docState: () => ({ pageCount: 3, appliedTailBytes: 0 }),
+      annotations: () => ({}),
       textStats: async (_a, ctx) => {
         await new Promise((r) => setTimeout(r, 5));
         ctx.throwIfAborted();

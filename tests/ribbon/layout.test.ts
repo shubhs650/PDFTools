@@ -5,8 +5,18 @@ import { ribbonLayout } from '../../src/app/ribbon/layout';
 describe('ribbon layout from the command table (§8, ADR-001 B6, M1-Q2)', () => {
   const m1 = ribbonLayout();
 
-  it('shows only tabs with an available command: Home, View, Help, and Protect from M2-03', () => {
-    expect(m1.tabs.map((t) => t.tab)).toEqual(['home', 'view', 'protect', 'help']);
+  it('shows only tabs with an available command: Home, View, Help, Protect (M2-03), Comment (M3-07/08)', () => {
+    expect(m1.tabs.map((t) => t.tab)).toEqual(['home', 'view', 'comment', 'protect', 'help']);
+    const comment = m1.tabs.find((t) => t.tab === 'comment');
+    expect(comment?.groups.flatMap((g) => g.commands.map((c) => c.id))).toEqual([
+      'comment.highlight', // M3-08
+      'comment.underline',
+      'comment.strikeout',
+      'comment.squiggly',
+      'comment.insertText',
+      'comment.replaceText',
+      'comment.reviewerProfile', // M3-07
+    ]);
     const protect = m1.tabs.find((t) => t.tab === 'protect');
     // Only what works: Security Info (M2-12), Unlock (M2-03), Signatures (M2-13); redaction (M4) and the rest stay omitted.
     expect(protect?.groups.flatMap((g) => g.commands.map((c) => c.id))).toEqual([
@@ -30,6 +40,7 @@ describe('ribbon layout from the command table (§8, ADR-001 B6, M1-Q2)', () => 
       'home.find',
       'home.forms',
       'view.zoom',
+      'comment.textMarkup', // Highlight (M3-08)
       'protect.security', // Signatures (M2-13)
     ]);
     expect(home?.groups[3]?.commands.map((c) => c.id)).toEqual([
@@ -54,7 +65,13 @@ describe('ribbon layout from the command table (§8, ADR-001 B6, M1-Q2)', () => 
       'file.about',
       'file.privacy',
     ]);
-    expect(m1.quickAccess.map((c) => c.id)).toEqual(['qat.open', 'qat.save', 'qat.print']);
+    expect(m1.quickAccess.map((c) => c.id)).toEqual([
+      'qat.open',
+      'qat.save',
+      'qat.print',
+      'qat.undo', // M3-05
+      'qat.redo', // M3-05
+    ]);
   });
 
   it('shows every §8 tab once every milestone is available', () => {

@@ -46,6 +46,18 @@ export const INTERNAL_ACTIONS = [
   'edit.selectAll',
   'find.next',
   'find.prev',
+  // Annotations (M3-05): delete, cycle with Tab, nudge with the arrow keys.
+  'annotation.delete',
+  'annotation.next',
+  'annotation.prev',
+  'annotation.nudgeLeft',
+  'annotation.nudgeRight',
+  'annotation.nudgeUp',
+  'annotation.nudgeDown',
+  'annotation.nudgeLeftFar',
+  'annotation.nudgeRightFar',
+  'annotation.nudgeUpFar',
+  'annotation.nudgeDownFar',
 ] as const;
 export type InternalAction = (typeof INTERNAL_ACTIONS)[number];
 

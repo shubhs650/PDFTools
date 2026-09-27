@@ -1,13 +1,120 @@
 # PDFTools — Progress
 
-_Last updated: 2026-09-27 (session 15: M2-16 to M2-19, M2 complete)_
+_Last updated: 2026-09-27 (session 16: M3 plan approved; M3-01 … M3-08)_
 
-**Current milestone:** M2 — Read is **complete on the agent side** (M2-01 … M2-19; results and
-owner pack: [docs/acceptance/M2.md](acceptance/M2.md)). M1 is merged into `main`; M2-01 … M2-15
-are merged; M2-16 … M2-19 are on `claude/m2-tasks-16-19-wt8d51`, waiting for review. M0, M1 and M2
-owner runs are open. Next: the M3 plan (after the owner's review of M2).
+**Current milestone:** M3 — Review. Plan approved (2026-09-27); M3-01 … M3-08 done in session 16
+on `claude/m3-task-breakdown-tlyokp` (ADR-014 and ADR-015 accepted).
+M0–M2 are merged into `main` (M2 complete on the agent side, owner pack in
+[docs/acceptance/M2.md](acceptance/M2.md)); the M0, M1 and M2 owner runs are open.
 
 ## Done
+
+- **Session 16 — perf gate fix before merging M3.** CI's perf gate tripped on 3 of 6 branch
+  runs. A HEAD-vs-main comparison (longest main-thread task per scenario, two full perf runs
+  each) singled out Save attachment: the main thread built a 20 MB `Blob` from the transferred
+  bytes (22–27 ms on main, but 180 ms+ in 2 of 6 HEAD runs). The Work worker now returns the
+  Blob itself (`readAttachment` → `{ blob }`), so the main thread only gets a handle: 0 tasks
+  over 50 ms in 8 of 8 runs. Other scenarios matched main within noise.
+
+- **Session 16 — M3-08 text markup tools.** Highlight, Underline, Strikeout, Squiggly, Insert
+  Text and Replace Text on the Comment tab (Highlight also on Home), keys G/U/K/Q/I/R. Select
+  text first (drag, or Ctrl+A from the keyboard) and run the tool, or turn the tool on and drag
+  (on until Esc). Standard annotations with `/QuadPoints` per line, `/T` from the profile and the
+  selected text in `/Contents` only when copying is allowed; Replace = Caret + StrikeOut grouped
+  (`/IRT`, `/RT /Group`, `/IT /StrikeOutTextEdit`). Fixed EmbedPDF writing the selected text to
+  its private `/EPDFCustom` key (rule 6) and omitting `/IT` on text markups. Unit + e2e
+  `e2e/text-markup.spec.ts`.
+
+- **Session 16 — M3-07 reviewer profile (D-16, M3-Q7).** Asked before the first markup of a
+  session (Skip = "Anonymous" until the next session), stored on this device only (IndexedDB v2,
+  new `profile` store, listed on the Privacy page, cleared with local data), edited in Settings
+  or Comment → Reviewer Profile (the Comment tab now shows). New annotations get `/T` = name.
+  Fixed: EmbedPDF re-authored any markup it edited; edits now keep the original author in the
+  store and in the file. Dark `--color-danger` raised to 5.6:1. Unit + `e2e/profile.spec.ts`.
+
+- **Session 16 — M3-06 custom icons.** The 15 M3 icons ADR-010 lists as missing, in Fluent's
+  Regular line style with Filled variants for toggles (`src/ui/icons/custom/m3.ts`, drawn with
+  `draw.ts` at 20 and 32 px directly; no third-party artwork, rule 15); no M3 command is
+  `customPending` any more (unit test). Owner visual review pending.
+
+- **Session 16 — M3-05 annotation layer core (ADR-014).** `@embedpdf/plugin-annotation` and
+  `plugin-history` 2.15.1. Annotations load through the Work worker (new Work RPC `annotations`;
+  `RoutedPdfEngine` overrides `getAllAnnotations` and returns no stock appearance bitmaps), with
+  stable `obj-<n>` ids for `/NM`-less markups that the Render worker names before an edit
+  (`src/workers/render/annotIds.ts`). Markups are drawn by our annotation tiles
+  (`src/features/annotate/AnnotationTileLayer.tsx`, Render RPC `annotationTile`,
+  `src/workers/render/annotTiles.ts`); the plugin layer draws only hit areas, handles and the
+  selected body. Commands: Select Comments (shipped), Undo/Redo (Quick Access, Ctrl+Z/Y/Shift+Z),
+  Delete, arrow nudge, Tab/Shift+Tab, Esc; all need the annotate permission (rule 9); a live region
+  names the selection. Found and fixed: the plugin's transparent link bodies sat over our link
+  layer. Unit: `tests/annotate/*` (keyboard order, stable ids, annotation tiles equal PDFium's own
+  render within 4/255 on plain, rotated and crop-offset pages, Work/Render id agreement); e2e:
+  `e2e/annotations.spec.ts` (tiles, stable id, click-select, nudge, undo/redo, delete, Tab, save
+  with `/NM` persisted, annotate-denied file); perf gate in `annotation-load` (tile p95 +13 % while
+  loading 10,000 markups; was 7×). Unit 740, e2e 171, green; bundle core 7.07 MB.
+
+- **Session 16 — M3-04 Standard security handler.** `src/model/pdf/security/` (own MD5, RC4,
+  AES-CBC; WebCrypto SHA-2 for R5/R6): file keys for R2–R6 from the user or owner password, RC4 /
+  AESV2 / AESV3 / Identity crypt filters. `PdfReader.open(bytes, inflate, { password })`
+  decrypts strings and streams; the Render worker's tracker derives the key from the open
+  password (worker memory only, M2-Q7) and encrypts only the staged values, so measurement
+  strings and `/VP` now save in encrypted files (R, P and method unchanged, qpdf-clean). Unit:
+  RFC 1321 / RFC 6229 / FIPS-197 vectors, CBC vs WebCrypto, qpdf R2/R3/R4/R6/owner-only files
+  (plain and object streams) read back against `qpdf --decrypt`, encrypted saves incl. Save
+  Optimized and rule 9 with the user password; e2e: an AES-128 file opened with its owner
+  password saves encrypted keys and verifies. New probe `view.activeDocId`. Unit 733, green.
+
+- **Session 16 — M3-02 stamps, CRS workbook and snapshots spike.** _Works with workaround_,
+  [ADR-015](adr/015-m3-stamps-crs.md) (proposed; decisions 1–2 need the owner). Stamp PNG drawn
+  in a worker with the bundled Noto Sans Regular: at 4× the placed size as sharp as vector text
+  up to 400 % (softer at 1600 %), ~42 KB each. ExcelJS 4.4.0's browser bundle in a worker: 1,000
+  rows + 1,000 images, zip 0.6 s, 3.1 MB, worker chunk 202 KB brotli, cancel between rows, no
+  long task, no CSP violation, read back correctly. **License gate fails** as installed:
+  `unzipper@0.10 → binary → buffers@0.1.1` has no license (plus `chainsaw`/`traverse` "MIT/X11");
+  per M3-Q9 ExcelJS is **not** added. With an npm override `unzipper@0.12.3` the gate passes (709
+  packages); alternative: our own XLSX writer. Snapshots via content crop + ADR-014 annotation
+  tile: 1,000 on the marked contract in 1.3 s; 200 on the marked A0 sheet in 0.5 s (72 s with
+  PDFium's annotation flag). Spike `spikes/s13-stamps-crs/` (project `s13`).
+
+- **Session 16 — M3-01 annotation spike.** _Works with workaround_,
+  [ADR-014](adr/014-m3-annotations.md) (proposed). All 21 EmbedPDF tools (with appearance
+  streams), replies (`/IRT` object reference, `/RT /R`) and review states (`/StateModel`,
+  `/State`) round-trip through the narrow Ctrl+S and verify; Acrobat-style replies are read;
+  `plugin-history` gives per-document unlimited undo. Found: the plugin loads **every**
+  annotation through the Render queue on open (500-page chunks of 178–195 ms; 10,000 markups
+  load in 0.73–0.77 s in the browser, tile p95 23 → 169–178 ms); today's tiles are rendered
+  without annotations and the stock layer draws per-markup bitmaps at the current zoom
+  (a sheet-size cloud = 384 MP at 800 %); PDFium's own annotation flag costs 330–410 ms per tile
+  on a 1,000-markup page. Proposed: load via the Work worker (deterministic ids for `/NM`-less
+  annotations) and our own **annotation tiles** (`EPDF_RenderAnnotBitmap` for the markups meeting
+  a tile: 0.2–3.5 ms, pixel-equal within 3/255). New self-made fixtures `markedContractPdf`
+  (2,000 × 5 markups) and `markedSheetPdf` (A0, 1,000 markups); perf scenario
+  `e2e/perf/annotation-load.spec.ts`; e2e-only probe `view.engineLoad('allAnnotations')`.
+
+- **Session 16 — M3-03 PDF object layer + single-revision merge.** `src/model/pdf/` (values,
+  parser, serializer, async reader over `DecompressionStream`, RPC wire form) ported from S2;
+  staged patches (`src/workers/render/objects/patches.ts`, Render RPC `stageObjects`) applied to
+  PDFium's own serialization of the object inside the one narrow Ctrl+S tail. Patches are sticky
+  (re-applied when a later save rewrites the object; appended after a Save Optimized rewrite,
+  which would otherwise drop them), limited to measurement keys on annotations and `/VP` on pages,
+  need the annotate permission, and refuse strings in encrypted files until M3-04. The Work
+  worker checks the staged keys with our reader (`verifyObjects.ts`). The Layers pane uses the
+  shared reader (scanner as fallback). Unit: `tests/objects/*` (parser, serializer, wire, reader
+  incl. `/Prev`, object streams, predictors, and a qpdf cross-check of every committed fixture and
+  corpus PDF), `tests/save/patch-save.test.ts` (real PDFium: 5 plain + 2 encrypted S1 originals,
+  one revision, qpdf-clean, sticky re-apply, Save Optimized, undo by removal, deleted annotation,
+  recovery tail, verification mismatch, rule 9); e2e: staged keys through the workers on an
+  xref-stream file. Unit 705, green; no dependency added.
+
+- **Session 16 — M3 plan.** Branch `claude/m3-task-breakdown-tlyokp`. Read PROGRESS,
+  ARCHITECTURE Rev 0.4 and ADR-001 to ADR-013; wrote [docs/plan/M3.md](plan/M3.md): 20 tasks (two
+  spikes → ADR-014 annotations/history/comment data path and ADR-015 stamps/CRS/snapshots; object
+  layer port with single-revision merge; Standard security handler; annotation core with undo;
+  custom icons; reviewer profile; text markup, note/drawing/link tools; properties pane; comments
+  pane with auto-numbering; replies and review status; status schemes; stamps; scale model;
+  measurement tools; scale viewports; snapping with the Snap worker; CRS export; acceptance) with
+  goals, files, acceptance criteria, tests and dependencies, plus ten owner questions
+  (M3-Q1 … Q10). No code.
 
 - **Session 15 — M2-19 M2 acceptance pass and owner pack.** [docs/acceptance/M2.md](acceptance/M2.md): every §12 row met on typical files (search on the 2,000-page stand-in: first hits 52 ms, complete 5.9 s; 23 of 23 perf scenarios without a long task; M1 rows still met), every §13 M2 item mapped, owner pack (FAR / 500 MB search via `npm run owner:timings`, interop §M2 I–K, signatures after form save, live error report, Firefox). `scripts/acceptance.ts` has the M2 rows (search, M2 offline proof); new M2 offline proof in `e2e/offline.spec.ts`; the a11y gate covers every M2 pane, the find bar and the M2 dialogs in light, dark and pseudo-locale; the handler test covers every M2 command; `AVAILABLE_MILESTONES` = M1, M2. Found and fixed: Ctrl+S/O/P/F did nothing inside text fields (form fields now save with Ctrl+S, committing the typed value first); a save could overtake a form value still being committed (`pendingEdits.ts`); Home → Select Text had no handler. New perf scenario: 50-page print-ready export. Bundle 6.84 MB core / 30.85 MB installed, within budget.
 
@@ -520,14 +627,24 @@ owner runs are open. Next: the M3 plan (after the owner's review of M2).
 
 ## In progress
 
-- **M2-16 … M2-19 (session 15):** one commit per task on `claude/m2-tasks-16-19-wt8d51` (from
-  `main` after PRs #37–#43), pushed once at the end of the session; no PR opened yet.
+- **M3 (session 16):** M3-01 … M3-08 as one commit each on
+  `claude/m3-task-breakdown-tlyokp` (the session's branch; the plan's `m3/<task>` branches were
+  not used because this session may only push to its own branch), pushed; no PR opened yet.
 - **Git in one paragraph (for the owner):** each task lives on its own _branch_ (a named line
   of commits). A _commit_ is a saved snapshot with a message; _push_ uploads the branch to
   GitHub; a _pull request_ (PR) asks to bring a branch into `main`, and GitHub runs the checks
   (CI) on it; _merge_ adds it to `main` once the checks are green.
 
 ## Session log
+
+- **Session 16 (2026-09-27), continued:** M3 plan approved; M3-03, M3-01, M3-02 (one commit
+  each). Local checks: typecheck, lint, format, 705 unit tests, license gate (642 packages), the
+  save/recovery/layers e2e specs (18) and the new perf scenario `annotation-load`; spike runs
+  `s12` (Node) and `s13` (2/2, ExcelJS installed with `--no-save` only). qpdf installed in the
+  container.
+
+- **Session 16 (2026-09-27):** M3 plan only (docs); no code, so no checks beyond Prettier on the
+  changed Markdown.
 
 - **Session 15 (2026-09-27):** M2-16, M2-17, M2-18 and M2-19 on `claude/m2-tasks-16-19-wt8d51`
   (one commit each). Local checks on the last commit: typecheck (app, node, functions), lint,
@@ -596,7 +713,10 @@ owner runs are open. Next: the M3 plan (after the owner's review of M2).
 
 ## Next
 
-1. **Owner:** review and merge `claude/m2-tasks-16-19-wt8d51` (M2-16 … M2-19).
+1. **Owner:** review ADR-014 (annotation load via the Work worker, own annotation tiles) and
+   ADR-015 — **decide** stamps (PNG at 4× vs a B7 exception for vector stamps) and the workbook
+   library (ExcelJS with the `unzipper` override vs our own XLSX writer); then review and merge
+   `claude/m3-task-breakdown-tlyokp` (M3 plan, M3-01 … M3-03).
 2. **Owner:** the M2 owner pack in [docs/acceptance/M2.md](acceptance/M2.md) §4 — FAR / 500 MB
    search timings, interop §M2 (I–K and signatures after a form save), the live error report
    (Cloudflare setup in [docs/deploy/error-report.md](deploy/error-report.md)), Firefox smoke.
@@ -614,9 +734,15 @@ owner runs are open. Next: the M3 plan (after the owner's review of M2).
    - S8 Firefox check and Pages preview.
 4. **Owner:** decide the items under "Decisions needed" (keyboard text selection, committed
    corpus PDFs, Pages project).
-5. **Agent:** the M3 plan (`docs/plan/M3.md`), once M2 is reviewed.
+5. **Owner:** the S2 interop run (§D/§F) before M3-16/M3-20 (M3-Q2 defaults are in use until then).
+6. **Agent:** M3-09 (note, text, drawing, ink and link tools) next, then M3-10 … M3-20 in plan order.
 
 ## Open issues
+
+- **M3-08 tool keys** (G highlight, U underline, K strikeout, Q squiggly, I insert text,
+  R replace text) are our choice — §8.1 names none. Owner may prefer others (the keymap is one
+  table). M3-09 will need letters for note/text box/shapes; R may move if rectangle wants it.
+- **Markups in previews:** page previews and thumbnails still show no markups (M3-05 follow-up).
 
 - **Send-email binding on Pages (M2-18):** not verified that the dashboard offers a Send email
   binding for Pages projects. Without it, reports are stored in D1 only (the function skips the
@@ -700,6 +826,8 @@ owner runs are open. Next: the M3 plan (after the owner's review of M2).
 
 | Date       | Ref              | Decision                                                                                                                                                                                                                                                                                                                                                                                                                                                  |
 | ---------- | ---------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| 2026-09-27 | ADR-014, ADR-015 | Owner accepted ADR-014 (annotations loaded through the Work worker; markups drawn as our own annotation tiles) and ADR-015 (PNG image stamps at 4×; ExcelJS 4.4.0 with an npm override `unzipper@0.12.3`, added in M3-19). Proceed with M3-04 … M3-08.                                                                                                                                                                                                    |
+| 2026-09-27 | M3 plan          | M3 plan approved with M3-Q1 … Q10 as proposed: annotation export in M4; ADR-007 label/viewport defaults until the interop run; review status = standard `/StateModel /Review` replies, schemes drive stamps and the CRS header; image-stamp route (spike first); derived auto-numbers; keyboard creation for note/text box/stamp only; `/T` = reviewer name; own MD5/RC4; ExcelJS in the Work worker (non-core); `m3/<task>` branches.                    |
 | 2026-09-26 | ADR-012, ADR-013 | Owner approved all pending ADRs. ADR-012 decision 5: list-only Layers pane (M2-11). ADR-013 decision 7: §10.1 CSP gains `frame-src blob:` for M2-16's browser-viewer print route (ARCHITECTURE.md updated with M2-16).                                                                                                                                                                                                                                    |
 | 2026-09-25 | M1-15            | Owner: zoom 100 % = one PDF point per CSS pixel (EmbedPDF scale 1, ADR-011's range), so Actual Size is not physical size. PR #13 (main → M0 branch) closed. Single-core machines are not a target; the one-core first-open contention from M1-13/15 CI needs no work.                                                                                                                                                                                     |
 | 2026-09-26 | M1-18            | Owner: headed Chrome/Edge 154 read stored file handles fine, so the Chromium 153 crash is headless/153-only; pin Playwright to 1.62.1 (Chromium 151) for CI rather than change the recent-files design (option 3).                                                                                                                                                                                                                                        |

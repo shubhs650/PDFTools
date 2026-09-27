@@ -87,3 +87,41 @@ test('forced mismatch takes the keep-all path, logs counts only, and the file is
   expect([0, 3, 'absent']).toContain(qpdfCheck(saved));
   expect(await squares(page, id)).toBe(1);
 });
+
+test('object-layer keys (M3-03) save in the same revision and pass the Work worker check', async ({
+  page,
+}) => {
+  await page.goto('/');
+  // An xref-stream file: the Work worker's reader inflates in the worker.
+  const original = readFileSync(`${S1}/original__objstm.pdf`);
+  const id = await openOne(page, 'objstm.pdf', original);
+  expect(await cap(page, 'save', 'addSquares', id, 1)).toBeNull();
+  const measure = {
+    dict: {
+      Type: { name: 'Measure' },
+      Subtype: { name: 'RL' },
+      R: { text: '1 mm = 100 mm' },
+      X: [{ dict: { U: { text: 'm' }, C: 0.0352777778 } }],
+    },
+  };
+  expect(
+    await cap(page, 'save', 'stage', id, { page: 0, annot: 'e2e-square-0' }, { Measure: measure }),
+  ).toBeNull();
+  expect(
+    await cap(page, 'save', 'stage', id, { page: 0 }, { VP: [{ dict: { Measure: measure } }] }),
+  ).toBeNull();
+  expect(await cap(page, 'save', 'stage', id, { page: 0 }, { Annots: [] })).toBe('patch-key');
+  expect(await cap(page, 'save', 'state', id)).toMatchObject({ staged: 2 });
+
+  const r = (await cap(page, 'save', 'verifiedSave', id)) as Verified;
+  expect(r).toMatchObject({ mode: 'narrow', fellBack: false });
+  const tail = Buffer.from(r.tail, 'base64').toString('latin1');
+  expect(tail.match(/startxref/g)?.length).toBe(1);
+  expect(tail).toContain('/VP');
+  expect(tail).toContain('/Measure');
+  expect(await cap(page, 'save', 'fallbacks')).toEqual([]);
+  expect(await cap(page, 'save', 'state', id)).toMatchObject({ staged: 0 });
+  expect([0, 3, 'absent']).toContain(
+    qpdfCheck(Buffer.concat([original, Buffer.from(r.tail, 'base64')])),
+  );
+});

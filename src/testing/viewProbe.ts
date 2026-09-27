@@ -77,6 +77,9 @@ export function registerViewProbe(hook: TestHook): void {
     reset: () => {
       resetRenderStats();
     },
+    /** The active document's engine id (M3-04: probes that take a docId). */
+    activeDocId: () =>
+      hostStore.getState().registry?.getStore().getState().core.activeDocumentId ?? null,
     /** The selection plugin's state for the active document (M2-04). */
     selection: () => {
       const registry = hostStore.getState().registry;
@@ -98,7 +101,7 @@ export function registerViewProbe(hook: TestHook): void {
      * visible tiles; later perf scenarios use it as background load.
      */
     engineLoad: async (
-      method: 'geometry' | 'thumbnail' | 'textRects' | 'bookmarks',
+      method: 'geometry' | 'thumbnail' | 'textRects' | 'bookmarks' | 'allAnnotations',
       pages: number[],
       inFlight = 1,
     ) => {
@@ -118,6 +121,8 @@ export function registerViewProbe(hook: TestHook): void {
           if (method === 'geometry') await engine.getPageGeometry(doc, page).toPromise();
           else if (method === 'textRects') await engine.getPageTextRects(doc, page).toPromise();
           else if (method === 'bookmarks') await engine.getBookmarks(doc).toPromise();
+          // M3-01: what plugin-annotation does once per document on load.
+          else if (method === 'allAnnotations') await engine.getAllAnnotations(doc).toPromise();
           // Raw (unencoded, uncached, not counted as a tile) at the stock
           // thumbnail plugin's priority: renderPageRect's HIGH, like tiles.
           else

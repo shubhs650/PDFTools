@@ -30,6 +30,7 @@ interface DocRecord extends WorkDocSource {
 
 /** Job methods: the ones that run through the worker's scheduler. */
 type JobMethod =
+  | 'annotations'
   | 'docState'
   | 'textStats'
   | 'verify'
@@ -75,6 +76,8 @@ export class WorkClient {
   private readonly docs = new Map<string, DocRecord>();
   /** Opens in flight: jobs on those documents wait for them (the worker needs the copy). */
   private readonly opening = new Map<string, Promise<unknown>>();
+  /** Callers waiting for a document's copy to be added (whenAdded). */
+  private readonly addWaiters = new Map<string, (() => void)[]>();
   private readonly wasmUrl: string;
   private readonly threshold: number;
   private readonly spawnWorker: () => Worker;
@@ -113,6 +116,8 @@ export class WorkClient {
     source: WorkDocSource,
   ): Promise<{ pageCount: number }> {
     this.docs.set(docId, { ...source, tail: undefined });
+    for (const wake of this.addWaiters.get(docId) ?? []) wake();
+    this.addWaiters.delete(docId);
     const opened = (async () => {
       await this.whenReady();
       return this.rpc.call(
@@ -144,6 +149,27 @@ export class WorkClient {
     d.tail = tail;
     await this.whenReady();
     await this.rpc.call('refresh', { docId, tail: tail.slice(0) }).promise;
+  }
+
+  /**
+   * Resolves true once the document's copy is added here (the open pipeline
+   * adds it right after the tab opens), or false after `timeoutMs`.
+   */
+  whenAdded(docId: string, timeoutMs: number): Promise<boolean> {
+    if (this.docs.has(docId)) return Promise.resolve(true);
+    return new Promise((resolve) => {
+      const wake = (): void => {
+        clearTimeout(timer);
+        resolve(true);
+      };
+      const timer = setTimeout(() => {
+        const list = this.addWaiters.get(docId)?.filter((w) => w !== wake) ?? [];
+        if (list.length) this.addWaiters.set(docId, list);
+        else this.addWaiters.delete(docId);
+        resolve(false);
+      }, timeoutMs);
+      this.addWaiters.set(docId, [...(this.addWaiters.get(docId) ?? []), wake]);
+    });
   }
 
   /** Whether the document has a copy here (opening it can fail without affecting the tab). */

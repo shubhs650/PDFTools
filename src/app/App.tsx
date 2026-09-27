@@ -23,6 +23,9 @@ import { RecoveryDialog } from '../features/recovery/RecoveryDialog';
 import { registerSaveCommands } from '../features/save/commands';
 import { registerFindCommands } from '../features/search/commands';
 import { registerSelectionCommands } from '../features/select/commands';
+import { registerAnnotateCommands } from '../features/annotate/commands';
+import { ProfileDialog } from '../features/settings/profile/ProfileDialog';
+import { CaretTextDialog } from '../features/annotate/tools/CaretTextDialog';
 import { GrowthPrompt, SaveOptimizedDialog } from '../features/save/SaveDialogs';
 import { SaveErrorDialog, SaveStatus } from '../features/save/SaveStatus';
 import { registerViewCommands } from '../features/view/commands';
@@ -69,6 +72,7 @@ export function App() {
   useEffect(() => registerPrintCommands(), []);
   useEffect(() => registerReportCommands(), []);
   useEffect(() => registerSelectionCommands(), []);
+  useEffect(() => registerAnnotateCommands(), []);
   useEffect(() => registerFindCommands(), []);
   useEffect(() => installRecovery(), []);
   // §9: register the service worker; after the first render, precache the rest.
@@ -138,6 +142,8 @@ export function App() {
         <SaveOptimizedDialog />
         <GrowthPrompt />
         <RecoveryDialog />
+        <ProfileDialog />
+        <CaretTextDialog />
         <UpdateWaitDialog />
         <DropZone />
         <HelpPage />

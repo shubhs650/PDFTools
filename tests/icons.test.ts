@@ -57,7 +57,8 @@ describe('command table (M1-06)', () => {
     expect(available).toContain('protect.unlock'); // shipped in M2-03
     expect(available).toContain('file.saveOptimized');
     expect(available).toContain('view.zoomIn');
-    expect(available).not.toContain('comment.highlight');
+    expect(available).toContain('comment.highlight'); // shipped in M3-08
+    expect(available).not.toContain('comment.cloud');
     expect(available).not.toContain('organize.delete'); // M4
     expect(available).toContain('home.resetForm'); // shipped in M2-14
     expect(available).toContain('home.find'); // shipped in M2-07
@@ -73,6 +74,19 @@ describe('command table (M1-06)', () => {
     ]) {
       const c = COMMANDS.find((x) => x.id === id);
       expect(c?.custom ?? c?.customPending, id).toBeTruthy();
+    }
+  });
+});
+
+describe('M3 custom icons (M3-06)', () => {
+  it('no M3 command waits for a custom icon; each has Regular and Filled glyphs', () => {
+    const m3 = COMMANDS.filter((c) => c.milestone === 'M3');
+    expect(m3.filter((c) => c.customPending).map((c) => c.id)).toEqual([]);
+    for (const c of m3.filter((x) => x.custom)) {
+      const g = CUSTOM_GLYPHS[c.custom ?? ''];
+      expect(g?.regular.small, c.id).toBeTruthy();
+      if (c.toggle) expect(g?.filled?.small, c.id).toBeTruthy();
+      if (c.size === 'large') expect(g?.regular.large, c.id).toBeTruthy();
     }
   });
 });

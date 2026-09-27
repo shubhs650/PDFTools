@@ -284,7 +284,12 @@
       "editCopy": "Copy Selected Text",
       "editSelectAll": "Select Page Text",
       "findNext": "Find Next",
-      "findPrev": "Find Previous"
+      "findPrev": "Find Previous",
+      "annotationDelete": "Delete Selected Comments",
+      "annotationNext": "Next Comment on the Page",
+      "annotationPrev": "Previous Comment on the Page",
+      "annotationNudge": "Move Selected Comments (1 pt)",
+      "annotationNudgeFar": "Move Selected Comments (10 pt)"
     },
     "key": {
       "ctrl": "Ctrl",
@@ -296,7 +301,11 @@
       "pageDown": "Page Down",
       "escape": "Esc",
       "arrowLeft": "Left Arrow",
-      "arrowRight": "Right Arrow"
+      "arrowRight": "Right Arrow",
+      "arrowUp": "Up Arrow",
+      "arrowDown": "Down Arrow",
+      "delete": "Delete",
+      "tab": "Tab"
     }
   },
   "open": {
@@ -415,10 +424,10 @@
       "snapshots": "Recovery snapshots",
       "used": "Storage used by PDFTools",
       "unknown": "Not reported by this browser",
-      "note": "Your PDF files stay where they are. PDFTools keeps only settings, the recent files list and recovery snapshots of unsaved changes. Storage used includes the offline copy of the app.",
+      "note": "Your PDF files stay where they are. PDFTools keeps only settings, your reviewer profile, the recent files list and recovery snapshots of unsaved changes. Storage used includes the offline copy of the app.",
       "clear": "Clear all local data…",
       "confirmTitle": "Clear all local data?",
-      "confirmDescription": "This deletes your settings, the recent files list and all recovery snapshots on this device. Your PDF files are not changed. The offline copy of the app is kept, so PDFTools keeps working offline.",
+      "confirmDescription": "This deletes your settings, reviewer profile, the recent files list and all recovery snapshots on this device. Your PDF files are not changed. The offline copy of the app is kept, so PDFTools keeps working offline.",
       "warnOpen_one": "{{count}} document is open. It stays open.",
       "warnOpen_other": "{{count}} documents are open. They stay open.",
       "warnUnsaved_one": "{{count}} open document has unsaved changes. Its recovery snapshot is deleted too, so those changes could not be recovered after a crash until you change the document again.",
@@ -456,7 +465,8 @@
       "settings": "Settings",
       "recent": "Recent files: file name, size, when it was opened and the browser's permission handle to reopen it",
       "recovery": "Recovery snapshots: a copy of a document with unsaved changes, deleted when you save, close or discard it",
-      "appFiles": "The offline copy of the app (program files only, no documents)"
+      "appFiles": "The offline copy of the app (program files only, no documents)",
+      "profile": "Reviewer profile: the name, initials, discipline and company you entered"
     },
     "clearHint": "To delete this data, use File → Settings → Clear all local data."
   },
@@ -842,5 +852,60 @@
         "body": "PDFTools makes no network requests with your documents. Error reports are sent only when you choose to, and you see every word of them first."
       }
     }
+  },
+  "annotate": {
+    "noneSelected": "Select a comment first",
+    "nothingToUndo": "Nothing to undo",
+    "nothingToRedo": "Nothing to redo",
+    "selectedOne": "{{type}} by {{author}} on page {{page}}, selected",
+    "selectedMany": "{{count}} comments selected",
+    "noAuthor": "an unknown author",
+    "type": {
+      "note": "Note",
+      "freeText": "Text box",
+      "line": "Line",
+      "rectangle": "Rectangle",
+      "oval": "Oval",
+      "polygon": "Polygon",
+      "polyline": "Polyline",
+      "highlight": "Highlight",
+      "underline": "Underline",
+      "squiggly": "Squiggly underline",
+      "strikeout": "Strikeout",
+      "stamp": "Stamp",
+      "caret": "Inserted text",
+      "ink": "Pencil drawing",
+      "other": "Comment"
+    },
+    "anonymous": "Anonymous",
+    "caret": {
+      "title": "Text to insert",
+      "label": "Inserted text",
+      "ok": "Insert",
+      "cancel": "Cancel"
+    }
+  },
+  "profile": {
+    "title": "Reviewer profile",
+    "titleFirst": "Who is reviewing?",
+    "description": "Your name is added as the author of the comments you make. The profile is kept on this device only.",
+    "field": {
+      "name": "Name",
+      "initials": "Initials",
+      "discipline": "Discipline",
+      "company": "Company"
+    },
+    "error": {
+      "required": "Enter your name.",
+      "tooLong": "Use at most {{max}} characters."
+    },
+    "save": "Save",
+    "skip": "Skip for now",
+    "cancel": "Cancel",
+    "saveFailed": "The profile couldn't be stored on this device. It is used until you close PDFTools.",
+    "none": "No profile yet. You'll be asked for one before your first comment; until then, comments are made as “Anonymous”.",
+    "notSet": "Not set",
+    "note": "Your name becomes the author of new comments. Initials, discipline and company are used in stamps and comment review sheets.",
+    "edit": "Edit reviewer profile…"
   }
 }

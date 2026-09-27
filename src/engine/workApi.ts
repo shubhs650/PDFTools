@@ -1,6 +1,6 @@
 // Work worker API (ARCHITECTURE §3.1, D-10): PDFium #2 with a read-only copy of
 // each document. M1 uses it for save verification (M1-21); M2 adds search.
-import type { PageTextSlice, PdfPageGeometry } from '@embedpdf/models';
+import type { PdfAnnotationObject, PageTextSlice, PdfPageGeometry } from '@embedpdf/models';
 import type { DocDigest } from '../workers/render/save/digest';
 import type { AttachmentInfo, AttachmentRef } from '../workers/work/attachments';
 import type { FormFacts } from '../model/formFacts';
@@ -73,6 +73,15 @@ export interface WorkApi {
     PdfPageGeometry
   >;
   /** Text of glyph ranges (selection → clipboard). */
+  /**
+   * Every annotation, by page, for plugin-annotation's store (M3-05, ADR-014
+   * decision 2); ids for /NM-less annotations are stable (`obj-<n>`).
+   */
+  annotations: MethodSpec<
+    { docId: string },
+    Record<number, PdfAnnotationObject[]>,
+    { done: number; total: number }
+  >;
   textSlices: MethodSpec<
     { docId: string; slices: PageTextSlice[]; priority?: WorkPriority },
     string[]
@@ -130,8 +139,11 @@ export interface WorkApi {
     { bytes: ArrayBuffer },
     { done: number; total: number }
   >;
-  /** An attachment's bytes, transferred (never parsed or run here). */
-  readAttachment: MethodSpec<{ docId: string; ref: AttachmentRef }, { bytes: ArrayBuffer }>;
+  /**
+   * An attachment's content as a Blob made here (never parsed or run): the
+   * main thread gets a handle, never a copy of a large file (rule 1).
+   */
+  readAttachment: MethodSpec<{ docId: string; ref: AttachmentRef }, { blob: Blob }>;
   /** Highlight rectangles for hits on one page, in the viewer's page space. */
   hitRects: MethodSpec<
     { docId: string; pageIndex: number; hits: { start: number; length: number }[] },

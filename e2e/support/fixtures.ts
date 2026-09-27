@@ -26,6 +26,8 @@ import {
   annotatedPdf,
   attachmentsPdf,
   layersPdf,
+  markedContractPdf,
+  markedSheetPdf,
   propertiesPdf,
   outlinedPdf,
   cjkFallbackPdf,
@@ -133,6 +135,10 @@ export interface Pdfs {
   /** Known Info values, tagged, two page sizes (M2-12). */
   properties(): Buffer;
   a0(segments: number): Buffer;
+  /** The contract stand-in with square markups on every page (M3-01). */
+  markedContract(pages?: number, perPage?: number): Buffer;
+  /** The A0 sheet with `n` square markups (M3-01). */
+  markedSheet(segments: number, n?: number): Buffer;
   cjk(): Buffer;
 }
 
@@ -155,6 +161,10 @@ function makePdfs(): Pdfs {
     layers: () => memo('layers', layersPdf),
     properties: () => memo('properties', propertiesPdf),
     a0: (segments) => memo(`a0-${String(segments)}`, () => a0Sheet(segments)),
+    markedContract: (pages = 2000, perPage = 5) =>
+      memo(`marked-${String(pages)}-${String(perPage)}`, () => markedContractPdf(pages, perPage)),
+    markedSheet: (segments, n = 1000) =>
+      memo(`marked-a0-${String(segments)}-${String(n)}`, () => markedSheetPdf(segments, n)),
     cjk: () => memo('cjk', () => cjkFallbackPdf()),
   };
 }

@@ -13,6 +13,7 @@ import { digestDocument } from './render/save/digest';
 import { WorkDocs } from './work/docs';
 import { verifyCandidate } from './work/verify';
 import { Scheduler } from './work/scheduler';
+import { listAnnotations } from './work/annotations';
 import { Activity, indexDocument } from './work/indexer';
 import { SearchEngine } from './work/search';
 import { listAttachments, readAttachment } from './work/attachments';
@@ -112,6 +113,19 @@ serve<WorkApi>(self, {
       const page = doc.pages[pageIndex];
       if (!page) throw new RpcError('page-out-of-range', 'No such page');
       return need().getPageGeometry(doc, page).toPromise();
+    }),
+
+  annotations: ({ docId }, ctx) =>
+    scheduler.run('interactive', ctx.signal, async (slice) => {
+      if (!mod) throw new RpcError('not-initialized', 'The work worker is not initialized');
+      const { doc } = await docs.get(docId);
+      try {
+        return await listAnnotations(mod, need(), doc, slice, (p) => {
+          ctx.progress(p);
+        });
+      } finally {
+        wasmBytes();
+      }
     }),
 
   textSlices: ({ docId, slices, priority = 'interactive' }, ctx) =>
@@ -229,7 +243,8 @@ serve<WorkApi>(self, {
       const { doc } = await docs.get(docId);
       try {
         const bytes = await readAttachment(mod, need(), doc, ref);
-        return new Transfer({ bytes }, [bytes]);
+        // The Blob copy of a large file happens here, off the main thread.
+        return { blob: new Blob([bytes], { type: 'application/octet-stream' }) };
       } finally {
         wasmBytes(); // a large read grows the heap (ADR-004 respawn policy)
       }

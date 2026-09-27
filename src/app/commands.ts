@@ -105,6 +105,7 @@ export const COMMANDS: readonly CommandDef[] = [
     size: 'small',
     fluent: 'ArrowUndo',
     milestone: 'M3',
+    shipped: true, // M3-05
   },
   {
     id: 'qat.redo',
@@ -113,6 +114,7 @@ export const COMMANDS: readonly CommandDef[] = [
     size: 'small',
     fluent: 'ArrowRedo',
     milestone: 'M3',
+    shipped: true, // M3-05
   },
   {
     id: 'file.open',
@@ -241,6 +243,7 @@ export const COMMANDS: readonly CommandDef[] = [
     size: 'large',
     fluent: 'Cursor',
     milestone: 'M3',
+    shipped: true, // M3-05
     toggle: true,
   },
   {
@@ -475,6 +478,7 @@ export const COMMANDS: readonly CommandDef[] = [
     fluent: 'Highlight',
     milestone: 'M3',
     toggle: true,
+    shipped: true, // M3-08
   },
   {
     id: 'comment.underline',
@@ -484,6 +488,7 @@ export const COMMANDS: readonly CommandDef[] = [
     fluent: 'TextUnderline',
     milestone: 'M3',
     toggle: true,
+    shipped: true, // M3-08
   },
   {
     id: 'comment.strikeout',
@@ -493,6 +498,7 @@ export const COMMANDS: readonly CommandDef[] = [
     fluent: 'TextStrikethrough',
     milestone: 'M3',
     toggle: true,
+    shipped: true, // M3-08
   },
   {
     id: 'comment.squiggly',
@@ -502,7 +508,8 @@ export const COMMANDS: readonly CommandDef[] = [
     fluent: 'TextUnderline',
     milestone: 'M3',
     toggle: true,
-    customPending: true,
+    shipped: true, // M3-08
+    custom: 'comment.squiggly', // M3-06
   },
   {
     id: 'comment.insertText',
@@ -512,6 +519,7 @@ export const COMMANDS: readonly CommandDef[] = [
     fluent: 'TextAdd',
     milestone: 'M3',
     toggle: true,
+    shipped: true, // M3-08
   },
   {
     id: 'comment.replaceText',
@@ -521,7 +529,8 @@ export const COMMANDS: readonly CommandDef[] = [
     fluent: 'TextEditStyle',
     milestone: 'M3',
     toggle: true,
-    customPending: true,
+    shipped: true, // M3-08
+    custom: 'comment.replaceText', // M3-06
   },
   {
     id: 'comment.stickyNote',
@@ -612,7 +621,7 @@ export const COMMANDS: readonly CommandDef[] = [
     fluent: 'Cloud',
     milestone: 'M3',
     toggle: true,
-    customPending: true,
+    custom: 'comment.cloud', // M3-06
   },
   {
     id: 'comment.pencil',
@@ -640,7 +649,7 @@ export const COMMANDS: readonly CommandDef[] = [
     fluent: 'ApprovalsApp',
     milestone: 'M3',
     toggle: true,
-    customPending: true,
+    custom: 'comment.stamp', // M3-06
   },
   {
     id: 'comment.imageStamp',
@@ -731,6 +740,7 @@ export const COMMANDS: readonly CommandDef[] = [
     size: 'small',
     fluent: 'PersonEdit',
     milestone: 'M3',
+    shipped: true, // M3-07
   },
   {
     id: 'comment.exportAnnotations',
@@ -747,7 +757,7 @@ export const COMMANDS: readonly CommandDef[] = [
     size: 'large',
     fluent: 'DocumentTableArrowRight',
     milestone: 'M3',
-    customPending: true,
+    custom: 'comment.exportCrs', // M3-06
   },
   {
     id: 'measure.distance',
@@ -766,7 +776,7 @@ export const COMMANDS: readonly CommandDef[] = [
     fluent: 'Pentagon',
     milestone: 'M3',
     toggle: true,
-    customPending: true,
+    custom: 'measure.perimeter', // M3-06
   },
   {
     id: 'measure.area',
@@ -776,7 +786,7 @@ export const COMMANDS: readonly CommandDef[] = [
     fluent: 'Pentagon',
     milestone: 'M3',
     toggle: true,
-    customPending: true,
+    custom: 'measure.area', // M3-06
   },
   {
     id: 'measure.calibrate',
@@ -786,7 +796,7 @@ export const COMMANDS: readonly CommandDef[] = [
     fluent: 'Ruler',
     milestone: 'M3',
     toggle: true,
-    customPending: true,
+    custom: 'measure.calibrate', // M3-06
   },
   {
     id: 'measure.setScale',
@@ -796,7 +806,7 @@ export const COMMANDS: readonly CommandDef[] = [
     fluent: 'RatioOneToOne',
     milestone: 'M3',
     toggle: true,
-    customPending: true,
+    custom: 'measure.setScale', // M3-06
   },
   {
     id: 'measure.scaleViewport',
@@ -806,7 +816,7 @@ export const COMMANDS: readonly CommandDef[] = [
     fluent: 'SelectObject',
     milestone: 'M3',
     toggle: true,
-    customPending: true,
+    custom: 'measure.scaleViewport', // M3-06
   },
   {
     id: 'measure.units',
@@ -824,7 +834,7 @@ export const COMMANDS: readonly CommandDef[] = [
     fluent: 'Target',
     milestone: 'M3',
     toggle: true,
-    customPending: true,
+    custom: 'measure.snapping', // M3-06
   },
   {
     id: 'measure.snapEndpoint',
@@ -834,7 +844,7 @@ export const COMMANDS: readonly CommandDef[] = [
     fluent: 'Square',
     milestone: 'M3',
     toggle: true,
-    customPending: true,
+    custom: 'measure.snapEndpoint', // M3-06
   },
   {
     id: 'measure.snapMidpoint',
@@ -844,7 +854,7 @@ export const COMMANDS: readonly CommandDef[] = [
     fluent: 'Triangle',
     milestone: 'M3',
     toggle: true,
-    customPending: true,
+    custom: 'measure.snapMidpoint', // M3-06
   },
   {
     id: 'measure.snapIntersection',
@@ -854,7 +864,7 @@ export const COMMANDS: readonly CommandDef[] = [
     fluent: 'Dismiss',
     milestone: 'M3',
     toggle: true,
-    customPending: true,
+    custom: 'measure.snapIntersection', // M3-06
   },
   {
     id: 'measure.snapNearest',
@@ -864,7 +874,7 @@ export const COMMANDS: readonly CommandDef[] = [
     fluent: 'Circle',
     milestone: 'M3',
     toggle: true,
-    customPending: true,
+    custom: 'measure.snapNearest', // M3-06
   },
   {
     id: 'organize.insertBlank',

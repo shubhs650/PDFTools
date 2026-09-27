@@ -8,9 +8,12 @@ import { init, type WrappedPdfiumModule } from '@embedpdf/pdfium';
 import { RpcError } from '../engine/errors';
 import { Transfer } from '../engine/protocol';
 import { PDFIUM_ERROR_PREFIX, type RenderApi } from '../engine/renderApi';
+import { fromJson } from '../model/pdf/wire';
 import { serve } from './rpc-host';
 import { acquirePage, docPtrOf, rawCall, wasmMemory } from './render/pdfium';
 import { renderProgressive } from './render/progressive';
+import { AnnotBoxCache, annotBoxes, renderAnnotTile } from './render/annotTiles';
+import { dropCustom, keepAuthor, nameTargets, writeMarkupIntent } from './render/annotIds';
 import { SaveTracker, isMutation } from './render/save/tracker';
 
 const FPDF_PAGEOBJ_PATH = 2;
@@ -22,6 +25,7 @@ const FORM_VALUE_METHODS = new Set(['setFormFieldValue', 'setFormFieldState']);
 let mod: WrappedPdfiumModule | undefined;
 let native: PdfiumNative | undefined;
 let tracker: SaveTracker | undefined;
+const annotBoxCache = new AnnotBoxCache();
 
 function ready(): { mod: WrappedPdfiumModule; native: PdfiumNative; tracker: SaveTracker } {
   if (!mod || !native || !tracker)
@@ -93,7 +97,12 @@ serve<RenderApi>(self, {
     )[method];
     if (typeof fn !== 'function')
       throw new RpcError('unknown-method', `Unknown executor method ${method}`);
-    const task = fn.apply(n, args);
+    // Stable ids (ADR-014 d2): name the targeted annotation before EmbedPDF looks it up.
+    if (typeof docId === 'string') nameTargets(m, n, method, args);
+    // An edit keeps the annotation's own author (D-03); no private keys (rule 6).
+    const callArgs =
+      typeof docId === 'string' ? keepAuthor(m, n, method, dropCustom(method, args)) : args;
+    const task = fn.apply(n, callArgs);
     task.onProgress((p) => {
       ctx.progress(p);
     });
@@ -106,15 +115,25 @@ serve<RenderApi>(self, {
     } catch (err) {
       throw toRpcError(err);
     }
+    if (typeof docId === 'string') writeMarkupIntent(m, n, method, callArgs);
     // Save bookkeeping (M1-20): the opened bytes' trailer, and what each edit changed.
     if (method === 'openDocumentBuffer') {
       const file = args[0] as { id: string; content: ArrayBuffer };
-      t.opened(file.id, new Uint8Array(file.content));
+      // The open password (memory only, M2-Q7) derives our object layer's file key (M3-04).
+      const password = (args[1] as { password?: unknown } | undefined)?.password;
+      t.opened(
+        file.id,
+        new Uint8Array(file.content),
+        typeof password === 'string' ? password : undefined,
+      );
     } else if (method === 'closeDocument' && typeof docId === 'string') {
       t.closed(docId);
     } else if (isMutation(method)) {
       t.recordMutation(method, args);
     }
+    // Any change (or close) can move, add or remove markups: annotation tiles re-read boxes.
+    if (typeof docId === 'string' && (isMutation(method) || method === 'closeDocument'))
+      annotBoxCache.drop(docId);
     return new Transfer(value, transferables(value, wasmMemory(m)?.buffer));
   },
 
@@ -140,6 +159,21 @@ serve<RenderApi>(self, {
   },
 
   saveState: ({ docId }) => ready().tracker.dirtyState(docId),
+
+  stageObjects: async ({ docId, target, set, remove }) => {
+    const t = ready().tracker;
+    await t.securityReady(docId);
+    const values = new Map(Object.entries(set).map(([k, v]) => [k, fromJson(v)]));
+    t.stagePatch(
+      docId,
+      target.annot === undefined
+        ? { page: target.page }
+        : { page: target.page, annot: target.annot },
+      values,
+      remove ?? [],
+    );
+    return { staged: t.dirtyState(docId).staged };
+  },
 
   docInfo: ({ docId }) => {
     const { mod: m, native: n } = ready();
@@ -191,6 +225,20 @@ serve<RenderApi>(self, {
       m.pdfium.wasmExports.free(buf);
       rawCall(m, 'FPDF_ClosePage', page);
     }
+  },
+
+  annotationTile: ({ docId, frame, ...req }) => {
+    const { mod: m, native: n } = ready();
+    const boxes = annotBoxCache.get(docId, req.pageIndex, () => {
+      const ref = acquirePage(n, docId, req.pageIndex);
+      try {
+        return annotBoxes(m, ref.pagePtr, frame);
+      } finally {
+        ref.release();
+      }
+    });
+    const tile = renderAnnotTile(m, n, docId, boxes, req);
+    return tile ? new Transfer(tile, [tile.data.buffer]) : null;
   },
 
   pageCost: ({ docId, pageIndex }) => {

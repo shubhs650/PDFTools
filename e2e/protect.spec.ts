@@ -235,3 +235,32 @@ test('passwords are never stored: after an edit and its recovery snapshot, nothi
   await expect(banner(page)).toContainText('printing');
   expect(await findInStorage(page, [user, ownerPw])).toEqual([]);
 });
+
+test('M3-04: object-layer strings in an encrypted file are saved encrypted and verified', async ({
+  page,
+}) => {
+  const v = encryptedVariants(simplePdf(1)).find((x) => x.name === 'R4-aes-128');
+  if (!v) throw new Error('R4 fixture');
+  await page.goto('/');
+  await drop(page, [{ name: 'aes.pdf', b64: b64(v.bytes) }]);
+  const dialog = passwordDialog(page);
+  await dialog.getByLabel('Password').fill(OWNER_PW);
+  await dialog.getByRole('button', { name: 'Open' }).click();
+  await expect(page.locator('[data-page="0"] img.page-preview')).toBeVisible();
+  const id = (await cap(page, 'view', 'activeDocId')) as string;
+  expect(await cap(page, 'save', 'addSquares', id, 1)).toBeNull();
+  const units = { dict: { Type: { name: 'Measure' }, R: { text: '1 mm = 100 mm' } } };
+  expect(
+    await cap(page, 'save', 'stage', id, { page: 0, annot: 'e2e-square-0' }, { Measure: units }),
+  ).toBeNull();
+  const r = (await cap(page, 'save', 'verifiedSave', id)) as {
+    mode: string;
+    fellBack: boolean;
+    tail: string;
+  };
+  expect(r).toMatchObject({ mode: 'narrow', fellBack: false });
+  const tail = Buffer.from(r.tail, 'base64').toString('latin1');
+  expect(tail).toContain('/Measure');
+  expect(tail).not.toContain('1 mm = 100 mm');
+  expect(await cap(page, 'save', 'fallbacks')).toEqual([]);
+});

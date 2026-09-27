@@ -8,7 +8,9 @@ import {
   Task,
   TaskStage,
   type IPdfiumExecutor,
+  type AnnotationAppearanceMap,
   type PageTextSlice,
+  type PdfAnnotationObject,
   type PdfDocumentObject,
   type PdfPageGeometry,
   type PdfPageObject,
@@ -121,6 +123,14 @@ export interface TextJob<T> {
 export interface TextSource {
   pageGeometry(doc: PdfDocumentObject, page: PdfPageObject): TextJob<PdfPageGeometry> | null;
   textSlices(doc: PdfDocumentObject, slices: PageTextSlice[]): TextJob<string[]> | null;
+  /**
+   * Every annotation of the document (ADR-014 decision 2), or null to use the
+   * Render worker. `fallback` runs the Render worker's own listing.
+   */
+  allAnnotations?(
+    doc: PdfDocumentObject,
+    fallback: () => Promise<Record<number, PdfAnnotationObject[]>>,
+  ): TextJob<Record<number, PdfAnnotationObject[]>> | null;
 }
 
 /** An EmbedPDF task driven by one of our jobs; aborting the task cancels the job. */
@@ -169,6 +179,28 @@ export class RoutedPdfEngine extends PdfEngine {
   override getTextSlices(doc: PdfDocumentObject, slices: PageTextSlice[]): PdfTask<string[]> {
     const job = this.text.textSlices(doc, slices);
     return job ? taskFromJob(job) : super.getTextSlices(doc, slices);
+  }
+
+  /**
+   * plugin-annotation's load of every annotation (ADR-014 decision 2): from the
+   * Work worker, not as 500-page uninterruptible chunks on the Render queue.
+   */
+  override getAllAnnotations(doc: PdfDocumentObject): ReturnType<PdfEngine['getAllAnnotations']> {
+    const job = this.text.allAnnotations?.(doc, () => super.getAllAnnotations(doc).toPromise());
+    // The plugin only waits on the result; a plain task stands in for the compound one.
+    return job
+      ? (taskFromJob(job) as unknown as ReturnType<PdfEngine['getAllAnnotations']>)
+      : super.getAllAnnotations(doc);
+  }
+
+  /**
+   * No appearance bitmaps for the stock annotation layer (ADR-014 decision 3):
+   * markups are drawn by our annotation tiles, which stay bounded at any zoom.
+   */
+  override renderPageAnnotations(): PdfTask<AnnotationAppearanceMap<Blob>> {
+    const task = new Task<AnnotationAppearanceMap<Blob>, { code: PdfErrorCode; message: string }>();
+    task.resolve({});
+    return task;
   }
 }
 

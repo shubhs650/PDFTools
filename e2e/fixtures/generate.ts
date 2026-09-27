@@ -375,6 +375,16 @@ export const A0 = { width: 3370, height: 2384 } as const;
  * Not a stand-in for real P&IDs, which are owner runs (ADR-002).
  */
 export function a0Sheet(segments: number): Uint8Array {
+  return buildPdf([
+    '<< /Type /Catalog /Pages 2 0 R >>',
+    '<< /Type /Pages /Kids [3 0 R] /Count 1 >>',
+    `<< /Type /Page /Parent 2 0 R /MediaBox [0 0 ${String(A0.width)} ${String(A0.height)}] /Contents 4 0 R >>`,
+    a0Content(segments),
+  ]);
+}
+
+/** The A0 sheet's content stream: `segments` short lines in paths of 50. */
+function a0Content(segments: number): PdfObject {
   const rand = rng(7);
   const lines: string[] = ['0.2 w 0 G'];
   let path: string[] = [];
@@ -398,12 +408,79 @@ export function a0Sheet(segments: number): Uint8Array {
     }
   }
   if (path.length) lines.push(`${path.join(' ')} S`);
-  return buildPdf([
+  return flate(lines.join('\n'));
+}
+
+// ------------------------------------------------------------ markups (M3-01)
+
+/** A reviewer's square markup as viewers write it: /NM, /T, dates, colour, an appearance. */
+function squareMarkup(nm: string, x: number, y: number, w: number, h: number, ap: number): string {
+  const r = (n: number) => n.toFixed(2);
+  return (
+    `<< /Type /Annot /Subtype /Square /Rect [${r(x)} ${r(y)} ${r(x + w)} ${r(y + h)}] ` +
+    `/NM (${nm}) /T (Reviewer ${nm.slice(-1)}) /Subj (Square) /Contents (Comment ${escText(nm)}) ` +
+    '/CreationDate (D:20260927120000Z) /M (D:20260927120000Z) /F 4 /C [0.89 0.26 0.2] ' +
+    `/BS << /W 2 >> /AP << /N ${String(ap)} 0 R >> >>`
+  );
+}
+
+/** One shared appearance per markup size (a stroked rectangle, like a viewer's). */
+const squareAppearance = (w: number, h: number): PdfObject => ({
+  dict: `<< /Type /XObject /Subtype /Form /BBox [0 0 ${w.toFixed(2)} ${h.toFixed(2)}] >>`,
+  stream: `0.89 0.26 0.2 RG 2 w 1 1 ${(w - 2).toFixed(2)} ${(h - 2).toFixed(2)} re S`,
+});
+
+/**
+ * The contract stand-in with `perPage` square markups on every page (M3-01:
+ * 2,000 pages × 5 = 10,000 markups), each with /NM, /T, dates and an appearance.
+ */
+export function markedContractPdf(pages = 2000, perPage = 5): Uint8Array {
+  const rand = rng(42);
+  const objs: PdfObject[] = ['<< /Type /Catalog /Pages 2 0 R >>', ''];
+  const font = 3;
+  const ap = 4;
+  objs.push('<< /Type /Font /Subtype /Type1 /BaseFont /Times-Roman /Encoding /WinAnsiEncoding >>');
+  objs.push(squareAppearance(120, 40));
+  const kids: number[] = [];
+  for (let i = 0; i < pages; i++) {
+    const pageNum = objs.length + 1;
+    const annots = Array.from({ length: perPage }, (_, k) => pageNum + 2 + k);
+    kids.push(pageNum);
+    objs.push(
+      `<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 842] /Resources << /Font << /F1 ${String(font)} 0 R >> >> /Contents ${String(pageNum + 1)} 0 R /Annots [${annots.map((n) => `${String(n)} 0 R`).join(' ')}] >>`,
+      flate(contractPage(i, rand)),
+    );
+    for (let k = 0; k < perPage; k++)
+      objs.push(
+        squareMarkup(`m-${String(i)}-${String(k)}`, 60 + k * 90, 700 - k * 120, 120, 40, ap),
+      );
+  }
+  objs[1] = `<< /Type /Pages /Kids [${kids.map((n) => `${String(n)} 0 R`).join(' ')}] /Count ${String(pages)} >>`;
+  return buildPdf(objs);
+}
+
+/** The dense A0 sheet (a0Sheet) with `n` square markups on it (M3-01: 1,000). */
+export function markedSheetPdf(segments: number, n = 1000): Uint8Array {
+  const rand = rng(11);
+  const objs: PdfObject[] = [
     '<< /Type /Catalog /Pages 2 0 R >>',
     '<< /Type /Pages /Kids [3 0 R] /Count 1 >>',
-    `<< /Type /Page /Parent 2 0 R /MediaBox [0 0 ${String(A0.width)} ${String(A0.height)}] /Contents 4 0 R >>`,
-    flate(lines.join('\n')),
-  ]);
+    `<< /Type /Page /Parent 2 0 R /MediaBox [0 0 ${String(A0.width)} ${String(A0.height)}] /Contents 4 0 R /Annots [${Array.from({ length: n }, (_, i) => `${String(6 + i)} 0 R`).join(' ')}] >>`,
+    a0Content(segments),
+    squareAppearance(80, 50),
+  ];
+  for (let i = 0; i < n; i++)
+    objs.push(
+      squareMarkup(
+        `s-${String(i)}`,
+        60 + rand() * (A0.width - 200),
+        60 + rand() * (A0.height - 150),
+        80,
+        50,
+        5,
+      ),
+    );
+  return buildPdf(objs);
 }
 
 // ------------------------------------------------------------ font fallback

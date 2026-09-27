@@ -1,9 +1,12 @@
 // Optional content groups ("layers") read from a PDF's bytes (M2-11,
 // ADR-012 decision 5 option 1: a list-only pane; PDFium can't toggle them).
-// A small read-only scanner, not an object model: it finds the catalog's
-// /OCProperties, the /OCG objects and their names, in plain objects and in
-// object streams (inflated by the caller). Unencrypted files only (their
-// strings and streams are encrypted). Pure but for the injected inflate.
+// Read with the shared object reader (M3-03); a small byte scanner remains
+// as the fallback for files the reader refuses, and its helpers serve
+// formFacts and printReady. Unencrypted files only (their strings and streams
+// are encrypted). Pure but for the injected inflate.
+
+import { PdfRef, PdfString, isDict, nameOf as pdfNameOf, type PdfValue } from './pdf/objects';
+import { PdfReader } from './pdf/reader';
 
 export interface Layer {
   name: string;
@@ -208,9 +211,62 @@ export const isEncrypted = (bytes: Uint8Array): boolean =>
     (i) => !/[A-Za-z]/.test(String.fromCharCode(bytes[i + 8] ?? 32)),
   );
 
-/** The document's layers in display order (/D /Order, else /OCGs). */
+/** Object numbers of the references in `v`, depth-first (nested /Order arrays). */
+async function refNums(r: PdfReader, v: PdfValue | undefined, depth = 0): Promise<number[]> {
+  if (depth > 32) return [];
+  if (v instanceof PdfRef) {
+    const target = await r.get(v);
+    return Array.isArray(target) ? refNums(r, target, depth + 1) : [v.num];
+  }
+  if (!Array.isArray(v)) return [];
+  const out: number[] = [];
+  for (const x of v) out.push(...(await refNums(r, x, depth + 1)));
+  return out;
+}
+
+/** With the shared object reader (M3-03): the xref decides which object is current. */
+async function layersFromReader(bytes: Uint8Array, inflate: Inflate): Promise<LayerList> {
+  const r = await PdfReader.open(bytes, inflate);
+  if (r.encrypted) return { encrypted: true, layers: [] };
+  const root = await r.resolve(r.trailer.get('Root'));
+  if (!isDict(root)) throw new Error('no catalog');
+  const props = await r.resolve(root.get('OCProperties'));
+  if (!isDict(props)) return { encrypted: false, layers: [] };
+  const all = await refNums(r, props.get('OCGs'));
+  const d = await r.resolve(props.get('D'));
+  const config = isDict(d) ? d : new Map<string, PdfValue>();
+  const baseOff = pdfNameOf(config.get('BaseState')) === 'OFF';
+  const on = new Set(await refNums(r, config.get('ON')));
+  const off = new Set(await refNums(r, config.get('OFF')));
+  const ordered = await refNums(r, config.get('Order'));
+  const seq = [...new Set([...ordered.filter((n) => all.includes(n)), ...all])];
+  const layers = [];
+  for (const num of seq) {
+    const ocg = await r.get(num);
+    const name = isDict(ocg) ? await r.resolve(ocg.get('Name')) : undefined;
+    layers.push({
+      name: name instanceof PdfString ? name.text() : '',
+      on: baseOff ? on.has(num) : !off.has(num),
+    });
+  }
+  return { encrypted: false, layers };
+}
+
+/**
+ * The document's layers in display order (/D /Order, else /OCGs). Read with
+ * the shared object reader; files it refuses (a damaged xref, say) fall back
+ * to the byte scanner below.
+ */
 export async function readLayers(bytes: Uint8Array, inflate: Inflate): Promise<LayerList> {
   if (isEncrypted(bytes)) return { encrypted: true, layers: [] };
+  try {
+    return await layersFromReader(bytes, inflate);
+  } catch {
+    return scanLayers(bytes, inflate);
+  }
+}
+
+async function scanLayers(bytes: Uint8Array, inflate: Inflate): Promise<LayerList> {
   const packed = await streamObjects(bytes, inflate);
   const plain = plainIndex(bytes);
   const object = (num: number): string | null => {

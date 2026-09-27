@@ -18,6 +18,17 @@ const ACTION_LABELS: Record<InternalAction, MessageKey> = {
   'edit.selectAll': msg('shortcuts.action.editSelectAll'),
   'find.next': msg('shortcuts.action.findNext'),
   'find.prev': msg('shortcuts.action.findPrev'),
+  'annotation.delete': msg('shortcuts.action.annotationDelete'),
+  'annotation.next': msg('shortcuts.action.annotationNext'),
+  'annotation.prev': msg('shortcuts.action.annotationPrev'),
+  'annotation.nudgeLeft': msg('shortcuts.action.annotationNudge'),
+  'annotation.nudgeRight': msg('shortcuts.action.annotationNudge'),
+  'annotation.nudgeUp': msg('shortcuts.action.annotationNudge'),
+  'annotation.nudgeDown': msg('shortcuts.action.annotationNudge'),
+  'annotation.nudgeLeftFar': msg('shortcuts.action.annotationNudgeFar'),
+  'annotation.nudgeRightFar': msg('shortcuts.action.annotationNudgeFar'),
+  'annotation.nudgeUpFar': msg('shortcuts.action.annotationNudgeFar'),
+  'annotation.nudgeDownFar': msg('shortcuts.action.annotationNudgeFar'),
 };
 
 /** Printable list of every binding, generated from the keymap (§8.1). */
@@ -31,6 +42,10 @@ export function ShortcutSheet() {
     Escape: msg('shortcuts.key.escape'),
     ArrowLeft: msg('shortcuts.key.arrowLeft'),
     ArrowRight: msg('shortcuts.key.arrowRight'),
+    ArrowUp: msg('shortcuts.key.arrowUp'),
+    ArrowDown: msg('shortcuts.key.arrowDown'),
+    Delete: msg('shortcuts.key.delete'),
+    Tab: msg('shortcuts.key.tab'),
   };
   const labels: KeyLabels = {
     ctrl: mac ? t('shortcuts.key.cmd') : t('shortcuts.key.ctrl'),
