@@ -2,13 +2,24 @@
 
 _Last updated: 2026-09-27 (session 16: M3 plan approved; M3-01 … M3-03)_
 
-**Current milestone:** M2 — Read is **complete on the agent side** (M2-01 … M2-19; results and
-owner pack: [docs/acceptance/M2.md](acceptance/M2.md)). M1 is merged into `main`; M2-01 … M2-15
-are merged; M2-16 … M2-19 are on `claude/m2-tasks-16-19-wt8d51`, waiting for review. M0, M1 and M2
-owner runs are open. The **M3 plan** ([docs/plan/M3.md](plan/M3.md)) is drafted and waiting for
-the owner's approval and answers to M3-Q1 … M3-Q10; no M3 code yet.
+**Current milestone:** M3 — Review. Plan approved (2026-09-27); M3-01 … M3-03 done in session 16
+on `claude/m3-task-breakdown-tlyokp` (ADR-014 and ADR-015 proposed, waiting for the owner).
+M0–M2 are merged into `main` (M2 complete on the agent side, owner pack in
+[docs/acceptance/M2.md](acceptance/M2.md)); the M0, M1 and M2 owner runs are open.
 
 ## Done
+
+- **Session 16 — M3-02 stamps, CRS workbook and snapshots spike.** _Works with workaround_,
+  [ADR-015](adr/015-m3-stamps-crs.md) (proposed; decisions 1–2 need the owner). Stamp PNG drawn
+  in a worker with the bundled Noto Sans Regular: at 4× the placed size as sharp as vector text
+  up to 400 % (softer at 1600 %), ~42 KB each. ExcelJS 4.4.0's browser bundle in a worker: 1,000
+  rows + 1,000 images, zip 0.6 s, 3.1 MB, worker chunk 202 KB brotli, cancel between rows, no
+  long task, no CSP violation, read back correctly. **License gate fails** as installed:
+  `unzipper@0.10 → binary → buffers@0.1.1` has no license (plus `chainsaw`/`traverse` "MIT/X11");
+  per M3-Q9 ExcelJS is **not** added. With an npm override `unzipper@0.12.3` the gate passes (709
+  packages); alternative: our own XLSX writer. Snapshots via content crop + ADR-014 annotation
+  tile: 1,000 on the marked contract in 1.3 s; 200 on the marked A0 sheet in 0.5 s (72 s with
+  PDFium's annotation flag). Spike `spikes/s13-stamps-crs/` (project `s13`).
 
 - **Session 16 — M3-01 annotation spike.** _Works with workaround_,
   [ADR-014](adr/014-m3-annotations.md) (proposed). All 21 EmbedPDF tools (with appearance
@@ -561,14 +572,21 @@ the owner's approval and answers to M3-Q1 … M3-Q10; no M3 code yet.
 
 ## In progress
 
-- **M2-16 … M2-19 (session 15):** one commit per task on `claude/m2-tasks-16-19-wt8d51` (from
-  `main` after PRs #37–#43), pushed once at the end of the session; no PR opened yet.
+- **M3 (session 16):** M3-01, M3-02 and M3-03 as one commit each on
+  `claude/m3-task-breakdown-tlyokp` (the session's branch; the plan's `m3/<task>` branches were
+  not used because this session may only push to its own branch), pushed; no PR opened yet.
 - **Git in one paragraph (for the owner):** each task lives on its own _branch_ (a named line
   of commits). A _commit_ is a saved snapshot with a message; _push_ uploads the branch to
   GitHub; a _pull request_ (PR) asks to bring a branch into `main`, and GitHub runs the checks
   (CI) on it; _merge_ adds it to `main` once the checks are green.
 
 ## Session log
+
+- **Session 16 (2026-09-27), continued:** M3 plan approved; M3-03, M3-01, M3-02 (one commit
+  each). Local checks: typecheck, lint, format, 705 unit tests, license gate (642 packages), the
+  save/recovery/layers e2e specs (18) and the new perf scenario `annotation-load`; spike runs
+  `s12` (Node) and `s13` (2/2, ExcelJS installed with `--no-save` only). qpdf installed in the
+  container.
 
 - **Session 16 (2026-09-27):** M3 plan only (docs); no code, so no checks beyond Prettier on the
   changed Markdown.
@@ -640,7 +658,10 @@ the owner's approval and answers to M3-Q1 … M3-Q10; no M3 code yet.
 
 ## Next
 
-1. **Owner:** review and merge `claude/m2-tasks-16-19-wt8d51` (M2-16 … M2-19).
+1. **Owner:** review ADR-014 (annotation load via the Work worker, own annotation tiles) and
+   ADR-015 — **decide** stamps (PNG at 4× vs a B7 exception for vector stamps) and the workbook
+   library (ExcelJS with the `unzipper` override vs our own XLSX writer); then review and merge
+   `claude/m3-task-breakdown-tlyokp` (M3 plan, M3-01 … M3-03).
 2. **Owner:** the M2 owner pack in [docs/acceptance/M2.md](acceptance/M2.md) §4 — FAR / 500 MB
    search timings, interop §M2 (I–K and signatures after a form save), the live error report
    (Cloudflare setup in [docs/deploy/error-report.md](deploy/error-report.md)), Firefox smoke.
@@ -658,11 +679,9 @@ the owner's approval and answers to M3-Q1 … M3-Q10; no M3 code yet.
    - S8 Firefox check and Pages preview.
 4. **Owner:** decide the items under "Decisions needed" (keyboard text selection, committed
    corpus PDFs, Pages project).
-5. **Owner:** review [docs/plan/M3.md](plan/M3.md) and answer M3-Q1 … M3-Q10 (annotation export
-   in M4, measurement label defaults before interop §D/§F, review status vs scheme codes, stamp
-   appearance route, auto-numbering, keyboard creation of markups, profile → `/T`, own MD5/RC4,
-   ExcelJS, branching).
-6. **Agent:** after approval, M3-01 and M3-02 (spikes) and M3-03 (object layer) in parallel.
+5. **Owner:** the S2 interop run (§D/§F) before M3-16/M3-20 (M3-Q2 defaults are in use until then).
+6. **Agent:** M3-04 (Standard security handler) and M3-05 (annotation core per ADR-014), then
+   M3-06/M3-07; M3-14 and M3-19 wait for the ADR-015 decisions.
 
 ## Open issues
 
@@ -729,6 +748,14 @@ the owner's approval and answers to M3-Q1 … M3-Q10; no M3 code yet.
 
 ## Decisions needed (owner)
 
+- **ADR-015 decision 2 — CRS workbook library.** ExcelJS 4.4.0 fails the license gate
+  (`buffers@0.1.1` has no license, via its Node-only `unzipper` reader). Options: (a) ExcelJS
+  with the npm override `unzipper@0.12.3` (gate passes; recommended); (b) our own minimal XLSX
+  writer (no dependency; changes §3.2).
+- **ADR-015 decision 1 — stamp appearance.** PNG image stamp at 4× (no B7 exception; softer
+  beyond 400 %) or a small vector stamp appearance of our own (B7 exception for stamps).
+- **ADR-014** — accept loading annotations through the Work worker and drawing markups as our own
+  annotation tiles (replaces two stock plugin behaviours; no ARCHITECTURE.md change).
 - **M3 plan (M3-Q1 … M3-Q10)** in [docs/plan/M3.md](plan/M3.md#owner-decisions-needed). M3-Q2
   depends on the still-open S2 interop run (§D/§F); the plan proceeds with the ADR-007 defaults.
 - **Keyboard text selection (M2-04).** Caret-based selection (Shift+arrows) is not built; the

@@ -16,8 +16,9 @@ export const S4_PORT = 4185;
 export const S9_PORT = 4186;
 export const S11_PORT = 4187;
 export const S11_FRAME_PORT = 4188;
+export const S13_PORT = 4189;
 
-// SPIKE=s8|s3|s1|s5|s7|s4|s9|s11 limits which spike gets built and served (default: both).
+// SPIKE=s8|s3|s1|s5|s7|s4|s9|s11|s13 limits which spike gets built and served (default: both).
 const only = process.env.SPIKE;
 const want = (name: string): boolean => !only || only === name;
 
@@ -91,6 +92,11 @@ export default defineConfig({
       testMatch: ['s11-secure-print/**/*.spec.ts'],
       use: { ...devices['Desktop Chrome'], baseURL: `http://localhost:${String(S11_PORT)}` },
     },
+    {
+      name: 's13',
+      testMatch: ['s13-stamps-crs/**/*.spec.ts'],
+      use: { ...devices['Desktop Chrome'], baseURL: `http://localhost:${String(S13_PORT)}` },
+    },
   ],
   webServer: [
     ...(want('s8') ? [server('s8', 's8-csp', S8_PORT)] : []),
@@ -156,5 +162,6 @@ export default defineConfig({
           },
         ]
       : []),
+    ...(want('s13') ? [server('s13', 's13-stamps-crs', S13_PORT, ' --coi')] : []),
   ],
 });

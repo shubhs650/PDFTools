@@ -54,9 +54,10 @@ export function renderAnnotTile(
   y: number,
   scale: number,
   size = 256,
+  pageIndex = 0,
 ): { data: Uint8Array; drawn: number } {
   const heap = mod.pdfium as unknown as Heap;
-  const ref = acquirePage(native, docId, 0);
+  const ref = acquirePage(native, docId, pageIndex);
   const bytes = size * size * 4;
   const px = heap.wasmExports.malloc(bytes);
   const bmp = rawCall(mod, 'FPDFBitmap_CreateEx', size, size, 4, px, size * 4);

@@ -39,6 +39,8 @@ Throwaway spike code for [docs/plan/M0.md](../docs/plan/M0.md) (S1–S8) and M1-
 npm run spikes
 SPIKE=s8 npm run spikes -- --project=s8
 SPIKE=s9 npm run spikes -- --project=s9   # M1-01: EmbedPDF plugins (ADR-011)
+# M3-02 needs ExcelJS for the run only: see ADR-015 (npm install --no-save exceljs@4.4.0)
+SPIKE=s13 npm run spikes -- --project=s13
 SPIKE=s3 npm run spikes -- --project=s3   # raw numbers → test-results/s3-results.json
 npm run typecheck:spikes
 
