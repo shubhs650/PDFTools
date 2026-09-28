@@ -337,6 +337,9 @@ body {
 }
 
 .ribbon-panel {
+  /* The containing block of the buttons' visually hidden text, which would
+     otherwise escape this scroller and widen the page (pseudo-locale). */
+  position: relative;
   min-height: var(--ribbon-height);
   overflow-x: auto;
 }
@@ -1627,3 +1630,4 @@ textarea.form-field {
   gap: var(--space-3);
   align-items: center;
 }
+
