@@ -76,12 +76,14 @@ export interface WorkApi {
   /** Text of glyph ranges (selection → clipboard). */
   /**
    * Every annotation, by page, for plugin-annotation's store (M3-05, ADR-014
-   * decision 2); ids for /NM-less annotations are stable (`obj-<n>`).
+   * decision 2); ids for /NM-less annotations are stable (`obj-<n>`). The
+   * pages arrive with the progress, one batch at a time, so no single message
+   * (and its copy on the main thread) holds them all; the result is the count.
    */
   annotations: MethodSpec<
     { docId: string },
-    Record<number, PdfAnnotationObject[]>,
-    { done: number; total: number }
+    { pages: number },
+    { done: number; total: number; pages: Record<number, PdfAnnotationObject[]> }
   >;
   textSlices: MethodSpec<
     { docId: string; slices: PageTextSlice[]; priority?: WorkPriority },

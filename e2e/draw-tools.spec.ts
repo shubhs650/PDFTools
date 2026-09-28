@@ -215,6 +215,7 @@ test('keyboard: N then Enter places a note, T then Enter a text box (M3-Q6)', as
   const id = await open(page);
   await view(page).focus();
   await page.keyboard.press('n');
+  await expect(page.locator('.document-host')).toHaveAttribute('data-tool', 'textComment');
   await page.keyboard.press('Enter');
   const note = page.getByRole('dialog', { name: 'Note' });
   await note.getByLabel('Note text').fill('Check this dimension');
@@ -225,6 +226,7 @@ test('keyboard: N then Enter places a note, T then Enter a text box (M3-Q6)', as
   await view(page).focus();
   await page.keyboard.press('Escape');
   await page.keyboard.press('t');
+  await expect(page.locator('.document-host')).toHaveAttribute('data-tool', 'freeText');
   await page.keyboard.press('Enter');
   const box = page.getByRole('dialog', { name: 'Text box' });
   await box.getByLabel('Text').fill('Revised per RFI 12');

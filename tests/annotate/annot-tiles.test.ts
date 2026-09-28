@@ -136,13 +136,15 @@ describe('stable ids across the workers (ADR-014 decision 2)', () => {
 
   it('the Work listing says obj-4; the Render side names it before an edit', async () => {
     const work = await open(noNm);
-    const listed = await listAnnotations(
+    const listed: Record<number, PdfAnnotationObject[]> = {};
+    const result = await listAnnotations(
       mod,
       native,
       work,
       { checkpoint: () => Promise.resolve(), signal: new AbortController().signal },
-      () => undefined,
+      (p) => Object.assign(listed, p.pages),
     );
+    expect(result).toEqual({ pages: 1 });
     expect(listed[0]?.map((a) => a.id)).toEqual(['obj-4']);
     await native.closeDocument(work).toPromise();
 
