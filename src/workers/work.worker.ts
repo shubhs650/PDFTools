@@ -121,8 +121,9 @@ serve<WorkApi>(self, {
       if (!mod) throw new RpcError('not-initialized', 'The work worker is not initialized');
       const { doc } = await docs.get(docId);
       try {
+        // Streamed, not throttled: each message carries a batch of annotations.
         return await listAnnotations(mod, need(), doc, slice, (p) => {
-          ctx.progress(p);
+          ctx.stream(p);
         });
       } finally {
         wasmBytes();

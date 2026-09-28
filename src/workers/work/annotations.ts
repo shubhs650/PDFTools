@@ -48,8 +48,9 @@ export function nameAnnotations(
 }
 
 /**
- * Lists the annotations batch by batch; each batch goes out with its progress
- * (the main thread copies one small message at a time, rule 1).
+ * Lists the annotations batch by batch; each batch goes out with its progress,
+ * streamed (never coalesced), so the main thread copies one small message at a
+ * time (rule 1).
  */
 export async function listAnnotations(
   mod: WrappedPdfiumModule,
