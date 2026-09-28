@@ -9,6 +9,10 @@ M0–M2 are merged into `main` (M2 complete on the agent side, owner pack in
 
 ## Done
 
+- **Session 16 — M3-13 status schemes.** Three presets (1–4, A–D, Approved … For Information),
+  custom schemes (codes, labels, colours with a contrast warning), the active scheme, export to
+  and strict import from `.pdftools-scheme.json`; IndexedDB v3 `schemes` store.
+
 - **Session 16 — M3-12 replies and review status.** Threads under the selected comment: replies
   (`/IRT`) and Set Status (`/StateModel /Review`, per-reviewer latest state and history), read from
   files made in other viewers too; own replies editable; deleting a comment with replies asks

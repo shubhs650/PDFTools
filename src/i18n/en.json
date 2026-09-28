@@ -467,7 +467,8 @@
       "recent": "Recent files: file name, size, when it was opened and the browser's permission handle to reopen it",
       "recovery": "Recovery snapshots: a copy of a document with unsaved changes, deleted when you save, close or discard it",
       "appFiles": "The offline copy of the app (program files only, no documents)",
-      "profile": "Reviewer profile: the name, initials, discipline and company you entered"
+      "profile": "Reviewer profile: the name, initials, discipline and company you entered",
+      "schemes": "Status schemes you made or imported (codes, labels, colours) and which one is active"
     },
     "clearHint": "To delete this data, use File → Settings → Clear all local data."
   },
@@ -1021,5 +1022,78 @@
     "deleteDescription_one": "The selected comments have {{count}} reply or status, which will be deleted too. You can undo this.",
     "deleteDescription_other": "The selected comments have {{count}} replies and statuses, which will be deleted too. You can undo this.",
     "deleteConfirm": "Delete"
+  },
+  "schemes": {
+    "title": "Status schemes",
+    "description": "Review codes for stamps and comment review sheets. Presets can be duplicated and changed.",
+    "close": "Close",
+    "active": "Active scheme",
+    "list": "Schemes",
+    "codesOf": "Codes of {{name}}",
+    "duplicate": "Duplicate",
+    "duplicateNamed": "Duplicate {{name}}",
+    "edit": "Edit",
+    "editNamed": "Edit {{name}}",
+    "export": "Export",
+    "exportNamed": "Export {{name}}",
+    "delete": "Delete",
+    "deleteNamed": "Delete {{name}}",
+    "new": "New scheme",
+    "import": "Import…",
+    "copyOf": "Copy of {{name}}",
+    "saved": "Saved {{name}}.",
+    "imported": "Imported {{name}}.",
+    "editTitle": "Edit status scheme",
+    "save": "Save",
+    "name": "Scheme name",
+    "codes": "Codes",
+    "code": "Code {{n}}",
+    "label": "Label {{n}}",
+    "color": "Colour {{n}}",
+    "up": "Move code {{n}} up",
+    "down": "Move code {{n}} down",
+    "remove": "Remove code {{n}}",
+    "addCode": "Add code",
+    "lowContrast": "This colour is hard to read on a white page.",
+    "preset": {
+      "tag": "Preset",
+      "numeric": {
+        "name": "1 / 2 / 3 / 4",
+        "1": "Approved",
+        "2": "Approved with comments",
+        "3": "Revise and resubmit",
+        "4": "Rejected"
+      },
+      "alpha": {
+        "name": "A / B / C / D",
+        "A": "Approved",
+        "B": "Approved with comments",
+        "C": "Revise and resubmit",
+        "D": "Rejected"
+      },
+      "approval": {
+        "name": "Approved / Approved as Noted / Revise & Resubmit / Rejected / For Information",
+        "AP": "Approved",
+        "AN": "Approved as Noted",
+        "RR": "Revise & Resubmit",
+        "RJ": "Rejected",
+        "FI": "For Information"
+      }
+    },
+    "error": {
+      "name": "Give the scheme a name (up to 64 characters).",
+      "noCodes": "Add at least one code.",
+      "tooManyCodes": "A scheme has at most 20 codes.",
+      "code": "Each code needs 1 to 8 characters.",
+      "label": "Each code needs a label (up to 64 characters).",
+      "color": "Each code needs a colour.",
+      "duplicate": "Two codes are the same.",
+      "tooLarge": "The file is too large to be a scheme.",
+      "json": "The file isn't a valid scheme file.",
+      "format": "The file isn't a PDFTools scheme.",
+      "version": "The scheme was made by a newer version of PDFTools.",
+      "unknownKey": "The file has entries a scheme doesn't have.",
+      "codes": "The file's codes aren't valid."
+    }
   }
 }

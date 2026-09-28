@@ -678,6 +678,7 @@ export const COMMANDS: readonly CommandDef[] = [
     size: 'small',
     fluent: 'Status',
     milestone: 'M3',
+    shipped: true, // M3-13
   },
   {
     id: 'comment.link',

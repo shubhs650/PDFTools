@@ -19,7 +19,12 @@ describe('AppDb (M1-12)', () => {
   it('creates the schema with settings, recent and profile', async () => {
     const db = await AppDb.open({ factory: new IDBFactory() });
     expect(db.db.version).toBe(MIGRATIONS.length);
-    expect([...db.db.objectStoreNames].sort()).toEqual(['profile', 'recent', 'settings']);
+    expect([...db.db.objectStoreNames].sort()).toEqual([
+      'profile',
+      'recent',
+      'schemes',
+      'settings',
+    ]);
     db.close();
   });
 
@@ -29,7 +34,7 @@ describe('AppDb (M1-12)', () => {
     await v1.setSetting('theme', 'dark');
     await v1.putRecent(entry('a', 1));
     v1.close();
-    const db = await AppDb.open({ factory });
+    const db = await AppDb.open({ factory, migrations: MIGRATIONS.slice(0, 2) });
     expect(db.db.version).toBe(2);
     expect(await db.getSetting('theme')).toBe('dark');
     expect((await db.listRecent()).map((e) => e.id)).toEqual(['a']);
@@ -105,5 +110,22 @@ describe('AppDb (M1-12)', () => {
     expect(next.db.version).toBe(MIGRATIONS.length + 1);
     next.close();
     expect(() => old.db.transaction('settings')).toThrow();
+  });
+});
+
+describe('AppDb v3 (M3-13)', () => {
+  it('stores custom status schemes by id, keeping v2 data', async () => {
+    const factory = new IDBFactory();
+    const v2 = await AppDb.open({ factory, migrations: MIGRATIONS.slice(0, 2) });
+    await v2.setProfile({ name: 'Ana' });
+    v2.close();
+    const db = await AppDb.open({ factory });
+    expect(db.db.version).toBe(3);
+    expect(await db.getProfile()).toEqual({ name: 'Ana' });
+    await db.putScheme({ id: 's1', name: 'Site' });
+    await db.putScheme({ id: 's2', name: 'Shop' });
+    await db.deleteScheme('s1');
+    expect(await db.listSchemes()).toEqual([{ id: 's2', name: 'Shop' }]);
+    db.close();
   });
 });

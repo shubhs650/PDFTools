@@ -28,6 +28,7 @@ import { ProfileDialog } from '../features/settings/profile/ProfileDialog';
 import { ContentsDialog } from '../features/annotate/tools/ContentsDialog';
 import { LinkEditDialog } from '../features/annotate/tools/LinkEditDialog';
 import { DeleteThreadDialog } from '../features/annotate/comments/DeleteThreadDialog';
+import { SchemesDialog } from '../features/stamps/schemes/SchemesDialog';
 import { GrowthPrompt, SaveOptimizedDialog } from '../features/save/SaveDialogs';
 import { SaveErrorDialog, SaveStatus } from '../features/save/SaveStatus';
 import { registerViewCommands } from '../features/view/commands';
@@ -148,6 +149,7 @@ export function App() {
         <ContentsDialog />
         <LinkEditDialog />
         <DeleteThreadDialog />
+        <SchemesDialog />
         <UpdateWaitDialog />
         <DropZone />
         <HelpPage />

@@ -9,6 +9,7 @@ import { appStore } from '../../app/store/appStore';
 import { documentStore, selectActive } from '../../app/store/documentStore';
 import { msg } from '../../i18n';
 import { openProfileDialog, requestProfile } from '../settings/profile/profileStore';
+import { openSchemes } from '../stamps/schemes/schemeStore';
 import { capability, hostStore } from '../view/host';
 import { annotationCapability, annotationState } from './selection';
 import { cycleTarget, pageAnnotations } from './model';
@@ -245,6 +246,9 @@ export function registerAnnotateCommands(): () => void {
         commentsStore.setState((c) => ({ numbersOnPage: !c.numbersOnPage }));
       },
       isPressed: () => commentsStore.getState().numbersOnPage,
+    }),
+    registerCommand('comment.statusSchemes', {
+      run: openSchemes,
     }),
     registerCommand('comment.reviewerProfile', {
       run: openProfileDialog,
