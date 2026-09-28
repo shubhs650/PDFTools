@@ -1,9 +1,10 @@
 import { Dismiss20Regular } from '@fluentui/react-icons/svg/dismiss';
 import { useTranslation } from 'react-i18next';
+import { AnnotationProperties } from '../features/annotate/properties/AnnotationProperties';
 import { IconButton } from '../ui/components';
 import { appStore, useApp } from './store/appStore';
 
-/** Right Properties pane (D-01). Content (selected annotation properties) arrives in M3. */
+/** Right Properties pane (D-01): the selected annotations' properties (M3-10). */
 export function PropertiesPane() {
   const { t } = useTranslation();
   const open = useApp((s) => s.propertiesOpen);
@@ -28,6 +29,7 @@ export function PropertiesPane() {
           }}
         />
       </div>
+      <AnnotationProperties />
     </aside>
   );
 }

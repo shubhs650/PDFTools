@@ -737,6 +737,7 @@ export const COMMANDS: readonly CommandDef[] = [
     size: 'small',
     fluent: 'PaintBrush',
     milestone: 'M3',
+    shipped: true, // M3-10
   },
   {
     id: 'comment.applyStyle',
@@ -745,6 +746,7 @@ export const COMMANDS: readonly CommandDef[] = [
     size: 'small',
     fluent: 'PaintBrushArrowDown',
     milestone: 'M3',
+    shipped: true, // M3-10
   },
   {
     id: 'comment.reviewerProfile',

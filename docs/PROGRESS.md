@@ -9,6 +9,12 @@ M0–M2 are merged into `main` (M2 complete on the agent side, owner pack in
 
 ## Done
 
+- **Session 16 — M3-10 Properties pane.** Colour, fill, opacity, width, line style (incl.
+  cloudy), line endings, font size/colour, subject and text of the selected comments; mixed
+  values; one undo step per change; read-only without the annotate permission; Copy/Apply
+  Comment Style. Also fixed: the ribbon's hidden button text widened the page in the
+  pseudo-locale (310 px) once Home gained the M3-09 groups.
+
 - **Session 16 — M3-09 note, text, drawing, ink and link tools.** Sticky note, text box,
   callout, line, arrow, polyline, polygon, rectangle, oval, cloud, pencil, ink highlighter and
   link on the Comment tab; Shift constrains, Enter/Esc finish/drop polylines, keyboard creation

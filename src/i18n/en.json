@@ -930,5 +930,45 @@
     "notSet": "Not set",
     "note": "Your name becomes the author of new comments. Initials, discipline and company are used in stamps and comment review sheets.",
     "edit": "Edit reviewer profile…"
+  },
+  "annotProps": {
+    "label": "Comment properties",
+    "none": "Select a comment to see its properties.",
+    "one": "{{type}} by {{author}}",
+    "many_one": "{{count}} comment selected",
+    "many_other": "{{count}} comments selected",
+    "readOnly": "This document doesn't allow changes to comments.",
+    "mixed": "Mixed",
+    "noFill": "No fill",
+    "range": "Enter a number from {{min}} to {{max}}.",
+    "color": "Color",
+    "fill": "Fill",
+    "fontColor": "Text color",
+    "opacity": "Opacity",
+    "width": "Line width",
+    "fontSize": "Font size",
+    "pt": "pt",
+    "lineStyle": "Line style",
+    "lineStart": "Line start",
+    "lineEnd": "Line end",
+    "subject": "Subject",
+    "contents": "Comment text",
+    "author": "Author",
+    "style": {
+      "solid": "Solid",
+      "dashed": "Dashed",
+      "cloudy": "Cloudy"
+    },
+    "ending": {
+      "none": "None",
+      "openArrow": "Open arrow",
+      "closedArrow": "Closed arrow",
+      "circle": "Circle",
+      "square": "Square",
+      "diamond": "Diamond",
+      "butt": "Butt",
+      "slash": "Slash"
+    },
+    "noStyle": "Copy a style first"
   }
 }

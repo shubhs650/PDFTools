@@ -14,6 +14,7 @@ import { annotationCapability, annotationState } from './selection';
 import { cycleTarget, pageAnnotations } from './model';
 import { DRAW_COMMANDS, isDrawTool, KEYBOARD_PLACED, VERTEX_TOOLS } from './tools/drawModel';
 import { finishDrawing, placeAtCentre } from './tools/drawTools';
+import { copiedStyle, copyStyle, pasteStyle } from './properties/style';
 import { MARKUP_TOOLS } from './tools/markupModel';
 import { markupFromSelection } from './tools/textMarkup';
 
@@ -172,6 +173,35 @@ export function registerAnnotateCommands(): () => void {
         if (t !== 'textComment' && t !== 'freeText') return;
         await requestProfile();
         placeAtCentre(registry, id, documentStore.getState().docs[id]?.view.page ?? 0, t);
+      },
+    }),
+    // Copy/Apply Style (M3-10): the first selected annotation's style onto others.
+    registerCommand('comment.copyStyle', {
+      requiresDocument: true,
+      disabledReason: () => {
+        const id = activeId();
+        return id && selectedOf(id).length > 0 ? null : msg('annotate.noneSelected');
+      },
+      run: () => {
+        const id = activeId();
+        const first = id ? selectedOf(id)[0] : undefined;
+        if (first) copyStyle(first.object);
+      },
+    }),
+    registerCommand('comment.applyStyle', {
+      ...withSelection,
+      disabledReason: () => {
+        if (!copiedStyle()) return msg('annotProps.noStyle');
+        const id = activeId();
+        return id && selectedOf(id).length > 0 ? null : msg('annotate.noneSelected');
+      },
+      run: () => {
+        const id = activeId();
+        if (id)
+          pasteStyle(
+            id,
+            selectedOf(id).map((t) => t.object),
+          );
       },
     }),
     registerCommand('comment.reviewerProfile', {

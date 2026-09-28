@@ -1631,3 +1631,71 @@ textarea.form-field {
   align-items: center;
 }
 
+/* ------------------------------------------------------------ annotation properties (M3-10) */
+.annot-props,
+.prop-empty {
+  display: grid;
+  gap: var(--space-3);
+  margin: var(--space-0);
+  padding: var(--space-3);
+}
+
+.prop-empty,
+.prop-readonly,
+.prop-author,
+.prop-mixed {
+  margin: var(--space-0);
+  color: var(--color-text-muted);
+}
+
+.prop-summary {
+  margin: var(--space-0);
+  font-weight: var(--font-weight-semibold);
+}
+
+.prop-fields {
+  display: grid;
+  gap: var(--space-3);
+  margin: var(--space-0);
+  padding: var(--space-0);
+  border: none;
+}
+
+.prop-field {
+  display: grid;
+  gap: var(--space-1);
+}
+
+.prop-row {
+  display: flex;
+  gap: var(--space-2);
+  align-items: center;
+}
+
+.prop-swatch {
+  width: var(--control-height-m);
+  height: var(--control-height-m);
+  padding: var(--space-1);
+  border: var(--border-width) solid var(--color-border-strong);
+  border-radius: var(--radius-m);
+  background: var(--color-surface);
+}
+
+.prop-number {
+  width: 6em;
+}
+
+.prop-check {
+  display: flex;
+  gap: var(--space-2);
+  align-items: center;
+}
+
+.prop-text {
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.properties-pane {
+  overflow-y: auto;
+}
