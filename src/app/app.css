@@ -1958,3 +1958,27 @@ textarea.form-field {
   color: var(--color-danger);
   font-size: var(--font-size-s);
 }
+
+/* ------------------------------------------------------------ stamps (M3-14) */
+.stamp-form,
+.stamp-codes {
+  display: grid;
+  gap: var(--space-3);
+}
+
+.stamp-codes {
+  margin: var(--space-0);
+  padding: var(--space-0);
+  border: none;
+}
+
+.stamp-code {
+  display: flex;
+  gap: var(--space-2);
+  align-items: center;
+}
+
+.stamp-hint {
+  margin: var(--space-0);
+  color: var(--color-text-muted);
+}

@@ -1095,5 +1095,26 @@
       "unknownKey": "The file has entries a scheme doesn't have.",
       "codes": "The file's codes aren't valid."
     }
+  },
+  "stamps": {
+    "title": "Stamp",
+    "description": "The stamp shows the code, your name, today's date and the document's number and revision.",
+    "code": "Code ({{scheme}})",
+    "schemes": "Status schemes…",
+    "docNo": "Document number",
+    "rev": "Revision",
+    "place": "Place stamp",
+    "hint": "Then click the page, or press Enter to place it at the centre of the current page.",
+    "imageTitle": "Image stamp",
+    "imageDescription": "A PNG or JPG image, or the first page of a PDF.",
+    "chooseImage": "Choose an image or PDF",
+    "error": {
+      "draw": "The stamp couldn't be drawn. Try again.",
+      "tooLarge": "The file is larger than 20 MB.",
+      "unsupported": "Choose a PNG, JPG or PDF file.",
+      "pdfLocked": "That PDF needs a password.",
+      "pdfNoCopy": "That PDF doesn't allow copying its content.",
+      "pdfBroken": "That PDF couldn't be read."
+    }
   }
 }

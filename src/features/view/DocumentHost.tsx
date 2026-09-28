@@ -4,6 +4,7 @@ import type { InteractionManagerCapability } from '@embedpdf/plugin-interaction-
 import { HAND_MODE, PLUGINS } from './plugins';
 import { installAuthoring } from '../annotate/authoring';
 import { installDrawTools } from '../annotate/tools/drawTools';
+import { installStampTools } from '../stamps/stampTools';
 import { capability, setRegistry, useHost } from './host';
 
 const onInitialized = (registry: Parameters<typeof setRegistry>[0]): Promise<void> => {
@@ -17,6 +18,7 @@ const onInitialized = (registry: Parameters<typeof setRegistry>[0]): Promise<voi
     });
     installAuthoring(registry);
     installDrawTools(registry);
+    installStampTools(registry);
   }
   setRegistry(registry);
   return Promise.resolve();

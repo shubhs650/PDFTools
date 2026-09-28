@@ -9,6 +9,11 @@ M0–M2 are merged into `main` (M2 complete on the agent side, owner pack in
 
 ## Done
 
+- **Session 16 — M3-14 stamps.** Dynamic stamps from the active scheme (code, reviewer, date,
+  document number and revision) drawn in the encoder worker as a 4× PNG; image stamps from
+  PNG/JPG or a PDF's first page (vector, copy permission honoured). `/Subj` and `/Contents`
+  carry the text; keyboard placement; 50 stamps without a long task.
+
 - **Session 16 — M3-13 status schemes.** Three presets (1–4, A–D, Approved … For Information),
   custom schemes (codes, labels, colours with a contrast warning), the active scheme, export to
   and strict import from `.pdftools-scheme.json`; IndexedDB v3 `schemes` store.

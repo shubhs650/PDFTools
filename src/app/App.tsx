@@ -29,6 +29,7 @@ import { ContentsDialog } from '../features/annotate/tools/ContentsDialog';
 import { LinkEditDialog } from '../features/annotate/tools/LinkEditDialog';
 import { DeleteThreadDialog } from '../features/annotate/comments/DeleteThreadDialog';
 import { SchemesDialog } from '../features/stamps/schemes/SchemesDialog';
+import { ImageStampDialog, StampDialog } from '../features/stamps/StampDialogs';
 import { GrowthPrompt, SaveOptimizedDialog } from '../features/save/SaveDialogs';
 import { SaveErrorDialog, SaveStatus } from '../features/save/SaveStatus';
 import { registerViewCommands } from '../features/view/commands';
@@ -150,6 +151,8 @@ export function App() {
         <LinkEditDialog />
         <DeleteThreadDialog />
         <SchemesDialog />
+        <StampDialog />
+        <ImageStampDialog />
         <UpdateWaitDialog />
         <DropZone />
         <HelpPage />

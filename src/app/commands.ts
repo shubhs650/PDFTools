@@ -661,6 +661,7 @@ export const COMMANDS: readonly CommandDef[] = [
     fluent: 'ApprovalsApp',
     milestone: 'M3',
     toggle: true,
+    shipped: true, // M3-14
     custom: 'comment.stamp', // M3-06
   },
   {
@@ -670,6 +671,7 @@ export const COMMANDS: readonly CommandDef[] = [
     size: 'small',
     fluent: 'ImageAdd',
     milestone: 'M3',
+    shipped: true, // M3-14
   },
   {
     id: 'comment.statusSchemes',

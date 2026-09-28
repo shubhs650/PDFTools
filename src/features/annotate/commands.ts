@@ -10,6 +10,8 @@ import { documentStore, selectActive } from '../../app/store/documentStore';
 import { msg } from '../../i18n';
 import { openProfileDialog, requestProfile } from '../settings/profile/profileStore';
 import { openSchemes } from '../stamps/schemes/schemeStore';
+import { placeDynamicStamp, placeImageStamp } from '../stamps/stampTools';
+import { stampStore } from '../stamps/stampStore';
 import { capability, hostStore } from '../view/host';
 import { annotationCapability, annotationState } from './selection';
 import { cycleTarget, pageAnnotations } from './model';
@@ -173,9 +175,19 @@ export function registerAnnotateCommands(): () => void {
           finishDrawing();
           return;
         }
+        const page = documentStore.getState().docs[id]?.view.page ?? 0;
+        // Stamps (M3-14) at the page centre too.
+        if (t === 'dynamicStamp') {
+          await placeDynamicStamp(id, page);
+          return;
+        }
+        if (t === 'imageStamp') {
+          await placeImageStamp(id, page);
+          return;
+        }
         if (t !== 'textComment' && t !== 'freeText') return;
         await requestProfile();
-        placeAtCentre(registry, id, documentStore.getState().docs[id]?.view.page ?? 0, t);
+        placeAtCentre(registry, id, page, t);
       },
     }),
     // Copy/Apply Style (M3-10): the first selected annotation's style onto others.
@@ -246,6 +258,31 @@ export function registerAnnotateCommands(): () => void {
         commentsStore.setState((c) => ({ numbersOnPage: !c.numbersOnPage }));
       },
       isPressed: () => commentsStore.getState().numbersOnPage,
+    }),
+    // Stamps (M3-14): Stamp asks for the code (and the document's number and
+    // revision) and turns the tool on; Image Stamp asks for the image.
+    registerCommand('comment.stamp', {
+      requires: 'annotate',
+      isPressed: () => appStore.getState().tool === 'dynamicStamp',
+      run: async () => {
+        if (appStore.getState().tool === 'dynamicStamp') {
+          appStore.getState().setTool('select');
+          return;
+        }
+        await requestProfile();
+        stampStore.setState({ pickerOpen: true });
+      },
+    }),
+    registerCommand('comment.imageStamp', {
+      requires: 'annotate',
+      isPressed: () => appStore.getState().tool === 'imageStamp',
+      run: () => {
+        if (appStore.getState().tool === 'imageStamp') {
+          appStore.getState().setTool('select');
+          return;
+        }
+        stampStore.setState({ imageOpen: true });
+      },
     }),
     registerCommand('comment.statusSchemes', {
       run: openSchemes,

@@ -16,6 +16,9 @@ export const DRAW_TOOLS = [
   'ink',
   'inkHighlighter',
   'link',
+  // Stamps (M3-14): tools of ours, registered with the plugin (stamps/stampTools.ts).
+  'dynamicStamp',
+  'imageStamp',
 ] as const;
 
 /** A drawing tool; the id is also the plugin's tool id and interaction mode. */
@@ -42,7 +45,12 @@ export const DRAW_COMMANDS: Record<string, DrawTool> = {
 };
 
 /** Tools that can also place their annotation from the keyboard (M3-Q6): Enter on the page. */
-export const KEYBOARD_PLACED: ReadonlySet<DrawTool> = new Set(['textComment', 'freeText']);
+export const KEYBOARD_PLACED: ReadonlySet<DrawTool> = new Set([
+  'textComment',
+  'freeText',
+  'dynamicStamp',
+  'imageStamp',
+]);
 
 /** Tools whose drawing is a chain of clicks, finished by Enter or double-click. */
 export const VERTEX_TOOLS: ReadonlySet<DrawTool> = new Set(['polyline', 'polygon', 'cloud']);
