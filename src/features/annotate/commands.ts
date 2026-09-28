@@ -12,6 +12,7 @@ import { openProfileDialog, requestProfile } from '../settings/profile/profileSt
 import { openSchemes } from '../stamps/schemes/schemeStore';
 import { placeDynamicStamp, placeImageStamp } from '../stamps/stampTools';
 import { stampStore } from '../stamps/stampStore';
+import { openScaleDialog, scaleStore } from '../measure/scaleStore';
 import { capability, hostStore } from '../view/host';
 import { annotationCapability, annotationState } from './selection';
 import { cycleTarget, pageAnnotations } from './model';
@@ -282,6 +283,23 @@ export function registerAnnotateCommands(): () => void {
           return;
         }
         stampStore.setState({ imageOpen: true });
+      },
+    }),
+    // Scales (M3-15): Set Scale and Units open the scale dialog; Calibrate its sibling.
+    ...(['measure.setScale', 'measure.units'] as const).map((command) =>
+      registerCommand(command, {
+        requiresDocument: true,
+        run: () => {
+          openScaleDialog('setScale');
+        },
+      }),
+    ),
+    registerCommand('measure.calibrate', {
+      requiresDocument: true,
+      isPressed: () => appStore.getState().tool === 'calibrate',
+      run: () => {
+        scaleStore.setState({ picked: null });
+        openScaleDialog('calibrate');
       },
     }),
     registerCommand('comment.statusSchemes', {

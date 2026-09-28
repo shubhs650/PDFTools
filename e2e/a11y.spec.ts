@@ -42,7 +42,7 @@ for (const theme of THEMES) {
       await page.goto(url);
       await expect(page.getByTestId('start-screen')).toBeVisible();
       await axe(page, 'start screen');
-      for (const tab of ['Home', 'View', 'Comment', 'Help']) {
+      for (const tab of ['Home', 'View', 'Comment', 'Measure', 'Help']) {
         await page.getByRole('tab', { name: tab }).click();
         await axe(page, `ribbon: ${tab}`);
       }

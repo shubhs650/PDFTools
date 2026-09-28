@@ -19,6 +19,8 @@ export const DRAW_TOOLS = [
   // Stamps (M3-14): tools of ours, registered with the plugin (stamps/stampTools.ts).
   'dynamicStamp',
   'imageStamp',
+  // Calibrate (M3-15): two clicks on the page (measure/calibrate.ts).
+  'calibrate',
 ] as const;
 
 /** A drawing tool; the id is also the plugin's tool id and interaction mode. */

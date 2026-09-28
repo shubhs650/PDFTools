@@ -1116,5 +1116,50 @@
       "pdfNoCopy": "That PDF doesn't allow copying its content.",
       "pdfBroken": "That PDF couldn't be read."
     }
+  },
+  "scale": {
+    "setTitle": "Set scale",
+    "setDescription": "The drawing's scale, as paper length : real length.",
+    "calTitle": "Calibrate",
+    "calDescription": "Pick two points a known distance apart, then enter that distance.",
+    "paper": "Paper",
+    "real": "Real",
+    "unit": "Units",
+    "precision": "Decimal places",
+    "fraction": "Round to",
+    "units": {
+      "mm": "Millimetres",
+      "cm": "Centimetres",
+      "m": "Metres",
+      "in": "Inches",
+      "ft": "Feet",
+      "ftin": "Feet and inches"
+    },
+    "applyTo": "Apply to",
+    "where": {
+      "page": "This page",
+      "all": "All pages",
+      "range": "Pages"
+    },
+    "pages": "Pages (e.g. 1-3, 5)",
+    "apply": "Apply",
+    "preview": "Scale {{ratio}}",
+    "pick": "Pick two points on the page",
+    "p1x": "Point 1 x (pt)",
+    "p1y": "Point 1 y (pt)",
+    "p2x": "Point 2 x (pt)",
+    "p2y": "Point 2 y (pt)",
+    "onPaper": "Distance on the page: {{length}} mm",
+    "realLength": "Real length",
+    "realLengthFtIn": "Real length (e.g. 12'-6 1/2\")",
+    "indicator": "{{ratio}} · {{unit}}",
+    "uncalibrated": "Uncalibrated",
+    "error": {
+      "ratio": "Enter two numbers greater than zero.",
+      "points": "Pick or type two different points.",
+      "length": "Enter the real length.",
+      "range": "Enter pages such as 1-3, 5.",
+      "save": "The scale couldn't be set. Try again."
+    }
   }
 }

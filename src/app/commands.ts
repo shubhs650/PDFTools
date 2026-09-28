@@ -819,6 +819,7 @@ export const COMMANDS: readonly CommandDef[] = [
     fluent: 'Ruler',
     milestone: 'M3',
     toggle: true,
+    shipped: true, // M3-15
     custom: 'measure.calibrate', // M3-06
   },
   {
@@ -829,6 +830,7 @@ export const COMMANDS: readonly CommandDef[] = [
     fluent: 'RatioOneToOne',
     milestone: 'M3',
     toggle: true,
+    shipped: true, // M3-15
     custom: 'measure.setScale', // M3-06
   },
   {
@@ -848,6 +850,7 @@ export const COMMANDS: readonly CommandDef[] = [
     size: 'small',
     fluent: 'NumberSymbol',
     milestone: 'M3',
+    shipped: true, // M3-15
   },
   {
     id: 'measure.snapping',

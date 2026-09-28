@@ -1,6 +1,6 @@
 # PDFTools — Progress
 
-_Last updated: 2026-09-27 (session 16: M3-01 … M3-08 merged; M3-09 … M3-15 in progress)_
+_Last updated: 2026-09-28 (session 16: M3-01 … M3-08 merged; M3-09 … M3-15 done on the branch)_
 
 **Current milestone:** M3 — Review. Plan approved (2026-09-27); M3-01 … M3-08 done in session 16
 on `claude/m3-task-breakdown-tlyokp` (ADR-014 and ADR-015 accepted).
@@ -8,6 +8,11 @@ M0–M2 are merged into `main` (M2 complete on the agent side, owner pack in
 [docs/acceptance/M2.md](acceptance/M2.md)); the M0, M1 and M2 owner runs are open.
 
 ## Done
+
+- **Session 16 — M3-15 scale model.** Measure tab: Set Scale (ratio, units, precision; this page,
+  all pages or a range), Calibrate (two picked or typed points and a real length) and Units; the
+  scale is saved as the page's `/VP` (other viewports kept) and `/VP` from other viewers is read;
+  ft-in to 1/64"; the status bar shows the scale or "Uncalibrated".
 
 - **Session 16 — M3-14 stamps.** Dynamic stamps from the active scheme (code, reviewer, date,
   document number and revision) drawn in the encoder worker as a 4× PNG; image stamps from
@@ -766,7 +771,8 @@ M0–M2 are merged into `main` (M2 complete on the agent side, owner pack in
 4. **Owner:** decide the items under "Decisions needed" (keyboard text selection, committed
    corpus PDFs, Pages project).
 5. **Owner:** the S2 interop run (§D/§F) before M3-16/M3-20 (M3-Q2 defaults are in use until then).
-6. **Agent:** M3-09 (note, text, drawing, ink and link tools) next, then M3-10 … M3-20 in plan order.
+6. **Agent:** M3-16 (distance, perimeter and area measurement tools) next, then M3-17 … M3-20 in
+   plan order. M3-09 … M3-15 are pushed on `claude/m3-task-breakdown-tlyokp`; no PR opened yet.
 
 ## Open issues
 

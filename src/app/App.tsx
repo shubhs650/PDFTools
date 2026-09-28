@@ -30,6 +30,8 @@ import { LinkEditDialog } from '../features/annotate/tools/LinkEditDialog';
 import { DeleteThreadDialog } from '../features/annotate/comments/DeleteThreadDialog';
 import { SchemesDialog } from '../features/stamps/schemes/SchemesDialog';
 import { ImageStampDialog, StampDialog } from '../features/stamps/StampDialogs';
+import { CalibrateDialog, SetScaleDialog } from '../features/measure/ScaleDialogs';
+import { ScaleIndicator } from '../features/measure/ScaleIndicator';
 import { GrowthPrompt, SaveOptimizedDialog } from '../features/save/SaveDialogs';
 import { SaveErrorDialog, SaveStatus } from '../features/save/SaveStatus';
 import { registerViewCommands } from '../features/view/commands';
@@ -106,6 +108,7 @@ export function App() {
             pageNav: <PageNav />,
             view: (
               <>
+                <ScaleIndicator />
                 <ViewModeSwitch />
                 <ZoomBox />
               </>
@@ -153,6 +156,8 @@ export function App() {
         <SchemesDialog />
         <StampDialog />
         <ImageStampDialog />
+        <SetScaleDialog />
+        <CalibrateDialog />
         <UpdateWaitDialog />
         <DropZone />
         <HelpPage />
