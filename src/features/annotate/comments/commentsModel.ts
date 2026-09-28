@@ -29,7 +29,12 @@ export interface Comment {
   annot: PdfAnnotationObject;
 }
 
-const isComment = (a: PdfAnnotationObject): boolean => !NOT_COMMENTS.has(a.type) && !a.inReplyToId;
+/** A comment: not a link/field/popup, and not a reply — unless its parent is gone. */
+const commentTest = (all: readonly PdfAnnotationObject[]) => {
+  const ids = new Set(all.map((a) => a.id));
+  return (a: PdfAnnotationObject): boolean =>
+    !NOT_COMMENTS.has(a.type) && (!a.inReplyToId || !ids.has(a.inReplyToId));
+};
 
 const dateOf = (a: PdfAnnotationObject): Date | null => a.created ?? a.modified ?? null;
 
@@ -48,7 +53,7 @@ export const isStateReply = (a: PdfAnnotationObject): boolean =>
  * the rest.
  */
 export function numberComments(all: readonly PdfAnnotationObject[]): Map<string, number> {
-  const list = all.filter(isComment);
+  const list = all.filter(commentTest(all));
   list.sort(
     (a, b) =>
       a.pageIndex - b.pageIndex ||

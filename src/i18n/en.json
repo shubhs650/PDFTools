@@ -1002,6 +1002,24 @@
       "completed": "Completed",
       "marked": "Marked",
       "unmarked": "Unmarked"
-    }
+    },
+    "stateSetBy": "{{state}} set by {{author}}",
+    "stateBy": "{{state}} — {{author}}",
+    "thread": "Comment {{n}} · {{type}}",
+    "setStatus": "Set status",
+    "chooseStatus": "Choose a status…",
+    "statuses": "Status by reviewer",
+    "history": "Status history",
+    "repliesLabel": "Replies",
+    "editReply": "Edit reply",
+    "save": "Save",
+    "edit": "Edit reply",
+    "delete": "Delete reply",
+    "replyLabel": "Reply",
+    "reply": "Post reply",
+    "deleteTitle": "Delete comments and their replies?",
+    "deleteDescription_one": "The selected comments have {{count}} reply or status, which will be deleted too. You can undo this.",
+    "deleteDescription_other": "The selected comments have {{count}} replies and statuses, which will be deleted too. You can undo this.",
+    "deleteConfirm": "Delete"
   }
 }

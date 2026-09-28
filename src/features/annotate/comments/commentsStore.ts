@@ -21,12 +21,17 @@ interface CommentsState {
   numbersOnPage: boolean;
   /** Bumped to move focus to the filters (comment.filter). */
   focusFilters: number;
+  /** Bumped to move focus to the reply box / status of the selected comment (M3-12). */
+  focusReply: number;
+  focusStatus: number;
 }
 
 export const commentsStore = createStore<CommentsState>()(() => ({
   byDoc: {},
   numbersOnPage: false,
   focusFilters: 0,
+  focusReply: 0,
+  focusStatus: 0,
 }));
 
 export function useComments<T>(selector: (s: CommentsState) => T): T {
@@ -51,7 +56,7 @@ const objectsCache = new WeakMap<ByUid, PdfAnnotationObject[]>();
 const commentsCache = new WeakMap<ByUid, Comment[]>();
 const numbersCache = new WeakMap<ByUid, Map<string, number>>();
 
-const objectsOf = (byUid: ByUid): PdfAnnotationObject[] => {
+export const objectsOf = (byUid: ByUid): PdfAnnotationObject[] => {
   let o = objectsCache.get(byUid);
   if (!o) {
     o = Object.values(byUid).map((t) => t.object);

@@ -15,7 +15,9 @@ const renderBody: CustomAnnotationRenderer<PdfAnnotationObject> = ({
   children,
   isSelected,
 }) =>
-  OWN_LAYER.has(annotation.type) ? (
+  // Replies (/IRT notes, M3-12) are shown in the thread, never on the page.
+  OWN_LAYER.has(annotation.type) ||
+  (annotation.type === PdfAnnotationSubtype.TEXT && annotation.inReplyToId) ? (
     <></>
   ) : (
     <div className="annotation-body" data-selected={isSelected || undefined}>

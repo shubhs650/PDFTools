@@ -8,7 +8,15 @@ import { annotationTypeKey } from '../annotationTypes';
 import { annotationCapability, useSelectedAnnotations } from '../selection';
 import { buildRows, type CommentRow, type CommentSort } from './commentsModel';
 import { STATUS_FILTERS, STATUS_KEYS } from './statusLabels';
-import { commentsFor, setView, useAnnotationMap, useComments, viewOf } from './commentsStore';
+import {
+  commentsFor,
+  objectsOf,
+  setView,
+  useAnnotationMap,
+  useComments,
+  viewOf,
+} from './commentsStore';
+import { ThreadView } from './ThreadView';
 
 /** Row height in CSS px (fixed: the list is virtualized by index). */
 const ROW_H = 44;
@@ -152,7 +160,43 @@ export function CommentsPane() {
             })}
       </p>
       {rows.length > 0 ? <CommentList docId={docId} rows={rows} /> : null}
+      {byUid ? <SelectedThread docId={docId} byUid={byUid} /> : null}
     </div>
+  );
+}
+
+/** The thread of the comment selected on the page (M3-12). */
+function SelectedThread({
+  docId,
+  byUid,
+}: {
+  docId: string;
+  byUid: Parameters<typeof objectsOf>[0];
+}) {
+  const selected = useSelectedAnnotations(docId);
+  const focusReply = useComments((s) => s.focusReply);
+  const focusStatus = useComments((s) => s.focusStatus);
+  const replyRef = useRef<HTMLTextAreaElement>(null);
+  const statusRef = useRef<HTMLSelectElement>(null);
+  useEffect(() => {
+    if (focusReply > 0) replyRef.current?.focus();
+  }, [focusReply]);
+  useEffect(() => {
+    if (focusStatus > 0) statusRef.current?.focus();
+  }, [focusStatus]);
+  const comments = commentsFor(byUid);
+  const only = selected.length === 1 ? selected[0] : undefined;
+  const c = only ? comments.find((x) => x.id === only.id) : undefined;
+  if (!c) return null;
+  return (
+    <ThreadView
+      docId={docId}
+      comment={c.annot}
+      number={c.number}
+      all={objectsOf(byUid)}
+      replyRef={replyRef}
+      statusRef={statusRef}
+    />
   );
 }
 

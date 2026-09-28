@@ -705,6 +705,7 @@ export const COMMANDS: readonly CommandDef[] = [
     size: 'small',
     fluent: 'ArrowReply',
     milestone: 'M3',
+    shipped: true, // M3-12
   },
   {
     id: 'comment.setStatus',
@@ -713,6 +714,7 @@ export const COMMANDS: readonly CommandDef[] = [
     size: 'small',
     fluent: 'CheckmarkCircle',
     milestone: 'M3',
+    shipped: true, // M3-12
   },
   {
     id: 'comment.filter',

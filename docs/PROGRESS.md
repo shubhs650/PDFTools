@@ -9,6 +9,11 @@ M0–M2 are merged into `main` (M2 complete on the agent side, owner pack in
 
 ## Done
 
+- **Session 16 — M3-12 replies and review status.** Threads under the selected comment: replies
+  (`/IRT`) and Set Status (`/StateModel /Review`, per-reviewer latest state and history), read from
+  files made in other viewers too; own replies editable; deleting a comment with replies asks
+  first and undoes in one step.
+
 - **Session 16 — M3-11 Comments pane.** Every comment (unsaved ones included), numbered per
   M3-Q5, filtered by author/type/status/current page and sorted; a virtualized, keyboard-driven
   list that selects on the page and follows the page's selection; page-number overlay toggle.

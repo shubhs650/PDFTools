@@ -1812,3 +1812,66 @@ textarea.form-field {
   font-size: var(--font-size-xs);
   text-align: center;
 }
+
+/* ------------------------------------------------------------ comment threads (M3-12) */
+.thread {
+  display: grid;
+  gap: var(--space-2);
+  max-height: 55%;
+  padding: var(--space-3);
+  overflow-y: auto;
+  border-top: var(--border-width) solid var(--color-border);
+}
+
+.thread-title {
+  margin: var(--space-0);
+  font-size: var(--font-size-m);
+  font-weight: var(--font-weight-semibold);
+}
+
+.thread-root,
+.thread-text {
+  margin: var(--space-0);
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+
+.thread-fields {
+  display: grid;
+  gap: var(--space-3);
+  margin: var(--space-0);
+  padding: var(--space-0);
+  border: none;
+}
+
+.thread-status,
+.thread-reply-box,
+.thread-edit {
+  display: grid;
+  gap: var(--space-1);
+}
+
+.thread-states,
+.thread-replies {
+  display: grid;
+  gap: var(--space-2);
+  margin: var(--space-0);
+  padding: var(--space-0);
+  list-style: none;
+}
+
+.thread-meta,
+.thread-date {
+  color: var(--color-text-muted);
+  font-size: var(--font-size-s);
+}
+
+.thread-actions {
+  display: flex;
+  gap: var(--space-1);
+}
+
+.thread-reply-box > .ui-button,
+.thread-edit > .ui-button {
+  justify-self: start;
+}
