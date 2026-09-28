@@ -18,7 +18,7 @@ import type {
 import { documentStore } from '../../app/store/documentStore';
 import { recordError } from '../../app/diagnostics';
 import { fontPath } from '../../engine/fonts';
-import { format } from '../../i18n';
+import { format, msg } from '../../i18n';
 import { needsCjk, STAMP_SCALE, STAMP_SIZE, stampText } from '../../model/stamp';
 import type { StatusCode } from '../../model/statusScheme';
 import { t } from '../../i18n';
@@ -102,7 +102,8 @@ export async function placeDynamicStamp(
     }).promise;
   } catch (err) {
     recordError('stamp.draw', err);
-    stampStore.setState({ problem: 'stamps.error.draw' });
+    // The Stamp dialog opens again with the reason (and a second try).
+    stampStore.setState({ problem: msg('stamps.error.draw'), pickerOpen: true });
     return null;
   }
   const id = uuidV4();

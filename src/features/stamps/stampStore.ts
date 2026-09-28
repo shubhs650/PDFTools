@@ -3,6 +3,7 @@
 // the session and written only into its stamps), and the image chosen for
 // Image Stamp.
 import { createStore, useStore } from 'zustand';
+import type { MessageKey } from '../../i18n';
 
 export interface DocInfo {
   docNo: string;
@@ -26,8 +27,8 @@ interface StampState {
   /** The Image Stamp dialog. */
   imageOpen: boolean;
   image: StampImage | null;
-  /** Why the last stamp couldn't be made (a message key), for the dialogs' status line. */
-  problem: string | null;
+  /** Why the last stamp couldn't be made; the Stamp dialog shows it. */
+  problem: MessageKey | null;
 }
 
 export const stampStore = createStore<StampState>()(() => ({

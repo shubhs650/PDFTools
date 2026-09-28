@@ -33,6 +33,7 @@ function StampForm() {
   const docId = documentStore.getState().activeId ?? '';
   const saved = useStamps((s) => s.docInfo[docId]);
   const picked = useStamps((s) => s.code);
+  const problem = useStamps((s) => s.problem);
   const [code, setCode] = useState(
     scheme.codes.find((c) => c.code === picked)?.code ?? scheme.codes[0]?.code ?? '',
   );
@@ -46,6 +47,7 @@ function StampForm() {
   const place = (): void => {
     stampStore.setState((s) => ({
       code,
+      problem: null,
       pickerOpen: false,
       docInfo: { ...s.docInfo, [docId]: { docNo, rev } },
     }));
@@ -130,6 +132,11 @@ function StampForm() {
           }}
         />
         <p className="stamp-hint">{t('stamps.hint')}</p>
+        {problem ? (
+          <p className="ui-field-error" role="alert">
+            {t(problem)}
+          </p>
+        ) : null}
       </form>
     </Dialog>
   );
