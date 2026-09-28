@@ -122,8 +122,10 @@ describe('AppDb v3 (M3-13)', () => {
     const db = await AppDb.open({ factory });
     expect(db.db.version).toBe(3);
     expect(await db.getProfile()).toEqual({ name: 'Ana' });
-    await db.putScheme({ id: 's1', name: 'Site' });
-    await db.putScheme({ id: 's2', name: 'Shop' });
+    const s1 = { id: 's1', name: 'Site' };
+    const s2 = { id: 's2', name: 'Shop' };
+    await db.putScheme(s1);
+    await db.putScheme(s2);
     await db.deleteScheme('s1');
     expect(await db.listSchemes()).toEqual([{ id: 's2', name: 'Shop' }]);
     db.close();

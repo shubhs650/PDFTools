@@ -77,6 +77,7 @@ function fakeSpawn(world: FakeWorld) {
       printReady: () => ({ bytes: new ArrayBuffer(0) }),
       formFacts: () => ({ tabs: [], annotated: [], defaults: {}, encrypted: false }),
       checkSignatures: () => [],
+      pageViewports: () => [],
       docProperties: () => {
         throw new Error('unused');
       },

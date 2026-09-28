@@ -37,6 +37,13 @@ export const allSchemes = (s: SchemesState = schemeStore.getState()): StatusSche
   ...s.custom,
 ];
 
+/** A stored scheme is always validated as a custom one. */
+function withoutPreset(v: StatusScheme): StatusScheme {
+  const rest = { ...v };
+  delete rest.preset;
+  return rest;
+}
+
 /** The active scheme (the default preset when the stored one is gone). */
 export function activeScheme(s: SchemesState = schemeStore.getState()): StatusScheme {
   return allSchemes(s).find((x) => x.id === s.activeId) ?? DEFAULT_SCHEME;
@@ -58,7 +65,7 @@ export function loadSchemes(): Promise<void> {
           v !== null &&
           typeof (v as StatusScheme).id === 'string' &&
           Array.isArray((v as StatusScheme).codes) &&
-          validateScheme({ ...(v as StatusScheme), preset: undefined }).length === 0,
+          validateScheme(withoutPreset(v as StatusScheme)).length === 0,
       );
       schemeStore.setState({
         custom,

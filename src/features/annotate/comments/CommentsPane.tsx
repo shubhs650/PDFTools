@@ -124,11 +124,10 @@ export function CommentsPane() {
             checked={!!f.pages}
             onChange={(e) => {
               const page = e.currentTarget.checked ? currentPage(docId) : null;
+              const rest = { ...f };
+              delete rest.pages;
               setView(docId, {
-                filter: {
-                  ...f,
-                  ...(page === null ? { pages: undefined } : { pages: [page, page] }),
-                },
+                filter: page === null ? rest : { ...rest, pages: [page, page] },
               });
             }}
           />
