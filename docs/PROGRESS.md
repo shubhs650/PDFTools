@@ -9,6 +9,11 @@ M0–M2 are merged into `main` (M2 complete on the agent side, owner pack in
 
 ## Done
 
+- **Session 16 — M3-11 Comments pane.** Every comment (unsaved ones included), numbered per
+  M3-Q5, filtered by author/type/status/current page and sorted; a virtualized, keyboard-driven
+  list that selects on the page and follows the page's selection; page-number overlay toggle.
+  10,000 comments: first rows < 1 s, no long tasks.
+
 - **Session 16 — M3-10 Properties pane.** Colour, fill, opacity, width, line style (incl.
   cloudy), line endings, font size/colour, subject and text of the selected comments; mixed
   values; one undo step per change; read-only without the annotate permission; Copy/Apply

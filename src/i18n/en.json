@@ -970,5 +970,38 @@
       "slash": "Slash"
     },
     "noStyle": "Copy a style first"
+  },
+  "comments": {
+    "noDocument": "Open a document to see its comments.",
+    "filters": "Filter comments",
+    "author": "Author",
+    "type": "Type",
+    "statusLabel": "Status",
+    "all": "All",
+    "thisPage": "Current page only",
+    "sortLabel": "Sort by",
+    "sort": {
+      "page": "Page",
+      "date": "Date (newest first)",
+      "author": "Author",
+      "type": "Type"
+    },
+    "none": "No comments in this document.",
+    "count_one": "{{shown}} of {{total}} comment",
+    "count_other": "{{shown}} of {{total}} comments",
+    "list": "Comments",
+    "page_one": "Page {{page}} · {{count}} comment",
+    "page_other": "Page {{page}} · {{count}} comments",
+    "replies_one": "{{count}} reply",
+    "replies_other": "{{count}} replies",
+    "status": {
+      "none": "No status",
+      "accepted": "Accepted",
+      "rejected": "Rejected",
+      "cancelled": "Cancelled",
+      "completed": "Completed",
+      "marked": "Marked",
+      "unmarked": "Unmarked"
+    }
   }
 }

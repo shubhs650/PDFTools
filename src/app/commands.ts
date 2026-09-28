@@ -696,6 +696,7 @@ export const COMMANDS: readonly CommandDef[] = [
     size: 'small',
     fluent: 'CommentMultiple',
     milestone: 'M3',
+    shipped: true, // M3-11
   },
   {
     id: 'comment.reply',
@@ -720,6 +721,7 @@ export const COMMANDS: readonly CommandDef[] = [
     size: 'small',
     fluent: 'Filter',
     milestone: 'M3',
+    shipped: true, // M3-11
   },
   {
     id: 'comment.autoNumber',
@@ -729,6 +731,7 @@ export const COMMANDS: readonly CommandDef[] = [
     fluent: 'NumberSymbolSquare',
     milestone: 'M3',
     toggle: true,
+    shipped: true, // M3-11
   },
   {
     id: 'comment.copyStyle',
@@ -1146,6 +1149,7 @@ export const COMMANDS: readonly CommandDef[] = [
     fluent: 'CommentMultiple',
     milestone: 'M3',
     toggle: true,
+    shipped: true, // M3-11
   },
   {
     id: 'rail.attachments',

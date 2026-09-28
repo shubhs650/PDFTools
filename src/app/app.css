@@ -1699,3 +1699,116 @@ textarea.form-field {
 .properties-pane {
   overflow-y: auto;
 }
+
+/* ------------------------------------------------------------ comments pane (M3-11) */
+.comments-pane {
+  /* Fills the pane body without its (virtual) content sizing it, as .search-pane. */
+  position: absolute;
+  inset: var(--space-0);
+  display: flex;
+  flex-direction: column;
+}
+
+.comments-filters {
+  display: grid;
+  grid-template-columns: max-content 1fr;
+  gap: var(--space-2) var(--space-3);
+  align-items: center;
+  padding: var(--space-3);
+  border-bottom: var(--border-width) solid var(--color-border);
+}
+
+.comments-check {
+  display: flex;
+  grid-column: 1 / -1;
+  gap: var(--space-2);
+  align-items: center;
+}
+
+.comments-count {
+  margin: var(--space-0);
+  padding: var(--space-2) var(--space-3);
+  color: var(--color-text-muted);
+  font-size: var(--font-size-s);
+}
+
+.comments-list {
+  position: relative;
+  flex: 1;
+  min-height: var(--space-0);
+  overflow-y: auto;
+  overscroll-behavior: contain;
+}
+
+.comments-list:focus-visible {
+  outline: var(--focus-width) solid var(--color-focus);
+  outline-offset: calc(-1 * var(--focus-width));
+}
+
+.comments-list-content {
+  position: relative;
+}
+
+.comment-row {
+  position: absolute;
+  right: var(--space-0);
+  left: var(--space-0);
+  display: flex;
+  gap: var(--space-3);
+  align-items: center;
+  padding: var(--space-0) var(--space-3);
+  box-sizing: border-box;
+  cursor: pointer;
+}
+
+.comment-row--page {
+  background: var(--color-surface-sunken);
+  color: var(--color-text-muted);
+  font-size: var(--font-size-s);
+  font-weight: var(--font-weight-semibold);
+}
+
+.comment-row--active {
+  background: var(--color-selected);
+}
+
+.comment-number {
+  min-width: 2.5em;
+  font-variant-numeric: tabular-nums;
+  text-align: right;
+}
+
+.comment-body {
+  display: grid;
+  min-width: var(--space-0);
+}
+
+.comment-meta,
+.comment-text {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.comment-meta {
+  color: var(--color-text-muted);
+  font-size: var(--font-size-s);
+}
+
+.comment-numbers {
+  position: absolute;
+  inset: var(--space-0);
+  pointer-events: none;
+}
+
+.comment-number-badge {
+  position: absolute;
+  transform: translate(-50%, -50%);
+  min-width: 1.5em;
+  padding: var(--space-0) var(--space-1);
+  border-radius: var(--radius-m);
+  background: var(--color-accent);
+  color: var(--color-text-on-accent);
+  font-size: var(--font-size-xs);
+  text-align: center;
+}

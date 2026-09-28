@@ -15,6 +15,7 @@ import { cycleTarget, pageAnnotations } from './model';
 import { DRAW_COMMANDS, isDrawTool, KEYBOARD_PLACED, VERTEX_TOOLS } from './tools/drawModel';
 import { finishDrawing, placeAtCentre } from './tools/drawTools';
 import { copiedStyle, copyStyle, pasteStyle } from './properties/style';
+import { commentsStore } from './comments/commentsStore';
 import { MARKUP_TOOLS } from './tools/markupModel';
 import { markupFromSelection } from './tools/textMarkup';
 
@@ -203,6 +204,31 @@ export function registerAnnotateCommands(): () => void {
             selectedOf(id).map((t) => t.object),
           );
       },
+    }),
+    // Comments pane (M3-11): open it; Filter opens it with focus on the filters.
+    registerCommand('comment.commentsPane', {
+      run: () => {
+        const s = appStore.getState();
+        if (!(s.leftPaneOpen && s.leftPane === 'rail.comments')) s.choosePane('rail.comments');
+      },
+      isPressed: () => {
+        const s = appStore.getState();
+        return s.leftPaneOpen && s.leftPane === 'rail.comments';
+      },
+    }),
+    registerCommand('comment.filter', {
+      requiresDocument: true,
+      run: () => {
+        const s = appStore.getState();
+        if (!(s.leftPaneOpen && s.leftPane === 'rail.comments')) s.choosePane('rail.comments');
+        commentsStore.setState((c) => ({ focusFilters: c.focusFilters + 1 }));
+      },
+    }),
+    registerCommand('comment.autoNumber', {
+      run: () => {
+        commentsStore.setState((c) => ({ numbersOnPage: !c.numbersOnPage }));
+      },
+      isPressed: () => commentsStore.getState().numbersOnPage,
     }),
     registerCommand('comment.reviewerProfile', {
       run: openProfileDialog,
