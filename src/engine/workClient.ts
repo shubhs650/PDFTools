@@ -43,6 +43,7 @@ type JobMethod =
   | 'listAttachments'
   | 'readAttachment'
   | 'listLayers'
+  | 'pageViewports'
   | 'formFacts'
   | 'printOpen'
   | 'printPages'

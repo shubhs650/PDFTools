@@ -3,6 +3,9 @@ import type { ReactNode } from 'react';
 import type { InteractionManagerCapability } from '@embedpdf/plugin-interaction-manager';
 import { HAND_MODE, PLUGINS } from './plugins';
 import { installAuthoring } from '../annotate/authoring';
+import { installDrawTools } from '../annotate/tools/drawTools';
+import { installStampTools } from '../stamps/stampTools';
+import { installCalibrateTool } from '../measure/calibrate';
 import { capability, setRegistry, useHost } from './host';
 
 const onInitialized = (registry: Parameters<typeof setRegistry>[0]): Promise<void> => {
@@ -15,6 +18,9 @@ const onInitialized = (registry: Parameters<typeof setRegistry>[0]): Promise<voi
       exclusive: false,
     });
     installAuthoring(registry);
+    installDrawTools(registry);
+    installStampTools(registry);
+    installCalibrateTool(registry);
   }
   setRegistry(registry);
   return Promise.resolve();

@@ -4,6 +4,7 @@
 import type { ComponentType } from 'react';
 import { AttachmentsPane } from '../features/attachments/AttachmentsPane';
 import { BookmarksPane } from '../features/bookmarks/BookmarksPane';
+import { CommentsPane } from '../features/annotate/comments/CommentsPane';
 import { LayersPane } from '../features/layers/LayersPane';
 import { SearchPane } from '../features/search/SearchPane';
 import { SignaturesPane } from '../features/signatures/SignaturesPane';
@@ -18,6 +19,7 @@ export interface PaneDef {
 export const PANES: readonly PaneDef[] = [
   { id: 'rail.bookmarks', component: BookmarksPane },
   { id: 'rail.thumbnails', component: ThumbnailsPane },
+  { id: 'rail.comments', component: CommentsPane },
   { id: 'rail.search', component: SearchPane },
   { id: 'rail.attachments', component: AttachmentsPane },
   { id: 'rail.layers', component: LayersPane },

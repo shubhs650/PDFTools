@@ -43,6 +43,14 @@ export function registerAnnotateProbe(hook: TestHook): void {
     select: (docId: string, page: number, id: string) => {
       annotationCapability()?.forDocument(docId).selectAnnotation(page, id);
     },
+    selectMany: (docId: string, ids: string[]) => {
+      annotationCapability()?.forDocument(docId).setSelection(ids);
+    },
+    /** The full plugin objects (all fields), for property checks. */
+    objects: (docId: string) => {
+      const st = annotationState(docId);
+      return st ? Object.values(st.byUid).map((t) => t.object) : null;
+    },
     canUndo: (docId: string) => history()?.forDocument(docId).canUndo() ?? false,
     /**
      * Makes a square markup the way the M3-08+ tools do: the reviewer profile

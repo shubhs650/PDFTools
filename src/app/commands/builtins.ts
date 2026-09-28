@@ -20,6 +20,7 @@ export function registerBuiltinCommands(): () => void {
     ...[
       'rail.bookmarks',
       'rail.thumbnails',
+      'rail.comments',
       'rail.search',
       'rail.attachments',
       'rail.layers',

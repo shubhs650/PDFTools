@@ -57,6 +57,15 @@ export function readAnnotString(mod: WrappedPdfiumModule, annot: number, key: st
   }
 }
 
+const TEXT = 1;
+
+function isReply(mod: WrappedPdfiumModule, annot: number): boolean {
+  const parent = rawCall(mod, 'FPDFAnnot_GetLinkedAnnot', annot, 'IRT');
+  if (!parent) return false;
+  rawCall(mod, 'FPDFPage_CloseAnnot', parent);
+  return true;
+}
+
 const readNm = (mod: WrappedPdfiumModule, annot: number): string =>
   readAnnotString(mod, annot, 'NM');
 
@@ -75,7 +84,10 @@ export function annotBoxes(
       const a = rawCall(mod, 'FPDFPage_GetAnnot', pagePtr, i);
       if (!a) continue;
       try {
-        if (SKIP_SUBTYPES.has(rawCall(mod, 'FPDFAnnot_GetSubtype', a))) continue;
+        const subtype = rawCall(mod, 'FPDFAnnot_GetSubtype', a);
+        if (SKIP_SUBTYPES.has(subtype)) continue;
+        // Replies (a Text note with /IRT, M3-12) live in the thread, not on the page.
+        if (subtype === TEXT && isReply(mod, a)) continue;
         if (rawCall(mod, 'FPDFAnnot_GetFlags', a) & (HIDDEN | NO_VIEW)) continue;
         if (!rawCall(mod, 'EPDFAnnot_GetRect', a, buf)) continue;
         const f = (k: number) => heap.getValue(buf + 4 * k, 'float');

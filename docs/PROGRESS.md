@@ -1,6 +1,6 @@
 # PDFTools — Progress
 
-_Last updated: 2026-09-27 (session 16: M3 plan approved; M3-01 … M3-08)_
+_Last updated: 2026-09-28 (session 16: M3-01 … M3-08 merged; M3-09 … M3-15 done on the branch)_
 
 **Current milestone:** M3 — Review. Plan approved (2026-09-27); M3-01 … M3-08 done in session 16
 on `claude/m3-task-breakdown-tlyokp` (ADR-014 and ADR-015 accepted).
@@ -8,6 +8,42 @@ M0–M2 are merged into `main` (M2 complete on the agent side, owner pack in
 [docs/acceptance/M2.md](acceptance/M2.md)); the M0, M1 and M2 owner runs are open.
 
 ## Done
+
+- **Session 16 — M3-15 scale model.** Measure tab: Set Scale (ratio, units, precision; this page,
+  all pages or a range), Calibrate (two picked or typed points and a real length) and Units; the
+  scale is saved as the page's `/VP` (other viewports kept) and `/VP` from other viewers is read;
+  ft-in to 1/64"; the status bar shows the scale or "Uncalibrated".
+
+- **Session 16 — M3-14 stamps.** Dynamic stamps from the active scheme (code, reviewer, date,
+  document number and revision) drawn in the encoder worker as a 4× PNG; image stamps from
+  PNG/JPG or a PDF's first page (vector, copy permission honoured). `/Subj` and `/Contents`
+  carry the text; keyboard placement; 50 stamps without a long task.
+
+- **Session 16 — M3-13 status schemes.** Three presets (1–4, A–D, Approved … For Information),
+  custom schemes (codes, labels, colours with a contrast warning), the active scheme, export to
+  and strict import from `.pdftools-scheme.json`; IndexedDB v3 `schemes` store.
+
+- **Session 16 — M3-12 replies and review status.** Threads under the selected comment: replies
+  (`/IRT`) and Set Status (`/StateModel /Review`, per-reviewer latest state and history), read from
+  files made in other viewers too; own replies editable; deleting a comment with replies asks
+  first and undoes in one step.
+
+- **Session 16 — M3-11 Comments pane.** Every comment (unsaved ones included), numbered per
+  M3-Q5, filtered by author/type/status/current page and sorted; a virtualized, keyboard-driven
+  list that selects on the page and follows the page's selection; page-number overlay toggle.
+  10,000 comments: first rows < 1 s, no long tasks.
+
+- **Session 16 — M3-10 Properties pane.** Colour, fill, opacity, width, line style (incl.
+  cloudy), line endings, font size/colour, subject and text of the selected comments; mixed
+  values; one undo step per change; read-only without the annotate permission; Copy/Apply
+  Comment Style. Also fixed: the ribbon's hidden button text widened the page in the
+  pseudo-locale (310 px) once Home gained the M3-09 groups.
+
+- **Session 16 — M3-09 note, text, drawing, ink and link tools.** Sticky note, text box,
+  callout, line, arrow, polyline, polygon, rectangle, oval, cloud, pencil, ink highlighter and
+  link on the Comment tab; Shift constrains, Enter/Esc finish/drop polylines, keyboard creation
+  of notes and text boxes (N/T then Enter). Link dialog: page or web address (unsafe schemes
+  refused). Unit + `e2e/draw-tools.spec.ts` + ink perf scenario.
 
 - **Session 16 — perf gate fix before merging M3.** CI's perf gate tripped on 3 of 6 branch
   runs. A HEAD-vs-main comparison (longest main-thread task per scenario, two full perf runs
@@ -735,7 +771,8 @@ M0–M2 are merged into `main` (M2 complete on the agent side, owner pack in
 4. **Owner:** decide the items under "Decisions needed" (keyboard text selection, committed
    corpus PDFs, Pages project).
 5. **Owner:** the S2 interop run (§D/§F) before M3-16/M3-20 (M3-Q2 defaults are in use until then).
-6. **Agent:** M3-09 (note, text, drawing, ink and link tools) next, then M3-10 … M3-20 in plan order.
+6. **Agent:** M3-16 (distance, perimeter and area measurement tools) next, then M3-17 … M3-20 in
+   plan order. M3-09 … M3-15 are pushed on `claude/m3-task-breakdown-tlyokp`; no PR opened yet.
 
 ## Open issues
 

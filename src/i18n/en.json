@@ -289,7 +289,8 @@
       "annotationNext": "Next Comment on the Page",
       "annotationPrev": "Previous Comment on the Page",
       "annotationNudge": "Move Selected Comments (1 pt)",
-      "annotationNudgeFar": "Move Selected Comments (10 pt)"
+      "annotationNudgeFar": "Move Selected Comments (10 pt)",
+      "toolEnter": "Place a note or text box, or finish a polyline"
     },
     "key": {
       "ctrl": "Ctrl",
@@ -466,7 +467,8 @@
       "recent": "Recent files: file name, size, when it was opened and the browser's permission handle to reopen it",
       "recovery": "Recovery snapshots: a copy of a document with unsaved changes, deleted when you save, close or discard it",
       "appFiles": "The offline copy of the app (program files only, no documents)",
-      "profile": "Reviewer profile: the name, initials, discipline and company you entered"
+      "profile": "Reviewer profile: the name, initials, discipline and company you entered",
+      "schemes": "Status schemes you made or imported (codes, labels, colours) and which one is active"
     },
     "clearHint": "To delete this data, use File → Settings → Clear all local data."
   },
@@ -883,6 +885,28 @@
       "label": "Inserted text",
       "ok": "Insert",
       "cancel": "Cancel"
+    },
+    "note": {
+      "title": "Note",
+      "label": "Note text",
+      "ok": "OK"
+    },
+    "freeText": {
+      "title": "Text box",
+      "label": "Text",
+      "placeholder": "Type here"
+    },
+    "link": {
+      "title": "Link",
+      "description": "Where does this link go?",
+      "goesTo": "Goes to",
+      "page": "A page in this document",
+      "url": "A web address",
+      "pageNumber": "Page (1 to {{count}})",
+      "pageRange": "Enter a page from 1 to {{count}}.",
+      "address": "Web address",
+      "badUrl": "Enter a web address such as https://example.com.",
+      "ok": "Create link"
     }
   },
   "profile": {
@@ -907,5 +931,235 @@
     "notSet": "Not set",
     "note": "Your name becomes the author of new comments. Initials, discipline and company are used in stamps and comment review sheets.",
     "edit": "Edit reviewer profile…"
+  },
+  "annotProps": {
+    "label": "Comment properties",
+    "none": "Select a comment to see its properties.",
+    "one": "{{type}} by {{author}}",
+    "many_one": "{{count}} comment selected",
+    "many_other": "{{count}} comments selected",
+    "readOnly": "This document doesn't allow changes to comments.",
+    "mixed": "Mixed",
+    "noFill": "No fill",
+    "range": "Enter a number from {{min}} to {{max}}.",
+    "color": "Color",
+    "fill": "Fill",
+    "fontColor": "Text color",
+    "opacity": "Opacity",
+    "width": "Line width",
+    "fontSize": "Font size",
+    "pt": "pt",
+    "lineStyle": "Line style",
+    "lineStart": "Line start",
+    "lineEnd": "Line end",
+    "subject": "Subject",
+    "contents": "Comment text",
+    "author": "Author",
+    "style": {
+      "solid": "Solid",
+      "dashed": "Dashed",
+      "cloudy": "Cloudy"
+    },
+    "ending": {
+      "none": "None",
+      "openArrow": "Open arrow",
+      "closedArrow": "Closed arrow",
+      "circle": "Circle",
+      "square": "Square",
+      "diamond": "Diamond",
+      "butt": "Butt",
+      "slash": "Slash"
+    },
+    "noStyle": "Copy a style first"
+  },
+  "comments": {
+    "noDocument": "Open a document to see its comments.",
+    "filters": "Filter comments",
+    "author": "Author",
+    "type": "Type",
+    "statusLabel": "Status",
+    "all": "All",
+    "thisPage": "Current page only",
+    "sortLabel": "Sort by",
+    "sort": {
+      "page": "Page",
+      "date": "Date (newest first)",
+      "author": "Author",
+      "type": "Type"
+    },
+    "none": "No comments in this document.",
+    "count_one": "{{shown}} of {{total}} comment",
+    "count_other": "{{shown}} of {{total}} comments",
+    "list": "Comments",
+    "page_one": "Page {{page}} · {{count}} comment",
+    "page_other": "Page {{page}} · {{count}} comments",
+    "replies_one": "{{count}} reply",
+    "replies_other": "{{count}} replies",
+    "status": {
+      "none": "No status",
+      "accepted": "Accepted",
+      "rejected": "Rejected",
+      "cancelled": "Cancelled",
+      "completed": "Completed",
+      "marked": "Marked",
+      "unmarked": "Unmarked"
+    },
+    "stateSetBy": "{{state}} set by {{author}}",
+    "stateBy": "{{state}} — {{author}}",
+    "thread": "Comment {{n}} · {{type}}",
+    "setStatus": "Set status",
+    "chooseStatus": "Choose a status…",
+    "statuses": "Status by reviewer",
+    "history": "Status history",
+    "repliesLabel": "Replies",
+    "editReply": "Edit reply",
+    "save": "Save",
+    "edit": "Edit reply",
+    "delete": "Delete reply",
+    "replyLabel": "Reply",
+    "reply": "Post reply",
+    "deleteTitle": "Delete comments and their replies?",
+    "deleteDescription_one": "The selected comments have {{count}} reply or status, which will be deleted too. You can undo this.",
+    "deleteDescription_other": "The selected comments have {{count}} replies and statuses, which will be deleted too. You can undo this.",
+    "deleteConfirm": "Delete"
+  },
+  "schemes": {
+    "title": "Status schemes",
+    "description": "Review codes for stamps and comment review sheets. Presets can be duplicated and changed.",
+    "close": "Close",
+    "active": "Active scheme",
+    "list": "Schemes",
+    "codesOf": "Codes of {{name}}",
+    "duplicate": "Duplicate",
+    "duplicateNamed": "Duplicate {{name}}",
+    "edit": "Edit",
+    "editNamed": "Edit {{name}}",
+    "export": "Export",
+    "exportNamed": "Export {{name}}",
+    "delete": "Delete",
+    "deleteNamed": "Delete {{name}}",
+    "new": "New scheme",
+    "import": "Import…",
+    "copyOf": "Copy of {{name}}",
+    "saved": "Saved {{name}}.",
+    "imported": "Imported {{name}}.",
+    "editTitle": "Edit status scheme",
+    "save": "Save",
+    "name": "Scheme name",
+    "codes": "Codes",
+    "code": "Code {{n}}",
+    "label": "Label {{n}}",
+    "color": "Colour {{n}}",
+    "up": "Move code {{n}} up",
+    "down": "Move code {{n}} down",
+    "remove": "Remove code {{n}}",
+    "addCode": "Add code",
+    "lowContrast": "This colour is hard to read on a white page.",
+    "preset": {
+      "tag": "Preset",
+      "numeric": {
+        "name": "1 / 2 / 3 / 4",
+        "1": "Approved",
+        "2": "Approved with comments",
+        "3": "Revise and resubmit",
+        "4": "Rejected"
+      },
+      "alpha": {
+        "name": "A / B / C / D",
+        "A": "Approved",
+        "B": "Approved with comments",
+        "C": "Revise and resubmit",
+        "D": "Rejected"
+      },
+      "approval": {
+        "name": "Approved / Approved as Noted / Revise & Resubmit / Rejected / For Information",
+        "AP": "Approved",
+        "AN": "Approved as Noted",
+        "RR": "Revise & Resubmit",
+        "RJ": "Rejected",
+        "FI": "For Information"
+      }
+    },
+    "error": {
+      "name": "Give the scheme a name (up to 64 characters).",
+      "noCodes": "Add at least one code.",
+      "tooManyCodes": "A scheme has at most 20 codes.",
+      "code": "Each code needs 1 to 8 characters.",
+      "label": "Each code needs a label (up to 64 characters).",
+      "color": "Each code needs a colour.",
+      "duplicate": "Two codes are the same.",
+      "tooLarge": "The file is too large to be a scheme.",
+      "json": "The file isn't a valid scheme file.",
+      "format": "The file isn't a PDFTools scheme.",
+      "version": "The scheme was made by a newer version of PDFTools.",
+      "unknownKey": "The file has entries a scheme doesn't have.",
+      "codes": "The file's codes aren't valid."
+    }
+  },
+  "stamps": {
+    "title": "Stamp",
+    "description": "The stamp shows the code, your name, today's date and the document's number and revision.",
+    "code": "Code ({{scheme}})",
+    "schemes": "Status schemes…",
+    "docNo": "Document number",
+    "rev": "Revision",
+    "place": "Place stamp",
+    "hint": "Then click the page, or press Enter to place it at the centre of the current page.",
+    "imageTitle": "Image stamp",
+    "imageDescription": "A PNG or JPG image, or the first page of a PDF.",
+    "chooseImage": "Choose an image or PDF",
+    "error": {
+      "draw": "The stamp couldn't be drawn. Try again.",
+      "tooLarge": "The file is larger than 20 MB.",
+      "unsupported": "Choose a PNG, JPG or PDF file.",
+      "pdfLocked": "That PDF needs a password.",
+      "pdfNoCopy": "That PDF doesn't allow copying its content.",
+      "pdfBroken": "That PDF couldn't be read."
+    }
+  },
+  "scale": {
+    "setTitle": "Set scale",
+    "setDescription": "The drawing's scale, as paper length : real length.",
+    "calTitle": "Calibrate",
+    "calDescription": "Pick two points a known distance apart, then enter that distance.",
+    "paper": "Paper",
+    "real": "Real",
+    "unit": "Units",
+    "precision": "Decimal places",
+    "fraction": "Round to",
+    "units": {
+      "mm": "Millimetres",
+      "cm": "Centimetres",
+      "m": "Metres",
+      "in": "Inches",
+      "ft": "Feet",
+      "ftin": "Feet and inches"
+    },
+    "applyTo": "Apply to",
+    "where": {
+      "page": "This page",
+      "all": "All pages",
+      "range": "Pages"
+    },
+    "pages": "Pages (e.g. 1-3, 5)",
+    "apply": "Apply",
+    "preview": "Scale {{ratio}}",
+    "pick": "Pick two points on the page",
+    "p1x": "Point 1 x (pt)",
+    "p1y": "Point 1 y (pt)",
+    "p2x": "Point 2 x (pt)",
+    "p2y": "Point 2 y (pt)",
+    "onPaper": "Distance on the page: {{length}} mm",
+    "realLength": "Real length",
+    "realLengthFtIn": "Real length (e.g. 12'-6 1/2\")",
+    "indicator": "{{ratio}} · {{unit}}",
+    "uncalibrated": "Uncalibrated",
+    "error": {
+      "ratio": "Enter two numbers greater than zero.",
+      "points": "Pick or type two different points.",
+      "length": "Enter the real length.",
+      "range": "Enter pages such as 1-3, 5.",
+      "save": "The scale couldn't be set. Try again."
+    }
   }
 }

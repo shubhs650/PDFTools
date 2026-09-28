@@ -47,21 +47,29 @@ export function nameAnnotations(
   return named;
 }
 
+/**
+ * Lists the annotations batch by batch; each batch goes out with its progress,
+ * streamed (never coalesced), so the main thread copies one small message at a
+ * time (rule 1).
+ */
 export async function listAnnotations(
   mod: WrappedPdfiumModule,
   native: PdfiumNative,
   doc: PdfDocumentObject,
   slice: JobSlice,
-  progress: (p: { done: number; total: number }) => void,
-): Promise<Record<number, PdfAnnotationObject[]>> {
-  const out: Record<number, PdfAnnotationObject[]> = {};
+  progress: (p: {
+    done: number;
+    total: number;
+    pages: Record<number, PdfAnnotationObject[]>;
+  }) => void,
+): Promise<{ pages: number }> {
   const total = doc.pages.length;
   for (let from = 0; from < total; from += BATCH) {
     await slice.checkpoint();
     const pages = doc.pages.slice(from, from + BATCH);
     for (const p of pages) nameAnnotations(mod, native, doc.id, p.index);
-    Object.assign(out, await native.getAnnotationsBatch(doc, pages).toPromise());
-    progress({ done: Math.min(total, from + BATCH), total });
+    const batch = await native.getAnnotationsBatch(doc, pages).toPromise();
+    progress({ done: Math.min(total, from + BATCH), total, pages: batch });
   }
-  return out;
+  return { pages: total };
 }

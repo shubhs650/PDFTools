@@ -107,6 +107,18 @@ export const KEYMAP: readonly Binding[] = [
   b('comment.squiggly', ['Q'], 'document'),
   b('comment.insertText', ['I'], 'document'),
   b('comment.replaceText', ['R'], 'document'),
+  // Note, text and drawing tools (M3-09); Enter places a note or text box at the
+  // page centre, or finishes a polyline/polygon (Esc drops it).
+  b('comment.stickyNote', ['N'], 'document'),
+  b('comment.textBox', ['T'], 'document'),
+  b('comment.line', ['L'], 'document'),
+  b('comment.arrow', ['A'], 'document'),
+  b('comment.rectangle', ['B'], 'document'),
+  b('comment.oval', ['O'], 'document'),
+  b('comment.polygon', ['P'], 'document'),
+  b('comment.cloud', ['C'], 'document'),
+  b('comment.pencil', ['D'], 'document'),
+  { ...b('tool.enter', ['Enter'], 'document'), preventWhenDisabled: false },
   // Browser-reserved first, alternates after (M1-Q1).
   b('tab.close', ['Ctrl+F4', 'Ctrl+Alt+W', 'Ctrl+Alt+F4'], 'global', true),
   b('tab.next', ['Ctrl+PageDown', 'Ctrl+Alt+PageDown'], 'global', true),

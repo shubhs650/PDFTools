@@ -4,6 +4,7 @@ import type { PdfAnnotationObject, PageTextSlice, PdfPageGeometry } from '@embed
 import type { DocDigest } from '../workers/render/save/digest';
 import type { AttachmentInfo, AttachmentRef } from '../workers/work/attachments';
 import type { FormFacts } from '../model/formFacts';
+import type { PageVp } from '../workers/work/viewports';
 import type { Band, BandRequest } from '../workers/work/print';
 import type { FlattenOptions } from '../workers/work/flatten';
 import type { LayerList } from '../model/ocg';
@@ -75,12 +76,14 @@ export interface WorkApi {
   /** Text of glyph ranges (selection → clipboard). */
   /**
    * Every annotation, by page, for plugin-annotation's store (M3-05, ADR-014
-   * decision 2); ids for /NM-less annotations are stable (`obj-<n>`).
+   * decision 2); ids for /NM-less annotations are stable (`obj-<n>`). The
+   * pages arrive with the progress, one batch at a time, so no single message
+   * (and its copy on the main thread) holds them all; the result is the count.
    */
   annotations: MethodSpec<
     { docId: string },
-    Record<number, PdfAnnotationObject[]>,
-    { done: number; total: number }
+    { pages: number },
+    { done: number; total: number; pages: Record<number, PdfAnnotationObject[]> }
   >;
   textSlices: MethodSpec<
     { docId: string; slices: PageTextSlice[]; priority?: WorkPriority },
@@ -113,6 +116,8 @@ export interface WorkApi {
   docProperties: MethodSpec<{ docId: string }, DocProperties>;
   /** Optional content groups: names and default visibility (list-only, ADR-012 d5). */
   listLayers: MethodSpec<{ docId: string }, LayerList>;
+  /** Each page's /VP (as plain PDF data) and MediaBox (M3-15, ADR-007). */
+  pageViewports: MethodSpec<{ docId: string }, PageVp[]>;
   /** Form facts EmbedPDF doesn't give: /Tabs per page, /DV per field (M2-14). */
   formFacts: MethodSpec<{ docId: string }, FormFacts>;
   /**

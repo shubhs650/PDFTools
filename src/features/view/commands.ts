@@ -1,4 +1,5 @@
 // View commands (§5, §8.1, M1-15): zoom, page navigation, Hand and Select.
+import { cancelDrawing } from '../annotate/tools/drawTools';
 import { deselectAnnotations } from '../annotate/commands';
 import { registerCommand } from '../../app/commands/dispatch';
 import { clearSelection } from '../select/commands';
@@ -113,6 +114,8 @@ export function registerViewCommands(): () => void {
     registerCommand('tool.cancel', {
       requiresDocument: true,
       run: () => {
+        // A polyline/polygon being drawn is dropped first; the tool stays on (M3-09).
+        if (cancelDrawing()) return;
         clearSelection();
         deselectAnnotations();
         appStore.getState().setTool('select');

@@ -76,7 +76,7 @@ test('Highlight tool: on until Esc; drag makes a highlight saved with quads, /T 
   await page.getByRole('tab', { name: 'Comment' }).click();
   const highlight = page
     .getByRole('toolbar', { name: 'Comment commands' })
-    .getByRole('button', { name: 'Highlight' });
+    .getByRole('button', { name: 'Highlight', exact: true });
   await highlight.click();
   await expect(highlight).toHaveAttribute('aria-pressed', 'true');
   await expect(page.locator('.document-host')).toHaveAttribute('data-tool', 'highlight');
@@ -173,6 +173,13 @@ test('a rotated page: Ctrl+A then G highlights the rotated line', async ({ page 
   const id = await open(page, 'rotated.pdf', rotated);
   await view(page).focus();
   await page.keyboard.press('Control+A');
+  // Select All reads the page's text in the Render worker first.
+  await expect
+    .poll(
+      async () =>
+        ((await cap(page, 'view', 'selection')) as { selection: unknown } | null)?.selection,
+    )
+    .toBeTruthy();
   await page.keyboard.press('g');
   await expect
     .poll(async () => (await list(page, id)).map((a) => [a.type, a.contents]))

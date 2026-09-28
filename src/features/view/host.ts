@@ -5,7 +5,7 @@
 import type { PluginRegistry } from '@embedpdf/core';
 import type { DocumentManagerCapability } from '@embedpdf/plugin-document-manager';
 import { createStore, useStore } from 'zustand';
-import { PdfErrorCode } from '@embedpdf/models';
+import { PdfErrorCode, type PdfAnnotationObject } from '@embedpdf/models';
 import { documentStore, securityOf } from '../../app/store/documentStore';
 import { createRenderEngine, type RenderEngine } from '../../engine/createEngine';
 import { RpcError, isAbortError } from '../../engine/errors';
@@ -68,11 +68,17 @@ const textSource: TextSource = {
     };
     const promise = (async () => {
       if (await w.whenAdded(doc.id, WORK_COPY_WAIT_MS)) {
-        const job = w.run('annotations', { docId: doc.id });
+        const out: Record<number, PdfAnnotationObject[]> = {};
+        const job = w.run(
+          'annotations',
+          { docId: doc.id },
+          { onProgress: (p) => Object.assign(out, p.pages) },
+        );
         state.inner = job;
         if (state.cancelled) job.cancel();
         try {
-          return await job.promise;
+          await job.promise;
+          return out;
         } catch (err) {
           if (state.cancelled || isAbortError(err)) throw err;
         }

@@ -58,6 +58,8 @@ export const INTERNAL_ACTIONS = [
   'annotation.nudgeRightFar',
   'annotation.nudgeUpFar',
   'annotation.nudgeDownFar',
+  // Drawing tools (M3-09): Enter places a note/text box or finishes a polyline.
+  'tool.enter',
 ] as const;
 export type InternalAction = (typeof INTERNAL_ACTIONS)[number];
 

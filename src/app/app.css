@@ -337,6 +337,9 @@ body {
 }
 
 .ribbon-panel {
+  /* The containing block of the buttons' visually hidden text, which would
+     otherwise escape this scroller and widen the page (pseudo-locale). */
+  position: relative;
   min-height: var(--ribbon-height);
   overflow-x: auto;
 }
@@ -1606,4 +1609,419 @@ textarea.form-field {
 .help-actions {
   display: flex;
   gap: var(--space-3);
+}
+
+/* ------------------------------------------------------------ link tool (M3-09) */
+.link-edit-form {
+  display: grid;
+  gap: var(--space-4);
+}
+
+.link-edit-kind {
+  display: grid;
+  gap: var(--space-2);
+  margin: var(--space-0);
+  padding: var(--space-0);
+  border: none;
+}
+
+.link-edit-kind label {
+  display: flex;
+  gap: var(--space-3);
+  align-items: center;
+}
+
+/* ------------------------------------------------------------ annotation properties (M3-10) */
+.annot-props,
+.prop-empty {
+  display: grid;
+  gap: var(--space-3);
+  margin: var(--space-0);
+  padding: var(--space-3);
+}
+
+.prop-empty,
+.prop-readonly,
+.prop-author,
+.prop-mixed {
+  margin: var(--space-0);
+  color: var(--color-text-muted);
+}
+
+.prop-summary {
+  margin: var(--space-0);
+  font-weight: var(--font-weight-semibold);
+}
+
+.prop-fields {
+  display: grid;
+  gap: var(--space-3);
+  margin: var(--space-0);
+  padding: var(--space-0);
+  border: none;
+}
+
+.prop-field {
+  display: grid;
+  gap: var(--space-1);
+}
+
+.prop-row {
+  display: flex;
+  gap: var(--space-2);
+  align-items: center;
+}
+
+.prop-swatch {
+  width: var(--control-height-m);
+  height: var(--control-height-m);
+  padding: var(--space-1);
+  border: var(--border-width) solid var(--color-border-strong);
+  border-radius: var(--radius-m);
+  background: var(--color-surface);
+}
+
+.prop-number {
+  width: 6em;
+}
+
+.prop-check {
+  display: flex;
+  gap: var(--space-2);
+  align-items: center;
+}
+
+.prop-text {
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.properties-pane {
+  overflow-y: auto;
+}
+
+/* ------------------------------------------------------------ comments pane (M3-11) */
+.comments-pane {
+  /* Fills the pane body without its (virtual) content sizing it, as .search-pane. */
+  position: absolute;
+  inset: var(--space-0);
+  display: flex;
+  flex-direction: column;
+}
+
+.comments-filters {
+  display: grid;
+  grid-template-columns: max-content 1fr;
+  gap: var(--space-2) var(--space-3);
+  align-items: center;
+  padding: var(--space-3);
+  border-bottom: var(--border-width) solid var(--color-border);
+}
+
+.comments-check {
+  display: flex;
+  grid-column: 1 / -1;
+  gap: var(--space-2);
+  align-items: center;
+}
+
+.comments-count {
+  margin: var(--space-0);
+  padding: var(--space-2) var(--space-3);
+  color: var(--color-text-muted);
+  font-size: var(--font-size-s);
+}
+
+.comments-list {
+  position: relative;
+  flex: 1;
+  min-height: var(--space-0);
+  overflow-y: auto;
+  overscroll-behavior: contain;
+}
+
+.comments-list:focus-visible {
+  outline: var(--focus-width) solid var(--color-focus);
+  outline-offset: calc(-1 * var(--focus-width));
+}
+
+.comments-list-content {
+  position: relative;
+}
+
+.comment-row {
+  position: absolute;
+  right: var(--space-0);
+  left: var(--space-0);
+  display: flex;
+  gap: var(--space-3);
+  align-items: center;
+  padding: var(--space-0) var(--space-3);
+  box-sizing: border-box;
+  cursor: pointer;
+}
+
+.comment-row--page {
+  background: var(--color-surface-sunken);
+  color: var(--color-text-muted);
+  font-size: var(--font-size-s);
+  font-weight: var(--font-weight-semibold);
+}
+
+.comment-row--active {
+  background: var(--color-selected);
+}
+
+.comment-number {
+  min-width: 2.5em;
+  font-variant-numeric: tabular-nums;
+  text-align: right;
+}
+
+.comment-body {
+  display: grid;
+  min-width: var(--space-0);
+}
+
+.comment-meta,
+.comment-text {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.comment-meta {
+  color: var(--color-text-muted);
+  font-size: var(--font-size-s);
+}
+
+.comment-numbers {
+  position: absolute;
+  inset: var(--space-0);
+  pointer-events: none;
+}
+
+.comment-number-badge {
+  position: absolute;
+  transform: translate(-50%, -50%);
+  min-width: 1.5em;
+  padding: var(--space-0) var(--space-1);
+  border-radius: var(--radius-m);
+  background: var(--color-accent);
+  color: var(--color-text-on-accent);
+  font-size: var(--font-size-xs);
+  text-align: center;
+}
+
+/* ------------------------------------------------------------ comment threads (M3-12) */
+.thread {
+  display: grid;
+  gap: var(--space-2);
+  max-height: 55%;
+  padding: var(--space-3);
+  overflow-y: auto;
+  border-top: var(--border-width) solid var(--color-border);
+}
+
+.thread-title {
+  margin: var(--space-0);
+  font-size: var(--font-size-m);
+  font-weight: var(--font-weight-semibold);
+}
+
+.thread-root,
+.thread-text {
+  margin: var(--space-0);
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+
+.thread-fields {
+  display: grid;
+  gap: var(--space-3);
+  margin: var(--space-0);
+  padding: var(--space-0);
+  border: none;
+}
+
+.thread-status,
+.thread-reply-box,
+.thread-edit {
+  display: grid;
+  gap: var(--space-1);
+}
+
+.thread-states,
+.thread-replies {
+  display: grid;
+  gap: var(--space-2);
+  margin: var(--space-0);
+  padding: var(--space-0);
+  list-style: none;
+}
+
+.thread-meta,
+.thread-date {
+  color: var(--color-text-muted);
+  font-size: var(--font-size-s);
+}
+
+.thread-actions {
+  display: flex;
+  gap: var(--space-1);
+}
+
+.thread-reply-box > .ui-button,
+.thread-edit > .ui-button {
+  justify-self: start;
+}
+
+/* ------------------------------------------------------------ status schemes (M3-13) */
+.schemes,
+.scheme-editor {
+  display: grid;
+  gap: var(--space-3);
+  max-height: 60vh;
+  overflow-y: auto;
+}
+
+.scheme-list,
+.scheme-codes,
+.scheme-rows {
+  display: grid;
+  gap: var(--space-3);
+  margin: var(--space-0);
+  padding: var(--space-0);
+  list-style: none;
+}
+
+.scheme-codes {
+  gap: var(--space-1);
+}
+
+.scheme-item {
+  display: grid;
+  gap: var(--space-2);
+  padding: var(--space-3);
+  border: var(--border-width) solid var(--color-border);
+  border-radius: var(--radius-m);
+}
+
+.scheme-head,
+.scheme-actions,
+.scheme-new {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+  align-items: center;
+}
+
+.scheme-name {
+  font-weight: var(--font-weight-semibold);
+}
+
+.scheme-tag,
+.scheme-message {
+  margin: var(--space-0);
+  color: var(--color-text-muted);
+}
+
+.scheme-chip {
+  display: inline-block;
+  min-width: 2em;
+  padding: var(--space-0) var(--space-1);
+  border: var(--border-width) solid;
+  border-radius: var(--radius-m);
+  background: var(--color-page);
+  font-weight: var(--font-weight-semibold);
+  text-align: center;
+}
+
+.scheme-row {
+  display: grid;
+  gap: var(--space-2);
+  padding-bottom: var(--space-3);
+  border-bottom: var(--border-width) solid var(--color-border);
+}
+
+.scheme-import {
+  cursor: pointer;
+}
+
+.scheme-import:focus-within {
+  outline: var(--focus-width) solid var(--color-focus);
+  outline-offset: var(--focus-offset);
+}
+
+.scheme-warning {
+  margin: var(--space-0);
+  color: var(--color-danger);
+  font-size: var(--font-size-s);
+}
+
+/* ------------------------------------------------------------ stamps (M3-14) */
+.stamp-form,
+.stamp-codes {
+  display: grid;
+  gap: var(--space-3);
+}
+
+.stamp-codes {
+  margin: var(--space-0);
+  padding: var(--space-0);
+  border: none;
+}
+
+.stamp-code {
+  display: flex;
+  gap: var(--space-2);
+  align-items: center;
+}
+
+.stamp-hint {
+  margin: var(--space-0);
+  color: var(--color-text-muted);
+}
+
+/* ------------------------------------------------------------ scales (M3-15) */
+.scale-form,
+.scale-where {
+  display: grid;
+  gap: var(--space-3);
+}
+
+.scale-where {
+  margin: var(--space-0);
+  padding: var(--space-0);
+  border: none;
+}
+
+.scale-ratio {
+  display: grid;
+  grid-template-columns: 1fr auto 1fr;
+  gap: var(--space-2);
+  align-items: end;
+}
+
+.scale-points {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: var(--space-2);
+}
+
+.scale-radio {
+  display: flex;
+  gap: var(--space-2);
+  align-items: center;
+}
+
+.scale-preview {
+  margin: var(--space-0);
+  color: var(--color-text-muted);
+}
+
+.scale-indicator {
+  padding: var(--space-0) var(--space-3);
+  color: var(--color-text-muted);
+  white-space: nowrap;
 }

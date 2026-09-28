@@ -1,4 +1,5 @@
 // The annotation plugin's state, read from React and from commands (M3-05).
+import type { PdfAnnotationObject } from '@embedpdf/models';
 import type { AnnotationCapability, AnnotationDocumentState } from '@embedpdf/plugin-annotation';
 import { useEffect, useState } from 'react';
 import { capability, hostStore, useHost } from '../view/host';
@@ -55,4 +56,38 @@ export function useSelectedIds(documentId: string, pageIndex: number): string[] 
     return scope.onStateChange(update);
   }, [registry, documentId, pageIndex]);
   return ids;
+}
+
+/** The selected annotations of a document, as objects (Properties pane, M3-10). */
+export function useSelectedAnnotations(documentId: string | null): PdfAnnotationObject[] {
+  const registry = useHost((s) => s.registry);
+  // Tagged with its document, so a switch of tabs never shows the previous one's.
+  const [state, setState] = useState<{ doc: string | null; objs: PdfAnnotationObject[] }>({
+    doc: null,
+    objs: [],
+  });
+  useEffect(() => {
+    if (!registry || !documentId) return;
+    const scope = annotationCapability()?.forDocument(documentId);
+    if (!scope) return;
+    const update = (state: AnnotationDocumentState): void => {
+      const next = state.selectedUids
+        .map((uid) => state.byUid[uid]?.object)
+        .filter((o): o is PdfAnnotationObject => o !== undefined);
+      setState((prev) =>
+        prev.doc === documentId &&
+        prev.objs.length === next.length &&
+        prev.objs.every((o, i) => o === next[i])
+          ? prev
+          : { doc: documentId, objs: next },
+      );
+    };
+    try {
+      update(scope.getState());
+    } catch {
+      // The document's state appears with its first change.
+    }
+    return scope.onStateChange(update);
+  }, [registry, documentId]);
+  return state.doc === documentId ? state.objs : [];
 }

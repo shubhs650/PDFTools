@@ -58,6 +58,20 @@ export function linksOf(docId: string, pageIndex: number): Promise<PageLink[]> {
   return p;
 }
 
+const listeners = new Set<() => void>();
+
+/** A link was made, changed or removed on a page (M3-09): read the page's links again. */
+export function invalidateLinks(docId: string, pageIndex: number): void {
+  cache.delete(`${docId}|${String(pageIndex)}`);
+  for (const l of listeners) l();
+}
+
+/** Called when any page's links were invalidated. */
+export function onLinksInvalidated(fn: () => void): () => void {
+  listeners.add(fn);
+  return () => listeners.delete(fn);
+}
+
 /** Forget a closed document's links. */
 export function dropLinks(docId: string): void {
   for (const key of cache.keys()) if (key.startsWith(`${docId}|`)) cache.delete(key);

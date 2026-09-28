@@ -5,18 +5,26 @@ import { ribbonLayout } from '../../src/app/ribbon/layout';
 describe('ribbon layout from the command table (§8, ADR-001 B6, M1-Q2)', () => {
   const m1 = ribbonLayout();
 
-  it('shows only tabs with an available command: Home, View, Help, Protect (M2-03), Comment (M3-07/08)', () => {
-    expect(m1.tabs.map((t) => t.tab)).toEqual(['home', 'view', 'comment', 'protect', 'help']);
-    const comment = m1.tabs.find((t) => t.tab === 'comment');
-    expect(comment?.groups.flatMap((g) => g.commands.map((c) => c.id))).toEqual([
-      'comment.highlight', // M3-08
-      'comment.underline',
-      'comment.strikeout',
-      'comment.squiggly',
-      'comment.insertText',
-      'comment.replaceText',
-      'comment.reviewerProfile', // M3-07
+  it('shows only tabs with an available command: Home, View, Help, Protect (M2-03), Comment (M3-07/08), Measure (M3-15)', () => {
+    expect(m1.tabs.map((t) => t.tab)).toEqual([
+      'home',
+      'view',
+      'comment',
+      'measure',
+      'protect',
+      'help',
     ]);
+    const comment = m1.tabs.find((t) => t.tab === 'comment');
+    // Grows task by task in M3: what works is shown, the rest is omitted.
+    const shown = comment?.groups.flatMap((g) => g.commands.map((c) => c.id)) ?? [];
+    for (const id of [
+      'comment.highlight',
+      'comment.stickyNote',
+      'comment.link',
+      'comment.reviewerProfile',
+    ])
+      expect(shown).toContain(id);
+    expect(shown).not.toContain('comment.exportCrs'); // M3-19
     const protect = m1.tabs.find((t) => t.tab === 'protect');
     // Only what works: Security Info (M2-12), Unlock (M2-03), Signatures (M2-13); redaction (M4) and the rest stay omitted.
     expect(protect?.groups.flatMap((g) => g.commands.map((c) => c.id))).toEqual([
@@ -41,6 +49,10 @@ describe('ribbon layout from the command table (§8, ADR-001 B6, M1-Q2)', () => 
       'home.forms',
       'view.zoom',
       'comment.textMarkup', // Highlight (M3-08)
+      'comment.text', // Text box (M3-09)
+      'comment.note', // Sticky note (M3-09)
+      'comment.drawing', // Cloud (M3-09)
+      'comment.stamp', // Stamp (M3-14)
       'protect.security', // Signatures (M2-13)
     ]);
     expect(home?.groups[3]?.commands.map((c) => c.id)).toEqual([

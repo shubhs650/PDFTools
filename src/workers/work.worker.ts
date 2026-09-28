@@ -19,6 +19,7 @@ import { SearchEngine } from './work/search';
 import { listAttachments, readAttachment } from './work/attachments';
 import { readFormFacts } from '../model/formFacts';
 import { readLayers } from '../model/ocg';
+import { readViewports } from './work/viewports';
 import { flattenCopy } from './work/flatten';
 import { pageBox, renderBand } from './work/print';
 import { readProperties } from './work/properties';
@@ -120,8 +121,9 @@ serve<WorkApi>(self, {
       if (!mod) throw new RpcError('not-initialized', 'The work worker is not initialized');
       const { doc } = await docs.get(docId);
       try {
+        // Streamed, not throttled: each message carries a batch of annotations.
         return await listAnnotations(mod, need(), doc, slice, (p) => {
-          ctx.progress(p);
+          ctx.stream(p);
         });
       } finally {
         wasmBytes();
@@ -176,6 +178,11 @@ serve<WorkApi>(self, {
       const { doc } = await docs.get(docId);
       return readProperties(mod, need(), doc, docs.bytes(docId));
     }),
+
+  pageViewports: ({ docId }, ctx) =>
+    scheduler.run('interactive', ctx.signal, () =>
+      readViewports(docs.bytes(docId), inflate, docs.passwordOf(docId)),
+    ),
 
   listLayers: ({ docId }, ctx) =>
     scheduler.run('interactive', ctx.signal, () => readLayers(docs.bytes(docId), inflate)),

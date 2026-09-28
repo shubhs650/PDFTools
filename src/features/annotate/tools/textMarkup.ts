@@ -16,7 +16,7 @@ import { allows } from '../../../model/permissions';
 import { requestProfile } from '../../settings/profile/profileStore';
 import { capability, hostStore } from '../../view/host';
 import { annotationCapability } from '../selection';
-import { openCaretText } from './caretText';
+import { openContentsPrompt } from './contentsPrompt';
 import { buildMarkups, textsPerPage, type MarkupTool, type PageSelection } from './markupModel';
 
 function selection(): SelectionCapability | null {
@@ -65,7 +65,8 @@ async function make(
   if (first) {
     scope.selectAnnotation(first.pageIndex, first.id);
     // Inserted or replacing text is typed next; it goes to the caret's /Contents.
-    if (first.type === PdfAnnotationSubtype.CARET) openCaretText(docId, first.pageIndex, first.id);
+    if (first.type === PdfAnnotationSubtype.CARET)
+      openContentsPrompt('caret', docId, first.pageIndex, first.id);
   }
   return made;
 }

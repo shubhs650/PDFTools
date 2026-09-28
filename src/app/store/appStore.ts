@@ -2,6 +2,7 @@
 // Vanilla store so the reducers are testable without React; components read it
 // through selectors (useApp) so a change re-renders only its readers.
 import { createStore, useStore } from 'zustand';
+import type { DrawTool } from '../../features/annotate/tools/drawModel';
 
 /**
  * Pointer tools: Select (V) selects text and annotations (M3-05); Select Text
@@ -19,7 +20,9 @@ export type Tool =
   | 'strikeout'
   | 'squiggly'
   | 'insertText'
-  | 'replaceText';
+  | 'replaceText'
+  // Note, text and drawing tools (M3-09): EmbedPDF tool ids.
+  | DrawTool;
 
 export const PANE_WIDTH_MIN = 160;
 export const PANE_WIDTH_MAX = 480;

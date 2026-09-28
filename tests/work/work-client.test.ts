@@ -77,6 +77,7 @@ function fakeSpawn(world: FakeWorld) {
       printReady: () => ({ bytes: new ArrayBuffer(0) }),
       formFacts: () => ({ tabs: [], annotated: [], defaults: {}, encrypted: false }),
       checkSignatures: () => [],
+      pageViewports: () => [],
       docProperties: () => {
         throw new Error('unused');
       },
@@ -94,7 +95,7 @@ function fakeSpawn(world: FakeWorld) {
       close: () => ({ wasmBytes: world.memory }),
       memory: () => ({ wasmBytes: world.memory, peakWasmBytes: world.memory }),
       docState: () => ({ pageCount: 3, appliedTailBytes: 0 }),
-      annotations: () => ({}),
+      annotations: () => ({ pages: 0 }),
       textStats: async (_a, ctx) => {
         await new Promise((r) => setTimeout(r, 5));
         ctx.throwIfAborted();

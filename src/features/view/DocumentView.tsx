@@ -22,6 +22,8 @@ import { AnnotationLayer } from '../annotate/AnnotationLayer';
 import { AnnotationTileLayer } from '../annotate/AnnotationTileLayer';
 import { SelectionAnnouncer } from '../annotate/SelectionAnnouncer';
 import { annotationCapability } from '../annotate/selection';
+import { isDrawTool } from '../annotate/tools/drawModel';
+import { NumberOverlay } from '../annotate/comments/NumberOverlay';
 import { isMarkupTool } from '../annotate/tools/markupModel';
 import { LinkLayer } from './LinkLayer';
 import { capability, useHost } from './host';
@@ -113,6 +115,8 @@ function Page({
               />
               {/* Annotation hit areas, selection and handles (M3-05) above the text layer. */}
               <AnnotationLayer documentId={documentId} pageIndex={layout.pageIndex} scale={scale} />
+              {/* Comment numbers (M3-11), when switched on. */}
+              <NumberOverlay documentId={documentId} pageIndex={layout.pageIndex} scale={scale} />
               {/* Links (M2-10) sit above the text layer, so a click follows them. */}
               <LinkLayer documentId={documentId} pageIndex={layout.pageIndex} scale={scale} />
               {/* Form fields (M2-14) on top: a field under a link is still filled. */}
@@ -227,7 +231,7 @@ export function DocumentView({ documentId }: { documentId: string }) {
     const im = capability<InteractionManagerCapability>(registry, 'interaction-manager');
     // A text markup tool is the annotation plugin's interaction mode of the same id (M3-08).
     im.forDocument(documentId).activate(
-      tool === 'hand' ? HAND_MODE : isMarkupTool(tool) ? tool : POINTER_MODE,
+      tool === 'hand' ? HAND_MODE : isMarkupTool(tool) || isDrawTool(tool) ? tool : POINTER_MODE,
     );
     // Select Text and Hand never pick up annotations (M3-05); Select and Select Objects do.
     try {

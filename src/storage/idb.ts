@@ -32,6 +32,10 @@ export const MIGRATIONS: readonly Migration[] = [
   (db) => {
     db.createObjectStore('profile');
   },
+  // v3 (M3-13): custom status schemes (D-23), by id.
+  (db) => {
+    db.createObjectStore('schemes', { keyPath: 'id' });
+  },
 ];
 
 const PROFILE_KEY = 'reviewer';
@@ -115,6 +119,24 @@ export class AppDb {
   async setProfile(value: unknown): Promise<void> {
     const tx = this.db.transaction('profile', 'readwrite');
     tx.objectStore('profile').put(value, PROFILE_KEY);
+    await done(tx);
+  }
+
+  /** Custom status schemes as stored (validate them: statusScheme.ts). */
+  async listSchemes(): Promise<unknown[]> {
+    const tx = this.db.transaction('schemes', 'readonly');
+    return request(tx.objectStore('schemes').getAll());
+  }
+
+  async putScheme(value: { id: string }): Promise<void> {
+    const tx = this.db.transaction('schemes', 'readwrite');
+    tx.objectStore('schemes').put(value);
+    await done(tx);
+  }
+
+  async deleteScheme(id: string): Promise<void> {
+    const tx = this.db.transaction('schemes', 'readwrite');
+    tx.objectStore('schemes').delete(id);
     await done(tx);
   }
 

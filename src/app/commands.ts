@@ -540,6 +540,7 @@ export const COMMANDS: readonly CommandDef[] = [
     fluent: 'Note',
     milestone: 'M3',
     toggle: true,
+    shipped: true, // M3-09
   },
   {
     id: 'comment.textBox',
@@ -549,6 +550,7 @@ export const COMMANDS: readonly CommandDef[] = [
     fluent: 'Textbox',
     milestone: 'M3',
     toggle: true,
+    shipped: true, // M3-09
   },
   {
     id: 'comment.callout',
@@ -558,6 +560,7 @@ export const COMMANDS: readonly CommandDef[] = [
     fluent: 'TooltipQuote',
     milestone: 'M3',
     toggle: true,
+    shipped: true, // M3-09
   },
   {
     id: 'comment.line',
@@ -567,6 +570,7 @@ export const COMMANDS: readonly CommandDef[] = [
     fluent: 'Line',
     milestone: 'M3',
     toggle: true,
+    shipped: true, // M3-09
   },
   {
     id: 'comment.arrow',
@@ -576,6 +580,7 @@ export const COMMANDS: readonly CommandDef[] = [
     fluent: 'ArrowUpRight',
     milestone: 'M3',
     toggle: true,
+    shipped: true, // M3-09
   },
   {
     id: 'comment.polyline',
@@ -585,6 +590,7 @@ export const COMMANDS: readonly CommandDef[] = [
     fluent: 'LineFlowDiagonalUpRight',
     milestone: 'M3',
     toggle: true,
+    shipped: true, // M3-09
   },
   {
     id: 'comment.polygon',
@@ -594,6 +600,7 @@ export const COMMANDS: readonly CommandDef[] = [
     fluent: 'Pentagon',
     milestone: 'M3',
     toggle: true,
+    shipped: true, // M3-09
   },
   {
     id: 'comment.rectangle',
@@ -603,6 +610,7 @@ export const COMMANDS: readonly CommandDef[] = [
     fluent: 'RectangleLandscape',
     milestone: 'M3',
     toggle: true,
+    shipped: true, // M3-09
   },
   {
     id: 'comment.oval',
@@ -612,6 +620,7 @@ export const COMMANDS: readonly CommandDef[] = [
     fluent: 'Oval',
     milestone: 'M3',
     toggle: true,
+    shipped: true, // M3-09
   },
   {
     id: 'comment.cloud',
@@ -621,6 +630,7 @@ export const COMMANDS: readonly CommandDef[] = [
     fluent: 'Cloud',
     milestone: 'M3',
     toggle: true,
+    shipped: true, // M3-09
     custom: 'comment.cloud', // M3-06
   },
   {
@@ -631,6 +641,7 @@ export const COMMANDS: readonly CommandDef[] = [
     fluent: 'Pen',
     milestone: 'M3',
     toggle: true,
+    shipped: true, // M3-09
   },
   {
     id: 'comment.inkHighlighter',
@@ -640,6 +651,7 @@ export const COMMANDS: readonly CommandDef[] = [
     fluent: 'InkingTool',
     milestone: 'M3',
     toggle: true,
+    shipped: true, // M3-09
   },
   {
     id: 'comment.stamp',
@@ -649,6 +661,7 @@ export const COMMANDS: readonly CommandDef[] = [
     fluent: 'ApprovalsApp',
     milestone: 'M3',
     toggle: true,
+    shipped: true, // M3-14
     custom: 'comment.stamp', // M3-06
   },
   {
@@ -658,6 +671,7 @@ export const COMMANDS: readonly CommandDef[] = [
     size: 'small',
     fluent: 'ImageAdd',
     milestone: 'M3',
+    shipped: true, // M3-14
   },
   {
     id: 'comment.statusSchemes',
@@ -666,6 +680,7 @@ export const COMMANDS: readonly CommandDef[] = [
     size: 'small',
     fluent: 'Status',
     milestone: 'M3',
+    shipped: true, // M3-13
   },
   {
     id: 'comment.link',
@@ -675,6 +690,7 @@ export const COMMANDS: readonly CommandDef[] = [
     fluent: 'Link',
     milestone: 'M3',
     toggle: true,
+    shipped: true, // M3-09
   },
   {
     id: 'comment.commentsPane',
@@ -683,6 +699,7 @@ export const COMMANDS: readonly CommandDef[] = [
     size: 'small',
     fluent: 'CommentMultiple',
     milestone: 'M3',
+    shipped: true, // M3-11
   },
   {
     id: 'comment.reply',
@@ -691,6 +708,7 @@ export const COMMANDS: readonly CommandDef[] = [
     size: 'small',
     fluent: 'ArrowReply',
     milestone: 'M3',
+    shipped: true, // M3-12
   },
   {
     id: 'comment.setStatus',
@@ -699,6 +717,7 @@ export const COMMANDS: readonly CommandDef[] = [
     size: 'small',
     fluent: 'CheckmarkCircle',
     milestone: 'M3',
+    shipped: true, // M3-12
   },
   {
     id: 'comment.filter',
@@ -707,6 +726,7 @@ export const COMMANDS: readonly CommandDef[] = [
     size: 'small',
     fluent: 'Filter',
     milestone: 'M3',
+    shipped: true, // M3-11
   },
   {
     id: 'comment.autoNumber',
@@ -716,6 +736,7 @@ export const COMMANDS: readonly CommandDef[] = [
     fluent: 'NumberSymbolSquare',
     milestone: 'M3',
     toggle: true,
+    shipped: true, // M3-11
   },
   {
     id: 'comment.copyStyle',
@@ -724,6 +745,7 @@ export const COMMANDS: readonly CommandDef[] = [
     size: 'small',
     fluent: 'PaintBrush',
     milestone: 'M3',
+    shipped: true, // M3-10
   },
   {
     id: 'comment.applyStyle',
@@ -732,6 +754,7 @@ export const COMMANDS: readonly CommandDef[] = [
     size: 'small',
     fluent: 'PaintBrushArrowDown',
     milestone: 'M3',
+    shipped: true, // M3-10
   },
   {
     id: 'comment.reviewerProfile',
@@ -796,6 +819,7 @@ export const COMMANDS: readonly CommandDef[] = [
     fluent: 'Ruler',
     milestone: 'M3',
     toggle: true,
+    shipped: true, // M3-15
     custom: 'measure.calibrate', // M3-06
   },
   {
@@ -806,6 +830,7 @@ export const COMMANDS: readonly CommandDef[] = [
     fluent: 'RatioOneToOne',
     milestone: 'M3',
     toggle: true,
+    shipped: true, // M3-15
     custom: 'measure.setScale', // M3-06
   },
   {
@@ -825,6 +850,7 @@ export const COMMANDS: readonly CommandDef[] = [
     size: 'small',
     fluent: 'NumberSymbol',
     milestone: 'M3',
+    shipped: true, // M3-15
   },
   {
     id: 'measure.snapping',
@@ -1131,6 +1157,7 @@ export const COMMANDS: readonly CommandDef[] = [
     fluent: 'CommentMultiple',
     milestone: 'M3',
     toggle: true,
+    shipped: true, // M3-11
   },
   {
     id: 'rail.attachments',

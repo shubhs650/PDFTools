@@ -9,9 +9,18 @@ import { appStore } from '../../app/store/appStore';
 import { documentStore, selectActive } from '../../app/store/documentStore';
 import { msg } from '../../i18n';
 import { openProfileDialog, requestProfile } from '../settings/profile/profileStore';
+import { openSchemes } from '../stamps/schemes/schemeStore';
+import { placeDynamicStamp, placeImageStamp } from '../stamps/stampTools';
+import { stampStore } from '../stamps/stampStore';
+import { openScaleDialog, scaleStore } from '../measure/scaleStore';
 import { capability, hostStore } from '../view/host';
 import { annotationCapability, annotationState } from './selection';
 import { cycleTarget, pageAnnotations } from './model';
+import { DRAW_COMMANDS, isDrawTool, KEYBOARD_PLACED, VERTEX_TOOLS } from './tools/drawModel';
+import { finishDrawing, placeAtCentre } from './tools/drawTools';
+import { copiedStyle, copyStyle, pasteStyle } from './properties/style';
+import { commentsStore } from './comments/commentsStore';
+import { deleteComments } from './comments/threadActions';
 import { MARKUP_TOOLS } from './tools/markupModel';
 import { markupFromSelection } from './tools/textMarkup';
 
@@ -133,6 +142,169 @@ export function registerAnnotateCommands(): () => void {
         },
       }),
     ),
+    // Note, text and drawing tools (M3-09): on until Esc or the command again.
+    ...Object.entries(DRAW_COMMANDS).map(([command, tool]) =>
+      registerCommand(command, {
+        requires: 'annotate',
+        isPressed: () => appStore.getState().tool === tool,
+        run: async () => {
+          if (appStore.getState().tool === tool) {
+            appStore.getState().setTool('select');
+            return;
+          }
+          await requestProfile();
+          appStore.getState().setTool(tool);
+        },
+      }),
+    ),
+    // Enter on the page: place a note or text box at its centre (M3-Q6), or
+    // finish the polyline/polygon being drawn. Otherwise Enter keeps its job.
+    registerCommand('tool.enter', {
+      requires: 'annotate',
+      disabledReason: () => {
+        const t = appStore.getState().tool;
+        return isDrawTool(t) && (KEYBOARD_PLACED.has(t) || VERTEX_TOOLS.has(t))
+          ? null
+          : msg('annotate.noneSelected');
+      },
+      run: async () => {
+        const t = appStore.getState().tool;
+        const id = activeId();
+        const registry = hostStore.getState().registry;
+        if (!isDrawTool(t) || !id || !registry) return;
+        if (VERTEX_TOOLS.has(t)) {
+          finishDrawing();
+          return;
+        }
+        const page = documentStore.getState().docs[id]?.view.page ?? 0;
+        // Stamps (M3-14) at the page centre too.
+        if (t === 'dynamicStamp') {
+          await placeDynamicStamp(id, page);
+          return;
+        }
+        if (t === 'imageStamp') {
+          await placeImageStamp(id, page);
+          return;
+        }
+        if (t !== 'textComment' && t !== 'freeText') return;
+        await requestProfile();
+        placeAtCentre(registry, id, page, t);
+      },
+    }),
+    // Copy/Apply Style (M3-10): the first selected annotation's style onto others.
+    registerCommand('comment.copyStyle', {
+      requiresDocument: true,
+      disabledReason: () => {
+        const id = activeId();
+        return id && selectedOf(id).length > 0 ? null : msg('annotate.noneSelected');
+      },
+      run: () => {
+        const id = activeId();
+        const first = id ? selectedOf(id)[0] : undefined;
+        if (first) copyStyle(first.object);
+      },
+    }),
+    registerCommand('comment.applyStyle', {
+      ...withSelection,
+      disabledReason: () => {
+        if (!copiedStyle()) return msg('annotProps.noStyle');
+        const id = activeId();
+        return id && selectedOf(id).length > 0 ? null : msg('annotate.noneSelected');
+      },
+      run: () => {
+        const id = activeId();
+        if (id)
+          pasteStyle(
+            id,
+            selectedOf(id).map((t) => t.object),
+          );
+      },
+    }),
+    // Comments pane (M3-11): open it; Filter opens it with focus on the filters.
+    registerCommand('comment.commentsPane', {
+      run: () => {
+        const s = appStore.getState();
+        if (!(s.leftPaneOpen && s.leftPane === 'rail.comments')) s.choosePane('rail.comments');
+      },
+      isPressed: () => {
+        const s = appStore.getState();
+        return s.leftPaneOpen && s.leftPane === 'rail.comments';
+      },
+    }),
+    registerCommand('comment.filter', {
+      requiresDocument: true,
+      run: () => {
+        const s = appStore.getState();
+        if (!(s.leftPaneOpen && s.leftPane === 'rail.comments')) s.choosePane('rail.comments');
+        commentsStore.setState((c) => ({ focusFilters: c.focusFilters + 1 }));
+      },
+    }),
+    // Reply / Set Status (M3-12): the selected comment's thread in the Comments pane.
+    ...(['comment.reply', 'comment.setStatus'] as const).map((command) =>
+      registerCommand(command, {
+        ...withSelection,
+        run: () => {
+          const s = appStore.getState();
+          if (!(s.leftPaneOpen && s.leftPane === 'rail.comments')) s.choosePane('rail.comments');
+          const key = command === 'comment.reply' ? 'focusReply' : 'focusStatus';
+          // After the pane has rendered the thread.
+          requestAnimationFrame(() => {
+            commentsStore.setState((c) => ({ [key]: c[key] + 1 }));
+          });
+        },
+      }),
+    ),
+    registerCommand('comment.autoNumber', {
+      run: () => {
+        commentsStore.setState((c) => ({ numbersOnPage: !c.numbersOnPage }));
+      },
+      isPressed: () => commentsStore.getState().numbersOnPage,
+    }),
+    // Stamps (M3-14): Stamp asks for the code (and the document's number and
+    // revision) and turns the tool on; Image Stamp asks for the image.
+    registerCommand('comment.stamp', {
+      requires: 'annotate',
+      isPressed: () => appStore.getState().tool === 'dynamicStamp',
+      run: async () => {
+        if (appStore.getState().tool === 'dynamicStamp') {
+          appStore.getState().setTool('select');
+          return;
+        }
+        await requestProfile();
+        stampStore.setState({ pickerOpen: true });
+      },
+    }),
+    registerCommand('comment.imageStamp', {
+      requires: 'annotate',
+      isPressed: () => appStore.getState().tool === 'imageStamp',
+      run: () => {
+        if (appStore.getState().tool === 'imageStamp') {
+          appStore.getState().setTool('select');
+          return;
+        }
+        stampStore.setState({ imageOpen: true });
+      },
+    }),
+    // Scales (M3-15): Set Scale and Units open the scale dialog; Calibrate its sibling.
+    ...(['measure.setScale', 'measure.units'] as const).map((command) =>
+      registerCommand(command, {
+        requiresDocument: true,
+        run: () => {
+          openScaleDialog('setScale');
+        },
+      }),
+    ),
+    registerCommand('measure.calibrate', {
+      requiresDocument: true,
+      isPressed: () => appStore.getState().tool === 'calibrate',
+      run: () => {
+        scaleStore.setState({ picked: null });
+        openScaleDialog('calibrate');
+      },
+    }),
+    registerCommand('comment.statusSchemes', {
+      run: openSchemes,
+    }),
     registerCommand('comment.reviewerProfile', {
       run: openProfileDialog,
     }),
@@ -141,9 +313,10 @@ export function registerAnnotateCommands(): () => void {
       run: () => {
         const id = activeId();
         if (!id) return;
-        const sel = selectedOf(id);
-        scope(id)?.deleteAnnotations(
-          sel.map((t) => ({ pageIndex: t.object.pageIndex, id: t.object.id })),
+        // A comment with replies asks first; its thread goes with it (M3-12).
+        deleteComments(
+          id,
+          selectedOf(id).map((t) => t.object),
         );
       },
     }),
