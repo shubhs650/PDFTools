@@ -4,10 +4,22 @@ import { useTranslation } from 'react-i18next';
 import { format, msg, type MessageKey } from '../../i18n';
 import { Button, Dialog, ProgressBar, TextField } from '../../ui/components';
 import type { ExtractFormat } from '../../workers/work/extract';
-import { cancelExport, closeExport, startExport, useExport, type ExportError } from './exportJob';
+import { canPickFolder } from '../../storage/fileAccess';
+import {
+  cancelExport,
+  closeExport,
+  HAS_IMAGES,
+  startExport,
+  useExport,
+  type ExportError,
+} from './exportJob';
 import type { Scope, ScopeKind } from './scope';
 
-const TITLES: Record<ExtractFormat, MessageKey> = { text: msg('export.title.text') };
+const TITLES: Record<ExtractFormat, MessageKey> = {
+  text: msg('export.title.text'),
+  markdown: msg('export.title.markdown'),
+  html: msg('export.title.html'),
+};
 
 const ERRORS: Record<ExportError, MessageKey> = {
   empty: msg('export.error.empty'),
@@ -36,6 +48,7 @@ function ExportForm({ format: fmt }: { format: ExtractFormat }) {
   const running = useExport((s) => s.running);
   const error = useExport((s) => s.error);
   const [scope, setScope] = useState<Scope>({ kind: 'all', custom: '' });
+  const [images, setImages] = useState(true);
   const rangeError =
     scope.kind === 'custom' && (error === 'empty' || error === 'syntax' || error === 'outOfRange')
       ? error
@@ -86,7 +99,7 @@ function ExportForm({ format: fmt }: { format: ExtractFormat }) {
         noValidate
         onSubmit={(e) => {
           e.preventDefault();
-          void startExport(scope);
+          void startExport({ scope, images });
         }}
       >
         <fieldset className="scale-where">
@@ -108,6 +121,28 @@ function ExportForm({ format: fmt }: { format: ExtractFormat }) {
             />
           ) : null}
         </fieldset>
+        {HAS_IMAGES[fmt] ? (
+          <>
+            <label className="scale-radio">
+              <input
+                type="checkbox"
+                checked={images}
+                disabled={!!running}
+                onChange={(e) => {
+                  setImages(e.currentTarget.checked);
+                }}
+              />
+              {t(fmt === 'markdown' ? msg('export.images.markdown') : msg('export.images.html'))}
+            </label>
+            {fmt === 'markdown' && images ? (
+              <p className="print-note">
+                {t(
+                  canPickFolder() ? msg('export.images.folderNote') : msg('export.images.zipNote'),
+                )}
+              </p>
+            ) : null}
+          </>
+        ) : null}
         {running ? (
           <>
             <ProgressBar

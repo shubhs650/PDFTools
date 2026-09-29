@@ -51,3 +51,40 @@ test('2,000-page stand-in: Oxide warm-up and a full text extraction while scroll
   expect(scrollRun.blankFrames).toBe(0);
   expect(tiles.tiles.p95).toBeLessThan(400);
 });
+
+test('2,000-page stand-in: Markdown export while scrolling', async ({ page, pdfs, guard }) => {
+  test.setTimeout(180_000);
+  await page.setViewportSize({ width: 1400, height: 900 });
+  await page.goto('/');
+  await drop(page, [{ name: 'contract.pdf', b64: pdfs.contract(2000).toString('base64') }]);
+  await page.locator('[data-page="0"] img.page-preview').waitFor();
+  const docId = ((await cap(page, 'open', 'state')) as { activeId: string }).activeId;
+  await cap(page, 'extract', 'warm');
+  await guard.startMeasuring();
+  await view(page, 'reset');
+  const running = cap(
+    page,
+    'extract',
+    'run',
+    docId,
+    [...Array(2000).keys()],
+    'markdown',
+  ) as Promise<{
+    ok: boolean;
+    ms: number;
+    pages: number;
+  }>;
+  const scroll = (await view(page, 'autoScroll', 900, 3000)) as { blankFrames: number };
+  const run = await running;
+  mkdirSync('test-results', { recursive: true });
+  writeFileSync(
+    'test-results/m4-markdown.json',
+    JSON.stringify({ ms: run.ms, pages: run.pages, scroll }, null, 2),
+  );
+  test
+    .info()
+    .annotations.push({ type: 'm4-markdown', description: JSON.stringify({ ms: run.ms }) });
+  expect(run.ok).toBe(true);
+  expect(run.pages).toBe(2000);
+  expect(scroll.blankFrames).toBe(0);
+});

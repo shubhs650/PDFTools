@@ -1257,9 +1257,11 @@
   },
   "export": {
     "title": {
-      "text": "Export as Text"
+      "text": "Export as Text",
+      "markdown": "Export as Markdown",
+      "html": "Export as HTML"
     },
-    "description": "The text is extracted on this device; nothing is sent anywhere.",
+    "description": "The document is converted on this device; nothing is sent anywhere.",
     "scope": {
       "legend": "Pages",
       "all": "All pages",
@@ -1267,6 +1269,12 @@
       "custom": "Pages:",
       "customLabel": "Page range",
       "customHint": "e.g. 1-3, 8"
+    },
+    "images": {
+      "markdown": "Include images (saved as files next to the Markdown)",
+      "html": "Include images (embedded in the page)",
+      "folderNote": "The Markdown file and its images go into a new folder.",
+      "zipNote": "The Markdown file and its images are saved as one ZIP file."
     },
     "fileName": "{{base}}.{{ext}}",
     "export": "Export",
@@ -1282,6 +1290,11 @@
       "denied": "This document's security settings don't allow {{what}}.",
       "failed": "The export could not be completed. Nothing was saved.",
       "noDocument": "The document is no longer open."
+    },
+    "label": {
+      "page": "Page {{n}}",
+      "image": "Image {{n}} on page {{page}}",
+      "noText": "Page {{n}} has no text layer (a scanned page needs OCR, which is planned)."
     }
   }
 }

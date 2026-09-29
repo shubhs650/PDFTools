@@ -30,7 +30,8 @@ import { exportCrs } from './work/crs';
 import { buildGrid, DENSE_BYTES, DENSE_SEGMENTS, thin } from '../model/snapIndex';
 import { OxideHost, webLoader } from './work/oxide';
 import { requireCapability, securityOf } from './work/permissionGate';
-import { extractText } from './work/extract';
+import { extract } from './work/extract';
+import { zipBlob } from './work/zip';
 
 let mod: WrappedPdfiumModule | undefined;
 let native: PdfiumNative | undefined;
@@ -355,7 +356,7 @@ serve<WorkApi>(self, {
       }
     }),
 
-  extract: ({ docId, pages }, ctx) =>
+  extract: ({ docId, pages, options, packaging }, ctx) =>
     scheduler.run('interactive', ctx.signal, async (slice) => {
       if (!mod) throw new RpcError('not-initialized', 'The work worker is not initialized');
       const { doc, appliedTailBytes } = await docs.get(docId);
@@ -368,10 +369,32 @@ serve<WorkApi>(self, {
         docs.passwordOf(docId),
       );
       try {
-        // Plain text is the only `format` so far; M4-05 adds Markdown and HTML.
-        return await extractText(odoc, pages, slice, (p) => {
+        const r = await extract(odoc, pages, options, slice, (p) => {
           ctx.progress(p);
         });
+        const { pages: n, chars, images } = r;
+        const blobOf = (f: (typeof r.files)[number]) =>
+          new Blob([f.data as BlobPart], { type: f.type });
+        const [main] = r.files;
+        if (!main) throw new RpcError('export-empty', 'Nothing was extracted');
+        if (packaging === 'single')
+          return { blob: blobOf(main), name: main.path, pages: n, chars, images };
+        if (packaging === 'zip') {
+          const enc = new TextEncoder();
+          const blob = zipBlob(
+            r.files.map((f) => ({
+              name: f.path,
+              data: typeof f.data === 'string' ? enc.encode(f.data) : f.data,
+            })),
+          );
+          return { blob, name: `${options.baseName}.zip`, pages: n, chars, images };
+        }
+        return {
+          files: r.files.map((f) => ({ path: f.path, blob: blobOf(f) })),
+          pages: n,
+          chars,
+          images,
+        };
       } finally {
         wasmBytes(); // Oxide's heap counts for the respawn policy
       }

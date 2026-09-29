@@ -14,6 +14,8 @@ export interface OxideDocument {
   toMarkdown(page: number, detectHeadings?: boolean, includeImages?: boolean): string;
   toHtml(page: number, preserveLayout?: boolean, detectHeadings?: boolean): string;
   extractImages(page: number): unknown;
+  extractImageBytes(page: number): unknown;
+  extractTextLines(page: number): unknown;
   extractWords(page: number): unknown;
   extractTables(page: number): unknown;
   authenticate(password: string): boolean;

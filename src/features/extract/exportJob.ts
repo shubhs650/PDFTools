@@ -1,21 +1,24 @@
-// Export framework (M4-04, §7.6): the dialog's choices → the pages → where to
-// save (asked first, while the click's gesture is fresh) → the Work worker job
-// with progress and Cancel (rule 2) → the file written. The main thread only
-// ever holds a Blob handle from the worker (rule 1). Every export in M4
-// (text, Markdown, HTML, images, Word, tables, annotations) runs through here;
-// M4-05 onwards add formats and their ribbon commands.
+// Export framework (M4-04, M4-05, §7.6): the dialog's choices → the pages →
+// where to save (asked first, while the click's gesture is fresh) → the Work
+// worker job with progress and Cancel (rule 2) → the file(s) written. The main
+// thread only ever holds Blob handles from the worker (rule 1). Several files
+// (Markdown with its images) go into a new folder where the browser can write
+// one, else into one ZIP (M4-Q5).
 import { createStore, useStore } from 'zustand';
 import { recordError } from '../../app/diagnostics';
 import { documentStore } from '../../app/store/documentStore';
 import { RpcError } from '../../engine/errors';
-import { t } from '../../i18n';
+import { i18n, t } from '../../i18n';
 import {
   accessStrategy,
+  canPickFolder,
   downloadBytes,
   pickFileSaveTarget,
+  pickFolderTarget,
+  writeFilesToFolder,
   writeToHandle,
 } from '../../storage/fileAccess';
-import type { ExtractFormat } from '../../workers/work/extract';
+import type { ExtractFormat, ExtractOptions } from '../../workers/work/extract';
 import { DENIED } from '../../workers/work/permissionGate';
 import { workClient } from '../view/host';
 import { resolveScope, type Scope } from './scope';
@@ -41,11 +44,27 @@ export function useExport<T>(selector: (s: ExportState) => T): T {
   return useStore(exportStore, selector);
 }
 
-/** File extension of each format's single-file output. */
-export const EXTENSIONS: Record<ExtractFormat, string> = { text: 'txt' };
+/** Extension of each format's main file. */
+export const EXTENSIONS: Record<ExtractFormat, string> = {
+  text: 'txt',
+  markdown: 'md',
+  html: 'html',
+};
 
-/** The last file made (e2e builds only: the test hook reads it). */
-export let lastExport: { name: string; blob: Blob } | null = null;
+/** Formats that can bring their images along (Markdown as files, HTML embedded). */
+export const HAS_IMAGES: Record<ExtractFormat, boolean> = {
+  text: false,
+  markdown: true,
+  html: true,
+};
+
+export interface ExportChoice {
+  scope: Scope;
+  images: boolean;
+}
+
+/** The last output (e2e builds only: the test hook reads it). */
+export let lastExport: { files: { path: string; blob: Blob }[]; packaging: string } | null = null;
 
 let job: AbortController | null = null;
 
@@ -64,16 +83,55 @@ export function cancelExport(): void {
   job?.abort();
 }
 
-/** "plan.pdf" → "plan.txt". */
-export function exportFileName(name: string, format: ExtractFormat): string {
-  return t('export.fileName', { base: name.replace(/\.pdf$/iu, ''), ext: EXTENSIONS[format] });
+/** "plan.pdf" → "plan". */
+export const baseNameOf = (name: string): string => name.replace(/\.pdf$/iu, '') || name;
+
+export function exportFileName(name: string, ext: string): string {
+  return t('export.fileName', { base: baseNameOf(name), ext });
+}
+
+function optionsFor(format: ExtractFormat, base: string, images: boolean): ExtractOptions {
+  return {
+    format,
+    images: images && HAS_IMAGES[format],
+    baseName: base,
+    title: base,
+    lang: i18n.language || 'en',
+    // Templates with %P / %N, filled in by the worker (rule 11).
+    labels: {
+      page: t('export.label.page', { n: '%P' }),
+      image: t('export.label.image', { n: '%N', page: '%P' }),
+      noText: t('export.label.noText', { n: '%P' }),
+    },
+  };
+}
+
+type Target =
+  | { packaging: 'single' | 'zip'; handle?: FileSystemFileHandle; name: string }
+  | { packaging: 'folder'; dir: FileSystemDirectoryHandle };
+
+/** Where the output goes, asked before the job (user activation); null if cancelled. */
+async function pickTarget(
+  base: string,
+  format: ExtractFormat,
+  multi: boolean,
+): Promise<Target | null> {
+  if (multi && canPickFolder()) {
+    const dir = await pickFolderTarget();
+    return dir ? { packaging: 'folder', dir } : null;
+  }
+  const packaging = multi ? 'zip' : 'single';
+  const name = exportFileName(base, multi ? 'zip' : EXTENSIONS[format]);
+  if (accessStrategy() !== 'fsa') return { packaging, name };
+  const handle = await pickFileSaveTarget(name);
+  return handle ? { packaging, handle, name } : null;
 }
 
 /**
- * Runs the export chosen in the dialog. Resolves once the file is written,
+ * Runs the export chosen in the dialog. Resolves once the output is written,
  * or the job was cancelled or failed (the store says which).
  */
-export async function startExport(scope: Scope): Promise<void> {
+export async function startExport(choice: ExportChoice): Promise<void> {
   const { docId, format, running } = exportStore.getState();
   const d = docId ? documentStore.getState().docs[docId] : undefined;
   if (!docId || !format || running) return;
@@ -81,27 +139,26 @@ export async function startExport(scope: Scope): Promise<void> {
     exportStore.setState({ error: 'noDocument' });
     return;
   }
-  const pages = resolveScope(scope, { pageCount: d.meta.pageCount, current: d.view.page });
+  const pages = resolveScope(choice.scope, { pageCount: d.meta.pageCount, current: d.view.page });
   if (!pages.ok) {
     exportStore.setState({ error: pages.error });
     return;
   }
-  const fileName = exportFileName(d.meta.name, format);
+  const base = baseNameOf(d.meta.name);
+  const options = optionsFor(format, base, choice.images);
+  const multi = format === 'markdown' && options.images;
   const controller = new AbortController();
   job = controller;
   exportStore.setState({ running: { done: 0, total: pages.pages.length }, error: null });
   try {
-    let handle: FileSystemFileHandle | undefined;
-    if (accessStrategy() === 'fsa') {
-      handle = await pickFileSaveTarget(fileName);
-      if (!handle) {
-        exportStore.setState({ running: null });
-        return;
-      }
+    const target = await pickTarget(base, format, multi);
+    if (!target) {
+      exportStore.setState({ running: null });
+      return;
     }
-    const { blob } = await workClient().run(
+    const r = await workClient().run(
       'extract',
-      { docId, pages: pages.pages, format },
+      { docId, pages: pages.pages, options, packaging: target.packaging },
       {
         signal: controller.signal,
         onProgress: (p) => {
@@ -110,9 +167,18 @@ export async function startExport(scope: Scope): Promise<void> {
       },
     ).promise;
     controller.signal.throwIfAborted();
-    if (import.meta.env.MODE === 'e2e') lastExport = { name: fileName, blob };
-    if (handle) await writeToHandle(handle, blob, controller.signal);
-    else downloadBytes(blob, fileName);
+    if (target.packaging === 'folder') {
+      const files = r.files ?? [];
+      if (import.meta.env.MODE === 'e2e') lastExport = { files, packaging: 'folder' };
+      await writeFilesToFolder(target.dir, files, { subfolder: base, signal: controller.signal });
+    } else {
+      const blob = r.blob;
+      if (!blob) throw new Error('no output');
+      if (import.meta.env.MODE === 'e2e')
+        lastExport = { files: [{ path: target.name, blob }], packaging: target.packaging };
+      if (target.handle) await writeToHandle(target.handle, blob, controller.signal);
+      else downloadBytes(blob, target.name);
+    }
     exportStore.setState({ docId: null, format: null, running: null, error: null });
   } catch (err) {
     const cancelled = controller.signal.aborted;

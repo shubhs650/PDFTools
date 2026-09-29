@@ -113,9 +113,9 @@ test('export dialog: a page range, progress, then the file is saved', async ({ p
   expect(await savedFiles(page)).toEqual([
     expect.objectContaining({ name: 'report.txt' }) as unknown,
   ]);
-  const last = (await cap(page, 'extract', 'lastExport')) as { text: string };
+  const last = (await cap(page, 'extract', 'lastExport')) as { files: { text: string }[] };
   expect(
-    last.text
+    (last.files[0]?.text ?? '')
       .split('\f')
       .map((s) => s.trim())
       .filter(Boolean),

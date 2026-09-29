@@ -5,14 +5,21 @@ import { ribbonLayout } from '../../src/app/ribbon/layout';
 describe('ribbon layout from the command table (§8, ADR-001 B6, M1-Q2)', () => {
   const m1 = ribbonLayout();
 
-  it('shows only tabs with an available command: Home, View, Help, Protect (M2-03), Comment (M3-07/08), Measure (M3-15)', () => {
+  it('shows only tabs with an available command: Home, View, Help, Protect (M2-03), Comment (M3-07/08), Measure (M3-15), Convert (M4-05)', () => {
     expect(m1.tabs.map((t) => t.tab)).toEqual([
       'home',
       'view',
       'comment',
       'measure',
+      'convert',
       'protect',
       'help',
+    ]);
+    const convert = m1.tabs.find((t) => t.tab === 'convert');
+    expect(convert?.groups.flatMap((g) => g.commands.map((c) => c.id))).toEqual([
+      'convert.text',
+      'convert.markdown',
+      'convert.html',
     ]);
     const comment = m1.tabs.find((t) => t.tab === 'comment');
     // Grows task by task in M3: what works is shown, the rest is omitted.

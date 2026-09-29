@@ -7,7 +7,7 @@ import * as nodeOxide from 'pdf-oxide-wasm';
 import { contractPdf, simplePdf } from '../../e2e/fixtures/generate.ts';
 import { RpcError } from '../../src/engine/errors';
 import { PERM_COPY, PERM_PRINT } from '../../src/model/permissions';
-import { extractText, PAGE_BREAK } from '../../src/workers/work/extract';
+import { extract, PAGE_BREAK, type ExtractOptions } from '../../src/workers/work/extract';
 import {
   OxideHost,
   toPlain,
@@ -114,6 +114,25 @@ describe('permission gate (M4-04, ADR-009 decision 3, rule 9)', () => {
     expect((caught as RpcError).code).toBe('permission-denied:copy');
   });
 });
+
+const textOptions: ExtractOptions = {
+  format: 'text',
+  images: false,
+  baseName: 'b',
+  title: 'b',
+  lang: 'en',
+  labels: { page: 'Page %P', image: 'Image %N on page %P', noText: 'No text on page %P' },
+};
+const extractText = async (
+  doc: OxideDocument,
+  pages: number[],
+  s: JobSlice,
+  progress: (p: { done: number; total: number }) => void,
+) => {
+  const r = await extract(doc, pages, textOptions, s, progress);
+  const main = r.files[0];
+  return { ...r, blob: new Blob([String(main?.data)]) };
+};
 
 describe('text extraction job (M4-04)', () => {
   it('extracts the chosen pages in document order, one checkpoint and progress step per page', async () => {

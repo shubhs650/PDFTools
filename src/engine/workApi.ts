@@ -23,7 +23,7 @@ import type { VerifyResult } from '../workers/work/verifySave';
 import type { GridIndex } from '../model/snapIndex';
 import type { SnapshotRegion } from '../workers/work/crs';
 import type { WorkbookSpec } from '../workers/work/crsWorkbook';
-import type { ExtractFormat } from '../workers/work/extract';
+import type { ExtractOptions } from '../workers/work/extract';
 import type { MethodSpec } from './protocol';
 
 export type WorkPriority = 'interactive' | 'save-verify' | 'geometry' | 'background';
@@ -197,14 +197,28 @@ export interface WorkApi {
    */
   oxideWarm: MethodSpec<null, { warmUpMs: number; oxideBytes: number }>;
   /**
-   * An extraction through PDF Oxide (M4-04, §7.6) of `pages` (0-based,
+   * An extraction through PDF Oxide (M4-04, M4-05, §7.6) of `pages` (0-based,
    * document order) of the current revision. PDFium's permission check comes
-   * first (copy, rule 9): refused with `permission-denied:copy`. The result is
-   * a Blob built in the worker; cancellable between pages.
+   * first (copy, rule 9): refused with `permission-denied:copy`. Built in the
+   * worker: `single` returns the main file, `zip` one archive of every file,
+   * `folder` the files for writing into a folder (M4-Q5). Cancellable between
+   * pages.
    */
   extract: MethodSpec<
-    { docId: string; pages: number[]; format: ExtractFormat },
-    { blob: Blob; pages: number; chars: number },
+    {
+      docId: string;
+      pages: number[];
+      options: ExtractOptions;
+      packaging: 'single' | 'zip' | 'folder';
+    },
+    {
+      blob?: Blob;
+      name?: string;
+      files?: { path: string; blob: Blob }[];
+      pages: number;
+      chars: number;
+      images: number;
+    },
     { done: number; total: number }
   >;
   /** The user is scrolling or zooming: background work backs off for `quietMs`. */

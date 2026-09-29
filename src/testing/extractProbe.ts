@@ -1,19 +1,38 @@
-// E2E-only probe for PDF Oxide and the export framework (M4-04). The ribbon
-// commands ship with their formats (M4-05 on); until then tests reach the
-// dialog and the Work worker's extraction through here. Never shipped.
+// E2E-only probe for PDF Oxide and the export framework (M4-04, M4-05). Tests
+// reach the Work worker's extraction directly through here, and read back what
+// the dialog produced. Never shipped.
 import { lastExport, openExport } from '../features/extract/exportJob';
 import { workClient } from '../features/view/host';
+import type { ExtractFormat, ExtractOptions } from '../workers/work/extract';
 import type { TestHook } from './hook';
+
+const options = (format: ExtractFormat, images = false): ExtractOptions => ({
+  format,
+  images,
+  baseName: 'probe',
+  title: 'probe',
+  lang: 'en',
+  labels: { page: 'Page %P', image: 'Image %N on page %P', noText: 'Page %P has no text' },
+});
 
 export function registerExtractProbe(hook: TestHook): void {
   hook.capabilities['extract'] = {
-    /** Opens the export dialog for a format, as its command will. */
-    openDialog: (docId: string, format: 'text') => {
+    /** Opens the export dialog for a format, as its command does. */
+    openDialog: (docId: string, format: ExtractFormat) => {
       openExport(docId, format);
     },
-    /** The last exported file: name and text. */
-    lastExport: async () =>
-      lastExport ? { name: lastExport.name, text: await lastExport.blob.text() } : null,
+    /** The last output: packaging and each file's path, size and (for text files) text. */
+    lastExport: async () => {
+      if (!lastExport) return null;
+      const files = await Promise.all(
+        lastExport.files.map(async (f) => ({
+          path: f.path,
+          size: f.blob.size,
+          text: /\.(txt|md|html)$/.test(f.path) ? await f.blob.text() : null,
+        })),
+      );
+      return { packaging: lastExport.packaging, files };
+    },
     /** The Work worker's warm-up (ADR-009 d2), timed on the main thread. */
     warm: async () => {
       const t0 = performance.now();
@@ -21,23 +40,33 @@ export function registerExtractProbe(hook: TestHook): void {
       return { ...r, mainMs: performance.now() - t0 };
     },
     /** An extraction straight through the Work worker, with its time and progress steps. */
-    run: async (docId: string, pages: number[]) => {
+    run: async (docId: string, pages: number[], format: ExtractFormat = 'text', images = false) => {
       const t0 = performance.now();
       let steps = 0;
       try {
         const r = await workClient().run(
           'extract',
-          { docId, pages, format: 'text' },
+          { docId, pages, options: options(format, images), packaging: 'folder' },
           {
             onProgress: () => {
               steps++;
             },
           },
         ).promise;
+        const files = await Promise.all(
+          (r.files ?? []).map(async (f) => ({
+            path: f.path,
+            size: f.blob.size,
+            type: f.blob.type,
+            text: f.blob.type.startsWith('text/') ? await f.blob.text() : null,
+          })),
+        );
         return {
           ok: true,
-          text: await r.blob.text(),
+          text: files[0]?.text ?? '',
+          files,
           pages: r.pages,
+          images: r.images,
           ms: performance.now() - t0,
           steps,
         };
@@ -51,7 +80,7 @@ export function registerExtractProbe(hook: TestHook): void {
       let done = 0;
       const job = workClient().run(
         'extract',
-        { docId, pages, format: 'text' },
+        { docId, pages, options: options('text'), packaging: 'single' },
         {
           signal: controller.signal,
           onProgress: (p) => {

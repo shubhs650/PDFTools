@@ -8,6 +8,7 @@ import { OfflineStatus, UpdateWaitDialog } from '../features/offline/OfflineStat
 import { installRecovery } from '../features/recovery/recovery';
 import { registerFormCommands } from '../features/forms/commands';
 import { registerPrintCommands } from '../features/print/commands';
+import { registerExtractCommands } from '../features/extract/commands';
 import { PrintDialog } from '../features/print/PrintDialog';
 import { PrintReadyDialog } from '../features/print/PrintReadyDialog';
 import { HelpPage } from '../features/help/HelpPage';
@@ -80,6 +81,7 @@ export function App() {
   useEffect(() => registerProtectCommands(), []);
   useEffect(() => registerFormCommands(), []);
   useEffect(() => registerPrintCommands(), []);
+  useEffect(() => registerExtractCommands(), []);
   useEffect(() => registerReportCommands(), []);
   useEffect(() => registerSelectionCommands(), []);
   useEffect(() => registerAnnotateCommands(), []);

@@ -975,6 +975,7 @@ export const COMMANDS: readonly CommandDef[] = [
     size: 'large',
     fluent: 'DocumentText',
     milestone: 'M4',
+    shipped: true, // M4-05
   },
   {
     id: 'convert.markdown',
@@ -983,6 +984,7 @@ export const COMMANDS: readonly CommandDef[] = [
     size: 'large',
     fluent: 'Markdown',
     milestone: 'M4',
+    shipped: true, // M4-05
   },
   {
     id: 'convert.html',
@@ -991,6 +993,7 @@ export const COMMANDS: readonly CommandDef[] = [
     size: 'large',
     fluent: 'WebAsset',
     milestone: 'M4',
+    shipped: true, // M4-05
   },
   {
     id: 'convert.word',

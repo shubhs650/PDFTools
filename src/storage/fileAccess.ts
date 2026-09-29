@@ -159,31 +159,63 @@ export function freeName(name: string, taken: ReadonlySet<string>): string {
   return n;
 }
 
+async function namesIn(dir: FileSystemDirectoryHandle): Promise<Set<string>> {
+  const taken = new Set<string>();
+  const keys = (dir as unknown as { keys?: () => AsyncIterable<string> }).keys?.();
+  if (keys) for await (const k of keys) taken.add(k.toLowerCase());
+  return taken;
+}
+
 /**
- * Writes the files into `dir` without replacing anything already there (a
- * taken name gets " (2)"), one after another; cancellable between files.
- * Returns the names used.
+ * Writes the files into `dir` — or, with `subfolder`, into a new folder of
+ * that name inside it (" (2)" if taken) — never replacing anything already
+ * there; paths may contain "/" (created as folders). One file after another,
+ * cancellable between files. Returns the folder written to.
  */
 export async function writeFilesToFolder(
   dir: FileSystemDirectoryHandle,
-  files: readonly { name: string; blob: Blob }[],
-  signal?: AbortSignal,
-  progress?: (done: number, total: number) => void,
-): Promise<string[]> {
-  const taken = new Set<string>();
-  const entries = (dir as unknown as { keys?: () => AsyncIterable<string> }).keys?.();
-  if (entries) for await (const k of entries) taken.add(k.toLowerCase());
-  const used: string[] = [];
-  for (const [i, f] of files.entries()) {
-    if (signal?.aborted) throw new AbortError();
-    const name = freeName(f.name, taken);
-    taken.add(name.toLowerCase());
-    const handle = await dir.getFileHandle(name, { create: true });
-    await writeToHandle(handle, f.blob, signal);
-    used.push(name);
-    progress?.(i + 1, files.length);
+  files: readonly { path: string; blob: Blob }[],
+  opts: {
+    subfolder?: string;
+    signal?: AbortSignal;
+    progress?: (done: number, total: number) => void;
+  } = {},
+): Promise<string> {
+  let root = dir;
+  let rootName = dir.name;
+  if (opts.subfolder !== undefined) {
+    rootName = freeName(opts.subfolder, await namesIn(dir));
+    root = await dir.getDirectoryHandle(rootName, { create: true });
   }
-  return used;
+  const taken = new Map<FileSystemDirectoryHandle, Set<string>>();
+  const folders = new Map<string, FileSystemDirectoryHandle>([['', root]]);
+  for (const [i, f] of files.entries()) {
+    if (opts.signal?.aborted) throw new AbortError();
+    const parts = f.path.split('/').filter((p) => p !== '' && p !== '.' && p !== '..');
+    const leaf = parts.pop() ?? 'file';
+    let at = root;
+    let key = '';
+    for (const part of parts) {
+      key = `${key}/${part}`;
+      let next = folders.get(key);
+      if (!next) {
+        next = await at.getDirectoryHandle(part, { create: true });
+        folders.set(key, next);
+      }
+      at = next;
+    }
+    let names = taken.get(at);
+    if (!names) {
+      names = await namesIn(at);
+      taken.set(at, names);
+    }
+    const name = freeName(leaf, names);
+    names.add(name.toLowerCase());
+    const handle = await at.getFileHandle(name, { create: true });
+    await writeToHandle(handle, f.blob, opts.signal);
+    opts.progress?.(i + 1, files.length);
+  }
+  return rootName;
 }
 
 /** Reopening a recent file asks for permission again (§4.1). */
