@@ -75,6 +75,32 @@ describe('Work-worker scheduler', () => {
     expect(log).toEqual([]);
   });
 
+  it('snap geometry (M3-18, ADR-008): after interactive and saves, before background; runs during a save', async () => {
+    const s = new Scheduler();
+    const ac = new AbortController();
+    const order: Priority[] = [];
+    const first = s.run('interactive', ac.signal, async (sl) => {
+      await sl.checkpoint();
+      await tick();
+      return 'x';
+    });
+    const runs = (['background', 'geometry', 'save-verify', 'interactive'] as const).map((p) =>
+      s.run(p, ac.signal, () => {
+        order.push(p);
+        return Promise.resolve(p);
+      }),
+    );
+    await Promise.all([first, ...runs]);
+    expect(order).toEqual(['interactive', 'save-verify', 'geometry', 'background']);
+    // Unlike background work, geometry is not parked by a save in progress.
+    const log: string[] = [];
+    const save = s.run('save-verify', ac.signal, job(log, 's', 3));
+    await tick();
+    const geo = s.run('geometry', ac.signal, job(log, 'g', 1));
+    await Promise.all([save, geo]);
+    expect(log).toContain('g0');
+  });
+
   it('cancels a running job at its next checkpoint, and a waiting job immediately', async () => {
     const s = new Scheduler();
     const log: string[] = [];

@@ -9,9 +9,16 @@
 
 import { AbortError } from '../../engine/errors';
 
-export type Priority = 'interactive' | 'save-verify' | 'background';
+// Snap geometry (M3-18, ADR-008) sits below interactive work and above
+// background indexing; like interactive work it still runs during a save.
+export type Priority = 'interactive' | 'save-verify' | 'geometry' | 'background';
 
-const RANK: Record<Priority, number> = { interactive: 0, 'save-verify': 1, background: 2 };
+const RANK: Record<Priority, number> = {
+  interactive: 0,
+  'save-verify': 1,
+  geometry: 2,
+  background: 3,
+};
 
 export interface JobSlice {
   /** Call between units of work (pages). May suspend; throws AbortError when cancelled. */

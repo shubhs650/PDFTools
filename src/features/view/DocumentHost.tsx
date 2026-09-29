@@ -9,6 +9,7 @@ import { installCalibrateTool } from '../measure/calibrate';
 import { installMeasurements } from '../measure/measurements';
 import { installMeasureTools } from '../measure/measureTools';
 import { installViewportTool } from '../measure/viewports';
+import { installSnapping } from '../measure/snapping';
 import { installHistoryJoin } from '../annotate/historyJoin';
 import { capability, setRegistry, useHost } from './host';
 
@@ -30,6 +31,7 @@ const onInitialized = (registry: Parameters<typeof setRegistry>[0]): Promise<voi
     installCalibrateTool(registry);
     installViewportTool(registry);
     installMeasurements(registry);
+    installSnapping();
   }
   setRegistry(registry);
   return Promise.resolve();

@@ -374,12 +374,16 @@ export const A0 = { width: 3370, height: 2384 } as const;
  * objects of 50, clustered like CAD entities. 20k is "typical", 200k "dense".
  * Not a stand-in for real P&IDs, which are owner runs (ADR-002).
  */
-export function a0Sheet(segments: number): Uint8Array {
+export function a0Sheet(segments: number, pages = 1): Uint8Array {
+  // Extra pages share page 1's content stream (each is still parsed on its own).
+  const extra = Array.from({ length: pages - 1 }, (_, i) => String(5 + i));
+  const page = `<< /Type /Page /Parent 2 0 R /MediaBox [0 0 ${String(A0.width)} ${String(A0.height)}] /Contents 4 0 R >>`;
   return buildPdf([
     '<< /Type /Catalog /Pages 2 0 R >>',
-    '<< /Type /Pages /Kids [3 0 R] /Count 1 >>',
-    `<< /Type /Page /Parent 2 0 R /MediaBox [0 0 ${String(A0.width)} ${String(A0.height)}] /Contents 4 0 R >>`,
+    `<< /Type /Pages /Kids [${['3', ...extra].map((n) => `${n} 0 R`).join(' ')}] /Count ${String(pages)} >>`,
+    page,
     a0Content(segments),
+    ...extra.map(() => page),
   ]);
 }
 
@@ -651,5 +655,81 @@ export function printPdf(): Uint8Array {
     '<< /Type /Page /Parent 2 0 R /MediaBox [0 0 595 842] /Rotate 90 /Contents 11 0 R >>',
     { dict: '<< >>', stream: '0 g 50 50 100 100 re f' },
     ap('0 0 1'),
+  ]);
+}
+
+// ------------------------------------------------------------ snapping (M3-18)
+
+/** The known-geometry sheet's stroked segments, user space (from the M0-S7 spike). */
+export const SNAP_SEGMENTS: [number, number, number, number][] = [
+  [100, 100, 300, 100],
+  [100, 100, 100, 300],
+  // rectangle via `re`
+  [400, 400, 500, 400],
+  [500, 400, 500, 450],
+  [500, 450, 400, 450],
+  [400, 450, 400, 400],
+  // crossing diagonals → intersection (200, 200)
+  [150, 150, 250, 250],
+  [150, 250, 250, 150],
+  // `q 2 0 0 2 10 20 cm  50 150 m 75 150 l S Q`
+  [110, 320, 160, 320],
+  // `q 0 1 -1 0 300 300 cm  0 0 m 50 0 l S Q` (90° rotation)
+  [300, 300, 300, 350],
+  // form Fm1 (0 0 → 30 0) at 350,500 and scaled 0.5 at 50,500
+  [350, 500, 380, 500],
+  [50, 500, 65, 500],
+  // form Fm2 has /Matrix [2 0 0 1 0 0]; placed at 350,550
+  [350, 550, 410, 550],
+];
+export const SNAP_CIRCLE = { cx: 450, cy: 150, r: 40 };
+export const SNAP_FILL_ONLY: [number, number, number, number][] = [
+  [200, 450, 250, 450],
+  [250, 450, 225, 500],
+  [225, 500, 200, 450],
+];
+
+/**
+ * The S7 known-geometry sheet (600 × 600 pt): lines, a rectangle, crossing
+ * diagonals (intersection at 200, 200), `cm` scaling and rotation, a Bézier
+ * circle, two form XObjects (one with its own /Matrix) and a fill-only triangle.
+ */
+export function snapSheet(): Uint8Array {
+  const k = 0.5522847498 * SNAP_CIRCLE.r;
+  const { cx, cy, r } = SNAP_CIRCLE;
+  const n = (v: number): string => String(v);
+  const circle = [
+    `${n(cx + r)} ${n(cy)} m`,
+    `${n(cx + r)} ${n(cy + k)} ${n(cx + k)} ${n(cy + r)} ${n(cx)} ${n(cy + r)} c`,
+    `${n(cx - k)} ${n(cy + r)} ${n(cx - r)} ${n(cy + k)} ${n(cx - r)} ${n(cy)} c`,
+    `${n(cx - r)} ${n(cy - k)} ${n(cx - k)} ${n(cy - r)} ${n(cx)} ${n(cy - r)} c`,
+    `${n(cx + k)} ${n(cy - r)} ${n(cx + r)} ${n(cy - k)} ${n(cx + r)} ${n(cy)} c S`,
+  ].join(' ');
+  const content = [
+    '1 w 0 G',
+    '100 100 m 300 100 l S',
+    '100 100 m 100 300 l S',
+    '400 400 100 50 re S',
+    '150 150 m 250 250 l S 150 250 m 250 150 l S',
+    'q 2 0 0 2 10 20 cm 50 150 m 75 150 l S Q',
+    'q 0 1 -1 0 300 300 cm 0 0 m 50 0 l S Q',
+    circle,
+    'q 1 0 0 1 350 500 cm /Fm1 Do Q',
+    'q 0.5 0 0 0.5 50 500 cm /Fm1 Do Q',
+    'q 1 0 0 1 350 550 cm /Fm2 Do Q',
+    '0.5 g 200 450 m 250 450 l 225 500 l f',
+    'BT /F1 10 Tf 20 580 Td (PDFTools snap test sheet - self-made) Tj ET',
+  ].join('\n');
+  return buildPdf([
+    '<< /Type /Catalog /Pages 2 0 R >>',
+    '<< /Type /Pages /Kids [3 0 R] /Count 1 >>',
+    '<< /Type /Page /Parent 2 0 R /MediaBox [0 0 600 600] /Resources << /XObject << /Fm1 5 0 R /Fm2 6 0 R >> /Font << /F1 7 0 R >> >> /Contents 4 0 R >>',
+    { dict: '<< >>', stream: content },
+    { dict: '<< /Type /XObject /Subtype /Form /BBox [-1 -1 31 1] >>', stream: '0 0 m 30 0 l S' },
+    {
+      dict: '<< /Type /XObject /Subtype /Form /BBox [-1 -1 31 1] /Matrix [2 0 0 1 0 0] >>',
+      stream: '0 0 m 30 0 l S',
+    },
+    '<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica >>',
   ]);
 }

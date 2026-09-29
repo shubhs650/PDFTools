@@ -15,6 +15,8 @@ import {
 } from '../features/settings/profile/profileStore';
 import { annotationCapability, annotationState } from '../features/annotate/selection';
 import { capability, hostStore } from '../features/view/host';
+import { diagnostics } from '../app/diagnostics';
+import { ensurePage, rtts, snapStore } from '../features/measure/snapping';
 import type { TestHook } from './hook';
 
 function history(): HistoryCapability | null {
@@ -82,6 +84,16 @@ export function registerAnnotateProbe(hook: TestHook): void {
       };
       annotationCapability()?.forDocument(docId).createAnnotation(page, annot);
       return annot.id;
+    },
+    /** Snap round trips (ms) so far and the page index states (M3-18). */
+    snap: () => ({
+      rtts: [...rtts],
+      pages: snapStore.getState().pages,
+      errors: diagnostics().filter((d) => d.where.startsWith('snap.')),
+    }),
+    /** Starts a page's geometry extraction (the Work worker gets busy with it). */
+    snapPrepare: (docId: string, page: number) => {
+      void ensurePage(docId, page);
     },
     setProfile: (name: string) => saveProfile({ name, initials: '', discipline: '', company: '' }),
     profile: () => {

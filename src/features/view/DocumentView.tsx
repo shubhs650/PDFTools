@@ -26,6 +26,7 @@ import { isDrawTool } from '../annotate/tools/drawModel';
 import { NumberOverlay } from '../annotate/comments/NumberOverlay';
 import { MeasureOverlay } from '../measure/MeasureOverlay';
 import { ViewportLayer } from '../measure/ViewportLayer';
+import { SnapMarker } from '../measure/SnapMarker';
 import { isMarkupTool } from '../annotate/tools/markupModel';
 import { LinkLayer } from './LinkLayer';
 import { capability, useHost } from './host';
@@ -121,6 +122,8 @@ function Page({
               <NumberOverlay documentId={documentId} pageIndex={layout.pageIndex} scale={scale} />
               {/* Scale viewports while on the Measure tab (M3-17). */}
               <ViewportLayer documentId={documentId} pageIndex={layout.pageIndex} scale={scale} />
+              {/* Where the pointer snaps (M3-18). */}
+              <SnapMarker documentId={documentId} pageIndex={layout.pageIndex} scale={scale} />
               {/* The value of a measurement being drawn (M3-16). */}
               <MeasureOverlay documentId={documentId} pageIndex={layout.pageIndex} scale={scale} />
               {/* Links (M2-10) sit above the text layer, so a click follows them. */}

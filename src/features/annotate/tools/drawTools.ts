@@ -25,10 +25,33 @@ const inProgress = new Set<{ finish: () => void; cancel: () => void }>();
 
 const shift = (evt: unknown): boolean => (evt as { shiftKey?: boolean } | null)?.shiftKey === true;
 
+/** Tools whose points snap to the page's geometry (M3-18): shapes and measurements. */
+const SNAPS: ReadonlySet<DrawTool> = new Set([
+  'line',
+  'lineArrow',
+  'polyline',
+  'polygon',
+  'cloud',
+  'square',
+  'circle',
+  'measureDistance',
+  'measurePerimeter',
+  'measureArea',
+]);
+
+type Snapper = (page: number, pos: Pt, evt: unknown) => Pt;
+let snapper: Snapper | null = null;
+
+/** Snapping (measure/snapping.ts) hooks in here; null turns it off. */
+export function setSnapper(fn: Snapper | null): void {
+  snapper = fn;
+}
+
 /**
  * Wraps a tool's pointer handler factory: Shift constrains from the anchor
- * point. `adapt` may wrap the plugin's handler context (the measurement tools
- * watch its previews, M3-16).
+ * point; otherwise points snap to the page's geometry when snapping is on
+ * (M3-18). `adapt` may wrap the plugin's handler context (the measurement
+ * tools watch its previews, M3-16).
  */
 export function wrapFactory(
   tool: DrawTool,
@@ -42,7 +65,13 @@ export function wrapFactory(
       const h = factory.create(adapt ? adapt(context) : context);
       // Drag tools: where the drag started. Vertex tools: the last vertex placed.
       let anchor: Pt | null = null;
-      const fix = (pos: Pt, evt: Evt): Pt => (shift(evt) ? constrain(tool, anchor, pos) : pos);
+      const snaps = SNAPS.has(tool);
+      const fix = (pos: Pt, evt: Evt): Pt =>
+        shift(evt)
+          ? constrain(tool, anchor, pos)
+          : snaps && snapper
+            ? snapper(context.pageIndex, pos, evt)
+            : pos;
       const entry = {
         finish: () => {
           if (anchor) h.onDoubleClick?.(anchor, undefined as unknown as Evt, tool);
@@ -78,8 +107,9 @@ export function wrapFactory(
         };
       } else {
         out.onPointerDown = (pos, evt, mode) => {
-          anchor = pos;
-          h.onPointerDown?.(pos, evt, mode);
+          const p = shift(evt) ? pos : fix(pos, evt);
+          anchor = p;
+          h.onPointerDown?.(p, evt, mode);
         };
         out.onPointerMove = (pos, evt, mode) => {
           h.onPointerMove?.(fix(pos, evt), evt, mode);

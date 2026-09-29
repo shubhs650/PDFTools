@@ -41,7 +41,7 @@ export const MODULES: readonly { id: ModuleId; label: string; test: RegExp }[] =
   { id: 'workWorker', label: 'Work worker', test: /^assets\/work\.worker-[\w-]+\.js$/ },
   {
     id: 'otherWorkers',
-    label: 'Storage and encoder workers',
+    label: 'Storage, encoder and snap workers',
     test: /^assets\/[\w-]+\.worker-[\w-]+\.js$/,
   },
   { id: 'pdfium', label: 'pdfium.wasm', test: /^assets\/pdfium-[\w-]+\.wasm$/ },

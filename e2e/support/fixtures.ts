@@ -134,7 +134,7 @@ export interface Pdfs {
   layers(): Buffer;
   /** Known Info values, tagged, two page sizes (M2-12). */
   properties(): Buffer;
-  a0(segments: number): Buffer;
+  a0(segments: number, pages?: number): Buffer;
   /** The contract stand-in with square markups on every page (M3-01). */
   markedContract(pages?: number, perPage?: number): Buffer;
   /** The A0 sheet with `n` square markups (M3-01). */
@@ -160,7 +160,8 @@ function makePdfs(): Pdfs {
     attachments: () => memo('attachments', () => attachmentsPdf()),
     layers: () => memo('layers', layersPdf),
     properties: () => memo('properties', propertiesPdf),
-    a0: (segments) => memo(`a0-${String(segments)}`, () => a0Sheet(segments)),
+    a0: (segments, pages = 1) =>
+      memo(`a0-${String(segments)}-${String(pages)}`, () => a0Sheet(segments, pages)),
     markedContract: (pages = 2000, perPage = 5) =>
       memo(`marked-${String(pages)}-${String(perPage)}`, () => markedContractPdf(pages, perPage)),
     markedSheet: (segments, n = 1000) =>

@@ -9,6 +9,12 @@ M0–M2 are merged into `main` (M2 complete on the agent side, owner pack in
 
 ## Done
 
+- **Session 17 — M3-18 snapping.** Geometry extracted whole in the Work worker (new geometry
+  priority, cached per page), indexed and transferred to a new pure-JS Snap worker; endpoint,
+  intersection, midpoint and nearest snaps with a marker; status-bar toggle and "Preparing
+  snapping…", per-kind switches on the Measure tab; Alt disables. RTT p95 3.45 ms on a
+  200k-segment A0 while another page is extracted.
+
 - **Session 17 — M3-17 scale viewports.** Draw a rectangle (or Add viewport in the Properties
   pane) → name, box, ratio or known width, units; saved as page `/VP` entries; outlines on the
   Measure tab; edit/delete undoable; measurements use their viewport (smallest wins), the page

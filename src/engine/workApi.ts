@@ -20,9 +20,10 @@ import type {
 } from '../workers/work/search';
 import type { Hit, SearchOptions } from '../workers/work/searchCore';
 import type { VerifyResult } from '../workers/work/verifySave';
+import type { GridIndex } from '../model/snapIndex';
 import type { MethodSpec } from './protocol';
 
-export type WorkPriority = 'interactive' | 'save-verify' | 'background';
+export type WorkPriority = 'interactive' | 'save-verify' | 'geometry' | 'background';
 
 export interface WorkApi {
   init: MethodSpec<{ wasmUrl: string }, { ms: number; wasmBytes: number }>;
@@ -118,6 +119,17 @@ export interface WorkApi {
   listLayers: MethodSpec<{ docId: string }, LayerList>;
   /** Each page's /VP (as plain PDF data) and MediaBox (M3-15, ADR-007). */
   pageViewports: MethodSpec<{ docId: string }, PageVp[]>;
+  /**
+   * A page's snap index (M3-18, ADR-008): its vector geometry extracted whole
+   * (cached per page), indexed, and transferred — the main thread hands it on
+   * to the Snap worker untouched. Geometry priority: below interactive search,
+   * above background indexing. `minLen` (points) drops shorter segments on
+   * dense pages (decision 3); `dense` says the page needed it.
+   */
+  snapGeometry: MethodSpec<
+    { docId: string; pageIndex: number; minLen: number },
+    { index: GridIndex; segments: number; dense: boolean; ms: number }
+  >;
   /** Form facts EmbedPDF doesn't give: /Tabs per page, /DV per field (M2-14). */
   formFacts: MethodSpec<{ docId: string }, FormFacts>;
   /**

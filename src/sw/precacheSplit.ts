@@ -12,6 +12,8 @@ export interface PrecacheEntry {
 /** Background modules: needed later than the first page, or only for some documents. */
 const BACKGROUND = [
   /(^|\/)assets\/work\.worker-[\w-]+\.js$/,
+  // Snapping needs the Work worker's geometry anyway (M3-18, ADR-008).
+  /(^|\/)assets\/snap\.worker-[\w-]+\.js$/,
   /(^|\/)fonts\/(sc|tc|jp|kr)\//,
   /(^|\/)third-party-notices\.txt$/,
 ];

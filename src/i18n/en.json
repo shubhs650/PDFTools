@@ -1,4 +1,8 @@
 {
+  "snap": {
+    "enable": "Enable Snapping",
+    "preparing": "Preparing snapping…"
+  },
   "app": {
     "name": "PDFTools",
     "description": "A free, offline, private PDF editor for engineers."

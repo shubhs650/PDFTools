@@ -24,6 +24,8 @@ import { flattenCopy } from './work/flatten';
 import { pageBox, renderBand } from './work/print';
 import { readProperties } from './work/properties';
 import { checkSignatures } from './work/signatures';
+import { extractGeometry } from './work/geometry';
+import { buildGrid, DENSE_BYTES, DENSE_SEGMENTS, thin } from '../model/snapIndex';
 
 let mod: WrappedPdfiumModule | undefined;
 let native: PdfiumNative | undefined;
@@ -47,6 +49,9 @@ async function inflate(bytes: Uint8Array): Promise<Uint8Array> {
   const stream = new Blob([bytes.slice()]).stream().pipeThrough(new DecompressionStream('deflate'));
   return new Uint8Array(await new Response(stream).arrayBuffer());
 }
+/** Snap geometry per document and page (M3-18): extracted once, reused at every zoom. */
+const geometry = new Map<string, Map<number, Float32Array>>();
+
 const scheduler = new Scheduler();
 const activity = new Activity();
 const search = new SearchEngine(() => {
@@ -96,6 +101,7 @@ serve<WorkApi>(self, {
 
   close: async ({ docId }) => {
     search.cache.drop(docId);
+    geometry.delete(docId);
     await docs.close(docId);
     return { wasmBytes: wasmBytes() };
   },
@@ -183,6 +189,34 @@ serve<WorkApi>(self, {
     scheduler.run('interactive', ctx.signal, () =>
       readViewports(docs.bytes(docId), inflate, docs.passwordOf(docId)),
     ),
+
+  snapGeometry: ({ docId, pageIndex, minLen }, ctx) =>
+    scheduler.run('geometry', ctx.signal, async (slice) => {
+      if (!mod) throw new RpcError('not-initialized', 'The work worker is not initialized');
+      const t0 = performance.now();
+      const { doc } = await docs.get(docId);
+      if (pageIndex < 0 || pageIndex >= doc.pageCount)
+        throw new RpcError('page-out-of-range', 'No such page');
+      const pages = geometry.get(docId) ?? new Map<number, Float32Array>();
+      geometry.set(docId, pages);
+      let segs = pages.get(pageIndex);
+      if (!segs) {
+        try {
+          segs = (await extractGeometry(mod, docPtrOf(need(), doc.id), pageIndex, slice)).segs;
+        } finally {
+          wasmBytes();
+        }
+        pages.set(pageIndex, segs);
+      }
+      // ADR-008 d3: a very dense page keeps only segments visible at this zoom.
+      const n = segs.length / 4;
+      const dense = n > DENSE_SEGMENTS || segs.byteLength * 3 > DENSE_BYTES;
+      const index = buildGrid(dense && minLen > 0 ? thin(segs, minLen) : segs.slice());
+      return new Transfer(
+        { index, segments: index.segs.length / 4, dense, ms: performance.now() - t0 },
+        [index.segs.buffer, index.cellStart.buffer, index.items.buffer],
+      );
+    }),
 
   listLayers: ({ docId }, ctx) =>
     scheduler.run('interactive', ctx.signal, () => readLayers(docs.bytes(docId), inflate)),

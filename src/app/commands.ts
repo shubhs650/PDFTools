@@ -864,6 +864,7 @@ export const COMMANDS: readonly CommandDef[] = [
     fluent: 'Target',
     milestone: 'M3',
     toggle: true,
+    shipped: true, // M3-18
     custom: 'measure.snapping', // M3-06
   },
   {
@@ -874,6 +875,7 @@ export const COMMANDS: readonly CommandDef[] = [
     fluent: 'Square',
     milestone: 'M3',
     toggle: true,
+    shipped: true, // M3-18
     custom: 'measure.snapEndpoint', // M3-06
   },
   {
@@ -884,6 +886,7 @@ export const COMMANDS: readonly CommandDef[] = [
     fluent: 'Triangle',
     milestone: 'M3',
     toggle: true,
+    shipped: true, // M3-18
     custom: 'measure.snapMidpoint', // M3-06
   },
   {
@@ -894,6 +897,7 @@ export const COMMANDS: readonly CommandDef[] = [
     fluent: 'Dismiss',
     milestone: 'M3',
     toggle: true,
+    shipped: true, // M3-18
     custom: 'measure.snapIntersection', // M3-06
   },
   {
@@ -904,6 +908,7 @@ export const COMMANDS: readonly CommandDef[] = [
     fluent: 'Circle',
     milestone: 'M3',
     toggle: true,
+    shipped: true, // M3-18
     custom: 'measure.snapNearest', // M3-06
   },
   {

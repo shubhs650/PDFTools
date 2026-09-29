@@ -53,6 +53,7 @@ type JobMethod =
   | 'docProperties'
   | 'checkSignatures'
   | 'hitRects'
+  | 'snapGeometry'
   | 'indexText';
 
 export interface WorkClientOptions {

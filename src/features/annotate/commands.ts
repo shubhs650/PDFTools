@@ -14,6 +14,7 @@ import { placeDynamicStamp, placeImageStamp } from '../stamps/stampTools';
 import { stampStore } from '../stamps/stampStore';
 import { loadScales, openScaleDialog, scaleStore } from '../measure/scaleStore';
 import { MEASURE_COMMANDS } from '../measure/measureTools';
+import { setSnapping, snapStore, toggleKind } from '../measure/snapping';
 import { capability, hostStore } from '../view/host';
 import { annotationCapability, annotationState } from './selection';
 import { cycleTarget, pageAnnotations } from './model';
@@ -312,6 +313,28 @@ export function registerAnnotateCommands(): () => void {
         },
       }),
     ),
+    // Snapping (M3-18): the switch (also in the status bar) and one per snap kind.
+    registerCommand('measure.snapping', {
+      run: () => {
+        void setSnapping(!snapStore.getState().enabled);
+      },
+      isPressed: () => snapStore.getState().enabled,
+    }),
+    ...(
+      [
+        ['measure.snapEndpoint', 'endpoint'],
+        ['measure.snapMidpoint', 'midpoint'],
+        ['measure.snapIntersection', 'intersection'],
+        ['measure.snapNearest', 'nearest'],
+      ] as const
+    ).map(([command, kind]) =>
+      registerCommand(command, {
+        run: () => {
+          toggleKind(kind);
+        },
+        isPressed: () => snapStore.getState().kinds[kind],
+      }),
+    ),
     registerCommand('measure.calibrate', {
       requiresDocument: true,
       isPressed: () => appStore.getState().tool === 'calibrate',
@@ -427,9 +450,14 @@ export function registerAnnotateCommands(): () => void {
       watch();
     }
   });
+  // Snap switches are toggles on the Measure tab.
+  const offSnap = snapStore.subscribe((s, prev) => {
+    if (s.enabled !== prev.enabled || s.kinds !== prev.kinds) notify();
+  });
   return () => {
     offRegistry();
     offPlugins();
+    offSnap();
     for (const off of offs) off();
   };
 }

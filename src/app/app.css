@@ -1834,6 +1834,65 @@ textarea.form-field {
   content: '\26A0\FE0E  ';
 }
 
+.snap-layer {
+  position: absolute;
+  inset: var(--space-0);
+  pointer-events: none;
+}
+
+.snap-marker {
+  position: absolute;
+  width: 10px;
+  height: 10px;
+  transform: translate(-50%, -50%);
+  border: 2px solid var(--color-accent);
+}
+
+.snap-marker--nearest {
+  border-radius: 50%;
+}
+
+.snap-marker--midpoint {
+  border: 0;
+  width: 0;
+  height: 0;
+  border-left: 6px solid transparent;
+  border-right: 6px solid transparent;
+  border-bottom: 10px solid var(--color-accent);
+}
+
+.snap-marker--intersection {
+  border: 0;
+  background:
+    linear-gradient(45deg, transparent 42%, var(--color-accent) 42% 58%, transparent 58%),
+    linear-gradient(-45deg, transparent 42%, var(--color-accent) 42% 58%, transparent 58%);
+}
+
+.snap-status {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+}
+
+.snap-toggle {
+  padding: var(--space-0) var(--space-2);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-m);
+  background: transparent;
+  color: var(--color-text);
+  font: inherit;
+}
+
+.snap-toggle[aria-pressed='true'] {
+  background: var(--color-accent);
+  border-color: var(--color-accent);
+  color: var(--color-text-on-accent);
+}
+
+.snap-preparing:empty {
+  display: none;
+}
+
 .viewport-layer {
   position: absolute;
   inset: var(--space-0);
