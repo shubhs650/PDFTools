@@ -1,6 +1,6 @@
 # PDFTools — Progress
 
-_Last updated: 2026-09-28 (session 16: M3-01 … M3-08 merged; M3-09 … M3-15 done on the branch)_
+_Last updated: 2026-09-29 (session 18: M4 plan drafted, waiting for owner approval)_
 
 **Current milestone:** M3 — Review. Plan approved (2026-09-27); M3-01 … M3-08 done in session 16
 on `claude/m3-task-breakdown-tlyokp` (ADR-014 and ADR-015 accepted).
@@ -8,6 +8,15 @@ M0–M2 are merged into `main` (M2 complete on the agent side, owner pack in
 [docs/acceptance/M2.md](acceptance/M2.md)); the M0, M1 and M2 owner runs are open.
 
 ## Done
+
+- **Session 18 — M4 plan (draft).** Branch `claude/upbeat-cray-lknggv`. Read PROGRESS,
+  ARCHITECTURE Rev 0.4 and ADR-001 to ADR-015; wrote [docs/plan/M4.md](plan/M4.md): 19 tasks (two
+  spikes → ADR-016 page operations/save/undo/cache invalidation and ADR-017 redaction
+  apply/sanitize/verification; M4 custom icons; PDF Oxide in the Work worker + export framework;
+  text/Markdown/HTML, images, Word (Beta), annotation export; page operations core, reorder,
+  insert/extract/merge; table model and detectors, Express Extract, Review & Extract, templates;
+  mark redactions, apply, verification; acceptance) with goals, files, acceptance criteria, tests
+  and dependencies, plus eleven owner questions (M4-Q1 … Q11). No code.
 
 - **Session 17 — M3-20 M3 acceptance: M3 complete (agent side).** M3 commands shown
   (`AVAILABLE_MILESTONES` += M3; Export Annotations moved to M4, M3-Q1); a Ctrl+S perf scenario
@@ -696,13 +705,18 @@ M0–M2 are merged into `main` (M2 complete on the agent side, owner pack in
 
 - **M3 done on the agent side (session 17):** M3-16 … M3-20 as one commit each on
   `claude/m3-tasks-16-20-vdqo8q` (pushed; no PR opened). Waiting on the owner pack
-  ([docs/acceptance/M3.md](acceptance/M3.md) §4). M4 is not started.
+  ([docs/acceptance/M3.md](acceptance/M3.md) §4).
+- **M4 plan drafted (session 18):** [docs/plan/M4.md](plan/M4.md), waiting for the owner's
+  approval and answers to M4-Q1 … Q11. No M4 code yet.
 - **Git in one paragraph (for the owner):** each task lives on its own _branch_ (a named line
   of commits). A _commit_ is a saved snapshot with a message; _push_ uploads the branch to
   GitHub; a _pull request_ (PR) asks to bring a branch into `main`, and GitHub runs the checks
   (CI) on it; _merge_ adds it to `main` once the checks are green.
 
 ## Session log
+
+- **Session 18 (2026-09-29):** M4 plan only (docs); no code, so no checks beyond Prettier on the
+  changed Markdown.
 
 - **Session 17 (2026-09-28/29):** M3-16, M3-17, M3-18, M3-19, M3-20 on
   `claude/m3-tasks-16-20-vdqo8q` (one commit each). Local checks on the last commit: typecheck,
@@ -798,7 +812,10 @@ M0–M2 are merged into `main` (M2 complete on the agent side, owner pack in
    owner runs (below, unchanged).
 4. **Owner:** decide the items under "Decisions needed" (keyboard text selection, committed
    corpus PDFs, Pages project).
-5. **Agent:** M4 planning (`docs/plan/M4.md`) once the owner approves starting M4.
+5. **Owner:** review [docs/plan/M4.md](plan/M4.md) and answer M4-Q1 … Q11 (page-operation undo,
+   permissions, pending redaction marks, redacted-output encryption, multi-file outputs, Word
+   dependencies, annotation JSON, merge carry-over, table templates, keyboard access, branching).
+   **Agent:** then start with M4-01 / M4-02 (spikes) and M4-03.
 6. **Owner (M0/M1, still open):** S1 interop checklist; S1 FSA button on the 500 MB contract; S5
    search on the FAR and the 500 MB contract; S7 on the CAD drawings and the P&ID
    (`node spikes/s7-snap/run-node.ts <files>`); S4 on the pipe chart and a parts list; FAR, 500 MB
