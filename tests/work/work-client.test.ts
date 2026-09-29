@@ -89,6 +89,10 @@ function fakeSpawn(world: FakeWorld) {
       },
       readAttachment: () => ({ blob: new Blob([]) }),
       indexText: () => ({ pages: 3, extracted: 3, pausedMs: 0, ms: 1 }),
+      oxideWarm: () => ({ warmUpMs: 1, oxideBytes: 0 }),
+      extract: () => {
+        throw new Error('not used');
+      },
       activity: () => {
         world.jobsSeen.push('activity');
         return null;

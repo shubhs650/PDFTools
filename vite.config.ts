@@ -1,3 +1,4 @@
+import { fileURLToPath } from 'node:url';
 import { defineConfig } from 'vite';
 import react from '@vitejs/plugin-react';
 import { VitePWA } from 'vite-plugin-pwa';
@@ -24,14 +25,25 @@ export default defineConfig({
       filename: 'sw.ts',
       injectManifest: {
         globPatterns: [`**/*.{${PRECACHE_EXTENSIONS.join(',')}}`],
-        // pdfium.wasm is 4.6 MB and the largest CJK font 8.4 MB (ADR-003).
-        maximumFileSizeToCacheInBytes: 10 * 1024 * 1024,
+        // pdfium.wasm is 4.6 MB, the largest CJK font 8.4 MB (ADR-003) and PDF
+        // Oxide's WASM 17.6 MB raw (4.5 MB brotli on the wire, ADR-009).
+        maximumFileSizeToCacheInBytes: 20 * 1024 * 1024,
       },
     }),
   ],
   define: {
     // File → About (M1-26): package version and the commit it was built from.
     'import.meta.env.VITE_APP_VERSION': JSON.stringify(appVersion()),
+  },
+  resolve: {
+    alias: [
+      // PDF Oxide's WASM (ADR-009 decision 1): the package exports no path to
+      // it, and the Work worker passes its URL explicitly (M4-04).
+      {
+        find: /^pdf-oxide-wasm\/wasm(\?url)?$/,
+        replacement: `${fileURLToPath(new URL('./node_modules/pdf-oxide-wasm/web/pdf_oxide_bg.wasm', import.meta.url))}$1`,
+      },
+    ],
   },
   worker: {
     format: 'es',

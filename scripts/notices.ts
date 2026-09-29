@@ -3,7 +3,8 @@
 // with its license text. Texts come from the package's own LICENSE / COPYING /
 // NOTICE files (so PDFium's LICENSE.pdfium and the fonts' OFL-1.1 text are
 // included); a package that ships none gets the standard text of a short
-// permissive license with the copyright holder from its manifest. A package
+// permissive license with the copyright holder from its manifest — unless
+// scripts/notices-vendored/<package>/ holds its source repository's texts. A package
 // with neither fails the generator, so a new dependency cannot slip through.
 //
 // Used by the Vite build (third-party-notices.txt next to index.html) and by
@@ -172,6 +173,9 @@ export function collectNotices(root: string): NoticePackage[] {
     if (seen.has(key)) continue;
     const license = licenseFromManifest(manifest) ?? 'UNKNOWN';
     let texts = licenseTexts(dir);
+    // Texts copied from the package's source repository when its tarball has none (ADR-009 d7).
+    const vendored = join(root, 'scripts', 'notices-vendored', name);
+    if (texts.length === 0 && existsSync(vendored)) texts = licenseTexts(vendored);
     if (texts.length === 0) {
       const std = standardText(license, manifest, name);
       if (std) texts = [std];

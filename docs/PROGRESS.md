@@ -9,6 +9,16 @@ M0–M2 are merged into `main` (M2 complete on the agent side, owner pack in
 
 ## Done
 
+- **Session 18 — M4-04 PDF Oxide in the Work worker + export framework.** Oxide 0.3.77 lazy in
+  the Work worker (own chunk, WASM by explicit same-origin URL, one copy), warmed up in the
+  background after the first indexing (0.67 s in the worker), PDFium `copy` gate before any Oxide
+  call (rule 9), plain-text extraction with cancel between pages; store-only ZIP writer and folder
+  output (M4-Q5); the export dialog (all / current / custom pages, save target first, progress,
+  Cancel). Background precache, bundle line (17.73 MB raw / 5.05 MB brotli; install 50.06 MB of
+  60), notices from `scripts/notices-vendored/`. Perf: warm-up plus a 2,000-page extraction
+  (11.7 s) while scrolling, 0 blank frames, no long task. Unit 869, license gate 711. The Convert
+  commands ship with M4-05.
+
 - **Session 18 — M4-03 custom icons.** To Word (page + ¶ tag, no Word logo), Mark for Redaction,
   Mark Area for Redaction (Filled variants for the toggles) and Apply Redactions in
   `src/ui/icons/custom/m4.ts`, drawn with `draw.ts` at 20 and 32 px; no M4 command is
@@ -742,7 +752,9 @@ M0–M2 are merged into `main` (M2 complete on the agent side, owner pack in
 - **M3 done on the agent side (session 17):** M3-16 … M3-20 as one commit each on
   `claude/m3-tasks-16-20-vdqo8q` (pushed; no PR opened). Waiting on the owner pack
   ([docs/acceptance/M3.md](acceptance/M3.md) §4).
-- **M4 plan approved (session 18):** [docs/plan/M4.md](plan/M4.md), 22 tasks. No M4 code yet.
+- **M4 in progress (session 18):** [docs/plan/M4.md](plan/M4.md), 22 tasks. Done: M4-01 and M4-02
+  (spikes; ADR-016 and ADR-017 proposed, owner decisions pending), M4-03 (icons), M4-04 (Oxide and
+  the export framework).
   ADR-018 (comment transfer) is proposed; ARCHITECTURE.md §7.1/§7.6/§13 are amended once it is
   accepted after the M4-19 spike.
 - **Git in one paragraph (for the owner):** each task lives on its own _branch_ (a named line
@@ -751,6 +763,13 @@ M0–M2 are merged into `main` (M2 complete on the agent side, owner pack in
   (CI) on it; _merge_ adds it to `main` once the checks are green.
 
 ## Session log
+
+- **Session 18 (2026-09-29), continued:** M4-01, M4-02, M4-03, M4-04 on `claude/upbeat-cray-lknggv`
+  (one commit each). Spikes S14/S15 in Node with real PDFium and qpdf 11.9 (installed in the
+  container). Local checks on M4-04: typecheck, lint, format, 869 unit tests, license gate (711
+  packages), build + `check:dist`, bundle report (within budget), the new `e2e/oxide.spec.ts` (4)
+  and perf `e2e/perf/oxide.spec.ts`, 32 affected e2e specs (offline, i18n, headers, work
+  worker, search, CRS, ribbon, gallery, update); full e2e suite result in the next commit.
 
 - **Session 18 (2026-09-29):** M4 plan only (docs); no code, so no checks beyond Prettier on the
   changed Markdown.
@@ -849,9 +868,12 @@ M0–M2 are merged into `main` (M2 complete on the agent side, owner pack in
    owner runs (below, unchanged).
 4. **Owner:** decide the items under "Decisions needed" (keyboard text selection, committed
    corpus PDFs, Pages project).
-5. **Agent:** M4 spikes first — M4-01 (page operations, ADR-016), M4-02 (redaction, ADR-017),
-   M4-19 (comment transfer, ADR-018) — plus M4-03 (icons), on `m4/<task>` branches.
-6. **Owner (M0/M1, still open):** S1 interop checklist; S1 FSA button on the 500 MB contract; S5
+5. **Owner:** decide ADR-016 decisions 3, 5, 7 (page-operation verification, undo route,
+   dangling references) and ADR-017 decisions 3 and 5 (re-cutting crossing paths, which amends
+   B8's wording; the sanitize list). Review the M4 icons in the e2e gallery.
+6. **Agent:** M4-05 (text / Markdown / HTML exports and the Convert tab), M4-19 (comment-transfer
+   spike), then M4-06 … M4-08; page operations (M4-09) after ADR-016 is accepted.
+7. **Owner (M0/M1, still open):** S1 interop checklist; S1 FSA button on the 500 MB contract; S5
    search on the FAR and the 500 MB contract; S7 on the CAD drawings and the P&ID
    (`node spikes/s7-snap/run-node.ts <files>`); S4 on the pipe chart and a parts list; FAR, 500 MB
    and A0 through the S3 harness; S8 Firefox check and Pages preview.

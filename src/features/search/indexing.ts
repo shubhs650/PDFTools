@@ -2,6 +2,7 @@
 // one indexing job per open document, started once its Work copy exists and
 // cancelled when it closes; scrolling and zooming are reported (throttled) so
 // the Work worker backs off meanwhile.
+import { warmOxide } from '../extract/oxideWarm';
 import { noteActivity } from '../view/activity';
 import { startedWorkClient, workClient } from '../view/host';
 
@@ -49,6 +50,7 @@ export function startIndexing(docId: string, visible: number[], delayMs = START_
   job.promise.then(
     (r) => {
       status.set(docId, { state: 'done', done: r.pages, total: r.pages });
+      warmOxide(); // the Work worker is idle now (M4-04, ADR-009 d2)
     },
     () => {
       const s = status.get(docId);

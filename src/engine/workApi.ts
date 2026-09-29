@@ -23,6 +23,7 @@ import type { VerifyResult } from '../workers/work/verifySave';
 import type { GridIndex } from '../model/snapIndex';
 import type { SnapshotRegion } from '../workers/work/crs';
 import type { WorkbookSpec } from '../workers/work/crsWorkbook';
+import type { ExtractFormat } from '../workers/work/extract';
 import type { MethodSpec } from './protocol';
 
 export type WorkPriority = 'interactive' | 'save-verify' | 'geometry' | 'background';
@@ -187,6 +188,23 @@ export interface WorkApi {
   indexText: MethodSpec<
     { docId: string; visible: number[] },
     { pages: number; extracted: number; pausedMs: number; ms: number },
+    { done: number; total: number }
+  >;
+  /**
+   * PDF Oxide warm-up (M4-04, ADR-009 decision 2): loads Oxide and runs one
+   * throwaway extraction, at background priority, so the first export does not
+   * pay the ~0.7 s first call. Idempotent.
+   */
+  oxideWarm: MethodSpec<null, { warmUpMs: number; oxideBytes: number }>;
+  /**
+   * An extraction through PDF Oxide (M4-04, §7.6) of `pages` (0-based,
+   * document order) of the current revision. PDFium's permission check comes
+   * first (copy, rule 9): refused with `permission-denied:copy`. The result is
+   * a Blob built in the worker; cancellable between pages.
+   */
+  extract: MethodSpec<
+    { docId: string; pages: number[]; format: ExtractFormat },
+    { blob: Blob; pages: number; chars: number },
     { done: number; total: number }
   >;
   /** The user is scrolling or zooming: background work backs off for `quietMs`. */

@@ -22,6 +22,10 @@ interface PickerWindow {
     types?: typeof PDF_TYPES;
     id?: string;
   }) => Promise<FileSystemFileHandle>;
+  showDirectoryPicker?: (options: {
+    id?: string;
+    mode?: 'read' | 'readwrite';
+  }) => Promise<FileSystemDirectoryHandle>;
 }
 
 type PermissionMode = 'read' | 'readwrite';
@@ -120,6 +124,66 @@ export async function pickFileSaveTarget(
     if (isAbort(err)) return undefined;
     throw err;
   }
+}
+
+/** Several exported files can be written straight to a folder (M4-Q5; Chromium). */
+export function canPickFolder(win: object = window): boolean {
+  return typeof (win as PickerWindow).showDirectoryPicker === 'function';
+}
+
+/**
+ * Folder for several exported files (images, one CSV per table — M4-Q5);
+ * undefined where the browser has no folder picker, or if cancelled.
+ */
+export async function pickFolderTarget(
+  win: Window = window,
+): Promise<FileSystemDirectoryHandle | undefined> {
+  if (!canPickFolder(win)) return undefined;
+  try {
+    return await (win as PickerWindow).showDirectoryPicker?.({
+      id: 'pdftools-export',
+      mode: 'readwrite',
+    });
+  } catch (err) {
+    if (isAbort(err)) return undefined;
+    throw err;
+  }
+}
+
+/** "a.png" → "a (2).png" … until the name is free in `taken` (case-insensitive). */
+export function freeName(name: string, taken: ReadonlySet<string>): string {
+  const dot = name.lastIndexOf('.');
+  const [base, ext] = dot > 0 ? [name.slice(0, dot), name.slice(dot)] : [name, ''];
+  let n = name;
+  for (let i = 2; taken.has(n.toLowerCase()); i++) n = `${base} (${String(i)})${ext}`;
+  return n;
+}
+
+/**
+ * Writes the files into `dir` without replacing anything already there (a
+ * taken name gets " (2)"), one after another; cancellable between files.
+ * Returns the names used.
+ */
+export async function writeFilesToFolder(
+  dir: FileSystemDirectoryHandle,
+  files: readonly { name: string; blob: Blob }[],
+  signal?: AbortSignal,
+  progress?: (done: number, total: number) => void,
+): Promise<string[]> {
+  const taken = new Set<string>();
+  const entries = (dir as unknown as { keys?: () => AsyncIterable<string> }).keys?.();
+  if (entries) for await (const k of entries) taken.add(k.toLowerCase());
+  const used: string[] = [];
+  for (const [i, f] of files.entries()) {
+    if (signal?.aborted) throw new AbortError();
+    const name = freeName(f.name, taken);
+    taken.add(name.toLowerCase());
+    const handle = await dir.getFileHandle(name, { create: true });
+    await writeToHandle(handle, f.blob, signal);
+    used.push(name);
+    progress?.(i + 1, files.length);
+  }
+  return used;
 }
 
 /** Reopening a recent file asks for permission again (§4.1). */

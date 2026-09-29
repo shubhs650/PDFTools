@@ -1254,5 +1254,34 @@
       "vendorResponse": "Vendor Response",
       "finalStatus": "Final Status"
     }
+  },
+  "export": {
+    "title": {
+      "text": "Export as Text"
+    },
+    "description": "The text is extracted on this device; nothing is sent anywhere.",
+    "scope": {
+      "legend": "Pages",
+      "all": "All pages",
+      "current": "Current page",
+      "custom": "Pages:",
+      "customLabel": "Page range",
+      "customHint": "e.g. 1-3, 8"
+    },
+    "fileName": "{{base}}.{{ext}}",
+    "export": "Export",
+    "close": "Close",
+    "cancel": "Cancel",
+    "progressName": "Export progress",
+    "progress": "Page {{done}} of {{total}}",
+    "error": {
+      "empty": "Enter the pages to export.",
+      "syntax": "Use page numbers and ranges, e.g. 1-3, 8.",
+      "outOfRange": "Some pages are not in this document.",
+      "noSelection": "Select pages in the Thumbnails pane first.",
+      "denied": "This document's security settings don't allow {{what}}.",
+      "failed": "The export could not be completed. Nothing was saved.",
+      "noDocument": "The document is no longer open."
+    }
   }
 }

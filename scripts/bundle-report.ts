@@ -32,6 +32,7 @@ export type ModuleId =
   | 'workWorker'
   | 'otherWorkers'
   | 'excelJs'
+  | 'oxide'
   | 'pdfium'
   | 'coreFonts'
   | 'cjkFonts'
@@ -47,6 +48,8 @@ export const MODULES: readonly { id: ModuleId; label: string; test: RegExp }[] =
   },
   // M3-19 (ADR-015 d2): lazy-loaded by the Work worker for the CRS, background precache.
   { id: 'excelJs', label: 'ExcelJS', test: /^assets\/exceljs[\w.-]*\.js$/ },
+  // M4-04 (ADR-009 d1): lazy-loaded by the Work worker for exports, background precache.
+  { id: 'oxide', label: 'PDF Oxide (WASM + glue)', test: /^assets\/pdf_oxide[\w.-]*\.(js|wasm)$/ },
   { id: 'pdfium', label: 'pdfium.wasm', test: /^assets\/pdfium-[\w-]+\.wasm$/ },
   {
     id: 'coreFonts',
@@ -64,10 +67,7 @@ export const RESERVED: readonly {
   milestone: string;
   raw: number;
   source: string;
-}[] = [
-  { label: 'PDF Oxide WASM + glue', milestone: 'M2/M4', raw: 17_920_000, source: 'ADR-009' },
-  { label: 'docx', milestone: 'M4', raw: 700_000, source: 'estimate' },
-];
+}[] = [{ label: 'docx', milestone: 'M4', raw: 700_000, source: 'estimate' }];
 
 export interface FileSize {
   path: string;

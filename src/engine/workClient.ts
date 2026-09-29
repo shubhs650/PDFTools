@@ -55,6 +55,8 @@ type JobMethod =
   | 'hitRects'
   | 'snapGeometry'
   | 'crs'
+  | 'oxideWarm'
+  | 'extract'
   | 'indexText';
 
 export interface WorkClientOptions {
@@ -257,7 +259,7 @@ export class WorkClient {
     this.active++;
     const promise = (async () => {
       try {
-        const docId = (args as { docId?: unknown }).docId;
+        const docId = (args as { docId?: unknown } | null)?.docId;
         if (typeof docId === 'string') await this.opening.get(docId);
         await this.whenReady();
         job = this.rpc.call(method, args, { ...options, signal: ac.signal });

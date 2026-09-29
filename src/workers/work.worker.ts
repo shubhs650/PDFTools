@@ -4,6 +4,7 @@
 // between pages, so cancellation and higher-priority work get in (rule 2).
 import { PdfiumNative } from '@embedpdf/engines/pdfium';
 import { init, type WrappedPdfiumModule } from '@embedpdf/pdfium';
+import oxideWasmUrl from 'pdf-oxide-wasm/wasm?url';
 import { RpcError } from '../engine/errors';
 import type { WorkApi } from '../engine/workApi';
 import { Transfer } from '../engine/protocol';
@@ -27,6 +28,9 @@ import { checkSignatures } from './work/signatures';
 import { extractGeometry } from './work/geometry';
 import { exportCrs } from './work/crs';
 import { buildGrid, DENSE_BYTES, DENSE_SEGMENTS, thin } from '../model/snapIndex';
+import { OxideHost, webLoader } from './work/oxide';
+import { requireCapability, securityOf } from './work/permissionGate';
+import { extractText } from './work/extract';
 
 let mod: WrappedPdfiumModule | undefined;
 let native: PdfiumNative | undefined;
@@ -37,8 +41,15 @@ function need(): PdfiumNative {
   return native;
 }
 
+/**
+ * PDF Oxide (M4-04, ADR-009): lazy, one instance, its WASM from our own origin
+ * by an explicit URL (never the glue's default).
+ */
+const oxide = new OxideHost(webLoader(() => new URL(oxideWasmUrl, self.location.href).href));
+
+/** PDFium's and Oxide's WASM memory: both count for the respawn policy (ADR-004 d4, ADR-009). */
 function wasmBytes(): number {
-  const bytes = mod ? (wasmMemory(mod)?.buffer.byteLength ?? 0) : 0;
+  const bytes = (mod ? (wasmMemory(mod)?.buffer.byteLength ?? 0) : 0) + oxide.memoryBytes();
   peak = Math.max(peak, bytes);
   return bytes;
 }
@@ -101,6 +112,7 @@ serve<WorkApi>(self, {
     }),
 
   close: async ({ docId }) => {
+    oxide.drop(docId);
     search.cache.drop(docId);
     geometry.delete(docId);
     await docs.close(docId);
@@ -331,6 +343,37 @@ serve<WorkApi>(self, {
         });
       } finally {
         wasmBytes();
+      }
+    }),
+
+  oxideWarm: (_args, ctx) =>
+    scheduler.run('background', ctx.signal, async () => {
+      try {
+        return { warmUpMs: await oxide.warmUp(), oxideBytes: oxide.memoryBytes() };
+      } finally {
+        wasmBytes();
+      }
+    }),
+
+  extract: ({ docId, pages }, ctx) =>
+    scheduler.run('interactive', ctx.signal, async (slice) => {
+      if (!mod) throw new RpcError('not-initialized', 'The work worker is not initialized');
+      const { doc, appliedTailBytes } = await docs.get(docId);
+      // Rule 9 before Oxide sees a byte (ADR-009 decision 3).
+      requireCapability(securityOf(mod, docPtrOf(need(), doc.id)), 'copy');
+      const odoc = await oxide.document(
+        docId,
+        `${doc.id}:${String(appliedTailBytes)}`,
+        () => docs.bytes(docId),
+        docs.passwordOf(docId),
+      );
+      try {
+        // Plain text is the only `format` so far; M4-05 adds Markdown and HTML.
+        return await extractText(odoc, pages, slice, (p) => {
+          ctx.progress(p);
+        });
+      } finally {
+        wasmBytes(); // Oxide's heap counts for the respawn policy
       }
     }),
 
