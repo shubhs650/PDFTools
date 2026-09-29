@@ -26,6 +26,7 @@ import { commentsStore } from './comments/commentsStore';
 import { deleteComments } from './comments/threadActions';
 import { MARKUP_TOOLS } from './tools/markupModel';
 import { markupFromSelection } from './tools/textMarkup';
+import { openAnnotationExport } from './export/annotationExport';
 
 const activeId = (): string | null => selectActive(documentStore.getState())?.meta.id ?? null;
 
@@ -364,6 +365,15 @@ export function registerAnnotateCommands(): () => void {
       run: () => {
         const id = activeId();
         if (id) void openCrs(id);
+      },
+    }),
+    // Export Annotations (M4-08): the comments' text leaves the document, so copy is needed (rule 9).
+    registerCommand('comment.exportAnnotations', {
+      requiresDocument: true,
+      requires: 'copy',
+      run: () => {
+        const id = activeId();
+        if (id) openAnnotationExport(id);
       },
     }),
     registerCommand('comment.statusSchemes', {

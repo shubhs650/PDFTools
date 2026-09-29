@@ -772,6 +772,7 @@ export const COMMANDS: readonly CommandDef[] = [
     size: 'small',
     fluent: 'ArrowExport',
     milestone: 'M4', // M3-Q1: annotation export is M4 (§13)
+    shipped: true, // M4-08
   },
   {
     id: 'comment.exportCrs',

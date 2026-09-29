@@ -65,9 +65,23 @@ const oneLine = (s: string): string => s.replace(/\r\n|\r/gu, '\n').trim();
 
 /** The CRS rows of `all` (every annotation of the document). */
 export function buildCrsRows(all: readonly PdfAnnotationObject[], o: RowOptions): CrsRow[] {
+  const out: CrsRow[] = [];
+  for (const batch of crsRowBatches(all, o, Infinity)) out.push(...batch);
+  return out;
+}
+
+/**
+ * The same rows in batches of `size`, so a caller on the main thread can yield
+ * between them (M4-08: 10,000 comments must not make one long task, rule 1).
+ */
+export function* crsRowBatches(
+  all: readonly PdfAnnotationObject[],
+  o: RowOptions,
+  size: number,
+): Generator<CrsRow[]> {
   const comments = commentsOf(all).filter((c) => !o.filter || matches(c, o.filter));
   const kids = childrenOf(all);
-  return comments.map((c) => {
+  const row = (c: (typeof comments)[number]): CrsRow => {
     const thread = buildThread(all, c.id, kids);
     const replies = thread.replies
       .map(({ annot, depth }) => {
@@ -96,7 +110,8 @@ export function buildCrsRows(all: readonly PdfAnnotationObject[], o: RowOptions)
         height: r.size.height,
       },
     };
-  });
+  };
+  for (let i = 0; i < comments.length; i += size) yield comments.slice(i, i + size).map(row);
 }
 
 /** A row's cells in column order (snapshot and the vendor's columns empty). */

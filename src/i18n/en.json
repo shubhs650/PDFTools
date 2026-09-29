@@ -1305,5 +1305,41 @@
       "pageBreaks": "Start each PDF page on a new page",
       "beta": "Beta: headings, paragraphs, lists, tables and images are kept; columns, fonts and exact layout are not."
     }
+  },
+  "annotExport": {
+    "title": "Export Annotations",
+    "description": "Every comment with its replies and status, as a spreadsheet or as data for other tools. Built on this device; nothing is sent anywhere.",
+    "scope": "Comments",
+    "scopeAll": "All comments",
+    "scopeFiltered": "As filtered in the Comments pane",
+    "format": "Format",
+    "xlsx": "Excel workbook (.xlsx)",
+    "csv": "CSV (.csv)",
+    "json": "JSON (.json) — can be imported again",
+    "export": "Export",
+    "close": "Close",
+    "cancel": "Cancel",
+    "progressName": "Export progress",
+    "empty": "There are no comments to export.",
+    "failed": "The export could not be completed. Nothing was saved.",
+    "fileName": "{{base}} (annotations).{{ext}}",
+    "sheet": "Annotations",
+    "sheetTitle": "Annotations — {{name}}",
+    "head": {
+      "document": "Document",
+      "exported": "Exported"
+    },
+    "col": {
+      "number": "No.",
+      "page": "Page",
+      "type": "Type",
+      "author": "Author",
+      "subject": "Subject",
+      "comment": "Comment",
+      "replies": "Replies",
+      "status": "Status",
+      "created": "Created",
+      "modified": "Modified"
+    }
   }
 }

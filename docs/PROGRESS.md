@@ -9,6 +9,12 @@ M0–M2 are merged into `main` (M2 complete on the agent side, owner pack in
 
 ## Done
 
+- **Session 18 — M4-08 annotation export.** Comment → Export Annotations: all or filtered
+  comments as CSV, Excel (Work worker) or the import-ready JSON v1
+  ([docs/formats/pdftools-annotations-v1.md](formats/pdftools-annotations-v1.md)); copy permission
+  honoured. CRS rows now built in batches (a 10,000-comment export had one 144 ms task). Unit,
+  e2e, perf (10,000 comments to CSV and XLSX, no long task).
+
 - **Session 18 — M4-07 Word export (Beta).** Convert → To Word: Oxide Markdown → mdast → `docx`
   in the Work worker (lazy chunk), headings, emphasis, lists, tables and images in reading
   order; optional page breaks. New dependencies `docx`, `mdast-util-from-markdown`,
@@ -772,7 +778,7 @@ M0–M2 are merged into `main` (M2 complete on the agent side, owner pack in
   ([docs/acceptance/M3.md](acceptance/M3.md) §4).
 - **M4 in progress (session 18):** [docs/plan/M4.md](plan/M4.md), 22 tasks. Done: M4-01 and M4-02
   (spikes; ADR-016 and ADR-017 accepted), M4-03 (icons), M4-04 (Oxide and the export
-  framework), M4-05 (text, Markdown, HTML), M4-06 (images), M4-07 (Word, Beta).
+  framework), M4-05 (text, Markdown, HTML), M4-06 (images), M4-07 (Word, Beta), M4-08 (annotation export).
   ADR-018 (comment transfer) is proposed; ARCHITECTURE.md §7.1/§7.6/§13 are amended once it is
   accepted after the M4-19 spike.
 - **Git in one paragraph (for the owner):** each task lives on its own _branch_ (a named line
@@ -781,6 +787,12 @@ M0–M2 are merged into `main` (M2 complete on the agent side, owner pack in
   (CI) on it; _merge_ adds it to `main` once the checks are green.
 
 ## Session log
+
+- **Session 18 (2026-09-29), exports:** M4-05, M4-06, M4-07, M4-08 on `claude/upbeat-cray-lknggv`
+  (one commit each). Local checks on M4-08: typecheck, lint, format, 908 unit tests, license gate
+  (762 packages), build, the new `e2e/annotation-export.spec.ts` (2) and perf
+  `e2e/perf/annotation-export.spec.ts` (2), then the full e2e suite: 241 of 241 passed (7.0 min, 2
+  workers). The ribbon e2e test still listed the tabs without Convert (missed in M4-05) — fixed.
 
 - **Session 18 (2026-09-29), continued:** M4-01, M4-02, M4-03, M4-04 on `claude/upbeat-cray-lknggv`
   (one commit each). Spikes S14/S15 in Node with real PDFium and qpdf 11.9 (installed in the
@@ -888,8 +900,8 @@ M0–M2 are merged into `main` (M2 complete on the agent side, owner pack in
 4. **Owner:** decide the items under "Decisions needed" (keyboard text selection, committed
    corpus PDFs, Pages project).
 5. **Owner:** review the M4 icons in the e2e gallery.
-6. **Agent:** M4-05 (text / Markdown / HTML exports and the Convert tab), M4-19 (comment-transfer
-   spike), then M4-06 … M4-08; page operations (M4-09) after ADR-016 is accepted.
+6. **Agent:** M4-19 (comment-transfer spike, ADR-018), then page operations (M4-09 …, ADR-016
+   accepted) and M4-20 once ADR-018 is accepted.
 7. **Owner (M0/M1, still open):** S1 interop checklist; S1 FSA button on the 500 MB contract; S5
    search on the FAR and the 500 MB contract; S7 on the CAD drawings and the P&ID
    (`node spikes/s7-snap/run-node.ts <files>`); S4 on the pipe chart and a parts list; FAR, 500 MB
