@@ -1,4 +1,5 @@
-// Convert → To Text / To Markdown / To HTML (M4-05) and Export Images (M4-06),
+// Convert → To Text / To Markdown / To HTML (M4-05), Export Images (M4-06) and
+// To Word (Beta, M4-07),
 // §7.6: open the export
 // dialog for the active document. Extraction needs the copy permission (rule 9,
 // ADR-009 decision 3); without it the commands are disabled with the reason.
@@ -10,6 +11,7 @@ const FORMATS: [string, ExportFormat][] = [
   ['convert.text', 'text'],
   ['convert.markdown', 'markdown'],
   ['convert.html', 'html'],
+  ['convert.word', 'word'],
   ['convert.images', 'images'],
 ];
 

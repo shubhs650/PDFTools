@@ -25,11 +25,17 @@ export function registerExtractProbe(hook: TestHook): void {
     lastExport: async () => {
       if (!lastExport) return null;
       const files = await Promise.all(
-        lastExport.files.map(async (f) => ({
-          path: f.path,
-          size: f.blob.size,
-          text: /\.(txt|md|html)$/.test(f.path) ? await f.blob.text() : null,
-        })),
+        lastExport.files.map(async (f) => {
+          const text = /\.(txt|md|html)$/.test(f.path) ? await f.blob.text() : null;
+          let b64: string | null = null;
+          if (text === null && f.blob.size < 4_000_000) {
+            let bin = '';
+            for (const b of new Uint8Array(await f.blob.arrayBuffer()))
+              bin += String.fromCharCode(b);
+            b64 = btoa(bin);
+          }
+          return { path: f.path, size: f.blob.size, text, b64 };
+        }),
       );
       return { packaging: lastExport.packaging, files };
     },

@@ -9,6 +9,12 @@ M0–M2 are merged into `main` (M2 complete on the agent side, owner pack in
 
 ## Done
 
+- **Session 18 — M4-07 Word export (Beta).** Convert → To Word: Oxide Markdown → mdast → `docx`
+  in the Work worker (lazy chunk), headings, emphasis, lists, tables and images in reading
+  order; optional page breaks. New dependencies `docx`, `mdast-util-from-markdown`,
+  `mdast-util-gfm-table`, `micromark-extension-gfm-table` (all MIT; license gate 762). Fixed a DOM
+  build of the entity decoder landing in the worker (alias). Unit + e2e.
+
 - **Session 18 — M4-06 image export.** Convert → Export Images: PDFium image objects in the Work
   worker — JPEGs byte for byte, the rest PNG through our own exact encoder, masked images with
   alpha, Form XObjects included, repeats once, dots skipped; into a new folder or one ZIP. Unit,
@@ -766,7 +772,7 @@ M0–M2 are merged into `main` (M2 complete on the agent side, owner pack in
   ([docs/acceptance/M3.md](acceptance/M3.md) §4).
 - **M4 in progress (session 18):** [docs/plan/M4.md](plan/M4.md), 22 tasks. Done: M4-01 and M4-02
   (spikes; ADR-016 and ADR-017 accepted), M4-03 (icons), M4-04 (Oxide and the export
-  framework), M4-05 (text, Markdown, HTML), M4-06 (images).
+  framework), M4-05 (text, Markdown, HTML), M4-06 (images), M4-07 (Word, Beta).
   ADR-018 (comment transfer) is proposed; ARCHITECTURE.md §7.1/§7.6/§13 are amended once it is
   accepted after the M4-19 spike.
 - **Git in one paragraph (for the owner):** each task lives on its own _branch_ (a named line

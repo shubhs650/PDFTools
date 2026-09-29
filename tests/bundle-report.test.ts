@@ -45,6 +45,7 @@ describe('bundle report (M1-27)', () => {
     expect(moduleOf('assets/exceljs.min-Bq12.js')).toBe('excelJs');
     expect(moduleOf('assets/pdf_oxide-Zx12.js')).toBe('oxide');
     expect(moduleOf('assets/pdf_oxide_bg-Zx34.wasm')).toBe('oxide');
+    expect(moduleOf('assets/docxBuild-Ab12.js')).toBe('docx');
     expect(moduleOf('fonts/hebrew/NotoSansHebrew-Regular.ttf')).toBe('coreFonts');
     expect(moduleOf('fonts/kr/NotoSansKR-Regular.otf')).toBe('cjkFonts');
     expect(moduleOf('assets/index-abc.js')).toBe('app');

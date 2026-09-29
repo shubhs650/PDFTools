@@ -1260,7 +1260,8 @@
       "text": "Export as Text",
       "markdown": "Export as Markdown",
       "html": "Export as HTML",
-      "images": "Export Images"
+      "images": "Export Images",
+      "word": "Export to Word (Beta)"
     },
     "description": "The document is converted on this device; nothing is sent anywhere.",
     "scope": {
@@ -1277,7 +1278,8 @@
       "folderNote": "The Markdown file and its images go into a new folder.",
       "zipNote": "The Markdown file and its images are saved as one ZIP file.",
       "imagesFolderNote": "Each image is saved as a file (JPEG images as they are, others as PNG) in a new folder. Repeated images are saved once.",
-      "imagesZipNote": "Each image is saved as a file (JPEG images as they are, others as PNG) in one ZIP file. Repeated images are saved once."
+      "imagesZipNote": "Each image is saved as a file (JPEG images as they are, others as PNG) in one ZIP file. Repeated images are saved once.",
+      "word": "Include images"
     },
     "fileName": "{{base}}.{{ext}}",
     "export": "Export",
@@ -1298,6 +1300,10 @@
       "page": "Page {{n}}",
       "image": "Image {{n}} on page {{page}}",
       "noText": "Page {{n}} has no text layer (a scanned page needs OCR, which is planned)."
+    },
+    "word": {
+      "pageBreaks": "Start each PDF page on a new page",
+      "beta": "Beta: headings, paragraphs, lists, tables and images are kept; columns, fonts and exact layout are not."
     }
   }
 }

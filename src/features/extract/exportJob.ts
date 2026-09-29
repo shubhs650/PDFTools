@@ -52,6 +52,7 @@ export const EXTENSIONS: Record<ExportFormat, string> = {
   text: 'txt',
   markdown: 'md',
   html: 'html',
+  word: 'docx',
   images: 'zip',
 };
 
@@ -60,12 +61,15 @@ export const HAS_IMAGES: Record<ExportFormat, boolean> = {
   text: false,
   markdown: true,
   html: true,
+  word: true,
   images: false,
 };
 
 export interface ExportChoice {
   scope: Scope;
   images: boolean;
+  /** Word: each PDF page starts a new page. */
+  pageBreaks?: boolean;
 }
 
 /** The last output (e2e builds only: the test hook reads it). */
@@ -95,8 +99,14 @@ export function exportFileName(name: string, ext: string): string {
   return t('export.fileName', { base: baseNameOf(name), ext });
 }
 
-function optionsFor(format: ExtractFormat, base: string, images: boolean): ExtractOptions {
+function optionsFor(
+  format: ExtractFormat,
+  base: string,
+  images: boolean,
+  pageBreaks = false,
+): ExtractOptions {
   return {
+    pageBreaks,
     format,
     images: images && HAS_IMAGES[format],
     baseName: base,
@@ -150,7 +160,8 @@ export async function startExport(choice: ExportChoice): Promise<void> {
     return;
   }
   const base = baseNameOf(d.meta.name);
-  const options = format === 'images' ? null : optionsFor(format, base, choice.images);
+  const options =
+    format === 'images' ? null : optionsFor(format, base, choice.images, choice.pageBreaks);
   const multi = format === 'images' || (format === 'markdown' && (options?.images ?? false));
   const controller = new AbortController();
   job = controller;

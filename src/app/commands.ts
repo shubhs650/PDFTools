@@ -1002,6 +1002,7 @@ export const COMMANDS: readonly CommandDef[] = [
     size: 'large',
     fluent: 'DocumentEdit',
     milestone: 'M4',
+    shipped: true, // M4-07
     custom: 'convert.word', // M4-03
   },
   {

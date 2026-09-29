@@ -17,8 +17,9 @@ import {
 import { inertMarkdown } from './markdownSafe';
 import { toPlain, type OxideDocument } from './oxide';
 import type { JobSlice } from './scheduler';
+import type { WordPage } from './docxBuild';
 
-export type ExtractFormat = 'text' | 'markdown' | 'html';
+export type ExtractFormat = 'text' | 'markdown' | 'html' | 'word';
 
 /** Templates with %P (page number) and %N (image number), translated by the caller. */
 export interface ExportLabels {
@@ -38,6 +39,8 @@ export interface ExtractOptions {
   /** BCP 47 tag of the UI language, for <html lang>. */
   lang: string;
   labels: ExportLabels;
+  /** Word: start each PDF page on a new page. */
+  pageBreaks?: boolean;
 }
 
 export interface ExportFile {
@@ -159,6 +162,7 @@ export async function extract(
   const list = pages.filter((p) => Number.isInteger(p) && p >= 0 && p < count);
   const parts: string[] = [];
   const extra: ExportFile[] = [];
+  const word: WordPage[] = [];
   let chars = 0;
   let images = 0;
   progress({ done: 0, total: list.length });
@@ -172,9 +176,9 @@ export async function extract(
     } else {
       const withImages = o.images;
       const imgs = withImages ? pageImages(doc, p) : [];
-      const raw =
-        o.format === 'markdown' ? doc.toMarkdown(p, true, false) : doc.toHtml(p, false, true);
-      const blocks = o.format === 'markdown' ? splitMarkdownBlocks(raw) : splitHtmlBlocks(raw);
+      const md = o.format !== 'html';
+      const raw = md ? doc.toMarkdown(p, true, false) : doc.toHtml(p, false, true);
+      const blocks = md ? splitMarkdownBlocks(raw) : splitHtmlBlocks(raw);
       const placed = imgs.length
         ? placeImages(
             blockTops(blocks, lineBoxes(doc, p)),
@@ -182,6 +186,31 @@ export async function extract(
           )
         : blocks.map((_, index) => ({ kind: 'block' as const, index }));
       chars += blocks.reduce((a, b) => a + b.length, 0);
+      if (o.format === 'word') {
+        // The Word builder parses the Markdown itself (raw HTML stays text there).
+        const items: WordPage['items'] = blocks.length
+          ? []
+          : [{ kind: 'markdown', text: fill(o.labels.noText, n) }];
+        for (const item of placed) {
+          if (item.kind === 'block')
+            items.push({ kind: 'markdown', text: blocks[item.index] ?? '' });
+          else {
+            const img = imgs[item.ref];
+            if (!img) continue;
+            images++;
+            items.push({
+              kind: 'image',
+              png: img.png,
+              width: img.width,
+              height: img.height,
+              alt: fill(o.labels.image, n, item.ref + 1),
+            });
+          }
+        }
+        word.push({ items });
+        progress({ done: i + 1, total: list.length });
+        continue;
+      }
       const body: string[] = [];
       for (const item of placed) {
         if (item.kind === 'block') {
@@ -217,6 +246,23 @@ export async function extract(
       );
     }
     progress({ done: i + 1, total: list.length });
+  }
+  if (o.format === 'word') {
+    const { buildDocx } = await import('./docxBuild');
+    await slice.checkpoint();
+    const data = await buildDocx(word, { title: o.title, pageBreaks: o.pageBreaks ?? false });
+    return {
+      files: [
+        {
+          path: `${o.baseName}.docx`,
+          data,
+          type: 'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+        },
+      ],
+      pages: list.length,
+      chars,
+      images,
+    };
   }
   const main: ExportFile =
     o.format === 'text'

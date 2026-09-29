@@ -1,5 +1,6 @@
 import AxeBuilder from '@axe-core/playwright';
 import type { Page } from '@playwright/test';
+import JSZip from 'jszip';
 import { encryptedVariants, hasQpdf, USER_PW } from './fixtures/encrypted.ts';
 import { extractionFixture, IMAGE_PAGE, imagesPdf, STRUCTURE } from './fixtures/extraction.ts';
 import { cap, drop } from './support/app.ts';
@@ -31,7 +32,7 @@ async function convert(page: Page, label: string, title: string) {
 
 interface Last {
   packaging: string;
-  files: { path: string; size: number; text: string | null }[];
+  files: { path: string; size: number; text: string | null; b64: string | null }[];
 }
 const last = async (page: Page) => (await cap(page, 'extract', 'lastExport')) as Last;
 
@@ -90,6 +91,32 @@ test('To HTML: one self-contained file with the image embedded; To Text: form fe
   expect((await savedFiles(page)).map((f) => f.name)).toEqual(['spec.html', 'spec.txt']);
 });
 
+test('To Word (Beta): headings, the image between its paragraphs, page breaks on request', async ({
+  page,
+}) => {
+  await page.goto('/');
+  await open(page);
+  await stubSavePicker(page);
+  const dialog = await convert(page, 'To Word (Beta)', 'Export to Word (Beta)');
+  await expect(dialog).toContainText('Beta:');
+  await dialog.getByRole('checkbox', { name: 'Start each PDF page on a new page' }).check();
+  const { violations } = await new AxeBuilder({ page }).include('[role="dialog"]').analyze();
+  expect(violations.map((v) => v.id)).toEqual([]);
+  await dialog.getByRole('radio', { name: 'Pages:' }).check();
+  await dialog.getByLabel('Page range').fill('4-5');
+  await dialog.getByRole('button', { name: 'Export' }).click();
+  await expect(dialog).toBeHidden({ timeout: 30_000 });
+  expect((await savedFiles(page)).map((f) => f.name)).toEqual(['spec.docx']);
+  const file = (await last(page)).files[0];
+  const zip = await JSZip.loadAsync(Buffer.from(file?.b64 ?? '', 'base64'));
+  const xml = (await zip.file('word/document.xml')?.async('string')) ?? '';
+  expect(xml).toContain('<w:pStyle w:val="Heading1"/>');
+  expect(xml).toContain('<w:pageBreakBefore/>');
+  const at = (s: string) => xml.indexOf(s);
+  expect(at(IMAGE_PAGE.before)).toBeLessThan(at('<w:drawing>'));
+  expect(at('<w:drawing>')).toBeLessThan(at(IMAGE_PAGE.after));
+});
+
 test('Export Images: every image once into a new folder; a ZIP where no folder can be picked', async ({
   page,
 }) => {
@@ -138,7 +165,7 @@ test('without the copy permission the Convert commands are disabled with the rea
   await expect(page.locator('[data-page="0"] img.page-preview')).toBeVisible();
   await page.getByRole('tab', { name: 'Convert' }).click();
   const bar = page.getByRole('toolbar', { name: 'Convert commands' });
-  for (const name of ['To Text', 'To Markdown', 'To HTML', 'Export Images'])
+  for (const name of ['To Text', 'To Markdown', 'To HTML', 'To Word (Beta)', 'Export Images'])
     await expect(bar.getByRole('button', { name })).toBeDisabled();
 });
 

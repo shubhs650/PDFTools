@@ -19,6 +19,7 @@ const TITLES: Record<ExportFormat, MessageKey> = {
   text: msg('export.title.text'),
   markdown: msg('export.title.markdown'),
   html: msg('export.title.html'),
+  word: msg('export.title.word'),
   images: msg('export.title.images'),
 };
 
@@ -50,6 +51,7 @@ function ExportForm({ format: fmt }: { format: ExportFormat }) {
   const error = useExport((s) => s.error);
   const [scope, setScope] = useState<Scope>({ kind: 'all', custom: '' });
   const [images, setImages] = useState(true);
+  const [pageBreaks, setPageBreaks] = useState(false);
   const rangeError =
     scope.kind === 'custom' && (error === 'empty' || error === 'syntax' || error === 'outOfRange')
       ? error
@@ -100,7 +102,7 @@ function ExportForm({ format: fmt }: { format: ExportFormat }) {
         noValidate
         onSubmit={(e) => {
           e.preventDefault();
-          void startExport({ scope, images });
+          void startExport({ scope, images, pageBreaks });
         }}
       >
         <fieldset className="scale-where">
@@ -133,7 +135,13 @@ function ExportForm({ format: fmt }: { format: ExportFormat }) {
                   setImages(e.currentTarget.checked);
                 }}
               />
-              {t(fmt === 'markdown' ? msg('export.images.markdown') : msg('export.images.html'))}
+              {t(
+                fmt === 'markdown'
+                  ? msg('export.images.markdown')
+                  : fmt === 'word'
+                    ? msg('export.images.word')
+                    : msg('export.images.html'),
+              )}
             </label>
             {fmt === 'markdown' && images ? (
               <p className="print-note">
@@ -142,6 +150,22 @@ function ExportForm({ format: fmt }: { format: ExportFormat }) {
                 )}
               </p>
             ) : null}
+          </>
+        ) : null}
+        {fmt === 'word' ? (
+          <>
+            <label className="scale-radio">
+              <input
+                type="checkbox"
+                checked={pageBreaks}
+                disabled={!!running}
+                onChange={(e) => {
+                  setPageBreaks(e.currentTarget.checked);
+                }}
+              />
+              {t('export.word.pageBreaks')}
+            </label>
+            <p className="print-note">{t('export.word.beta')}</p>
           </>
         ) : null}
         {fmt === 'images' ? (

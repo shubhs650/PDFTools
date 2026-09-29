@@ -43,6 +43,16 @@ export default defineConfig({
         find: /^pdf-oxide-wasm\/wasm(\?url)?$/,
         replacement: `${fileURLToPath(new URL('./node_modules/pdf-oxide-wasm/web/pdf_oxide_bg.wasm', import.meta.url))}$1`,
       },
+      // The Markdown parser's entity decoder (M4-07) has a DOM build for the
+      // "browser" condition (document.createElement); the Work worker has no
+      // document, and Vite's worker build does not prefer the package's own
+      // "worker" condition, so the plain build is used everywhere.
+      {
+        find: /^decode-named-character-reference$/,
+        replacement: fileURLToPath(
+          new URL('./node_modules/decode-named-character-reference/index.js', import.meta.url),
+        ),
+      },
     ],
   },
   worker: {
