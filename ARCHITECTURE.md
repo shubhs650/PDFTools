@@ -1,7 +1,7 @@
-# PDFTools — Architecture & Product Specification (Rev 0.4)
+# PDFTools — Architecture & Product Specification (Rev 0.5)
 
 **App:** PDFTools · **URL:** `pdf-tools.openengtools.com` · **Platform:** Open Engineering Tools (OET)
-**Status:** Approved for implementation · **Last updated:** 24-Sep-2026 (Rev 0.4)
+**Status:** Approved for implementation · **Last updated:** 29-Sep-2026 (Rev 0.5)
 **Companion file:** `CLAUDE.md` (standing rules for the coding agent — read it first)
 
 > This document is the single source of truth. Where code and this document disagree, this document wins until it is deliberately amended. Decisions are numbered (D-xx) so commits, issues and ADRs can reference them.
@@ -13,6 +13,8 @@
 > **Rev 0.3 amendments** — M0 spike results, owner-approved: [ADR-003](docs/adr/003-s8-csp-wasm-workers-sw.md) (explicit font fallback, font split — §9), [ADR-004](docs/adr/004-s3-two-engines.md) (hosted Render worker, render cancellation, memory policy, COOP/COEP — §3.1, §10.1), [ADR-005](docs/adr/005-s1-incremental-save.md) (narrow-tail Ctrl+S — §4.2, §4.3), [ADR-006](docs/adr/006-s5-search-work-worker.md) (background indexing, context cap — §6), [ADR-007](docs/adr/007-s2-measure-viewport.md) (own object layer, encrypted files — §7.4) and [ADR-009](docs/adr/009-s4-pdf-oxide.md) (PDF Oxide gating, stream tables — §7.6, §7.7).
 
 > **Rev 0.4 amendment** — [ADR-010](docs/adr/010-s6-fluent-icons.md) (owner-approved): Fluent **Regular** icons (Filled for active states) replace the deprecated Color style (D-20, §8).
+
+> **Rev 0.5 amendment** — [ADR-017](docs/adr/017-m4-redaction.md) decisions 3 and 5 (owner-approved 2026-09-29): §7.9 steps 0 and 3 (crossing paths re-cut through PDFium's page-object API; wider sanitize list).
 
 > **Rev 0.4 amendment (M2-16)** — [ADR-013](docs/adr/013-m2-security-forms-print.md) decision 7 (owner-approved 2026-09-26): §10.1's CSP gains `frame-src blob:` for printing the print-ready copy through the browser's PDF viewer.
 
@@ -285,10 +287,10 @@ PDF Oxide runs in the Work worker, lazy-loaded (non-core) from a self-hosted WAS
 Rotate, delete, insert (blank / from file), extract to new PDF, merge files, reorder via thumbnails drag. Page ops that rewrite content streams mark the doc as "optimize recommended".
 
 ### 7.9 Redaction (D-31)
-0. Engine: EmbedPDF redaction (`plugin-redaction`; engine `redactTextInRects` / `applyRedaction` / `applyAllRedactions`) — no custom content-stream rewriter (ADR-001 B8). Steps 2–5 wrap it.
+0. Engine: EmbedPDF redaction (`plugin-redaction`; engine `redactTextInRects` / `applyRedaction` / `applyAllRedactions`) — no custom content-stream rewriter; the geometry of path objects crossing a redacted rectangle may be re-cut through PDFium's page-object API (ADR-001 B8, ADR-017 decision 3). Steps 2–5 wrap it.
 1. Mark (text selection or area) → pending list → review → **Apply**.
 2. Apply **always** produces a **new file via Save As** with a **full rewrite**; never incremental; never overwrites the original by default.
-3. Sanitize: document Info + XMP metadata, embedded page thumbnails, annotations / form values / bookmarks / links intersecting redacted areas.
+3. Sanitize: document Info + XMP metadata, embedded page thumbnails, structure tree (tagging), JavaScript, embedded files and private application data; annotations / form values / bookmarks / links intersecting redacted areas (ADR-017 decision 5).
 4. Signed document → warn that signatures will be invalidated.
 5. **Post-redaction verification** (by location — ADR-001 B3): reopen the output in the Work worker and confirm that **no text, image pixels or vector content remain inside any redacted rectangle**; additionally search for each redacted string that does not also occur outside the redacted areas. Success is reported only if both checks pass; otherwise fail loudly.
 

@@ -1,6 +1,6 @@
 # ADR-016: M4-01 — Page operations: PDFium calls, narrow save, undo and cache invalidation
 
-- **Status:** Proposed (decisions 3, 5 and 7 need the owner)
+- **Status:** Accepted (owner, 2026-09-29: all decisions as proposed). No ARCHITECTURE.md change.
 - **Date:** 2026-09-29
 - **Deciders:** Owner; recorded by the coding agent
 - **Related decisions:** D-06, D-09, D-10, D-19, D-24 (ARCHITECTURE.md §3.1, §4.2, §4.3, §7.8);

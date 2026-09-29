@@ -1,6 +1,7 @@
 # ADR-017: M4-02 — Redaction: apply, sanitize and location-based verification
 
-- **Status:** Proposed (decisions 3 and 5 need the owner; decision 3 amends ADR-001 B8's wording)
+- **Status:** Accepted (owner, 2026-09-29: all decisions as proposed). Decision 3 amends ADR-001
+  B8's wording and decisions 3 and 5 ARCHITECTURE.md §7.9 steps 0 and 3 (Rev 0.5).
 - **Date:** 2026-09-29
 - **Deciders:** Owner; recorded by the coding agent
 - **Related decisions:** D-06, D-24, D-31 (ARCHITECTURE.md §7.9); ADR-001 B3, B8, B14; ADR-005 d3;
