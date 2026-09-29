@@ -24,7 +24,8 @@ describe('ribbon layout from the command table (§8, ADR-001 B6, M1-Q2)', () => 
       'comment.reviewerProfile',
     ])
       expect(shown).toContain(id);
-    expect(shown).not.toContain('comment.exportCrs'); // M3-19
+    expect(shown).toContain('comment.exportCrs'); // M3-19
+    expect(shown).not.toContain('comment.exportAnnotations'); // M4 (M3-Q1)
     const protect = m1.tabs.find((t) => t.tab === 'protect');
     // Only what works: Security Info (M2-12), Unlock (M2-03), Signatures (M2-13); redaction (M4) and the rest stay omitted.
     expect(protect?.groups.flatMap((g) => g.commands.map((c) => c.id))).toEqual([

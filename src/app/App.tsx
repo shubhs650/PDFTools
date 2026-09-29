@@ -33,6 +33,7 @@ import { ImageStampDialog, StampDialog } from '../features/stamps/StampDialogs';
 import { CalibrateDialog, SetScaleDialog } from '../features/measure/ScaleDialogs';
 import { ViewportDialog } from '../features/measure/ViewportDialog';
 import { SnapStatus } from '../features/measure/SnapStatus';
+import { CrsDialog } from '../features/crs/CrsDialog';
 import { ScaleIndicator } from '../features/measure/ScaleIndicator';
 import { GrowthPrompt, SaveOptimizedDialog } from '../features/save/SaveDialogs';
 import { SaveErrorDialog, SaveStatus } from '../features/save/SaveStatus';
@@ -162,6 +163,7 @@ export function App() {
         <SetScaleDialog />
         <CalibrateDialog />
         <ViewportDialog />
+        <CrsDialog />
         <UpdateWaitDialog />
         <DropZone />
         <HelpPage />

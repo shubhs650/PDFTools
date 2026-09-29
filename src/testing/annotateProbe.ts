@@ -17,6 +17,7 @@ import { annotationCapability, annotationState } from '../features/annotate/sele
 import { capability, hostStore } from '../features/view/host';
 import { diagnostics } from '../app/diagnostics';
 import { ensurePage, rtts, snapStore } from '../features/measure/snapping';
+import { lastCrs } from '../features/crs/crsExport';
 import type { TestHook } from './hook';
 
 function history(): HistoryCapability | null {
@@ -94,6 +95,16 @@ export function registerAnnotateProbe(hook: TestHook): void {
     /** Starts a page's geometry extraction (the Work worker gets busy with it). */
     snapPrepare: (docId: string, page: number) => {
       void ensurePage(docId, page);
+    },
+    /** Recorded errors whose place starts with `prefix` (codes and stacks only, rule 10). */
+    errors: (prefix: string) => diagnostics().filter((d) => d.where.startsWith(prefix)),
+    /** The last CRS file made (M3-19): name and bytes as base64. */
+    lastCrs: () => {
+      const f = lastCrs;
+      if (!f) return null;
+      let bin = '';
+      for (const b of f.bytes) bin += String.fromCharCode(b);
+      return { name: f.name, b64: btoa(bin) };
     },
     setProfile: (name: string) => saveProfile({ name, initials: '', discipline: '', company: '' }),
     profile: () => {

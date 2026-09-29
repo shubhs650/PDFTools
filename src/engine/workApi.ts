@@ -21,6 +21,8 @@ import type {
 import type { Hit, SearchOptions } from '../workers/work/searchCore';
 import type { VerifyResult } from '../workers/work/verifySave';
 import type { GridIndex } from '../model/snapIndex';
+import type { SnapshotRegion } from '../workers/work/crs';
+import type { WorkbookSpec } from '../workers/work/crsWorkbook';
 import type { MethodSpec } from './protocol';
 
 export type WorkPriority = 'interactive' | 'save-verify' | 'geometry' | 'background';
@@ -129,6 +131,17 @@ export interface WorkApi {
   snapGeometry: MethodSpec<
     { docId: string; pageIndex: number; minLen: number },
     { index: GridIndex; segments: number; dense: boolean; ms: number }
+  >;
+  /**
+   * CRS export (M3-19, D-15, ADR-015): the workbook built here (ExcelJS,
+   * lazy), with a snapshot per row when `snapshots` is given — rendered from
+   * a copy of the current revision plus `piece` (unsaved edits). Progress per
+   * row; cancellable between rows; the file's bytes come back transferred.
+   */
+  crs: MethodSpec<
+    { docId: string; piece?: ArrayBuffer; spec: WorkbookSpec; snapshots: SnapshotRegion[] | null },
+    { bytes: ArrayBuffer },
+    { done: number; total: number }
   >;
   /** Form facts EmbedPDF doesn't give: /Tabs per page, /DV per field (M2-14). */
   formFacts: MethodSpec<{ docId: string }, FormFacts>;

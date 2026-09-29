@@ -1206,5 +1206,53 @@
       "name": "Enter a name.",
       "box": "Enter a box inside the page, at least 4 pt wide and high."
     }
+  },
+  "crs": {
+    "title": "Export Comment Review Sheet",
+    "description": "A sheet with every comment, its replies and status, for the review record.",
+    "docNumber": "Document number",
+    "revision": "Revision",
+    "docTitle": "Title",
+    "reviewer": "Reviewer",
+    "date": "Date",
+    "scheme": "Status scheme: {{name}}",
+    "scope": "Comments",
+    "scopeAll": "All comments",
+    "scopeFiltered": "Only those the Comments pane shows",
+    "snapshots": "Include a snapshot of each markup",
+    "format": "Format",
+    "xlsx": "Excel workbook (.xlsx)",
+    "csv": "CSV (.csv, no snapshots)",
+    "export": "Export",
+    "cancel": "Cancel",
+    "close": "Close",
+    "progressName": "Building the sheet",
+    "progress": "Row {{done}} of {{total}}",
+    "failed": "The sheet couldn't be made. Try again.",
+    "empty": "There are no comments to export.",
+    "fileName": "{{base}} (CRS).{{ext}}",
+    "sheet": "CRS",
+    "sheetTitle": "Comment Review Sheet: {{title}}",
+    "head": {
+      "docNumber": "Document number",
+      "revision": "Revision",
+      "title": "Title",
+      "reviewer": "Reviewer",
+      "date": "Date",
+      "scheme": "Status scheme"
+    },
+    "col": {
+      "number": "No.",
+      "page": "Page",
+      "type": "Location/Type",
+      "reviewer": "Reviewer",
+      "discipline": "Discipline",
+      "comment": "Comment",
+      "replies": "Replies",
+      "status": "Status",
+      "snapshot": "Snapshot",
+      "vendorResponse": "Vendor Response",
+      "finalStatus": "Final Status"
+    }
   }
 }

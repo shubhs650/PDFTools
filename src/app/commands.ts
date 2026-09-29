@@ -780,6 +780,7 @@ export const COMMANDS: readonly CommandDef[] = [
     size: 'large',
     fluent: 'DocumentTableArrowRight',
     milestone: 'M3',
+    shipped: true, // M3-19
     custom: 'comment.exportCrs', // M3-06
   },
   {

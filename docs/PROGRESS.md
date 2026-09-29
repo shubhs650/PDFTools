@@ -9,6 +9,11 @@ M0–M2 are merged into `main` (M2 complete on the agent side, owner pack in
 
 ## Done
 
+- **Session 17 — M3-19 CRS export.** Comment → Export CRS: header block (document number,
+  revision, title, reviewer, date, status scheme), the §7.5 columns, replies and statuses, a
+  snapshot per row (unsaved edits included) as XLSX built in the Work worker with ExcelJS
+  (lazy, background precache), or CSV (BOM, formula guard); progress and Cancel.
+
 - **Session 17 — M3-18 snapping.** Geometry extracted whole in the Work worker (new geometry
   priority, cached per page), indexed and transferred to a new pure-JS Snap worker; endpoint,
   intersection, midpoint and nearest snaps with a marker; status-bar toggle and "Preparing

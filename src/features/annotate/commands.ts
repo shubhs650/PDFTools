@@ -15,6 +15,7 @@ import { stampStore } from '../stamps/stampStore';
 import { loadScales, openScaleDialog, scaleStore } from '../measure/scaleStore';
 import { MEASURE_COMMANDS } from '../measure/measureTools';
 import { setSnapping, snapStore, toggleKind } from '../measure/snapping';
+import { openCrs } from '../crs/crsExport';
 import { capability, hostStore } from '../view/host';
 import { annotationCapability, annotationState } from './selection';
 import { cycleTarget, pageAnnotations } from './model';
@@ -355,6 +356,14 @@ export function registerAnnotateCommands(): () => void {
         const id = activeId();
         if (id) void loadScales(id);
         appStore.getState().setTool('scaleViewport');
+      },
+    }),
+    // Comment Review Sheet (M3-19): the dialog, prefilled.
+    registerCommand('comment.exportCrs', {
+      requiresDocument: true,
+      run: () => {
+        const id = activeId();
+        if (id) void openCrs(id);
       },
     }),
     registerCommand('comment.statusSchemes', {

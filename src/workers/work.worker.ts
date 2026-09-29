@@ -25,6 +25,7 @@ import { pageBox, renderBand } from './work/print';
 import { readProperties } from './work/properties';
 import { checkSignatures } from './work/signatures';
 import { extractGeometry } from './work/geometry';
+import { exportCrs } from './work/crs';
 import { buildGrid, DENSE_BYTES, DENSE_SEGMENTS, thin } from '../model/snapIndex';
 
 let mod: WrappedPdfiumModule | undefined;
@@ -216,6 +217,30 @@ serve<WorkApi>(self, {
         { index, segments: index.segs.length / 4, dense, ms: performance.now() - t0 },
         [index.segs.buffer, index.cellStart.buffer, index.items.buffer],
       );
+    }),
+
+  crs: ({ docId, piece, spec, snapshots }, ctx) =>
+    scheduler.run('interactive', ctx.signal, async (slice) => {
+      if (!mod) throw new RpcError('not-initialized', 'The work worker is not initialized');
+      const m = mod;
+      // Snapshots come from a separate copy with the unsaved edits (ADR-013 route).
+      const copy = snapshots ? await docs.openCandidate(docId, piece ?? null) : null;
+      try {
+        const bytes = await exportCrs(
+          m,
+          copy ? docPtrOf(need(), copy.candidateId) : null,
+          spec,
+          snapshots,
+          slice,
+          (p) => {
+            ctx.progress(p);
+          },
+        );
+        return new Transfer({ bytes }, [bytes]);
+      } finally {
+        if (copy) await docs.closeCandidate(copy.candidateId);
+        wasmBytes(); // a large workbook grows the heap (ADR-004 respawn policy)
+      }
     }),
 
   listLayers: ({ docId }, ctx) =>

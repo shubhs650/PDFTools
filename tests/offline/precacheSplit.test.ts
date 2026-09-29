@@ -15,6 +15,7 @@ describe('precache split (§9, ADR-003 decision 3)', () => {
     'assets/encoder.worker-Ij90.js',
     'assets/work.worker-Kl12.js',
     'assets/snap.worker-Op56.js',
+    'assets/exceljs.min-Qr78.js',
     'assets/pdfium-Mn34.wasm',
     'fonts/latin/NotoSans-Regular.ttf',
     'fonts/arabic/NotoNaskhArabic-Regular.ttf',
@@ -47,10 +48,11 @@ describe('precache split (§9, ADR-003 decision 3)', () => {
     ]);
   });
 
-  it('background: the Work and Snap workers and the CJK fonts', () => {
+  it('background: the Work and Snap workers, ExcelJS and the CJK fonts', () => {
     expect(urls(background)).toEqual([
       'assets/work.worker-Kl12.js',
       'assets/snap.worker-Op56.js',
+      'assets/exceljs.min-Qr78.js',
       'fonts/sc/NotoSansHans-Regular.otf',
       'fonts/tc/NotoSansHant-Regular.otf',
       'fonts/jp/NotoSansJP-Regular.otf',

@@ -1,8 +1,8 @@
 // Offline precache split (§9, D-17, ADR-003 decision 3): what the service
 // worker caches at install (the core: shell, UI, Render worker, PDFium WASM,
 // Latin/Arabic/Hebrew fonts) and what it caches in the background after the
-// first render (Work worker, CJK fonts; later milestones add PDF Oxide,
-// ExcelJS, docx) and the third-party notices (File → About). Shared by the service worker and its unit test.
+// first render (Work and Snap workers, CJK fonts, ExcelJS; later milestones
+// add PDF Oxide, docx) and the third-party notices (File → About). Shared by the service worker and its unit test.
 
 export interface PrecacheEntry {
   url: string;
@@ -14,6 +14,8 @@ const BACKGROUND = [
   /(^|\/)assets\/work\.worker-[\w-]+\.js$/,
   // Snapping needs the Work worker's geometry anyway (M3-18, ADR-008).
   /(^|\/)assets\/snap\.worker-[\w-]+\.js$/,
+  // The CRS workbook library (M3-19, ADR-015 d2): only for an export.
+  /(^|\/)assets\/exceljs[\w.-]*\.js$/,
   /(^|\/)fonts\/(sc|tc|jp|kr)\//,
   /(^|\/)third-party-notices\.txt$/,
 ];

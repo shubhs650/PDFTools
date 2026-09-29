@@ -31,7 +31,10 @@ export interface Thread {
 
 const time = (a: PdfAnnotationObject): number => (a.created ?? a.modified)?.getTime() ?? 0;
 
-function childrenOf(all: readonly PdfAnnotationObject[]): Map<string, PdfAnnotationObject[]> {
+/** Replies by parent id (build once to walk many threads). */
+export function childrenOf(
+  all: readonly PdfAnnotationObject[],
+): Map<string, PdfAnnotationObject[]> {
   const kids = new Map<string, PdfAnnotationObject[]>();
   for (const a of all) {
     if (!a.inReplyToId) continue;
@@ -42,8 +45,11 @@ function childrenOf(all: readonly PdfAnnotationObject[]): Map<string, PdfAnnotat
   return kids;
 }
 
-export function buildThread(all: readonly PdfAnnotationObject[], rootId: string): Thread {
-  const kids = childrenOf(all);
+export function buildThread(
+  all: readonly PdfAnnotationObject[],
+  rootId: string,
+  kids: Map<string, PdfAnnotationObject[]> = childrenOf(all),
+): Thread {
   const replies: ThreadEntry[] = [];
   const walk = (id: string, depth: number, seen: Set<string>): void => {
     const list = (kids.get(id) ?? [])

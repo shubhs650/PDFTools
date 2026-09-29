@@ -31,6 +31,7 @@ export type ModuleId =
   | 'renderWorker'
   | 'workWorker'
   | 'otherWorkers'
+  | 'excelJs'
   | 'pdfium'
   | 'coreFonts'
   | 'cjkFonts'
@@ -44,6 +45,8 @@ export const MODULES: readonly { id: ModuleId; label: string; test: RegExp }[] =
     label: 'Storage, encoder and snap workers',
     test: /^assets\/[\w-]+\.worker-[\w-]+\.js$/,
   },
+  // M3-19 (ADR-015 d2): lazy-loaded by the Work worker for the CRS, background precache.
+  { id: 'excelJs', label: 'ExcelJS', test: /^assets\/exceljs[\w.-]*\.js$/ },
   { id: 'pdfium', label: 'pdfium.wasm', test: /^assets\/pdfium-[\w-]+\.wasm$/ },
   {
     id: 'coreFonts',
@@ -63,7 +66,6 @@ export const RESERVED: readonly {
   source: string;
 }[] = [
   { label: 'PDF Oxide WASM + glue', milestone: 'M2/M4', raw: 17_920_000, source: 'ADR-009' },
-  { label: 'ExcelJS', milestone: 'M4', raw: 1_100_000, source: 'estimate' },
   { label: 'docx', milestone: 'M4', raw: 700_000, source: 'estimate' },
 ];
 
