@@ -1,6 +1,6 @@
 # PDFTools — Progress
 
-_Last updated: 2026-09-29 (session 18: M4 plan drafted, waiting for owner approval)_
+_Last updated: 2026-09-29 (session 18: M4 plan approved; comment transfer added under ADR-018)_
 
 **Current milestone:** M3 — Review. Plan approved (2026-09-27); M3-01 … M3-08 done in session 16
 on `claude/m3-task-breakdown-tlyokp` (ADR-014 and ADR-015 accepted).
@@ -8,6 +8,14 @@ M0–M2 are merged into `main` (M2 complete on the agent side, owner pack in
 [docs/acceptance/M2.md](acceptance/M2.md)); the M0, M1 and M2 owner runs are open.
 
 ## Done
+
+- **Session 18 — M4 plan follow-up: image order and comment transfer.** Owner approved the plan
+  (M4-Q1 … Q11 as proposed) and two follow-ups. Q6: checked PDF Oxide 0.3.77 on a self-made page —
+  Markdown puts images at the end of the page, HTML has none, its own DOCX pins every block to a
+  fixed position — so M4-05/M4-07 gain our own image-placement step (images in reading order). Q7:
+  comment transfer (import from a PDF or our JSON v1, copy/paste between documents) added as
+  M4-19 (spike), M4-20, M4-21 under [ADR-018](adr/018-m4-comment-transfer.md) (proposed; scope
+  accepted, route after the spike); acceptance is now M4-22; M4-08's JSON v1 made import-ready.
 
 - **Session 18 — M4 plan (draft).** Branch `claude/upbeat-cray-lknggv`. Read PROGRESS,
   ARCHITECTURE Rev 0.4 and ADR-001 to ADR-015; wrote [docs/plan/M4.md](plan/M4.md): 19 tasks (two
@@ -706,8 +714,9 @@ M0–M2 are merged into `main` (M2 complete on the agent side, owner pack in
 - **M3 done on the agent side (session 17):** M3-16 … M3-20 as one commit each on
   `claude/m3-tasks-16-20-vdqo8q` (pushed; no PR opened). Waiting on the owner pack
   ([docs/acceptance/M3.md](acceptance/M3.md) §4).
-- **M4 plan drafted (session 18):** [docs/plan/M4.md](plan/M4.md), waiting for the owner's
-  approval and answers to M4-Q1 … Q11. No M4 code yet.
+- **M4 plan approved (session 18):** [docs/plan/M4.md](plan/M4.md), 22 tasks. No M4 code yet.
+  ADR-018 (comment transfer) is proposed; ARCHITECTURE.md §7.1/§7.6/§13 are amended once it is
+  accepted after the M4-19 spike.
 - **Git in one paragraph (for the owner):** each task lives on its own _branch_ (a named line
   of commits). A _commit_ is a saved snapshot with a message; _push_ uploads the branch to
   GitHub; a _pull request_ (PR) asks to bring a branch into `main`, and GitHub runs the checks
@@ -812,10 +821,8 @@ M0–M2 are merged into `main` (M2 complete on the agent side, owner pack in
    owner runs (below, unchanged).
 4. **Owner:** decide the items under "Decisions needed" (keyboard text selection, committed
    corpus PDFs, Pages project).
-5. **Owner:** review [docs/plan/M4.md](plan/M4.md) and answer M4-Q1 … Q11 (page-operation undo,
-   permissions, pending redaction marks, redacted-output encryption, multi-file outputs, Word
-   dependencies, annotation JSON, merge carry-over, table templates, keyboard access, branching).
-   **Agent:** then start with M4-01 / M4-02 (spikes) and M4-03.
+5. **Agent:** M4 spikes first — M4-01 (page operations, ADR-016), M4-02 (redaction, ADR-017),
+   M4-19 (comment transfer, ADR-018) — plus M4-03 (icons), on `m4/<task>` branches.
 6. **Owner (M0/M1, still open):** S1 interop checklist; S1 FSA button on the 500 MB contract; S5
    search on the FAR and the 500 MB contract; S7 on the CAD drawings and the P&ID
    (`node spikes/s7-snap/run-node.ts <files>`); S4 on the pipe chart and a parts list; FAR, 500 MB
@@ -924,6 +931,7 @@ M0–M2 are merged into `main` (M2 complete on the agent side, owner pack in
 
 | Date       | Ref              | Decision                                                                                                                                                                                                                                                                                                                                                                                                                                                  |
 | ---------- | ---------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| 2026-09-29 | M4 plan, ADR-018 | M4 plan approved with M4-Q1 … Q11 as proposed. Follow-ups: Word/Markdown export place images in reading order with our own step (Oxide puts them at page end); comment transfer (import from PDF or JSON v1, copy/paste between documents) added to M4 as M4-19 … M4-21, ADR-018 scope accepted, route decided by the M4-19 spike.                                                                                                                        |
 | 2026-09-27 | ADR-014, ADR-015 | Owner accepted ADR-014 (annotations loaded through the Work worker; markups drawn as our own annotation tiles) and ADR-015 (PNG image stamps at 4×; ExcelJS 4.4.0 with an npm override `unzipper@0.12.3`, added in M3-19). Proceed with M3-04 … M3-08.                                                                                                                                                                                                    |
 | 2026-09-27 | M3 plan          | M3 plan approved with M3-Q1 … Q10 as proposed: annotation export in M4; ADR-007 label/viewport defaults until the interop run; review status = standard `/StateModel /Review` replies, schemes drive stamps and the CRS header; image-stamp route (spike first); derived auto-numbers; keyboard creation for note/text box/stamp only; `/T` = reviewer name; own MD5/RC4; ExcelJS in the Work worker (non-core); `m3/<task>` branches.                    |
 | 2026-09-26 | ADR-012, ADR-013 | Owner approved all pending ADRs. ADR-012 decision 5: list-only Layers pane (M2-11). ADR-013 decision 7: §10.1 CSP gains `frame-src blob:` for M2-16's browser-viewer print route (ARCHITECTURE.md updated with M2-16).                                                                                                                                                                                                                                    |
