@@ -9,6 +9,11 @@ M0–M2 are merged into `main` (M2 complete on the agent side, owner pack in
 
 ## Done
 
+- **Session 18 — M4-06 image export.** Convert → Export Images: PDFium image objects in the Work
+  worker — JPEGs byte for byte, the rest PNG through our own exact encoder, masked images with
+  alpha, Form XObjects included, repeats once, dots skipped; into a new folder or one ZIP. Unit,
+  e2e, perf (401 images from 200 pages in 1.5 s, no long task).
+
 - **Session 18 — M4-05 text, Markdown and HTML export.** Convert tab with To Text / To Markdown /
   To HTML (copy permission). Images in reading order (our placement step over Oxide's line and
   image boxes, M4-Q6); Markdown made inert (Oxide passes markup-like PDF text through); Markdown
@@ -761,7 +766,7 @@ M0–M2 are merged into `main` (M2 complete on the agent side, owner pack in
   ([docs/acceptance/M3.md](acceptance/M3.md) §4).
 - **M4 in progress (session 18):** [docs/plan/M4.md](plan/M4.md), 22 tasks. Done: M4-01 and M4-02
   (spikes; ADR-016 and ADR-017 accepted), M4-03 (icons), M4-04 (Oxide and the export
-  framework), M4-05 (text, Markdown, HTML).
+  framework), M4-05 (text, Markdown, HTML), M4-06 (images).
   ADR-018 (comment transfer) is proposed; ARCHITECTURE.md §7.1/§7.6/§13 are amended once it is
   accepted after the M4-19 spike.
 - **Git in one paragraph (for the owner):** each task lives on its own _branch_ (a named line

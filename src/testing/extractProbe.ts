@@ -1,7 +1,7 @@
 // E2E-only probe for PDF Oxide and the export framework (M4-04, M4-05). Tests
 // reach the Work worker's extraction directly through here, and read back what
 // the dialog produced. Never shipped.
-import { lastExport, openExport } from '../features/extract/exportJob';
+import { lastExport, openExport, type ExportFormat } from '../features/extract/exportJob';
 import { workClient } from '../features/view/host';
 import type { ExtractFormat, ExtractOptions } from '../workers/work/extract';
 import type { TestHook } from './hook';
@@ -18,7 +18,7 @@ const options = (format: ExtractFormat, images = false): ExtractOptions => ({
 export function registerExtractProbe(hook: TestHook): void {
   hook.capabilities['extract'] = {
     /** Opens the export dialog for a format, as its command does. */
-    openDialog: (docId: string, format: ExtractFormat) => {
+    openDialog: (docId: string, format: ExportFormat) => {
       openExport(docId, format);
     },
     /** The last output: packaging and each file's path, size and (for text files) text. */

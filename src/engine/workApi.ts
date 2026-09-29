@@ -221,6 +221,24 @@ export interface WorkApi {
     },
     { done: number; total: number }
   >;
+  /**
+   * Export Images (M4-06): every distinct image of `pages` as a file (JPEG
+   * passed through, the rest PNG), copy permission first; `zip` one archive,
+   * `folder` the files. Cancellable between pages.
+   */
+  exportImages: MethodSpec<
+    { docId: string; pages: number[]; baseName: string; packaging: 'zip' | 'folder' },
+    {
+      blob?: Blob;
+      name?: string;
+      files?: { path: string; blob: Blob }[];
+      pages: number;
+      images: number;
+      duplicates: number;
+      skipped: number;
+    },
+    { done: number; total: number }
+  >;
   /** The user is scrolling or zooming: background work backs off for `quietMs`. */
   activity: MethodSpec<{ quietMs?: number }, null>;
   textStats: MethodSpec<

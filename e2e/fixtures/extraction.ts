@@ -237,3 +237,102 @@ export function extractionFixture(): Uint8Array {
   });
   return buildPdf(objs);
 }
+
+/** A 24 × 24 baseline JPEG gradient, drawn once by Chromium's canvas for these fixtures (self-made). */
+export const JPEG_24 = Buffer.from(
+  '/9j/4AAQSkZJRgABAQAAAQABAAD/4gHYSUNDX1BST0ZJTEUAAQEAAAHIAAAAAAQwAABtbnRyUkdCIFhZWiAH4AABAAEAAAAAAABhY3NwAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAQAA9tYAAQAAAADTLQAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAlkZXNjAAAA8AAAACRyWFlaAAABFAAAABRnWFlaAAABKAAAABRiWFlaAAABPAAAABR3dHB0AAABUAAAABRyVFJDAAABZAAAAChnVFJDAAABZAAAAChiVFJDAAABZAAAAChjcHJ0AAABjAAAADxtbHVjAAAAAAAAAAEAAAAMZW5VUwAAAAgAAAAcAHMAUgBHAEJYWVogAAAAAAAAb6IAADj1AAADkFhZWiAAAAAAAABimQAAt4UAABjaWFlaIAAAAAAAACSgAAAPhAAAts9YWVogAAAAAAAA9tYAAQAAAADTLXBhcmEAAAAAAAQAAAACZmYAAPKnAAANWQAAE9AAAApbAAAAAAAAAABtbHVjAAAAAAAAAAEAAAAMZW5VUwAAACAAAAAcAEcAbwBvAGcAbABlACAASQBuAGMALgAgADIAMAAxADb/2wBDAAMCAgMCAgMDAwMEAwMEBQgFBQQEBQoHBwYIDAoMDAsKCwsNDhIQDQ4RDgsLEBYQERMUFRUVDA8XGBYUGBIUFRT/2wBDAQMEBAUEBQkFBQkUDQsNFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBT/wAARCAAYABgDASIAAhEBAxEB/8QAGAABAQEBAQAAAAAAAAAAAAAAAAcGAgj/xAAbEAABBQEBAAAAAAAAAAAAAAAABQYjMqEBIv/EABgBAAIDAAAAAAAAAAAAAAAAAAYIBQcJ/8QAIBEAAQMEAgMAAAAAAAAAAAAAAAMEIgUGITEBEhQkMv/aAAwDAQACEQMRAD8A8WojK55jwoCIyqx4b1EZXPMeFARGVWPC8X9e3kjLRub5kYJEZVY8BfURlVjwAEvXp7G4pVzetxI4RGVzzHhQERlVjwABX7xbOTLG0X68ZFARGVWPAAAK7xbvsbilP1/G4kf/2Q==',
+  'base64',
+);
+
+/**
+ * Image export (M4-06): page 1 a JPEG (DCTDecode), a Flate RGB image, a 4 × 4
+ * dot (below the size limit) and a logo; page 2 the same logo again, an image
+ * with a soft mask (alpha) and an inline image; page 3 an image inside a Form
+ * XObject. Expected output: 6 files (logo once), 1 skipped, 1 duplicate.
+ */
+export function imagesPdf(): Uint8Array {
+  const flate = (s: string) => deflateSync(Buffer.from(s, 'latin1')).toString('latin1');
+  const img = (w: number, h: number, extra = '') => ({
+    dict: `<< /Type /XObject /Subtype /Image /Width ${String(w)} /Height ${String(h)} /ColorSpace /DeviceRGB /BitsPerComponent 8 /Filter /FlateDecode${extra} >>`,
+    stream: flate(rgb(w, h)),
+  });
+  let alpha = '';
+  for (let i = 0; i < 20 * 20; i++) alpha += String.fromCharCode((i * 3) & 255);
+  let inline = '';
+  for (let i = 0; i < 16 * 16; i++) inline += String.fromCharCode(200, (i * 5) & 255, 40);
+  // 1 catalog, 2 pages, 3-8 pages+contents, 9 JPEG, 10 RGB, 11 dot, 12 logo, 13 masked, 14 its SMask, 15 form, 16 the form's image
+  const objs: PdfObject[] = [
+    '<< /Type /Catalog /Pages 2 0 R >>',
+    '<< /Type /Pages /Kids [3 0 R 5 0 R 7 0 R] /Count 3 >>',
+    '<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Resources << /XObject << /J 9 0 R /R 10 0 R /D 11 0 R /L 12 0 R >> >> /Contents 4 0 R >>',
+    {
+      dict: '<< >>',
+      stream:
+        'q 96 0 0 96 50 600 cm /J Do Q q 160 0 0 80 200 600 cm /R Do Q q 8 0 0 8 400 600 cm /D Do Q q 64 0 0 64 50 400 cm /L Do Q',
+    },
+    '<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Resources << /XObject << /L 12 0 R /M 13 0 R >> >> /Contents 6 0 R >>',
+    {
+      dict: '<< >>',
+      stream: `q 64 0 0 64 50 600 cm /L Do Q q 80 0 0 80 200 600 cm /M Do Q q 64 0 0 64 50 400 cm BI /W 16 /H 16 /CS /RGB /BPC 8 ID ${inline} EI Q`,
+    },
+    '<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Resources << /XObject << /F 15 0 R >> >> /Contents 8 0 R >>',
+    { dict: '<< >>', stream: 'q 1 0 0 1 100 500 cm /F Do Q' },
+    {
+      dict: '<< /Type /XObject /Subtype /Image /Width 24 /Height 24 /ColorSpace /DeviceRGB /BitsPerComponent 8 /Filter /DCTDecode >>',
+      stream: JPEG_24.toString('latin1'),
+    },
+    img(40, 20),
+    img(4, 4),
+    img(32, 32),
+    img(20, 20, ' /SMask 14 0 R'),
+    {
+      dict: '<< /Type /XObject /Subtype /Image /Width 20 /Height 20 /ColorSpace /DeviceGray /BitsPerComponent 8 /Filter /FlateDecode >>',
+      stream: flate(alpha),
+    },
+    {
+      dict: '<< /Type /XObject /Subtype /Form /BBox [0 0 200 200] /Resources << /XObject << /I 16 0 R >> >> >>',
+      stream: 'q 120 0 0 60 0 0 cm /I Do Q',
+    },
+    img(30, 30),
+  ];
+  return buildPdf(objs);
+}
+
+/** `pages` pages, each with two distinct 64 × 64 images and one logo shared by all (M4-06 perf). */
+export function imageHeavyPdf(pages: number): Uint8Array {
+  const img = (seed: number) => {
+    let s = '';
+    for (let y = 0; y < 64; y++)
+      for (let x = 0; x < 64; x++)
+        s += String.fromCharCode(
+          (x * 4 + seed) & 255,
+          (y * 4 + seed * 3) & 255,
+          ((seed >> 8) * 60 + 7) & 255,
+        );
+    return {
+      dict: '<< /Type /XObject /Subtype /Image /Width 64 /Height 64 /ColorSpace /DeviceRGB /BitsPerComponent 8 /Filter /FlateDecode >>',
+      stream: deflateSync(Buffer.from(s, 'latin1')).toString('latin1'),
+    };
+  };
+  // 1 catalog, 2 pages, then per page: page, contents, image A, image B; last: the logo.
+  const logo = 3 + pages * 4;
+  const objs: PdfObject[] = [
+    '<< /Type /Catalog /Pages 2 0 R >>',
+    `<< /Type /Pages /Kids [${Array.from({ length: pages }, (_, i) => `${String(3 + i * 4)} 0 R`).join(' ')}] /Count ${String(pages)} >>`,
+  ];
+  for (let i = 0; i < pages; i++) {
+    const p = 3 + i * 4;
+    objs.push(
+      `<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Resources << /XObject << /A ${String(p + 2)} 0 R /B ${String(p + 3)} 0 R /L ${String(logo)} 0 R >> >> /Contents ${String(p + 1)} 0 R >>`,
+      {
+        dict: '<< >>',
+        stream:
+          'q 200 0 0 200 50 500 cm /A Do Q q 200 0 0 200 300 500 cm /B Do Q q 40 0 0 40 50 50 cm /L Do Q',
+      },
+      img(i * 2 + 1),
+      img(i * 2 + 2),
+    );
+  }
+  objs.push(img(0));
+  return buildPdf(objs);
+}

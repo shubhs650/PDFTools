@@ -1011,6 +1011,7 @@ export const COMMANDS: readonly CommandDef[] = [
     size: 'large',
     fluent: 'ImageMultiple',
     milestone: 'M4',
+    shipped: true, // M4-06
   },
   {
     id: 'convert.expressExtract',

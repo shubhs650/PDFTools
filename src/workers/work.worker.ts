@@ -32,6 +32,7 @@ import { OxideHost, webLoader } from './work/oxide';
 import { requireCapability, securityOf } from './work/permissionGate';
 import { extract } from './work/extract';
 import { zipBlob } from './work/zip';
+import { exportImages } from './work/images';
 
 let mod: WrappedPdfiumModule | undefined;
 let native: PdfiumNative | undefined;
@@ -397,6 +398,39 @@ serve<WorkApi>(self, {
         };
       } finally {
         wasmBytes(); // Oxide's heap counts for the respawn policy
+      }
+    }),
+
+  exportImages: ({ docId, pages, baseName, packaging }, ctx) =>
+    scheduler.run('interactive', ctx.signal, async (slice) => {
+      if (!mod) throw new RpcError('not-initialized', 'The work worker is not initialized');
+      const { doc } = await docs.get(docId);
+      const ptr = docPtrOf(need(), doc.id);
+      requireCapability(securityOf(mod, ptr), 'copy'); // rule 9
+      try {
+        const r = await exportImages(mod, ptr, pages, slice, (p) => {
+          ctx.progress(p);
+        });
+        const { images, duplicates, skipped } = r;
+        const counts = { pages: r.pages, images, duplicates, skipped };
+        if (packaging === 'zip') {
+          const blob = zipBlob(
+            r.files.map((f) => ({
+              name: f.path,
+              data: typeof f.data === 'string' ? new TextEncoder().encode(f.data) : f.data,
+            })),
+          );
+          return { blob, name: `${baseName}.zip`, ...counts };
+        }
+        return {
+          files: r.files.map((f) => ({
+            path: f.path,
+            blob: new Blob([f.data as BlobPart], { type: f.type }),
+          })),
+          ...counts,
+        };
+      } finally {
+        wasmBytes(); // decoded images grow the heap (ADR-004 respawn policy)
       }
     }),
 

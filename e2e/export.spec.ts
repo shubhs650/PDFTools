@@ -1,7 +1,7 @@
 import AxeBuilder from '@axe-core/playwright';
 import type { Page } from '@playwright/test';
 import { encryptedVariants, hasQpdf, USER_PW } from './fixtures/encrypted.ts';
-import { extractionFixture, IMAGE_PAGE, STRUCTURE } from './fixtures/extraction.ts';
+import { extractionFixture, IMAGE_PAGE, imagesPdf, STRUCTURE } from './fixtures/extraction.ts';
 import { cap, drop } from './support/app.ts';
 import { expect, test } from './support/fixtures.ts';
 import { folderFiles, savedFiles, stubFolderPicker, stubSavePicker } from './support/savePicker.ts';
@@ -90,6 +90,40 @@ test('To HTML: one self-contained file with the image embedded; To Text: form fe
   expect((await savedFiles(page)).map((f) => f.name)).toEqual(['spec.html', 'spec.txt']);
 });
 
+test('Export Images: every image once into a new folder; a ZIP where no folder can be picked', async ({
+  page,
+}) => {
+  await page.goto('/');
+  await drop(page, [{ name: 'pics.pdf', b64: b64(imagesPdf()) }]);
+  await expect(page.locator('[data-page="0"] img.page-preview')).toBeVisible();
+  await stubFolderPicker(page);
+  let dialog = await convert(page, 'Export Images', 'Export Images');
+  await expect(dialog).toContainText('Repeated images are saved once.');
+  await dialog.getByRole('button', { name: 'Export' }).click();
+  await expect(dialog).toBeHidden({ timeout: 20_000 });
+  expect((await folderFiles(page)).map((f) => f.path)).toEqual([
+    'pics/page-1-image-1.jpg',
+    'pics/page-1-image-2.png',
+    'pics/page-1-image-3.png',
+    'pics/page-2-image-1.png',
+    'pics/page-2-image-2.png',
+    'pics/page-3-image-1.png',
+  ]);
+
+  // A browser without a folder picker gets one ZIP through the save picker.
+  await page.evaluate(() => {
+    delete (window as unknown as { showDirectoryPicker?: unknown }).showDirectoryPicker;
+  });
+  await stubSavePicker(page);
+  dialog = await convert(page, 'Export Images', 'Export Images');
+  await expect(dialog).toContainText('in one ZIP file');
+  await dialog.getByRole('radio', { name: 'Current page' }).check();
+  await dialog.getByRole('button', { name: 'Export' }).click();
+  await expect(dialog).toBeHidden({ timeout: 20_000 });
+  expect((await savedFiles(page)).map((f) => f.name)).toEqual(['pics.zip']);
+  expect((await last(page)).packaging).toBe('zip');
+});
+
 test('without the copy permission the Convert commands are disabled with the reason', async ({
   page,
 }) => {
@@ -104,7 +138,7 @@ test('without the copy permission the Convert commands are disabled with the rea
   await expect(page.locator('[data-page="0"] img.page-preview')).toBeVisible();
   await page.getByRole('tab', { name: 'Convert' }).click();
   const bar = page.getByRole('toolbar', { name: 'Convert commands' });
-  for (const name of ['To Text', 'To Markdown', 'To HTML'])
+  for (const name of ['To Text', 'To Markdown', 'To HTML', 'Export Images'])
     await expect(bar.getByRole('button', { name })).toBeDisabled();
 });
 

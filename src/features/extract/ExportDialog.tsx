@@ -3,7 +3,6 @@ import { useId, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { format, msg, type MessageKey } from '../../i18n';
 import { Button, Dialog, ProgressBar, TextField } from '../../ui/components';
-import type { ExtractFormat } from '../../workers/work/extract';
 import { canPickFolder } from '../../storage/fileAccess';
 import {
   cancelExport,
@@ -12,13 +11,15 @@ import {
   startExport,
   useExport,
   type ExportError,
+  type ExportFormat,
 } from './exportJob';
 import type { Scope, ScopeKind } from './scope';
 
-const TITLES: Record<ExtractFormat, MessageKey> = {
+const TITLES: Record<ExportFormat, MessageKey> = {
   text: msg('export.title.text'),
   markdown: msg('export.title.markdown'),
   html: msg('export.title.html'),
+  images: msg('export.title.images'),
 };
 
 const ERRORS: Record<ExportError, MessageKey> = {
@@ -42,7 +43,7 @@ export function ExportDialog() {
   return <ExportForm key={`${docId}:${fmt}`} format={fmt} />;
 }
 
-function ExportForm({ format: fmt }: { format: ExtractFormat }) {
+function ExportForm({ format: fmt }: { format: ExportFormat }) {
   const { t } = useTranslation();
   const ids = useId();
   const running = useExport((s) => s.running);
@@ -142,6 +143,15 @@ function ExportForm({ format: fmt }: { format: ExtractFormat }) {
               </p>
             ) : null}
           </>
+        ) : null}
+        {fmt === 'images' ? (
+          <p className="print-note">
+            {t(
+              canPickFolder()
+                ? msg('export.images.imagesFolderNote')
+                : msg('export.images.imagesZipNote'),
+            )}
+          </p>
         ) : null}
         {running ? (
           <>

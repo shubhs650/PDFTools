@@ -1,15 +1,16 @@
-// Convert → To Text / To Markdown / To HTML (M4-05, §7.6): open the export
+// Convert → To Text / To Markdown / To HTML (M4-05) and Export Images (M4-06),
+// §7.6: open the export
 // dialog for the active document. Extraction needs the copy permission (rule 9,
 // ADR-009 decision 3); without it the commands are disabled with the reason.
 import { registerCommand } from '../../app/commands/dispatch';
 import { documentStore, selectActive } from '../../app/store/documentStore';
-import type { ExtractFormat } from '../../workers/work/extract';
-import { openExport } from './exportJob';
+import { openExport, type ExportFormat } from './exportJob';
 
-const FORMATS: [string, ExtractFormat][] = [
+const FORMATS: [string, ExportFormat][] = [
   ['convert.text', 'text'],
   ['convert.markdown', 'markdown'],
   ['convert.html', 'html'],
+  ['convert.images', 'images'],
 ];
 
 export function registerExtractCommands(): () => void {

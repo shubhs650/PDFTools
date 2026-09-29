@@ -57,6 +57,7 @@ type JobMethod =
   | 'crs'
   | 'oxideWarm'
   | 'extract'
+  | 'exportImages'
   | 'indexText';
 
 export interface WorkClientOptions {

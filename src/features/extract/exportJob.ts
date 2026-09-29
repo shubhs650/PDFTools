@@ -23,12 +23,15 @@ import { DENIED } from '../../workers/work/permissionGate';
 import { workClient } from '../view/host';
 import { resolveScope, type Scope } from './scope';
 
+/** What the dialog exports: an Oxide format (M4-05) or the page images (M4-06). */
+export type ExportFormat = ExtractFormat | 'images';
+
 export type ExportError =
   'empty' | 'syntax' | 'outOfRange' | 'noSelection' | 'denied' | 'failed' | 'noDocument';
 
 interface ExportState {
   docId: string | null;
-  format: ExtractFormat | null;
+  format: ExportFormat | null;
   running: { done: number; total: number } | null;
   error: ExportError | null;
 }
@@ -45,17 +48,19 @@ export function useExport<T>(selector: (s: ExportState) => T): T {
 }
 
 /** Extension of each format's main file. */
-export const EXTENSIONS: Record<ExtractFormat, string> = {
+export const EXTENSIONS: Record<ExportFormat, string> = {
   text: 'txt',
   markdown: 'md',
   html: 'html',
+  images: 'zip',
 };
 
 /** Formats that can bring their images along (Markdown as files, HTML embedded). */
-export const HAS_IMAGES: Record<ExtractFormat, boolean> = {
+export const HAS_IMAGES: Record<ExportFormat, boolean> = {
   text: false,
   markdown: true,
   html: true,
+  images: false,
 };
 
 export interface ExportChoice {
@@ -68,7 +73,7 @@ export let lastExport: { files: { path: string; blob: Blob }[]; packaging: strin
 
 let job: AbortController | null = null;
 
-export function openExport(docId: string, format: ExtractFormat): void {
+export function openExport(docId: string, format: ExportFormat): void {
   if (!documentStore.getState().docs[docId]) return;
   exportStore.setState({ docId, format, running: null, error: null });
 }
@@ -113,7 +118,7 @@ type Target =
 /** Where the output goes, asked before the job (user activation); null if cancelled. */
 async function pickTarget(
   base: string,
-  format: ExtractFormat,
+  format: ExportFormat,
   multi: boolean,
 ): Promise<Target | null> {
   if (multi && canPickFolder()) {
@@ -145,8 +150,8 @@ export async function startExport(choice: ExportChoice): Promise<void> {
     return;
   }
   const base = baseNameOf(d.meta.name);
-  const options = optionsFor(format, base, choice.images);
-  const multi = format === 'markdown' && options.images;
+  const options = format === 'images' ? null : optionsFor(format, base, choice.images);
+  const multi = format === 'images' || (format === 'markdown' && (options?.images ?? false));
   const controller = new AbortController();
   job = controller;
   exportStore.setState({ running: { done: 0, total: pages.pages.length }, error: null });
@@ -156,16 +161,28 @@ export async function startExport(choice: ExportChoice): Promise<void> {
       exportStore.setState({ running: null });
       return;
     }
-    const r = await workClient().run(
-      'extract',
-      { docId, pages: pages.pages, options, packaging: target.packaging },
-      {
-        signal: controller.signal,
-        onProgress: (p) => {
-          if (!controller.signal.aborted) exportStore.setState({ running: p });
-        },
+    const call = {
+      signal: controller.signal,
+      onProgress: (p: { done: number; total: number }) => {
+        if (!controller.signal.aborted) exportStore.setState({ running: p });
       },
-    ).promise;
+    };
+    const r = options
+      ? await workClient().run(
+          'extract',
+          { docId, pages: pages.pages, options, packaging: target.packaging },
+          call,
+        ).promise
+      : await workClient().run(
+          'exportImages',
+          {
+            docId,
+            pages: pages.pages,
+            baseName: base,
+            packaging: target.packaging === 'folder' ? 'folder' : 'zip',
+          },
+          call,
+        ).promise;
     controller.signal.throwIfAborted();
     if (target.packaging === 'folder') {
       const files = r.files ?? [];

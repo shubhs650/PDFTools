@@ -1259,7 +1259,8 @@
     "title": {
       "text": "Export as Text",
       "markdown": "Export as Markdown",
-      "html": "Export as HTML"
+      "html": "Export as HTML",
+      "images": "Export Images"
     },
     "description": "The document is converted on this device; nothing is sent anywhere.",
     "scope": {
@@ -1274,7 +1275,9 @@
       "markdown": "Include images (saved as files next to the Markdown)",
       "html": "Include images (embedded in the page)",
       "folderNote": "The Markdown file and its images go into a new folder.",
-      "zipNote": "The Markdown file and its images are saved as one ZIP file."
+      "zipNote": "The Markdown file and its images are saved as one ZIP file.",
+      "imagesFolderNote": "Each image is saved as a file (JPEG images as they are, others as PNG) in a new folder. Repeated images are saved once.",
+      "imagesZipNote": "Each image is saved as a file (JPEG images as they are, others as PNG) in one ZIP file. Repeated images are saved once."
     },
     "fileName": "{{base}}.{{ext}}",
     "export": "Export",
