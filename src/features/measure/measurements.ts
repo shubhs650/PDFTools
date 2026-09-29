@@ -33,10 +33,13 @@ import {
   valueText,
   type MeasureKind,
 } from '../../model/measurement';
-import { measureFromPdf, pageScale, viewportsFromPdf, type Scale } from '../../model/scale';
+import { measureFromPdf, ratioLabel, type ScaleChoice, type Scale } from '../../model/scale';
+import { layoutOf, scaleChoice, scaleOfChoice } from '../../model/scaleViewport';
+import { toUserSpace } from '../../model/measurement';
 import { isReplaying, joinStep, outsideHistory } from '../annotate/historyJoin';
 import { capability, renderEngine } from '../view/host';
-import { scaleOf, scaleStore } from './scaleStore';
+import { layoutFor, readEntries, scaleStore } from './scaleStore';
+import { frameOf } from './viewports';
 
 const sameScale = (a: Scale | null, b: Scale | null): boolean =>
   !!a &&
@@ -62,14 +65,48 @@ export function kindOf(docId: string, a: PdfAnnotationObject): MeasureKind | nul
   return f ? measureKind({ ...a, intent: f.measure.intent }) : null;
 }
 
+/** Where a measurement's scale comes from (§7.4), or its own from the file (ADR-007 d3). */
+export type MeasureChoice = ScaleChoice | { kind: 'own'; scale: Scale };
+
+/** The scale choice for a measurement: its viewport, the page, spanning, uncalibrated. */
+export function choiceFor(docId: string, a: PdfAnnotationObject): MeasureChoice {
+  const pts = toUserSpace(measurePoints(a), frameOf(docId, a.pageIndex));
+  const now = scaleChoice(pts, layoutFor(scaleStore.getState(), docId, a.pageIndex));
+  const f = fileMeasure(docId, a.pageIndex, a.id);
+  if (!f) return now;
+  const own = measureFromPdf(f.measure.measure);
+  const vp = Array.isArray(f.page.vp) ? f.page.vp : [];
+  const inFile = scaleChoice(pts, layoutOf(readEntries(vp), f.page.mediaBox));
+  // A file's measurement valued at another scale than its place had: keep its own.
+  return own && !sameScale(own, scaleOfChoice(inFile)) ? { kind: 'own', scale: own } : now;
+}
+
 /** The scale a measurement is valued in; null = uncalibrated. */
 export function scaleForMeasurement(docId: string, a: PdfAnnotationObject): Scale | null {
-  const pageNow = scaleOf(scaleStore.getState(), docId, a.pageIndex);
-  const f = fileMeasure(docId, a.pageIndex, a.id);
-  if (!f) return pageNow;
-  const own = measureFromPdf(f.measure.measure);
-  const filePage = pageScale(viewportsFromPdf(f.page.vp), f.page.mediaBox);
-  return own && !sameScale(own, filePage) ? own : pageNow;
+  const c = choiceFor(docId, a);
+  return c.kind === 'own' ? c.scale : scaleOfChoice(c);
+}
+
+/** "Scale: Detail A, 1 : 5", "Spans Detail A and (page)…" for the Properties pane. */
+export function choiceText(c: MeasureChoice): string {
+  const ratio = (s: Scale): string => ratioLabel(s, format);
+  switch (c.kind) {
+    case 'viewport':
+      return t('measure.source.viewport', {
+        name: c.viewport.name,
+        ratio: ratio(c.viewport.scale),
+      });
+    case 'page':
+      return t('measure.source.page', { ratio: ratio(c.scale) });
+    case 'own':
+      return t('measure.source.own', { ratio: ratio(c.scale) });
+    case 'spanning':
+      return t('measure.source.spanning', {
+        names: format.list(c.viewports.map((n) => (n === '(page)' ? t('measure.pageArea') : n))),
+      });
+    default:
+      return t('measure.source.uncalibrated');
+  }
 }
 
 /** The value as shown and written: "20.00 m", or "200.0 mm (uncalibrated)". */
@@ -184,14 +221,13 @@ function refresh(registry: PluginRegistry, docId: string, id: string, how: 'join
   void stage(docId, a, kind, s);
 }
 
-/** The page's measurements that follow its scale (not a file's own other scale). */
+/** The page's measurements valued by its scales (not a file's own other scale). */
 function followers(registry: PluginRegistry, docId: string, page: number): string[] {
   const scope = capability<AnnotationCapability>(registry, 'annotation').forDocument(docId);
-  const pageNow = scaleOf(scaleStore.getState(), docId, page);
   return scope
     .getAnnotations({ pageIndex: page })
     .map((ta) => ta.object)
-    .filter((o) => kindOf(docId, o) && sameScale(scaleForMeasurement(docId, o), pageNow))
+    .filter((o) => kindOf(docId, o) && choiceFor(docId, o).kind !== 'own')
     .map((o) => o.id);
 }
 
@@ -243,11 +279,11 @@ export function installMeasurements(registry: PluginRegistry): () => void {
       const p = prev.docs[docId];
       if (typeof d === 'string') continue;
       const before = p && typeof p !== 'string' ? p : null;
-      if (before?.set === d.set && before.pages === d.pages) continue;
+      if (before?.vp === d.vp && before.pages === d.pages) continue;
       const pages = new Set<number>(
-        Object.keys(d.set)
+        Object.keys(d.vp)
           .map(Number)
-          .filter((n) => before?.set[n] !== d.set[n]),
+          .filter((n) => before?.vp[n] !== d.vp[n]),
       );
       for (const page of pages)
         for (const id of followers(registry, docId, page)) refresh(registry, docId, id, 'outside');

@@ -320,6 +320,20 @@ export function registerAnnotateCommands(): () => void {
         openScaleDialog('calibrate');
       },
     }),
+    // Scale viewports (M3-17): draw a rectangle, then name and scale it.
+    registerCommand('measure.scaleViewport', {
+      requires: 'annotate',
+      isPressed: () => appStore.getState().tool === 'scaleViewport',
+      run: () => {
+        if (appStore.getState().tool === 'scaleViewport') {
+          appStore.getState().setTool('select');
+          return;
+        }
+        const id = activeId();
+        if (id) void loadScales(id);
+        appStore.getState().setTool('scaleViewport');
+      },
+    }),
     registerCommand('comment.statusSchemes', {
       run: openSchemes,
     }),

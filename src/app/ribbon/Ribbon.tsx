@@ -1,6 +1,6 @@
 import { ChevronDown20Regular } from '@fluentui/react-icons/svg/chevron-down';
 import { ChevronUp20Regular } from '@fluentui/react-icons/svg/chevron-up';
-import { useMemo, useRef, useState, type KeyboardEvent } from 'react';
+import { useEffect, useMemo, useRef, useState, type KeyboardEvent } from 'react';
 import { useTranslation } from 'react-i18next';
 import { IconButton } from '../../ui/components';
 import { groupLabelKey, tabLabelKey } from '../commandLabels';
@@ -29,6 +29,10 @@ export function Ribbon({ onOpenBackstage, focusDocument }: RibbonProps) {
   const collapsed = useApp((s) => s.ribbonCollapsed);
   const tabRefs = useRef<(HTMLButtonElement | null)[]>([]);
   const active = layout.tabs[tabIndex];
+  // Pages show tab-specific layers (scale viewports on Measure, M3-17).
+  useEffect(() => {
+    if (active) appStore.getState().setRibbonTab(active.tab);
+  }, [active]);
 
   const onTabKey = (e: KeyboardEvent, i: number): void => {
     const n = layout.tabs.length;

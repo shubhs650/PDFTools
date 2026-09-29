@@ -844,6 +844,7 @@ export const COMMANDS: readonly CommandDef[] = [
     fluent: 'SelectObject',
     milestone: 'M3',
     toggle: true,
+    shipped: true, // M3-17
     custom: 'measure.scaleViewport', // M3-06
   },
   {

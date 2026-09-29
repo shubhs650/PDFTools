@@ -8,6 +8,7 @@ import { installStampTools } from '../stamps/stampTools';
 import { installCalibrateTool } from '../measure/calibrate';
 import { installMeasurements } from '../measure/measurements';
 import { installMeasureTools } from '../measure/measureTools';
+import { installViewportTool } from '../measure/viewports';
 import { installHistoryJoin } from '../annotate/historyJoin';
 import { capability, setRegistry, useHost } from './host';
 
@@ -27,6 +28,7 @@ const onInitialized = (registry: Parameters<typeof setRegistry>[0]): Promise<voi
     installDrawTools(registry);
     installStampTools(registry);
     installCalibrateTool(registry);
+    installViewportTool(registry);
     installMeasurements(registry);
   }
   setRegistry(registry);

@@ -9,6 +9,12 @@ M0–M2 are merged into `main` (M2 complete on the agent side, owner pack in
 
 ## Done
 
+- **Session 17 — M3-17 scale viewports.** Draw a rectangle (or Add viewport in the Properties
+  pane) → name, box, ratio or known width, units; saved as page `/VP` entries; outlines on the
+  Measure tab; edit/delete undoable; measurements use their viewport (smallest wins), the page
+  outside, and are flagged when they span viewports. ft-in scales now keep their fraction in
+  `/Measure`.
+
 - **Session 17 — M3-16 measurement tools.** Distance, Perimeter and Area on the Measure tab
   (Distance also on Home): live value by the pointer, `/Contents` and a grouped FreeText label
   with the value, `/IT`, `/Measure`, `/Cap` in the single Ctrl+S revision; values follow vertex

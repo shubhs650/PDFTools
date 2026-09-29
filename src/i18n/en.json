@@ -1166,6 +1166,41 @@
     }
   },
   "measure": {
-    "uncalibrated": "{{value}} (uncalibrated)"
+    "uncalibrated": "{{value}} (uncalibrated)",
+    "source": {
+      "viewport": "Scale: {{name}}, {{ratio}}",
+      "page": "Scale: page, {{ratio}}",
+      "own": "Scale: from the file, {{ratio}}",
+      "uncalibrated": "Uncalibrated",
+      "spanning": "Spans {{names}}: valued at the page scale"
+    },
+    "spansBadge": "Spans viewports",
+    "pageArea": "the page",
+    "spansHint": "Move its points into one viewport, or out of all of them, for a single scale."
+  },
+  "viewport": {
+    "baseName": "Detail",
+    "addTitle": "Scale viewport",
+    "editTitle": "Edit scale viewport",
+    "description": "A region of the page drawn at its own scale. Measurements inside it use this scale.",
+    "name": "Name",
+    "box": "Box (pt, from the page's lower left)",
+    "x1": "Left",
+    "y1": "Bottom",
+    "x2": "Right",
+    "y2": "Top",
+    "knownWidth": "Or: real width of the box",
+    "save": "Save",
+    "list": "Scale viewports on this page",
+    "none": "No scale viewports on this page.",
+    "add": "Add viewport",
+    "edit": "Edit {{name}}",
+    "delete": "Delete {{name}}",
+    "item": "{{name}} · {{ratio}}",
+    "unscaled": "{{name}} · no scale",
+    "error": {
+      "name": "Enter a name.",
+      "box": "Enter a box inside the page, at least 4 pt wide and high."
+    }
   }
 }

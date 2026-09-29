@@ -25,6 +25,8 @@ export const DRAW_TOOLS = [
   'measureDistance',
   'measurePerimeter',
   'measureArea',
+  // Scale viewport (M3-17): a rectangle, then the dialog (measure/viewports.ts).
+  'scaleViewport',
 ] as const;
 
 /** A drawing tool; the id is also the plugin's tool id and interaction mode. */

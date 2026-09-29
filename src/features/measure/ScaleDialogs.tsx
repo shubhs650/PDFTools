@@ -10,21 +10,14 @@ import {
   MM_PER_POINT,
   parseFtIn,
   ratioLabel,
-  type Scale,
   type Unit,
 } from '../../model/scale';
 import { Button, Dialog, TextField } from '../../ui/components';
 import { parseRange } from '../print/options';
 import { startPicking } from './calibrate';
 import { UNIT_KEYS, type UnitChoice } from './units';
-import {
-  applyScale,
-  closeScaleDialog,
-  scaleOf,
-  scaleStore,
-  useScales,
-  type MeasureDefaults,
-} from './scaleStore';
+import { toScale, useScaleFields, type Fields } from './scaleFields';
+import { applyScale, closeScaleDialog, scaleOf, scaleStore, useScales } from './scaleStore';
 
 const UNITS: readonly UnitChoice[] = ['mm', 'cm', 'm', 'in', 'ft', 'ftin'];
 const PRECISIONS = [0, 1, 2, 3, 4] as const;
@@ -36,41 +29,7 @@ const ERROR_KEYS = {
   save: msg('scale.error.save'),
 } as const;
 
-const toScale = (
-  paper: number,
-  real: number,
-  unit: UnitChoice,
-  precision: number,
-  ftIn: number,
-): Scale =>
-  unit === 'ftin' ? { paper, real, unit: 'ft', precision, ftIn } : { paper, real, unit, precision };
-
-const unitOf = (d: MeasureDefaults): UnitChoice => (d.ftIn && d.unit === 'ft' ? 'ftin' : d.unit);
-
-/** Units, precision (or ft-in fraction) and the pages a scale applies to: shared by both dialogs. */
-function useScaleFields(defaults: MeasureDefaults) {
-  const [unit, setUnit] = useState<UnitChoice>(unitOf(defaults));
-  const [precision, setPrecision] = useState(defaults.precision);
-  const [ftIn, setFtIn] = useState(defaults.ftIn ?? 16);
-  const [where, setWhere] = useState<'page' | 'all' | 'range'>('page');
-  const [range, setRange] = useState('');
-  return {
-    unit,
-    setUnit,
-    precision,
-    setPrecision,
-    ftIn,
-    setFtIn,
-    where,
-    setWhere,
-    range,
-    setRange,
-  };
-}
-
-type Fields = ReturnType<typeof useScaleFields>;
-
-function UnitFields({ f }: { f: Fields }) {
+export function UnitFields({ f }: { f: Fields }) {
   const { t } = useTranslation();
   const ids = useId();
   return (

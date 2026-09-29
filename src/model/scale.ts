@@ -108,21 +108,30 @@ export type ScaleChoice =
   | { kind: 'spanning'; viewports: string[]; fallback: Scale | null }
   | { kind: 'uncalibrated' };
 
+const boxArea = ([x1, y1, x2, y2]: [number, number, number, number]): number =>
+  Math.abs((x2 - x1) * (y2 - y1));
+
 /**
  * §7.4: the viewport containing the measurement; outside all → page default;
  * crossing a viewport boundary → spanning (flag a warning); nothing → uncalibrated.
- * Later viewports in the list are on top (checked first), like PDF /VP order.
+ * Where viewports overlap, the smallest containing one wins (a detail drawn
+ * inside a larger view); equal sizes: the later one (PDF /VP order).
  */
 export function chooseScale(
   pts: Pt[],
   viewports: ScaleViewport[],
   pageDefault: Scale | null,
 ): ScaleChoice {
-  const vpOf = (p: Pt): ScaleViewport | undefined =>
-    [...viewports].reverse().find((v) => inside(p, v.bbox));
+  const vpOf = (p: Pt): ScaleViewport | undefined => {
+    let best: ScaleViewport | undefined;
+    for (const v of viewports)
+      if (inside(p, v.bbox) && (!best || boxArea(v.bbox) <= boxArea(best.bbox))) best = v;
+    return best;
+  };
   const hits = pts.map(vpOf);
-  const names = [...new Set(hits.map((v) => v?.name ?? '(page)'))];
-  if (names.length > 1) return { kind: 'spanning', viewports: names, fallback: pageDefault };
+  const distinct = [...new Set(hits)];
+  const names = distinct.map((v) => v?.name ?? '(page)');
+  if (distinct.length > 1) return { kind: 'spanning', viewports: names, fallback: pageDefault };
   const v = hits[0];
   if (v) return { kind: 'viewport', viewport: v };
   if (pageDefault) return { kind: 'page', scale: pageDefault };
@@ -135,6 +144,8 @@ export interface NumberFormat {
   U: string;
   C: number;
   D: number;
+  /** /F: 'F' shows fractions of 1/D (ft-in's inches); decimals otherwise. */
+  F?: string;
 }
 
 export interface MeasureRL {
@@ -153,8 +164,19 @@ export function toMeasureRL(s: Scale): MeasureRL {
   const d = 10 ** s.precision;
   const fmt = (n: number): string =>
     Number.isInteger(n) ? String(n) : String(Number(n.toPrecision(6)));
+  const R = `${fmt(s.paper)} ${s.unit} = ${fmt(s.real)} ${s.unit}`;
+  if (s.ftIn && s.unit === 'ft') {
+    // Feet, then inches to 1/ftIn, as Acrobat writes ft-in (a two-element /X).
+    const inches: NumberFormat = { U: 'in', C: 12, D: s.ftIn, F: 'F' };
+    return {
+      R,
+      X: [{ U: 'ft', C: unitsPerPoint(s), D: 1 }, inches],
+      D: [{ U: 'ft', C: 1, D: 1 }, inches],
+      A: [{ U: 'sq ft', C: 1, D: d }],
+    };
+  }
   return {
-    R: `${fmt(s.paper)} ${s.unit} = ${fmt(s.real)} ${s.unit}`,
+    R,
     X: [{ U: s.unit, C: unitsPerPoint(s), D: d }],
     D: [{ U: s.unit, C: 1, D: d }],
     A: [{ U: `sq ${s.unit}`, C: 1, D: d }],
@@ -172,14 +194,28 @@ const UNIT_ALIASES: Record<string, Unit> = {
 };
 
 /** Recover our Scale from a /Measure RL (ours or a viewer's). Unknown unit → null. */
-export function fromMeasureRL(m: { X?: { U?: string; C?: number; D?: number }[] }): Scale | null {
+type NF = { U?: string; C?: number; D?: number }[];
+
+export function fromMeasureRL(m: { X?: NF; A?: NF }): Scale | null {
   const x = m.X?.[0];
   if (!x?.U || !x.C) return null;
   const unit = UNIT_ALIASES[x.U.trim().toLowerCase()];
   if (!unit) return null;
   const ratio = (x.C * MM_PER_UNIT[unit]) / MM_PER_POINT;
-  const precision = x.D && x.D > 1 ? Math.round(Math.log10(x.D)) : 0;
-  return { paper: 1, real: Number(ratio.toPrecision(10)), unit, precision };
+  const digits = (d: number | undefined): number => (d && d > 1 ? Math.round(Math.log10(d)) : 0);
+  const real = Number(ratio.toPrecision(10));
+  // Feet then 12 inches: ft-in, to 1/D inch (precision is the area's).
+  const inch = m.X?.[1];
+  if (
+    unit === 'ft' &&
+    inch?.U &&
+    UNIT_ALIASES[inch.U.trim().toLowerCase()] === 'in' &&
+    inch.C === 12
+  ) {
+    const ftIn = FT_IN_STEPS.find((n) => n >= (inch.D ?? 16)) ?? 64;
+    return { paper: 1, real, unit, precision: digits(m.A?.[0]?.D), ftIn };
+  }
+  return { paper: 1, real, unit, precision: digits(x.D) };
 }
 
 // ---- M3-15: parsing, locale formatting, page viewports -------------------------
@@ -258,7 +294,13 @@ const dict = (j: PdfJson | undefined): Record<string, PdfJson> | null =>
 export function measureToPdf(s: Scale): PdfJson {
   const m = toMeasureRL(s);
   const nf = (f: NumberFormat): PdfJson => ({
-    dict: { Type: { name: 'NumberFormat' }, U: { text: f.U }, C: f.C, D: f.D },
+    dict: {
+      Type: { name: 'NumberFormat' },
+      U: { text: f.U },
+      C: f.C,
+      D: f.D,
+      ...(f.F ? { F: { name: f.F } } : {}),
+    },
   });
   return {
     dict: {
@@ -276,11 +318,11 @@ export function measureToPdf(s: Scale): PdfJson {
 export function measureFromPdf(j: PdfJson | undefined): Scale | null {
   const m = dict(j);
   if (!m || text(m['Subtype']) !== 'RL') return null;
-  const x = Array.isArray(m['X']) ? m['X'].map((e) => dict(e)) : [];
-  const xs = x
-    .filter((e): e is Record<string, PdfJson> => e !== null)
-    .map((e) => ({ U: text(e['U']) ?? '', C: num(e['C']) ?? 0, D: num(e['D']) ?? 1 }));
-  return fromMeasureRL({ X: xs });
+  const formats = (k: string) =>
+    (Array.isArray(m[k]) ? m[k].map((e) => dict(e)) : [])
+      .filter((e): e is Record<string, PdfJson> => e !== null)
+      .map((e) => ({ U: text(e['U']) ?? '', C: num(e['C']) ?? 0, D: num(e['D']) ?? 1 }));
+  return fromMeasureRL({ X: formats('X'), A: formats('A') });
 }
 
 /** One /VP entry as the object layer writes it. */
