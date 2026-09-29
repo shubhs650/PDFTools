@@ -769,7 +769,8 @@ M0–M2 are merged into `main` (M2 complete on the agent side, owner pack in
   container). Local checks on M4-04: typecheck, lint, format, 869 unit tests, license gate (711
   packages), build + `check:dist`, bundle report (within budget), the new `e2e/oxide.spec.ts` (4)
   and perf `e2e/perf/oxide.spec.ts`, 32 affected e2e specs (offline, i18n, headers, work
-  worker, search, CRS, ribbon, gallery, update); full e2e suite result in the next commit.
+  worker, search, CRS, ribbon, gallery, update), then the full e2e suite: 233 of 233 passed (8.1 min,
+  2 workers).
 
 - **Session 18 (2026-09-29):** M4 plan only (docs); no code, so no checks beyond Prettier on the
   changed Markdown.
