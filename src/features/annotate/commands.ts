@@ -12,7 +12,8 @@ import { openProfileDialog, requestProfile } from '../settings/profile/profileSt
 import { openSchemes } from '../stamps/schemes/schemeStore';
 import { placeDynamicStamp, placeImageStamp } from '../stamps/stampTools';
 import { stampStore } from '../stamps/stampStore';
-import { openScaleDialog, scaleStore } from '../measure/scaleStore';
+import { loadScales, openScaleDialog, scaleStore } from '../measure/scaleStore';
+import { MEASURE_COMMANDS } from '../measure/measureTools';
 import { capability, hostStore } from '../view/host';
 import { annotationCapability, annotationState } from './selection';
 import { cycleTarget, pageAnnotations } from './model';
@@ -152,6 +153,23 @@ export function registerAnnotateCommands(): () => void {
             appStore.getState().setTool('select');
             return;
           }
+          await requestProfile();
+          appStore.getState().setTool(tool);
+        },
+      }),
+    ),
+    // Measurements (M3-16): on until Esc or the command again; the page's scales load first.
+    ...Object.entries(MEASURE_COMMANDS).map(([command, tool]) =>
+      registerCommand(command, {
+        requires: 'annotate',
+        isPressed: () => appStore.getState().tool === tool,
+        run: async () => {
+          if (appStore.getState().tool === tool) {
+            appStore.getState().setTool('select');
+            return;
+          }
+          const id = activeId();
+          if (id) void loadScales(id);
           await requestProfile();
           appStore.getState().setTool(tool);
         },

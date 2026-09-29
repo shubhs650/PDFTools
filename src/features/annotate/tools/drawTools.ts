@@ -17,6 +17,7 @@ import { centred, constrain, VERTEX_TOOLS, type DrawTool, type Pt } from './draw
 import { openLinkEdit } from './linkEdit';
 
 type Handlers = ReturnType<HandlerFactory<PdfAnnotationObject>['create']>;
+export type HandlerContext = Parameters<HandlerFactory<PdfAnnotationObject>['create']>[0];
 type Evt = Parameters<NonNullable<Handlers['onClick']>>[1];
 
 /** Handlers with a click-by-click shape in progress (polyline, polygon, cloud). */
@@ -24,16 +25,21 @@ const inProgress = new Set<{ finish: () => void; cancel: () => void }>();
 
 const shift = (evt: unknown): boolean => (evt as { shiftKey?: boolean } | null)?.shiftKey === true;
 
-/** Wraps a tool's pointer handler factory: Shift constrains from the anchor point. */
-function wrapFactory(
+/**
+ * Wraps a tool's pointer handler factory: Shift constrains from the anchor
+ * point. `adapt` may wrap the plugin's handler context (the measurement tools
+ * watch its previews, M3-16).
+ */
+export function wrapFactory(
   tool: DrawTool,
   factory: HandlerFactory<PdfAnnotationObject>,
+  adapt?: (context: HandlerContext) => HandlerContext,
 ): HandlerFactory<PdfAnnotationObject> {
   const vertices = VERTEX_TOOLS.has(tool);
   return {
     annotationType: factory.annotationType,
     create(context) {
-      const h = factory.create(context);
+      const h = factory.create(adapt ? adapt(context) : context);
       // Drag tools: where the drag started. Vertex tools: the last vertex placed.
       let anchor: Pt | null = null;
       const fix = (pos: Pt, evt: Evt): Pt => (shift(evt) ? constrain(tool, anchor, pos) : pos);

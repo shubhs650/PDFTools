@@ -1795,6 +1795,25 @@ textarea.form-field {
   font-size: var(--font-size-s);
 }
 
+.measure-overlay {
+  position: absolute;
+  inset: var(--space-0);
+  pointer-events: none;
+}
+
+.measure-live {
+  position: absolute;
+  transform: translate(var(--space-3), var(--space-3));
+  padding: var(--space-0) var(--space-1);
+  border-radius: var(--radius-m);
+  background: var(--color-surface-raised);
+  color: var(--color-text);
+  box-shadow: var(--shadow-1);
+  font-size: var(--font-size-xs);
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
 .comment-numbers {
   position: absolute;
   inset: var(--space-0);

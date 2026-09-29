@@ -790,6 +790,7 @@ export const COMMANDS: readonly CommandDef[] = [
     fluent: 'Ruler',
     milestone: 'M3',
     toggle: true,
+    shipped: true, // M3-16
   },
   {
     id: 'measure.perimeter',
@@ -799,6 +800,7 @@ export const COMMANDS: readonly CommandDef[] = [
     fluent: 'Pentagon',
     milestone: 'M3',
     toggle: true,
+    shipped: true, // M3-16
     custom: 'measure.perimeter', // M3-06
   },
   {
@@ -809,6 +811,7 @@ export const COMMANDS: readonly CommandDef[] = [
     fluent: 'Pentagon',
     milestone: 'M3',
     toggle: true,
+    shipped: true, // M3-16
     custom: 'measure.area', // M3-06
   },
   {

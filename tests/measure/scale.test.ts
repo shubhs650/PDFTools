@@ -148,7 +148,8 @@ describe('M3-15: ft-in, locale formatting, page viewports', () => {
     expect(formatLength(1 + 1 / 12 + 1 / 96, { ...s100, unit: 'ft', ftIn: 8 }, en)).toBe(
       `1'-1 1/8"`,
     );
-    expect(formatLength(200, s100, en, 'area')).toBe('200 m²');
+    expect(formatLength(200, s100, en, 'area')).toBe('200.00 m²');
+    expect(formatLength(80000, s5mm, en, 'area')).toBe('80,000.0 mm²');
     expect(ratioLabel(s100, en)).toBe('1 : 100');
     expect(ratioLabel({ paper: 1, real: 97.25, unit: 'mm', precision: 1 }, de)).toBe('1 : 97,25');
   });

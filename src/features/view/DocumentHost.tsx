@@ -6,6 +6,9 @@ import { installAuthoring } from '../annotate/authoring';
 import { installDrawTools } from '../annotate/tools/drawTools';
 import { installStampTools } from '../stamps/stampTools';
 import { installCalibrateTool } from '../measure/calibrate';
+import { installMeasurements } from '../measure/measurements';
+import { installMeasureTools } from '../measure/measureTools';
+import { installHistoryJoin } from '../annotate/historyJoin';
 import { capability, setRegistry, useHost } from './host';
 
 const onInitialized = (registry: Parameters<typeof setRegistry>[0]): Promise<void> => {
@@ -18,9 +21,13 @@ const onInitialized = (registry: Parameters<typeof setRegistry>[0]): Promise<voi
       exclusive: false,
     });
     installAuthoring(registry);
+    installHistoryJoin(registry);
+    // Before installDrawTools rewraps the line/polyline/polygon tools they build on.
+    installMeasureTools(registry);
     installDrawTools(registry);
     installStampTools(registry);
     installCalibrateTool(registry);
+    installMeasurements(registry);
   }
   setRegistry(registry);
   return Promise.resolve();

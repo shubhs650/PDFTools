@@ -4,6 +4,8 @@
 export interface Formatters {
   readonly locale: string;
   number(value: number, maximumFractionDigits?: number): string;
+  /** Exactly `digits` decimals: measured values show their precision ("20.00 m"). */
+  fixed(value: number, digits: number): string;
   /** 0.256 → "25.6 %" (locale-dependent spacing and separators). */
   percent(fraction: number, maximumFractionDigits?: number): string;
   /** Zoom factor 1.25 → "125 %"; below 10 % keeps one decimal. */
@@ -49,6 +51,11 @@ export function createFormatters(locale: string): Formatters {
     locale,
     list: (items) => lf.format(items),
     number: (value, max = 2) => nf(`n${String(max)}`, { maximumFractionDigits: max }).format(value),
+    fixed: (value, digits) =>
+      nf(`f${String(digits)}`, {
+        minimumFractionDigits: digits,
+        maximumFractionDigits: digits,
+      }).format(value),
     percent: (fraction, max = 1) =>
       nf(`p${String(max)}`, { style: 'percent', maximumFractionDigits: max }).format(fraction),
     zoom: (factor) =>

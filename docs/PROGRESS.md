@@ -9,6 +9,12 @@ M0–M2 are merged into `main` (M2 complete on the agent side, owner pack in
 
 ## Done
 
+- **Session 17 — M3-16 measurement tools.** Distance, Perimeter and Area on the Measure tab
+  (Distance also on Home): live value by the pointer, `/Contents` and a grouped FreeText label
+  with the value, `/IT`, `/Measure`, `/Cap` in the single Ctrl+S revision; values follow vertex
+  edits in the same undo step and re-value on a scale change; files' own `/Measure` trusted
+  unless it is the page's scale; uncalibrated values marked; encrypted (AES-256) files saved.
+
 - **Session 16 — M3-15 scale model.** Measure tab: Set Scale (ratio, units, precision; this page,
   all pages or a range), Calibrate (two picked or typed points and a real length) and Units; the
   scale is saved as the page's `/VP` (other viewports kept) and `/VP` from other viewers is read;

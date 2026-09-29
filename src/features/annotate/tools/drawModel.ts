@@ -21,6 +21,10 @@ export const DRAW_TOOLS = [
   'imageStamp',
   // Calibrate (M3-15): two clicks on the page (measure/calibrate.ts).
   'calibrate',
+  // Measurements (M3-16): line, polyline and polygon with a dimension intent (measure/measureTools.ts).
+  'measureDistance',
+  'measurePerimeter',
+  'measureArea',
 ] as const;
 
 /** A drawing tool; the id is also the plugin's tool id and interaction mode. */
@@ -55,7 +59,13 @@ export const KEYBOARD_PLACED: ReadonlySet<DrawTool> = new Set([
 ]);
 
 /** Tools whose drawing is a chain of clicks, finished by Enter or double-click. */
-export const VERTEX_TOOLS: ReadonlySet<DrawTool> = new Set(['polyline', 'polygon', 'cloud']);
+export const VERTEX_TOOLS: ReadonlySet<DrawTool> = new Set([
+  'polyline',
+  'polygon',
+  'cloud',
+  'measurePerimeter',
+  'measureArea',
+]);
 
 /** Shift keeps lines at multiples of 45° … */
 const ANGLED: ReadonlySet<DrawTool> = new Set([
@@ -64,6 +74,9 @@ const ANGLED: ReadonlySet<DrawTool> = new Set([
   'polyline',
   'polygon',
   'cloud',
+  'measureDistance',
+  'measurePerimeter',
+  'measureArea',
 ]);
 /** … and boxes square. */
 const BOXED: ReadonlySet<DrawTool> = new Set(['square', 'circle', 'link']);

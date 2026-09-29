@@ -52,6 +52,16 @@ export function registerAnnotateProbe(hook: TestHook): void {
       return st ? Object.values(st.byUid).map((t) => t.object) : null;
     },
     canUndo: (docId: string) => history()?.forDocument(docId).canUndo() ?? false,
+    undo: (docId: string) => {
+      history()?.forDocument(docId).undo();
+    },
+    redo: (docId: string) => {
+      history()?.forDocument(docId).redo();
+    },
+    /** A plugin update, as a vertex drag or the Properties pane makes one (M3-16). */
+    update: (docId: string, page: number, id: string, patch: Record<string, unknown>) => {
+      annotationCapability()?.forDocument(docId).updateAnnotation(page, id, patch);
+    },
     /**
      * Makes a square markup the way the M3-08+ tools do: the reviewer profile
      * first (M3-07), then the plugin's create. Resolves with its id.

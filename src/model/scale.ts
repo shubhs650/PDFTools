@@ -209,9 +209,13 @@ export function parseFtIn(text: string): number | null {
 
 export interface LengthFormat {
   number(value: number, maximumFractionDigits?: number): string;
+  fixed(value: number, digits: number): string;
 }
 
-/** A length in the scale's unit, in the user's locale (ft-in when the scale says so). */
+/**
+ * A length (or area) in the scale's unit and precision, in the user's locale
+ * (ft-in when the scale says so): "20.00 m", "80,000.0 mm²".
+ */
 export function formatLength(
   value: number,
   s: Scale,
@@ -220,8 +224,7 @@ export function formatLength(
 ): string {
   if (kind !== 'area' && s.ftIn && s.unit === 'ft') return formatFtIn(value, s.ftIn);
   const unit = kind === 'area' ? `${s.unit}²` : s.unit;
-  const rounded = Math.round(value * 10 ** s.precision) / 10 ** s.precision;
-  return `${f.number(rounded, s.precision)} ${unit}`;
+  return `${f.fixed(value, s.precision)} ${unit}`;
 }
 
 /** "1 : 100" (numbers in the user's locale). */
@@ -251,31 +254,47 @@ const text = (j: PdfJson | undefined): string | null =>
 const dict = (j: PdfJson | undefined): Record<string, PdfJson> | null =>
   j && typeof j === 'object' && !Array.isArray(j) && 'dict' in j ? j.dict : null;
 
+/** A /Measure RL dictionary as the object layer writes it (viewports, measurements). */
+export function measureToPdf(s: Scale): PdfJson {
+  const m = toMeasureRL(s);
+  const nf = (f: NumberFormat): PdfJson => ({
+    dict: { Type: { name: 'NumberFormat' }, U: { text: f.U }, C: f.C, D: f.D },
+  });
+  return {
+    dict: {
+      Type: { name: 'Measure' },
+      Subtype: { name: 'RL' },
+      R: { text: m.R },
+      X: m.X.map(nf),
+      D: m.D.map(nf),
+      A: m.A.map(nf),
+    },
+  };
+}
+
+/** A /Measure RL (ours or a viewer's, as plain data) read back; null when it isn't one. */
+export function measureFromPdf(j: PdfJson | undefined): Scale | null {
+  const m = dict(j);
+  if (!m || text(m['Subtype']) !== 'RL') return null;
+  const x = Array.isArray(m['X']) ? m['X'].map((e) => dict(e)) : [];
+  const xs = x
+    .filter((e): e is Record<string, PdfJson> => e !== null)
+    .map((e) => ({ U: text(e['U']) ?? '', C: num(e['C']) ?? 0, D: num(e['D']) ?? 1 }));
+  return fromMeasureRL({ X: xs });
+}
+
 /** One /VP entry as the object layer writes it. */
 export function viewportToPdf(vp: {
   name: string;
   bbox: [number, number, number, number];
   scale: Scale;
 }): PdfJson {
-  const m = toMeasureRL(vp.scale);
-  const nf = (f: NumberFormat): PdfJson => ({
-    dict: { Type: { name: 'NumberFormat' }, U: { text: f.U }, C: f.C, D: f.D },
-  });
   return {
     dict: {
       Type: { name: 'Viewport' },
       BBox: vp.bbox,
       Name: { text: vp.name },
-      Measure: {
-        dict: {
-          Type: { name: 'Measure' },
-          Subtype: { name: 'RL' },
-          R: { text: m.R },
-          X: m.X.map(nf),
-          D: m.D.map(nf),
-          A: m.A.map(nf),
-        },
-      },
+      Measure: measureToPdf(vp.scale),
     },
   };
 }
@@ -290,15 +309,10 @@ export function viewportsFromPdf(vp: PdfJson | undefined): PageViewport[] {
     if (!d || !Array.isArray(bb) || bb.length !== 4) continue;
     const box = bb.map(num);
     if (box.some((n) => n === null)) continue;
-    const m = dict(d['Measure']);
-    const x = Array.isArray(m?.['X']) ? m['X'].map((e) => dict(e)) : [];
-    const xs = x
-      .filter((e): e is Record<string, PdfJson> => e !== null)
-      .map((e) => ({ U: text(e['U']) ?? '', C: num(e['C']) ?? 0, D: num(e['D']) ?? 1 }));
     out.push({
       name: text(d['Name']) ?? '',
       bbox: box as [number, number, number, number],
-      scale: m && text(m['Subtype']) === 'RL' ? fromMeasureRL({ X: xs }) : null,
+      scale: measureFromPdf(d['Measure']),
     });
   }
   return out;

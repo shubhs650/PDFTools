@@ -53,6 +53,7 @@ describe('ribbon layout from the command table (§8, ADR-001 B6, M1-Q2)', () => 
       'comment.note', // Sticky note (M3-09)
       'comment.drawing', // Cloud (M3-09)
       'comment.stamp', // Stamp (M3-14)
+      'measure.measure', // Distance (M3-16)
       'protect.security', // Signatures (M2-13)
     ]);
     expect(home?.groups[3]?.commands.map((c) => c.id)).toEqual([

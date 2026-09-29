@@ -1,15 +1,58 @@
 // Page scales (M3-15, ADR-007): each page's /VP viewports and MediaBox, read
 // with our own object reader (PDFium can't read nested dictionaries) from the
-// file as saved so far. Viewer-made /VP (Acrobat, PDF-XChange) read the same way.
-import { isDict, PdfStream, type PdfValue } from '../../model/pdf/objects';
+// file as saved so far. Viewer-made /VP (Acrobat, PDF-XChange) read the same way,
+// and so are measurement annotations' own /IT and /Measure (M3-16).
+import {
+  isDict,
+  nameOf,
+  PdfRef,
+  PdfStream,
+  PdfString,
+  type PdfValue,
+} from '../../model/pdf/objects';
 import { PdfReader, type Inflate } from '../../model/pdf/reader';
 import { toJson, type PdfJson } from '../../model/pdf/wire';
+import { stableAnnotId } from '../shared/annotId';
+
+/** A measurement annotation's own data (M3-16): what the file says, not what we'd compute. */
+export interface FileMeasure {
+  /** EmbedPDF's id: /NM, else the stable id both workers derive (annotId.ts). */
+  id: string;
+  /** /IT without the slash. */
+  intent: string;
+  /** Its /Measure as plain data (null when it has none). */
+  measure: PdfJson;
+}
 
 export interface PageVp {
   page: number;
   mediaBox: [number, number, number, number];
   /** The page's /VP as plain data (null when it has none). */
   vp: PdfJson;
+  /** Annotations with a /…Dimension intent (M3-16). */
+  measures: FileMeasure[];
+}
+
+const DIMENSIONS = new Set(['LineDimension', 'PolyLineDimension', 'PolygonDimension']);
+
+async function measuresOf(r: PdfReader, page: number, annots: PdfValue | undefined) {
+  const out: FileMeasure[] = [];
+  const list = await r.resolve(annots);
+  if (!Array.isArray(list)) return out;
+  for (const [i, entry] of list.entries()) {
+    const d = await r.resolve(entry);
+    if (!isDict(d)) continue;
+    const intent = nameOf(await r.resolve(d.get('IT')));
+    if (!intent || !DIMENSIONS.has(intent)) continue;
+    const nm = await r.resolve(d.get('NM'));
+    const id =
+      nm instanceof PdfString && nm.bytes.length > 0
+        ? nm.text()
+        : stableAnnotId(entry instanceof PdfRef ? entry.num : 0, page, i);
+    const m = d.get('Measure');
+    out.push({ id, intent, measure: m === undefined ? null : toJson(await deep(r, m)) });
+  }
+  return out;
 }
 
 /** Refs resolved all the way down (depth-limited), streams dropped. */
@@ -41,7 +84,12 @@ export async function readViewports(
         ? (box as [number, number, number, number])
         : [0, 0, 612, 792];
     const vp = p.dict.get('VP');
-    out.push({ page: i, mediaBox, vp: vp === undefined ? null : toJson(await deep(r, vp)) });
+    out.push({
+      page: i,
+      mediaBox,
+      vp: vp === undefined ? null : toJson(await deep(r, vp)),
+      measures: await measuresOf(r, i, p.dict.get('Annots')),
+    });
   }
   return out;
 }
