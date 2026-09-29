@@ -9,6 +9,17 @@ M0–M2 are merged into `main` (M2 complete on the agent side, owner pack in
 
 ## Done
 
+- **Session 18 — M4-02 redaction spike.** _Works with workaround_,
+  [ADR-017](adr/017-m4-redaction.md) (proposed; decisions 3 and 5 need the owner). EmbedPDF's
+  PDFium redaction (`EPDFPage_ApplyRedactions`) on a self-made 9-page adversarial file: removes all
+  text in the rectangles (invisible, white, rotated, crop-offset, hidden layer, Form XObject),
+  image pixels and paths wholly inside; **leaves paths crossing a rectangle**, other annotations and
+  all document-level data (Info, XMP, thumbnail, outline, JavaScript, embedded file, structure
+  `/ActualText`). A path re-cut through PDFium's page-object API (prototype), annotation removal,
+  an object-layer sanitize and a second rewrite pass the location check, the string rule and a
+  canary scan (A0 geometry outside kept to 99.98 %); a crossing path inside a Form XObject fails
+  verification loudly. AES-256 outputs stay encrypted. Spike `spikes/s15-redaction/` (Node).
+
 - **Session 18 — M4-01 page-operations spike.** _Works with workaround_,
   [ADR-016](adr/016-m4-page-operations.md) (proposed; decisions 3, 5, 7 need the owner). Direct
   PDFium exports for rotate/delete/insert/move/import (EmbedPDF has only delete/import/extract). A
