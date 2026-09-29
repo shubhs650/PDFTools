@@ -41,7 +41,7 @@ export interface CommandDef {
 }
 
 /** Milestones whose commands are shown. Extend as milestones land. */
-export const AVAILABLE_MILESTONES: readonly Milestone[] = ['M1', 'M2'];
+export const AVAILABLE_MILESTONES: readonly Milestone[] = ['M1', 'M2', 'M3'];
 
 /** Ribbon tabs in order (§8, authoritative). */
 export const RIBBON_TABS = [
@@ -771,7 +771,7 @@ export const COMMANDS: readonly CommandDef[] = [
     group: 'manageComments',
     size: 'small',
     fluent: 'ArrowExport',
-    milestone: 'M3',
+    milestone: 'M4', // M3-Q1: annotation export is M4 (§13)
   },
   {
     id: 'comment.exportCrs',

@@ -1,0 +1,396 @@
+{
+  "generated": "2026-09-29T08:18:12.248Z",
+  "results": [
+    {
+      "area": "App start (offline, from the service worker cache)",
+      "target": "usable UI < 2 s",
+      "measured": "423 ms",
+      "verdict": "met",
+      "source": "perf/acceptance.spec.ts"
+    },
+    {
+      "area": "Open 2,000-page stand-in",
+      "target": "first page visible < 1.5 s",
+      "measured": "697 ms",
+      "verdict": "met",
+      "source": "perf/scroll.spec.ts"
+    },
+    {
+      "area": "Scroll 2,000-page stand-in (900 and 3,000 px/s)",
+      "target": "smooth, no blank page frames",
+      "measured": "0 / 0 blank of 297 / 180 frames",
+      "verdict": "met",
+      "source": "perf/scroll.spec.ts"
+    },
+    {
+      "area": "Dense A0 drawing (self-made)",
+      "target": "first view < 2 s",
+      "measured": "331 ms",
+      "verdict": "met",
+      "source": "perf/acceptance.spec.ts"
+    },
+    {
+      "area": "Dense A0 drawing: zoom 100 %, 800 %, 6400 %",
+      "target": "sharp tiles < 0.5 s",
+      "measured": "349 ms",
+      "verdict": "met",
+      "source": "perf/zoom.spec.ts"
+    },
+    {
+      "area": "Dense A0 drawing",
+      "target": "zoom up to 6400 %",
+      "measured": "6400 %: sharp in 272 ms",
+      "verdict": "met",
+      "source": "perf/zoom.spec.ts"
+    },
+    {
+      "area": "Save (Ctrl+S, incremental, 100 markups)",
+      "target": "< 1 s",
+      "measured": "139 ms",
+      "verdict": "met",
+      "source": "perf/save.spec.ts"
+    },
+    {
+      "area": "UI responsiveness",
+      "target": "no main-thread task > 100 ms (after boot)",
+      "measured": "30 of 31 perf scenarios passed",
+      "verdict": "missed",
+      "source": "e2e/perf/*"
+    },
+    {
+      "area": "Offline proof",
+      "target": "network off → M1 features work; zero outbound requests",
+      "measured": "passed",
+      "verdict": "met",
+      "source": "offline.spec.ts"
+    },
+    {
+      "area": "Search the 2,000-page stand-in (common word, cold)",
+      "target": "first hits < 1 s",
+      "measured": "76 ms",
+      "verdict": "met",
+      "source": "perf/search.spec.ts"
+    },
+    {
+      "area": "Search the 2,000-page stand-in (common word, cold)",
+      "target": "complete < 15 s",
+      "measured": "6899 ms",
+      "verdict": "met",
+      "source": "perf/search.spec.ts"
+    },
+    {
+      "area": "Offline proof (M2)",
+      "target": "network off → protected open, search, panes, forms save, print, export work; report fails gracefully; zero outbound requests",
+      "measured": "passed",
+      "verdict": "met",
+      "source": "offline.spec.ts"
+    },
+    {
+      "area": "Save (Ctrl+S, 100 mixed M3 markups: shapes, measurements, stamps)",
+      "target": "< 1 s (M3 markups)",
+      "measured": "229 ms",
+      "verdict": "met",
+      "source": "perf/save-m3.spec.ts"
+    },
+    {
+      "area": "Snapping on the dense A0 sheet (while another page is extracted)",
+      "target": "query round trip p95 ≤ 16 ms",
+      "measured": "4.09 ms",
+      "verdict": "met",
+      "source": "perf/snap.spec.ts"
+    },
+    {
+      "area": "Offline proof (M3)",
+      "target": "network off → markups, measurement with snapping, stamps, CRS export, Ctrl+S; zero outbound requests",
+      "measured": "passed",
+      "verdict": "met",
+      "source": "offline.spec.ts"
+    }
+  ],
+  "scenarios": [
+    {
+      "file": "perf/acceptance.spec.ts",
+      "title": "app start offline from the service worker cache: usable UI < 2 s",
+      "status": "passed",
+      "durationMs": 3547,
+      "metrics": {
+        "app-start-offline-ms": "423"
+      }
+    },
+    {
+      "file": "perf/acceptance.spec.ts",
+      "title": "dense A0 sheet: first view < 2 s, then sharp tiles",
+      "status": "passed",
+      "durationMs": 2948,
+      "metrics": {
+        "a0-first-view-ms": "331",
+        "a0-sharp-ms": "598"
+      }
+    },
+    {
+      "file": "perf/advanced-search.spec.ts",
+      "title": "Advanced Search: common term, first rows < 1 s, complete < 15 s",
+      "status": "passed",
+      "durationMs": 11200,
+      "metrics": {
+        "m2-advanced-search": "{\"firstMs\":192,\"completeMs\":6582}"
+      }
+    },
+    {
+      "file": "perf/annotation-load.spec.ts",
+      "title": "loading every annotation (Work worker since M3-05) vs visible tiles",
+      "status": "passed",
+      "durationMs": 19576,
+      "metrics": {
+        "m3-annotation-load": "{\"contract\":{\"baseline\":{\"scroll\":{\"frames\":242,\"blankFrames\":0,\"gapP95\":16.7,\"gapMax\":16.7},\"tiles\":{\"requested\":75,\"done\":75,\"aborted\":0,\"failed\":0,\"cached\":0,\"p50\":23,\"p95\":58.2,\"max\":59.9},\"load\":null},\"allAnnotations\":{\"scroll\":{\"frames\":242,\"blankFrames\":0,\"gapP95\":16.7,\"gapMax\":16.7},\"tiles\":{\"requested\":75,\"done\":75,\"aborted\":0,\"failed\":0,\"cached\":0,\"p50\":21.6,\"p95\":78.8,\"max\":86.1},\"load\":{\"n\":1,\"p50\":1662.4,\"p95\":1662.4,\"max\":1662.4}},\"baselineAgain\":{\"scroll\":{\"frames\":242,\"blankFrames\":0,\"gapP95\":16.7,\"gapMax\":16.7},\"tiles\":{\"requested\":75,\"done\":75,\"aborted\":0,\"failed\":0,\"cached\":0,\"p50\":24.7,\"p95\":117.8,\"max\":121.1},\"load\":null}},\"longTasks\":[]}"
+      }
+    },
+    {
+      "file": "perf/attachments.spec.ts",
+      "title": "attachments: list and save a 20 MB file, no long tasks",
+      "status": "passed",
+      "durationMs": 6654,
+      "metrics": {}
+    },
+    {
+      "file": "perf/comments-pane.spec.ts",
+      "title": "comments pane: 10,000 comments, first rows < 1 s, no long tasks",
+      "status": "passed",
+      "durationMs": 7133,
+      "metrics": {
+        "m3-comments-first-rows-ms": "116"
+      }
+    },
+    {
+      "file": "perf/crs.spec.ts",
+      "title": "CRS: 1,000 comments with snapshots on the contract stand-in, no long tasks",
+      "status": "passed",
+      "durationMs": 13264,
+      "metrics": {
+        "crs-1000-ms": "7783"
+      }
+    },
+    {
+      "file": "perf/find.spec.ts",
+      "title": "Quick Find: common term, highlights, F3 x 30",
+      "status": "passed",
+      "durationMs": 10356,
+      "metrics": {}
+    },
+    {
+      "file": "perf/idle.spec.ts",
+      "title": "idle app shell has no main-thread long tasks after boot",
+      "status": "passed",
+      "durationMs": 1652,
+      "metrics": {}
+    },
+    {
+      "file": "perf/idle.spec.ts",
+      "title": "a 150 ms main-thread task trips the perf gate",
+      "status": "passed",
+      "durationMs": 811,
+      "metrics": {}
+    },
+    {
+      "file": "perf/indexing.spec.ts",
+      "title": "2,000-page stand-in: indexing while scrolling, then a rare term far away",
+      "status": "failed",
+      "durationMs": 21043,
+      "metrics": {
+        "m2-indexing": "{\"before\":0,\"afterScroll\":0,\"during\":{\"tiles\":{\"requested\":45,\"done\":45,\"aborted\":0,\"failed\":0,\"cached\":0,\"p50\":19,\"p95\":52.1,\"max\":53.3},\"previews\":{\"requested\":2,\"done\":2,\"aborted\":0,\"failed\":0,\"cached\":0,\"p50\":41.3,\"p95\":41.3,\"max\":41.3},\"progressive\":{\"requested\":0,\"done\":0,\"cancelled\":0,\"slices\":[],\"maxSliceMs\":[]},\"cache\":{\"bytes\":4634984,\"entries\":73,\"max\":67108864},\"focus\":{\"docId\":\"doc-0f7cebc9-4ab7-4c46-a1dc-5b041fda1326\",\"pageIndex\":2}},\"idle\":{\"tiles\":{\"requested\":55,\"done\":55,\"aborted\":0,\"failed\":0,\"cached\":0,\"p50\":18.7,\"p95\":59.7,\"max\":84.2},\"previews\":{\"requested\":2,\"done\":2,\"aborted\":0,\"failed\":0,\"cached\":0,\"p50\":54.8,\"p95\":54.8,\"max\":54.8},\"progressive\":{\"requested\":0,\"done\":0,\"cancelled\":0,\"slices\":[],\"maxSliceMs\":[]},\"cache\":{\"bytes\":6989414,\"entries\":140,\"max\":67108864},\"focus\":{\"docId\":\"doc-0f7cebc9-4ab7-4c46-a1dc-5b041fda1326\",\"pageIndex\":3}},\"scroll\":{\"frames\":174,\"blankFrames\":0,\"gapP95\":16.7,\"gapMax\":150},\"rare\":{\"firstHitMs\":17.044999999925494,\"totalMs\":17.15000000037253,\"hits\":3,\"counted\":0,\"batches\":1,\"summary\":{\"searchId\":1,\"totalHits\":3,\"detailedHits\":3,\"pageCount\":2000,\"ms\":15.240000000223517,\"firstHitMs\":2.3650000002235174}}}"
+      }
+    },
+    {
+      "file": "perf/ink.spec.ts",
+      "title": "pencil: a 2,000-point stroke on the dense A0 sheet, no long tasks",
+      "status": "passed",
+      "durationMs": 46230,
+      "metrics": {}
+    },
+    {
+      "file": "perf/measure.spec.ts",
+      "title": "area: a 200-vertex polygon on the dense A0 sheet, no long tasks",
+      "status": "passed",
+      "durationMs": 16920,
+      "metrics": {}
+    },
+    {
+      "file": "perf/open.spec.ts",
+      "title": "dropping three files, switching and closing them: no long tasks",
+      "status": "passed",
+      "durationMs": 2803,
+      "metrics": {}
+    },
+    {
+      "file": "perf/open.spec.ts",
+      "title": "opening the 2,000-page stand-in: no long tasks",
+      "status": "passed",
+      "durationMs": 2240,
+      "metrics": {
+        "open-ready-ms": "389"
+      }
+    },
+    {
+      "file": "perf/pane-load.spec.ts",
+      "title": "pane and text-layer load through the Render queue vs visible tiles",
+      "status": "passed",
+      "durationMs": 33143,
+      "metrics": {
+        "m2-pane-load": "{\"contract\":{\"baseline\":{\"scroll\":{\"frames\":242,\"blankFrames\":0,\"gapP95\":16.7,\"gapMax\":16.7},\"tiles\":{\"requested\":75,\"done\":75,\"aborted\":0,\"failed\":0,\"cached\":0,\"p50\":20.1,\"p95\":36.9,\"max\":47.6},\"load\":null},\"geometry\":{\"scroll\":{\"frames\":239,\"blankFrames\":0,\"gapP95\":16.7,\"gapMax\":50},\"tiles\":{\"requested\":75,\"done\":75,\"aborted\":0,\"failed\":0,\"cached\":0,\"p50\":25.1,\"p95\":49.1,\"max\":85.1},\"load\":{\"n\":120,\"p50\":50.8,\"p95\":103.2,\"max\":150.2}},\"thumbnails\":{\"scroll\":{\"frames\":242,\"blankFrames\":0,\"gapP95\":16.7,\"gapMax\":16.7},\"tiles\":{\"requested\":75,\"done\":75,\"aborted\":0,\"failed\":0,\"cached\":0,\"p50\":17.6,\"p95\":41.7,\"max\":47.3},\"load\":{\"n\":400,\"p50\":3.6,\"p95\":9,\"max\":29.1}},\"baselineAgain\":{\"scroll\":{\"frames\":240,\"blankFrames\":0,\"gapP95\":16.7,\"gapMax\":33.3},\"tiles\":{\"requested\":75,\"done\":75,\"aborted\":0,\"failed\":0,\"cached\":0,\"p50\":20,\"p95\":117.6,\"max\":139.1},\"load\":null}},\"a0\":{\"zoom800\":{\"tiles\":{\"requested\":20,\"done\":20,\"aborted\":0,\"failed\":0,\"cached\":0,\"p50\":127.5,\"p95\":187.2,\"max\":187.2},\"thumbnail\":null},\"zoom600WithThumbnail\":{\"tiles\":{\"requested\":24,\"done\":24,\"aborted\":0,\"failed\":0,\"cached\":0,\"p50\":137.4,\"p95\":190.7,\"max\":196.4},\"thumbnail\":{\"n\":1,\"p50\":84.5,\"p95\":84.5,\"max\":84.5}}},\"longTasks\":[]}"
+      }
+    },
+    {
+      "file": "perf/print.spec.ts",
+      "title": "print: 50 pages at standard quality up to print(), no long tasks",
+      "status": "passed",
+      "durationMs": 5986,
+      "metrics": {
+        "m2-print-50-ms": "4291"
+      }
+    },
+    {
+      "file": "perf/print.spec.ts",
+      "title": "export print-ready: 50 pages, no long tasks",
+      "status": "passed",
+      "durationMs": 2080,
+      "metrics": {
+        "m2-export-50-ms": "488"
+      }
+    },
+    {
+      "file": "perf/progressive.spec.ts",
+      "title": "dense A0 zoom thrash with progressive previews: no long tasks",
+      "status": "passed",
+      "durationMs": 4102,
+      "metrics": {
+        "progressive": "{\"requested\":8,\"done\":1,\"cancelled\":7,\"slices\":[2],\"maxSliceMs\":[18.8]}"
+      }
+    },
+    {
+      "file": "perf/save-m3.spec.ts",
+      "title": "Ctrl+S with 100 mixed M3 markups (measurements, stamps): < 1 s, no long tasks",
+      "status": "passed",
+      "durationMs": 12231,
+      "metrics": {
+        "save-100-m3-markups-ms": "229"
+      }
+    },
+    {
+      "file": "perf/save.spec.ts",
+      "title": "Ctrl+S with 100 markups: < 1 s, no long tasks",
+      "status": "passed",
+      "durationMs": 3208,
+      "metrics": {
+        "save-100-markups-ms": "139"
+      }
+    },
+    {
+      "file": "perf/scroll.spec.ts",
+      "title": "2,000-page stand-in: first preview, then 900 px/s with no blank page frames",
+      "status": "passed",
+      "durationMs": 11725,
+      "metrics": {
+        "m1-scroll": "{\"firstPreviewMs\":697,\"scroll900\":{\"frames\":297,\"blankFrames\":0,\"gapP95\":16.7,\"gapMax\":50},\"stats900\":{\"tiles\":{\"requested\":90,\"done\":90,\"aborted\":0,\"failed\":0,\"cached\":0,\"p50\":24.5,\"p95\":47.2,\"max\":54.8},\"previews\":{\"requested\":3,\"done\":3,\"aborted\":0,\"failed\":0,\"cached\":0,\"p50\":43.3,\"p95\":46.4,\"max\":46.4},\"progressive\":{\"requested\":0,\"done\":0,\"cancelled\":0,\"slices\":[],\"maxSliceMs\":[]},\"cache\":{\"bytes\":6442583,\"entries\":122,\"max\":67108864},\"focus\":{\"docId\":\"doc-f6b41149-bd09-4aa2-967f-3bd8c808134f\",\"pageIndex\":3}},\"scroll3000\":{\"frames\":180,\"blankFrames\":0,\"gapP95\":16.7,\"gapMax\":33.3},\"stats3000\":{\"tiles\":{\"requested\":180,\"done\":180,\"aborted\":0,\"failed\":0,\"cached\":0,\"p50\":26.6,\"p95\":69.3,\"max\":114.6},\"previews\":{\"requested\":6,\"done\":6,\"aborted\":0,\"failed\":0,\"cached\":0,\"p50\":54.1,\"p95\":68.5,\"max\":68.5},\"progressive\":{\"requested\":0,\"done\":0,\"cancelled\":0,\"slices\":[],\"maxSliceMs\":[]},\"cache\":{\"bytes\":13755276,\"entries\":314,\"max\":67108864},\"focus\":{\"docId\":\"doc-f6b41149-bd09-4aa2-967f-3bd8c808134f\",\"pageIndex\":9}},\"longTasks\":[]}"
+      }
+    },
+    {
+      "file": "perf/scroll.spec.ts",
+      "title": "jumping through the stand-in and zoom thrash: no long tasks",
+      "status": "passed",
+      "durationMs": 5615,
+      "metrics": {}
+    },
+    {
+      "file": "perf/search.spec.ts",
+      "title": "2,000-page stand-in: cold and warm searches, cap and supersede",
+      "status": "passed",
+      "durationMs": 16508,
+      "metrics": {
+        "m2-search": "{\"common\":{\"firstHitMs\":75.94000000040978,\"totalMs\":6898.995000000112,\"hits\":5000,\"counted\":13798,\"batches\":126,\"summary\":{\"searchId\":1,\"totalHits\":18798,\"detailedHits\":5000,\"pageCount\":2000,\"ms\":6890.375,\"firstHitMs\":7.034999999217689}},\"rareFar\":{\"firstHitMs\":10.799999999813735,\"totalMs\":10.884999999776483,\"hits\":3,\"counted\":0,\"batches\":1,\"summary\":{\"searchId\":2,\"totalHits\":3,\"detailedHits\":3,\"pageCount\":2000,\"ms\":10.049999999813735,\"firstHitMs\":0.9450000002980232}},\"regex\":{\"firstHitMs\":66.12999999988824,\"totalMs\":105.96999999973923,\"hits\":5000,\"counted\":905320,\"batches\":3,\"summary\":{\"searchId\":3,\"totalHits\":910320,\"detailedHits\":5000,\"pageCount\":2000,\"ms\":105.44500000029802,\"firstHitMs\":1.349999999627471}},\"supersede\":{\"outcome\":\"cancelled\",\"stopMs\":0.3700000001117587,\"staleAfterNew\":0}}"
+      }
+    },
+    {
+      "file": "perf/selection.spec.ts",
+      "title": "2,000-page stand-in: drag-select a page, Ctrl+A, Ctrl+C while scrolling",
+      "status": "passed",
+      "durationMs": 6707,
+      "metrics": {}
+    },
+    {
+      "file": "perf/selection.spec.ts",
+      "title": "dense A0 sheet: Ctrl+A on a page without text, no long tasks",
+      "status": "passed",
+      "durationMs": 3331,
+      "metrics": {}
+    },
+    {
+      "file": "perf/snap.spec.ts",
+      "title": "snap RTT p95 ≤ 16 ms on the dense A0 sheet, also during another extraction",
+      "status": "passed",
+      "durationMs": 10532,
+      "metrics": {
+        "snap-rtt-p95-ms": "4.09"
+      }
+    },
+    {
+      "file": "perf/stamps.spec.ts",
+      "title": "placing 50 dynamic stamps: no long tasks",
+      "status": "passed",
+      "durationMs": 4285,
+      "metrics": {}
+    },
+    {
+      "file": "perf/thumbnails.spec.ts",
+      "title": "thumbnails load while the document scrolls: no long tasks",
+      "status": "passed",
+      "durationMs": 8578,
+      "metrics": {}
+    },
+    {
+      "file": "perf/work-job.spec.ts",
+      "title": "a full-document Work job leaves the main thread free",
+      "status": "passed",
+      "durationMs": 7612,
+      "metrics": {
+        "textStats": "5671 ms for 2,000 pages"
+      }
+    },
+    {
+      "file": "perf/zoom.spec.ts",
+      "title": "A0 sheet at 800 %, 6400 % and 100 %: no long tasks; sharp tiles after each zoom",
+      "status": "passed",
+      "durationMs": 4333,
+      "metrics": {
+        "sharp-after-zoom-ms": "{\"100\":349,\"800\":280,\"6400\":272}"
+      }
+    },
+    {
+      "file": "offline.spec.ts",
+      "title": "first visit: \"Preparing offline… n %\" then \"✓ Ready offline\"; offline: reload, open, render, save and recover with zero outbound requests",
+      "status": "passed",
+      "durationMs": 10069,
+      "metrics": {}
+    },
+    {
+      "file": "offline.spec.ts",
+      "title": "M2 offline: protected open, search, panes, form fill + save, print, print-ready export; a report fails gracefully; zero outbound requests",
+      "status": "passed",
+      "durationMs": 6558,
+      "metrics": {}
+    },
+    {
+      "file": "offline.spec.ts",
+      "title": "M3 offline: markups, a snapped measurement, a stamp, the CRS export and Ctrl+S; zero outbound requests",
+      "status": "passed",
+      "durationMs": 4554,
+      "metrics": {}
+    },
+    {
+      "file": "update.spec.ts",
+      "title": "v2 deployed while v1 has a document open: \"Update ready\", no reload; applies after the last document closes",
+      "status": "passed",
+      "durationMs": 7066,
+      "metrics": {}
+    }
+  ]
+}

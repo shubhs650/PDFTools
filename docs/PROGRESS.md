@@ -9,6 +9,14 @@ M0–M2 are merged into `main` (M2 complete on the agent side, owner pack in
 
 ## Done
 
+- **Session 17 — M3-20 M3 acceptance: M3 complete (agent side).** M3 commands shown
+  (`AVAILABLE_MILESTONES` += M3; Export Annotations moved to M4, M3-Q1); a Ctrl+S perf scenario
+  with 100 mixed M3 markups (229 ms); the M3 offline proof (markups, snapped measurement, stamp,
+  CRS, Ctrl+S; zero outbound requests); axe on the M3 panes and dialogs in light, dark and the
+  pseudo-locale; the interop pack §M3 (6 files, qpdf-clean) and checklist §L/§M; snapping in
+  `npm run owner:timings`; acceptance table rows for M3. See
+  [docs/acceptance/M3.md](acceptance/M3.md).
+
 - **Session 17 — M3-19 CRS export.** Comment → Export CRS: header block (document number,
   revision, title, reviewer, date, status scheme), the §7.5 columns, replies and statuses, a
   snapshot per row (unsaved edits included) as XLSX built in the Work worker with ExcelJS
@@ -686,15 +694,23 @@ M0–M2 are merged into `main` (M2 complete on the agent side, owner pack in
 
 ## In progress
 
-- **M3 (session 16):** M3-01 … M3-08 as one commit each on
-  `claude/m3-task-breakdown-tlyokp` (the session's branch; the plan's `m3/<task>` branches were
-  not used because this session may only push to its own branch), pushed; no PR opened yet.
+- **M3 done on the agent side (session 17):** M3-16 … M3-20 as one commit each on
+  `claude/m3-tasks-16-20-vdqo8q` (pushed; no PR opened). Waiting on the owner pack
+  ([docs/acceptance/M3.md](acceptance/M3.md) §4). M4 is not started.
 - **Git in one paragraph (for the owner):** each task lives on its own _branch_ (a named line
   of commits). A _commit_ is a saved snapshot with a message; _push_ uploads the branch to
   GitHub; a _pull request_ (PR) asks to bring a branch into `main`, and GitHub runs the checks
   (CI) on it; _merge_ adds it to `main` once the checks are green.
 
 ## Session log
+
+- **Session 17 (2026-09-28/29):** M3-16, M3-17, M3-18, M3-19, M3-20 on
+  `claude/m3-tasks-16-20-vdqo8q` (one commit each). Local checks on the last commit: typecheck,
+  lint, format, 850 unit tests, license gate (711 packages, ExcelJS added), build +
+  `check:dist`, bundle report (core 7.21 MB, install 32.32 MB), full e2e suite 228 of 229 (incl.
+  offline and a11y; the M2 bookmarks view-history test missed once under load and passes 9 of 9
+  alone), 31 perf scenarios (three full runs, each with one-off stalls in different scenarios; each
+  passes alone — see M3 acceptance), acceptance table. qpdf installed in the container.
 
 - **Session 16 (2026-09-27), continued:** M3 plan approved; M3-03, M3-01, M3-02 (one commit
   each). Local checks: typecheck, lint, format, 705 unit tests, license gate (642 packages), the
@@ -772,32 +788,37 @@ M0–M2 are merged into `main` (M2 complete on the agent side, owner pack in
 
 ## Next
 
-1. **Owner:** review ADR-014 (annotation load via the Work worker, own annotation tiles) and
-   ADR-015 — **decide** stamps (PNG at 4× vs a B7 exception for vector stamps) and the workbook
-   library (ExcelJS with the `unzipper` override vs our own XLSX writer); then review and merge
-   `claude/m3-task-breakdown-tlyokp` (M3 plan, M3-01 … M3-03).
-2. **Owner:** the M2 owner pack in [docs/acceptance/M2.md](acceptance/M2.md) §4 — FAR / 500 MB
-   search timings, interop §M2 (I–K and signatures after a form save), the live error report
-   (Cloudflare setup in [docs/deploy/error-report.md](deploy/error-report.md)), Firefox smoke.
-3. **Owner:** the M1 owner pack in [docs/acceptance/M1.md](acceptance/M1.md) §3 and the M0 owner
-   runs:
-   - **S1 interop checklist** (`e2e/interop/CHECKLIST.md`) in Acrobat Reader and PDF-XChange;
-   - S1 FSA button on the 500 MB contract;
-   - **S5 search on the FAR and the 500 MB contract** (now also in `npm run owner:timings`);
-   - **S2 interop checklist** §D and §F (`e2e/fixtures/self-made/s2-interop/`);
-   - **S7 on the four local CAD drawings and the dense P&ID**
-     (`node spikes/s7-snap/run-node.ts <files>`, plus the browser page; see ADR-008);
-   - **S4 on the local pipe-chart fixture and a parts-list drawing**
-     (`node spikes/s4-oxide/run-node.ts <files>`; dumps in `out/review/`, see ADR-009);
-   - FAR, 500 MB and A0 through the S3 harness;
-   - S8 Firefox check and Pages preview.
+1. **Owner:** the M3 owner pack in [docs/acceptance/M3.md](acceptance/M3.md) §4 — interop §M3
+   (L/M) and the still-open §D/§F in Acrobat Reader and PDF-XChange (they decide ADR-007
+   decisions 2 and 3: the grouped measurement label and viewport semantics), snapping on the local
+   P&ID and CAD drawings (`npm run owner:timings`), the CRS in Excel.
+2. **Owner:** review and merge `claude/m3-tasks-16-20-vdqo8q` (M3-16 … M3-20) after
+   `claude/m3-task-breakdown-tlyokp` (M3-01 … M3-15, merged as PR #46).
+3. **Owner:** the M2 owner pack in [docs/acceptance/M2.md](acceptance/M2.md) §4 and the M1/M0
+   owner runs (below, unchanged).
 4. **Owner:** decide the items under "Decisions needed" (keyboard text selection, committed
    corpus PDFs, Pages project).
-5. **Owner:** the S2 interop run (§D/§F) before M3-16/M3-20 (M3-Q2 defaults are in use until then).
-6. **Agent:** M3-16 (distance, perimeter and area measurement tools) next, then M3-17 … M3-20 in
-   plan order. M3-09 … M3-15 are pushed on `claude/m3-task-breakdown-tlyokp`; no PR opened yet.
+5. **Agent:** M4 planning (`docs/plan/M4.md`) once the owner approves starting M4.
+6. **Owner (M0/M1, still open):** S1 interop checklist; S1 FSA button on the 500 MB contract; S5
+   search on the FAR and the 500 MB contract; S7 on the CAD drawings and the P&ID
+   (`node spikes/s7-snap/run-node.ts <files>`); S4 on the pipe chart and a parts list; FAR, 500 MB
+   and A0 through the S3 harness; S8 Firefox check and Pages preview.
 
 ## Open issues
+
+- **Perf stalls in this container (M3-20):** three full perf runs each had one or two one-off
+  main-thread tasks of 103–331 ms in a different scenario (snap, indexing, ink, print); each passes
+  alone. Two of them have no M3 code. Watch CI and the owner's machine: a scenario that fails
+  repeatedly is a bug.
+- **Measurement labels vs vertex editing (M3-16):** the plugin shows no vertex handles for a
+  selected group, so selecting a measurement's grouped label selects the measurement alone; the
+  label is derived (text and place follow the measurement).
+- **Plugin-instance hooks (M3-16):** `historyJoin.ts` (derived edits in the same undo step) and
+  `authoring.ts` patch EmbedPDF plugin instances (pinned 2.15.1); re-check on any upgrade.
+- **CRS snapshots (M3-19)** use PDFium's annotation flag, not ADR-014's annotation tiles
+  (ADR-015 d3): ~8 s for 1,000 rows here; the tile route is the fix if markup-dense sheets are slow.
+- **ExcelJS maintenance (ADR-015):** 4.4.0 (2023) with an npm override for `unzipper`; re-check
+  the override and `check:dist` on any upgrade.
 
 - **M3-08 tool keys** (G highlight, U underline, K strikeout, Q squiggly, I insert text,
   R replace text) are our choice — §8.1 names none. Owner may prefer others (the keymap is one

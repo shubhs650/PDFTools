@@ -15,6 +15,9 @@ import { expect, test } from '../support/fixtures.ts';
 // a cold search for OWNER_SEARCH (default "the"), then the same search warm.
 // The search word is not written to the report.
 //
+// M3-20 adds snapping (ADR-008): page 1's geometry prepared (extraction and
+// index, the "Preparing snapping…" time), then pointer query round trips.
+//
 // Each file is first copied into the browser's private storage (OPFS, not
 // timed), then opened through its file handle, as Chromium/Edge open a file
 // from disk: OPFS stands in for the disk file, and Ctrl+S appends to it with
@@ -96,6 +99,53 @@ FILES.forEach((file, n) => {
     const searchCold = await searchRun();
     const searchWarm = await searchRun();
 
+    // Snapping (M3-20, ADR-008): page 1's index, then 300 pointer moves over the page.
+    const p0 = await now(page);
+    await page.getByTestId('snap-toggle').click();
+    await expect
+      .poll(
+        async () =>
+          ((await cap(page, 'annotate', 'snap')) as { pages: Record<string, string> }).pages[
+            `${docId}/0`
+          ],
+        { timeout: LONG },
+      )
+      .toMatch(/ready|failed/);
+    const snapPrepareMs = Math.round((await now(page)) - p0);
+    // A profile, so the tool doesn't stop at the reviewer prompt (M3-07).
+    await cap(page, 'annotate', 'setProfile', 'Owner timings');
+    await page.getByRole('tab', { name: 'Measure' }).click();
+    await page
+      .getByRole('toolbar', { name: 'Measure commands' })
+      .getByRole('button', { name: 'Distance', exact: true })
+      .click();
+    // Over the middle of the view (whichever page is there): its index first, then 300 moves.
+    const area = await page.getByTestId('document-view').boundingBox();
+    const cx = (area?.x ?? 0) + (area?.width ?? 800) / 2;
+    const cy = (area?.y ?? 0) + (area?.height ?? 600) / 2;
+    await page.mouse.move(cx, cy);
+    await expect
+      .poll(
+        async () =>
+          Object.values(
+            ((await cap(page, 'annotate', 'snap')) as { pages: Record<string, string> }).pages,
+          ).includes('preparing'),
+        { timeout: LONG },
+      )
+      .toBe(false);
+    const before = ((await cap(page, 'annotate', 'snap')) as { rtts: number[] }).rtts.length;
+    for (let i = 0; i < 300; i++) {
+      const t = i / 10;
+      await page.mouse.move(cx + Math.cos(t) * 200, cy + Math.sin(t) * 150);
+    }
+    const rtts = ((await cap(page, 'annotate', 'snap')) as { rtts: number[] }).rtts
+      .slice(before)
+      .sort((a, b) => a - b);
+    const snapRttP95Ms = rtts.length
+      ? Number((rtts[Math.floor(rtts.length * 0.95)] ?? 0).toFixed(2))
+      : null;
+    await page.keyboard.press('Escape');
+
     // Ctrl+S with 100 markups (incremental append through the file handle).
     expect(await cap(page, 'save', 'addSquares', docId, 100)).toBeNull();
     await expect(firstTab(page)).toHaveAccessibleName('owner.pdf, unsaved changes');
@@ -122,6 +172,9 @@ FILES.forEach((file, n) => {
       sharpAfterZoomMs,
       searchCold,
       searchWarm,
+      snapPrepareMs,
+      snapRttP95Ms,
+      snapQueries: rtts.length,
       save100MarkupsMs,
       bytesAppended: savedBytes - bytes,
       longTasksOver100ms: await guard.longTasksOverLimit(),

@@ -47,11 +47,13 @@ describe('command table (M1-06)', () => {
     expect(missing).toEqual([]);
   });
 
-  it('shows M1 and M2 commands (M2 complete, M2-19); the rest are omitted (M1-Q2)', () => {
-    expect(AVAILABLE_MILESTONES).toEqual(['M1', 'M2']);
-    // Every M2 command works: none is left for the milestone flag alone to show.
+  it('shows M1, M2 and M3 commands (M3 complete, M3-20); the rest are omitted (M1-Q2)', () => {
+    expect(AVAILABLE_MILESTONES).toEqual(['M1', 'M2', 'M3']);
+    // Every M2 and M3 command works: none is left for the milestone flag alone to show.
     expect(
-      COMMANDS.filter((c) => c.milestone === 'M2' && c.shipped !== true).map((c) => c.id),
+      COMMANDS.filter(
+        (c) => (c.milestone === 'M2' || c.milestone === 'M3') && c.shipped !== true,
+      ).map((c) => c.id),
     ).toEqual([]);
     const available = COMMANDS.filter(isAvailable).map((c) => c.id);
     expect(available).toContain('protect.unlock'); // shipped in M2-03

@@ -213,3 +213,47 @@ copy. Then Ctrl+P → "Print with: The browser's PDF viewer" → Print.
 | K2  | Zoomed to 800 % the copy's text and lines stay sharp (vector, not an image).                                                        |                       |                       |
 | K3  | Viewer route: the browser's own print dialog opens with the chosen pages; printing to a PDF printer gives sharp lines.              |                       |                       |
 | K4  | Viewer route in a browser without a built-in PDF viewer (or with it turned off): note what happens; the raster route still works.   |                       |                       |
+
+## M3 — review: comments, stamps, measurements (D-03, D-14, D-23; [M3 acceptance](../../docs/acceptance/M3.md))
+
+Files: [`e2e/fixtures/self-made/m3-interop/`](../fixtures/self-made/m3-interop/), made by the
+**real app** and saved with Ctrl+S (a narrow incremental revision after the self-made original) by
+`M3_INTEROP_OUT=1 npm run owner:interop:m3` (`e2e/interop-m3.spec.ts`). Every file passes
+`qpdf --check`. Author of everything: "PDFTools Interop" (the reply thread also has "Bo Vendor").
+
+| File                            | What it is                                                                                                                                                                                                       |
+| ------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `types__ctrl-s.pdf`             | One of each: square, oval, arrow (line), polyline, polygon, cloud (polygon with `/BE`), pencil (ink), text box, sticky note, highlight, underline, strikeout, squiggly, inserted-text caret, dynamic stamp (AP). |
+| `replies-states__ctrl-s.pdf`    | A square with a reply, a reply to that reply, and two review states (Rejected by Bo Vendor, then Accepted by PDFTools Interop).                                                                                  |
+| `measure-page__ctrl-s.pdf`      | Page scale 1:100 (m, `/VP` "Page"); a 200 × 100 mm rectangle measured: distance 20.00 m, perimeter 60.00 m, area 200.00 m²; each with a grouped FreeText label.                                                  |
+| `measure-viewport__ctrl-s.pdf`  | Page 1:100 plus "Detail A" 1:5 (mm); an 80 × 40 mm plate inside: 400.0 mm, 1,200.0 mm, 80,000.0 mm²; one line from outside into Detail A (spans: valued at the page scale, 9.69 m).                              |
+| `encrypted-aes256__ctrl-s.pdf`  | AES-256 (owner password `owner`, no user password): the page-scale measurements and a stamp, written with our string encryption (M3-04).                                                                         |
+| `encrypted-rc4-128__ctrl-s.pdf` | The same with RC4-128.                                                                                                                                                                                           |
+
+### L. Ours → theirs (both viewers)
+
+| #   | File                           | Check                                                                                                                                              | Acrobat | PDF-XChange |
+| --- | ------------------------------ | -------------------------------------------------------------------------------------------------------------------------------------------------- | ------- | ----------- |
+| L1  | all                            | Opens without a repair message; closing without edits does not ask "Save changes?".                                                                |         |             |
+| L2  | `types__ctrl-s.pdf`            | All 15 are listed in the comments list with their type, author and text; each draws as it does in PDFTools.                                        |         |             |
+| L3  | `types__ctrl-s.pdf`            | The stamp shows "AP", the label, reviewer and date; its comment text says the same (searchable).                                                   |         |             |
+| L4  | `replies-states__ctrl-s.pdf`   | The thread shows both replies nested under the square, and the review status per reviewer (Bo Vendor: Rejected; PDFTools Interop: Accepted).       |         |             |
+| L5  | `measure-page__ctrl-s.pdf`     | The three are listed as **measurements** with 20.00 m / 60.00 m / 200.00 m²; the labels show the values on the page.                               |         |             |
+| L6  | `measure-page__ctrl-s.pdf`     | With the viewer's distance tool (no scale set), the rectangle's long side measures 20.00 m (our page `/VP` used).                                  |         |             |
+| L7  | `measure-viewport__ctrl-s.pdf` | The viewer's distance tool inside Detail A measures the plate's long side as 400 mm; outside it uses 1:100.                                        |         |             |
+| L8  | `measure-*__ctrl-s.pdf`        | Move a measurement's vertex and save: the value updates in the viewer; reopen in PDFTools — the value matches, the label follows on the next edit. |         |             |
+| L9  | `encrypted-*__ctrl-s.pdf`      | Opens without a password; measurements and the stamp as in L3/L5; File → Properties shows the same encryption as before.                           |         |             |
+
+### M. Theirs → ours
+
+1. In each viewer, add to a copy of `measure-page__ctrl-s.pdf`: a sticky note, a highlight, a
+   reply and a review status on our square, a stamp, and one distance / perimeter / area
+   measurement with the viewer's own scale (for example 1:50). Save.
+2. Open the saved file in PDFTools and record:
+
+| #   | Check                                                                                                                                                                             | Acrobat | PDF-XChange |
+| --- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------- | ----------- |
+| M1  | Every added comment is in the Comments pane with the viewer's author, text, date; the reply and status appear in the thread.                                                      |         |             |
+| M2  | The viewer's measurements keep **their own** values (their `/Measure`, ADR-007 d3), even though the page says 1:100; select one: the Properties pane says "Scale: from the file". |         |             |
+| M3  | Our own measurements still show 20.00 m / 60.00 m / 200.00 m²; Ctrl+S, reopen in the viewer: nothing of theirs was lost.                                                          |         |             |
+| M4  | Comment → Export CRS: every comment of theirs and ours is a row, with replies and statuses.                                                                                       |         |             |

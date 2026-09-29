@@ -1,6 +1,6 @@
 import type { Page } from '@playwright/test';
 import { hasQpdf, qpdfEncrypt } from './fixtures/encrypted.ts';
-import { NEEDLE, fullFormPdf, outlinedPdf } from './fixtures/generate.ts';
+import { NEEDLE, fullFormPdf, outlinedPdf, snapSheet } from './fixtures/generate.ts';
 import { cap, drop } from './support/app.ts';
 import { expect, test } from './support/fixtures.ts';
 import { printCalls, stubFramePrint } from './support/printStub.ts';
@@ -180,6 +180,95 @@ test(
       // Send may try its one same-origin POST (browsers differ on navigator.onLine
       // while offline); it fails, and nothing else is requested.
       expect(outbound.filter((u) => !/^failed https?:\/\/[^/]+\/api\/report$/.test(u))).toEqual([]);
+    } finally {
+      await context.setOffline(false);
+    }
+  },
+);
+
+test(
+  'M3 offline: markups, a snapped measurement, a stamp, the CRS export and Ctrl+S; zero outbound requests',
+  { tag: '@offline' },
+  async ({ page, context }) => {
+    test.setTimeout(120_000);
+    await page.goto('/?sw');
+    await expect(status(page).getByText('✓ Ready offline')).toBeVisible({ timeout: 60_000 });
+
+    await context.setOffline(true);
+    const outbound: string[] = [];
+    page.on('requestfailed', (r) => {
+      if (/^https?:/.test(r.url())) outbound.push(`failed ${r.url()}`);
+    });
+    page.on('response', (r) => {
+      if (/^https?:/.test(r.url()) && !r.fromServiceWorker()) outbound.push(r.url());
+    });
+    try {
+      await page.reload();
+      await expect(page.getByTestId('start-screen')).toBeVisible();
+      await stubSavePicker(page);
+      await cap(page, 'annotate', 'setProfile', 'Offline Reviewer');
+      await drop(page, [{ name: 'sheet.pdf', b64: Buffer.from(snapSheet()).toString('base64') }]);
+      await expect(page.locator('[data-page="0"] img.page-preview')).toBeVisible();
+      const id = (await cap(page, 'view', 'activeDocId')) as string;
+      await expect.poll(() => cap(page, 'annotate', 'list', id)).not.toBeNull();
+
+      // Annotation (M3-05) and a dynamic stamp (M3-14; its font from the cache).
+      await cap(page, 'annotate', 'createSquare', id, 0, 60, 60);
+      expect(await cap(page, 'annotate', 'stamp', id, 0, 300, 80)).not.toBeNull();
+
+      // A page scale, snapping on (Work + Snap workers), a measurement on the rectangle's edge.
+      const measure = page.getByRole('toolbar', { name: 'Measure commands' });
+      await page.getByRole('tab', { name: 'Measure' }).click();
+      await measure.getByRole('button', { name: 'Set Scale' }).click();
+      const dialog = page.getByRole('dialog', { name: 'Set scale' });
+      await dialog.getByLabel('Real').fill('100');
+      await dialog.getByLabel('Units').selectOption({ label: 'Metres' });
+      await dialog.getByRole('button', { name: 'Apply' }).click();
+      await page.getByTestId('snap-toggle').click();
+      await expect
+        .poll(
+          async () =>
+            ((await cap(page, 'annotate', 'snap')) as { pages: Record<string, string> }).pages[
+              `${id}/0`
+            ],
+          { timeout: 20_000 },
+        )
+        .toBe('ready');
+      await measure.getByRole('button', { name: 'Distance', exact: true }).click();
+      const box = await page.locator('[data-page="0"] .page-content').boundingBox();
+      if (!box) throw new Error('page not laid out');
+      const k = box.width / 600;
+      const at = (x: number, y: number) => ({ x: box.x + x * k, y: box.y + (600 - y) * k });
+      const a = at(402, 448);
+      const b = at(498, 452);
+      await page.mouse.move(a.x, a.y, { steps: 3 });
+      await expect(page.getByTestId('snap-marker')).toBeVisible();
+      await page.mouse.down();
+      await page.mouse.move(b.x, b.y, { steps: 6 });
+      await page.mouse.up();
+      await expect
+        .poll(async () =>
+          ((await cap(page, 'annotate', 'list', id)) as { contents: string | null }[]).some(
+            (o) => o.contents === '3.53 m',
+          ),
+        )
+        .toBe(true);
+      await page.keyboard.press('Escape');
+
+      // The CRS workbook (ExcelJS from the cache) and Ctrl+S.
+      await page.getByRole('tab', { name: 'Comment' }).click();
+      await page
+        .getByRole('toolbar', { name: 'Comment commands' })
+        .getByRole('button', { name: 'Export CRS' })
+        .click();
+      const crs = page.getByRole('dialog', { name: 'Export Comment Review Sheet' });
+      await crs.getByRole('button', { name: 'Export' }).click();
+      await expect(crs).toBeHidden({ timeout: 30_000 });
+      await page.getByTestId('document-view').focus();
+      await page.keyboard.press('Control+S');
+      await expect(tabs(page).first()).toHaveAccessibleName('sheet.pdf');
+      expect((await savedFiles(page)).map((f) => f.name)).toContain('sheet (CRS).xlsx');
+      expect(outbound).toEqual([]);
     } finally {
       await context.setOffline(false);
     }

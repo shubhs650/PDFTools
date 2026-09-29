@@ -29,12 +29,18 @@ const GOOD: PerfRow[] = [
     'm2-search': JSON.stringify({ common: { firstHitMs: 120, totalMs: 5400 } }),
   }),
   row('offline.spec.ts', 'M2 offline: protected open, … zero outbound requests'),
+  row('perf/save-m3.spec.ts', 'save m3', { 'save-100-m3-markups-ms': '166' }),
+  row('perf/snap.spec.ts', 'snap', { 'snap-rtt-p95-ms': '3.45' }),
+  row('offline.spec.ts', 'M3 offline: markups, … zero outbound requests'),
 ];
 
-describe('M1 + M2 acceptance table (M1-28, M2-19)', () => {
+describe('M1 + M2 + M3 acceptance table (M1-28, M2-19, M3-20)', () => {
   it('meets every target with good numbers', () => {
     const results = evaluate(GOOD);
-    expect(results).toHaveLength(12);
+    expect(results).toHaveLength(15);
+    expect(results.find((r) => r.target === 'query round trip p95 ≤ 16 ms')?.measured).toBe(
+      '3.45 ms',
+    );
     expect(results.find((r) => r.target === 'first hits < 1 s')?.measured).toBe('120 ms');
     expect(results.find((r) => r.target === 'complete < 15 s')?.measured).toBe('5400 ms');
     expect(results.filter((r) => r.verdict !== 'met')).toEqual([]);
@@ -56,5 +62,14 @@ describe('M1 + M2 acceptance table (M1-28, M2-19)', () => {
     expect(byArea.get('first hits < 1 s')).toBe('not measured');
     expect(byArea.get('complete < 15 s')).toBe('not measured');
     expect(renderAcceptance(evaluate(rows))).toContain('❌ missed');
+    const slowSnap = GOOD.map((r) =>
+      r.file === 'perf/snap.spec.ts' ? { ...r, metrics: { 'snap-rtt-p95-ms': '21' } } : r,
+    );
+    expect(evaluate(slowSnap).find((r) => r.target.startsWith('query round trip'))?.verdict).toBe(
+      'missed',
+    );
+    expect(new Map(evaluate(rows).map((r) => [r.area, r.verdict])).get('Offline proof (M3)')).toBe(
+      'not measured',
+    );
   });
 });
