@@ -999,7 +999,7 @@ export const COMMANDS: readonly CommandDef[] = [
     size: 'large',
     fluent: 'DocumentEdit',
     milestone: 'M4',
-    customPending: true,
+    custom: 'convert.word', // M4-03
   },
   {
     id: 'convert.images',
@@ -1041,7 +1041,7 @@ export const COMMANDS: readonly CommandDef[] = [
     fluent: 'TextStrikethrough',
     milestone: 'M4',
     toggle: true,
-    customPending: true,
+    custom: 'protect.markRedaction', // M4-03
   },
   {
     id: 'protect.markRedactionArea',
@@ -1051,7 +1051,7 @@ export const COMMANDS: readonly CommandDef[] = [
     fluent: 'RectangleLandscape',
     milestone: 'M4',
     toggle: true,
-    customPending: true,
+    custom: 'protect.markRedactionArea', // M4-03
   },
   {
     id: 'protect.applyRedactions',
@@ -1060,7 +1060,7 @@ export const COMMANDS: readonly CommandDef[] = [
     size: 'large',
     fluent: 'CheckmarkCircle',
     milestone: 'M4',
-    customPending: true,
+    custom: 'protect.applyRedactions', // M4-03
   },
   {
     id: 'protect.redactionList',

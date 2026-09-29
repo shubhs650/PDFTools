@@ -9,6 +9,11 @@ M0–M2 are merged into `main` (M2 complete on the agent side, owner pack in
 
 ## Done
 
+- **Session 18 — M4-03 custom icons.** To Word (page + ¶ tag, no Word logo), Mark for Redaction,
+  Mark Area for Redaction (Filled variants for the toggles) and Apply Redactions in
+  `src/ui/icons/custom/m4.ts`, drawn with `draw.ts` at 20 and 32 px; no M4 command is
+  `customPending`; the e2e gallery shows every custom icon for the owner's review.
+
 - **Session 18 — M4-02 redaction spike.** _Works with workaround_,
   [ADR-017](adr/017-m4-redaction.md) (proposed; decisions 3 and 5 need the owner). EmbedPDF's
   PDFium redaction (`EPDFPage_ApplyRedactions`) on a self-made 9-page adversarial file: removes all

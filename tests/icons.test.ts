@@ -95,6 +95,41 @@ describe('M3 custom icons (M3-06)', () => {
   });
 });
 
+describe('M4 custom icons (M4-03)', () => {
+  it('no M4 command waits for a custom icon; each has Regular, 32 px and pressed glyphs', () => {
+    const m4 = COMMANDS.filter((c) => c.milestone === 'M4');
+    expect(m4.filter((c) => c.customPending).map((c) => c.id)).toEqual([]);
+    const custom = m4.filter((x) => x.custom).map((c) => c.id);
+    expect(custom.sort()).toEqual([
+      'convert.word',
+      'protect.applyRedactions',
+      'protect.markRedaction',
+      'protect.markRedactionArea',
+    ]);
+    for (const c of m4.filter((x) => x.custom)) {
+      const g = CUSTOM_GLYPHS[c.custom ?? ''];
+      expect(g?.regular.small, c.id).toBeTruthy();
+      expect(g?.regular.large, c.id).toBeTruthy();
+      if (c.toggle) expect(g?.filled?.small, c.id).toBeTruthy();
+    }
+  });
+
+  it('render at 20 and 32 px in currentColor, with the pressed state drawn differently', () => {
+    for (const id of ['protect.markRedaction', 'protect.markRedactionArea']) {
+      const plain = renderToStaticMarkup(createElement(iconFor(id)));
+      const pressed = renderToStaticMarkup(createElement(iconFor(id, { pressed: true })));
+      expect(plain).toContain('viewBox="0 0 20 20"');
+      expect(pressed).not.toBe(plain);
+    }
+    for (const id of ['convert.word', 'protect.applyRedactions']) {
+      const large = renderToStaticMarkup(createElement(iconFor(id, { large: true })));
+      expect(large).toContain('viewBox="0 0 32 32"');
+      expect(large).not.toMatch(/fill="#|stroke="#/);
+      expect(large).toContain('aria-hidden="true"');
+    }
+  });
+});
+
 describe('icon registry (ADR-010)', () => {
   it('the generated Fluent imports are up to date with the command table', () => {
     expect(readFileSync(OUT, 'utf8')).toBe(generate());
