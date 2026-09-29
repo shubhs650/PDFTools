@@ -5,8 +5,15 @@
 import { readdir, readFile } from 'node:fs/promises';
 import { join, relative, resolve } from 'node:path';
 
-export const FORBIDDEN: readonly { marker: string; reason: string }[] = [
+export const FORBIDDEN: readonly { marker: string; reason: string; only?: RegExp }[] = [
   { marker: '__pdftoolsTest', reason: 'e2e test hook in a production build (M1-Q3)' },
+  // ADR-015 d2: ExcelJS's Node-only reader and its unlicensed dependency chain stay out.
+  // (Code only: the third-party notices name every installed package.)
+  {
+    marker: 'unzipper',
+    reason: "ExcelJS's Node streaming reader bundled (ADR-015)",
+    only: /\.m?js$/,
+  },
 ];
 
 export interface Finding {
@@ -32,6 +39,7 @@ export async function scanDist(dir: string): Promise<Finding[]> {
     if (!TEXT.test(file)) continue;
     const text = await readFile(file, 'utf8');
     for (const f of FORBIDDEN) {
+      if (f.only && !f.only.test(file)) continue;
       if (text.includes(f.marker)) {
         findings.push({ file: relative(root, file), marker: f.marker, reason: f.reason });
       }

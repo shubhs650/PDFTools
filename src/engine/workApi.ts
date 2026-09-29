@@ -20,9 +20,12 @@ import type {
 } from '../workers/work/search';
 import type { Hit, SearchOptions } from '../workers/work/searchCore';
 import type { VerifyResult } from '../workers/work/verifySave';
+import type { GridIndex } from '../model/snapIndex';
+import type { SnapshotRegion } from '../workers/work/crs';
+import type { WorkbookSpec } from '../workers/work/crsWorkbook';
 import type { MethodSpec } from './protocol';
 
-export type WorkPriority = 'interactive' | 'save-verify' | 'background';
+export type WorkPriority = 'interactive' | 'save-verify' | 'geometry' | 'background';
 
 export interface WorkApi {
   init: MethodSpec<{ wasmUrl: string }, { ms: number; wasmBytes: number }>;
@@ -118,6 +121,28 @@ export interface WorkApi {
   listLayers: MethodSpec<{ docId: string }, LayerList>;
   /** Each page's /VP (as plain PDF data) and MediaBox (M3-15, ADR-007). */
   pageViewports: MethodSpec<{ docId: string }, PageVp[]>;
+  /**
+   * A page's snap index (M3-18, ADR-008): its vector geometry extracted whole
+   * (cached per page), indexed, and transferred — the main thread hands it on
+   * to the Snap worker untouched. Geometry priority: below interactive search,
+   * above background indexing. `minLen` (points) drops shorter segments on
+   * dense pages (decision 3); `dense` says the page needed it.
+   */
+  snapGeometry: MethodSpec<
+    { docId: string; pageIndex: number; minLen: number },
+    { index: GridIndex; segments: number; dense: boolean; ms: number }
+  >;
+  /**
+   * CRS export (M3-19, D-15, ADR-015): the workbook built here (ExcelJS,
+   * lazy), with a snapshot per row when `snapshots` is given — rendered from
+   * a copy of the current revision plus `piece` (unsaved edits). Progress per
+   * row; cancellable between rows; the file's bytes come back transferred.
+   */
+  crs: MethodSpec<
+    { docId: string; piece?: ArrayBuffer; spec: WorkbookSpec; snapshots: SnapshotRegion[] | null },
+    { bytes: ArrayBuffer },
+    { done: number; total: number }
+  >;
   /** Form facts EmbedPDF doesn't give: /Tabs per page, /DV per field (M2-14). */
   formFacts: MethodSpec<{ docId: string }, FormFacts>;
   /**

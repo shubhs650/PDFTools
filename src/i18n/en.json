@@ -1,4 +1,8 @@
 {
+  "snap": {
+    "enable": "Enable Snapping",
+    "preparing": "Preparing snapping…"
+  },
   "app": {
     "name": "PDFTools",
     "description": "A free, offline, private PDF editor for engineers."
@@ -877,7 +881,10 @@
       "stamp": "Stamp",
       "caret": "Inserted text",
       "ink": "Pencil drawing",
-      "other": "Comment"
+      "other": "Comment",
+      "distance": "Distance measurement",
+      "perimeter": "Perimeter measurement",
+      "area": "Area measurement"
     },
     "anonymous": "Anonymous",
     "caret": {
@@ -1160,6 +1167,92 @@
       "length": "Enter the real length.",
       "range": "Enter pages such as 1-3, 5.",
       "save": "The scale couldn't be set. Try again."
+    }
+  },
+  "measure": {
+    "uncalibrated": "{{value}} (uncalibrated)",
+    "source": {
+      "viewport": "Scale: {{name}}, {{ratio}}",
+      "page": "Scale: page, {{ratio}}",
+      "own": "Scale: from the file, {{ratio}}",
+      "uncalibrated": "Uncalibrated",
+      "spanning": "Spans {{names}}: valued at the page scale"
+    },
+    "spansBadge": "Spans viewports",
+    "pageArea": "the page",
+    "spansHint": "Move its points into one viewport, or out of all of them, for a single scale."
+  },
+  "viewport": {
+    "baseName": "Detail",
+    "addTitle": "Scale viewport",
+    "editTitle": "Edit scale viewport",
+    "description": "A region of the page drawn at its own scale. Measurements inside it use this scale.",
+    "name": "Name",
+    "box": "Box (pt, from the page's lower left)",
+    "x1": "Left",
+    "y1": "Bottom",
+    "x2": "Right",
+    "y2": "Top",
+    "knownWidth": "Or: real width of the box",
+    "save": "Save",
+    "list": "Scale viewports on this page",
+    "none": "No scale viewports on this page.",
+    "add": "Add viewport",
+    "edit": "Edit {{name}}",
+    "delete": "Delete {{name}}",
+    "item": "{{name}} · {{ratio}}",
+    "unscaled": "{{name}} · no scale",
+    "error": {
+      "name": "Enter a name.",
+      "box": "Enter a box inside the page, at least 4 pt wide and high."
+    }
+  },
+  "crs": {
+    "title": "Export Comment Review Sheet",
+    "description": "A sheet with every comment, its replies and status, for the review record.",
+    "docNumber": "Document number",
+    "revision": "Revision",
+    "docTitle": "Title",
+    "reviewer": "Reviewer",
+    "date": "Date",
+    "scheme": "Status scheme: {{name}}",
+    "scope": "Comments",
+    "scopeAll": "All comments",
+    "scopeFiltered": "Only those the Comments pane shows",
+    "snapshots": "Include a snapshot of each markup",
+    "format": "Format",
+    "xlsx": "Excel workbook (.xlsx)",
+    "csv": "CSV (.csv, no snapshots)",
+    "export": "Export",
+    "cancel": "Cancel",
+    "close": "Close",
+    "progressName": "Building the sheet",
+    "progress": "Row {{done}} of {{total}}",
+    "failed": "The sheet couldn't be made. Try again.",
+    "empty": "There are no comments to export.",
+    "fileName": "{{base}} (CRS).{{ext}}",
+    "sheet": "CRS",
+    "sheetTitle": "Comment Review Sheet: {{title}}",
+    "head": {
+      "docNumber": "Document number",
+      "revision": "Revision",
+      "title": "Title",
+      "reviewer": "Reviewer",
+      "date": "Date",
+      "scheme": "Status scheme"
+    },
+    "col": {
+      "number": "No.",
+      "page": "Page",
+      "type": "Location/Type",
+      "reviewer": "Reviewer",
+      "discipline": "Discipline",
+      "comment": "Comment",
+      "replies": "Replies",
+      "status": "Status",
+      "snapshot": "Snapshot",
+      "vendorResponse": "Vendor Response",
+      "finalStatus": "Final Status"
     }
   }
 }

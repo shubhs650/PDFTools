@@ -31,6 +31,9 @@ import { DeleteThreadDialog } from '../features/annotate/comments/DeleteThreadDi
 import { SchemesDialog } from '../features/stamps/schemes/SchemesDialog';
 import { ImageStampDialog, StampDialog } from '../features/stamps/StampDialogs';
 import { CalibrateDialog, SetScaleDialog } from '../features/measure/ScaleDialogs';
+import { ViewportDialog } from '../features/measure/ViewportDialog';
+import { SnapStatus } from '../features/measure/SnapStatus';
+import { CrsDialog } from '../features/crs/CrsDialog';
 import { ScaleIndicator } from '../features/measure/ScaleIndicator';
 import { GrowthPrompt, SaveOptimizedDialog } from '../features/save/SaveDialogs';
 import { SaveErrorDialog, SaveStatus } from '../features/save/SaveStatus';
@@ -108,6 +111,7 @@ export function App() {
             pageNav: <PageNav />,
             view: (
               <>
+                <SnapStatus />
                 <ScaleIndicator />
                 <ViewModeSwitch />
                 <ZoomBox />
@@ -158,6 +162,8 @@ export function App() {
         <ImageStampDialog />
         <SetScaleDialog />
         <CalibrateDialog />
+        <ViewportDialog />
+        <CrsDialog />
         <UpdateWaitDialog />
         <DropZone />
         <HelpPage />

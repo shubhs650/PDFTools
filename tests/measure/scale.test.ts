@@ -97,10 +97,33 @@ describe('chooseScale (§7.4)', () => {
     );
     expect(c).toEqual({ kind: 'spanning', viewports: ['(page)', 'Detail A'], fallback: s100 });
   });
-  it('overlapping viewports: the later (top) one wins', () => {
-    const top: ScaleViewport = { name: 'Top', bbox: [140, 140, 160, 160], scale: s100 };
-    const c = chooseScale([{ x: 150, y: 150 }], [...vps, top], null);
-    expect(c.kind === 'viewport' && c.viewport.name).toBe('Top');
+  it('overlapping viewports: the smallest containing one wins, whatever the order', () => {
+    const inner: ScaleViewport = { name: 'Inner', bbox: [140, 140, 160, 160], scale: s100 };
+    const outer: ScaleViewport = { name: 'Outer', bbox: [0, 0, 500, 500], scale: s100 };
+    for (const list of [
+      [...vps, inner, outer],
+      [inner, outer, ...vps],
+    ]) {
+      const c = chooseScale([{ x: 150, y: 150 }], list, null);
+      expect(c.kind === 'viewport' && c.viewport.name).toBe('Inner');
+      const d = chooseScale([{ x: 120, y: 120 }], list, null);
+      expect(d.kind === 'viewport' && d.viewport.name).toBe('Detail A');
+    }
+  });
+  it('equal viewports: the later one; same-named viewports are still told apart', () => {
+    const again: ScaleViewport = { name: 'Detail A', bbox: [300, 300, 400, 400], scale: s100 };
+    const same: ScaleViewport = { name: 'Same', bbox: [100, 100, 200, 200], scale: s100 };
+    const c = chooseScale([{ x: 150, y: 150 }], [...vps, same], null);
+    expect(c.kind === 'viewport' && c.viewport.name).toBe('Same');
+    const span = chooseScale(
+      [
+        { x: 150, y: 150 },
+        { x: 350, y: 350 },
+      ],
+      [...vps, again],
+      null,
+    );
+    expect(span.kind).toBe('spanning');
   });
 });
 
@@ -148,9 +171,21 @@ describe('M3-15: ft-in, locale formatting, page viewports', () => {
     expect(formatLength(1 + 1 / 12 + 1 / 96, { ...s100, unit: 'ft', ftIn: 8 }, en)).toBe(
       `1'-1 1/8"`,
     );
-    expect(formatLength(200, s100, en, 'area')).toBe('200 m²');
+    expect(formatLength(200, s100, en, 'area')).toBe('200.00 m²');
+    expect(formatLength(80000, s5mm, en, 'area')).toBe('80,000.0 mm²');
     expect(ratioLabel(s100, en)).toBe('1 : 100');
     expect(ratioLabel({ paper: 1, real: 97.25, unit: 'mm', precision: 1 }, de)).toBe('1 : 97,25');
+  });
+
+  it('ft-in round-trips through /Measure as feet then inches to the fraction (Acrobat form)', async () => {
+    const { measureToPdf, measureFromPdf, toMeasureRL } = await import('../../src/model/scale');
+    const ft = { paper: 1, real: 48, unit: 'ft' as const, precision: 2, ftIn: 8 };
+    const m = toMeasureRL(ft);
+    expect(m.X.map((x) => x.U)).toEqual(['ft', 'in']);
+    expect(m.X[1]).toMatchObject({ C: 12, D: 8, F: 'F' });
+    const back = measureFromPdf(measureToPdf(ft));
+    expect(back).toMatchObject({ unit: 'ft', ftIn: 8, precision: 2 });
+    expect(back?.real).toBeCloseTo(48, 6);
   });
 
   it('writes and reads a page viewport (/VP with /Measure RL)', async () => {

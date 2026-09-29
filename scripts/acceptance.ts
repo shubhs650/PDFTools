@@ -1,6 +1,6 @@
-// M1 + M2 acceptance table (M1-28, M2-19, §12, D-27, ADR-002): reads
+// M1 + M2 + M3 acceptance table (M1-28, M2-19, M3-20, §12, D-27, ADR-002): reads
 // Playwright JSON reports (the perf project, plus the @offline run for the
-// offline proofs) and checks the M1- and M2-relevant §12 targets on typical,
+// offline proofs) and checks the M1-, M2- and M3-relevant §12 targets on typical,
 // self-made files.
 //
 // Usage: node scripts/acceptance.ts <report.json>... [--json <file>] [--markdown <file>]
@@ -77,9 +77,14 @@ export function evaluate(rows: readonly PerfRow[]): TargetResult[] {
   const sharp = json(m, 'sharp-after-zoom-ms') as Record<string, number> | undefined;
   const perf = rows.filter((r) => r.file.includes('perf/'));
   const offline = rows.filter(
-    (r) => r.title.includes('zero outbound requests') && !r.title.startsWith('M2 offline'),
+    (r) =>
+      r.title.includes('zero outbound requests') &&
+      !r.title.startsWith('M2 offline') &&
+      !r.title.startsWith('M3 offline'),
   );
   const offlineM2 = rows.filter((r) => r.title.startsWith('M2 offline'));
+  const offlineM3 = rows.filter((r) => r.title.startsWith('M3 offline'));
+  const snapP95 = num(m, 'snap-rtt-p95-ms');
   const search = (json(m, 'm2-search') as { common?: SearchRun } | undefined)?.common;
   const blank = scroll?.scroll900 && scroll.scroll3000;
   const out: TargetResult[] = [
@@ -190,6 +195,33 @@ export function evaluate(rows: readonly PerfRow[]): TargetResult[] {
           : 'missed',
       source: 'offline.spec.ts',
     },
+    // M3 (M3-20)
+    under(
+      'Save (Ctrl+S, 100 mixed M3 markups: shapes, measurements, stamps)',
+      '< 1 s (M3 markups)',
+      num(m, 'save-100-m3-markups-ms'),
+      1000,
+      'perf/save-m3.spec.ts',
+    ),
+    {
+      area: 'Snapping on the dense A0 sheet (while another page is extracted)',
+      target: 'query round trip p95 ≤ 16 ms',
+      measured: snapP95 === undefined ? '—' : `${snapP95.toFixed(2)} ms`,
+      verdict: snapP95 === undefined ? 'not measured' : snapP95 <= 16 ? 'met' : 'missed',
+      source: 'perf/snap.spec.ts',
+    },
+    {
+      area: 'Offline proof (M3)',
+      target:
+        'network off → markups, measurement with snapping, stamps, CRS export, Ctrl+S; zero outbound requests',
+      measured: offlineM3.length ? offlineM3.map((r) => r.status).join(', ') : '—',
+      verdict: !offlineM3.length
+        ? 'not measured'
+        : offlineM3.every((r) => r.status === 'passed')
+          ? 'met'
+          : 'missed',
+      source: 'offline.spec.ts',
+    },
   ];
   return out;
 }
@@ -198,7 +230,7 @@ const MARK: Record<Verdict, string> = { met: '✅', missed: '❌', 'not measured
 
 export function renderAcceptance(results: readonly TargetResult[]): string {
   return [
-    '### M1 + M2 acceptance: §12 targets on typical (self-made) files',
+    '### M1 + M2 + M3 acceptance: §12 targets on typical (self-made) files',
     '',
     '| Area | Target | Measured | Result |',
     '| --- | --- | --- | --- |',

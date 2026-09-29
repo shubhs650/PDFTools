@@ -11,6 +11,7 @@ import type {
 import { appStore } from '../../app/store/appStore';
 import { capability } from '../view/host';
 import { scaleStore } from './scaleStore';
+import { snapPoint } from './snapping';
 
 let first: { page: number; x: number; y: number } | null = null;
 
@@ -18,7 +19,12 @@ const handler: HandlerFactory<PdfAnnotationObject> = {
   annotationType: PdfAnnotationSubtype.LINE,
   create(context) {
     return {
-      onClick: (pos) => {
+      onPointerMove: (p, evt) => {
+        // Keeps the snap marker live (M3-18); the click takes the snapped point.
+        snapPoint(context.pageIndex, p, evt);
+      },
+      onClick: (p, evt) => {
+        const pos = snapPoint(context.pageIndex, p, evt);
         if (first?.page !== context.pageIndex) {
           first = { page: context.pageIndex, ...pos };
           return;

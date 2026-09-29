@@ -53,6 +53,8 @@ type JobMethod =
   | 'docProperties'
   | 'checkSignatures'
   | 'hitRects'
+  | 'snapGeometry'
+  | 'crs'
   | 'indexText';
 
 export interface WorkClientOptions {
@@ -246,6 +248,8 @@ export class WorkClient {
     options: CallOptions<ProgressOf<WorkApi, K>> = {},
   ): { promise: Promise<ResultOf<WorkApi, K>>; cancel(): void } {
     const ac = new AbortController();
+    // A signal aborted before the call cancels it at once (no 'abort' event comes).
+    if (options.signal?.aborted) ac.abort();
     options.signal?.addEventListener('abort', () => {
       ac.abort();
     });

@@ -115,7 +115,7 @@ for (const q of ['/', '/?locale=pseudo']) {
   });
 }
 
-test('every command M1 and M2 show has a handler: none says "Not available yet" (M1-28, M2-19)', async ({
+test('every command M1, M2 and M3 show has a handler: none says "Not available yet" (M1-28, M2-19, M3-20)', async ({
   page,
   pdfs,
 }) => {
@@ -177,6 +177,20 @@ test('every command M1 and M2 show has a handler: none says "Not available yet" 
     'protect.signatures',
     'help.help',
     'help.errorReport',
+    // M3
+    'qat.undo',
+    'qat.redo',
+    'comment.highlight',
+    'comment.stickyNote',
+    'comment.stamp',
+    'comment.commentsPane',
+    'comment.exportCrs',
+    'measure.distance',
+    'measure.area',
+    'measure.setScale',
+    'measure.scaleViewport',
+    'measure.snapping',
+    'measure.snapNearest',
   ])
     expect(seen).toContain(id);
 });

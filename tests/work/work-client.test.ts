@@ -78,6 +78,12 @@ function fakeSpawn(world: FakeWorld) {
       formFacts: () => ({ tabs: [], annotated: [], defaults: {}, encrypted: false }),
       checkSignatures: () => [],
       pageViewports: () => [],
+      crs: () => {
+        throw new Error('not used');
+      },
+      snapGeometry: () => {
+        throw new Error('not used');
+      },
       docProperties: () => {
         throw new Error('unused');
       },

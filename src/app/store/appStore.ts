@@ -36,6 +36,8 @@ export interface AppState {
   leftPaneWidth: number;
   propertiesOpen: boolean;
   ribbonCollapsed: boolean;
+  /** The ribbon tab shown (M3-17: scale viewports show on the Measure tab). */
+  ribbonTab: string;
   shortcutsOpen: boolean;
   tool: Tool;
   /** Space held: Hand until released (§8.1). */
@@ -47,6 +49,7 @@ export interface AppState {
   toggleProperties(): void;
   setProperties(open: boolean): void;
   toggleRibbon(): void;
+  setRibbonTab(tab: string): void;
   setShortcutsOpen(open: boolean): void;
   setTool(tool: Tool): void;
   setSpaceHand(on: boolean): void;
@@ -59,6 +62,7 @@ export const createAppStore = () =>
     leftPaneWidth: PANE_WIDTH_DEFAULT,
     propertiesOpen: false,
     ribbonCollapsed: false,
+    ribbonTab: 'home',
     shortcutsOpen: false,
     tool: 'select',
     spaceHand: false,
@@ -83,6 +87,9 @@ export const createAppStore = () =>
     },
     toggleRibbon: () => {
       set((s) => ({ ribbonCollapsed: !s.ribbonCollapsed }));
+    },
+    setRibbonTab: (tab) => {
+      set({ ribbonTab: tab });
     },
     setShortcutsOpen: (open) => {
       set({ shortcutsOpen: open });

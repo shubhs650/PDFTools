@@ -1,18 +1,20 @@
-// Page scales (M3-15, §7.4, D-14, ADR-007): read from each page's /VP
-// (ours and viewers') through the Work worker, and set by staging a new /VP
-// through the object layer (M3-03), saved in the same Ctrl+S revision. A page's
-// scale is its whole-page viewport; other viewports on it are kept. The user's
-// last units and precision are remembered on this device (settings).
+// Page scales and scale viewports (M3-15, M3-17, §7.4, D-14, ADR-007): read
+// from each page's /VP (ours and viewers') through the Work worker, and changed
+// by staging the page's new /VP through the object layer (M3-03), saved in the
+// same Ctrl+S revision. A page's scale is its whole-page viewport; its detail
+// viewports ("Detail A 1:5") are the others. Entries we don't touch are kept
+// as read. The user's last units and precision are remembered on this device.
 import { createStore, useStore } from 'zustand';
 import { recordError } from '../../app/diagnostics';
 import { documentStore } from '../../app/store/documentStore';
 import {
   PAGE_VIEWPORT_NAME,
-  pageScale,
   viewportsFromPdf,
   viewportToPdf,
+  type PageViewport,
   type Scale,
 } from '../../model/scale';
+import { coversPage, layoutOf, type Box, type PageLayout } from '../../model/scaleViewport';
 import type { PdfJson } from '../../model/pdf/wire';
 import { appDb } from '../../storage/appDb';
 import type { PageVp } from '../../workers/work/viewports';
@@ -28,8 +30,8 @@ export interface MeasureDefaults {
 
 interface DocScales {
   pages: PageVp[];
-  /** Scales set in this session (staged, saved with the next Ctrl+S). */
-  set: Record<number, Scale>;
+  /** Pages' /VP lists changed in this session (staged, saved with the next Ctrl+S). */
+  vp: Record<number, PdfJson[]>;
 }
 
 interface ScaleState {
@@ -51,14 +53,34 @@ export function useScales<T>(selector: (s: ScaleState) => T): T {
   return useStore(scaleStore, selector);
 }
 
-/** The page's scale: set in this session, else read from its /VP; null = uncalibrated. */
-export function scaleOf(s: Pick<ScaleState, 'docs'>, docId: string, page: number): Scale | null {
+/** The page's /VP entries now (this session's, else the file's). */
+export function entriesOf(s: Pick<ScaleState, 'docs'>, docId: string, page: number): PdfJson[] {
   const d = s.docs[docId];
-  if (!d || typeof d === 'string') return null;
-  const set = d.set[page];
-  if (set) return set;
-  const p = d.pages[page];
-  return p ? pageScale(viewportsFromPdf(p.vp), p.mediaBox) : null;
+  if (!d || typeof d === 'string') return [];
+  const mine = d.vp[page];
+  if (mine) return mine;
+  const vp = d.pages[page]?.vp;
+  return Array.isArray(vp) ? vp : [];
+}
+
+/** Each /VP entry read (null where it can't be), in order. */
+export const readEntries = (list: readonly PdfJson[]): (PageViewport | null)[] =>
+  list.map((e) => viewportsFromPdf([e])[0] ?? null);
+
+export function mediaBoxOf(s: Pick<ScaleState, 'docs'>, docId: string, page: number): Box {
+  const d = s.docs[docId];
+  const p = d && typeof d !== 'string' ? d.pages[page] : undefined;
+  return p?.mediaBox ?? [0, 0, 612, 792];
+}
+
+/** The page's default scale and detail viewports. */
+export function layoutFor(s: Pick<ScaleState, 'docs'>, docId: string, page: number): PageLayout {
+  return layoutOf(readEntries(entriesOf(s, docId, page)), mediaBoxOf(s, docId, page));
+}
+
+/** The page's scale: its whole-page viewport; null = uncalibrated. */
+export function scaleOf(s: Pick<ScaleState, 'docs'>, docId: string, page: number): Scale | null {
+  return layoutFor(s, docId, page).pageDefault;
 }
 
 export async function loadScales(docId: string): Promise<void> {
@@ -68,11 +90,41 @@ export async function loadScales(docId: string): Promise<void> {
   try {
     await workClient().whenAdded(docId, 10_000);
     const pages = await workClient().run('pageViewports', { docId }).promise;
-    scaleStore.setState((s) => ({ docs: { ...s.docs, [docId]: { pages, set: {} } } }));
+    scaleStore.setState((s) => ({ docs: { ...s.docs, [docId]: { pages, vp: {} } } }));
   } catch (err) {
     recordError('measure.viewports', err);
     scaleStore.setState((s) => ({ docs: { ...s.docs, [docId]: 'failed' } }));
   }
+}
+
+/** Stages each page's new /VP list and keeps it as the page's list now. */
+export async function setEntries(
+  docId: string,
+  lists: ReadonlyMap<number, PdfJson[]>,
+): Promise<boolean> {
+  const { rpc } = renderEngine();
+  const done = new Map<number, PdfJson[]>();
+  try {
+    for (const [page, list] of lists) {
+      await rpc.call('stageObjects', { docId, target: { page }, set: { VP: list } }).promise;
+      done.set(page, list);
+    }
+  } catch (err) {
+    recordError('measure.stage', err);
+    return false;
+  } finally {
+    if (done.size > 0) {
+      scaleStore.setState((s) => {
+        const cur = s.docs[docId];
+        if (!cur || typeof cur === 'string') return s;
+        return {
+          docs: { ...s.docs, [docId]: { ...cur, vp: { ...cur.vp, ...Object.fromEntries(done) } } },
+        };
+      });
+      documentStore.getState().markDirty(docId);
+    }
+  }
+  return true;
 }
 
 /**
@@ -85,41 +137,30 @@ export async function applyScale(
   scale: Scale,
 ): Promise<boolean> {
   await loadScales(docId);
-  const d = scaleStore.getState().docs[docId];
+  const st = scaleStore.getState();
+  const d = st.docs[docId];
   if (!d || typeof d === 'string') return false;
-  const { rpc } = renderEngine();
-  try {
-    for (const page of pages) {
-      const p = d.pages[page];
-      if (!p) continue;
-      const others = (Array.isArray(p.vp) ? p.vp : []).filter((entry) => {
-        const [vp] = viewportsFromPdf([entry]);
-        return vp?.name !== PAGE_VIEWPORT_NAME;
-      });
-      const vp: PdfJson = [
-        ...others,
-        viewportToPdf({ name: PAGE_VIEWPORT_NAME, bbox: p.mediaBox, scale }),
-      ];
-      await rpc.call('stageObjects', { docId, target: { page }, set: { VP: vp } }).promise;
-    }
-  } catch (err) {
-    recordError('measure.stage', err);
-    return false;
+  const lists = new Map<number, PdfJson[]>();
+  for (const page of pages) {
+    const p = d.pages[page];
+    if (!p) continue;
+    const others = entriesOf(st, docId, page).filter((entry) => {
+      const [vp] = viewportsFromPdf([entry]);
+      return !vp || !(vp.name === PAGE_VIEWPORT_NAME || coversPage(vp.bbox, p.mediaBox));
+    });
+    lists.set(page, [
+      ...others,
+      viewportToPdf({ name: PAGE_VIEWPORT_NAME, bbox: p.mediaBox, scale }),
+    ]);
   }
-  scaleStore.setState((s) => {
-    const cur = s.docs[docId];
-    if (!cur || typeof cur === 'string') return s;
-    const set = { ...cur.set };
-    for (const page of pages) set[page] = scale;
-    return { docs: { ...s.docs, [docId]: { ...cur, set } } };
-  });
-  documentStore.getState().markDirty(docId);
-  void rememberDefaults({
-    unit: scale.unit,
-    precision: scale.precision,
-    ...(scale.ftIn ? { ftIn: scale.ftIn } : {}),
-  });
-  return true;
+  const ok = await setEntries(docId, lists);
+  if (ok)
+    void rememberDefaults({
+      unit: scale.unit,
+      precision: scale.precision,
+      ...(scale.ftIn ? { ftIn: scale.ftIn } : {}),
+    });
+  return ok;
 }
 
 let defaultsLoaded = false;

@@ -12,7 +12,10 @@ import { openProfileDialog, requestProfile } from '../settings/profile/profileSt
 import { openSchemes } from '../stamps/schemes/schemeStore';
 import { placeDynamicStamp, placeImageStamp } from '../stamps/stampTools';
 import { stampStore } from '../stamps/stampStore';
-import { openScaleDialog, scaleStore } from '../measure/scaleStore';
+import { loadScales, openScaleDialog, scaleStore } from '../measure/scaleStore';
+import { MEASURE_COMMANDS } from '../measure/measureTools';
+import { setSnapping, snapStore, toggleKind } from '../measure/snapping';
+import { openCrs } from '../crs/crsExport';
 import { capability, hostStore } from '../view/host';
 import { annotationCapability, annotationState } from './selection';
 import { cycleTarget, pageAnnotations } from './model';
@@ -157,6 +160,23 @@ export function registerAnnotateCommands(): () => void {
         },
       }),
     ),
+    // Measurements (M3-16): on until Esc or the command again; the page's scales load first.
+    ...Object.entries(MEASURE_COMMANDS).map(([command, tool]) =>
+      registerCommand(command, {
+        requires: 'annotate',
+        isPressed: () => appStore.getState().tool === tool,
+        run: async () => {
+          if (appStore.getState().tool === tool) {
+            appStore.getState().setTool('select');
+            return;
+          }
+          const id = activeId();
+          if (id) void loadScales(id);
+          await requestProfile();
+          appStore.getState().setTool(tool);
+        },
+      }),
+    ),
     // Enter on the page: place a note or text box at its centre (M3-Q6), or
     // finish the polyline/polygon being drawn. Otherwise Enter keeps its job.
     registerCommand('tool.enter', {
@@ -294,12 +314,56 @@ export function registerAnnotateCommands(): () => void {
         },
       }),
     ),
+    // Snapping (M3-18): the switch (also in the status bar) and one per snap kind.
+    registerCommand('measure.snapping', {
+      run: () => {
+        void setSnapping(!snapStore.getState().enabled);
+      },
+      isPressed: () => snapStore.getState().enabled,
+    }),
+    ...(
+      [
+        ['measure.snapEndpoint', 'endpoint'],
+        ['measure.snapMidpoint', 'midpoint'],
+        ['measure.snapIntersection', 'intersection'],
+        ['measure.snapNearest', 'nearest'],
+      ] as const
+    ).map(([command, kind]) =>
+      registerCommand(command, {
+        run: () => {
+          toggleKind(kind);
+        },
+        isPressed: () => snapStore.getState().kinds[kind],
+      }),
+    ),
     registerCommand('measure.calibrate', {
       requiresDocument: true,
       isPressed: () => appStore.getState().tool === 'calibrate',
       run: () => {
         scaleStore.setState({ picked: null });
         openScaleDialog('calibrate');
+      },
+    }),
+    // Scale viewports (M3-17): draw a rectangle, then name and scale it.
+    registerCommand('measure.scaleViewport', {
+      requires: 'annotate',
+      isPressed: () => appStore.getState().tool === 'scaleViewport',
+      run: () => {
+        if (appStore.getState().tool === 'scaleViewport') {
+          appStore.getState().setTool('select');
+          return;
+        }
+        const id = activeId();
+        if (id) void loadScales(id);
+        appStore.getState().setTool('scaleViewport');
+      },
+    }),
+    // Comment Review Sheet (M3-19): the dialog, prefilled.
+    registerCommand('comment.exportCrs', {
+      requiresDocument: true,
+      run: () => {
+        const id = activeId();
+        if (id) void openCrs(id);
       },
     }),
     registerCommand('comment.statusSchemes', {
@@ -395,9 +459,14 @@ export function registerAnnotateCommands(): () => void {
       watch();
     }
   });
+  // Snap switches are toggles on the Measure tab.
+  const offSnap = snapStore.subscribe((s, prev) => {
+    if (s.enabled !== prev.enabled || s.kinds !== prev.kinds) notify();
+  });
   return () => {
     offRegistry();
     offPlugins();
+    offSnap();
     for (const off of offs) off();
   };
 }

@@ -230,3 +230,80 @@ for (const [variant, url] of [
     }
   });
 }
+
+// M3-20: the M3 panes and dialogs — Comments pane with a thread, the
+// Properties pane with a measurement and the page's viewports, the stamp,
+// scheme, profile, scale, viewport and CRS dialogs — in light, dark and the
+// pseudo-locale, reached by command id so the steps work in any language.
+for (const [variant, url] of [
+  ['light', '/'],
+  ['dark', '/?theme=dark'],
+  ['pseudo-locale', '/?locale=pseudo'],
+] as const) {
+  test(`M3 panes and dialogs (${variant})`, { tag: '@a11y' }, async ({ page }) => {
+    const { simplePdf } = await import('./fixtures/generate.ts');
+    await page.goto(url);
+    await cap(page, 'annotate', 'setProfile', 'Ana de Vries');
+    const [id] = (await cap(page, 'open', 'openHandles', [
+      { name: 'm3.pdf', b64: Buffer.from(simplePdf(1)).toString('base64') },
+    ])) as string[];
+    if (!id) throw new Error('not opened');
+    await expect(page.locator('[data-page="0"] img.page-preview')).toBeVisible();
+    await expect.poll(() => cap(page, 'annotate', 'list', id)).not.toBeNull();
+    const run = (cmd: string) =>
+      page.evaluate(
+        (c) =>
+          (
+            window as unknown as {
+              __pdftoolsTest: { capabilities: { commands: { run(id: string): Promise<boolean> } } };
+            }
+          ).__pdftoolsTest.capabilities.commands.run(c),
+        cmd,
+      );
+    const square = (await cap(page, 'annotate', 'createSquare', id, 0, 60, 60)) as string;
+    const line = (await cap(page, 'annotate', 'measure', id, 0, 'distance', [
+      { x: 100, y: 400 },
+      { x: 300, y: 400 },
+    ])) as string;
+    await expect
+      .poll(async () => ((await cap(page, 'annotate', 'list', id)) as unknown[]).length)
+      .toBe(3);
+
+    // Comments pane with the square's thread open.
+    await run('comment.commentsPane');
+    await cap(page, 'annotate', 'select', id, 0, square);
+    await expect(page.getByTestId('left-pane')).toBeVisible();
+    await page.waitForTimeout(200);
+    await axe(page, 'Comments pane');
+
+    // Properties pane: the measurement, and the Measure tab's viewport list.
+    await run('view.propertiesPane');
+    await cap(page, 'annotate', 'select', id, 0, line);
+    await expect(page.getByTestId('measure-info')).toBeVisible();
+    await page.locator('#ribbon-tab-measure').click();
+    await expect(page.locator('.viewport-list')).toBeVisible();
+    await axe(page, 'Properties pane (measurement, viewports)');
+    await page.locator('.viewport-list > button').click();
+    await expect(page.getByRole('dialog')).toBeVisible();
+    await axe(page, 'dialog scale viewport');
+    await page.keyboard.press('Escape');
+    await expect(page.getByRole('dialog')).toHaveCount(0);
+
+    for (const cmd of [
+      'comment.reviewerProfile',
+      'comment.statusSchemes',
+      'comment.stamp',
+      'comment.imageStamp',
+      'measure.setScale',
+      'measure.calibrate',
+      'comment.exportCrs',
+    ]) {
+      expect(await run(cmd)).toBe(true);
+      const dialog = page.getByRole('dialog');
+      await expect(dialog).toBeVisible();
+      await axe(page, `dialog ${cmd}`);
+      await page.keyboard.press('Escape');
+      await expect(dialog).toHaveCount(0);
+    }
+  });
+}
