@@ -9,6 +9,18 @@ M0–M2 are merged into `main` (M2 complete on the agent side, owner pack in
 
 ## Done
 
+- **Session 18 — M4-01 page-operations spike.** _Works with workaround_,
+  [ADR-016](adr/016-m4-page-operations.md) (proposed; decisions 3, 5, 7 need the owner). Direct
+  PDFium exports for rotate/delete/insert/move/import (EmbedPDF has only delete/import/extract). A
+  **semantic dirty set** (compare PDFium's appended objects with the base) keeps page-operation
+  saves narrow: 40 of 40 cases (xref table, object streams, nested tree, AES-256, RC4-128)
+  qpdf-clean and identical after reopen; 2,000-page stand-in tail 0.24 MB vs 1.82 MB keep-all.
+  Found: EmbedPDF's page cache is keyed by index and goes stale; no reducer case for a new page
+  list, and the annotation plugin drops annotations that change page on reload (workaround:
+  empty the store, then `SET_DOCUMENT_LOADED`); ADR-005's verification cannot see page order;
+  deletes leave dangling dests and fields; undo by reopen ~0.5 s on 2,000 pages (Node). Spike
+  `spikes/s14-pages/` (Node only; the browser-side relayout is M4-09's perf gate).
+
 - **Session 18 — M4 plan follow-up: image order and comment transfer.** Owner approved the plan
   (M4-Q1 … Q11 as proposed) and two follow-ups. Q6: checked PDF Oxide 0.3.77 on a self-made page —
   Markdown puts images at the end of the page, HTML has none, its own DOCX pins every block to a
@@ -830,6 +842,10 @@ M0–M2 are merged into `main` (M2 complete on the agent side, owner pack in
 
 ## Open issues
 
+- **Signatures listed twice after a keep-all save (M4-01, ADR-016 finding 9):** PDFium re-appends
+  the `/Sig` dictionary in a keep-all tail and `findSignatures` counts it again. Affects today's
+  keep-all fallback on signed files after any untracked change; fix (de-duplicate by object number)
+  scheduled in M4-09.
 - **Perf stalls in this container (M3-20):** three full perf runs each had one or two one-off
   main-thread tasks of 103–331 ms in a different scenario (snap, indexing, ink, print); each passes
   alone. Two of them have no M3 code. Watch CI and the owner's machine: a scenario that fails

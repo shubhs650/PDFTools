@@ -16,6 +16,7 @@ Throwaway spike code for [docs/plan/M0.md](../docs/plan/M0.md) (S1–S8) and M1-
 | S6    | [`s6-icons/`](s6-icons/)                 | [ADR-010](../docs/adr/010-s6-fluent-icons.md)        | Works with workaround |
 | S9    | [`s9-plugins/`](s9-plugins/) (M1-01)     | [ADR-011](../docs/adr/011-m1-embedpdf-plugins.md)    | Works with workaround |
 | S12   | [`s12-annotate/`](s12-annotate/) (M3-01) | [ADR-014](../docs/adr/014-m3-annotations.md)         | Works with workaround |
+| S14   | [`s14-pages/`](s14-pages/) (M4-01)       | [ADR-016](../docs/adr/016-m4-page-operations.md)     | Works with workaround |
 
 ## Shared pieces (`shared/`)
 
