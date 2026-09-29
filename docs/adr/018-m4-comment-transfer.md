@@ -1,8 +1,8 @@
 # ADR-018: M4 — Comment transfer (import from PDF or JSON, copy/paste between documents)
 
-- **Status:** Proposed. **Scope accepted by the owner on 2026-09-29** (decisions 1, 4–8). The
-  technical route (decisions 2–3) is settled by the M4-19 spike, which fills in **Outcome** and
-  **Evidence**; ARCHITECTURE.md is amended (decision 9) only after this ADR is accepted.
+- **Status:** Accepted (owner, 2026-09-29: scope — decisions 1, 4–8 — at the M4 plan review; the
+  route — decisions 2–3, as confirmed by the M4-19 spike — after it). Decision 9 applied:
+  ARCHITECTURE.md Rev 0.6 (§7.1, §7.6, §13 M4).
 - **Date:** 2026-09-29
 - **Deciders:** Owner (scope); recorded by the coding agent
 - **Related decisions:** D-03, D-06, D-15, D-16, D-19 (ARCHITECTURE.md §2); §7.1, §7.6, §13, §14;
@@ -78,11 +78,11 @@ and cannot yet add new objects that the Render worker's PDFium instance knows ab
    and page, within a document and between open tabs). New commands `comment.importComments`
    (Comment → Manage Comments), `comment.copyComments`, `comment.pasteComments` (Ctrl+C / Ctrl+V
    when comments are selected; text selection keeps Ctrl+C for text).
-2. _(Proposed; confirmed by M4-19, needs the owner)_ **Route:** option 3 (hybrid) — object copy
+2. _(Owner, accepted after M4-19)_ **Route:** option 3 (hybrid) — object copy
    for PDF sources and copy/paste, re-creation for JSON. The spike shows object copy is exact
    (33 of 33 appearances pixel-identical, every key kept) and 7–15× faster than re-creation, which
    loses keys and changes 7 of 33 appearances (findings 1, 8).
-3. _(Proposed; confirmed by M4-19, needs the owner)_ **Where the work runs:** reading and
+3. _(Owner, accepted after M4-19)_ **Where the work runs:** reading and
    deep-copying in the **Work worker** (it already holds a read-only copy of each open document; a
    PDF picked only for import is opened there without a tab); the Render worker only applies the
    result (reopen or `createAnnotation`). The main thread sends ids and options and receives counts
@@ -107,7 +107,7 @@ and cannot yet add new objects that the Render worker's PDFium instance knows ab
 8. _(Owner, accepted)_ **Clipboard:** in-app only (a per-session store holding the copied
    comments), never the system clipboard. The store holds a self-contained copy, so a paste still
    works after the source tab is closed; it is emptied when the app closes.
-9. **Proposed ARCHITECTURE.md wording** (applied only after acceptance):
+9. **ARCHITECTURE.md wording** (applied in Rev 0.6 on acceptance):
    - §7.1, new bullet after "Comments pane": "**Comment transfer:** import comments from another
      PDF (e.g. an earlier revision; page range, filters, page mapping, duplicates skipped by `/NM`)
      or from our JSON export, and copy/paste comments between documents; imported comments are

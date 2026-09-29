@@ -786,8 +786,8 @@ M0–M2 are merged into `main` (M2 complete on the agent side, owner pack in
   (spikes; ADR-016 and ADR-017 accepted), M4-03 (icons), M4-04 (Oxide and the export
   framework), M4-05 (text, Markdown, HTML), M4-06 (images), M4-07 (Word, Beta), M4-08 (annotation export), M4-19 (comment-transfer
   spike).
-  ADR-018 (comment transfer) is proposed with the M4-19 outcome filled in (hybrid route
-  confirmed); ARCHITECTURE.md §7.1/§7.6/§13 are amended once the owner accepts it.
+  ADR-018 (comment transfer) accepted after the M4-19 spike (hybrid route); ARCHITECTURE.md Rev
+  0.6 (§7.1, §7.6, §13).
 - **Git in one paragraph (for the owner):** each task lives on its own _branch_ (a named line
   of commits). A _commit_ is a saved snapshot with a message; _push_ uploads the branch to
   GitHub; a _pull request_ (PR) asks to bring a branch into `main`, and GitHub runs the checks
@@ -911,10 +911,9 @@ M0–M2 are merged into `main` (M2 complete on the agent side, owner pack in
 4. **Owner:** decide the items under "Decisions needed" (keyboard text selection, committed
    corpus PDFs, Pages project).
 5. **Owner:** review the M4 icons in the e2e gallery.
-6. **Owner:** accept ADR-018 (decisions 2–3 confirmed by the M4-19 spike) so M4-20/M4-21 can start.
-7. **Agent:** page operations M4-09 … (ADR-016 accepted), then M4-20/M4-21 once ADR-018 is
-   accepted.
-8. **Owner (M0/M1, still open):** S1 interop checklist; S1 FSA button on the 500 MB contract; S5
+6. **Agent:** page operations M4-09 … (ADR-016 accepted; M4-20 needs M4-09's reopen route), then
+   M4-20/M4-21 (ADR-018 accepted).
+7. **Owner (M0/M1, still open):** S1 interop checklist; S1 FSA button on the 500 MB contract; S5
    search on the FAR and the 500 MB contract; S7 on the CAD drawings and the P&ID
    (`node spikes/s7-snap/run-node.ts <files>`); S4 on the pipe chart and a parts list; FAR, 500 MB
    and A0 through the S3 harness; S8 Firefox check and Pages preview.
@@ -1007,13 +1006,6 @@ M0–M2 are merged into `main` (M2 complete on the agent side, owner pack in
 
 ## Decisions needed (owner)
 
-- **ADR-018 (comment transfer), decisions 2–3.** The M4-19 spike confirms the hybrid route: object
-  copy in the Work worker for Import from PDF and copy/paste (exact appearances, every key kept,
-  1,000 comments in ~0.3 s incl. reopen), re-creation for JSON import (loses /RC, /DS; the rest
-  restored by object-layer patches). The import stays a pending section until the next Ctrl+S
-  folds it into one narrow revision. Accept, and the ARCHITECTURE.md §7.1/§7.6/§13 wording in
-  decision 9 is applied.
-
 - **Keyboard text selection (M2-04).** Caret-based selection (Shift+arrows) is not built; the
   keyboard path is Ctrl+A (page text) + Ctrl+C. Accept as an exception to the M2-04 criterion, or
   schedule caret selection (about one session).
@@ -1033,6 +1025,7 @@ M0–M2 are merged into `main` (M2 complete on the agent side, owner pack in
 
 | Date       | Ref              | Decision                                                                                                                                                                                                                                                                                                                                                                                                                                                  |
 | ---------- | ---------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| 2026-09-29 | ADR-018          | Owner accepted ADR-018 decisions 2–3 after the M4-19 spike: hybrid route — object copy in the Work worker for Import from PDF and copy/paste (pending import section folded into the next Ctrl+S), re-creation + object-layer patches for JSON import. ARCHITECTURE.md Rev 0.6 (§7.1 comment transfer, §7.6 JSON imports, §13 M4).                                                                                                                        |
 | 2026-09-29 | ADR-016, ADR-017 | Owner accepted ADR-016 (page operations: semantic dirty set, digest with page identity, page-cache purge, reopen-based undo, dangling references) and ADR-017 (redaction on a Work copy, crossing paths re-cut via PDFium's page-object API, wider sanitize list, location verification). ARCHITECTURE.md Rev 0.5 (§7.9 steps 0 and 3), ADR-001 B8 wording amended.                                                                                       |
 | 2026-09-29 | M4 plan, ADR-018 | M4 plan approved with M4-Q1 … Q11 as proposed. Follow-ups: Word/Markdown export place images in reading order with our own step (Oxide puts them at page end); comment transfer (import from PDF or JSON v1, copy/paste between documents) added to M4 as M4-19 … M4-21, ADR-018 scope accepted, route decided by the M4-19 spike.                                                                                                                        |
 | 2026-09-27 | ADR-014, ADR-015 | Owner accepted ADR-014 (annotations loaded through the Work worker; markups drawn as our own annotation tiles) and ADR-015 (PNG image stamps at 4×; ExcelJS 4.4.0 with an npm override `unzipper@0.12.3`, added in M3-19). Proceed with M3-04 … M3-08.                                                                                                                                                                                                    |

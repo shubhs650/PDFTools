@@ -1,7 +1,7 @@
-# PDFTools — Architecture & Product Specification (Rev 0.5)
+# PDFTools — Architecture & Product Specification (Rev 0.6)
 
 **App:** PDFTools · **URL:** `pdf-tools.openengtools.com` · **Platform:** Open Engineering Tools (OET)
-**Status:** Approved for implementation · **Last updated:** 29-Sep-2026 (Rev 0.5)
+**Status:** Approved for implementation · **Last updated:** 29-Sep-2026 (Rev 0.6)
 **Companion file:** `CLAUDE.md` (standing rules for the coding agent — read it first)
 
 > This document is the single source of truth. Where code and this document disagree, this document wins until it is deliberately amended. Decisions are numbered (D-xx) so commits, issues and ADRs can reference them.
@@ -15,6 +15,8 @@
 > **Rev 0.4 amendment** — [ADR-010](docs/adr/010-s6-fluent-icons.md) (owner-approved): Fluent **Regular** icons (Filled for active states) replace the deprecated Color style (D-20, §8).
 
 > **Rev 0.5 amendment** — [ADR-017](docs/adr/017-m4-redaction.md) decisions 3 and 5 (owner-approved 2026-09-29): §7.9 steps 0 and 3 (crossing paths re-cut through PDFium's page-object API; wider sanitize list).
+
+> **Rev 0.6 amendment** — [ADR-018](docs/adr/018-m4-comment-transfer.md) (owner-approved 2026-09-29): comment transfer — import from another PDF or our JSON, copy/paste between documents (§7.1, §7.6, §13 M4).
 
 > **Rev 0.4 amendment (M2-16)** — [ADR-013](docs/adr/013-m2-security-forms-print.md) decision 7 (owner-approved 2026-09-26): §10.1's CSP gains `frame-src blob:` for printing the print-ready copy through the browser's PDF viewer.
 
@@ -243,6 +245,7 @@ Types: **every annotation type/tool supported by EmbedPDF** (ADR-001 B7). No cus
 - Properties pane edits the selected annotation(s); style copy/apply.
 - Undo/redo per document, unlimited within a session.
 - Comments pane: list, filter (author, status, type, page), sort, reply, set status, jump-to.
+- **Comment transfer:** import comments from another PDF (e.g. an earlier revision; page range, filters, page mapping, duplicates skipped by `/NM`) or from our JSON export, and copy/paste comments between documents; imported comments are standard annotation objects saved by the next Ctrl+S (ADR-018).
 - **Auto-numbering**: each markup gets a sequence number shown in the comments pane and optionally on-page; used by the CRS export.
 
 ### 7.2 Reviewer profile (D-16)
@@ -272,7 +275,7 @@ Excel (ExcelJS). Header block: document number, revision, title, reviewer, date,
 | Markdown | PDF Oxide | — |
 | HTML | PDF Oxide | — |
 | Word (.docx) | PDF → Markdown → mdast → `docx` | **Beta** |
-| Annotations | own serializer → CSV / XLSX / JSON | — |
+| Annotations | own serializer → CSV / XLSX / JSON (JSON also imports, §7.1) | — |
 
 PDF Oxide runs in the Work worker, lazy-loaded (non-core) from a self-hosted WASM URL and warmed up in the background after init. **Every Oxide call is gated by PDFium's permission check** — Oxide itself ignores permission flags (D-19, ADR-009). Search keeps PDFium text extraction (§6).
 
@@ -414,7 +417,7 @@ Advanced search + find bar, bookmarks/thumbnails/attachments panes, print dialog
 Full annotation set + round-trip, comments pane, reviewer profile, status schemes + stamps, measurement (scales, viewports, snapping), auto-numbering, CRS export.
 
 ### M4 — Extract
-Text/images/MD/HTML, Word (beta), tables (beta: Express + Review), page operations, redaction with verification, annotation export.
+Text/images/MD/HTML, Word (beta), tables (beta: Express + Review), page operations, redaction with verification, annotation export and comment transfer (import, copy/paste).
 
 **Public beta after M4** (D-32).
 
