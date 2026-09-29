@@ -9,7 +9,9 @@
   ADR-005, ADR-007, ADR-014; M3-04 (security handler); M4-Q1, M4-Q2, M4-Q7; CLAUDE.md rules 1, 2,
   6, 7, 9, 11, 12
 - **Related spike / milestone:** M4-19 (spike), M4-20, M4-21
-- **Outcome (spikes only):** _pending M4-19_
+- **Outcome (spikes only):** **Works with workaround** (M4-19, 2026-09-29): object copy meets every
+  save, verification and timing criterion; the workaround is a _pending import section_ that the
+  next Ctrl+S folds into its own single revision (finding 3). Option 3 (hybrid) is confirmed.
 
 ## Context
 
@@ -76,13 +78,16 @@ and cannot yet add new objects that the Render worker's PDFium instance knows ab
    and page, within a document and between open tabs). New commands `comment.importComments`
    (Comment → Manage Comments), `comment.copyComments`, `comment.pasteComments` (Ctrl+C / Ctrl+V
    when comments are selected; text selection keeps Ctrl+C for text).
-2. _(Proposed, decided by M4-19)_ **Route:** option 3 (hybrid) — object copy for PDF sources and
-   copy/paste, re-creation for JSON. If the spike shows object copy cannot meet the save,
-   verification or timing criteria, option 2 is used everywhere and the ADR records what is lost.
-3. _(Proposed, decided by M4-19)_ **Where the work runs:** reading and deep-copying in the **Work
-   worker** (it already holds a read-only copy of each open document; a PDF picked only for import
-   is opened there without a tab); the Render worker only applies the result (reopen or
-   `createAnnotation`). The main thread sends ids and options and receives counts (rule 1).
+2. _(Proposed; confirmed by M4-19, needs the owner)_ **Route:** option 3 (hybrid) — object copy
+   for PDF sources and copy/paste, re-creation for JSON. The spike shows object copy is exact
+   (33 of 33 appearances pixel-identical, every key kept) and 7–15× faster than re-creation, which
+   loses keys and changes 7 of 33 appearances (findings 1, 8).
+3. _(Proposed; confirmed by M4-19, needs the owner)_ **Where the work runs:** reading and
+   deep-copying in the **Work worker** (it already holds a read-only copy of each open document; a
+   PDF picked only for import is opened there without a tab); the Render worker only applies the
+   result (reopen or `createAnnotation`). The main thread sends ids and options and receives counts
+   (rule 1). The import section is kept by the Render worker's save tracker as **pending** until
+   the next Ctrl+S (finding 3).
 4. _(Owner, accepted)_ **Import options:** page range; author, type and status filters; with or
    without replies. **Page mapping:** same page number by default, or with an offset; comments whose
    target page does not exist are listed and skipped. **Placement:** same coordinates when the page
@@ -134,9 +139,112 @@ and cannot yet add new objects that the Render worker's PDFium instance knows ab
   viewers' private keys inside annotation dictionaries are copied as they are (we never add our own,
   rule 6).
 
+## Spike results (M4-19)
+
+Spike `spikes/s16-comment-transfer/` (Node, real PDFium WASM, our reader/serializer, the production
+`narrowTail`, `SaveTracker`, digest and `compareDigests`, qpdf 11.9 on every output). Rev A is
+self-made: one comment per M3 tool made through EmbedPDF and saved with our narrow Ctrl+S (20
+tools, incl. the image stamp, cloud, callout), a square with a reply, a review state and a
+measurement (/Measure + /IT patched the M3-16 way), and a page of hand-written other-viewer-style
+markups (custom /AP with font and image resources, /Popup, /RC, /DS, private keys, /IT
+/LineDimension + /Measure + /LL /LLE /Cap, a grouped label /IRT + /RT /Group, reply and review
+state, cloudy polygon, /OC + /StructParent, plus a link and a widget that must not be copied).
+
+1. **Object copy works on every target form.** `copy.ts` deep-copies each selected markup with
+   what it references, renumbered from the target's /Size, and writes the copies plus the target
+   pages' new `/Annots` (an indirect `/Annots` array is rewritten in place) as one incremental
+   section through `narrowTail` ("extra" objects). 13 cases: same geometry (xref table), object
+   streams + xref stream, rotated 90 (landscape media), crop-box offset, Letter vs A4, a shorter
+   target, page offset +1, AES-256 and RC4-128 targets, AES-256 source, AES-128 source and target,
+   two filter cases. **All 13: qpdf clean after the import and after the next save; import verified
+   (below); 33 of 33 named annotations pixel-identical to the source** (2 of them hidden, drawn empty on both sides; each drawn alone as an
+   annotation tile, ADR-014; the rotated and cropped cases compared in display space, and checked
+   by eye in full-page renders). 34 annotations (33 + a popup), 71 objects, 26–27 KB (39 KB AES);
+   import 10–64 ms.
+2. **What is dropped or remapped.** `/P` → the target page; `/Popup`, `/Parent`, `/IRT` → the
+   copies; an `/IRT` to a duplicate → the target's existing annotation; `/OC` (an OCG absent from
+   the target's `/OCProperties` would hide or orphan the markup) and `/StructParent` (the target's
+   structure tree) are dropped and counted; a reference into the page tree or to an annotation not
+   copied becomes `null`. Other viewers' private keys and `/RC`, `/DS`, `/Measure`, `/IT`, `/RT` are
+   copied as they are (rule 6: we add none). Shared resources (a font, the one appearance the
+   contract stand-in's 1,000 squares share) are copied once per import.
+3. **Save: one narrow revision, via a pending section.** The import section (t1) is appended to the
+   document the Render worker reopens (original + t1, the M4-Q1 route), but the file on disk is still
+   the original. After one more edit, the tracker's narrow Ctrl+S (t2, against original + t1) and t1
+   are folded by `mergeTails` into **one** incremental section on the original (later versions win;
+   both xref sections dropped, a new one written): **1 revision added, qpdf clean, ADR-005's check
+   passes, and the reopened file's digest equals the live document's on every page** in all 13
+   cases. Production: the tracker keeps a _disk base_ plus pending sections; `snapshotTail` (OPFS
+   recovery, ADR-001 B11) must include them.
+4. **Verification of the import.** The expected annotations of each target page are its own plus
+   the source digest's copied annotations with their rect mapped by the placement (NoRotate ones by
+   their upper-left corner); compared on subtype, /NM, /Contents hash and rect (±0.3 pt) after
+   reopening: 13 of 13 exact. This is the ADR-005 extension M4-20 needs (the Work worker has both
+   digests).
+5. **Placement.** Same position relative to the **visible top-left corner of the crop box**,
+   following `/Rotate` (source user space → display space → target user space); rects, QuadPoints,
+   Vertices, L, CL and InkList are mapped; when the placement rotates, each copied `/AP` form's
+   `/Matrix` is pre-multiplied by the rotation, so the appearance turns with the page; NoRotate
+   annotations (notes, replies) keep their size and move by their upper-left corner. Top-left
+   anchoring keeps comments on the same words when a re-issued sheet changes size (A4 → Letter);
+   annotations that land outside the target's crop box are counted (`offPage`) for the report.
+   Unit tests: 6 (`copy.test.ts`).
+6. **Pages, duplicates, filters, paste.** A missing target page skips its comments (9 of 33 on the
+   2-page target) and lists them; offset +1 works. Importing twice adds nothing (33 duplicates by
+   /NM, empty section). Filters apply to thread roots; replies follow (author filter without
+   replies: 7 + popup; review states and grouped labels always travel with their parent). Paste
+   into the same document with new /NMs: 4 copies, 8 unique /NMs on the page, qpdf clean.
+7. **Security.** Encrypted sources are read with their password (our Standard handler, M3-04);
+   copied strings and streams are re-encrypted with the target's key per new object number
+   (production needs `StandardCrypt.encryptStream`, used here through the private method). A
+   source without **copy** and a target without **annotate** are refused before any work (rule 9).
+   A signed target: 20 comments imported, qpdf clean, the signature stays **unchanged** and is
+   reported "changed after signing" (revision 1 of 2), as for any annotation saved after signing.
+   Certification (DocMDP) levels were not in the fixture; M4-20 must refuse annotation changes a
+   certification forbids, as the existing permission model does.
+8. **Re-create through EmbedPDF (option 2), same Rev A → Rev B.** 33 of 33 created, narrow save,
+   qpdf clean, ADR-005 check passes, but **keys lost**: `/IT` (callout arrow line, both
+   measurements), `/Measure`, `/LL`, `/LLE`, `/Cap`, `/RC`, `/DS`, `/RT` (replies and the
+   grouped label), private keys, `/OC`, `/StructParent`; **appearances changed in 7 of 33**:
+   both image stamps (100 % of pixels: the image is gone), the cloudy polygon (99.8 %), the
+   other-viewer callout (76 %) and measurement label (91 %) (fonts regenerated), the measurement
+   (16 %), the /OC circle. EmbedPDF-made markups re-create identically (26 of 26).
+9. **Timings (Node, one core; the browser is ~1.5–2× slower).** 1,000 comments:
+
+   | Route                                       | 2,000-page stand-in        | A0 sheet (200k segments)   |
+   | ------------------------------------------- | -------------------------- | -------------------------- |
+   | Object copy: read + copy + write            | 137 ms (45 + 24 + 59)      | 85 ms (16 + 14 + 53)       |
+   | Reopen original + import, load 1,000 annots | 158 ms (PDFium open 46)    | 90 ms                      |
+   | Fold into the next save (`mergeTails`)      | 50 ms                      | 38 ms                      |
+   | Undo (reopen without the import)            | 49 ms                      | 2 ms                       |
+   | Import section                              | 325 KB, qpdf clean         | 301 KB, qpdf clean         |
+   | Re-create: read + create + save             | 2.0 s (0.73 + 0.97 + 0.31) | 1.9 s (0.65 + 0.96 + 0.26) |
+   | Re-create save tail                         | 630 KB                     | 639 KB                     |
+
+   Nothing runs on the main thread except the annotation store reloading after the reopen, the
+   same path as opening a document and as ADR-016's page-operation undo. **Not measured here:**
+   main-thread long tasks in the browser — there is no production reopen path yet (M4-09); the
+   M4-20 perf test must show 0 tasks > 100 ms for 1,000 comments into the 2,000-page stand-in.
+
+10. **Side finding.** Rendering a page whose annotations lack `/AP` (the hand-written reply and
+    state) with PDFium's annotation flag makes PDFium generate appearance objects that the next
+    narrow save writes (+15 KB here). Valid and verified; noted for M4-20's size expectations.
+
+**What M4-20 builds on this:** `copy.ts` → `src/workers/work/commentTransfer.ts` (with a
+checkpoint per page for cancel and progress, rule 2); a stream writer and
+`StandardCrypt.encryptStream` in the object layer; the tracker's disk base + pending sections
+folded into the next save and into recovery snapshots; the import verification of finding 4; JSON
+import by re-creation plus object-layer patches for `/Measure`, `/IT`, `/LL`, `/LLE`, `/Cap` (keys
+the patch layer already allows) and `/RT` (to be added), accepting that `/RC` and `/DS` are
+regenerated. **Owner check (M4-22):** real Acrobat- and PDF-XChange-made Rev A files, transferred
+and opened in both viewers — the spike only imitates their structures.
+
 ## Evidence
 
-_To be filled by M4-19:_ spike code in `spikes/s16-comment-transfer/`, fixtures (self-made Rev A /
-Rev B pairs, incl. encrypted, rotated and different-size pages, Acrobat- and PDF-XChange-style
-annotations from the interop pack), timings for import of 1,000 comments into the 2,000-page
-stand-in by both routes, qpdf results, and a pixel comparison of transferred appearances.
+- Spike code: `spikes/s16-comment-transfer/{copy.ts,fixtures.ts,run-node.ts,copy.test.ts}`; run
+  `node --import ./spikes/shared/ts-ext.ts spikes/s16-comment-transfer/run-node.ts` (needs qpdf) →
+  `spikes/s16-comment-transfer/out/s16-node.json` and full-page PNG renders (source, same, rotated,
+  cropped, Letter) for review; `npx vitest run spikes/s16-comment-transfer`.
+- Fixtures: self-made only (rule 13) — `fixtures.ts` (Rev A / Rev B in five geometries),
+  `e2e/fixtures/{generate,encrypted,signed}.ts` (contract stand-in, A0 sheet, qpdf encryption,
+  a signed page).

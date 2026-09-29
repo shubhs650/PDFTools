@@ -9,6 +9,12 @@ M0–M2 are merged into `main` (M2 complete on the agent side, owner pack in
 
 ## Done
 
+- **Session 18 — M4-19 comment-transfer spike (ADR-018).** Object copy of comments between PDFs
+  (our reader + serializer, production narrow tail) on 13 target/source forms: qpdf-clean, import
+  verified, 33/33 appearances pixel-identical, the next Ctrl+S one narrow verified revision (the
+  import stays a pending section folded into it). Re-create through EmbedPDF loses keys and changes
+  7/33 appearances and is 7–15× slower. Hybrid route confirmed; ADR-018 awaits the owner.
+
 - **Session 18 — M4-08 annotation export.** Comment → Export Annotations: all or filtered
   comments as CSV, Excel (Work worker) or the import-ready JSON v1
   ([docs/formats/pdftools-annotations-v1.md](formats/pdftools-annotations-v1.md)); copy permission
@@ -778,15 +784,20 @@ M0–M2 are merged into `main` (M2 complete on the agent side, owner pack in
   ([docs/acceptance/M3.md](acceptance/M3.md) §4).
 - **M4 in progress (session 18):** [docs/plan/M4.md](plan/M4.md), 22 tasks. Done: M4-01 and M4-02
   (spikes; ADR-016 and ADR-017 accepted), M4-03 (icons), M4-04 (Oxide and the export
-  framework), M4-05 (text, Markdown, HTML), M4-06 (images), M4-07 (Word, Beta), M4-08 (annotation export).
-  ADR-018 (comment transfer) is proposed; ARCHITECTURE.md §7.1/§7.6/§13 are amended once it is
-  accepted after the M4-19 spike.
+  framework), M4-05 (text, Markdown, HTML), M4-06 (images), M4-07 (Word, Beta), M4-08 (annotation export), M4-19 (comment-transfer
+  spike).
+  ADR-018 (comment transfer) is proposed with the M4-19 outcome filled in (hybrid route
+  confirmed); ARCHITECTURE.md §7.1/§7.6/§13 are amended once the owner accepts it.
 - **Git in one paragraph (for the owner):** each task lives on its own _branch_ (a named line
   of commits). A _commit_ is a saved snapshot with a message; _push_ uploads the branch to
   GitHub; a _pull request_ (PR) asks to bring a branch into `main`, and GitHub runs the checks
   (CI) on it; _merge_ adds it to `main` once the checks are green.
 
 ## Session log
+
+- **Session 18 (2026-09-29), M4-19:** spike only (no production code). Checks: typecheck
+  (app + spikes), lint, format, the spike's 6 unit tests, the Node matrix twice (all 13 object-copy
+  cases pass; outputs qpdf-checked), full-page renders reviewed by eye.
 
 - **Session 18 (2026-09-29), exports:** M4-05, M4-06, M4-07, M4-08 on `claude/upbeat-cray-lknggv`
   (one commit each). Local checks on M4-08: typecheck, lint, format, 908 unit tests, license gate
@@ -900,9 +911,10 @@ M0–M2 are merged into `main` (M2 complete on the agent side, owner pack in
 4. **Owner:** decide the items under "Decisions needed" (keyboard text selection, committed
    corpus PDFs, Pages project).
 5. **Owner:** review the M4 icons in the e2e gallery.
-6. **Agent:** M4-19 (comment-transfer spike, ADR-018), then page operations (M4-09 …, ADR-016
-   accepted) and M4-20 once ADR-018 is accepted.
-7. **Owner (M0/M1, still open):** S1 interop checklist; S1 FSA button on the 500 MB contract; S5
+6. **Owner:** accept ADR-018 (decisions 2–3 confirmed by the M4-19 spike) so M4-20/M4-21 can start.
+7. **Agent:** page operations M4-09 … (ADR-016 accepted), then M4-20/M4-21 once ADR-018 is
+   accepted.
+8. **Owner (M0/M1, still open):** S1 interop checklist; S1 FSA button on the 500 MB contract; S5
    search on the FAR and the 500 MB contract; S7 on the CAD drawings and the P&ID
    (`node spikes/s7-snap/run-node.ts <files>`); S4 on the pipe chart and a parts list; FAR, 500 MB
    and A0 through the S3 harness; S8 Firefox check and Pages preview.
@@ -994,6 +1006,13 @@ M0–M2 are merged into `main` (M2 complete on the agent side, owner pack in
   Drawings are supplied locally by the owner anyway (ADR-002).
 
 ## Decisions needed (owner)
+
+- **ADR-018 (comment transfer), decisions 2–3.** The M4-19 spike confirms the hybrid route: object
+  copy in the Work worker for Import from PDF and copy/paste (exact appearances, every key kept,
+  1,000 comments in ~0.3 s incl. reopen), re-creation for JSON import (loses /RC, /DS; the rest
+  restored by object-layer patches). The import stays a pending section until the next Ctrl+S
+  folds it into one narrow revision. Accept, and the ARCHITECTURE.md §7.1/§7.6/§13 wording in
+  decision 9 is applied.
 
 - **Keyboard text selection (M2-04).** Caret-based selection (Shift+arrows) is not built; the
   keyboard path is Ctrl+A (page text) + Ctrl+C. Accept as an exception to the M2-04 criterion, or
