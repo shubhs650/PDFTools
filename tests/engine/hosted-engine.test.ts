@@ -40,6 +40,15 @@ function executorWith(
     snapshotTail: () => ({ tail: new ArrayBuffer(0), baseLength: 0 }),
     saveState: () => ({ dirty: [], untracked: false, baseLength: 0, staged: 0 }),
     stageObjects: () => ({ staged: 0 }),
+    pagesOp: () => {
+      throw new Error('not used');
+    },
+    pagesSnapshot: () => ({ token: 0, dropped: [] }),
+    pagesSource: () => ({ pageCount: 0, encrypted: false, fullAccess: true }),
+    pagesRestore: () => {
+      throw new Error('not used');
+    },
+    pagesDrop: () => null,
     annotationTile: () => null,
     renderProgressive: () => {
       throw new Error('not used');

@@ -9,6 +9,16 @@ M0–M2 are merged into `main` (M2 complete on the agent side, owner pack in
 
 ## Done
 
+- **Session 18 — M4-10 reorder pages.** Drag thumbnails (insertion marker, auto-scroll), Alt+↑/↓,
+  Organize → Move Pages…, announced; one undo step, narrow verified save. Worked around an O(n²)
+  layout comparison in EmbedPDF's scroll plugin that made a 2,000-page reorder a long task.
+
+- **Session 18 — M4-09 page operations core.** Organize tab: rotate, delete and insert blank pages
+  on the thumbnail selection, one undo step each (reopen-based undo), Ctrl+S one narrow verified
+  revision through the new semantic save (also after an undo that follows a save), caches and the
+  Work copy follow the change. New dependency `fflate` 0.8.3 (MIT). Fixed the duplicated signature
+  listing after keep-all saves (ADR-016 finding 9).
+
 - **Session 18 — M4-19 comment-transfer spike (ADR-018).** Object copy of comments between PDFs
   (our reader + serializer, production narrow tail) on 13 target/source forms: qpdf-clean, import
   verified, 33/33 appearances pixel-identical, the next Ctrl+S one narrow verified revision (the
@@ -785,7 +795,9 @@ M0–M2 are merged into `main` (M2 complete on the agent side, owner pack in
 - **M4 in progress (session 18):** [docs/plan/M4.md](plan/M4.md), 22 tasks. Done: M4-01 and M4-02
   (spikes; ADR-016 and ADR-017 accepted), M4-03 (icons), M4-04 (Oxide and the export
   framework), M4-05 (text, Markdown, HTML), M4-06 (images), M4-07 (Word, Beta), M4-08 (annotation export), M4-19 (comment-transfer
-  spike).
+  spike), M4-09 (page operations core), M4-10 (reorder). In progress: M4-11 — the worker side is
+  in (Render import-from-file operation, Work `assemble` job for Extract/Merge with per-file
+  bookmarks); the dialogs are next.
   ADR-018 (comment transfer) accepted after the M4-19 spike (hybrid route); ARCHITECTURE.md Rev
   0.6 (§7.1, §7.6, §13).
 - **Git in one paragraph (for the owner):** each task lives on its own _branch_ (a named line
@@ -794,6 +806,13 @@ M0–M2 are merged into `main` (M2 complete on the agent side, owner pack in
   (CI) on it; _merge_ adds it to `main` once the checks are green.
 
 ## Session log
+
+- **Session 18 (2026-09-30), pages:** M4-09 and M4-10 (one commit, with M4-11's worker groundwork).
+  Checks: typecheck, lint, format, 962 unit tests (incl. the 31-case page-operation save matrix on
+  real PDFium + qpdf), license gate (763 packages, `fflate` added), icons up to date, the full e2e
+  suite on M4-09 (250 of 250, 9.0 min, 2 workers; a first run found Save Optimized broken by a
+  transferred buffer — fixed), then the page, ribbon, thumbnail and a11y specs on M4-10 (36 of 36)
+  and the two page perf scenarios (twice each).
 
 - **Session 18 (2026-09-29), M4-19:** spike only (no production code). Checks: typecheck
   (app + spikes), lint, format, the spike's 6 unit tests, the Node matrix twice (all 13 object-copy
@@ -911,8 +930,8 @@ M0–M2 are merged into `main` (M2 complete on the agent side, owner pack in
 4. **Owner:** decide the items under "Decisions needed" (keyboard text selection, committed
    corpus PDFs, Pages project).
 5. **Owner:** review the M4 icons in the e2e gallery.
-6. **Agent:** page operations M4-09 … (ADR-016 accepted; M4-20 needs M4-09's reopen route), then
-   M4-20/M4-21 (ADR-018 accepted).
+6. **Agent:** finish M4-11 (Insert from File, Extract Pages, Merge Files dialogs), then M4-20/M4-21
+   (comment transfer, ADR-018 accepted).
 7. **Owner (M0/M1, still open):** S1 interop checklist; S1 FSA button on the 500 MB contract; S5
    search on the FAR and the 500 MB contract; S7 on the CAD drawings and the P&ID
    (`node spikes/s7-snap/run-node.ts <files>`); S4 on the pipe chart and a parts list; FAR, 500 MB
@@ -920,10 +939,14 @@ M0–M2 are merged into `main` (M2 complete on the agent side, owner pack in
 
 ## Open issues
 
-- **Signatures listed twice after a keep-all save (M4-01, ADR-016 finding 9):** PDFium re-appends
-  the `/Sig` dictionary in a keep-all tail and `findSignatures` counts it again. Affects today's
-  keep-all fallback on signed files after any untracked change; fix (de-duplicate by object number)
-  scheduled in M4-09.
+- **Page operations, deferred parts of ADR-016 decision 7 (M4-09):** after deleting pages, form
+  fields whose widgets were all on them stay in `/AcroForm /Fields` (valid PDF; the object layer
+  needs an AcroForm patch target), the Delete dialog has no page-labels note, and bookmarks to a
+  deleted page are not yet marked "target page deleted". Planned with M4-10/M4-11 or the M4
+  acceptance task.
+- **Undo of a page operation after Save Optimized:** Save Optimized becomes the disk baseline for
+  the semantic save (every object of the rewrite is kept in the Render worker's memory until the
+  next save replaces it). Fine for the rare optimized save; noted for very large files.
 - **Perf stalls in this container (M3-20):** three full perf runs each had one or two one-off
   main-thread tasks of 103–331 ms in a different scenario (snap, indexing, ink, print); each passes
   alone. Two of them have no M3 code. Watch CI and the owner's machine: a scenario that fails

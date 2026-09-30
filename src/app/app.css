@@ -200,6 +200,26 @@ body {
   box-shadow: 0 0 0 var(--border-width) var(--color-accent);
 }
 
+.thumb-drop-marker {
+  position: absolute;
+  left: var(--space-2);
+  right: var(--space-2);
+  height: 3px;
+  margin-top: -1px;
+  background: var(--color-accent);
+  border-radius: 2px;
+  pointer-events: none;
+}
+
+.thumb--selected {
+  background: var(--color-selected, color-mix(in srgb, var(--color-accent) 18%, transparent));
+}
+
+.thumb--selected .thumb-image {
+  border-color: var(--color-accent);
+  border-style: dashed;
+}
+
 .thumb:focus-visible .thumb-image {
   outline: var(--focus-width) solid var(--color-focus);
   outline-offset: var(--space-1);

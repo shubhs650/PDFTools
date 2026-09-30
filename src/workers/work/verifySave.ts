@@ -9,7 +9,13 @@ import {
 } from '../render/save/digest';
 
 export type MismatchReason =
-  'unparsable' | 'page-count' | 'missing-page' | 'annotations' | 'form' | 'objects';
+  | 'unparsable'
+  | 'page-count'
+  | 'missing-page'
+  | 'page-identity'
+  | 'annotations'
+  | 'form'
+  | 'objects';
 
 export type VerifyResult = { ok: true } | { ok: false; reason: MismatchReason; page?: number };
 
@@ -50,6 +56,13 @@ export function compareDigests(expected: DocDigest, actual: DocDigest): VerifyRe
   for (const want of expected.pages) {
     const got = byPage.get(want.page);
     if (!got) return { ok: false, reason: 'missing-page', page: want.page };
+    // Page order, rotation and size (ADR-016 decision 3); absent in older digests.
+    if (
+      (want.obj !== undefined && got.obj !== want.obj) ||
+      (want.rotation !== undefined && got.rotation !== want.rotation) ||
+      (want.size !== undefined && (got.size?.[0] !== want.size[0] || got.size[1] !== want.size[1]))
+    )
+      return { ok: false, reason: 'page-identity', page: want.page };
     if (!sameAnnots(want.annots, got.annots)) {
       return { ok: false, reason: 'annotations', page: want.page };
     }

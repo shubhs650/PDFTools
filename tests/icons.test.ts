@@ -63,7 +63,7 @@ describe('command table (M1-06)', () => {
     expect(available).toContain('comment.cloud'); // shipped in M3-09
     expect(available).toContain('comment.exportCrs'); // shipped in M3-19
     expect(available).toContain('comment.exportAnnotations'); // M4-08
-    expect(available).not.toContain('organize.delete'); // M4
+    expect(available).toContain('organize.delete'); // M4-09
     expect(available).toContain('home.resetForm'); // shipped in M2-14
     expect(available).toContain('home.find'); // shipped in M2-07
     expect(available).toContain('home.advancedSearch'); // shipped in M2-09

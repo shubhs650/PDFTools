@@ -37,6 +37,13 @@ function docObject(docId: string) {
   return hostStore.getState().registry?.getStore().getState().core.documents[docId]?.document;
 }
 
+/** Pages changed (M4-09): widgets are cached by page index. */
+export function dropFormCaches(docId: string): void {
+  facts.delete(docId);
+  for (const k of [...widgets.keys()]) if (k.startsWith(`${docId}|`)) widgets.delete(k);
+  formStore.setState((s) => ({ version: { ...s.version, [docId]: (s.version[docId] ?? 0) + 1 } }));
+}
+
 /** /Tabs and /DV (read once per document in the Work worker). */
 export function formFactsOf(docId: string): Promise<FormFacts> {
   let p = facts.get(docId);

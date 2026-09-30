@@ -103,6 +103,8 @@ function fakeSpawn(world: FakeWorld) {
       hitRects: ({ hits }) => hits.map(() => []),
       refresh: () => ({ pending: true }),
       append: ({ piece }) => ({ tailBytes: piece.byteLength }),
+      setLive: () => null,
+      assemble: () => ({ bytes: new ArrayBuffer(0) }),
       verify: () => ({ ok: true }),
       digest: () => ({ pageCount: 3, pages: [] }),
       close: () => ({ wasmBytes: world.memory }),

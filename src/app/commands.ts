@@ -920,6 +920,7 @@ export const COMMANDS: readonly CommandDef[] = [
     size: 'large',
     fluent: 'DocumentOnePageAdd',
     milestone: 'M4',
+    shipped: true, // M4-09
   },
   {
     id: 'organize.insertFromFile',
@@ -936,6 +937,16 @@ export const COMMANDS: readonly CommandDef[] = [
     size: 'large',
     fluent: 'DocumentDismiss',
     milestone: 'M4',
+    shipped: true, // M4-09
+  },
+  {
+    id: 'organize.move',
+    tab: 'organize',
+    group: 'pages',
+    size: 'large',
+    fluent: 'ReOrder',
+    milestone: 'M4',
+    shipped: true, // M4-10
   },
   {
     id: 'organize.extract',
@@ -960,6 +971,7 @@ export const COMMANDS: readonly CommandDef[] = [
     size: 'large',
     fluent: 'RotateRight',
     milestone: 'M4',
+    shipped: true, // M4-09
   },
   {
     id: 'organize.rotateCcw',
@@ -968,6 +980,7 @@ export const COMMANDS: readonly CommandDef[] = [
     size: 'large',
     fluent: 'RotateLeft',
     milestone: 'M4',
+    shipped: true, // M4-09
   },
   {
     id: 'convert.text',

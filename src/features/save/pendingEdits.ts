@@ -19,3 +19,14 @@ export function trackEdit<T>(edit: Promise<T>): Promise<T> {
 export async function editsSettled(): Promise<void> {
   while (pending.size > 0) await Promise.allSettled([...pending]);
 }
+
+/** Set by the page operations (M4-09): a save waits for the running one. */
+let pageOps: (docId: string) => boolean = () => false;
+
+export function setPageOpProbe(probe: (docId: string) => boolean): void {
+  pageOps = probe;
+}
+
+export function pageOpRunning(docId: string): boolean {
+  return pageOps(docId);
+}

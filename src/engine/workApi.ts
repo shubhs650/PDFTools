@@ -46,6 +46,29 @@ export interface WorkApi {
   unlock: MethodSpec<{ docId: string; ownerPassword: string }, { unlocked: boolean }>;
   /** Replaces the document's tail (bytes appended since the original). Applied lazily (ADR-001 B11). */
   refresh: MethodSpec<{ docId: string; tail: ArrayBuffer }, { pending: boolean }>;
+  /**
+   * Unsaved changes the jobs must see (M4-09 page operations): a section after
+   * the saved tail, dropped when a save is appended. Drops the document's
+   * search, snap-geometry and Oxide caches (pages may have moved).
+   */
+  setLive: MethodSpec<{ docId: string; live: ArrayBuffer | null }, null>;
+  /**
+   * Extract Pages / Merge Files (M4-11): a new, unencrypted document from pages
+   * of open documents (their Work copies, unsaved changes included) and of
+   * picked files, in order; `outline`: one bookmark per part (merge). Refused
+   * for an encrypted source without full access (M4-Q2).
+   */
+  assemble: MethodSpec<
+    {
+      parts: (
+        | { docId: string; pages: number[]; title: string }
+        | { bytes: ArrayBuffer; password?: string; pages: number[]; title: string }
+      )[];
+      outline: boolean;
+    },
+    { bytes: ArrayBuffer },
+    { done: number; total: number }
+  >;
   /** Appends a saved tail piece to the document's tail (after a committed save). */
   append: MethodSpec<{ docId: string; piece: ArrayBuffer }, { tailBytes: number }>;
   /**

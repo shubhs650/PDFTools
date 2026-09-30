@@ -35,7 +35,7 @@ import {
   type SaveEvent,
   type SavePhase,
 } from './saveMachine';
-import { editsSettled } from './pendingEdits';
+import { editsSettled, pageOpRunning } from './pendingEdits';
 
 interface SaveStoreState {
   phases: Record<string, SavePhase>;
@@ -130,6 +130,8 @@ async function runJob(
 ): Promise<SavePhase> {
   // A form value committed by the same key press (Ctrl+S in a field) goes first.
   await editsSettled();
+  // A page operation in flight finishes first (its undo snapshot and reopen, M4-09).
+  while (pageOpRunning(docId)) await new Promise((r) => setTimeout(r, 50));
   if (isActive(phaseOf(docId))) return phaseOf(docId);
   const ac = new AbortController();
   controllers.set(docId, ac);

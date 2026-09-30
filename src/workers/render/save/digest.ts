@@ -30,6 +30,14 @@ export interface FieldDigest {
 
 export interface PageDigest {
   page: number;
+  /**
+   * Page identity (ADR-016 decision 3): the page object's number, /Rotate in
+   * quarter turns and the size in points (rounded to 0.1), so a save that
+   * lost a page operation (order, rotation, an inserted page) cannot verify.
+   */
+  obj?: number;
+  rotation?: number;
+  size?: [number, number];
   annots: AnnotDigest[];
   fields: FieldDigest[];
 }
@@ -132,7 +140,27 @@ function eachAnnot(mod: WrappedPdfiumModule, pagePtr: number, fn: (annot: number
 }
 
 function pageDigest(mod: WrappedPdfiumModule, docPtr: number, pagePtr: number, page: number) {
-  const out: PageDigest = { page, annots: [], fields: [] };
+  // Document-level reads: a page loaded with EmbedPDF's normalized rotation
+  // (the Work worker's copies) reports /Rotate 0 and a swapped size.
+  const heap = heapOf(mod);
+  const buf = heap.wasmExports.malloc(8);
+  let size: [number, number] | undefined;
+  try {
+    if (rawCall(mod, 'FPDF_GetPageSizeByIndexF', docPtr, page, buf)) {
+      const r = (i: number) => Math.round(heap.getValue(buf + i * 4, 'float') * 10) / 10;
+      size = [r(0), r(1)];
+    }
+  } finally {
+    heap.wasmExports.free(buf);
+  }
+  const out: PageDigest = {
+    page,
+    obj: rawCall(mod, 'EPDFPage_GetObjectNumber', pagePtr),
+    rotation: rawCall(mod, 'EPDF_GetPageRotationByIndex', docPtr, page),
+    ...(size ? { size } : {}),
+    annots: [],
+    fields: [],
+  };
   eachAnnot(mod, pagePtr, (annot) => out.annots.push(readAnnot(mod, annot)));
   // A form-fill environment makes PDFium generate missing appearance streams
   // (new objects the next save would write), so only pages with widgets get one.

@@ -95,6 +95,11 @@ export interface NarrowOptions {
    * base); otherwise it is applied only if the object is kept anyway.
    */
   patches?: readonly ObjectPatch[];
+  /**
+   * Write exactly the `extra` objects (the semantic save, ADR-016 d2): PDFium's
+   * appended objects are only read for its trailer (/Root, /Info, /ID).
+   */
+  onlyExtra?: boolean;
 }
 
 export interface ObjectPatch {
@@ -125,7 +130,9 @@ export function narrowTail(
     pdfiumXref?.dict ??
     /trailer[\s\S]*$/.exec(latin1(full.subarray(Math.max(from, full.length - 8192))))?.[0] ??
     '';
-  const spans = new Map(objects.filter((o) => o !== pdfiumXref).map((o) => [o.num, o]));
+  const spans = new Map(
+    opts.onlyExtra ? [] : objects.filter((o) => o !== pdfiumXref).map((o) => [o.num, o]),
+  );
   const extra = new Map((opts.extra ?? []).map((e) => [e.num, e]));
   const refsOf = (num: number): number[] => {
     const text = extra.has(num)

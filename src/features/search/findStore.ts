@@ -104,6 +104,11 @@ export function setOption(name: 'matchCase' | 'wholeWord', on: boolean): void {
   findStore.setState((s) => ({ options: { ...s.options, [name]: on } }));
 }
 
+/** Pages changed (M4-09): hits of the document point at old page indexes. */
+export function dropFindResults(docId: string): void {
+  if (findStore.getState().docId === docId) resetResults(docId);
+}
+
 function resetResults(docId: string | null): void {
   rectCache.clear();
   findStore.setState((s) => ({

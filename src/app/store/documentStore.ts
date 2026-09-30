@@ -63,6 +63,8 @@ export interface DocumentsState {
   markOptimized(id: string, editsAtStart: number): void;
   /** Tab name after Save As to a new file (M1-22). */
   rename(id: string, name: string): void;
+  /** After a page operation (M4-09). */
+  setPageCount(id: string, pageCount: number): void;
   setSaveState(id: string, save: SaveState): void;
   /** Permissions after an owner-password unlock (read back from the Render worker). */
   setSecurity(id: string, security: { permissions: number; ownerUnlocked: boolean }): void;
@@ -152,6 +154,14 @@ export const createDocumentStore = () =>
     },
     rename: (id, name) => {
       set((s) => update(s, id, (d) => ({ meta: { ...d.meta, name } })));
+    },
+    setPageCount: (id, pageCount) => {
+      set((s) =>
+        update(s, id, (d) => ({
+          meta: { ...d.meta, pageCount },
+          view: { ...d.view, page: Math.min(d.view.page, Math.max(0, pageCount - 1)) },
+        })),
+      );
     },
     setSaveState: (id, save) => {
       set((s) => update(s, id, () => ({ save })));

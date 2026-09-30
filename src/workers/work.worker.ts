@@ -33,6 +33,8 @@ import { requireCapability, securityOf } from './work/permissionGate';
 import { extract } from './work/extract';
 import { zipBlob } from './work/zip';
 import { exportImages } from './work/images';
+import { assemble, fullAccess, type AssemblePart } from './work/assemble';
+import type { PdfDocumentObject } from '@embedpdf/models';
 
 let mod: WrappedPdfiumModule | undefined;
 let native: PdfiumNative | undefined;
@@ -67,6 +69,7 @@ async function inflate(bytes: Uint8Array): Promise<Uint8Array> {
 const geometry = new Map<string, Map<number, Float32Array>>();
 
 const scheduler = new Scheduler();
+let assembleSeq = 0;
 const activity = new Activity();
 const search = new SearchEngine(() => {
   if (!mod) throw new RpcError('not-initialized', 'The work worker is not initialized');
@@ -95,6 +98,52 @@ serve<WorkApi>(self, {
   refresh: ({ docId, tail }) => ({ pending: docs.refresh(docId, tail) }),
 
   append: ({ docId, piece }) => ({ tailBytes: docs.append(docId, piece) }),
+
+  assemble: ({ parts, outline }, ctx) =>
+    scheduler.run('interactive', ctx.signal, async (slice) => {
+      if (!mod) throw new RpcError('not-initialized', 'The work worker is not initialized');
+      const m = mod;
+      const n = need();
+      const opened: PdfDocumentObject[] = [];
+      try {
+        const resolved: AssemblePart[] = [];
+        for (const part of parts) {
+          let ptr: number;
+          if ('docId' in part) {
+            const { doc } = await docs.get(part.docId);
+            ptr = docPtrOf(n, doc.id);
+          } else {
+            const doc = await n
+              .openDocumentBuffer(
+                { id: `assemble-${String(++assembleSeq)}`, content: part.bytes },
+                part.password === undefined ? {} : { password: part.password },
+              )
+              .toPromise();
+            opened.push(doc);
+            ptr = docPtrOf(n, doc.id);
+          }
+          if (!fullAccess(m, ptr))
+            throw new RpcError('permission-denied:assemble', 'The source file is restricted');
+          resolved.push({ docPtr: ptr, pages: part.pages, title: part.title });
+        }
+        const bytes = await assemble(m, resolved, outline, slice, (p) => {
+          ctx.progress(p);
+        });
+        const buf = bytes.slice().buffer;
+        return new Transfer({ bytes: buf }, [buf]);
+      } finally {
+        for (const doc of opened) await n.closeDocument(doc).toPromise();
+        wasmBytes();
+      }
+    }),
+
+  setLive: ({ docId, live }) => {
+    docs.setLive(docId, live);
+    oxide.drop(docId);
+    search.cache.drop(docId);
+    geometry.delete(docId);
+    return null;
+  },
 
   verify: ({ docId, piece, expected }, ctx) =>
     scheduler.run('save-verify', ctx.signal, async () => {

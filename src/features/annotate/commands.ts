@@ -4,6 +4,7 @@
 // the Render worker refuses independently (M1-20).
 import type { AnnotationCapability } from '@embedpdf/plugin-annotation';
 import type { HistoryCapability } from '@embedpdf/plugin-history';
+import { pagesBusy } from '../pages/pageOps';
 import { notify, registerCommand, type CommandHandler } from '../../app/commands/dispatch';
 import { appStore } from '../../app/store/appStore';
 import { documentStore, selectActive } from '../../app/store/documentStore';
@@ -110,6 +111,7 @@ export function registerAnnotateCommands(): () => void {
       requiresDocument: true,
       disabledReason: () => {
         const id = activeId();
+        if (id && pagesBusy()) return msg('pages.busy');
         return id && history(id)?.canUndo() ? null : msg('annotate.nothingToUndo');
       },
       run: () => {
@@ -121,6 +123,7 @@ export function registerAnnotateCommands(): () => void {
       requiresDocument: true,
       disabledReason: () => {
         const id = activeId();
+        if (id && pagesBusy()) return msg('pages.busy');
         return id && history(id)?.canRedo() ? null : msg('annotate.nothingToRedo');
       },
       run: () => {

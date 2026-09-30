@@ -14,6 +14,14 @@ interface Entry {
   tail: ArrayBuffer | null;
   /** Tail waiting to be applied (null: nothing pending). */
   pendingTail: ArrayBuffer | null;
+  /**
+   * Unsaved changes the jobs must see, after the saved tail (M4-09: a page
+   * operation moves pages, so text, annotations and geometry by index change
+   * before any save). Relative to original + tail; verification never uses it.
+   */
+  live: ArrayBuffer | null;
+  /** `live` changed and is not applied yet. */
+  livePending: boolean;
   appliedTailBytes: number;
   doc: PdfDocumentObject;
   generation: number;
@@ -84,6 +92,8 @@ export class WorkDocs {
       ownerPassword,
       tail: tail ?? null,
       pendingTail: null,
+      live: null,
+      livePending: false,
       appliedTailBytes: tail?.byteLength ?? 0,
       doc,
       generation: 0,
@@ -104,9 +114,21 @@ export class WorkDocs {
     return true;
   }
 
+  /** Unsaved changes for the jobs to see (null: none); applied lazily like refresh. */
+  setLive(docId: string, live: ArrayBuffer | null): void {
+    const e = this.require(docId);
+    e.live = live && live.byteLength > 0 ? live : null;
+    e.livePending = true;
+  }
+
   /** A saved tail piece appended after the current tail; applied lazily like refresh. */
   append(docId: string, piece: ArrayBuffer): number {
     const e = this.require(docId);
+    // The live section was relative to the file before this save: it is stale now.
+    if (e.live) {
+      e.live = null;
+      e.livePending = true;
+    }
     const tail = concat(e.tail ?? new ArrayBuffer(0), piece);
     e.tail = tail;
     e.pendingTail = tail;
@@ -177,12 +199,12 @@ export class WorkDocs {
   /** The document with any pending tail applied (reopens original + tail). */
   async get(docId: string): Promise<{ doc: PdfDocumentObject; appliedTailBytes: number }> {
     const e = this.require(docId);
-    if (e.pendingTail) {
-      const tail = e.pendingTail;
+    if (e.pendingTail || e.livePending) {
+      const tail = e.pendingTail ?? e.tail;
       const generation = e.generation + 1;
       const doc = await this.load(
         docId,
-        concat(e.original, tail),
+        concat(concat(e.original, tail), e.live),
         e.password,
         generation,
         e.ownerPassword,
@@ -190,8 +212,9 @@ export class WorkDocs {
       await this.native().closeDocument(e.doc).toPromise();
       e.doc = doc;
       e.generation = generation;
-      e.appliedTailBytes = tail.byteLength;
+      e.appliedTailBytes = tail?.byteLength ?? 0;
       e.pendingTail = null;
+      e.livePending = false;
     }
     return { doc: e.doc, appliedTailBytes: e.appliedTailBytes };
   }

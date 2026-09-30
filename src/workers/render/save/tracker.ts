@@ -10,6 +10,7 @@
 // Saves: `saveIncremental` returns the narrow tail against the file as last
 // saved; `commit` makes that tail the new base after it was written (M1-22).
 import type { PdfiumNative } from '@embedpdf/engines/pdfium';
+import type { PdfDocumentObject } from '@embedpdf/models';
 import type { WrappedPdfiumModule } from '@embedpdf/pdfium';
 import { PdfErrorCode } from '@embedpdf/models';
 import { RpcError } from '../../../engine/errors';
@@ -21,7 +22,14 @@ import {
 } from '../../../engine/mutations';
 import { PDFIUM_ERROR_PREFIX } from '../../../engine/renderApi';
 import { allows, type Capability, type Security } from '../../../model/permissions';
-import { acquirePage, docPtrOf, rawCall, withWideString } from '../pdfium';
+import {
+  acquirePage,
+  docPtrOf,
+  isNormalized,
+  openedBytes,
+  rawCall,
+  withWideString,
+} from '../pdfium';
 import { concatBytes, latin1 } from './bytes';
 import type { PdfValue } from '../../../model/pdf/objects';
 import { PdfReader, inflateStream } from '../../../model/pdf/reader';
@@ -38,6 +46,15 @@ import { digestDocument, uncheckNames, type DocDigest, type ObjectDigest } from 
 import { narrowTail, type ExtraObject, type ObjectPatch } from './narrowTail';
 import { FPDF_INCREMENTAL, FPDF_NO_INCREMENTAL, saveWithFlags } from './writer';
 import { saveBaseOf, trailerRef, type SaveBase } from './xref';
+import {
+  parseSpan,
+  readerSpan,
+  readerValue,
+  sameObject,
+  spansOf,
+  syncInflate,
+  type Span,
+} from './semantic';
 
 export { ANNOTATION_METHODS, FORM_METHODS, OTHER_MUTATIONS, isMutation };
 
@@ -70,8 +87,54 @@ interface DocState {
   /** Resolves once `crypt` is known. */
   cryptReady: Promise<void>;
   /** A save or rewrite handed out and not yet committed (`rewrite`: a full rewrite). */
-  pending?: { next: SaveBase; tailLength: number; seq: number; rewrite?: boolean };
+  pending?: {
+    next: SaveBase;
+    tailLength: number;
+    seq: number;
+    rewrite?: boolean;
+    /**
+     * The tail's (or the rewritten file's) objects, copied before the bytes are
+     * transferred out: they join `disk` on commit.
+     */
+    spans: Map<number, Span>;
+  };
+  /** Open and owner passwords, session memory only (M2-Q7): a reopen needs them (ADR-016 d5). */
+  password: string | undefined;
+  ownerPassword: string | undefined;
+  /**
+   * The root bytes R: the file as first opened. Every reopen opens R + a tail,
+   * so R is always the prefix of what PDFium has open (and on the WASM heap).
+   */
+  rootLength: number;
+  rootBase: SaveBase | undefined;
+  /** Objects the file on disk has beyond R: every committed tail since open (latest wins). */
+  disk: Map<number, Span>;
+  /** Objects of what PDFium opened beyond R (after a reopen). */
+  reopened: Map<number, Span>;
+  /**
+   * A page operation happened (ADR-016 d2): saves compare objects with R and
+   * with the disk overlay (the semantic dirty set) instead of trusting `dirty`.
+   */
+  semantic: boolean;
 }
+
+/** Every object of a rewritten file (after its header). */
+function rewriteSpans(bytes: Uint8Array): Map<number, Span> {
+  const first = /\d+\s+\d+\s+obj\b/.exec(latin1(bytes.subarray(0, 1024)));
+  return first ? spansOf(bytes, first.index) : new Map<number, Span>();
+}
+
+/** An undo snapshot of a document before a page operation (ADR-016 d5). */
+interface PageSnapshot {
+  docId: string;
+  /** Every object that differs from R at that moment. */
+  state: Map<number, Span>;
+  patches: PatchSet;
+  bytes: number;
+}
+
+/** Undo snapshots kept in the Render worker's memory, per session (ADR-016 d5). */
+export const SNAPSHOT_BUDGET_BYTES = 256 * 1024 * 1024;
 
 export interface IncrementalSave {
   /** Bytes to append to the file as last saved; empty when nothing changed. */
@@ -135,6 +198,8 @@ function withPatches(
 
 export class SaveTracker {
   private readonly docs = new Map<string, DocState>();
+  private readonly snapshots = new Map<number, PageSnapshot>();
+  private snapshotSeq = 0;
   private readonly mod: WrappedPdfiumModule;
   private readonly native: PdfiumNative;
 
@@ -157,6 +222,13 @@ export class SaveTracker {
       patches: new PatchSet(),
       crypt: null,
       cryptReady: Promise.resolve(),
+      password,
+      ownerPassword: undefined,
+      rootLength: bytes.length,
+      rootBase: readBase(bytes),
+      disk: new Map(),
+      reopened: new Map(),
+      semantic: false,
     };
     // Only the trailer and /Encrypt are read; `bytes` is not kept once the key is known.
     if (namesEncrypt(state.base)) {
@@ -180,6 +252,14 @@ export class SaveTracker {
 
   closed(docId: string): void {
     this.docs.delete(docId);
+    for (const [token, snap] of this.snapshots)
+      if (snap.docId === docId) this.snapshots.delete(token);
+  }
+
+  /** The owner password unlocked the document (kept for reopens, session memory only). */
+  ownerUnlocked(docId: string, ownerPassword: string): void {
+    const s = this.docs.get(docId);
+    if (s) s.ownerPassword = ownerPassword;
   }
 
   has(docId: string): boolean {
@@ -412,12 +492,19 @@ export class SaveTracker {
     opts: { keepAll?: boolean; extra?: readonly ExtraObject[] } = {},
   ): IncrementalSave {
     const s = this.need(docId);
+    if (s.semantic)
+      throw new RpcError('save-semantic', 'After a page operation the save is asynchronous');
     // Digest first: reading form fields can make PDFium add appearance streams,
     // which then belong to this save rather than silently to the next one.
     const pages = s.untracked > 0 ? 'all' : [...s.pages.keys()].sort((a, b) => a - b);
     const digest = s.base ? digestDocument(this.mod, this.native, docId, pages) : null;
     const { base, r, keepAll, objects } = this.buildTail(docId, s, opts);
-    s.pending = { next: r.next, tailLength: r.tail.length, seq: s.seq };
+    s.pending = {
+      next: r.next,
+      tailLength: r.tail.length,
+      seq: s.seq,
+      spans: spansOf(r.tail, 0),
+    };
     const expected = r.tail.length === 0 || !digest ? null : uncheckNames(digest, new Set(r.kept));
     if (expected && objects.length > 0) expected.objects = objects;
     return {
@@ -436,6 +523,8 @@ export class SaveTracker {
    */
   snapshotTail(docId: string): { tail: Uint8Array<ArrayBuffer>; baseLength: number } {
     const s = this.need(docId);
+    if (s.semantic)
+      throw new RpcError('save-semantic', 'After a page operation the save is asynchronous');
     const { base, r } = this.buildTail(docId, s, {});
     return { tail: r.tail, baseLength: base.length };
   }
@@ -490,6 +579,9 @@ export class SaveTracker {
     if (p?.tailLength !== tailLength || (p.rewrite ?? false) !== rewrite)
       throw new RpcError('save-not-pending', 'No matching save to commit');
     s.base = p.next;
+    // What the file on disk now holds beyond R (the semantic save compares with it).
+    if (p.rewrite) s.disk = p.spans;
+    else for (const [n, sp] of p.spans) s.disk.set(n, sp);
     // Objects and flags changed again after the save stay dirty.
     for (const [n, seq] of s.dirty) if (seq <= p.seq) s.dirty.delete(n);
     for (const [n, seq] of s.pages) if (seq <= p.seq) s.pages.delete(n);
@@ -516,8 +608,199 @@ export class SaveTracker {
     const base = saveBaseOf(bytes);
     // Objects PDFium allocated before the rewrite are not new afterwards.
     const newFrom = Math.max(base.size, s.base?.newFrom ?? s.base?.size ?? 0);
-    s.pending = { next: { ...base, newFrom }, tailLength: bytes.length, seq: s.seq, rewrite: true };
+    s.pending = {
+      next: { ...base, newFrom },
+      tailLength: bytes.length,
+      seq: s.seq,
+      rewrite: true,
+      spans: rewriteSpans(bytes),
+    };
     return bytes;
+  }
+
+  /**
+   * Ctrl+S for any document (the Render RPC): the narrow tail as before, or,
+   * after a page operation, the semantic one (ADR-016 decision 2).
+   */
+  async save(docId: string, opts: { keepAll?: boolean } = {}): Promise<IncrementalSave> {
+    const s = this.need(docId);
+    if (!s.semantic) return this.saveIncremental(docId, opts);
+    const digest = s.base ? digestDocument(this.mod, this.native, docId, 'all') : null;
+    const { base, r, objects } = await this.buildSemantic(docId, s, opts.keepAll === true);
+    s.pending = {
+      next: r.next,
+      tailLength: r.tail.length,
+      seq: s.seq,
+      spans: spansOf(r.tail, 0),
+    };
+    const expected = r.tail.length === 0 || !digest ? null : uncheckNames(digest, new Set(r.kept));
+    if (expected && objects.length > 0) expected.objects = objects;
+    return {
+      expected,
+      tail: r.tail,
+      mode: opts.keepAll ? 'keep-all' : 'narrow',
+      kept: r.kept,
+      dropped: r.droppedNums.length,
+      baseLength: base.length,
+    };
+  }
+
+  /** Recovery snapshot and the Work worker's live copy, for any document. */
+  async snapshot(docId: string): Promise<{ tail: Uint8Array<ArrayBuffer>; baseLength: number }> {
+    const s = this.need(docId);
+    if (!s.semantic) return this.snapshotTail(docId);
+    const { base, r } = await this.buildSemantic(docId, s, false);
+    return { tail: r.tail, baseLength: base.length };
+  }
+
+  /**
+   * Every object whose current state differs from R: the reopened section's
+   * objects, then each object PDFium appends compared with R's version.
+   * Resolves within microtasks only (a view on the WASM heap, see semantic.ts).
+   */
+  private async currentState(
+    docId: string,
+    s: DocState,
+  ): Promise<{
+    state: Map<number, Span>;
+    full: Uint8Array;
+    root: PdfReader | null;
+    view: Uint8Array;
+  }> {
+    const resolved = this.resolvePatches(docId, s);
+    const full = saveWithFlags(this.mod, docPtrOf(this.native, docId), FPDF_INCREMENTAL);
+    const patchOf = new Map(resolved.map(({ num, patch }) => [num, patch]));
+    const appended = spansOf(full, s.openedLength);
+    for (const [n, sp] of appended) {
+      const patch = patchOf.get(n);
+      if (patch) appended.set(n, { ...sp, bytes: applyPatch(sp.bytes, patch, s.crypt) });
+    }
+    const state = new Map(s.reopened);
+    // Without the file key (an unsupported handler) nothing can be compared: all counts as changed.
+    const comparable = !namesEncrypt(s.rootBase) || s.crypt !== null;
+    const view = openedBytes(this.mod, this.native, docId, s.rootLength);
+    const root = comparable ? await PdfReader.open(view, syncInflate, { crypt: s.crypt }) : null;
+    for (const [n, sp] of appended) {
+      const was = root ? await readerValue(root, n) : undefined;
+      if (was !== undefined && sameObject(was, parseSpan(sp, s.crypt))) state.delete(n);
+      else state.set(n, sp);
+    }
+    if (view.byteLength === 0) throw new RpcError('save-heap', 'The document buffer moved');
+    return { state, full, root, view };
+  }
+
+  private async buildSemantic(docId: string, s: DocState, keepAll: boolean) {
+    const base = s.base;
+    if (!base) {
+      throw new RpcError('save-needs-rewrite', 'The file needs a full save (damaged trailer)');
+    }
+    const { state, full, root, view } = await this.currentState(docId, s);
+    const value = (sp: Span) => parseSpan(sp, s.crypt);
+    const out: Span[] = [];
+    for (const [n, sp] of state) {
+      const d = s.disk.get(n);
+      if (keepAll || !root || !d || !sameObject(value(d), value(sp))) out.push(sp);
+    }
+    // On disk but back to R's version now (e.g. a saved rotation undone): write R's.
+    for (const [n, d] of s.disk) {
+      if (state.has(n)) continue;
+      const again = root ? await readerSpan(root, view, n) : null;
+      if (again && (keepAll || !sameObject(value(d), value(again)))) out.push(again);
+    }
+    if (view.byteLength === 0) throw new RpcError('save-heap', 'The document buffer moved');
+    out.sort((a, b) => a.num - b.num);
+    const r = narrowTail(base, full, s.openedLength, [], { extra: out, onlyExtra: true });
+    const resolved = this.resolvePatches(docId, s);
+    const objects: ObjectDigest[] = resolved.map(({ num, patch }) => patchDigest(num, patch));
+    return { base, r, objects };
+  }
+
+  /** Throws unless the document allows `cap` (rule 9): page operations need assemble (ADR-016 d9). */
+  requireCapability(docId: string, cap: Capability): void {
+    if (!allows(this.security(docId), cap)) {
+      throw new RpcError(
+        `${PDFIUM_ERROR_PREFIX}${String(PdfErrorCode.Security)}`,
+        'The document does not allow this change',
+      );
+    }
+  }
+
+  /**
+   * After a page operation: saves become semantic, every page is verified,
+   * and staged patches follow their pages (`map`: old index → new index or null).
+   */
+  pageOperation(docId: string, map: (page: number) => number | null): void {
+    const s = this.need(docId);
+    const seq = ++s.seq;
+    s.semantic = true;
+    s.untracked = seq;
+    s.pages.clear();
+    s.patches.remapPages(map, seq);
+  }
+
+  /**
+   * An undo snapshot before a page operation (ADR-016 d5): every object that
+   * differs from R, kept here (bounded, oldest dropped first). Returns its token.
+   */
+  async takeSnapshot(docId: string): Promise<{ token: number; dropped: number[] }> {
+    const s = this.need(docId);
+    const { state } = await this.currentState(docId, s);
+    let bytes = 0;
+    for (const sp of state.values()) bytes += sp.bytes.length;
+    const token = ++this.snapshotSeq;
+    this.snapshots.set(token, { docId, state, patches: s.patches.clone(), bytes });
+    const dropped: number[] = [];
+    let total = 0;
+    for (const snap of this.snapshots.values()) total += snap.bytes;
+    for (const [t, snap] of this.snapshots) {
+      if (total <= SNAPSHOT_BUDGET_BYTES || t === token) break;
+      this.snapshots.delete(t);
+      total -= snap.bytes;
+      dropped.push(t);
+    }
+    return { token, dropped };
+  }
+
+  dropSnapshots(tokens: readonly number[]): void {
+    for (const t of tokens) this.snapshots.delete(t);
+  }
+
+  /**
+   * Undo of a page operation (ADR-016 d5): reopens R + the snapshot under the
+   * same id. The disk overlay stays, so the next save writes what differs from
+   * the file as saved, whatever was saved in between.
+   */
+  async restore(docId: string, token: number): Promise<PdfDocumentObject> {
+    const s = this.need(docId);
+    const snap = this.snapshots.get(token);
+    if (snap?.docId !== docId)
+      throw new RpcError('undo-evicted', 'The undo step is no longer kept');
+    if (!s.rootBase) throw new RpcError('save-needs-rewrite', 'The file needs a full save');
+    const root = openedBytes(this.mod, this.native, docId, s.rootLength).slice();
+    const spans = [...snap.state.values()].sort((a, b) => a.num - b.num);
+    const tail =
+      spans.length === 0
+        ? new Uint8Array(0)
+        : narrowTail(s.rootBase, root, root.length, [], { extra: spans, onlyExtra: true }).tail;
+    const bytes = concatBytes([root, tail]);
+    const normalizeRotation = isNormalized(this.native, docId);
+    await this.native.closeDocument({ id: docId } as PdfDocumentObject).toPromise();
+    const doc = await this.native
+      .openDocumentBuffer(
+        { id: docId, content: bytes.buffer },
+        { normalizeRotation, ...(s.password === undefined ? {} : { password: s.password }) },
+      )
+      .toPromise();
+    if (s.ownerPassword !== undefined)
+      await this.native.unlockOwnerPermissions(doc, s.ownerPassword).toPromise();
+    s.openedLength = bytes.length;
+    s.reopened = new Map(snap.state);
+    s.patches = snap.patches.clone();
+    s.semantic = true;
+    s.untracked = ++s.seq;
+    s.pages.clear();
+    s.dirty.clear();
+    return doc;
   }
 
   private need(docId: string): DocState {

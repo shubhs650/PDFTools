@@ -6,7 +6,13 @@ import { FontCharset } from '@embedpdf/models';
 import { init, type WrappedPdfiumModule } from '@embedpdf/pdfium';
 import { beforeAll, describe, expect, it } from 'vitest';
 import { FONT_FILES, localFontConfig } from '../../src/engine/fonts';
-import { docPtrOf, rawCall } from '../../src/workers/render/pdfium';
+import {
+  docPtrOf,
+  isNormalized,
+  openedBytes,
+  purgePageCache,
+  rawCall,
+} from '../../src/workers/render/pdfium';
 
 const require = createRequire(import.meta.url);
 const S1 = 'e2e/fixtures/self-made/s1-interop';
@@ -40,6 +46,18 @@ describe('docPtrOf (ADR-005 decision 4: the single private accessor)', () => {
     expect(() => docPtrOf({} as PdfiumNative, 'x')).toThrow(/internals changed/);
     const fake = { cache: { getContext: () => ({ docPtr: 0 }) } } as unknown as PdfiumNative;
     expect(() => docPtrOf(fake, 'x')).toThrow(/internals changed/);
+  });
+
+  it('reaches the opened bytes, the page cache and the rotation mode (ADR-016 d4)', async () => {
+    const doc = await open('original__plain.pdf');
+    const file = readFileSync(join(S1, 'original__plain.pdf'));
+    const view = openedBytes(mod, native, doc.id, file.length);
+    expect(Buffer.from(view).equals(file)).toBe(true);
+    expect(() => {
+      purgePageCache(native, doc.id);
+    }).not.toThrow();
+    expect(isNormalized(native, doc.id)).toBe(false);
+    await native.closeDocument(doc).toPromise();
   });
 
   it('reports a missing PDFium export by name', () => {

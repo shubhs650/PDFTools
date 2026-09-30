@@ -10,10 +10,19 @@ interface PageRef {
   release(): void;
 }
 
+interface ContextInternals {
+  docPtr: number;
+  normalizeRotation?: boolean;
+  filePtr?: number;
+  acquirePage?(index: number): PageRef;
+  pageCache?: { forceReleaseAll?(): void };
+}
+
 interface NativeInternals {
   cache?: {
-    getContext(id: string): { docPtr: number; acquirePage?(index: number): PageRef } | undefined;
+    getContext(id: string): ContextInternals | undefined;
   };
+  readPageBoxes?(docPtr: number, index: number, boxPtr: number): unknown;
 }
 
 /** PDFium `FPDF_DOCUMENT` pointer of an open EmbedPDF document. */
@@ -82,4 +91,100 @@ export function withWideString<T>(mod: WrappedPdfiumModule, s: string, fn: (ptr:
   } finally {
     heap.wasmExports.free(ptr);
   }
+}
+
+/**
+ * The bytes PDFium opened the document from, as a view on the WASM heap (no
+ * copy): EmbedPDF keeps the buffer for the document's lifetime and PDFium
+ * never writes to it. The view is detached if the heap grows, so callers use
+ * it within one synchronous run (microtasks only) and check `byteLength`.
+ */
+export function openedBytes(
+  mod: WrappedPdfiumModule,
+  native: PdfiumNative,
+  docId: string,
+  length: number,
+): Uint8Array {
+  const ctx = (native as unknown as NativeInternals).cache?.getContext(docId);
+  if (!ctx) throw new Error('Document is not open');
+  if (typeof ctx.filePtr !== 'number' || ctx.filePtr === 0) {
+    throw new Error('EmbedPDF internals changed: context.filePtr is not a pointer');
+  }
+  const heap = (mod.pdfium as unknown as { HEAPU8: Uint8Array }).HEAPU8;
+  return heap.subarray(ctx.filePtr, ctx.filePtr + length);
+}
+
+/**
+ * Closes every page EmbedPDF has cached for the document (ADR-016 finding 3):
+ * its page cache is keyed by page index, so after a page operation a cached
+ * `FPDF_PAGE` would be the wrong page. Called before and after each operation.
+ */
+export function purgePageCache(native: PdfiumNative, docId: string): void {
+  const ctx = (native as unknown as NativeInternals).cache?.getContext(docId) as
+    (ContextInternals & { pageCache?: { forceReleaseAll?(): void } }) | undefined;
+  if (!ctx) throw new Error('Document is not open');
+  const cache = ctx.pageCache;
+  if (typeof cache?.forceReleaseAll !== 'function') {
+    throw new Error('EmbedPDF internals changed: pageCache.forceReleaseAll is missing');
+  }
+  cache.forceReleaseAll();
+}
+
+export interface PageInfo {
+  index: number;
+  size: { width: number; height: number };
+  rotation: 0 | 1 | 2 | 3;
+  objectNumber: number;
+  boxes?: unknown;
+}
+
+/**
+ * The page list as EmbedPDF's openDocumentBuffer builds it (unnormalized
+ * rotation, as the Render worker opens documents): size, rotation, page
+ * object number and boxes, read after a page operation (ADR-016 decision 6).
+ */
+export function pageInfos(
+  mod: WrappedPdfiumModule,
+  native: PdfiumNative,
+  docId: string,
+): PageInfo[] {
+  const internals = native as unknown as NativeInternals;
+  const docPtr = docPtrOf(native, docId);
+  const heap = mod.pdfium as unknown as {
+    wasmExports: { malloc(n: number): number; free(p: number): void };
+    getValue(ptr: number, type: 'float'): number;
+  };
+  const count = rawCall(mod, 'FPDF_GetPageCount', docPtr);
+  // The document manager opens documents with normalized rotation: sizes unrotated.
+  const normalized = isNormalized(native, docId);
+  const size = heap.wasmExports.malloc(8);
+  const box = heap.wasmExports.malloc(16);
+  const out: PageInfo[] = [];
+  try {
+    for (let index = 0; index < count; index++) {
+      const read = normalized ? 'EPDF_GetPageSizeByIndexNormalized' : 'FPDF_GetPageSizeByIndexF';
+      if (!rawCall(mod, read, docPtr, index, size))
+        throw new Error(`page ${String(index)} has no size`);
+      const page: PageInfo = {
+        index,
+        size: { width: heap.getValue(size, 'float'), height: heap.getValue(size + 4, 'float') },
+        rotation: (rawCall(mod, 'EPDF_GetPageRotationByIndex', docPtr, index) & 3) as 0 | 1 | 2 | 3,
+        objectNumber: rawCall(mod, 'EPDFDoc_GetPageObjectNumberByIndex', docPtr, index),
+      };
+      if (typeof internals.readPageBoxes === 'function')
+        page.boxes = internals.readPageBoxes.call(native, docPtr, index, box);
+      out.push(page);
+    }
+  } finally {
+    heap.wasmExports.free(size);
+    heap.wasmExports.free(box);
+  }
+  return out;
+}
+
+/** Whether EmbedPDF opened the document with normalized rotation (a reopen keeps it). */
+export function isNormalized(native: PdfiumNative, docId: string): boolean {
+  const ctx = (native as unknown as NativeInternals).cache?.getContext(docId);
+  if (!ctx) throw new Error('Document is not open');
+  return ctx.normalizeRotation === true;
 }

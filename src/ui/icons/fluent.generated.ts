@@ -77,6 +77,7 @@ import { PersonEdit20Regular } from '@fluentui/react-icons/svg/person-edit';
 import { Print20Regular, Print32Regular } from '@fluentui/react-icons/svg/print';
 import { QuestionCircle20Regular, QuestionCircle32Regular } from '@fluentui/react-icons/svg/question-circle';
 import { RatioOneToOne20Filled, RatioOneToOne20Regular, RatioOneToOne24Filled, RatioOneToOne24Regular } from '@fluentui/react-icons/svg/ratio-one-to-one';
+import { ReOrder20Regular, ReOrder24Regular } from '@fluentui/react-icons/svg/re-order';
 import { RectangleLandscape20Filled, RectangleLandscape20Regular, RectangleLandscape32Filled, RectangleLandscape32Regular } from '@fluentui/react-icons/svg/rectangle-landscape';
 import { RotateLeft20Regular, RotateLeft24Regular } from '@fluentui/react-icons/svg/rotate-left';
 import { RotateRight20Regular, RotateRight24Regular } from '@fluentui/react-icons/svg/rotate-right';
@@ -205,6 +206,7 @@ export const FLUENT_GLYPHS: Record<string, FluentGlyphs> = {
   'organize.insertBlank': { regular: { small: DocumentOnePageAdd20Regular, large: DocumentOnePageAdd24Regular, largeNative: 24 } },
   'organize.insertFromFile': { regular: { small: DocumentAdd20Regular, large: DocumentAdd28Regular, largeNative: 28 } },
   'organize.delete': { regular: { small: DocumentDismiss20Regular, large: DocumentDismiss24Regular, largeNative: 24 } },
+  'organize.move': { regular: { small: ReOrder20Regular, large: ReOrder24Regular, largeNative: 24 } },
   'organize.extract': { regular: { small: DocumentArrowRight20Regular, large: DocumentArrowRight24Regular, largeNative: 24 } },
   'organize.merge': { regular: { small: DocumentMultiple20Regular, large: DocumentMultiple24Regular, largeNative: 24 } },
   'organize.rotateCw': { regular: { small: RotateRight20Regular, large: RotateRight24Regular, largeNative: 24 } },
