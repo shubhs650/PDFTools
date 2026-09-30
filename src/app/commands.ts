@@ -929,6 +929,7 @@ export const COMMANDS: readonly CommandDef[] = [
     size: 'large',
     fluent: 'DocumentAdd',
     milestone: 'M4',
+    shipped: true, // M4-11
   },
   {
     id: 'organize.delete',
@@ -955,6 +956,7 @@ export const COMMANDS: readonly CommandDef[] = [
     size: 'large',
     fluent: 'DocumentArrowRight',
     milestone: 'M4',
+    shipped: true, // M4-11
   },
   {
     id: 'organize.merge',
@@ -963,6 +965,7 @@ export const COMMANDS: readonly CommandDef[] = [
     size: 'large',
     fluent: 'DocumentMultiple',
     milestone: 'M4',
+    shipped: true, // M4-11
   },
   {
     id: 'organize.rotateCw',

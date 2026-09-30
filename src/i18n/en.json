@@ -1355,6 +1355,8 @@
     "deleting": "Deleting pages",
     "inserting": "Inserting pages",
     "moving": "Moving pages",
+    "extracting": "Extracting pages",
+    "merging": "Merging files",
     "moved": "{{count}} pages moved to page {{page}}.",
     "movedOne": "Page moved to page {{page}}.",
     "progressTitle": "Changing pages",
@@ -1420,6 +1422,49 @@
       "confirm": "Move",
       "cancel": "Cancel",
       "nothing": "The pages are already there."
+    },
+    "file": {
+      "choose": "Choose PDF…",
+      "chosen": "{{name}}: {{count}} pages",
+      "none": "No file chosen.",
+      "password": "Password for {{name}}",
+      "unlock": "Unlock",
+      "wrongPassword": "The password is not correct.",
+      "restricted": "This file's security settings don't allow its pages to be copied. Open it with the owner password.",
+      "unreadable": "This file could not be opened as a PDF.",
+      "range": "Pages of {{name}}",
+      "rangeHint": "All pages, or e.g. 1-3, 8",
+      "forms": "Form fields on these pages will not be fillable."
+    },
+    "insertFile": {
+      "title": "Insert from File",
+      "description": "Inserts pages of another PDF into this document.",
+      "where": "Position",
+      "page": "Page number",
+      "confirm": "Insert",
+      "cancel": "Cancel"
+    },
+    "extract": {
+      "title": "Extract Pages",
+      "description": "Copies the pages, with your unsaved changes, into a new document in its own tab. It is not saved until you save it.",
+      "alsoDelete": "Also delete them from this document",
+      "confirm": "Extract",
+      "cancel": "Cancel",
+      "fileName": "{{base}} (pages {{range}}).pdf",
+      "restricted": "Pages can leave this encrypted document only when it is open with the owner password."
+    },
+    "merge": {
+      "title": "Merge Files",
+      "description": "Combines PDF files into a new document in its own tab, with one bookmark per file. The files themselves are not changed.",
+      "add": "Add Files…",
+      "empty": "Add the files to merge.",
+      "list": "Files to merge",
+      "up": "Move {{name}} up",
+      "down": "Move {{name}} down",
+      "remove": "Remove {{name}}",
+      "confirm": "Merge",
+      "cancel": "Cancel",
+      "fileName": "Merged ({{count}} pages).pdf"
     },
     "menu": {
       "label": "Page actions",

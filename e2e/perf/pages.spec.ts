@@ -70,3 +70,51 @@ test('drag a thumbnail through the 2,000-page pane with auto-scroll: no long tas
   expect(info).toHaveLength(2000);
   expect(info[0]?.obj).not.toBe(3);
 });
+
+test('merge 10 files of 200 pages: no long tasks', async ({ page, pdfs, guard }) => {
+  test.setTimeout(300_000);
+  await page.goto('/');
+  await drop(page, [{ name: 'first.pdf', b64: pdfs.simple(1).toString('base64') }]);
+  await page.locator('[data-page="0"] img.page-preview').waitFor();
+  const part = pdfs.contract(200).toString('base64');
+  const files = Array.from({ length: 10 }, (_, i) => ({
+    name: `part-${String(i + 1)}.pdf`,
+    b64: part,
+  }));
+  await page.evaluate((list) => {
+    const w = window as unknown as { showOpenFilePicker: () => Promise<unknown[]> };
+    w.showOpenFilePicker = () =>
+      Promise.resolve(
+        list.map((f) => {
+          const bin = atob(f.b64);
+          const file = new File([Uint8Array.from(bin, (c) => c.charCodeAt(0))], f.name, {
+            type: 'application/pdf',
+          });
+          return { kind: 'file', name: f.name, getFile: () => Promise.resolve(file) };
+        }),
+      );
+  }, files);
+  await cap(page, 'view', 'settle', 400);
+  await page.getByRole('tab', { name: 'Organize' }).click();
+  await page
+    .getByRole('toolbar', { name: 'Organize commands' })
+    .getByRole('button', { name: 'Merge Files' })
+    .click();
+  const dialog = page.getByRole('dialog', { name: 'Merge Files' });
+  await dialog.getByRole('button', { name: 'Add Files…' }).click();
+  await expect(dialog.getByText('part-10.pdf: 200 pages')).toBeVisible({ timeout: 30_000 });
+  await guard.startMeasuring();
+  const t0 = Date.now();
+  await dialog.getByRole('button', { name: 'Merge' }).click();
+  const tabs = page.getByRole('tablist', { name: 'Open documents' }).getByRole('tab');
+  await expect(tabs).toHaveCount(2, { timeout: 120_000 });
+  const id = (await cap(page, 'view', 'activeDocId')) as string;
+  await expect
+    .poll(async () => ((await cap(page, 'pages', 'info', id)) as unknown[]).length, {
+      timeout: 60_000,
+    })
+    .toBe(2000);
+  test.info().annotations.push({ type: 'merge-10x200-ms', description: String(Date.now() - t0) });
+  await page.locator('[data-page="0"] img.page-preview').waitFor();
+  await cap(page, 'view', 'settle', 400);
+});

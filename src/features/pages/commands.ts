@@ -6,6 +6,7 @@
 import { notify, registerCommand } from '../../app/commands/dispatch';
 import { documentStore } from '../../app/store/documentStore';
 import { format, msg, t } from '../../i18n';
+import { hasFullAccess } from './assemble';
 import { openPageDialog } from './dialogStore';
 import { announce, pageOpBlocked, pagesStore, runPageOp } from './pageOps';
 import { targetPages } from './selection';
@@ -57,6 +58,32 @@ export function registerPageCommands(): () => void {
       run: () => {
         const id = activeId();
         if (id) openPageDialog('move', id);
+      },
+    }),
+    registerCommand('organize.insertFromFile', {
+      ...common,
+      run: () => {
+        const id = activeId();
+        if (id) openPageDialog('insertFile', id);
+      },
+    }),
+    registerCommand('organize.extract', {
+      requiresDocument: true,
+      disabledReason: () => {
+        const id = activeId();
+        const meta = id ? documentStore.getState().docs[id]?.meta : undefined;
+        if (meta && !hasFullAccess(meta)) return msg('pages.extract.restricted');
+        return blocked();
+      },
+      run: () => {
+        const id = activeId();
+        if (id) openPageDialog('extract', id);
+      },
+    }),
+    registerCommand('organize.merge', {
+      disabledReason: () => (pagesStore.getState().busy ? msg('pages.busy') : null),
+      run: () => {
+        openPageDialog('merge', activeId() ?? '');
       },
     }),
     registerCommand('organize.insertBlank', {

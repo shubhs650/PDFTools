@@ -11,6 +11,7 @@ import { registerPrintCommands } from '../features/print/commands';
 import { registerExtractCommands } from '../features/extract/commands';
 import { registerPageCommands } from '../features/pages/commands';
 import { PageDialogs } from '../features/pages/PageDialogs';
+import { FileDialogs } from '../features/pages/FileDialogs';
 import { PrintDialog } from '../features/print/PrintDialog';
 import { PrintReadyDialog } from '../features/print/PrintReadyDialog';
 import { HelpPage } from '../features/help/HelpPage';
@@ -174,6 +175,7 @@ export function App() {
         <AnnotationExportDialog />
         <ExportDialog />
         <PageDialogs />
+        <FileDialogs />
         <UpdateWaitDialog />
         <DropZone />
         <HelpPage />

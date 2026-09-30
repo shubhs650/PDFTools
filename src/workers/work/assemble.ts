@@ -76,11 +76,15 @@ export async function assemble(
       for (let i = 0; i < part.pages.length; i += SLICE) {
         await slice.checkpoint();
         const chunk = part.pages.slice(i, i + SLICE);
-        const ok = withInts(mod, chunk, (ptr) =>
-          mod.FPDF_ImportPagesByIndex(out, part.docPtr, ptr, chunk.length, done),
-        );
-        if (!ok) throw new RpcError('assemble', 'The pages could not be copied');
-        done += chunk.length;
+        // PDFium may import a list in ascending order: a slice that isn't goes page by page.
+        const ascending = chunk.every((p, k) => k === 0 || p > (chunk[k - 1] ?? -1));
+        for (const run of ascending ? [chunk] : chunk.map((p) => [p])) {
+          const ok = withInts(mod, run, (ptr) =>
+            mod.FPDF_ImportPagesByIndex(out, part.docPtr, ptr, run.length, done),
+          );
+          if (!ok) throw new RpcError('assemble', 'The pages could not be copied');
+          done += run.length;
+        }
         progress({ done, total });
       }
     }

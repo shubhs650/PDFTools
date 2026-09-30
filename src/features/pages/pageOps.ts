@@ -72,8 +72,16 @@ export function cancelPageOp(): void {
   cancelRunning?.();
 }
 
+let announceTimer: ReturnType<typeof setTimeout> | undefined;
+
+/** Said once by the Thumbnails pane's live region, then cleared. */
 export function announce(text: string | null): void {
+  clearTimeout(announceTimer);
   pagesStore.setState({ announcement: text });
+  if (text)
+    announceTimer = setTimeout(() => {
+      pagesStore.setState({ announcement: null });
+    }, 5000);
 }
 
 export function dismissPagesError(): void {
@@ -327,3 +335,40 @@ async function redo(docId: string, op: PageOp, label: MessageKey): Promise<void>
     setBusy(null);
   }
 }
+
+/**
+ * A long page job that is not an operation on one document (Extract, Merge:
+ * M4-11): the same progress dialog with Cancel. `job` gets a progress
+ * reporter and hands back how to cancel.
+ */
+export async function runBusy<T>(
+  docId: string,
+  label: MessageKey,
+  job: (
+    progress: (p: { done: number; total: number }) => void,
+    onCancel: (cancel: () => void) => void,
+  ) => Promise<T>,
+): Promise<T> {
+  setBusy({ docId, label, done: 0, total: 0, started: performance.now() });
+  try {
+    return await job(
+      (p) => {
+        const b = pagesStore.getState().busy;
+        if (b) setBusy({ ...b, done: p.done, total: p.total });
+      },
+      (cancel) => {
+        cancelRunning = cancel;
+      },
+    );
+  } finally {
+    cancelRunning = null;
+    setBusy(null);
+  }
+}
+
+/** Shows a page-operation error (M4-11 jobs outside runPageOp). */
+export function showPagesError(key: MessageKey): void {
+  pagesStore.setState({ error: key });
+}
+
+export { settleEdits };

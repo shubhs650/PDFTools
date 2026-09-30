@@ -416,9 +416,11 @@ export function ThumbnailsPane() {
           />
         ) : null}
       </div>
-      <div className="ui-visually-hidden" role="status" aria-live="polite">
-        {announcement}
-      </div>
+      {announcement ? (
+        <div className="ui-visually-hidden" role="status" aria-live="polite">
+          {announcement}
+        </div>
+      ) : null}
     </>
   );
 }

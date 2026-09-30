@@ -9,6 +9,11 @@ M0–M2 are merged into `main` (M2 complete on the agent side, owner pack in
 
 ## Done
 
+- **Session 18 — M4-11 insert from file, extract, merge.** Insert pages of another PDF (password,
+  owner password for restricted files, order kept), Extract Pages to a new unsaved tab (optionally
+  deleting them), Merge Files into a new unsaved tab with one bookmark per file. New documents are
+  built in the Work worker; an encrypted source needs full access (M4-Q2).
+
 - **Session 18 — M4-10 reorder pages.** Drag thumbnails (insertion marker, auto-scroll), Alt+↑/↓,
   Organize → Move Pages…, announced; one undo step, narrow verified save. Worked around an O(n²)
   layout comparison in EmbedPDF's scroll plugin that made a 2,000-page reorder a long task.
@@ -795,9 +800,8 @@ M0–M2 are merged into `main` (M2 complete on the agent side, owner pack in
 - **M4 in progress (session 18):** [docs/plan/M4.md](plan/M4.md), 22 tasks. Done: M4-01 and M4-02
   (spikes; ADR-016 and ADR-017 accepted), M4-03 (icons), M4-04 (Oxide and the export
   framework), M4-05 (text, Markdown, HTML), M4-06 (images), M4-07 (Word, Beta), M4-08 (annotation export), M4-19 (comment-transfer
-  spike), M4-09 (page operations core), M4-10 (reorder). In progress: M4-11 — the worker side is
-  in (Render import-from-file operation, Work `assemble` job for Extract/Merge with per-file
-  bookmarks); the dialogs are next.
+  spike), M4-09 (page operations core), M4-10 (reorder), M4-11 (insert from file, extract,
+  merge).
   ADR-018 (comment transfer) accepted after the M4-19 spike (hybrid route); ARCHITECTURE.md Rev
   0.6 (§7.1, §7.6, §13).
 - **Git in one paragraph (for the owner):** each task lives on its own _branch_ (a named line
@@ -806,6 +810,12 @@ M0–M2 are merged into `main` (M2 complete on the agent side, owner pack in
   (CI) on it; _merge_ adds it to `main` once the checks are green.
 
 ## Session log
+
+- **Session 18 (2026-09-30), M4-11:** typecheck, lint, format, 966 unit tests (incl. 5 new Node
+  tests on real PDFium + qpdf), icons up to date, the full e2e suite (254 of 255; the one failure,
+  a second `status` role from the new Thumbnails live region clashing with an annotations test's
+  locator, fixed by showing the region only while it speaks — both specs then 15 of 15), and the
+  merge perf scenario.
 
 - **Session 18 (2026-09-30), pages:** M4-09 and M4-10 (one commit, with M4-11's worker groundwork).
   Checks: typecheck, lint, format, 962 unit tests (incl. the 31-case page-operation save matrix on
@@ -930,8 +940,8 @@ M0–M2 are merged into `main` (M2 complete on the agent side, owner pack in
 4. **Owner:** decide the items under "Decisions needed" (keyboard text selection, committed
    corpus PDFs, Pages project).
 5. **Owner:** review the M4 icons in the e2e gallery.
-6. **Agent:** finish M4-11 (Insert from File, Extract Pages, Merge Files dialogs), then M4-20/M4-21
-   (comment transfer, ADR-018 accepted).
+6. **Agent:** M4-20/M4-21 (comment transfer, ADR-018 accepted; they build on M4-09's reopen route
+   and M4-11's import), then tables (M4-12 … M4-15) and redaction (M4-16 … M4-18).
 7. **Owner (M0/M1, still open):** S1 interop checklist; S1 FSA button on the 500 MB contract; S5
    search on the FAR and the 500 MB contract; S7 on the CAD drawings and the P&ID
    (`node spikes/s7-snap/run-node.ts <files>`); S4 on the pipe chart and a parts list; FAR, 500 MB

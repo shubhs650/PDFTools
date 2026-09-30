@@ -3,7 +3,7 @@
 import { createStore, useStore } from 'zustand';
 import type { Where } from './sizes';
 
-export type PageDialogKind = 'delete' | 'insertBlank' | 'move';
+export type PageDialogKind = 'delete' | 'insertBlank' | 'move' | 'insertFile' | 'extract' | 'merge';
 
 interface DialogState {
   open: { kind: PageDialogKind; docId: string; where?: Where } | null;

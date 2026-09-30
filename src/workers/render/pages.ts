@@ -133,18 +133,27 @@ export async function applyPageOp(
       if (!Number.isInteger(op.at) || op.at < 0 || op.at > count)
         throw new RpcError('pages-range', 'The position is out of range');
       await withSource(mod, native, op.source, op.password, async (src) => {
-        const pages = checkPages(op.pages, src.pageCount);
+        // The order given is kept (a range like "3, 1-2").
+        checkPages(op.pages, src.pageCount);
+        const pages = op.pages;
         if (!src.fullAccess)
           throw new RpcError('pages-source-restricted', 'The source file is restricted');
         const srcPtr = docPtrOf(native, src.id);
-        // In slices, so a cancel can arrive between them (rule 2).
+        // In slices, so a cancel can arrive between them (rule 2). PDFium imports
+        // a list in ascending order, so a slice that isn't is imported page by page.
         const SLICE = 50;
         for (let i = 0; i < pages.length; i += SLICE) {
           const part = pages.slice(i, i + SLICE);
-          const ok = withInts(mod, part, (ptr) =>
-            rawCall(mod, 'FPDF_ImportPagesByIndex', doc, srcPtr, ptr, part.length, op.at + i),
-          );
-          if (!ok) throw new RpcError('pages-import', 'The pages could not be imported');
+          const ascending = part.every((p, k) => k === 0 || p > (part[k - 1] ?? -1));
+          const runs = ascending ? [part] : part.map((p) => [p]);
+          let at = op.at + i;
+          for (const run of runs) {
+            const ok = withInts(mod, run, (ptr) =>
+              rawCall(mod, 'FPDF_ImportPagesByIndex', doc, srcPtr, ptr, run.length, at),
+            );
+            if (!ok) throw new RpcError('pages-import', 'The pages could not be imported');
+            at += run.length;
+          }
           ctx.progress({ done: Math.min(pages.length, i + SLICE), total: pages.length });
           await pause();
         }
@@ -192,7 +201,9 @@ export async function withSource<T>(
     .openDocumentBuffer({ id, content: bytes.slice(0) }, password === undefined ? {} : { password })
     .toPromise()
     .catch((err: unknown) => {
-      const code = (err as { code?: unknown }).code;
+      // EmbedPDF rejects with a TaskRejectedError whose reason holds the PdfErrorCode.
+      const e = err as { code?: unknown; reason?: { code?: unknown } };
+      const code = e.reason?.code ?? e.code;
       throw new RpcError(`pdfium:${String(typeof code === 'number' ? code : 0)}`, 'Not opened');
     });
   try {

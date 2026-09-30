@@ -2216,3 +2216,39 @@ textarea.form-field {
   color: var(--color-text-muted);
   white-space: nowrap;
 }
+
+/* Organize → Merge Files / Insert from File (M4-11). */
+.pages-source {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+
+.pages-merge-list {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  max-height: 50vh;
+  overflow: auto;
+}
+
+.pages-merge-item {
+  display: flex;
+  gap: var(--space-2);
+  padding: var(--space-2);
+  border: var(--border-width) solid var(--color-border);
+  border-radius: var(--radius-m, 4px);
+  background: var(--color-surface, transparent);
+}
+
+.pages-merge-item--dragged {
+  opacity: 0.5;
+}
+
+.pages-merge-controls {
+  display: flex;
+  flex-direction: column;
+}
