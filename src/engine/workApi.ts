@@ -24,6 +24,13 @@ import type { GridIndex } from '../model/snapIndex';
 import type { SnapshotRegion } from '../workers/work/crs';
 import type { WorkbookSpec } from '../workers/work/crsWorkbook';
 import type { ExtractOptions } from '../workers/work/extract';
+import type {
+  SourceSummary,
+  TransferCounts,
+  TransferObject,
+  TransferSource,
+  TransferSpec,
+} from '../workers/work/transferJobs';
 import type { MethodSpec } from './protocol';
 
 export type WorkPriority = 'interactive' | 'save-verify' | 'geometry' | 'background';
@@ -68,6 +75,27 @@ export interface WorkApi {
     },
     { bytes: ArrayBuffer },
     { done: number; total: number }
+  >;
+  /**
+   * Import Comments (M4-20, ADR-018): a source PDF's comments for the dialog's
+   * summary. Wrong or missing password: `pdfium:4`. `copyAllowed` false: the
+   * source's permissions forbid copying (rule 9) and nothing else is read.
+   */
+  commentSource: MethodSpec<TransferSource, SourceSummary>;
+  /**
+   * Copies the source's comments into the document's current state (its live
+   * section must be current): the objects for the Render worker's `pagesApply`
+   * and the counts; with `dryRun`, the counts only (the dialog's preview).
+   */
+  transferComments: MethodSpec<
+    { docId: string; source: TransferSource; spec: TransferSpec },
+    { objects: TransferObject[]; firstNew: number; counts: TransferCounts },
+    { done: number; total: number }
+  >;
+  /** The in-app clipboard (M4-21): the chosen comments as a small PDF. Needs copy. */
+  copyComments: MethodSpec<
+    { docId: string; ids: string[]; withReplies: boolean },
+    { bytes: ArrayBuffer; pages: number[]; count: number }
   >;
   /** Appends a saved tail piece to the document's tail (after a committed save). */
   append: MethodSpec<{ docId: string; piece: ArrayBuffer }, { tailBytes: number }>;

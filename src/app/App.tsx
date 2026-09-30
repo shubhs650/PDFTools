@@ -39,6 +39,7 @@ import { ViewportDialog } from '../features/measure/ViewportDialog';
 import { SnapStatus } from '../features/measure/SnapStatus';
 import { CrsDialog } from '../features/crs/CrsDialog';
 import { AnnotationExportDialog } from '../features/annotate/export/AnnotationExportDialog';
+import { ImportCommentsDialog } from '../features/annotate/transfer/ImportCommentsDialog';
 import { ExportDialog } from '../features/extract/ExportDialog';
 import { ScaleIndicator } from '../features/measure/ScaleIndicator';
 import { GrowthPrompt, SaveOptimizedDialog } from '../features/save/SaveDialogs';
@@ -173,6 +174,7 @@ export function App() {
         <ViewportDialog />
         <CrsDialog />
         <AnnotationExportDialog />
+        <ImportCommentsDialog />
         <ExportDialog />
         <PageDialogs />
         <FileDialogs />

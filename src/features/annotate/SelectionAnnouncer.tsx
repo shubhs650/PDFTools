@@ -7,11 +7,14 @@ import { useTranslation } from 'react-i18next';
 import { useHost } from '../view/host';
 import { annotationTypeKey } from './annotationTypes';
 import { annotationCapability } from './selection';
+import { useTransferAnnouncement } from './transfer/transferAnnounce';
 
 export function SelectionAnnouncer({ documentId }: { documentId: string }) {
   const { t } = useTranslation();
   const registry = useHost((s) => s.registry);
   const [selected, setSelected] = useState<PdfAnnotationObject[]>([]);
+  // A comment import, copy or paste (M4-20, M4-21) is said first.
+  const transfer = useTransferAnnouncement(documentId);
   useEffect(() => {
     if (!registry) return;
     let scope;
@@ -41,6 +44,7 @@ export function SelectionAnnouncer({ documentId }: { documentId: string }) {
       page: one.pageIndex + 1,
     });
   else if (selected.length > 1) text = t('annotate.selectedMany', { count: selected.length });
+  if (transfer) text = transfer;
   return (
     <div className="ui-visually-hidden" role="status" aria-live="polite">
       {text}

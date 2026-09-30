@@ -272,6 +272,11 @@ export class StandardCrypt {
     return this.run(this.info.strings, num, gen, data, true);
   }
 
+  /** A stream's data encrypted for object `num`/`gen` (M4-20: copied appearances). */
+  encryptStream(num: number, gen: number, data: Uint8Array): Uint8Array {
+    return this.run(this.info.streams, num, gen, data, true);
+  }
+
   decryptStream(num: number, gen: number, data: Uint8Array): Uint8Array {
     return this.run(this.info.streams, num, gen, data, false);
   }

@@ -43,6 +43,7 @@ export const INTERNAL_ACTIONS = [
   'tab.prev',
   'tool.cancel',
   'edit.copy',
+  'edit.paste',
   'edit.selectAll',
   'find.next',
   'find.prev',

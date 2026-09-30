@@ -8,6 +8,7 @@ import { ArrowCircleLeft20Regular } from '@fluentui/react-icons/svg/arrow-circle
 import { ArrowCircleRight20Regular } from '@fluentui/react-icons/svg/arrow-circle-right';
 import { ArrowDownload20Regular } from '@fluentui/react-icons/svg/arrow-download';
 import { ArrowExport20Regular } from '@fluentui/react-icons/svg/arrow-export';
+import { ArrowImport20Regular } from '@fluentui/react-icons/svg/arrow-import';
 import { ArrowNext20Regular } from '@fluentui/react-icons/svg/arrow-next';
 import { ArrowPrevious20Regular } from '@fluentui/react-icons/svg/arrow-previous';
 import { ArrowRedo20Regular } from '@fluentui/react-icons/svg/arrow-redo';
@@ -26,9 +27,12 @@ import { CheckmarkCircle20Regular, CheckmarkCircle32Regular } from '@fluentui/re
 import { ChevronLeft20Regular } from '@fluentui/react-icons/svg/chevron-left';
 import { ChevronRight20Regular } from '@fluentui/react-icons/svg/chevron-right';
 import { Circle20Filled, Circle20Regular } from '@fluentui/react-icons/svg/circle';
+import { ClipboardArrowRight20Regular } from '@fluentui/react-icons/svg/clipboard-arrow-right';
+import { ClipboardPaste20Regular } from '@fluentui/react-icons/svg/clipboard-paste';
 import { Cloud20Filled, Cloud20Regular } from '@fluentui/react-icons/svg/cloud';
 import { CloudCheckmark20Regular } from '@fluentui/react-icons/svg/cloud-checkmark';
 import { CommentMultiple20Filled, CommentMultiple20Regular } from '@fluentui/react-icons/svg/comment-multiple';
+import { Copy20Regular } from '@fluentui/react-icons/svg/copy';
 import { Cursor20Filled, Cursor20Regular, Cursor32Filled, Cursor32Regular } from '@fluentui/react-icons/svg/cursor';
 import { Delete20Regular, Delete32Regular } from '@fluentui/react-icons/svg/delete';
 import { Dismiss20Filled, Dismiss20Regular } from '@fluentui/react-icons/svg/dismiss';
@@ -190,6 +194,10 @@ export const FLUENT_GLYPHS: Record<string, FluentGlyphs> = {
   'comment.applyStyle': { regular: { small: PaintBrushArrowDown20Regular } },
   'comment.reviewerProfile': { regular: { small: PersonEdit20Regular } },
   'comment.exportAnnotations': { regular: { small: ArrowExport20Regular } },
+  'comment.importComments': { regular: { small: ArrowImport20Regular } },
+  'comment.copyComments': { regular: { small: Copy20Regular } },
+  'comment.pasteComments': { regular: { small: ClipboardPaste20Regular } },
+  'comment.pasteToOriginal': { regular: { small: ClipboardArrowRight20Regular } },
   'comment.exportCrs': { regular: { small: DocumentTableArrowRight20Regular, large: DocumentTableArrowRight24Regular, largeNative: 24 } },
   'measure.distance': { regular: { small: Ruler20Regular, large: Ruler32Regular, largeNative: 32 }, filled: { small: Ruler20Filled, large: Ruler32Filled, largeNative: 32 } },
   'measure.perimeter': { regular: { small: Pentagon20Regular, large: Pentagon32Regular, largeNative: 32 }, filled: { small: Pentagon20Filled, large: Pentagon32Filled, largeNative: 32 } },

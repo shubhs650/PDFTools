@@ -3,9 +3,10 @@ import { useEffect, useId, useMemo, useRef, useState, type KeyboardEvent } from 
 import { useTranslation } from 'react-i18next';
 import { documentStore, useDocuments } from '../../../app/store/documentStore';
 import { format, msg, type MessageKey } from '../../../i18n';
+import { runCommand } from '../../../app/commands/dispatch';
 import { goToPoint } from '../../view/controller';
 import { annotationTypeKey } from '../annotationTypes';
-import { annotationCapability, useSelectedAnnotations } from '../selection';
+import { annotationCapability, annotationState, useSelectedAnnotations } from '../selection';
 import { buildRows, type CommentRow, type CommentSort } from './commentsModel';
 import { STATUS_FILTERS, STATUS_KEYS } from './statusLabels';
 import {
@@ -212,6 +213,7 @@ function CommentList({ docId, rows }: { docId: string; rows: CommentRow[] }) {
   const [active, setActive] = useState(0);
   const selected = useSelectedAnnotations(docId);
   const selectedId = selected[0]?.id ?? null;
+  const selectedIds = new Set(selected.map((a) => a.id));
 
   useEffect(() => {
     const el = list.current;
@@ -250,6 +252,11 @@ function CommentList({ docId, rows }: { docId: string; rows: CommentRow[] }) {
   }, [selectedId]);
 
   const current = Math.min(active, rows.length - 1);
+  // The active row as keys see it: moved by moveTo before the next render.
+  const activeRef = useRef(current);
+  useEffect(() => {
+    activeRef.current = current;
+  }, [current]);
   const first = Math.max(0, Math.floor(scrollTop / ROW_H) - OVERSCAN);
   const last = Math.min(rows.length - 1, Math.ceil((scrollTop + viewHeight) / ROW_H) + OVERSCAN);
 
@@ -265,13 +272,70 @@ function CommentList({ docId, rows }: { docId: string; rows: CommentRow[] }) {
     annotationCapability()?.forDocument(docId).selectAnnotation(a.pageIndex, a.id);
   };
 
-  const moveTo = (i: number): void => {
+  const moveTo = (i: number): number => {
     const to = Math.max(0, Math.min(rows.length - 1, i));
+    activeRef.current = to;
     setActive(to);
     scrollIntoView(to);
+    return to;
+  };
+
+  // Multi-select (M4-21): Ctrl+click or Ctrl+Space toggles a comment,
+  // Shift+click or Shift+arrows extend; the page selection follows.
+  const commentAt = (i: number) => {
+    const row = rows[i];
+    return row?.kind === 'comment' ? row.comment.annot : null;
+  };
+  const setSelection = (ids: string[]): void => {
+    annotationCapability()?.forDocument(docId).setSelection(ids);
+  };
+  // The plugin's selection now (keys can arrive before the pane re-renders).
+  const liveSelection = (): Set<string> => {
+    const st = annotationState(docId);
+    if (!st) return new Set();
+    return new Set(
+      st.selectedUids.map((uid) => st.byUid[uid]?.object.id).filter((x): x is string => !!x),
+    );
+  };
+  const toggle = (i: number): void => {
+    const a = commentAt(i);
+    if (!a) return;
+    const now = liveSelection();
+    const ids = [...now];
+    setSelection(now.has(a.id) ? ids.filter((x) => x !== a.id) : [...ids, a.id]);
+  };
+  const extend = (from: number, to: number): void => {
+    const ids = liveSelection();
+    for (let k = Math.min(from, to); k <= Math.max(from, to); k++) {
+      const a = commentAt(k);
+      if (a) ids.add(a.id);
+    }
+    setSelection([...ids]);
   };
 
   const onKeyDown = (e: KeyboardEvent): void => {
+    const mod = e.ctrlKey || e.metaKey;
+    // Copy and paste comments (M4-21): the pane is outside the document area's keys.
+    const clip: Record<string, string> = {
+      c: 'comment.copyComments',
+      v: e.shiftKey ? 'comment.pasteToOriginal' : 'comment.pasteComments',
+    };
+    const command = mod && !e.altKey ? clip[e.key.toLowerCase()] : undefined;
+    if (command) {
+      e.preventDefault();
+      void runCommand(command);
+      return;
+    }
+    if (mod && e.key === ' ') {
+      e.preventDefault();
+      toggle(current);
+      return;
+    }
+    if (e.shiftKey && (e.key === 'ArrowDown' || e.key === 'ArrowUp')) {
+      e.preventDefault();
+      extend(activeRef.current, moveTo(activeRef.current + (e.key === 'ArrowDown' ? 1 : -1)));
+      return;
+    }
     const perView = Math.max(1, Math.floor(viewHeight / ROW_H) - 1);
     const keys: Record<string, () => void> = {
       ArrowDown: () => {
@@ -310,7 +374,7 @@ function CommentList({ docId, rows }: { docId: string; rows: CommentRow[] }) {
       key: i,
       id: `${listId}-${String(i)}`,
       role: 'option',
-      'aria-selected': i === current,
+      'aria-selected': row.kind === 'comment' ? selectedIds.has(row.comment.id) : false,
       'data-row': i,
       style: { top: i * ROW_H, height: ROW_H },
     } as const;
@@ -355,6 +419,7 @@ function CommentList({ docId, rows }: { docId: string; rows: CommentRow[] }) {
       role="listbox"
       tabIndex={0}
       aria-label={t('comments.list')}
+      aria-multiselectable
       aria-activedescendant={`${listId}-${String(current)}`}
       data-testid="comments-list"
       onScroll={(e) => {
@@ -365,8 +430,12 @@ function CommentList({ docId, rows }: { docId: string; rows: CommentRow[] }) {
         const el = (e.target as HTMLElement).closest<HTMLElement>('[data-row]');
         if (!el) return;
         const i = Number(el.dataset['row']);
+        if (e.ctrlKey || e.metaKey) toggle(i);
+        else if (e.shiftKey) extend(current, i);
+        else {
+          open(i);
+        }
         setActive(i);
-        open(i);
       }}
     >
       <div className="comments-list-content" style={{ height: rows.length * ROW_H }}>

@@ -192,3 +192,35 @@ describe('indexDocument', () => {
     // Indexes 1,100 real pages: ~5 s on a 4-core runner, right at Vitest's default timeout.
   }, 30_000);
 });
+
+describe('indexDocument after a reload (M4-20 regression)', () => {
+  it('follows the current document and never reads the replaced one', async () => {
+    const a = await open(contractPdf(6));
+    const b = await open(contractPdf(4));
+    const e = engine();
+    let calls = 0;
+    // The copy is reloaded after the second page: the rest is indexed from the new one.
+    const current = () => Promise.resolve(++calls > 2 ? b : a);
+    const seen: string[] = [];
+    const text = e.text.bind(e);
+    e.text = (docId, doc, page) => {
+      seen.push(`${doc.id}:${String(page)}`);
+      return text(docId, doc, page);
+    };
+    const r = await indexDocument(
+      e,
+      'd',
+      a,
+      [0],
+      freeSlice(),
+      new Activity(),
+      () => undefined,
+      () => Promise.resolve(),
+      100,
+      current,
+    );
+    expect(r.pages).toBe(4);
+    expect(seen.filter((x) => x.startsWith(`${a.id}:`))).toHaveLength(2);
+    expect(seen.filter((x) => x.startsWith(`${b.id}:`)).length).toBeGreaterThan(0);
+  });
+});

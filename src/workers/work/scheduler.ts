@@ -41,13 +41,21 @@ export class Scheduler {
   private readonly yieldEveryMs: number;
   private readonly now: () => number;
   private readonly sleep: () => Promise<void>;
+  private readonly onIdle: () => void;
 
   constructor(
-    opts: { yieldEveryMs?: number; now?: () => number; sleep?: () => Promise<void> } = {},
+    opts: {
+      yieldEveryMs?: number;
+      now?: () => number;
+      sleep?: () => Promise<void>;
+      /** No job running or waiting (M4-20: replaced documents can be closed then). */
+      onIdle?: () => void;
+    } = {},
   ) {
     this.yieldEveryMs = opts.yieldEveryMs ?? 8;
     this.now = opts.now ?? (() => performance.now());
     this.sleep = opts.sleep ?? (() => new Promise((r) => setTimeout(r, 0)));
+    this.onIdle = opts.onIdle ?? (() => undefined);
   }
 
   /** Current state, for tests and diagnostics. */
@@ -165,7 +173,10 @@ export class Scheduler {
   private dispatch(): void {
     if (this.running) return;
     const next = this.sorted().find((w) => this.eligible(w.priority));
-    if (!next) return;
+    if (!next) {
+      if (this.waiting.length === 0) this.onIdle();
+      return;
+    }
     this.waiting.splice(this.waiting.indexOf(next), 1);
     this.running = { priority: next.priority };
     next.wake();

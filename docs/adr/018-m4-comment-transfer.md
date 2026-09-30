@@ -239,6 +239,25 @@ the patch layer already allows) and `/RT` (to be added), accepting that `/RC` an
 regenerated. **Owner check (M4-22):** real Acrobat- and PDF-XChange-made Rev A files, transferred
 and opened in both viewers — the spike only imitates their structures.
 
+## Implementation notes (M4-20, M4-21)
+
+Recorded as built; the decisions above are unchanged.
+
+- **Apply route.** The copied objects join the document through M4-09's reopen route
+  (`SaveTracker.applyObjects`: current state ∪ copies → reopen R + tail), not a separate pending
+  section: undo is the page-operation snapshot, redo applies the same objects again, and the next
+  Ctrl+S writes them with the semantic save like any other change (one narrow, verified revision).
+- **Numbering guard.** The Work worker numbers new objects from `firstNew` on the state the main
+  thread synced to it (the live section); the Render worker refuses (`transfer-stale`) when any
+  object at or above it exists by then — an edit in between — and the main thread copies once more.
+- **Paste offset** is applied in the target page's displayed space (right and down), so it reads
+  the same on rotated pages.
+- **JSON v1 import** re-creates through the annotation plugin and keeps each record's `/NM` (a
+  second import skips them as duplicates). Measurements come in as plain markups: v1 carries the
+  measured value, not the `/Measure` dictionary, so the object-layer patches listed above are not
+  applied yet (open issue); importing from the PDF keeps them. Stamps are counted as "type not
+  supported" (v1 has no picture).
+
 ## Evidence
 
 - Spike code: `spikes/s16-comment-transfer/{copy.ts,fixtures.ts,run-node.ts,copy.test.ts}`; run

@@ -48,6 +48,9 @@ function executorWith(
     pagesRestore: () => {
       throw new Error('not used');
     },
+    pagesApply: () => {
+      throw new Error('not used');
+    },
     pagesDrop: () => null,
     annotationTile: () => null,
     renderProgressive: () => {

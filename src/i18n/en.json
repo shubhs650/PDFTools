@@ -102,6 +102,10 @@
       "applyStyle": "Apply Comment Style",
       "reviewerProfile": "Reviewer Profile",
       "exportAnnotations": "Export Comments (CSV / XLSX / JSON)",
+      "importComments": "Import Comments",
+      "copyComments": "Copy Comments",
+      "pasteComments": "Paste Comments",
+      "pasteToOriginal": "Paste to Original Pages",
       "exportCrs": "Export CRS (Excel)"
     },
     "measure": {
@@ -286,7 +290,8 @@
       "tabNext": "Next Tab",
       "tabPrev": "Previous Tab",
       "toolCancel": "Cancel Tool",
-      "editCopy": "Copy Selected Text",
+      "editCopy": "Copy Selected Text or Comments",
+      "editPaste": "Paste Comments",
       "editSelectAll": "Select Page Text",
       "findNext": "Find Next",
       "findPrev": "Find Previous",
@@ -1341,6 +1346,72 @@
       "status": "Status",
       "created": "Created",
       "modified": "Modified"
+    }
+  },
+  "transfer": {
+    "restricted": "This document's security settings don't allow adding comments.",
+    "failed": "The comments could not be imported.",
+    "unreadable": "This file could not be read.",
+    "importing": "Importing comments…",
+    "imported_one": "{{count}} comment imported.",
+    "imported_other": "{{count}} comments imported.",
+    "copied_one": "{{count}} comment copied.",
+    "copied_other": "{{count}} comments copied.",
+    "pasted_one": "{{count}} comment pasted.",
+    "pasted_other": "{{count}} comments pasted.",
+    "pasting": "Pasting comments…",
+    "copy": {
+      "none": "Select one or more comments first.",
+      "failed": "The comments could not be copied."
+    },
+    "paste": {
+      "empty": "Copy one or more comments first.",
+      "noPages": "This document doesn't have the pages the comments came from.",
+      "failed": "The comments could not be pasted."
+    },
+    "json": {
+      "syntax": "This file is not valid JSON.",
+      "format": "This is not a PDFTools comment export.",
+      "version": "This comment export was made by a newer version of PDFTools and can't be read here.",
+      "shape": "This comment export is damaged and can't be imported.",
+      "tooLarge": "This file has too many comments to import."
+    },
+    "import": {
+      "title": "Import Comments",
+      "description": "Bring comments from another PDF or from a PDFTools comment export (JSON) into {{name}}.",
+      "choose": "Choose PDF or JSON…",
+      "reading": "Reading the file…",
+      "none": "No file chosen.",
+      "restricted": "{{name}} doesn't allow its comments to be copied. Enter its owner password to import them.",
+      "summary": "{{name}}: {{count}} comments on {{pages}} pages.",
+      "perPage": "Per page: {{list}}.",
+      "pageCount": "page {{page}}: {{count}}",
+      "morePages_one": "{{n}} more page",
+      "morePages_other": "{{n}} more pages",
+      "statuses": "Statuses: {{list}}.",
+      "statusCount": "{{status}}: {{count}}",
+      "range": "Pages of the source (empty: all)",
+      "authors": "Authors",
+      "types": "Types",
+      "withCount": "{{label}} ({{count}})",
+      "withReplies": "With replies",
+      "mapping": "Place the comments",
+      "samePage": "On the same page numbers",
+      "shift": "Shifted by a number of pages",
+      "shiftBy": "Pages to shift (negative: earlier)",
+      "shiftError": "Enter a whole number.",
+      "nothing": "Nothing to import with these settings.",
+      "will_one": "{{n}} comment will be imported ({{total}} annotations with its replies and statuses).",
+      "will_other": "{{n}} comments will be imported ({{total}} annotations with their replies and statuses).",
+      "skipped": "Skipped: {{list}}.",
+      "skipMissing_one": "{{n}} on a page this document doesn't have",
+      "skipMissing_other": "{{n}} on pages this document doesn't have",
+      "skipDuplicate_one": "{{n}} already in this document",
+      "skipDuplicate_other": "{{n}} already in this document",
+      "skipUnsupported_one": "{{n}} of a type a JSON export can't bring (stamps)",
+      "skipUnsupported_other": "{{n}} of a type a JSON export can't bring (stamps)",
+      "confirm": "Import",
+      "cancel": "Cancel"
     }
   },
   "pages": {

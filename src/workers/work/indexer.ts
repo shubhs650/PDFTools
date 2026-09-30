@@ -52,41 +52,53 @@ export interface IndexResult {
 export async function indexDocument(
   engine: SearchEngine,
   docId: string,
-  doc: PdfDocumentObject,
+  first: PdfDocumentObject,
   visible: readonly number[],
   slice: JobSlice,
   activity: Activity,
   onProgress: (p: { done: number; total: number }) => void,
   nap: (ms: number) => Promise<void> = (ms) => new Promise((r) => setTimeout(r, ms)),
   dutyMs = DUTY_MS,
+  /** The document now: after a reload (unsaved page changes) indexing starts over on it. */
+  current: () => Promise<PdfDocumentObject> = () => Promise.resolve(first),
 ): Promise<IndexResult> {
   const t0 = performance.now();
   let extracted = 0;
   let pausedMs = 0;
-  let done = 0;
   let worked = 0;
-  for (const page of searchOrder(doc.pageCount, visible)) {
-    if (worked >= dutyMs) {
-      await nap(worked);
-      worked = 0;
-    }
-    await slice.checkpoint();
-    if (activity.busy()) {
-      const p0 = performance.now();
-      while (activity.busy()) {
-        await nap(NAP_MS);
-        await slice.checkpoint();
+  let doc = first;
+  let done = 0;
+  restart: for (;;) {
+    done = 0;
+    for (const page of searchOrder(doc.pageCount, visible)) {
+      if (worked >= dutyMs) {
+        await nap(worked);
+        worked = 0;
       }
-      pausedMs += performance.now() - p0;
+      await slice.checkpoint();
+      if (activity.busy()) {
+        const p0 = performance.now();
+        while (activity.busy()) {
+          await nap(NAP_MS);
+          await slice.checkpoint();
+        }
+        pausedMs += performance.now() - p0;
+      }
+      const now = await current();
+      if (now.id !== doc.id) {
+        doc = now;
+        continue restart;
+      }
+      if (engine.cache.get(docId, page) === undefined) {
+        const w0 = performance.now();
+        engine.text(docId, doc, page);
+        worked += performance.now() - w0;
+        extracted++;
+      }
+      done++;
+      onProgress({ done, total: doc.pageCount });
     }
-    if (engine.cache.get(docId, page) === undefined) {
-      const w0 = performance.now();
-      engine.text(docId, doc, page);
-      worked += performance.now() - w0;
-      extracted++;
-    }
-    done++;
-    onProgress({ done, total: doc.pageCount });
+    break;
   }
   return { pages: doc.pageCount, extracted, pausedMs, ms: performance.now() - t0 };
 }

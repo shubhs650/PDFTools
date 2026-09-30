@@ -14,6 +14,7 @@ import { recordError } from '../../app/diagnostics';
 import { documentStore, securityOf } from '../../app/store/documentStore';
 import { isAbortError } from '../../engine/errors';
 import type { PageInfo, PageOp } from '../../engine/renderApi';
+import type { TransferObject } from '../../workers/work/transferJobs';
 import { msg, type MessageKey } from '../../i18n';
 import { allows } from '../../model/permissions';
 import { annotationCapability } from '../annotate/selection';
@@ -22,8 +23,13 @@ import { isActive } from '../save/saveMachine';
 import { editsSettled, setPageOpProbe } from '../save/pendingEdits';
 import { goToPage } from '../view/controller';
 import { capability, hostStore, renderEngine, startedWorkClient } from '../view/host';
+import { changedPages } from './changed';
 import { invalidatePages } from './invalidate';
 import { remapPageSelection } from './selection';
+
+/** What one undo step does again on redo: a page operation, or copied objects (M4-20/21). */
+export type Change =
+  { kind: 'op'; op: PageOp } | { kind: 'objects'; objects: TransferObject[]; firstNew: number };
 
 export interface Busy {
   docId: string;
@@ -163,19 +169,7 @@ export async function runPageOp(docId: string, op: PageOp, label: MessageKey): P
   setBusy({ docId, label, done: 0, total: 0, started: performance.now() });
   try {
     await settleEdits(docId);
-    const rpc = renderEngine().rpc;
-    const snap = await rpc.call('pagesSnapshot', { docId }).promise;
-    for (const t of snap.dropped) evicted.add(t);
-    const applied = await apply(docId, op, label);
-    if (!applied) {
-      // Cancelled or failed part-way: back to the snapshot.
-      await restore(docId, snap.token);
-      return false;
-    }
-    await afterChange(docId, applied);
-    registerStep(docId, op, label, snap.token);
-    documentStore.getState().markDirty(docId);
-    return true;
+    return await applyAsStep(docId, { kind: 'op', op }, label);
   } catch (err) {
     recordError('pages.op', err);
     pagesStore.setState({ error: msg('pages.failed') });
@@ -186,11 +180,110 @@ export async function runPageOp(docId: string, op: PageOp, label: MessageKey): P
   }
 }
 
-/** The operation in the Render worker; null when cancelled or failed. */
-async function apply(docId: string, op: PageOp, label: MessageKey): Promise<PageInfo[] | null> {
+/** Snapshot, the change, everything following it, and one undo step. */
+async function applyAsStep(docId: string, change: Change, label: MessageKey): Promise<boolean> {
+  const rpc = renderEngine().rpc;
+  const snap = await rpc.call('pagesSnapshot', { docId }).promise;
+  for (const t of snap.dropped) evicted.add(t);
+  let applied: PageInfo[] | null;
+  try {
+    applied = await apply(docId, change, label);
+  } catch (err) {
+    // Nothing was applied (copied objects refused): the snapshot is not needed.
+    await rpc.call('pagesDrop', { tokens: [snap.token] }).promise;
+    throw err;
+  }
+  if (!applied) {
+    // Cancelled or failed part-way: back to the snapshot.
+    await restore(docId, snap.token);
+    return false;
+  }
+  await afterChange(docId, applied);
+  registerStep(docId, change, label, snap.token);
+  documentStore.getState().markDirty(docId);
+  return true;
+}
+
+/** Why comments can't be added to the document now (null: they can; rule 9). */
+export function transferBlocked(docId: string): MessageKey | null {
+  const d = documentStore.getState().docs[docId];
+  if (!d) return msg('pages.noDocument');
+  if (!allows(securityOf(d.meta), 'annotate')) return msg('transfer.restricted');
+  if (pagesBusy()) return msg('pages.busy');
+  if (isActive(phaseOf(docId))) return msg('pages.saving');
+  return null;
+}
+
+/** The Work worker's copy sees the document as it is now (unsaved edits as its live section). */
+export async function syncLive(docId: string): Promise<void> {
+  const work = startedWorkClient();
+  if (!work?.has(docId)) return;
+  const { tail } = await renderEngine().rpc.call('snapshotTail', { docId }).promise;
+  await work.setLive(docId, tail);
+}
+
+export interface TransferProduct {
+  objects: TransferObject[];
+  firstNew: number;
+}
+
+/**
+ * Comment transfer as one undo step (M4-20, M4-21, ADR-018): `produce` copies
+ * the comments in the Work worker (its copy synced first) with progress and
+ * Cancel; the Render worker applies the objects. When the document changed in
+ * between (`transfer-stale`), the copy runs once more. Resolves true when
+ * applied; null from `produce` (cancelled, nothing to copy) applies nothing.
+ */
+export async function runTransfer(
+  docId: string,
+  label: MessageKey,
+  produce: (
+    progress: (p: { done: number; total: number }) => void,
+    onCancel: (cancel: () => void) => void,
+  ) => Promise<TransferProduct | null>,
+): Promise<boolean> {
+  if (transferBlocked(docId)) return false;
+  setBusy({ docId, label, done: 0, total: 0, started: performance.now() });
+  const progress = (p: { done: number; total: number }) => {
+    const b = pagesStore.getState().busy;
+    if (b) setBusy({ ...b, done: p.done, total: p.total });
+  };
+  const onCancel = (cancel: () => void) => {
+    cancelRunning = cancel;
+  };
+  try {
+    for (let attempt = 0; ; attempt++) {
+      await settleEdits(docId);
+      await syncLive(docId);
+      const product = await produce(progress, onCancel);
+      cancelRunning = null;
+      if (!product || product.objects.length === 0) return false;
+      try {
+        return await applyAsStep(docId, { kind: 'objects', ...product }, label);
+      } catch (err) {
+        if ((err as { code?: string }).code !== 'transfer-stale' || attempt > 0) throw err;
+      }
+    }
+  } catch (err) {
+    if (isAbortError(err) || (err as { code?: string }).code?.startsWith('cancelled')) return false;
+    throw err;
+  } finally {
+    cancelRunning = null;
+    setBusy(null);
+  }
+}
+
+/** The change in the Render worker; null when cancelled or failed. */
+async function apply(docId: string, change: Change, label: MessageKey): Promise<PageInfo[] | null> {
+  if (change.kind === 'objects') {
+    const { objects, firstNew } = change;
+    // A structured copy (nothing transferred): a redo sends the same objects again.
+    return (await renderEngine().rpc.call('pagesApply', { docId, objects, firstNew }).promise)
+      .pages;
+  }
   const job = renderEngine().rpc.call(
     'pagesOp',
-    { docId, op },
+    { docId, op: change.op },
     {
       onProgress: (p) => {
         const b = pagesStore.getState().busy;
@@ -224,12 +317,7 @@ async function restore(docId: string, token: number): Promise<void> {
  * the tab's page count, the selection and the current page.
  */
 async function afterChange(docId: string, pages: readonly PageInfo[]): Promise<void> {
-  const rpc = renderEngine().rpc;
-  const work = startedWorkClient();
-  if (work?.has(docId)) {
-    const { tail } = await rpc.call('snapshotTail', { docId }).promise;
-    await work.setLive(docId, tail);
-  }
+  await syncLive(docId);
   const store = coreStore();
   const old = store.getState().core.documents[docId]?.document as PdfDocumentObject | undefined;
   if (!old) return;
@@ -255,12 +343,10 @@ async function afterChange(docId: string, pages: readonly PageInfo[]): Promise<v
     );
   }
   store.dispatch(setDocumentLoaded(docId, doc));
-  store.dispatch(
-    refreshPages(
-      docId,
-      pages.map((p) => p.index),
-    ),
-  );
+  // Only pages whose identity changed: copied comments need none (annotation
+  // tiles are drawn from the annotation store, ADR-014).
+  const changed = changedPages(old.pages, pages);
+  if (changed.length) store.dispatch(refreshPages(docId, changed));
   invalidatePages(docId);
   remapPageSelection(docId, map);
   const docs = documentStore.getState();
@@ -279,7 +365,7 @@ async function afterChange(docId: string, pages: readonly PageInfo[]): Promise<v
 }
 
 /** One step in the document's undo timeline (topic "pages"). */
-function registerStep(docId: string, op: PageOp, label: MessageKey, token: number): void {
+function registerStep(docId: string, change: Change, label: MessageKey, token: number): void {
   const history = historyOf(docId);
   if (!history) return;
   let first = true;
@@ -290,12 +376,12 @@ function registerStep(docId: string, op: PageOp, label: MessageKey, token: numbe
           first = false;
           return;
         }
-        void redo(docId, op, label);
+        void redo(docId, change, label);
       },
       undo: () => {
         void undo(docId, token);
       },
-      metadata: { pageOp: op.kind },
+      metadata: { pageOp: change.kind === 'op' ? change.op.kind : 'transfer' },
     },
     'pages',
   );
@@ -319,11 +405,11 @@ async function undo(docId: string, token: number): Promise<void> {
   }
 }
 
-async function redo(docId: string, op: PageOp, label: MessageKey): Promise<void> {
+async function redo(docId: string, change: Change, label: MessageKey): Promise<void> {
   setBusy({ docId, label, done: 0, total: 0, started: performance.now() });
   try {
     await settleEdits(docId);
-    const pages = await apply(docId, op, label);
+    const pages = await apply(docId, change, label);
     if (!pages) return;
     await afterChange(docId, pages);
     documentStore.getState().markDirty(docId);

@@ -65,6 +65,19 @@ export interface RenderApi {
   pagesSnapshot: MethodSpec<{ docId: string }, { token: number; dropped: number[] }>;
   /** Undo of a page operation: reopens the document from its snapshot, same id. */
   pagesRestore: MethodSpec<{ docId: string; token: number }, { pages: PageInfo[] }>;
+  /**
+   * Comment transfer (M4-20/21): objects copied by the Work worker join the
+   * document, which is reopened; the annotate permission is needed (rule 9).
+   * `firstNew`: the first new object number (`transfer-stale` if taken since).
+   */
+  pagesApply: MethodSpec<
+    {
+      docId: string;
+      objects: { num: number; gen: number; bytes: Uint8Array }[];
+      firstNew: number;
+    },
+    { pages: PageInfo[] }
+  >;
   /** Forgets undo snapshots (history cleared, document closed). */
   pagesDrop: MethodSpec<{ tokens: number[] }, null>;
   /**

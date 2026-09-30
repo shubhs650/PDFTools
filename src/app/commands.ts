@@ -775,6 +775,42 @@ export const COMMANDS: readonly CommandDef[] = [
     shipped: true, // M4-08
   },
   {
+    id: 'comment.importComments',
+    tab: 'comment',
+    group: 'manageComments',
+    size: 'small',
+    fluent: 'ArrowImport',
+    milestone: 'M4',
+    shipped: true, // M4-20
+  },
+  {
+    id: 'comment.copyComments',
+    tab: 'comment',
+    group: 'manageComments',
+    size: 'small',
+    fluent: 'Copy',
+    milestone: 'M4',
+    shipped: true, // M4-21
+  },
+  {
+    id: 'comment.pasteComments',
+    tab: 'comment',
+    group: 'manageComments',
+    size: 'small',
+    fluent: 'ClipboardPaste',
+    milestone: 'M4',
+    shipped: true, // M4-21
+  },
+  {
+    id: 'comment.pasteToOriginal',
+    tab: 'comment',
+    group: 'manageComments',
+    size: 'small',
+    fluent: 'ClipboardArrowRight',
+    milestone: 'M4',
+    shipped: true, // M4-21
+  },
+  {
     id: 'comment.exportCrs',
     tab: 'comment',
     group: 'manageComments',

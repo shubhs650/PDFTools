@@ -775,9 +775,43 @@ export class SaveTracker {
     const snap = this.snapshots.get(token);
     if (snap?.docId !== docId)
       throw new RpcError('undo-evicted', 'The undo step is no longer kept');
+    return this.reopen(docId, s, snap.state, snap.patches.clone());
+  }
+
+  /**
+   * Comment transfer (M4-20, M4-21, ADR-018 d2–3): the objects the Work
+   * worker copied join the document's current state, which is reopened (the
+   * M4-09 route); the next save writes them like any other change. Needs the
+   * annotate permission (rule 9). The Work worker numbered its new objects
+   * from `firstNew` on the state it was given: an object already there at or
+   * above it means the document changed since (an edit in between), and
+   * nothing is applied (`transfer-stale`: copy again).
+   */
+  async applyObjects(
+    docId: string,
+    objects: readonly Span[],
+    firstNew: number,
+  ): Promise<PdfDocumentObject> {
+    const s = this.need(docId);
+    this.requireCapability(docId, 'annotate');
+    const { state } = await this.currentState(docId, s);
+    for (const num of state.keys())
+      if (num >= firstNew)
+        throw new RpcError('transfer-stale', 'The document changed while comments were copied');
+    for (const o of objects) state.set(o.num, o);
+    return this.reopen(docId, s, state, s.patches);
+  }
+
+  /** Reopens R + `state` under the same id; the disk overlay stays (see `restore`). */
+  private async reopen(
+    docId: string,
+    s: DocState,
+    state: Map<number, Span>,
+    patches: PatchSet,
+  ): Promise<PdfDocumentObject> {
     if (!s.rootBase) throw new RpcError('save-needs-rewrite', 'The file needs a full save');
     const root = openedBytes(this.mod, this.native, docId, s.rootLength).slice();
-    const spans = [...snap.state.values()].sort((a, b) => a.num - b.num);
+    const spans = [...state.values()].sort((a, b) => a.num - b.num);
     const tail =
       spans.length === 0
         ? new Uint8Array(0)
@@ -794,8 +828,8 @@ export class SaveTracker {
     if (s.ownerPassword !== undefined)
       await this.native.unlockOwnerPermissions(doc, s.ownerPassword).toPromise();
     s.openedLength = bytes.length;
-    s.reopened = new Map(snap.state);
-    s.patches = snap.patches.clone();
+    s.reopened = new Map(state);
+    s.patches = patches;
     s.semantic = true;
     s.untracked = ++s.seq;
     s.pages.clear();

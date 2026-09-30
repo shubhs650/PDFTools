@@ -61,7 +61,10 @@ type JobMethod =
   | 'extract'
   | 'exportImages'
   | 'indexText'
-  | 'assemble';
+  | 'assemble'
+  | 'commentSource'
+  | 'transferComments'
+  | 'copyComments';
 
 export interface WorkClientOptions {
   wasmUrl?: string;

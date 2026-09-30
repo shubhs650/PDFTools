@@ -47,6 +47,13 @@ export function concat(a: ArrayBuffer, b: ArrayBuffer | null | undefined): Array
 export class WorkDocs {
   private readonly entries = new Map<string, Entry>();
   private readonly candidates = new Map<string, PdfDocumentObject>();
+  /**
+   * Copies replaced by a reload, closed only when no job runs (closeRetired):
+   * a job suspended at a checkpoint may still hold one (M4-20 found the
+   * background indexer working on a closed document after a live-section
+   * change — minutes of blocking, and stale text in the search cache).
+   */
+  private readonly retired: PdfDocumentObject[] = [];
   private verifySeq = 0;
   private readonly native: () => PdfiumNative;
 
@@ -209,7 +216,7 @@ export class WorkDocs {
         generation,
         e.ownerPassword,
       );
-      await this.native().closeDocument(e.doc).toPromise();
+      this.retired.push(e.doc);
       e.doc = doc;
       e.generation = generation;
       e.appliedTailBytes = tail?.byteLength ?? 0;
@@ -219,10 +226,30 @@ export class WorkDocs {
     return { doc: e.doc, appliedTailBytes: e.appliedTailBytes };
   }
 
+  /** Closes the copies replaced by reloads; call only while no job runs. */
+  async closeRetired(): Promise<void> {
+    for (const doc of this.retired.splice(0))
+      await this.native()
+        .closeDocument(doc)
+        .toPromise()
+        .catch(() => undefined);
+  }
+
+  /** The current copy's engine id changed since `doc` was taken (a reload). */
+  isCurrent(docId: string, doc: PdfDocumentObject): boolean {
+    return this.entries.get(docId)?.doc.id === doc.id;
+  }
+
   /** The file as saved so far (original + tail): for readers of raw PDF syntax (M2-11, M2-12). */
   bytes(docId: string): Uint8Array {
     const e = this.require(docId);
     return new Uint8Array(concat(e.original, e.tail));
+  }
+
+  /** The current state (original + tail + live section): comment transfer reads it (M4-20). */
+  liveBytes(docId: string): Uint8Array {
+    const e = this.require(docId);
+    return new Uint8Array(concat(concat(e.original, e.tail), e.live));
   }
 
   /** Unlocks the kept copy with the owner password; remembered for later reloads. */

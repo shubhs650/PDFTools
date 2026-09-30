@@ -34,6 +34,7 @@ import { extract } from './work/extract';
 import { zipBlob } from './work/zip';
 import { exportImages } from './work/images';
 import { assemble, fullAccess, type AssemblePart } from './work/assemble';
+import { commentSource, copyComments, transferComments } from './work/transferJobs';
 import type { PdfDocumentObject } from '@embedpdf/models';
 
 let mod: WrappedPdfiumModule | undefined;
@@ -68,7 +69,11 @@ async function inflate(bytes: Uint8Array): Promise<Uint8Array> {
 /** Snap geometry per document and page (M3-18): extracted once, reused at every zoom. */
 const geometry = new Map<string, Map<number, Float32Array>>();
 
-const scheduler = new Scheduler();
+const scheduler = new Scheduler({
+  onIdle: () => {
+    void docs.closeRetired();
+  },
+});
 let assembleSeq = 0;
 const activity = new Activity();
 const search = new SearchEngine(() => {
@@ -133,6 +138,51 @@ serve<WorkApi>(self, {
         return new Transfer({ bytes: buf }, [buf]);
       } finally {
         for (const doc of opened) await n.closeDocument(doc).toPromise();
+        wasmBytes();
+      }
+    }),
+
+  commentSource: (source, ctx) =>
+    scheduler.run('interactive', ctx.signal, async () => {
+      if (!mod) throw new RpcError('not-initialized', 'The work worker is not initialized');
+      try {
+        return await commentSource(mod, need(), source, inflate);
+      } finally {
+        wasmBytes();
+      }
+    }),
+
+  transferComments: ({ docId, source, spec }, ctx) =>
+    scheduler.run('interactive', ctx.signal, async (slice) => {
+      if (!mod) throw new RpcError('not-initialized', 'The work worker is not initialized');
+      try {
+        const r = await transferComments(
+          mod,
+          need(),
+          docs,
+          docId,
+          source,
+          spec,
+          inflate,
+          slice,
+          (p) => {
+            ctx.progress(p);
+          },
+        );
+        return new Transfer(r, [...new Set(r.objects.map((o) => o.bytes.buffer as ArrayBuffer))]);
+      } finally {
+        wasmBytes();
+      }
+    }),
+
+  copyComments: ({ docId, ids, withReplies }, ctx) =>
+    scheduler.run('interactive', ctx.signal, async (slice) => {
+      if (!mod) throw new RpcError('not-initialized', 'The work worker is not initialized');
+      try {
+        const r = await copyComments(mod, need(), docs, docId, ids, withReplies, inflate, slice);
+        const buf = r.bytes.slice().buffer;
+        return new Transfer({ bytes: buf, pages: r.pages, count: r.count }, [buf]);
+      } finally {
         wasmBytes();
       }
     }),
@@ -389,9 +439,22 @@ serve<WorkApi>(self, {
     scheduler.run('background', ctx.signal, async (slice) => {
       const { doc } = await docs.get(docId);
       try {
-        return await indexDocument(search, docId, doc, visible, slice, activity, (p) => {
-          ctx.progress(p);
-        });
+        // A live-section change reloads the copy: indexing follows the current one.
+        const current = async () => (await docs.get(docId)).doc;
+        return await indexDocument(
+          search,
+          docId,
+          doc,
+          visible,
+          slice,
+          activity,
+          (p) => {
+            ctx.progress(p);
+          },
+          undefined,
+          undefined,
+          current,
+        );
       } finally {
         wasmBytes();
       }

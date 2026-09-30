@@ -1,6 +1,6 @@
 # PDFTools — Progress
 
-_Last updated: 2026-09-29 (session 18: M4 plan approved; comment transfer added under ADR-018)_
+_Last updated: 2026-09-30 (session 18: M4-20 and M4-21 comment transfer done)_
 
 **Current milestone:** M3 — Review. Plan approved (2026-09-27); M3-01 … M3-08 done in session 16
 on `claude/m3-task-breakdown-tlyokp` (ADR-014 and ADR-015 accepted).
@@ -8,6 +8,20 @@ M0–M2 are merged into `main` (M2 complete on the agent side, owner pack in
 [docs/acceptance/M2.md](acceptance/M2.md)); the M0, M1 and M2 owner runs are open.
 
 ## Done
+
+- **Session 18 — M4-21 copy/paste comments.** Comment → Copy Comments / Paste Comments / Paste
+  to Original Pages, Ctrl+C (comments when comments are selected, text otherwise), Ctrl+V and
+  Ctrl+Shift+V; the Comments pane list is multi-select. An in-app clipboard (a small PDF built in
+  the Work worker), new `/NM`s on paste, replies follow, 10 pt offset on the page it came from;
+  one undo step; copy/annotate permissions honoured; counts announced.
+
+- **Session 18 — M4-20 Import Comments.** From another PDF (object copy per ADR-018: appearances,
+  replies, states and measurements as they are; password and owner password; copy permission) or
+  from our JSON v1 export (re-created); summary, filters, page range, page shift, live preview of
+  what is skipped; one undo step; narrow verified save. A numbering guard catches an edit made
+  while comments are copied. Fixed two M4-09 issues on the way: the Work copy's reload closed a
+  document the background indexer still read, and every page was refreshed after a change (a
+  text-geometry job per page — ~95 s of Work-worker queue on the 2,000-page stand-in).
 
 - **Session 18 — M4-11 insert from file, extract, merge.** Insert pages of another PDF (password,
   owner password for restricted files, order kept), Extract Pages to a new unsaved tab (optionally
@@ -801,7 +815,7 @@ M0–M2 are merged into `main` (M2 complete on the agent side, owner pack in
   (spikes; ADR-016 and ADR-017 accepted), M4-03 (icons), M4-04 (Oxide and the export
   framework), M4-05 (text, Markdown, HTML), M4-06 (images), M4-07 (Word, Beta), M4-08 (annotation export), M4-19 (comment-transfer
   spike), M4-09 (page operations core), M4-10 (reorder), M4-11 (insert from file, extract,
-  merge).
+  merge), M4-20 (Import Comments), M4-21 (copy/paste comments).
   ADR-018 (comment transfer) accepted after the M4-19 spike (hybrid route); ARCHITECTURE.md Rev
   0.6 (§7.1, §7.6, §13).
 - **Git in one paragraph (for the owner):** each task lives on its own _branch_ (a named line
@@ -810,6 +824,14 @@ M0–M2 are merged into `main` (M2 complete on the agent side, owner pack in
   (CI) on it; _merge_ adds it to `main` once the checks are green.
 
 ## Session log
+
+- **Session 18 (2026-09-30), M4-20 and M4-21:** typecheck, lint, format, 999 unit tests (incl. 7
+  Node integration tests on real PDFium + qpdf), license gate (763 packages, no new dependency),
+  icons regenerated, the full e2e suite (260 of 260, 12.1 min, 2 workers; the new specs 5 of 5),
+  the import perf scenario (three runs; one earlier run caught the test's own picker stub decoding
+  test data in the measured window — moved out of it) and the three page perf scenarios. The perf
+  test first showed 95–110 s until imported comments appeared; traced to every page being
+  refreshed after a change (fixed) and to a closed-document read in the indexer (fixed).
 
 - **Session 18 (2026-09-30), M4-11:** typecheck, lint, format, 966 unit tests (incl. 5 new Node
   tests on real PDFium + qpdf), icons up to date, the full e2e suite (254 of 255; the one failure,
@@ -940,14 +962,19 @@ M0–M2 are merged into `main` (M2 complete on the agent side, owner pack in
 4. **Owner:** decide the items under "Decisions needed" (keyboard text selection, committed
    corpus PDFs, Pages project).
 5. **Owner:** review the M4 icons in the e2e gallery.
-6. **Agent:** M4-20/M4-21 (comment transfer, ADR-018 accepted; they build on M4-09's reopen route
-   and M4-11's import), then tables (M4-12 … M4-15) and redaction (M4-16 … M4-18).
+6. **Agent:** tables (M4-12 … M4-15), then redaction (M4-16 … M4-18), then the M4 acceptance
+   pass (M4-22).
 7. **Owner (M0/M1, still open):** S1 interop checklist; S1 FSA button on the 500 MB contract; S5
    search on the FAR and the 500 MB contract; S7 on the CAD drawings and the P&ID
    (`node spikes/s7-snap/run-node.ts <files>`); S4 on the pipe chart and a parts list; FAR, 500 MB
    and A0 through the S3 harness; S8 Firefox check and Pages preview.
 
 ## Open issues
+
+- **Comment transfer (M4-20/21):** JSON-imported measurements come in as plain markups (v1 carries
+  the value, not `/Measure`; ADR-018's object-layer patches for JSON are not built yet — importing
+  from the PDF keeps them); no context menu for Copy/Paste yet (ribbon and keys only); the owner
+  check with real Acrobat/PDF-XChange Rev A files is in the M4-22 pack.
 
 - **Page operations, deferred parts of ADR-016 decision 7 (M4-09):** after deleting pages, form
   fields whose widgets were all on them stay in `/AcroForm /Fields` (valid PDF; the object layer

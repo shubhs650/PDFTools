@@ -325,6 +325,13 @@ serve<RenderApi>(self, {
     return { pages: pageInfos(m, n, docId) };
   },
 
+  pagesApply: async ({ docId, objects, firstNew }) => {
+    const { mod: m, native: n, tracker: t } = ready();
+    await t.applyObjects(docId, objects, firstNew);
+    annotBoxCache.drop(docId);
+    return { pages: pageInfos(m, n, docId) };
+  },
+
   pagesDrop: ({ tokens }) => {
     ready().tracker.dropSnapshots(tokens);
     return null;

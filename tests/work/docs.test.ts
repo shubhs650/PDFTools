@@ -96,3 +96,24 @@ describe.skipIf(!hasQpdf())('WorkDocs: owner unlock (§7.12, ADR-013 decision 3)
     await docs.close('enc');
   });
 });
+
+describe('replaced copies (M4-20 regression)', () => {
+  it('stay open until closeRetired: a suspended job may still read them', async () => {
+    const docs = new WorkDocs(() => native);
+    const bytes = simplePdf(2);
+    await docs.open('r', bytes.slice().buffer, undefined);
+    const { doc: before } = await docs.get('r');
+    docs.setLive('r', null);
+    const { doc: after } = await docs.get('r');
+    expect(after.id).not.toBe(before.id);
+    expect(docs.isCurrent('r', before)).toBe(false);
+    // The old copy still answers …
+    const page = before.pages[0];
+    if (!page) throw new Error('page');
+    await expect(native.getPageAnnotations(before, page).toPromise()).resolves.toEqual([]);
+    // … until the worker is idle.
+    await docs.closeRetired();
+    await expect(native.getPageAnnotations(before, page).toPromise()).rejects.toBeDefined();
+    await docs.close('r');
+  });
+});

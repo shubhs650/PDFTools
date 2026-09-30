@@ -11,10 +11,12 @@ import { AbortError } from '../engine/errors';
 
 const PDF_TYPES = [{ description: 'PDF', accept: { 'application/pdf': ['.pdf'] } }] as const;
 
+type PickerTypes = readonly { description: string; accept: Record<string, readonly string[]> }[];
+
 interface PickerWindow {
   showOpenFilePicker?: (options: {
     multiple?: boolean;
-    types?: typeof PDF_TYPES;
+    types?: PickerTypes;
     id?: string;
   }) => Promise<FileSystemFileHandle[]>;
   showSaveFilePicker?: (options: {
@@ -72,12 +74,45 @@ export async function pickPdfFiles(win: Window = window): Promise<OpenedFile[]> 
   return pickWithInput(win.document);
 }
 
-function pickWithInput(doc: Document): Promise<OpenedFile[]> {
+/** Import Comments (M4-20): one PDF or one of our JSON exports. Resolves null when cancelled. */
+export async function pickCommentSource(win: Window = window): Promise<File | null> {
+  if (accessStrategy(win) === 'fsa') {
+    try {
+      const [handle] =
+        (await (win as PickerWindow).showOpenFilePicker?.({
+          multiple: false,
+          types: [
+            {
+              description: 'PDF, JSON',
+              accept: { 'application/pdf': ['.pdf'], 'application/json': ['.json'] },
+            },
+          ],
+          id: 'pdftools-comments',
+        })) ?? [];
+      return handle ? await handle.getFile() : null;
+    } catch (err) {
+      if (isAbort(err)) return null;
+      throw err;
+    }
+  }
+  const [picked] = await pickWithInput(
+    win.document,
+    '.pdf,application/pdf,.json,application/json',
+    false,
+  );
+  return picked?.file ?? null;
+}
+
+function pickWithInput(
+  doc: Document,
+  accept = '.pdf,application/pdf',
+  multiple = true,
+): Promise<OpenedFile[]> {
   return new Promise((resolve) => {
     const input = doc.createElement('input');
     input.type = 'file';
-    input.accept = '.pdf,application/pdf';
-    input.multiple = true;
+    input.accept = accept;
+    input.multiple = multiple;
     input.addEventListener('change', () => {
       resolve([...(input.files ?? [])].map((file) => ({ file })));
     });

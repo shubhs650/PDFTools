@@ -1,8 +1,8 @@
 # PDFTools annotation export — JSON format, version 1
 
 Written by Comment → Export Annotations (M4-08, §7.6, M4-Q7). Version 1 is also the **import**
-format of Comment → Import Comments (M4-20, ADR-018); it is frozen once M4-20 ships — later
-changes get a new `version`.
+format of Comment → Import Comments (M4-20, ADR-018). **Frozen** since M4-20 shipped: later
+changes get a new `version`, and an import refuses a version it does not know.
 
 - Encoding: UTF-8 JSON, one object. Dates are ISO 8601 strings in UTC. Page numbers are 1-based.
 - Only comments are records (the Comments pane's set: markups, notes, stamps, measurements — not
@@ -61,3 +61,10 @@ Notes:
   an import re-creates them from a PDF source instead (ADR-018 option 1), or adds an optional
   `image` field (PNG data URI) before version 1 is frozen.
 - Readers must ignore fields they do not know.
+
+Import (M4-20) validates strictly: `format` and `version` as above; each record needs an integer
+`page` ≥ 1, a non-empty `id`, a `type`, `author` string or null, ISO dates or null, arrays
+`replies` (each with `id` and an `annotation`) and `states` (each with `id` and `state`), and an
+`annotation` model with a numeric `type` and a finite `rect`. One bad record refuses the file.
+Records keep their `id` as `/NM` (already in the document: skipped). Stamps are skipped (no
+picture in v1), and measurements come in as plain markups (v1 has the value, not `/Measure`).
