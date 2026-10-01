@@ -809,7 +809,7 @@ M0–M2 are merged into `main` (M2 complete on the agent side, owner pack in
 ## In progress
 
 - **M3 done on the agent side (session 17):** M3-16 … M3-20 as one commit each on
-  `claude/m3-tasks-16-20-vdqo8q` (pushed; no PR opened). Waiting on the owner pack
+  `claude/m3-tasks-16-20-vdqo8q`, merged into `main` as PR #47. Waiting on the owner pack
   ([docs/acceptance/M3.md](acceptance/M3.md) §4).
 - **M4 in progress (session 18):** [docs/plan/M4.md](plan/M4.md), 22 tasks. Done: M4-01 and M4-02
   (spikes; ADR-016 and ADR-017 accepted), M4-03 (icons), M4-04 (Oxide and the export
@@ -955,8 +955,8 @@ M0–M2 are merged into `main` (M2 complete on the agent side, owner pack in
    (L/M) and the still-open §D/§F in Acrobat Reader and PDF-XChange (they decide ADR-007
    decisions 2 and 3: the grouped measurement label and viewport semantics), snapping on the local
    P&ID and CAD drawings (`npm run owner:timings`), the CRS in Excel.
-2. **Owner:** review and merge `claude/m3-tasks-16-20-vdqo8q` (M3-16 … M3-20) after
-   `claude/m3-task-breakdown-tlyokp` (M3-01 … M3-15, merged as PR #46).
+2. **Agent:** M4 so far (M4-01 … M4-11, M4-19 … M4-21) goes into `main` through PR #48
+   (`claude/upbeat-cray-lknggv`) once CI is green. (M3 is in `main`: PRs #46 and #47.)
 3. **Owner:** the M2 owner pack in [docs/acceptance/M2.md](acceptance/M2.md) §4 and the M1/M0
    owner runs (below, unchanged).
 4. **Owner:** decide the items under "Decisions needed" (keyboard text selection, committed
