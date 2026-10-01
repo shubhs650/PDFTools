@@ -21,10 +21,9 @@ used in this repo (LGPL, ADR-003), so every step below is in the Cloudflare dash
 
 ## Steps
 
-1. **Pages project** (if not done yet; PROGRESS "Decisions needed" 2): Workers & Pages → Create →
-   Pages → connect the GitHub repository. Build command `npm run build`, output directory
-   `dist`, environment variable `NODE_VERSION` = `22`. The `functions/` folder at the repository
-   root is picked up automatically; `/api/report` is its only route.
+1. **Pages project** (if not done yet): follow [cloudflare-pages.md](cloudflare-pages.md). The
+   `functions/` folder at the repository root is picked up automatically; `/api/report` is its
+   only route.
 2. **D1 database:** Storage & Databases → D1 → Create, e.g. `pdftools-reports`. Open it →
    Console, paste [`functions/api/schema.sql`](../../functions/api/schema.sql) and run it.
 3. **Bind D1 to the project:** the Pages project → Settings → Bindings → Add → D1 database.

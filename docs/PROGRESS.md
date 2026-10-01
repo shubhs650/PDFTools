@@ -1,6 +1,6 @@
 # PDFTools — Progress
 
-_Last updated: 2026-10-01 (session 18: M4-22 acceptance — M4 complete on the agent side)_
+_Last updated: 2026-10-01 (session 19: Cloudflare Pages deployment readiness)_
 
 **Current milestone:** M4 — Extract, **complete on the agent side** (all 22 tasks; acceptance in
 [docs/acceptance/M4.md](acceptance/M4.md)). With M4 the Rev 0 feature set is complete; the public
@@ -8,6 +8,15 @@ beta (D-32) waits on the owner items in the readiness list (M4.md §5). M0–M3 
 `main`; the M0–M4 owner runs are open.
 
 ## Done
+
+- **Session 19 — Cloudflare Pages deployment readiness (D-11, D-22).** Owner setup guide
+  [docs/deploy/cloudflare-pages.md](deploy/cloudflare-pages.md) (Git-connected project, build
+  `npm run build` → `dist`, `NODE_VERSION` 22.x, custom domain, zone settings that must stay off
+  so nothing is injected past the CSP, rollback). New `npm run check:pages` (in CI after the
+  build): file count and 25 MiB per-file limits, root files (`index.html`, `sw.js`, manifest,
+  `_headers`), no `404.html` (SPA fallback), `_headers` rule/line limits and the CSP on `/*`.
+  File → About shows the commit from `CF_PAGES_COMMIT_SHA` when git is unavailable. No change to
+  `_headers` or the app. Build: 35 files, largest 17.6 MB (Oxide WASM).
 
 - **Session 18 — M4-22 M4 acceptance: M4 complete (agent side).**
   [docs/acceptance/M4.md](acceptance/M4.md): every §13 M4 item mapped to its tasks and tests; §12
@@ -1180,9 +1189,10 @@ beta (D-32) waits on the owner items in the readiness list (M4.md §5). M0–M3 
    (drawings to `corpus/files/drawings/`) and remove them from history. The S3 spec skips if they
    are missing. Note: `bearing catalogue.pdf` is a commercial manufacturer catalogue under
    copyright, not public domain (found during S4). It should move out of git either way.
-2. **Cloudflare Pages project for S8.** Until one exists, S8 runs locally with
-   `spikes/shared/serve.ts`, because `wrangler` is blocked by LGPL (ADR-003). The analytics and
-   injection checks wait for the project.
+2. **Cloudflare Pages project for S8.** The repository is ready to deploy; create the project
+   with [docs/deploy/cloudflare-pages.md](deploy/cloudflare-pages.md). Until then S8 runs locally
+   with `spikes/shared/serve.ts` (`wrangler` blocked, ADR-003). The analytics and injection checks
+   wait for the project.
 3. **More test drawings (optional).** Item 5 in the drawing list was blank. Add more whenever you
    like; they stay local only.
 

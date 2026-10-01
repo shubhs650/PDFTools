@@ -25,3 +25,9 @@ npm run build        # Production build
 
 If the installed Chromium doesn't match the Playwright version, set
 `PW_CHROMIUM_EXECUTABLE=/path/to/chrome` for `npm run e2e`.
+
+## Deployment
+
+Cloudflare Pages, built from this repository (`npm run build` → `dist/`, production branch
+`main`). Setup, checks and rollback: [`docs/deploy/cloudflare-pages.md`](docs/deploy/cloudflare-pages.md).
+`npm run check:pages` verifies a build against the Pages limits.
