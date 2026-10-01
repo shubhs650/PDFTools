@@ -21,7 +21,7 @@ beta (D-32) waits on the owner items in the readiness list (M4.md §5). M0–M3 
   and a self-merge; public-beta readiness list. Found and fixed: a redaction mark across the middle
   of a line failed verification (the text-object check now uses the object's own characters);
   `owner:timings` hung on any multi-page file (M3-20 snapping step). Bundle 7.38 MB core / 50.84 MB
-  installed of 60 MB; licenses 763 OK; unit 1058 green.
+  installed of 60 MB; licenses 763 OK; unit 1058 and e2e 282 green.
 
 - **Session 18 — M4-17/18 Apply Redactions, verified.** Protect → Apply Redactions makes a new
   file: the marks applied on a copy (crossing drawing lines re-cut exactly, comments/links/fields
