@@ -107,15 +107,16 @@ FILES.forEach((file, n) => {
     const searchCold = await searchRun();
     const searchWarm = await searchRun();
 
-    // Snapping (M3-20, ADR-008): page 1's index, then 300 pointer moves over the page.
+    // Snapping (M3-20, ADR-008): the index of the page in view (after the zooms
+    // that need not be page 1, M4-22), then 300 pointer moves over the page.
     const p0 = await now(page);
     await page.getByTestId('snap-toggle').click();
     await expect
       .poll(
         async () =>
-          ((await cap(page, 'annotate', 'snap')) as { pages: Record<string, string> }).pages[
-            `${docId}/0`
-          ],
+          Object.values(
+            ((await cap(page, 'annotate', 'snap')) as { pages: Record<string, string> }).pages,
+          ).find((st) => st === 'ready' || st === 'failed') ?? 'preparing',
         { timeout: LONG },
       )
       .toMatch(/ready|failed/);
@@ -201,20 +202,24 @@ FILES.forEach((file, n) => {
     const expressExtract = {
       pages: tablePages.length,
       ms: Math.round((await now(page)) - e0),
-      tables: Number.parseInt((await found.innerText()).replace(/[^\d]/gu, '') || '0', 10),
+      // The first number in the status ("n tables found."), separators removed.
+      tables: Number.parseInt(
+        (/\d[\d,.\u00a0\u202f ]*/u.exec(await found.innerText())?.[0] ?? '0').replace(/\D/gu, ''),
+        10,
+      ),
     };
     await express.getByRole('button', { name: 'Close' }).first().click();
 
     // A redaction mark over the middle of page 1, applied and verified.
     const [p1] = (await cap(page, 'pages', 'info', docId)) as { w: number; h: number }[];
-    const area = {
+    const redactArea = {
       origin: { x: (p1?.w ?? 600) / 4, y: (p1?.h ?? 800) / 4 },
       size: { width: (p1?.w ?? 600) / 2, height: (p1?.h ?? 800) / 2 },
     };
     await cap(page, 'annotate', 'create', docId, 0, {
       type: 28,
-      rect: area,
-      segmentRects: [area],
+      rect: redactArea,
+      segmentRects: [redactArea],
       color: '#000000',
       strokeColor: '#D93025',
     });
@@ -261,6 +266,8 @@ FILES.forEach((file, n) => {
     const m0 = await now(page);
     await merge.getByRole('button', { name: 'Merge' }).click();
     await expect(docTabs).toHaveCount(tabsBefore + 1, { timeout: LONG });
+    // The new tab becomes active a moment after it appears.
+    await expect.poll(() => cap(page, 'view', 'activeDocId'), { timeout: LONG }).not.toBe(docId);
     const mergedId = (await cap(page, 'view', 'activeDocId')) as string;
     await expect
       .poll(async () => ((await cap(page, 'pages', 'info', mergedId)) as unknown[]).length, {
