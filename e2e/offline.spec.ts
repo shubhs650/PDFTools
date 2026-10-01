@@ -1,6 +1,8 @@
 import type { Page } from '@playwright/test';
 import { hasQpdf, qpdfEncrypt } from './fixtures/encrypted.ts';
 import { NEEDLE, fullFormPdf, outlinedPdf, snapSheet } from './fixtures/generate.ts';
+import { reviewSourcePdf } from './fixtures/comments.ts';
+import { tablesPdf } from './fixtures/tables.ts';
 import { cap, drop } from './support/app.ts';
 import { expect, test } from './support/fixtures.ts';
 import { printCalls, stubFramePrint } from './support/printStub.ts';
@@ -268,6 +270,113 @@ test(
       await page.keyboard.press('Control+S');
       await expect(tabs(page).first()).toHaveAccessibleName('sheet.pdf');
       expect((await savedFiles(page)).map((f) => f.name)).toContain('sheet (CRS).xlsx');
+      expect(outbound).toEqual([]);
+    } finally {
+      await context.setOffline(false);
+    }
+  },
+);
+
+test(
+  'M4 offline: tables, a page operation, comment import and a verified redaction; zero outbound requests',
+  { tag: '@offline' },
+  async ({ page, context }) => {
+    test.setTimeout(120_000);
+    await page.goto('/?sw');
+    await expect(status(page).getByText('✓ Ready offline')).toBeVisible({ timeout: 60_000 });
+
+    await context.setOffline(true);
+    const outbound: string[] = [];
+    page.on('requestfailed', (r) => {
+      if (/^https?:/.test(r.url())) outbound.push(`failed ${r.url()}`);
+    });
+    page.on('response', (r) => {
+      if (/^https?:/.test(r.url()) && !r.fromServiceWorker()) outbound.push(r.url());
+    });
+    try {
+      await page.reload();
+      await expect(page.getByTestId('start-screen')).toBeVisible();
+      await stubSavePicker(page);
+      await cap(page, 'annotate', 'setProfile', 'Offline Reviewer');
+      await drop(page, [{ name: 'tables.pdf', b64: Buffer.from(tablesPdf()).toString('base64') }]);
+      await expect(page.locator('[data-page="0"] img.page-preview')).toBeVisible();
+      const id = (await cap(page, 'view', 'activeDocId')) as string;
+      await expect.poll(() => cap(page, 'annotate', 'list', id)).not.toBeNull();
+
+      // Tables (M4-13): PDF Oxide and ExcelJS from the cache.
+      await page.getByRole('tab', { name: 'Convert' }).click();
+      await page
+        .getByRole('toolbar', { name: 'Convert commands' })
+        .getByRole('button', { name: 'Express Extract' })
+        .click();
+      const express = page.getByRole('dialog', { name: 'Express Extract (Beta)' });
+      await express.getByRole('button', { name: 'Find Tables' }).click();
+      await expect(express.getByRole('status')).toContainText('2 tables found.', {
+        timeout: 30_000,
+      });
+      await express.getByRole('button', { name: 'Save…' }).click();
+      await expect(express).toBeHidden({ timeout: 30_000 });
+
+      // A page operation (M4-09).
+      expect(await cap(page, 'pages', 'run', id, { kind: 'rotate', pages: [3], quarter: 1 })).toBe(
+        true,
+      );
+
+      // Comment import from another PDF (M4-20).
+      await page.evaluate((data) => {
+        const w = window as unknown as { showOpenFilePicker: () => Promise<unknown[]> };
+        w.showOpenFilePicker = () => {
+          const bin = atob(data);
+          const file = new File([Uint8Array.from(bin, (c) => c.charCodeAt(0))], 'rev-a.pdf', {
+            type: 'application/pdf',
+          });
+          return Promise.resolve([
+            { kind: 'file', name: 'rev-a.pdf', getFile: () => Promise.resolve(file) },
+          ]);
+        };
+      }, Buffer.from(reviewSourcePdf()).toString('base64'));
+      await page.getByRole('tab', { name: 'Comment', exact: true }).click();
+      await page
+        .getByRole('toolbar', { name: 'Comment commands' })
+        .getByRole('button', { name: 'Import Comments' })
+        .click();
+      const imp = page.getByRole('dialog', { name: 'Import Comments' });
+      await imp.getByRole('button', { name: 'Choose PDF or JSON…' }).click();
+      await expect(imp.getByText('rev-a.pdf: 3 comments on 3 pages.')).toBeVisible();
+      await imp.getByRole('button', { name: 'Import' }).click();
+      await expect(imp).toBeHidden();
+      await expect
+        .poll(async () => ((await cap(page, 'annotate', 'list', id)) as unknown[]).length)
+        .toBeGreaterThan(0);
+
+      // A redaction mark on the prose page and Apply (M4-16 … M4-18): verified, then written.
+      const area = { origin: { x: 60, y: 60 }, size: { width: 300, height: 60 } };
+      await cap(page, 'annotate', 'create', id, 4, {
+        type: 28,
+        rect: area,
+        segmentRects: [area],
+        color: '#000000',
+        strokeColor: '#D93025',
+      });
+      await page.getByRole('tab', { name: 'Protect' }).click();
+      await page
+        .getByRole('toolbar', { name: 'Protect commands' })
+        .getByRole('button', { name: 'Apply Redactions' })
+        .click();
+      const apply = page.getByRole('dialog', { name: 'Apply Redactions' });
+      await apply.getByRole('button', { name: 'Apply and Save As…' }).click();
+      await expect(apply.getByTestId('redact-result')).toContainText('Every check passed.', {
+        timeout: 60_000,
+      });
+      await apply.getByRole('button', { name: 'Close' }).first().click();
+
+      // Ctrl+S of the open document (narrow, verified).
+      await page.getByTestId('document-view').focus();
+      await page.keyboard.press('Control+S');
+      await expect(tabs(page).first()).toHaveAccessibleName('tables.pdf');
+      expect((await savedFiles(page)).map((f) => f.name)).toEqual(
+        expect.arrayContaining(['tables tables.xlsx', 'tables-redacted.pdf']),
+      );
       expect(outbound).toEqual([]);
     } finally {
       await context.setOffline(false);
