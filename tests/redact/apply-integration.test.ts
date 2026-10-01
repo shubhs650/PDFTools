@@ -31,6 +31,8 @@ import {
 import type { JobSlice } from '../../src/workers/work/scheduler';
 import { docPtrOf, rawCall } from '../../src/workers/render/pdfium';
 import { Verifier, type Leak } from '../../src/workers/work/redact/verify';
+import { FPDF_NO_INCREMENTAL, saveWithFlags } from '../../src/workers/render/save/writer';
+import { tablesPdf } from '../../e2e/fixtures/tables';
 
 const require = createRequire(import.meta.url);
 let mod: WrappedPdfiumModule;
@@ -214,5 +216,61 @@ describe('encrypted and bulk sources', () => {
     expect(r.marks).toBe(600);
     expect(r.leaks).toEqual([]);
     expect(steps.at(-1)).toBe(400);
+  });
+});
+
+describe('a mark across the middle of prose lines (M4-22 regression)', () => {
+  /** The tables fixture with one /Redact mark over part of page 5's prose. */
+  async function markedProse(): Promise<Uint8Array> {
+    const doc = await native
+      .openDocumentBuffer({ id: 'prose', content: tablesPdf().slice().buffer })
+      .toPromise();
+    try {
+      const d = docPtrOf(native, doc.id);
+      const page = rawCall(mod, 'FPDF_LoadPage', d, 4);
+      const a = rawCall(mod, 'FPDFPage_CreateAnnot', page, 28);
+      const heap = mod.pdfium as unknown as {
+        wasmExports: { malloc(n: number): number; free(p: number): void };
+        setValue(p: number, v: number, t: string): void;
+      };
+      const r = heap.wasmExports.malloc(16);
+      [60, 782, 360, 722].forEach((v, i) => {
+        heap.setValue(r + i * 4, v, 'float');
+      });
+      rawCall(mod, 'FPDFAnnot_SetRect', a, r);
+      heap.wasmExports.free(r);
+      rawCall(mod, 'FPDFPage_CloseAnnot', a);
+      rawCall(mod, 'FPDF_ClosePage', page);
+      return new Uint8Array(saveWithFlags(mod, d, FPDF_NO_INCREMENTAL));
+    } finally {
+      await native.closeDocument(doc).toPromise();
+    }
+  }
+
+  it('the remainder of a cut line is one text object spanning the mark; that is not a leak', async () => {
+    const src = await markedProse();
+    // Negative control: before applying, the same mark reports text and text objects.
+    const doc = await native
+      .openDocumentBuffer({ id: 'neg2', content: src.slice().buffer })
+      .toPromise();
+    try {
+      const d = docPtrOf(native, doc.id);
+      const rs = redactAreas(mod, d).get(4) ?? [];
+      expect(rs).toHaveLength(1);
+      const page = rawCall(mod, 'FPDF_LoadPage', d, 4);
+      const leaks: Leak[] = [];
+      const v = new Verifier(mod);
+      v.textInRects(4, page, rs, leaks);
+      v.objectsInRects(4, page, rs, leaks);
+      rawCall(mod, 'FPDF_ClosePage', page);
+      expect(leaks.map((l) => l.kind).sort()).toEqual(['text', 'text-object']);
+    } finally {
+      await native.closeDocument(doc).toPromise();
+    }
+    const out = await applyRedactions(mod, native, src, undefined, slice, none);
+    expect(out.marks).toBe(1);
+    expect(out.leaks).toEqual([]);
+    // Text right of the mark on a cut line survives.
+    expect(await text(out.bytes)).toMatch(/rts,/u);
   });
 });
