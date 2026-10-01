@@ -86,7 +86,7 @@ jobs:
       - name: Perf report (numbers are report-only, ADR-002)
         if: always()
         run: npm run perf-report -- reports/perf.json --json reports/perf-rows.json
-      - name: M1 + M2 acceptance table (§12 targets on typical files, M1-28, M2-19)
+      - name: M1 … M4 acceptance table (§12 targets on typical files, M1-28, M2-19, M3-20, M4-22)
         if: always()
         run: npm run acceptance -- reports/perf.json reports/offline.json --json reports/acceptance.json
       - uses: actions/upload-artifact@v4

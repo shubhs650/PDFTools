@@ -32,12 +32,26 @@ const GOOD: PerfRow[] = [
   row('perf/save-m3.spec.ts', 'save m3', { 'save-100-m3-markups-ms': '166' }),
   row('perf/snap.spec.ts', 'snap', { 'snap-rtt-p95-ms': '3.45' }),
   row('offline.spec.ts', 'M3 offline: markups, … zero outbound requests'),
+  row('perf/oxide.spec.ts', 'markdown', { 'm4-markdown': JSON.stringify({ ms: 21_500 }) }),
+  row('perf/export-images.spec.ts', 'images'),
+  row('perf/tables.spec.ts', 'tables', {
+    'm4-tables': JSON.stringify({ detectMs: 4000, saveMs: 600 }),
+  }),
+  row('perf/tables-review.spec.ts', 'review'),
+  row('perf/pages.spec.ts', 'delete', { 'pages-delete-1000-ms': '2100' }),
+  row('perf/pages.spec.ts', 'merge', { 'merge-10x200-ms': '3300' }),
+  row('perf/comment-transfer.spec.ts', 'import', { 'transfer-import-1000-ms': '5200' }),
+  row('perf/redact.spec.ts', 'redact', { 'm4-redact': JSON.stringify({ ms: 9000 }) }),
+  row('perf/annotation-export.spec.ts', 'annotation export'),
+  row('offline.spec.ts', 'M4 offline: tables, … zero outbound requests'),
 ];
 
-describe('M1 + M2 + M3 acceptance table (M1-28, M2-19, M3-20)', () => {
+describe('M1 … M4 acceptance table (M1-28, M2-19, M3-20, M4-22)', () => {
   it('meets every target with good numbers', () => {
     const results = evaluate(GOOD);
-    expect(results).toHaveLength(15);
+    expect(results).toHaveLength(23);
+    expect(results.find((r) => r.area.startsWith('Express Extract'))?.measured).toBe('4600 ms');
+    expect(results.find((r) => r.area.startsWith('Markdown export'))?.measured).toBe('21500 ms');
     expect(results.find((r) => r.target === 'query round trip p95 ≤ 16 ms')?.measured).toBe(
       '3.45 ms',
     );
@@ -71,5 +85,19 @@ describe('M1 + M2 + M3 acceptance table (M1-28, M2-19, M3-20)', () => {
     expect(new Map(evaluate(rows).map((r) => [r.area, r.verdict])).get('Offline proof (M3)')).toBe(
       'not measured',
     );
+  });
+
+  it('M4: a missing perf file is not measured, a failed scenario misses its row and responsiveness', () => {
+    const noImages = GOOD.filter((r) => r.file !== 'perf/export-images.spec.ts');
+    const byArea = (rows: PerfRow[]) => new Map(evaluate(rows).map((r) => [r.area, r.verdict]));
+    const m4 = (a: string) => a.startsWith('UI responsiveness during M4');
+    expect([...byArea(noImages)].find(([a]) => m4(a))?.[1]).toBe('not measured');
+    const failedMerge = GOOD.map((r) => (r.title === 'merge' ? { ...r, status: 'failed' } : r));
+    expect(byArea(failedMerge).get('Merge 10 files of 200 pages')).toBe('missed');
+    expect([...byArea(failedMerge)].find(([a]) => m4(a))?.[1]).toBe('missed');
+    const noM4Offline = GOOD.filter((r) => !r.title.startsWith('M4 offline'));
+    expect(byArea(noM4Offline).get('Offline proof (M4)')).toBe('not measured');
+    // The M4 offline run is not counted as the M1 proof.
+    expect(byArea(noM4Offline).get('Offline proof')).toBe('met');
   });
 });
