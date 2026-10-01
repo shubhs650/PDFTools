@@ -21,7 +21,14 @@ import { isDict, PdfStream, PdfString, type PdfValue } from '../../src/model/pdf
 import { PdfReader } from '../../src/model/pdf/reader.ts';
 import { docPtrOf, rawCall } from '../../src/workers/render/pdfium.ts';
 import { FPDF_NO_INCREMENTAL, saveWithFlags } from '../../src/workers/render/save/writer.ts';
-import { adversarialPdf, HIDDEN, KEPT, markedBulkPdf, REPEATED, SECRETS } from './fixtures.ts';
+import {
+  adversarialPdf,
+  HIDDEN,
+  KEPT,
+  markedBulkPdf,
+  REPEATED,
+  SECRETS,
+} from '../../e2e/fixtures/redaction.ts';
 import { splitCrossingPaths, type SplitReport } from './pathsplit.ts';
 import { sanitize } from './sanitize.ts';
 import { Verifier, type Leak, type Rect } from './verify.ts';

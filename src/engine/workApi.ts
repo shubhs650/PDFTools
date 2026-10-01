@@ -32,6 +32,9 @@ import type {
   TransferSpec,
 } from '../workers/work/transferJobs';
 import type { TableData, TableGrid } from '../model/tableGrid';
+import type { RedactProgress, SkipStep } from '../workers/work/redact/apply';
+import type { RecutReport } from '../workers/work/redact/pathRecut';
+import type { Leak } from '../workers/work/redact/verify';
 import type { PageTables } from '../workers/work/tables/detect';
 import type { TableExportResult, TableFormat, TablePackaging } from '../workers/work/tables/job';
 import type { MethodSpec } from './protocol';
@@ -130,6 +133,28 @@ export interface WorkApi {
     },
     TableExportResult,
     { done: number; total: number }
+  >;
+  /**
+   * Apply redactions (M4-17/18, §7.9): the /Redact marks of the current state
+   * applied on a copy, sanitized, fully rewritten (encryption kept) and
+   * verified by location, string and structure. `bytes` may be written only
+   * when `leaks` is empty (rule 8). Modify permission (rule 9); cancellable
+   * between pages. `skip` exists for the e2e failure-path test only.
+   */
+  redact: MethodSpec<
+    { docId: string; skip?: SkipStep },
+    {
+      bytes: ArrayBuffer;
+      marks: number;
+      pages: number[];
+      removedAnnotations: number;
+      recut: RecutReport;
+      removed: string[];
+      outlineItemsRemoved: number;
+      fieldsRemoved: number;
+      leaks: Leak[];
+    },
+    RedactProgress
   >;
   /** Appends a saved tail piece to the document's tail (after a committed save). */
   append: MethodSpec<{ docId: string; piece: ArrayBuffer }, { tailBytes: number }>;

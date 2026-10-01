@@ -5,7 +5,7 @@
 // rectangle R (or R6 on the offset page), as another viewer would leave it
 // after "Mark for redaction" (M4-Q3).
 import { deflateSync } from 'node:zlib';
-import { buildPdf, type PdfObject } from '../../e2e/fixtures/generate.ts';
+import { buildPdf, type PdfObject } from './generate.ts';
 
 /** Redaction rectangle in default user space: [x0, y0, x1, y1]. */
 export const R: [number, number, number, number] = [140, 495, 330, 552];
