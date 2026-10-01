@@ -39,6 +39,8 @@ jobs:
         run: npm run build
       - name: No test hook or other forbidden strings in the build (M1-02)
         run: npm run check:dist
+      - name: Cloudflare Pages limits and root files (D-11)
+        run: npm run check:pages
       - name: Bundle report and install budget (M1-27, §9)
         run: |
           mkdir -p reports
