@@ -1,7 +1,7 @@
-# PDFTools — Architecture & Product Specification (Rev 0.6)
+# PDFTools — Architecture & Product Specification (Rev 0.7)
 
 **App:** PDFTools · **URL:** `pdf-tools.openengtools.com` · **Platform:** Open Engineering Tools (OET)
-**Status:** Approved for implementation · **Last updated:** 29-Sep-2026 (Rev 0.6)
+**Status:** Approved for implementation · **Last updated:** 01-Oct-2026 (Rev 0.7)
 **Companion file:** `CLAUDE.md` (standing rules for the coding agent — read it first)
 
 > This document is the single source of truth. Where code and this document disagree, this document wins until it is deliberately amended. Decisions are numbered (D-xx) so commits, issues and ADRs can reference them.
@@ -15,6 +15,8 @@
 > **Rev 0.4 amendment** — [ADR-010](docs/adr/010-s6-fluent-icons.md) (owner-approved): Fluent **Regular** icons (Filled for active states) replace the deprecated Color style (D-20, §8).
 
 > **Rev 0.5 amendment** — [ADR-017](docs/adr/017-m4-redaction.md) decisions 3 and 5 (owner-approved 2026-09-29): §7.9 steps 0 and 3 (crossing paths re-cut through PDFium's page-object API; wider sanitize list).
+
+> **Rev 0.7 amendment** — [ADR-019](docs/adr/019-m4-express-extract-two-steps.md) (owner-approved 2026-10-01): Express Extract in two steps, Find Tables then Save… (§7.7).
 
 > **Rev 0.6 amendment** — [ADR-018](docs/adr/018-m4-comment-transfer.md) (owner-approved 2026-09-29): comment transfer — import from another PDF or our JSON, copy/paste between documents (§7.1, §7.6, §13 M4).
 
@@ -282,7 +284,7 @@ PDF Oxide runs in the Work worker, lazy-loaded (non-core) from a self-hosted WAS
 ### 7.7 Table extraction (beta)
 - Text-layer PDFs only (scanned → message "requires OCR — planned").
 - Detection candidates: (1) **lattice** — ruling lines from vector paths (PDF Oxide's table output is exact here); (2) **stream** — our own text alignment/whitespace-column detector (PDF Oxide does not detect unruled tables — ADR-009). Merge/score candidates. Merged header cells come from the grid model, not the engine.
-- **Express Extract**: one click → auto-detect selected pages → XLSX/CSV, no review.
+- **Express Extract**: Find Tables → auto-detect selected pages → Save… as XLSX/CSV, no review (two clicks: the save picker needs a fresh click, and nothing is created when no table is found — [ADR-019](docs/adr/019-m4-express-extract-two-steps.md)).
 - **Review & Extract**: proposed outlines as overlays → accept / adjust grid (drag/add/remove row & column dividers, mark header rows, merged cells) / draw manually → preview → export. Saved **templates** apply the same grid to other pages.
 - Test fixture of record: a public pipe dimension chart style table (side-by-side tables, merged headers, multi-row cells, dual units).
 

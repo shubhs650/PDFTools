@@ -1112,14 +1112,6 @@ M0–M2 are merged into `main` (M2 complete on the agent side, owner pack in
 
 ## Decisions needed (owner)
 
-- **Express Extract: one click or two (M4-13, ARCHITECTURE §7.7).** §7.7 says "one click →
-  auto-detect → XLSX/CSV". Built: one click (Find Tables) detects, a second (Save…) asks where to
-  save, because the browser's save picker only opens on a fresh click, and asking first would
-  create an empty file when no table is found. Options: (a) keep two steps (recommended; amend
-  §7.7 by ADR); (b) ask where to save first, in one click, and delete/leave an empty file when
-  nothing is found; (c) one click that downloads to the Downloads folder (no picker) once tables
-  are found.
-
 - **Keyboard text selection (M2-04).** Caret-based selection (Shift+arrows) is not built; the
   keyboard path is Ctrl+A (page text) + Ctrl+C. Accept as an exception to the M2-04 criterion, or
   schedule caret selection (about one session).
@@ -1139,6 +1131,7 @@ M0–M2 are merged into `main` (M2 complete on the agent side, owner pack in
 
 | Date       | Ref              | Decision                                                                                                                                                                                                                                                                                                                                                                                                                                                  |
 | ---------- | ---------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| 2026-10-01 | ADR-019          | Owner accepted Express Extract in two steps (Find Tables, then Save…): the save picker needs a fresh click and nothing is created when no table is found. ARCHITECTURE.md Rev 0.7 (§7.7).                                                                                                                                                                                                                                                                 |
 | 2026-09-29 | ADR-018          | Owner accepted ADR-018 decisions 2–3 after the M4-19 spike: hybrid route — object copy in the Work worker for Import from PDF and copy/paste (pending import section folded into the next Ctrl+S), re-creation + object-layer patches for JSON import. ARCHITECTURE.md Rev 0.6 (§7.1 comment transfer, §7.6 JSON imports, §13 M4).                                                                                                                        |
 | 2026-09-29 | ADR-016, ADR-017 | Owner accepted ADR-016 (page operations: semantic dirty set, digest with page identity, page-cache purge, reopen-based undo, dangling references) and ADR-017 (redaction on a Work copy, crossing paths re-cut via PDFium's page-object API, wider sanitize list, location verification). ARCHITECTURE.md Rev 0.5 (§7.9 steps 0 and 3), ADR-001 B8 wording amended.                                                                                       |
 | 2026-09-29 | M4 plan, ADR-018 | M4 plan approved with M4-Q1 … Q11 as proposed. Follow-ups: Word/Markdown export place images in reading order with our own step (Oxide puts them at page end); comment transfer (import from PDF or JSON v1, copy/paste between documents) added to M4 as M4-19 … M4-21, ADR-018 scope accepted, route decided by the M4-19 spike.                                                                                                                        |
