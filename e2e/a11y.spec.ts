@@ -307,3 +307,136 @@ for (const [variant, url] of [
     }
   });
 }
+
+// M4-22: the M4 panes, dialogs and the review mode — Pages pane, the page
+// dialogs (insert, delete, move, extract, from a file, merge), the export
+// dialogs, Express Extract, Review & Extract, Table Templates, Import Comments
+// and Export Annotations, the pending-redactions pane and Apply Redactions
+// with its verified result — in light, dark and the pseudo-locale, reached by
+// command id so the steps work in any language.
+for (const [variant, url] of [
+  ['light', '/'],
+  ['dark', '/?theme=dark'],
+  ['pseudo-locale', '/?locale=pseudo'],
+] as const) {
+  test(`M4 panes, dialogs and review mode (${variant})`, { tag: '@a11y' }, async ({ page }) => {
+    test.setTimeout(120_000);
+    const { tablesPdf } = await import('./fixtures/tables.ts');
+    const { stubSavePicker } = await import('./support/savePicker.ts');
+    const pdf = Buffer.from(tablesPdf()).toString('base64');
+    await page.goto(url);
+    await cap(page, 'annotate', 'setProfile', 'Ana de Vries');
+    const [id] = (await cap(page, 'open', 'openHandles', [
+      { name: 'm4.pdf', b64: pdf },
+    ])) as string[];
+    if (!id) throw new Error('not opened');
+    await expect(page.locator('[data-page="0"] img.page-preview')).toBeVisible();
+    await expect.poll(() => cap(page, 'annotate', 'list', id)).not.toBeNull();
+    await stubSavePicker(page);
+    // Every open picker returns the same self-made PDF.
+    await page.evaluate((data) => {
+      const w = window as unknown as { showOpenFilePicker: () => Promise<unknown[]> };
+      w.showOpenFilePicker = () => {
+        const bin = atob(data);
+        const file = new File([Uint8Array.from(bin, (c) => c.charCodeAt(0))], 'other.pdf', {
+          type: 'application/pdf',
+        });
+        return Promise.resolve([
+          { kind: 'file', name: 'other.pdf', getFile: () => Promise.resolve(file) },
+        ]);
+      };
+    }, pdf);
+    const run = (cmd: string) =>
+      page.evaluate(
+        (c) =>
+          (
+            window as unknown as {
+              __pdftoolsTest: { capabilities: { commands: { run(id: string): Promise<boolean> } } };
+            }
+          ).__pdftoolsTest.capabilities.commands.run(c),
+        cmd,
+      );
+    const dialog = page.getByRole('dialog');
+    const closeDialog = async () => {
+      await page.keyboard.press('Escape');
+      await expect(dialog).toHaveCount(0);
+    };
+
+    // Pages pane (M4-10).
+    // The rail button toggles; the pane may already be open with a document.
+    await run('rail.thumbnails');
+    await page.waitForTimeout(300);
+    if (!(await page.getByTestId('left-pane').isVisible())) await run('rail.thumbnails');
+    await expect(page.getByTestId('left-pane')).toBeVisible();
+    await page.waitForTimeout(200);
+    await axe(page, 'Pages pane');
+
+    for (const cmd of [
+      'organize.insertBlank',
+      'organize.delete',
+      'organize.move',
+      'organize.extract',
+      'convert.text',
+      'convert.markdown',
+      'convert.html',
+      'convert.word',
+      'convert.images',
+      'convert.tableTemplates',
+      'comment.exportAnnotations',
+    ]) {
+      expect(await run(cmd)).toBe(true);
+      await expect(dialog).toBeVisible();
+      await axe(page, `dialog ${cmd}`);
+      await closeDialog();
+    }
+
+    // Dialogs with a chosen file: Insert from File, Merge, Import Comments.
+    for (const cmd of ['organize.insertFromFile', 'organize.merge', 'comment.importComments']) {
+      expect(await run(cmd)).toBe(true);
+      await expect(dialog).toBeVisible();
+      await dialog.getByRole('button').filter({ hasText: '…' }).first().click();
+      await expect(dialog.getByText(/other\.pdf/u).first()).toBeVisible();
+      await axe(page, `dialog ${cmd} with a file`);
+      await closeDialog();
+    }
+
+    // Express Extract with its tables found (M4-13).
+    expect(await run('convert.expressExtract')).toBe(true);
+    await expect(dialog).toBeVisible();
+    await axe(page, 'dialog convert.expressExtract');
+    await dialog.locator('button[type="submit"]').click(); // Find Tables
+    await expect(dialog.locator('div[role="status"]')).toBeVisible({ timeout: 30_000 });
+    await axe(page, 'dialog convert.expressExtract with tables found');
+    await closeDialog();
+
+    // Review & Extract mode (M4-14).
+    expect(await run('convert.reviewExtract')).toBe(true);
+    const panel = page.locator('aside.table-review-panel');
+    await expect(panel).toBeVisible();
+    await expect(panel.getByRole('status')).toHaveText(/\d/u, { timeout: 30_000 });
+    await axe(page, 'Review & Extract');
+    expect(await run('convert.reviewExtract')).toBe(true);
+    await expect(panel).toHaveCount(0);
+
+    // A redaction mark: pending pane (M4-16), Apply with its verified result (M4-18).
+    const area = { origin: { x: 60, y: 60 }, size: { width: 300, height: 60 } };
+    await cap(page, 'annotate', 'create', id, 4, {
+      type: 28,
+      rect: area,
+      segmentRects: [area],
+      color: '#000000',
+      strokeColor: '#D93025',
+    });
+    expect(await run('protect.redactionList')).toBe(true);
+    await expect(page.getByTestId('left-pane')).toBeVisible();
+    await page.waitForTimeout(200);
+    await axe(page, 'Pending redactions pane');
+    expect(await run('protect.applyRedactions')).toBe(true);
+    await expect(dialog).toBeVisible();
+    await axe(page, 'dialog protect.applyRedactions');
+    await dialog.getByRole('button').filter({ hasText: '…' }).first().click();
+    await expect(dialog.getByTestId('redact-result')).toBeVisible({ timeout: 60_000 });
+    await axe(page, 'Apply Redactions result');
+    await closeDialog();
+  });
+}
