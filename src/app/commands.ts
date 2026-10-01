@@ -1103,6 +1103,7 @@ export const COMMANDS: readonly CommandDef[] = [
     milestone: 'M4',
     toggle: true,
     custom: 'protect.markRedaction', // M4-03
+    shipped: true, // M4-16
   },
   {
     id: 'protect.markRedactionArea',
@@ -1113,6 +1114,7 @@ export const COMMANDS: readonly CommandDef[] = [
     milestone: 'M4',
     toggle: true,
     custom: 'protect.markRedactionArea', // M4-03
+    shipped: true, // M4-16
   },
   {
     id: 'protect.applyRedactions',
@@ -1130,6 +1132,8 @@ export const COMMANDS: readonly CommandDef[] = [
     size: 'large',
     fluent: 'TextBulletListSquare',
     milestone: 'M4',
+    toggle: true,
+    shipped: true, // M4-16
   },
   {
     id: 'protect.securityInfo',

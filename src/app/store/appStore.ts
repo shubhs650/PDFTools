@@ -21,6 +21,9 @@ export type Tool =
   | 'squiggly'
   | 'insertText'
   | 'replaceText'
+  // Redaction marks (M4-16): text selections become /Redact marks; areas are drawn.
+  | 'redactText'
+  | 'redactArea'
   // Note, text and drawing tools (M3-09): EmbedPDF tool ids.
   | DrawTool;
 

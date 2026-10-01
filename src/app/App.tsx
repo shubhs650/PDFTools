@@ -10,6 +10,8 @@ import { registerFormCommands } from '../features/forms/commands';
 import { registerPrintCommands } from '../features/print/commands';
 import { registerExtractCommands } from '../features/extract/commands';
 import { registerTableCommands } from '../features/tables/commands';
+import { registerRedactCommands } from '../features/redact/commands';
+import { RedactionStatus } from '../features/redact/PendingRedactionsPanel';
 import { ExpressExtractDialog } from '../features/tables/ExpressExtractDialog';
 import { TemplatesDialog } from '../features/tables/TemplatesDialog';
 import { registerPageCommands } from '../features/pages/commands';
@@ -91,6 +93,7 @@ export function App() {
   useEffect(() => registerPrintCommands(), []);
   useEffect(() => registerExtractCommands(), []);
   useEffect(() => registerTableCommands(), []);
+  useEffect(() => registerRedactCommands(), []);
   useEffect(() => registerPageCommands(), []);
   useEffect(() => registerReportCommands(), []);
   useEffect(() => registerSelectionCommands(), []);
@@ -118,6 +121,7 @@ export function App() {
             app: (
               <>
                 <SaveStatus />
+                <RedactionStatus />
                 <OfflineStatus />
               </>
             ),

@@ -1649,5 +1649,22 @@
       "noneFit": "None of these pages has the template's page size and rotation.",
       "failed": "The tables could not be extracted. Nothing was saved."
     }
+  },
+  "redact": {
+    "keyRect": "Area to mark for redaction",
+    "keyRectHelp": "Arrow keys move it (Ctrl: 1 point), Shift+arrow keys resize it, Enter marks the area, Esc ends.",
+    "status_one": "{{n}} redaction mark",
+    "status_other": "{{n}} redaction marks",
+    "panel": {
+      "title": "Pending Redactions",
+      "close": "Close Pending Redactions",
+      "count_one": "{{n}} mark waiting to be applied.",
+      "count_other": "{{n}} marks waiting to be applied.",
+      "empty": "No marks yet. Use Mark for Redaction on selected text or Mark Area for Redaction.",
+      "textItem": "{{n}}. Text, page {{page}}",
+      "areaItem": "{{n}}. Area, page {{page}}",
+      "remove": "Remove mark {{name}}",
+      "applyLater": "Marks are saved with the document (Ctrl+S) and can be applied later. Applying them creates a new, redacted copy; this document stays as it is."
+    }
   }
 }

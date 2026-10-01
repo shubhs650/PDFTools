@@ -9,6 +9,11 @@ M0–M2 are merged into `main` (M2 complete on the agent side, owner pack in
 
 ## Done
 
+- **Session 18 — M4-16 redaction marks.** Protect → Mark for Redaction (selected text, or the
+  tool on), Mark Area for Redaction (pointer or keyboard rectangle) and Pending Redactions (jump,
+  remove, status-bar count). Marks are standard `/Redact` annotations: undoable, saved by Ctrl+S,
+  loaded back as pending. No new dependency (the annotation plugin already handles `/Redact`).
+
 - **Session 18 — M4-15 table templates.** Save a reviewed table's grid as a named template;
   rename, delete, apply it to a page range (into Review & Extract or straight to a file), pages of
   another size or rotation skipped and named. Stored in IndexedDB v4, listed on the Privacy page,
@@ -834,8 +839,8 @@ M0–M2 are merged into `main` (M2 complete on the agent side, owner pack in
 - **M3 done on the agent side (session 17):** M3-16 … M3-20 as one commit each on
   `claude/m3-tasks-16-20-vdqo8q`, merged into `main` as PR #47. Waiting on the owner pack
   ([docs/acceptance/M3.md](acceptance/M3.md) §4).
-- **M4 in progress (session 18):** tables M4-12 … M4-15 done (on `claude/upbeat-cray-lknggv`,
-  after PR #48 was merged). Earlier: [docs/plan/M4.md](plan/M4.md), 22 tasks. Done: M4-01 and M4-02
+- **M4 in progress (session 18):** tables M4-12 … M4-15 merged (PR #49); redaction M4-16 done,
+  M4-17 and M4-18 next. Earlier: [docs/plan/M4.md](plan/M4.md), 22 tasks. Done: M4-01 and M4-02
   (spikes; ADR-016 and ADR-017 accepted), M4-03 (icons), M4-04 (Oxide and the export
   framework), M4-05 (text, Markdown, HTML), M4-06 (images), M4-07 (Word, Beta), M4-08 (annotation export), M4-19 (comment-transfer
   spike), M4-09 (page operations core), M4-10 (reorder), M4-11 (insert from file, extract,
