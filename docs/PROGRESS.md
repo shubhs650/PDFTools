@@ -9,6 +9,13 @@ M0–M2 are merged into `main` (M2 complete on the agent side, owner pack in
 
 ## Done
 
+- **Session 18 — M4-12 table model and detectors.** The table grid model (dividers, header rows,
+  merged cells, text by word centre) and detection in the Work worker: ruled tables from the
+  page's own rulings (merged headers rebuilt from missing rulings) plus Oxide's candidates, our
+  own unruled-table detector (wrapped rows, side-by-side tables), OCR note for scanned pages.
+  100 % of cells on every fixture table. Oxide's table finder proved unreliable on ruled tables
+  (ADR-009 implementation note).
+
 - **Session 18 — M4-21 copy/paste comments.** Comment → Copy Comments / Paste Comments / Paste
   to Original Pages, Ctrl+C (comments when comments are selected, text otherwise), Ctrl+V and
   Ctrl+Shift+V; the Comments pane list is multi-select. An in-app clipboard (a small PDF built in
@@ -811,7 +818,8 @@ M0–M2 are merged into `main` (M2 complete on the agent side, owner pack in
 - **M3 done on the agent side (session 17):** M3-16 … M3-20 as one commit each on
   `claude/m3-tasks-16-20-vdqo8q`, merged into `main` as PR #47. Waiting on the owner pack
   ([docs/acceptance/M3.md](acceptance/M3.md) §4).
-- **M4 in progress (session 18):** [docs/plan/M4.md](plan/M4.md), 22 tasks. Done: M4-01 and M4-02
+- **M4 in progress (session 18):** tables M4-12 done; M4-13 … M4-15 next.
+  Earlier: [docs/plan/M4.md](plan/M4.md), 22 tasks. Done: M4-01 and M4-02
   (spikes; ADR-016 and ADR-017 accepted), M4-03 (icons), M4-04 (Oxide and the export
   framework), M4-05 (text, Markdown, HTML), M4-06 (images), M4-07 (Word, Beta), M4-08 (annotation export), M4-19 (comment-transfer
   spike), M4-09 (page operations core), M4-10 (reorder), M4-11 (insert from file, extract,

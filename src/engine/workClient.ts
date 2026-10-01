@@ -64,7 +64,9 @@ type JobMethod =
   | 'assemble'
   | 'commentSource'
   | 'transferComments'
-  | 'copyComments';
+  | 'copyComments'
+  | 'detectTables'
+  | 'tableCells';
 
 export interface WorkClientOptions {
   wasmUrl?: string;

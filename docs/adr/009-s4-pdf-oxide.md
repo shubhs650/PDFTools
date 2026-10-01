@@ -201,6 +201,26 @@ size, licensing, network behavior, speed and quality. See
   copyright, not public domain. This ADR records only counts and timings from it. It adds to the
   open decision about committed corpus files (PROGRESS, "Decisions needed").
 
+## Implementation notes (M4-12)
+
+Recorded as built; decision 4 is unchanged (Oxide's `extractTables` stays a lattice candidate).
+
+- **Oxide misses or splits ruled tables** drawn the way many PDFs draw them: on the M4-12 fixture
+  (cell edges drawn as separate segments, 9 pt text, 20–34 pt rows) a 5-row table came back as a
+  2-row fragment and an 8-row table with merged headers as two fragments; the M0-S4 fixtures
+  (continuous rulings) still come out whole. So the lattice candidates are, first, **ruled regions
+  from the page's own rulings** (PDFium vector paths, the snap extraction — §7.7's "ruling lines
+  from vector paths"), and then any Oxide table whose centre lies outside them.
+- **Dividers and merges come from the rulings**: a divider where rulings run; two neighbouring
+  cells form a merged cell where the ruling between them covers less than 70 % of the boundary.
+  Without rulings (an Oxide table drawn some other way) Oxide's cell edges give the dividers and
+  nothing is merged.
+- **Stream tables** are our own detector (decision 4): word boxes from Oxide `extractWords` →
+  lines → chunks → column bands; wrapped continuation lines join the row above; side-by-side
+  tables are split where the two sides don't share their lines.
+- Oxide reads the document's **current state** (saved tail and unsaved page operations), the same
+  as PDFium's copy.
+
 ## Evidence
 
 - Code: [`spikes/s4-oxide/`](../../spikes/s4-oxide/)

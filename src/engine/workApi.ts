@@ -31,6 +31,8 @@ import type {
   TransferSource,
   TransferSpec,
 } from '../workers/work/transferJobs';
+import type { TableData, TableGrid } from '../model/tableGrid';
+import type { PageTables } from '../workers/work/tables/detect';
 import type { MethodSpec } from './protocol';
 
 export type WorkPriority = 'interactive' | 'save-verify' | 'geometry' | 'background';
@@ -97,6 +99,18 @@ export interface WorkApi {
     { docId: string; ids: string[]; withReplies: boolean },
     { bytes: ArrayBuffer; pages: number[]; count: number }
   >;
+  /**
+   * Tables (M4-12, §7.7): detected per page — ruled and unruled candidates,
+   * merged headers rebuilt, cells filled — or an OCR note for a page without
+   * text. Copy permission (rule 9); cancellable between pages.
+   */
+  detectTables: MethodSpec<
+    { docId: string; pages: number[] },
+    { pages: PageTables[] },
+    { done: number; total: number }
+  >;
+  /** The cells of given grids (review edits, templates): text by word centre. */
+  tableCells: MethodSpec<{ docId: string; grids: TableGrid[] }, { tables: TableData[] }>;
   /** Appends a saved tail piece to the document's tail (after a committed save). */
   append: MethodSpec<{ docId: string; piece: ArrayBuffer }, { tailBytes: number }>;
   /**

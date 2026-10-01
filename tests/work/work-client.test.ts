@@ -123,6 +123,8 @@ function fakeSpawn(world: FakeWorld) {
         },
       }),
       copyComments: () => ({ bytes: new ArrayBuffer(0), pages: [], count: 0 }),
+      detectTables: () => ({ pages: [] }),
+      tableCells: () => ({ tables: [] }),
       verify: () => ({ ok: true }),
       digest: () => ({ pageCount: 3, pages: [] }),
       close: () => ({ wasmBytes: world.memory }),
