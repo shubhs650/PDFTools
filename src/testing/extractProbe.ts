@@ -80,6 +80,26 @@ export function registerExtractProbe(hook: TestHook): void {
         return { ok: false, code: (err as { code?: string }).code ?? String(err) };
       }
     },
+    /**
+     * As `run`, for perf scenarios: time, pages and output sizes only. Reading a
+     * 2,000-page output back as text and returning it through page.evaluate is
+     * test-harness work on the main thread (a 400 ms task on CI), not the app's.
+     */
+    runTimed: async (docId: string, pages: number[], format: ExtractFormat = 'text') => {
+      const t0 = performance.now();
+      try {
+        const r = await workClient().run('extract', {
+          docId,
+          pages,
+          options: options(format),
+          packaging: 'folder',
+        }).promise;
+        const ms = performance.now() - t0;
+        return { ok: true, ms, pages: r.pages, bytes: (r.files ?? []).map((f) => f.blob.size) };
+      } catch (err) {
+        return { ok: false, code: (err as { code?: string }).code ?? String(err) };
+      }
+    },
     /** Starts an extraction and cancels it after `afterMs`: how long until it stops. */
     cancelAfter: async (docId: string, pages: number[], afterMs: number) => {
       const controller = new AbortController();

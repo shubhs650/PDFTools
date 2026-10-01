@@ -31,7 +31,7 @@ test('2,000-page stand-in: Oxide warm-up and a full text extraction while scroll
 
   await view(page, 'reset');
   const all = [...Array(2000).keys()];
-  const running = cap(page, 'extract', 'run', docId, all) as Promise<{
+  const running = cap(page, 'extract', 'runTimed', docId, all) as Promise<{
     ok: boolean;
     ms: number;
     pages: number;
@@ -65,7 +65,7 @@ test('2,000-page stand-in: Markdown export while scrolling', async ({ page, pdfs
   const running = cap(
     page,
     'extract',
-    'run',
+    'runTimed',
     docId,
     [...Array(2000).keys()],
     'markdown',

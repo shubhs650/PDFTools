@@ -139,6 +139,9 @@ function coreStore() {
   return registry.getStore();
 }
 
+/** Pages either side of the shown one that are refreshed after a change (the rest lazily). */
+const REFRESH_WINDOW = 10;
+
 /** Tokens the Render worker dropped for its memory budget (their undo is gone). */
 const evicted = new Set<number>();
 
@@ -343,17 +346,29 @@ async function afterChange(docId: string, pages: readonly PageInfo[]): Promise<v
     );
   }
   store.dispatch(setDocumentLoaded(docId, doc));
-  // Only pages whose identity changed: copied comments need none (annotation
-  // tiles are drawn from the annotation store, ADR-014).
-  const changed = changedPages(old.pages, pages);
-  if (changed.length) store.dispatch(refreshPages(docId, changed));
-  invalidatePages(docId);
-  remapPageSelection(docId, map);
   const docs = documentStore.getState();
   const current = docs.docs[docId]?.view.page ?? 0;
   const moved = map[current] ?? -1;
-  docs.setPageCount(docId, pages.length);
   const page = moved >= 0 ? moved : Math.min(current, pages.length - 1);
+  // Only pages whose identity changed (copied comments change none: annotation
+  // tiles are drawn from the annotation store, ADR-014). EmbedPDF's selection
+  // plugin reloads the text geometry of every refreshed page at once — one
+  // Work-worker job each, minutes for a 2,000-page reorder — while tiling only
+  // redraws visible pages: so pages near the one shown are refreshed, and the
+  // rest only lose their cached geometry (reloaded when text is selected there).
+  const changed = changedPages(old.pages, pages);
+  const near = changed.filter((i) => Math.abs(i - page) <= REFRESH_WINDOW);
+  if (changed.length) {
+    const evict: { type: string; payload: unknown } = {
+      type: 'SELECTION/EVICT_PAGE_GEOMETRY',
+      payload: { documentId: docId, pages: changed },
+    };
+    store.dispatch(evict);
+  }
+  if (near.length) store.dispatch(refreshPages(docId, near));
+  invalidatePages(docId);
+  remapPageSelection(docId, map);
+  docs.setPageCount(docId, pages.length);
   pagesStore.setState((s) => ({
     version: { ...s.version, [docId]: (s.version[docId] ?? 0) + 1 },
   }));

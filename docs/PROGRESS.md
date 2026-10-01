@@ -825,6 +825,16 @@ M0–M2 are merged into `main` (M2 complete on the agent side, owner pack in
 
 ## Session log
 
+- **Session 18 (2026-10-01), CI on PR #48:** the first full CI run (quota restored) failed 3 of 40
+  perf scenarios. Undo of "delete 1,000 of 2,000 pages" took 37–49 s: the viewer refresh after a
+  change asked EmbedPDF's selection plugin for every changed page's text geometry at once, and the
+  Work scheduler ran those ~1,000 jobs back to back ahead of `setLive`. Now only changed pages
+  within 10 of the shown one are refreshed and the rest lose their cached geometry (reloaded on
+  demand): undo 1.0 s. The two Oxide scenarios had one ~430 ms task right as the 2,000-page
+  extraction finished; the test probe returned the whole output (9.7 MB, twice) through
+  `page.evaluate`. Not reproduced in this container (older Chromium); the perf scenarios now use a
+  probe that returns times and sizes only.
+
 - **Session 18 (2026-09-30), M4-20 and M4-21:** typecheck, lint, format, 999 unit tests (incl. 7
   Node integration tests on real PDFium + qpdf), license gate (763 packages, no new dependency),
   icons regenerated, the full e2e suite (260 of 260, 12.1 min, 2 workers; the new specs 5 of 5),
