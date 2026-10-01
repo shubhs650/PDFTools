@@ -5,14 +5,24 @@ import { ribbonLayout } from '../../src/app/ribbon/layout';
 describe('ribbon layout from the command table (§8, ADR-001 B6, M1-Q2)', () => {
   const m1 = ribbonLayout();
 
-  it('shows only tabs with an available command: Home, View, Help, Protect (M2-03), Comment (M3-07/08), Measure (M3-15)', () => {
+  it('shows only tabs with an available command: Home, View, Help, Protect (M2-03), Comment (M3-07/08), Measure (M3-15), Convert (M4-05 … M4-07), M4-08 in Comment', () => {
     expect(m1.tabs.map((t) => t.tab)).toEqual([
       'home',
       'view',
       'comment',
       'measure',
+      'organize',
+      'convert',
       'protect',
       'help',
+    ]);
+    const convert = m1.tabs.find((t) => t.tab === 'convert');
+    expect(convert?.groups.flatMap((g) => g.commands.map((c) => c.id))).toEqual([
+      'convert.text',
+      'convert.markdown',
+      'convert.html',
+      'convert.word',
+      'convert.images',
     ]);
     const comment = m1.tabs.find((t) => t.tab === 'comment');
     // Grows task by task in M3: what works is shown, the rest is omitted.
@@ -25,7 +35,7 @@ describe('ribbon layout from the command table (§8, ADR-001 B6, M1-Q2)', () => 
     ])
       expect(shown).toContain(id);
     expect(shown).toContain('comment.exportCrs'); // M3-19
-    expect(shown).not.toContain('comment.exportAnnotations'); // M4 (M3-Q1)
+    expect(shown).toContain('comment.exportAnnotations'); // M4-08
     const protect = m1.tabs.find((t) => t.tab === 'protect');
     // Only what works: Security Info (M2-12), Unlock (M2-03), Signatures (M2-13); redaction (M4) and the rest stay omitted.
     expect(protect?.groups.flatMap((g) => g.commands.map((c) => c.id))).toEqual([
@@ -55,6 +65,7 @@ describe('ribbon layout from the command table (§8, ADR-001 B6, M1-Q2)', () => 
       'comment.drawing', // Cloud (M3-09)
       'comment.stamp', // Stamp (M3-14)
       'measure.measure', // Distance (M3-16)
+      'organize.transform', // Rotate Clockwise (M4-09)
       'protect.security', // Signatures (M2-13)
     ]);
     expect(home?.groups[3]?.commands.map((c) => c.id)).toEqual([

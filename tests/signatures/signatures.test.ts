@@ -114,3 +114,20 @@ describe('checkSignatures (offline)', () => {
     });
   });
 });
+
+describe('findSignatures after a save that re-appends the signature (ADR-016 finding 9)', () => {
+  it('lists each signed range once', async () => {
+    const signed = await signedPdf(await makeSigner('Dup Signer'));
+    const text = Buffer.from(signed).toString('latin1');
+    const at = text.lastIndexOf('/Type /Sig');
+    const objAt = text.lastIndexOf(' obj', at);
+    const start = text.lastIndexOf('\n', objAt) + 1;
+    const end = text.indexOf('endobj', at) + 'endobj'.length;
+    // The same dictionary appended again, as PDFium's keep-all tail does.
+    const again = Buffer.concat([
+      Buffer.from(signed),
+      Buffer.from(`\n${text.slice(start, end)}\n`, 'latin1'),
+    ]);
+    expect(findSignatures(new Uint8Array(again))).toHaveLength(1);
+  });
+});

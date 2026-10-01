@@ -104,6 +104,39 @@ export class PatchSet {
     this.byTarget.set(key, p);
   }
 
+  /**
+   * Page targets follow a page operation (ADR-016 cache map): `map` gives each
+   * old page index its new one, or null for a deleted page (its patches go).
+   */
+  remapPages(map: (page: number) => number | null, seq: number): void {
+    const all = [...this.byTarget.values()];
+    this.byTarget.clear();
+    for (const p of all) {
+      const page = map(p.target.page);
+      if (page === null) continue;
+      const moved = page !== p.target.page;
+      const next: Patch = {
+        ...p,
+        target: { ...p.target, page },
+        ...(moved ? { seq, clean: false } : {}),
+      };
+      this.byTarget.set(targetKey(next.target), next);
+    }
+  }
+
+  /** A deep copy (an undo snapshot of the staged keys). */
+  clone(): PatchSet {
+    const out = new PatchSet();
+    for (const [k, p] of this.byTarget)
+      out.byTarget.set(k, {
+        ...p,
+        target: { ...p.target },
+        set: new Map(p.set),
+        remove: new Set(p.remove),
+      });
+    return out;
+  }
+
   /** After a committed save that included changes up to `seq`. */
   committed(seq: number): void {
     for (const p of this.byTarget.values()) if (p.seq <= seq) p.clean = true;

@@ -60,6 +60,15 @@ function snapClient(): RpcClient<SnapApi> {
 
 const zoomOf = (docId: string): number => documentStore.getState().docs[docId]?.view.scale ?? 1;
 
+/** Pages changed (M4-09): each page's index is keyed by page index; extract again. */
+export async function dropSnapPages(docId: string): Promise<void> {
+  const prefix = `${docId}/`;
+  snapStore.setState((s) => ({
+    pages: Object.fromEntries(Object.entries(s.pages).filter(([k]) => !k.startsWith(prefix))),
+  }));
+  if (client) await client.call('drop', { prefix }).promise.catch(() => undefined);
+}
+
 /** Extracts and loads a page's index once (per document, per page). */
 export async function ensurePage(docId: string, page: number): Promise<void> {
   const key = keyOf(docId, page);

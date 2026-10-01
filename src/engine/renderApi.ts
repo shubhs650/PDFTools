@@ -4,6 +4,8 @@
 import type { FontFallbackConfig } from '@embedpdf/engines/pdfium';
 import type { PdfJson } from '../model/pdf/wire';
 import type { AnnotTileRequest } from '../workers/render/annotTiles';
+import type { PageOp } from '../workers/render/pages';
+import type { PageInfo } from '../workers/render/pdfium';
 import type { DocDigest } from '../workers/render/save/digest';
 import type { MethodSpec } from './protocol';
 
@@ -39,6 +41,45 @@ export interface RenderApi {
     { left: number; top: number; right: number; bottom: number } | null
   >;
   memory: MethodSpec<null, { wasmBytes: number }>;
+  /**
+   * A page operation (M4-09 … M4-11, ADR-016): needs the assemble permission
+   * (rule 9). Returns the new page list and old index → new index (−1:
+   * deleted). Cancellable between pages; a cancelled operation may be partly
+   * done, so the caller restores its snapshot.
+   */
+  pagesOp: MethodSpec<
+    { docId: string; op: PageOp },
+    { pages: PageInfo[]; map: number[] },
+    { done: number; total: number }
+  >;
+  /**
+   * A PDF picked for Insert from File or Merge (M4-11): page count and whether
+   * it is open with full access (M4-Q2). A missing or wrong password rejects
+   * with `pdfium:4`.
+   */
+  pagesSource: MethodSpec<
+    { bytes: ArrayBuffer; password?: string },
+    { pageCount: number; encrypted: boolean; fullAccess: boolean }
+  >;
+  /** Undo snapshot before a page operation (ADR-016 d5); `dropped`: older tokens evicted. */
+  pagesSnapshot: MethodSpec<{ docId: string }, { token: number; dropped: number[] }>;
+  /** Undo of a page operation: reopens the document from its snapshot, same id. */
+  pagesRestore: MethodSpec<{ docId: string; token: number }, { pages: PageInfo[] }>;
+  /**
+   * Comment transfer (M4-20/21): objects copied by the Work worker join the
+   * document, which is reopened; the annotate permission is needed (rule 9).
+   * `firstNew`: the first new object number (`transfer-stale` if taken since).
+   */
+  pagesApply: MethodSpec<
+    {
+      docId: string;
+      objects: { num: number; gen: number; bytes: Uint8Array }[];
+      firstNew: number;
+    },
+    { pages: PageInfo[] }
+  >;
+  /** Forgets undo snapshots (history cleared, document closed). */
+  pagesDrop: MethodSpec<{ tokens: number[] }, null>;
   /**
    * Ctrl+S core (M1-20, ADR-005): the narrow incremental tail to append to
    * the file as last saved (`baseLength` bytes). Empty tail = nothing changed.
@@ -116,6 +157,8 @@ export interface RenderApi {
     { slices: number }
   >;
 }
+
+export type { PageOp, PageInfo };
 
 /** RpcError code for a failed PDFium/EmbedPDF task: `pdfium:<PdfErrorCode>`. */
 export const PDFIUM_ERROR_PREFIX = 'pdfium:';

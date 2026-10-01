@@ -23,6 +23,14 @@ import type { VerifyResult } from '../workers/work/verifySave';
 import type { GridIndex } from '../model/snapIndex';
 import type { SnapshotRegion } from '../workers/work/crs';
 import type { WorkbookSpec } from '../workers/work/crsWorkbook';
+import type { ExtractOptions } from '../workers/work/extract';
+import type {
+  SourceSummary,
+  TransferCounts,
+  TransferObject,
+  TransferSource,
+  TransferSpec,
+} from '../workers/work/transferJobs';
 import type { MethodSpec } from './protocol';
 
 export type WorkPriority = 'interactive' | 'save-verify' | 'geometry' | 'background';
@@ -45,6 +53,50 @@ export interface WorkApi {
   unlock: MethodSpec<{ docId: string; ownerPassword: string }, { unlocked: boolean }>;
   /** Replaces the document's tail (bytes appended since the original). Applied lazily (ADR-001 B11). */
   refresh: MethodSpec<{ docId: string; tail: ArrayBuffer }, { pending: boolean }>;
+  /**
+   * Unsaved changes the jobs must see (M4-09 page operations): a section after
+   * the saved tail, dropped when a save is appended. Drops the document's
+   * search, snap-geometry and Oxide caches (pages may have moved).
+   */
+  setLive: MethodSpec<{ docId: string; live: ArrayBuffer | null }, null>;
+  /**
+   * Extract Pages / Merge Files (M4-11): a new, unencrypted document from pages
+   * of open documents (their Work copies, unsaved changes included) and of
+   * picked files, in order; `outline`: one bookmark per part (merge). Refused
+   * for an encrypted source without full access (M4-Q2).
+   */
+  assemble: MethodSpec<
+    {
+      parts: (
+        | { docId: string; pages: number[]; title: string }
+        | { bytes: ArrayBuffer; password?: string; pages: number[]; title: string }
+      )[];
+      outline: boolean;
+    },
+    { bytes: ArrayBuffer },
+    { done: number; total: number }
+  >;
+  /**
+   * Import Comments (M4-20, ADR-018): a source PDF's comments for the dialog's
+   * summary. Wrong or missing password: `pdfium:4`. `copyAllowed` false: the
+   * source's permissions forbid copying (rule 9) and nothing else is read.
+   */
+  commentSource: MethodSpec<TransferSource, SourceSummary>;
+  /**
+   * Copies the source's comments into the document's current state (its live
+   * section must be current): the objects for the Render worker's `pagesApply`
+   * and the counts; with `dryRun`, the counts only (the dialog's preview).
+   */
+  transferComments: MethodSpec<
+    { docId: string; source: TransferSource; spec: TransferSpec },
+    { objects: TransferObject[]; firstNew: number; counts: TransferCounts },
+    { done: number; total: number }
+  >;
+  /** The in-app clipboard (M4-21): the chosen comments as a small PDF. Needs copy. */
+  copyComments: MethodSpec<
+    { docId: string; ids: string[]; withReplies: boolean },
+    { bytes: ArrayBuffer; pages: number[]; count: number }
+  >;
   /** Appends a saved tail piece to the document's tail (after a committed save). */
   append: MethodSpec<{ docId: string; piece: ArrayBuffer }, { tailBytes: number }>;
   /**
@@ -187,6 +239,55 @@ export interface WorkApi {
   indexText: MethodSpec<
     { docId: string; visible: number[] },
     { pages: number; extracted: number; pausedMs: number; ms: number },
+    { done: number; total: number }
+  >;
+  /**
+   * PDF Oxide warm-up (M4-04, ADR-009 decision 2): loads Oxide and runs one
+   * throwaway extraction, at background priority, so the first export does not
+   * pay the ~0.7 s first call. Idempotent.
+   */
+  oxideWarm: MethodSpec<null, { warmUpMs: number; oxideBytes: number }>;
+  /**
+   * An extraction through PDF Oxide (M4-04, M4-05, §7.6) of `pages` (0-based,
+   * document order) of the current revision. PDFium's permission check comes
+   * first (copy, rule 9): refused with `permission-denied:copy`. Built in the
+   * worker: `single` returns the main file, `zip` one archive of every file,
+   * `folder` the files for writing into a folder (M4-Q5). Cancellable between
+   * pages.
+   */
+  extract: MethodSpec<
+    {
+      docId: string;
+      pages: number[];
+      options: ExtractOptions;
+      packaging: 'single' | 'zip' | 'folder';
+    },
+    {
+      blob?: Blob;
+      name?: string;
+      files?: { path: string; blob: Blob }[];
+      pages: number;
+      chars: number;
+      images: number;
+    },
+    { done: number; total: number }
+  >;
+  /**
+   * Export Images (M4-06): every distinct image of `pages` as a file (JPEG
+   * passed through, the rest PNG), copy permission first; `zip` one archive,
+   * `folder` the files. Cancellable between pages.
+   */
+  exportImages: MethodSpec<
+    { docId: string; pages: number[]; baseName: string; packaging: 'zip' | 'folder' },
+    {
+      blob?: Blob;
+      name?: string;
+      files?: { path: string; blob: Blob }[];
+      pages: number;
+      images: number;
+      duplicates: number;
+      skipped: number;
+    },
     { done: number; total: number }
   >;
   /** The user is scrolling or zooming: background work backs off for `quietMs`. */

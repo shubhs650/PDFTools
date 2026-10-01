@@ -4,6 +4,7 @@
 // the Render worker refuses independently (M1-20).
 import type { AnnotationCapability } from '@embedpdf/plugin-annotation';
 import type { HistoryCapability } from '@embedpdf/plugin-history';
+import { pagesBusy } from '../pages/pageOps';
 import { notify, registerCommand, type CommandHandler } from '../../app/commands/dispatch';
 import { appStore } from '../../app/store/appStore';
 import { documentStore, selectActive } from '../../app/store/documentStore';
@@ -26,6 +27,16 @@ import { commentsStore } from './comments/commentsStore';
 import { deleteComments } from './comments/threadActions';
 import { MARKUP_TOOLS } from './tools/markupModel';
 import { markupFromSelection } from './tools/textMarkup';
+import { openAnnotationExport } from './export/annotationExport';
+import { openImportComments } from './transfer/importComments';
+import {
+  clipboardStore,
+  copyBlocked,
+  copySelectedComments,
+  pasteBlocked,
+  pasteComments,
+} from './transfer/copyPaste';
+import { transferBlocked } from '../pages/pageOps';
 
 const activeId = (): string | null => selectActive(documentStore.getState())?.meta.id ?? null;
 
@@ -109,6 +120,7 @@ export function registerAnnotateCommands(): () => void {
       requiresDocument: true,
       disabledReason: () => {
         const id = activeId();
+        if (id && pagesBusy()) return msg('pages.busy');
         return id && history(id)?.canUndo() ? null : msg('annotate.nothingToUndo');
       },
       run: () => {
@@ -120,6 +132,7 @@ export function registerAnnotateCommands(): () => void {
       requiresDocument: true,
       disabledReason: () => {
         const id = activeId();
+        if (id && pagesBusy()) return msg('pages.busy');
         return id && history(id)?.canRedo() ? null : msg('annotate.nothingToRedo');
       },
       run: () => {
@@ -366,6 +379,56 @@ export function registerAnnotateCommands(): () => void {
         if (id) void openCrs(id);
       },
     }),
+    // Export Annotations (M4-08): the comments' text leaves the document, so copy is needed (rule 9).
+    registerCommand('comment.exportAnnotations', {
+      requiresDocument: true,
+      requires: 'copy',
+      run: () => {
+        const id = activeId();
+        if (id) openAnnotationExport(id);
+      },
+    }),
+    // Import Comments (M4-20): the target needs annotate (rule 9; the source's copy is checked on choosing it).
+    registerCommand('comment.importComments', {
+      requiresDocument: true,
+      requires: 'annotate',
+      disabledReason: () => {
+        const id = activeId();
+        return id ? transferBlocked(id) : null;
+      },
+      run: () => {
+        const id = activeId();
+        if (id) openImportComments(id);
+      },
+    }),
+    // Copy / Paste Comments (M4-21): an in-app clipboard (ADR-018 d8).
+    registerCommand('comment.copyComments', {
+      requiresDocument: true,
+      requires: 'copy',
+      disabledReason: () => copyBlocked(activeId()),
+      run: async () => {
+        const id = activeId();
+        if (id) await copySelectedComments(id);
+      },
+    }),
+    registerCommand('comment.pasteComments', {
+      requiresDocument: true,
+      requires: 'annotate',
+      disabledReason: () => pasteBlocked(activeId()),
+      run: async () => {
+        const id = activeId();
+        if (id) await pasteComments(id, 'current');
+      },
+    }),
+    registerCommand('comment.pasteToOriginal', {
+      requiresDocument: true,
+      requires: 'annotate',
+      disabledReason: () => pasteBlocked(activeId()),
+      run: async () => {
+        const id = activeId();
+        if (id) await pasteComments(id, 'original');
+      },
+    }),
     registerCommand('comment.statusSchemes', {
       run: openSchemes,
     }),
@@ -463,10 +526,13 @@ export function registerAnnotateCommands(): () => void {
   const offSnap = snapStore.subscribe((s, prev) => {
     if (s.enabled !== prev.enabled || s.kinds !== prev.kinds) notify();
   });
+  // Paste is enabled once something is copied (M4-21).
+  const offClip = clipboardStore.subscribe(notify);
   return () => {
     offRegistry();
     offPlugins();
     offSnap();
+    offClip();
     for (const off of offs) off();
   };
 }

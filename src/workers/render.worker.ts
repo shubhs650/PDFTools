@@ -10,7 +10,8 @@ import { Transfer } from '../engine/protocol';
 import { PDFIUM_ERROR_PREFIX, type RenderApi } from '../engine/renderApi';
 import { fromJson } from '../model/pdf/wire';
 import { serve } from './rpc-host';
-import { acquirePage, docPtrOf, rawCall, wasmMemory } from './render/pdfium';
+import { acquirePage, docPtrOf, pageInfos, rawCall, wasmMemory } from './render/pdfium';
+import { applyPageOp, withSource } from './render/pages';
 import { renderProgressive } from './render/progressive';
 import { AnnotBoxCache, annotBoxes, renderAnnotTile } from './render/annotTiles';
 import { dropCustom, keepAuthor, nameTargets, writeMarkupIntent } from './render/annotIds';
@@ -116,6 +117,11 @@ serve<RenderApi>(self, {
       throw toRpcError(err);
     }
     if (typeof docId === 'string') writeMarkupIntent(m, n, method, callArgs);
+    // A reopen (page-operation undo) re-applies the owner unlock (ADR-016 d5).
+    if (method === 'unlockOwnerPermissions' && value === true && typeof docId === 'string') {
+      const pw = args[1];
+      if (typeof pw === 'string') t.ownerUnlocked(docId, pw);
+    }
     // Save bookkeeping (M1-20): the opened bytes' trailer, and what each edit changed.
     if (method === 'openDocumentBuffer') {
       const file = args[0] as { id: string; content: ArrayBuffer };
@@ -137,8 +143,8 @@ serve<RenderApi>(self, {
     return new Transfer(value, transferables(value, wasmMemory(m)?.buffer));
   },
 
-  saveIncremental: ({ docId, keepAll }) => {
-    const r = ready().tracker.saveIncremental(docId, keepAll ? { keepAll } : {});
+  saveIncremental: async ({ docId, keepAll }) => {
+    const r = await ready().tracker.save(docId, keepAll ? { keepAll } : {});
     const tail = r.tail.buffer;
     return new Transfer({ ...r, tail }, [tail]);
   },
@@ -147,8 +153,8 @@ serve<RenderApi>(self, {
     baseLength: ready().tracker.commit(docId, tailLength, rewrite ?? false),
   }),
 
-  snapshotTail: ({ docId }) => {
-    const r = ready().tracker.snapshotTail(docId);
+  snapshotTail: async ({ docId }) => {
+    const r = await ready().tracker.snapshot(docId);
     const tail = r.tail.buffer;
     return new Transfer({ tail, baseLength: r.baseLength }, [tail]);
   },
@@ -275,4 +281,59 @@ serve<RenderApi>(self, {
   },
 
   memory: () => ({ wasmBytes: mod ? (wasmMemory(mod)?.buffer.byteLength ?? 0) : 0 }),
+
+  pagesOp: async ({ docId, op }, ctx) => {
+    const { mod: m, native: n, tracker: t } = ready();
+    t.requireCapability(docId, 'assemble');
+    let map: number[] | null = null;
+    try {
+      const r = await applyPageOp(m, n, docId, op, {
+        signal: ctx.signal,
+        progress: (p) => {
+          ctx.progress(p);
+        },
+      });
+      map = r.map;
+      return r;
+    } finally {
+      // Even a cancelled (partial) operation changed the document: saves turn semantic.
+      const known = map;
+      t.pageOperation(docId, (old) => {
+        if (!known) return old;
+        const v = known[old];
+        return v === undefined || v < 0 ? null : v;
+      });
+      annotBoxCache.drop(docId);
+    }
+  },
+
+  pagesSnapshot: async ({ docId }) => ready().tracker.takeSnapshot(docId),
+
+  pagesSource: async ({ bytes, password }) => {
+    const { mod: m, native: n } = ready();
+    return withSource(m, n, bytes, password, (src) => ({
+      pageCount: src.pageCount,
+      encrypted: src.encrypted,
+      fullAccess: src.fullAccess,
+    }));
+  },
+
+  pagesRestore: async ({ docId, token }) => {
+    const { mod: m, native: n, tracker: t } = ready();
+    await t.restore(docId, token);
+    annotBoxCache.drop(docId);
+    return { pages: pageInfos(m, n, docId) };
+  },
+
+  pagesApply: async ({ docId, objects, firstNew }) => {
+    const { mod: m, native: n, tracker: t } = ready();
+    await t.applyObjects(docId, objects, firstNew);
+    annotBoxCache.drop(docId);
+    return { pages: pageInfos(m, n, docId) };
+  },
+
+  pagesDrop: ({ tokens }) => {
+    ready().tracker.dropSnapshots(tokens);
+    return null;
+  },
 });

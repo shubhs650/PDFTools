@@ -11,10 +11,12 @@ import { AbortError } from '../engine/errors';
 
 const PDF_TYPES = [{ description: 'PDF', accept: { 'application/pdf': ['.pdf'] } }] as const;
 
+type PickerTypes = readonly { description: string; accept: Record<string, readonly string[]> }[];
+
 interface PickerWindow {
   showOpenFilePicker?: (options: {
     multiple?: boolean;
-    types?: typeof PDF_TYPES;
+    types?: PickerTypes;
     id?: string;
   }) => Promise<FileSystemFileHandle[]>;
   showSaveFilePicker?: (options: {
@@ -22,6 +24,10 @@ interface PickerWindow {
     types?: typeof PDF_TYPES;
     id?: string;
   }) => Promise<FileSystemFileHandle>;
+  showDirectoryPicker?: (options: {
+    id?: string;
+    mode?: 'read' | 'readwrite';
+  }) => Promise<FileSystemDirectoryHandle>;
 }
 
 type PermissionMode = 'read' | 'readwrite';
@@ -68,12 +74,45 @@ export async function pickPdfFiles(win: Window = window): Promise<OpenedFile[]> 
   return pickWithInput(win.document);
 }
 
-function pickWithInput(doc: Document): Promise<OpenedFile[]> {
+/** Import Comments (M4-20): one PDF or one of our JSON exports. Resolves null when cancelled. */
+export async function pickCommentSource(win: Window = window): Promise<File | null> {
+  if (accessStrategy(win) === 'fsa') {
+    try {
+      const [handle] =
+        (await (win as PickerWindow).showOpenFilePicker?.({
+          multiple: false,
+          types: [
+            {
+              description: 'PDF, JSON',
+              accept: { 'application/pdf': ['.pdf'], 'application/json': ['.json'] },
+            },
+          ],
+          id: 'pdftools-comments',
+        })) ?? [];
+      return handle ? await handle.getFile() : null;
+    } catch (err) {
+      if (isAbort(err)) return null;
+      throw err;
+    }
+  }
+  const [picked] = await pickWithInput(
+    win.document,
+    '.pdf,application/pdf,.json,application/json',
+    false,
+  );
+  return picked?.file ?? null;
+}
+
+function pickWithInput(
+  doc: Document,
+  accept = '.pdf,application/pdf',
+  multiple = true,
+): Promise<OpenedFile[]> {
   return new Promise((resolve) => {
     const input = doc.createElement('input');
     input.type = 'file';
-    input.accept = '.pdf,application/pdf';
-    input.multiple = true;
+    input.accept = accept;
+    input.multiple = multiple;
     input.addEventListener('change', () => {
       resolve([...(input.files ?? [])].map((file) => ({ file })));
     });
@@ -120,6 +159,98 @@ export async function pickFileSaveTarget(
     if (isAbort(err)) return undefined;
     throw err;
   }
+}
+
+/** Several exported files can be written straight to a folder (M4-Q5; Chromium). */
+export function canPickFolder(win: object = window): boolean {
+  return typeof (win as PickerWindow).showDirectoryPicker === 'function';
+}
+
+/**
+ * Folder for several exported files (images, one CSV per table — M4-Q5);
+ * undefined where the browser has no folder picker, or if cancelled.
+ */
+export async function pickFolderTarget(
+  win: Window = window,
+): Promise<FileSystemDirectoryHandle | undefined> {
+  if (!canPickFolder(win)) return undefined;
+  try {
+    return await (win as PickerWindow).showDirectoryPicker?.({
+      id: 'pdftools-export',
+      mode: 'readwrite',
+    });
+  } catch (err) {
+    if (isAbort(err)) return undefined;
+    throw err;
+  }
+}
+
+/** "a.png" → "a (2).png" … until the name is free in `taken` (case-insensitive). */
+export function freeName(name: string, taken: ReadonlySet<string>): string {
+  const dot = name.lastIndexOf('.');
+  const [base, ext] = dot > 0 ? [name.slice(0, dot), name.slice(dot)] : [name, ''];
+  let n = name;
+  for (let i = 2; taken.has(n.toLowerCase()); i++) n = `${base} (${String(i)})${ext}`;
+  return n;
+}
+
+async function namesIn(dir: FileSystemDirectoryHandle): Promise<Set<string>> {
+  const taken = new Set<string>();
+  const keys = (dir as unknown as { keys?: () => AsyncIterable<string> }).keys?.();
+  if (keys) for await (const k of keys) taken.add(k.toLowerCase());
+  return taken;
+}
+
+/**
+ * Writes the files into `dir` — or, with `subfolder`, into a new folder of
+ * that name inside it (" (2)" if taken) — never replacing anything already
+ * there; paths may contain "/" (created as folders). One file after another,
+ * cancellable between files. Returns the folder written to.
+ */
+export async function writeFilesToFolder(
+  dir: FileSystemDirectoryHandle,
+  files: readonly { path: string; blob: Blob }[],
+  opts: {
+    subfolder?: string;
+    signal?: AbortSignal;
+    progress?: (done: number, total: number) => void;
+  } = {},
+): Promise<string> {
+  let root = dir;
+  let rootName = dir.name;
+  if (opts.subfolder !== undefined) {
+    rootName = freeName(opts.subfolder, await namesIn(dir));
+    root = await dir.getDirectoryHandle(rootName, { create: true });
+  }
+  const taken = new Map<FileSystemDirectoryHandle, Set<string>>();
+  const folders = new Map<string, FileSystemDirectoryHandle>([['', root]]);
+  for (const [i, f] of files.entries()) {
+    if (opts.signal?.aborted) throw new AbortError();
+    const parts = f.path.split('/').filter((p) => p !== '' && p !== '.' && p !== '..');
+    const leaf = parts.pop() ?? 'file';
+    let at = root;
+    let key = '';
+    for (const part of parts) {
+      key = `${key}/${part}`;
+      let next = folders.get(key);
+      if (!next) {
+        next = await at.getDirectoryHandle(part, { create: true });
+        folders.set(key, next);
+      }
+      at = next;
+    }
+    let names = taken.get(at);
+    if (!names) {
+      names = await namesIn(at);
+      taken.set(at, names);
+    }
+    const name = freeName(leaf, names);
+    names.add(name.toLowerCase());
+    const handle = await at.getFileHandle(name, { create: true });
+    await writeToHandle(handle, f.blob, opts.signal);
+    opts.progress?.(i + 1, files.length);
+  }
+  return rootName;
 }
 
 /** Reopening a recent file asks for permission again (§4.1). */

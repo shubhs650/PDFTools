@@ -24,6 +24,8 @@ export interface WorkDocSource {
 
 interface DocRecord extends WorkDocSource {
   tail: ArrayBuffer | undefined;
+  /** Unsaved changes the jobs see (M4-09), re-sent after a respawn. */
+  live?: ArrayBuffer;
   /** Owner password once unlocked: re-applied after a respawn (memory only, M2-Q7). */
   ownerPassword?: string;
 }
@@ -55,7 +57,14 @@ type JobMethod =
   | 'hitRects'
   | 'snapGeometry'
   | 'crs'
-  | 'indexText';
+  | 'oxideWarm'
+  | 'extract'
+  | 'exportImages'
+  | 'indexText'
+  | 'assemble'
+  | 'commentSource'
+  | 'transferComments'
+  | 'copyComments';
 
 export interface WorkClientOptions {
   wasmUrl?: string;
@@ -180,10 +189,25 @@ export class WorkClient {
     return this.docs.has(docId);
   }
 
+  /**
+   * Unsaved changes the jobs must see (M4-09 page operations), after the saved
+   * tail; null clears them. A save's `append` drops them (they were relative to
+   * the file before it).
+   */
+  async setLive(docId: string, live: ArrayBuffer | null): Promise<void> {
+    const d = this.docs.get(docId);
+    if (!d) return;
+    if (live && live.byteLength > 0) d.live = live.slice(0);
+    else delete d.live;
+    await this.whenReady();
+    await this.rpc.call('setLive', { docId, live: live ? live.slice(0) : null }).promise;
+  }
+
   /** A committed save's tail piece (M1-21): appended to the tail, applied on the next job. */
   async append(docId: string, piece: ArrayBuffer): Promise<void> {
     const d = this.docs.get(docId);
     if (!d) return;
+    delete d.live;
     d.tail = appendBytes(d.tail, piece);
     await this.whenReady();
     await this.rpc.call('append', { docId, piece: piece.slice(0) }).promise;
@@ -257,7 +281,7 @@ export class WorkClient {
     this.active++;
     const promise = (async () => {
       try {
-        const docId = (args as { docId?: unknown }).docId;
+        const docId = (args as { docId?: unknown } | null)?.docId;
         if (typeof docId === 'string') await this.opening.get(docId);
         await this.whenReady();
         job = this.rpc.call(method, args, { ...options, signal: ac.signal });
@@ -345,6 +369,7 @@ export class WorkClient {
         },
         { transfer: [original] },
       ).promise;
+      if (d.live) await this.rpc.call('setLive', { docId, live: d.live.slice(0) }).promise;
     }
   }
 

@@ -106,7 +106,7 @@ export class PdfReader {
   static async open(
     bytes: Uint8Array,
     inflate: Inflate = inflateStream,
-    opts: { password?: string } = {},
+    opts: { password?: string; crypt?: StandardCrypt | null } = {},
   ): Promise<PdfReader> {
     const r = new PdfReader(bytes, inflate);
     const m = [...tailText(bytes).matchAll(/startxref\s+(\d+)/g)].pop();
@@ -131,11 +131,16 @@ export class PdfReader {
       const ref = r.trailer.get('Encrypt');
       if (ref instanceof PdfRef) r.encryptNum = ref.num;
       const enc = await r.resolve(ref);
-      try {
-        if (isDict(enc))
-          r.crypt = await StandardCrypt.open(enc, r.trailer.get('ID'), opts.password);
-      } catch {
-        r.crypt = null;
+      if (opts.crypt) {
+        // A key already derived for this file (the save tracker's): no async work.
+        r.crypt = opts.crypt;
+      } else {
+        try {
+          if (isDict(enc))
+            r.crypt = await StandardCrypt.open(enc, r.trailer.get('ID'), opts.password);
+        } catch {
+          r.crypt = null;
+        }
       }
       r.readable = r.crypt !== null;
       // Anything read while opening (the /Encrypt dict, lengths) was read raw.

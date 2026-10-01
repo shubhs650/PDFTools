@@ -8,6 +8,10 @@ import { OfflineStatus, UpdateWaitDialog } from '../features/offline/OfflineStat
 import { installRecovery } from '../features/recovery/recovery';
 import { registerFormCommands } from '../features/forms/commands';
 import { registerPrintCommands } from '../features/print/commands';
+import { registerExtractCommands } from '../features/extract/commands';
+import { registerPageCommands } from '../features/pages/commands';
+import { PageDialogs } from '../features/pages/PageDialogs';
+import { FileDialogs } from '../features/pages/FileDialogs';
 import { PrintDialog } from '../features/print/PrintDialog';
 import { PrintReadyDialog } from '../features/print/PrintReadyDialog';
 import { HelpPage } from '../features/help/HelpPage';
@@ -34,6 +38,9 @@ import { CalibrateDialog, SetScaleDialog } from '../features/measure/ScaleDialog
 import { ViewportDialog } from '../features/measure/ViewportDialog';
 import { SnapStatus } from '../features/measure/SnapStatus';
 import { CrsDialog } from '../features/crs/CrsDialog';
+import { AnnotationExportDialog } from '../features/annotate/export/AnnotationExportDialog';
+import { ImportCommentsDialog } from '../features/annotate/transfer/ImportCommentsDialog';
+import { ExportDialog } from '../features/extract/ExportDialog';
 import { ScaleIndicator } from '../features/measure/ScaleIndicator';
 import { GrowthPrompt, SaveOptimizedDialog } from '../features/save/SaveDialogs';
 import { SaveErrorDialog, SaveStatus } from '../features/save/SaveStatus';
@@ -79,6 +86,8 @@ export function App() {
   useEffect(() => registerProtectCommands(), []);
   useEffect(() => registerFormCommands(), []);
   useEffect(() => registerPrintCommands(), []);
+  useEffect(() => registerExtractCommands(), []);
+  useEffect(() => registerPageCommands(), []);
   useEffect(() => registerReportCommands(), []);
   useEffect(() => registerSelectionCommands(), []);
   useEffect(() => registerAnnotateCommands(), []);
@@ -164,6 +173,11 @@ export function App() {
         <CalibrateDialog />
         <ViewportDialog />
         <CrsDialog />
+        <AnnotationExportDialog />
+        <ImportCommentsDialog />
+        <ExportDialog />
+        <PageDialogs />
+        <FileDialogs />
         <UpdateWaitDialog />
         <DropZone />
         <HelpPage />

@@ -1,7 +1,20 @@
-import { useEffect, useLayoutEffect, useMemo, useRef, useState, type KeyboardEvent } from 'react';
+import {
+  useEffect,
+  useLayoutEffect,
+  useMemo,
+  useRef,
+  useState,
+  type KeyboardEvent,
+  type MouseEvent,
+} from 'react';
 import { useTranslation } from 'react-i18next';
 import { useDocuments } from '../../app/store/documentStore';
 import { format } from '../../i18n';
+import { movePages } from '../pages/commands';
+import { dropIndex, moveByOne, moveTo } from '../pages/move';
+import { usePages as usePageOps } from '../pages/pageOps';
+import { clickPage, setSelection, usePageSelection } from '../pages/selection';
+import { PageMenu } from './PageMenu';
 import { goToPage } from '../view/controller';
 import { useHost } from '../view/host';
 import { thumbLayout, visibleRange } from './layout';
@@ -21,6 +34,8 @@ interface PageInfo {
 
 function usePages(documentId: string | null): PageInfo[] {
   const registry = useHost((s) => s.registry);
+  // Page operations replace the page list (M4-09).
+  const version = usePageOps((s) => (documentId ? (s.version[documentId] ?? 0) : 0));
   return useMemo(() => {
     if (!registry || !documentId) return [];
     const doc = registry.getStore().getState().core.documents[documentId]?.document;
@@ -29,7 +44,8 @@ function usePages(documentId: string | null): PageInfo[] {
       height: p.size.height,
       rotation: p.rotation,
     }));
-  }, [registry, documentId]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- version: the page list changed in place
+  }, [registry, documentId, version]);
 }
 
 /**
@@ -37,12 +53,29 @@ function usePages(documentId: string | null): PageInfo[] {
  * items in view are rendered and ask for images (loader.ts: one at a time,
  * nearest the page in view first, paused while the document scrolls). The
  * current page is marked; click or Enter jumps; arrows, Home and End move.
+ * Multi-selection (M4-09) for the Organize commands: Ctrl/Cmd+click and
+ * Ctrl+Space toggle, Shift+click and Shift+arrows extend; the context menu
+ * (right click, Shift+F10 or the Menu key) offers the page commands.
+ * Reorder (M4-10): drag thumbnails (an insertion marker shows where they go;
+ * the list scrolls near its edges; Esc cancels) or Alt+↑ / Alt+↓; the new
+ * position is announced.
  */
 export function ThumbnailsPane() {
   const { t } = useTranslation();
   const documentId = useDocuments((s) => s.activeId);
   const current = useDocuments((s) => (s.activeId ? (s.docs[s.activeId]?.view.page ?? 0) : 0));
   const pages = usePages(documentId);
+  const version = usePageOps((s) => (documentId ? (s.version[documentId] ?? 0) : 0));
+  const selection = usePageSelection(documentId);
+  // One selected page is the current page (the selection follows navigation).
+  const multi = selection.selected.length > 1;
+  const [menu, setMenu] = useState<{ x: number; y: number; page: number } | null>(null);
+  const announcement = usePageOps((s) => s.announcement);
+  /** A drag in progress: the pages and where they would drop (an insertion index). */
+  const [drag, setDrag] = useState<{ pages: number[]; drop: number } | null>(null);
+  const press = useRef<{ x: number; y: number; page: number; id: number } | null>(null);
+  const dragging = useRef<{ pages: number[]; drop: number; clientY: number } | null>(null);
+  const suppressClick = useRef(false);
   const shown = useMemo(
     () =>
       pages.map((p) =>
@@ -120,7 +153,82 @@ export function ThumbnailsPane() {
     focusAfterMove.current = true;
     setFocused(i);
   };
+  const extend = (to: number): void => {
+    const i = Math.max(0, Math.min(pages.length - 1, to));
+    if (documentId) clickPage(documentId, i, { shift: true, toggle: false });
+    move(i);
+  };
+  /** While dragging near the list's top or bottom edge, scroll it (one frame at a time). */
+  const startAutoScroll = (): void => {
+    const step = (): void => {
+      const d = dragging.current;
+      const el = list.current;
+      if (!d || !el) return;
+      const r = el.getBoundingClientRect();
+      const edge = 40;
+      const dy = d.clientY < r.top + edge ? -16 : d.clientY > r.bottom - edge ? 16 : 0;
+      if (dy) {
+        el.scrollTop += dy;
+        const drop = dropIndex(layout.tops, d.clientY - r.top + el.scrollTop);
+        dragging.current = { ...d, drop };
+        setDrag({ pages: d.pages, drop });
+      }
+      requestAnimationFrame(step);
+    };
+    requestAnimationFrame(step);
+  };
+  const endDrag = (pointerId: number | null): void => {
+    dragging.current = null;
+    setDrag(null);
+    const el = list.current;
+    if (el && pointerId !== null && el.hasPointerCapture(pointerId))
+      el.releasePointerCapture(pointerId);
+  };
+  const openMenuAt = (i: number): void => {
+    const item = list.current?.querySelector<HTMLElement>(`[data-thumb="${String(i)}"]`);
+    const r = item?.getBoundingClientRect();
+    setMenu({ x: r ? r.left + r.width / 2 : 0, y: r ? r.top + r.height / 2 : 0, page: i });
+  };
   const onKeyDown = (e: KeyboardEvent): void => {
+    if (e.key === 'Escape' && dragging.current) {
+      e.preventDefault();
+      endDrag(null);
+      press.current = null;
+      return;
+    }
+    if (e.key === 'ContextMenu' || (e.key === 'F10' && e.shiftKey)) {
+      e.preventDefault();
+      if (documentId && !selection.selected.includes(focused))
+        clickPage(documentId, focused, { shift: false, toggle: false });
+      openMenuAt(focused);
+      return;
+    }
+    if (e.altKey && (e.key === 'ArrowDown' || e.key === 'ArrowUp')) {
+      e.preventDefault();
+      const moving = multi && selection.selected.includes(focused) ? selection.selected : [focused];
+      const to = moveByOne(moving, e.key === 'ArrowDown' ? 1 : -1, pages.length);
+      if (to === null || !documentId) return;
+      const offset = [...moving].sort((a, b) => a - b).indexOf(focused);
+      void movePages(documentId, moving, to).then((ok) => {
+        if (ok) move(to + Math.max(0, offset));
+      });
+      return;
+    }
+    if (e.shiftKey && (e.key === 'ArrowDown' || e.key === 'ArrowUp')) {
+      e.preventDefault();
+      extend(focused + (e.key === 'ArrowDown' ? 1 : -1));
+      return;
+    }
+    if ((e.ctrlKey || e.metaKey) && e.key === ' ') {
+      e.preventDefault();
+      if (documentId) clickPage(documentId, focused, { shift: false, toggle: true });
+      return;
+    }
+    if (e.key === 'Escape' && documentId && selection.selected.length) {
+      e.preventDefault();
+      setSelection(documentId, { selected: [], anchor: focused });
+      return;
+    }
     const perView = Math.max(1, last - first - 6);
     const keys: Record<string, () => void> = {
       ArrowDown: () => {
@@ -142,9 +250,11 @@ export function ThumbnailsPane() {
         move(pages.length - 1);
       },
       Enter: () => {
+        if (documentId) clickPage(documentId, focused, { shift: false, toggle: false });
         goToPage(focused);
       },
       ' ': () => {
+        if (documentId) clickPage(documentId, focused, { shift: false, toggle: false });
         goToPage(focused);
       },
     };
@@ -167,11 +277,18 @@ export function ThumbnailsPane() {
       <div
         key={i}
         role="option"
-        aria-selected={i === current}
+        aria-selected={multi ? selection.selected.includes(i) : i === current}
+        aria-current={i === current ? 'page' : undefined}
         tabIndex={i === focused ? 0 : -1}
         data-pane-focus={i === focused || undefined}
         data-thumb={i}
-        className={i === current ? 'thumb thumb--current' : 'thumb'}
+        className={[
+          'thumb',
+          i === current ? 'thumb--current' : '',
+          multi && selection.selected.includes(i) ? 'thumb--selected' : '',
+        ]
+          .filter(Boolean)
+          .join(' ')}
         style={{ top: layout.tops[i] }}
         onFocus={() => {
           setFocused(i);
@@ -180,6 +297,7 @@ export function ThumbnailsPane() {
         <div className="thumb-image" style={{ width: THUMB_WIDTH, height: layout.imageHeights[i] }}>
           {documentId ? (
             <ThumbImage
+              key={version}
               documentId={documentId}
               pageIndex={i}
               page={p}
@@ -194,34 +312,116 @@ export function ThumbnailsPane() {
   }
 
   return (
-    <div
-      ref={list}
-      className="thumb-list"
-      role="listbox"
-      aria-label={t('thumbnails.list')}
-      tabIndex={-1}
-      onFocus={() => {
-        setInList(true);
-      }}
-      onBlur={(e) => {
-        if (!e.currentTarget.contains(e.relatedTarget)) setInList(false);
-      }}
-      onClick={(e) => {
-        const item = (e.target as HTMLElement).closest<HTMLElement>('[data-thumb]');
-        if (!item) return;
-        const i = Number(item.dataset['thumb']);
-        setFocused(i);
-        goToPage(i);
-      }}
-      onScroll={(e) => {
-        setScrollTop(e.currentTarget.scrollTop);
-      }}
-      onKeyDown={onKeyDown}
-    >
-      <div className="thumb-content" style={{ height: layout.tops[pages.length] }}>
-        {items}
+    <>
+      <div
+        ref={list}
+        className="thumb-list"
+        role="listbox"
+        aria-label={t('thumbnails.list')}
+        aria-multiselectable="true"
+        tabIndex={-1}
+        onFocus={() => {
+          setInList(true);
+        }}
+        onBlur={(e) => {
+          if (!e.currentTarget.contains(e.relatedTarget)) setInList(false);
+        }}
+        onPointerDown={(e) => {
+          const item = (e.target as HTMLElement).closest<HTMLElement>('[data-thumb]');
+          if (!item || e.button !== 0 || e.shiftKey || e.ctrlKey || e.metaKey) return;
+          press.current = {
+            x: e.clientX,
+            y: e.clientY,
+            page: Number(item.dataset['thumb']),
+            id: e.pointerId,
+          };
+        }}
+        onPointerMove={(e) => {
+          const p = press.current;
+          const el = list.current;
+          if (!p || !el || p.id !== e.pointerId) return;
+          if (!dragging.current) {
+            if (Math.hypot(e.clientX - p.x, e.clientY - p.y) < 6) return;
+            const moving =
+              multi && selection.selected.includes(p.page) ? [...selection.selected] : [p.page];
+            dragging.current = { pages: moving, drop: p.page, clientY: e.clientY };
+            el.setPointerCapture(e.pointerId);
+            startAutoScroll();
+          }
+          const rect = el.getBoundingClientRect();
+          const drop = dropIndex(layout.tops, e.clientY - rect.top + el.scrollTop);
+          dragging.current = { ...dragging.current, drop, clientY: e.clientY };
+          setDrag({ pages: dragging.current.pages, drop });
+        }}
+        onPointerUp={(e) => {
+          const d = dragging.current;
+          press.current = null;
+          if (!d) return;
+          endDrag(e.pointerId);
+          suppressClick.current = true;
+          const to = moveTo(d.pages, d.drop, pages.length);
+          if (to !== null && documentId) void movePages(documentId, d.pages, to);
+        }}
+        onPointerCancel={(e) => {
+          press.current = null;
+          if (dragging.current) endDrag(e.pointerId);
+        }}
+        onClick={(e: MouseEvent) => {
+          if (suppressClick.current) {
+            suppressClick.current = false;
+            return;
+          }
+          const item = (e.target as HTMLElement).closest<HTMLElement>('[data-thumb]');
+          if (!item) return;
+          const i = Number(item.dataset['thumb']);
+          setFocused(i);
+          const mods = { shift: e.shiftKey, toggle: e.ctrlKey || e.metaKey };
+          if (documentId) clickPage(documentId, i, mods);
+          if (!mods.shift && !mods.toggle) goToPage(i);
+        }}
+        onContextMenu={(e: MouseEvent) => {
+          const item = (e.target as HTMLElement).closest<HTMLElement>('[data-thumb]');
+          if (!item || !documentId) return;
+          e.preventDefault();
+          const i = Number(item.dataset['thumb']);
+          setFocused(i);
+          if (!selection.selected.includes(i))
+            clickPage(documentId, i, { shift: false, toggle: false });
+          setMenu({ x: e.clientX, y: e.clientY, page: i });
+        }}
+        onScroll={(e) => {
+          setScrollTop(e.currentTarget.scrollTop);
+        }}
+        onKeyDown={onKeyDown}
+      >
+        <div className="thumb-content" style={{ height: layout.tops[pages.length] }}>
+          {items}
+          {drag && moveTo(drag.pages, drag.drop, pages.length) !== null ? (
+            <div
+              className="thumb-drop-marker"
+              aria-hidden="true"
+              style={{ top: Math.max(0, (layout.tops[drag.drop] ?? 0) - GAP / 2) }}
+            />
+          ) : null}
+        </div>
+        {menu && documentId ? (
+          <PageMenu
+            docId={documentId}
+            x={menu.x}
+            y={menu.y}
+            page={menu.page}
+            onClose={() => {
+              setMenu(null);
+            }}
+          />
+        ) : null}
       </div>
-    </div>
+      {announcement ? (
+        <div className="ui-visually-hidden" role="status" aria-live="polite">
+          {announcement}
+        </div>
+      ) : null}
+    </>
   );
 }
 

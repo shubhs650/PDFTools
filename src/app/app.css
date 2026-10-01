@@ -200,6 +200,26 @@ body {
   box-shadow: 0 0 0 var(--border-width) var(--color-accent);
 }
 
+.thumb-drop-marker {
+  position: absolute;
+  left: var(--space-2);
+  right: var(--space-2);
+  height: 3px;
+  margin-top: -1px;
+  background: var(--color-accent);
+  border-radius: 2px;
+  pointer-events: none;
+}
+
+.thumb--selected {
+  background: var(--color-selected, color-mix(in srgb, var(--color-accent) 18%, transparent));
+}
+
+.thumb--selected .thumb-image {
+  border-color: var(--color-accent);
+  border-style: dashed;
+}
+
 .thumb:focus-visible .thumb-image {
   outline: var(--focus-width) solid var(--color-focus);
   outline-offset: var(--space-1);
@@ -2195,4 +2215,40 @@ textarea.form-field {
   padding: var(--space-0) var(--space-3);
   color: var(--color-text-muted);
   white-space: nowrap;
+}
+
+/* Organize → Merge Files / Insert from File (M4-11). */
+.pages-source {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+
+.pages-merge-list {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  max-height: 50vh;
+  overflow: auto;
+}
+
+.pages-merge-item {
+  display: flex;
+  gap: var(--space-2);
+  padding: var(--space-2);
+  border: var(--border-width) solid var(--color-border);
+  border-radius: var(--radius-m, 4px);
+  background: var(--color-surface, transparent);
+}
+
+.pages-merge-item--dragged {
+  opacity: 0.5;
+}
+
+.pages-merge-controls {
+  display: flex;
+  flex-direction: column;
 }

@@ -102,6 +102,10 @@
       "applyStyle": "Apply Comment Style",
       "reviewerProfile": "Reviewer Profile",
       "exportAnnotations": "Export Comments (CSV / XLSX / JSON)",
+      "importComments": "Import Comments",
+      "copyComments": "Copy Comments",
+      "pasteComments": "Paste Comments",
+      "pasteToOriginal": "Paste to Original Pages",
       "exportCrs": "Export CRS (Excel)"
     },
     "measure": {
@@ -122,6 +126,7 @@
       "insertBlank": "Insert Blank Page",
       "insertFromFile": "Insert from File",
       "delete": "Delete Pages",
+      "move": "Move Pages",
       "extract": "Extract Pages",
       "merge": "Merge Files",
       "rotateCw": "Rotate Pages Clockwise",
@@ -285,7 +290,8 @@
       "tabNext": "Next Tab",
       "tabPrev": "Previous Tab",
       "toolCancel": "Cancel Tool",
-      "editCopy": "Copy Selected Text",
+      "editCopy": "Copy Selected Text or Comments",
+      "editPaste": "Paste Comments",
       "editSelectAll": "Select Page Text",
       "findNext": "Find Next",
       "findPrev": "Find Previous",
@@ -1253,6 +1259,292 @@
       "snapshot": "Snapshot",
       "vendorResponse": "Vendor Response",
       "finalStatus": "Final Status"
+    }
+  },
+  "export": {
+    "title": {
+      "text": "Export as Text",
+      "markdown": "Export as Markdown",
+      "html": "Export as HTML",
+      "images": "Export Images",
+      "word": "Export to Word (Beta)"
+    },
+    "description": "The document is converted on this device; nothing is sent anywhere.",
+    "scope": {
+      "legend": "Pages",
+      "all": "All pages",
+      "current": "Current page",
+      "custom": "Pages:",
+      "customLabel": "Page range",
+      "customHint": "e.g. 1-3, 8"
+    },
+    "images": {
+      "markdown": "Include images (saved as files next to the Markdown)",
+      "html": "Include images (embedded in the page)",
+      "folderNote": "The Markdown file and its images go into a new folder.",
+      "zipNote": "The Markdown file and its images are saved as one ZIP file.",
+      "imagesFolderNote": "Each image is saved as a file (JPEG images as they are, others as PNG) in a new folder. Repeated images are saved once.",
+      "imagesZipNote": "Each image is saved as a file (JPEG images as they are, others as PNG) in one ZIP file. Repeated images are saved once.",
+      "word": "Include images"
+    },
+    "fileName": "{{base}}.{{ext}}",
+    "export": "Export",
+    "close": "Close",
+    "cancel": "Cancel",
+    "progressName": "Export progress",
+    "progress": "Page {{done}} of {{total}}",
+    "error": {
+      "empty": "Enter the pages to export.",
+      "syntax": "Use page numbers and ranges, e.g. 1-3, 8.",
+      "outOfRange": "Some pages are not in this document.",
+      "noSelection": "Select pages in the Thumbnails pane first.",
+      "denied": "This document's security settings don't allow {{what}}.",
+      "failed": "The export could not be completed. Nothing was saved.",
+      "noDocument": "The document is no longer open."
+    },
+    "label": {
+      "page": "Page {{n}}",
+      "image": "Image {{n}} on page {{page}}",
+      "noText": "Page {{n}} has no text layer (a scanned page needs OCR, which is planned)."
+    },
+    "word": {
+      "pageBreaks": "Start each PDF page on a new page",
+      "beta": "Beta: headings, paragraphs, lists, tables and images are kept; columns, fonts and exact layout are not."
+    }
+  },
+  "annotExport": {
+    "title": "Export Annotations",
+    "description": "Every comment with its replies and status, as a spreadsheet or as data for other tools. Built on this device; nothing is sent anywhere.",
+    "scope": "Comments",
+    "scopeAll": "All comments",
+    "scopeFiltered": "As filtered in the Comments pane",
+    "format": "Format",
+    "xlsx": "Excel workbook (.xlsx)",
+    "csv": "CSV (.csv)",
+    "json": "JSON (.json) — can be imported again",
+    "export": "Export",
+    "close": "Close",
+    "cancel": "Cancel",
+    "progressName": "Export progress",
+    "empty": "There are no comments to export.",
+    "failed": "The export could not be completed. Nothing was saved.",
+    "fileName": "{{base}} (annotations).{{ext}}",
+    "sheet": "Annotations",
+    "sheetTitle": "Annotations — {{name}}",
+    "head": {
+      "document": "Document",
+      "exported": "Exported"
+    },
+    "col": {
+      "number": "No.",
+      "page": "Page",
+      "type": "Type",
+      "author": "Author",
+      "subject": "Subject",
+      "comment": "Comment",
+      "replies": "Replies",
+      "status": "Status",
+      "created": "Created",
+      "modified": "Modified"
+    }
+  },
+  "transfer": {
+    "restricted": "This document's security settings don't allow adding comments.",
+    "failed": "The comments could not be imported.",
+    "unreadable": "This file could not be read.",
+    "importing": "Importing comments…",
+    "imported_one": "{{count}} comment imported.",
+    "imported_other": "{{count}} comments imported.",
+    "copied_one": "{{count}} comment copied.",
+    "copied_other": "{{count}} comments copied.",
+    "pasted_one": "{{count}} comment pasted.",
+    "pasted_other": "{{count}} comments pasted.",
+    "pasting": "Pasting comments…",
+    "copy": {
+      "none": "Select one or more comments first.",
+      "failed": "The comments could not be copied."
+    },
+    "paste": {
+      "empty": "Copy one or more comments first.",
+      "noPages": "This document doesn't have the pages the comments came from.",
+      "failed": "The comments could not be pasted."
+    },
+    "json": {
+      "syntax": "This file is not valid JSON.",
+      "format": "This is not a PDFTools comment export.",
+      "version": "This comment export was made by a newer version of PDFTools and can't be read here.",
+      "shape": "This comment export is damaged and can't be imported.",
+      "tooLarge": "This file has too many comments to import."
+    },
+    "import": {
+      "title": "Import Comments",
+      "description": "Bring comments from another PDF or from a PDFTools comment export (JSON) into {{name}}.",
+      "choose": "Choose PDF or JSON…",
+      "reading": "Reading the file…",
+      "none": "No file chosen.",
+      "restricted": "{{name}} doesn't allow its comments to be copied. Enter its owner password to import them.",
+      "summary": "{{name}}: {{count}} comments on {{pages}} pages.",
+      "perPage": "Per page: {{list}}.",
+      "pageCount": "page {{page}}: {{count}}",
+      "morePages_one": "{{n}} more page",
+      "morePages_other": "{{n}} more pages",
+      "statuses": "Statuses: {{list}}.",
+      "statusCount": "{{status}}: {{count}}",
+      "range": "Pages of the source (empty: all)",
+      "authors": "Authors",
+      "types": "Types",
+      "withCount": "{{label}} ({{count}})",
+      "withReplies": "With replies",
+      "mapping": "Place the comments",
+      "samePage": "On the same page numbers",
+      "shift": "Shifted by a number of pages",
+      "shiftBy": "Pages to shift (negative: earlier)",
+      "shiftError": "Enter a whole number.",
+      "nothing": "Nothing to import with these settings.",
+      "will_one": "{{n}} comment will be imported ({{total}} annotations with its replies and statuses).",
+      "will_other": "{{n}} comments will be imported ({{total}} annotations with their replies and statuses).",
+      "skipped": "Skipped: {{list}}.",
+      "skipMissing_one": "{{n}} on a page this document doesn't have",
+      "skipMissing_other": "{{n}} on pages this document doesn't have",
+      "skipDuplicate_one": "{{n}} already in this document",
+      "skipDuplicate_other": "{{n}} already in this document",
+      "skipUnsupported_one": "{{n}} of a type a JSON export can't bring (stamps)",
+      "skipUnsupported_other": "{{n}} of a type a JSON export can't bring (stamps)",
+      "confirm": "Import",
+      "cancel": "Cancel"
+    }
+  },
+  "pages": {
+    "noDocument": "The document is no longer open.",
+    "restricted": "This document's security settings don't allow changing its pages.",
+    "busy": "A page operation is running.",
+    "saving": "Wait until the document is saved.",
+    "failed": "The pages could not be changed. The document is as it was before.",
+    "undoGone": "This page change can no longer be undone: the undo memory was full.",
+    "undoing": "Undoing the page change",
+    "rotating": "Rotating pages",
+    "deleting": "Deleting pages",
+    "inserting": "Inserting pages",
+    "moving": "Moving pages",
+    "extracting": "Extracting pages",
+    "merging": "Merging files",
+    "moved": "{{count}} pages moved to page {{page}}.",
+    "movedOne": "Page moved to page {{page}}.",
+    "progressTitle": "Changing pages",
+    "progressName": "Page operation progress",
+    "progress": "Page {{done}} of {{total}}",
+    "cancel": "Cancel",
+    "dismiss": "OK",
+    "errorTitle": "Pages not changed",
+    "signed": {
+      "title": "Change the pages of a signed document?",
+      "body": "The signatures stay valid for the version that was signed. After the next save they are shown as \"changed after signing\".",
+      "ok": "Change pages",
+      "cancel": "Cancel"
+    },
+    "scope": {
+      "legend": "Pages",
+      "selected": "Selected pages ({{count}})",
+      "current": "Current page ({{page}})",
+      "custom": "Pages:",
+      "customLabel": "Page range",
+      "customHint": "e.g. 1-3, 8"
+    },
+    "error": {
+      "empty": "Enter the pages.",
+      "syntax": "Use page numbers and ranges, e.g. 1-3, 8.",
+      "outOfRange": "Some pages are not in this document.",
+      "noSelection": "Select pages in the Thumbnails pane first.",
+      "all": "A document needs at least one page: not every page can be deleted.",
+      "page": "Enter a page number from 1 to {{max}}.",
+      "count": "Enter a number from 1 to 100."
+    },
+    "delete": {
+      "title": "Delete Pages",
+      "description": "The pages are removed from this document. Undo brings them back; nothing is written to the file until you save.",
+      "confirm": "Delete",
+      "cancel": "Cancel",
+      "summary": "{{count}} of {{total}} pages will be deleted."
+    },
+    "insert": {
+      "title": "Insert Blank Page",
+      "description": "Adds empty pages to this document.",
+      "where": "Position",
+      "before": "Before page",
+      "after": "After page",
+      "page": "Page number",
+      "count": "Number of pages",
+      "size": "Page size",
+      "neighbour": "Same as that page",
+      "a4": "A4 (210 × 297 mm)",
+      "letter": "Letter (8.5 × 11 in)",
+      "a3": "A3 (297 × 420 mm)",
+      "orientation": "Orientation",
+      "portrait": "Portrait",
+      "landscape": "Landscape",
+      "confirm": "Insert",
+      "cancel": "Cancel"
+    },
+    "move": {
+      "title": "Move Pages",
+      "description": "Moves the pages to another place in this document, in their current order.",
+      "where": "Move to",
+      "page": "Page number",
+      "confirm": "Move",
+      "cancel": "Cancel",
+      "nothing": "The pages are already there."
+    },
+    "file": {
+      "choose": "Choose PDF…",
+      "chosen": "{{name}}: {{count}} pages",
+      "none": "No file chosen.",
+      "password": "Password for {{name}}",
+      "unlock": "Unlock",
+      "wrongPassword": "The password is not correct.",
+      "restricted": "This file's security settings don't allow its pages to be copied. Open it with the owner password.",
+      "unreadable": "This file could not be opened as a PDF.",
+      "range": "Pages of {{name}}",
+      "rangeHint": "All pages, or e.g. 1-3, 8",
+      "forms": "Form fields on these pages will not be fillable."
+    },
+    "insertFile": {
+      "title": "Insert from File",
+      "description": "Inserts pages of another PDF into this document.",
+      "where": "Position",
+      "page": "Page number",
+      "confirm": "Insert",
+      "cancel": "Cancel"
+    },
+    "extract": {
+      "title": "Extract Pages",
+      "description": "Copies the pages, with your unsaved changes, into a new document in its own tab. It is not saved until you save it.",
+      "alsoDelete": "Also delete them from this document",
+      "confirm": "Extract",
+      "cancel": "Cancel",
+      "fileName": "{{base}} (pages {{range}}).pdf",
+      "restricted": "Pages can leave this encrypted document only when it is open with the owner password."
+    },
+    "merge": {
+      "title": "Merge Files",
+      "description": "Combines PDF files into a new document in its own tab, with one bookmark per file. The files themselves are not changed.",
+      "add": "Add Files…",
+      "empty": "Add the files to merge.",
+      "list": "Files to merge",
+      "up": "Move {{name}} up",
+      "down": "Move {{name}} down",
+      "remove": "Remove {{name}}",
+      "confirm": "Merge",
+      "cancel": "Cancel",
+      "fileName": "Merged ({{count}} pages).pdf"
+    },
+    "menu": {
+      "label": "Page actions",
+      "move": "Move Pages…",
+      "rotateCw": "Rotate Clockwise",
+      "rotateCcw": "Rotate Counterclockwise",
+      "insertBefore": "Insert Blank Page Before",
+      "insertAfter": "Insert Blank Page After",
+      "delete": "Delete Pages…"
     }
   }
 }

@@ -71,6 +71,9 @@ export const KEYMAP: readonly Binding[] = [
   b('home.select', ['V'], 'document'),
   // Text selection (M2-04): in the document only, so text fields keep their own.
   b('edit.copy', ['Ctrl+C'], 'document'),
+  // Comments (M4-21): Ctrl+V pastes copied comments; Ctrl+Shift+V onto their own pages.
+  { ...b('edit.paste', ['Ctrl+V'], 'document'), preventWhenDisabled: false },
+  { ...b('comment.pasteToOriginal', ['Ctrl+Shift+V'], 'document'), preventWhenDisabled: false },
   b('edit.selectAll', ['Ctrl+A'], 'document'),
   { ...b('tool.cancel', ['Escape']), preventWhenDisabled: false },
   // Annotations (M3-05, §7.1): undo/redo per document; in the document, the

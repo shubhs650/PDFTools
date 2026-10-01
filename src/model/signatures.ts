@@ -59,7 +59,15 @@ const str = (dict: string, key: string): string => {
 
 /** Every signature dictionary in the file, in file order (a later revision may add more). */
 export function findSignatures(bytes: Uint8Array): SignatureField[] {
-  const out: SignatureField[] = [];
+  // A save that re-appends a signature dictionary (PDFium's keep-all tail,
+  // ADR-016 finding 9) must not list the signature twice: one entry per
+  // signed range, the latest copy kept.
+  const byRange = new Map<string, SignatureField>();
+  const out = {
+    push: (f: SignatureField) => {
+      byRange.set(f.byteRange.join(' '), f); // same order, latest copy
+    },
+  };
   for (const at of indexesOf(bytes, '/ByteRange')) {
     // The dictionary: from its object header to endobj (signature dicts are plain objects).
     const from = Math.max(0, at - 32768);
@@ -91,7 +99,7 @@ export function findSignatures(bytes: Uint8Array): SignatureField[] {
       m: str(dict, 'M'),
     });
   }
-  return out;
+  return [...byRange.values()];
 }
 
 /** The signed bytes: the two ByteRange spans, concatenated. */

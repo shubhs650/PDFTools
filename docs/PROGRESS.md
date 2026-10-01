@@ -1,6 +1,6 @@
 # PDFTools — Progress
 
-_Last updated: 2026-09-28 (session 16: M3-01 … M3-08 merged; M3-09 … M3-15 done on the branch)_
+_Last updated: 2026-09-30 (session 18: M4-20 and M4-21 comment transfer done)_
 
 **Current milestone:** M3 — Review. Plan approved (2026-09-27); M3-01 … M3-08 done in session 16
 on `claude/m3-task-breakdown-tlyokp` (ADR-014 and ADR-015 accepted).
@@ -8,6 +8,120 @@ M0–M2 are merged into `main` (M2 complete on the agent side, owner pack in
 [docs/acceptance/M2.md](acceptance/M2.md)); the M0, M1 and M2 owner runs are open.
 
 ## Done
+
+- **Session 18 — M4-21 copy/paste comments.** Comment → Copy Comments / Paste Comments / Paste
+  to Original Pages, Ctrl+C (comments when comments are selected, text otherwise), Ctrl+V and
+  Ctrl+Shift+V; the Comments pane list is multi-select. An in-app clipboard (a small PDF built in
+  the Work worker), new `/NM`s on paste, replies follow, 10 pt offset on the page it came from;
+  one undo step; copy/annotate permissions honoured; counts announced.
+
+- **Session 18 — M4-20 Import Comments.** From another PDF (object copy per ADR-018: appearances,
+  replies, states and measurements as they are; password and owner password; copy permission) or
+  from our JSON v1 export (re-created); summary, filters, page range, page shift, live preview of
+  what is skipped; one undo step; narrow verified save. A numbering guard catches an edit made
+  while comments are copied. Fixed two M4-09 issues on the way: the Work copy's reload closed a
+  document the background indexer still read, and every page was refreshed after a change (a
+  text-geometry job per page — ~95 s of Work-worker queue on the 2,000-page stand-in).
+
+- **Session 18 — M4-11 insert from file, extract, merge.** Insert pages of another PDF (password,
+  owner password for restricted files, order kept), Extract Pages to a new unsaved tab (optionally
+  deleting them), Merge Files into a new unsaved tab with one bookmark per file. New documents are
+  built in the Work worker; an encrypted source needs full access (M4-Q2).
+
+- **Session 18 — M4-10 reorder pages.** Drag thumbnails (insertion marker, auto-scroll), Alt+↑/↓,
+  Organize → Move Pages…, announced; one undo step, narrow verified save. Worked around an O(n²)
+  layout comparison in EmbedPDF's scroll plugin that made a 2,000-page reorder a long task.
+
+- **Session 18 — M4-09 page operations core.** Organize tab: rotate, delete and insert blank pages
+  on the thumbnail selection, one undo step each (reopen-based undo), Ctrl+S one narrow verified
+  revision through the new semantic save (also after an undo that follows a save), caches and the
+  Work copy follow the change. New dependency `fflate` 0.8.3 (MIT). Fixed the duplicated signature
+  listing after keep-all saves (ADR-016 finding 9).
+
+- **Session 18 — M4-19 comment-transfer spike (ADR-018).** Object copy of comments between PDFs
+  (our reader + serializer, production narrow tail) on 13 target/source forms: qpdf-clean, import
+  verified, 33/33 appearances pixel-identical, the next Ctrl+S one narrow verified revision (the
+  import stays a pending section folded into it). Re-create through EmbedPDF loses keys and changes
+  7/33 appearances and is 7–15× slower. Hybrid route confirmed; ADR-018 awaits the owner.
+
+- **Session 18 — M4-08 annotation export.** Comment → Export Annotations: all or filtered
+  comments as CSV, Excel (Work worker) or the import-ready JSON v1
+  ([docs/formats/pdftools-annotations-v1.md](formats/pdftools-annotations-v1.md)); copy permission
+  honoured. CRS rows now built in batches (a 10,000-comment export had one 144 ms task). Unit,
+  e2e, perf (10,000 comments to CSV and XLSX, no long task).
+
+- **Session 18 — M4-07 Word export (Beta).** Convert → To Word: Oxide Markdown → mdast → `docx`
+  in the Work worker (lazy chunk), headings, emphasis, lists, tables and images in reading
+  order; optional page breaks. New dependencies `docx`, `mdast-util-from-markdown`,
+  `mdast-util-gfm-table`, `micromark-extension-gfm-table` (all MIT; license gate 762). Fixed a DOM
+  build of the entity decoder landing in the worker (alias). Unit + e2e.
+
+- **Session 18 — M4-06 image export.** Convert → Export Images: PDFium image objects in the Work
+  worker — JPEGs byte for byte, the rest PNG through our own exact encoder, masked images with
+  alpha, Form XObjects included, repeats once, dots skipped; into a new folder or one ZIP. Unit,
+  e2e, perf (401 images from 200 pages in 1.5 s, no long task).
+
+- **Session 18 — M4-05 text, Markdown and HTML export.** Convert tab with To Text / To Markdown /
+  To HTML (copy permission). Images in reading order (our placement step over Oxide's line and
+  image boxes, M4-Q6); Markdown made inert (Oxide passes markup-like PDF text through); Markdown
+  with images into a new folder or one ZIP; a self-contained HTML page with a strict CSP meta;
+  a note for pages without text. Unit + e2e (incl. offline) + perf (2,000 pages of Markdown in
+  22 s while scrolling, no long task).
+
+- **Session 18 — M4-04 PDF Oxide in the Work worker + export framework.** Oxide 0.3.77 lazy in
+  the Work worker (own chunk, WASM by explicit same-origin URL, one copy), warmed up in the
+  background after the first indexing (0.67 s in the worker), PDFium `copy` gate before any Oxide
+  call (rule 9), plain-text extraction with cancel between pages; store-only ZIP writer and folder
+  output (M4-Q5); the export dialog (all / current / custom pages, save target first, progress,
+  Cancel). Background precache, bundle line (17.73 MB raw / 5.05 MB brotli; install 50.06 MB of
+  60), notices from `scripts/notices-vendored/`. Perf: warm-up plus a 2,000-page extraction
+  (11.7 s) while scrolling, 0 blank frames, no long task. Unit 869, license gate 711. The Convert
+  commands ship with M4-05.
+
+- **Session 18 — M4-03 custom icons.** To Word (page + ¶ tag, no Word logo), Mark for Redaction,
+  Mark Area for Redaction (Filled variants for the toggles) and Apply Redactions in
+  `src/ui/icons/custom/m4.ts`, drawn with `draw.ts` at 20 and 32 px; no M4 command is
+  `customPending`; the e2e gallery shows every custom icon for the owner's review.
+
+- **Session 18 — M4-02 redaction spike.** _Works with workaround_,
+  [ADR-017](adr/017-m4-redaction.md) (proposed; decisions 3 and 5 need the owner). EmbedPDF's
+  PDFium redaction (`EPDFPage_ApplyRedactions`) on a self-made 9-page adversarial file: removes all
+  text in the rectangles (invisible, white, rotated, crop-offset, hidden layer, Form XObject),
+  image pixels and paths wholly inside; **leaves paths crossing a rectangle**, other annotations and
+  all document-level data (Info, XMP, thumbnail, outline, JavaScript, embedded file, structure
+  `/ActualText`). A path re-cut through PDFium's page-object API (prototype), annotation removal,
+  an object-layer sanitize and a second rewrite pass the location check, the string rule and a
+  canary scan (A0 geometry outside kept to 99.98 %); a crossing path inside a Form XObject fails
+  verification loudly. AES-256 outputs stay encrypted. Spike `spikes/s15-redaction/` (Node).
+
+- **Session 18 — M4-01 page-operations spike.** _Works with workaround_,
+  [ADR-016](adr/016-m4-page-operations.md) (proposed; decisions 3, 5, 7 need the owner). Direct
+  PDFium exports for rotate/delete/insert/move/import (EmbedPDF has only delete/import/extract). A
+  **semantic dirty set** (compare PDFium's appended objects with the base) keeps page-operation
+  saves narrow: 40 of 40 cases (xref table, object streams, nested tree, AES-256, RC4-128)
+  qpdf-clean and identical after reopen; 2,000-page stand-in tail 0.24 MB vs 1.82 MB keep-all.
+  Found: EmbedPDF's page cache is keyed by index and goes stale; no reducer case for a new page
+  list, and the annotation plugin drops annotations that change page on reload (workaround:
+  empty the store, then `SET_DOCUMENT_LOADED`); ADR-005's verification cannot see page order;
+  deletes leave dangling dests and fields; undo by reopen ~0.5 s on 2,000 pages (Node). Spike
+  `spikes/s14-pages/` (Node only; the browser-side relayout is M4-09's perf gate).
+
+- **Session 18 — M4 plan follow-up: image order and comment transfer.** Owner approved the plan
+  (M4-Q1 … Q11 as proposed) and two follow-ups. Q6: checked PDF Oxide 0.3.77 on a self-made page —
+  Markdown puts images at the end of the page, HTML has none, its own DOCX pins every block to a
+  fixed position — so M4-05/M4-07 gain our own image-placement step (images in reading order). Q7:
+  comment transfer (import from a PDF or our JSON v1, copy/paste between documents) added as
+  M4-19 (spike), M4-20, M4-21 under [ADR-018](adr/018-m4-comment-transfer.md) (proposed; scope
+  accepted, route after the spike); acceptance is now M4-22; M4-08's JSON v1 made import-ready.
+
+- **Session 18 — M4 plan (draft).** Branch `claude/upbeat-cray-lknggv`. Read PROGRESS,
+  ARCHITECTURE Rev 0.4 and ADR-001 to ADR-015; wrote [docs/plan/M4.md](plan/M4.md): 19 tasks (two
+  spikes → ADR-016 page operations/save/undo/cache invalidation and ADR-017 redaction
+  apply/sanitize/verification; M4 custom icons; PDF Oxide in the Work worker + export framework;
+  text/Markdown/HTML, images, Word (Beta), annotation export; page operations core, reorder,
+  insert/extract/merge; table model and detectors, Express Extract, Review & Extract, templates;
+  mark redactions, apply, verification; acceptance) with goals, files, acceptance criteria, tests
+  and dependencies, plus eleven owner questions (M4-Q1 … Q11). No code.
 
 - **Session 17 — M3-20 M3 acceptance: M3 complete (agent side).** M3 commands shown
   (`AVAILABLE_MILESTONES` += M3; Export Annotations moved to M4, M3-Q1); a Ctrl+S perf scenario
@@ -695,14 +809,73 @@ M0–M2 are merged into `main` (M2 complete on the agent side, owner pack in
 ## In progress
 
 - **M3 done on the agent side (session 17):** M3-16 … M3-20 as one commit each on
-  `claude/m3-tasks-16-20-vdqo8q` (pushed; no PR opened). Waiting on the owner pack
-  ([docs/acceptance/M3.md](acceptance/M3.md) §4). M4 is not started.
+  `claude/m3-tasks-16-20-vdqo8q`, merged into `main` as PR #47. Waiting on the owner pack
+  ([docs/acceptance/M3.md](acceptance/M3.md) §4).
+- **M4 in progress (session 18):** [docs/plan/M4.md](plan/M4.md), 22 tasks. Done: M4-01 and M4-02
+  (spikes; ADR-016 and ADR-017 accepted), M4-03 (icons), M4-04 (Oxide and the export
+  framework), M4-05 (text, Markdown, HTML), M4-06 (images), M4-07 (Word, Beta), M4-08 (annotation export), M4-19 (comment-transfer
+  spike), M4-09 (page operations core), M4-10 (reorder), M4-11 (insert from file, extract,
+  merge), M4-20 (Import Comments), M4-21 (copy/paste comments).
+  ADR-018 (comment transfer) accepted after the M4-19 spike (hybrid route); ARCHITECTURE.md Rev
+  0.6 (§7.1, §7.6, §13).
 - **Git in one paragraph (for the owner):** each task lives on its own _branch_ (a named line
   of commits). A _commit_ is a saved snapshot with a message; _push_ uploads the branch to
   GitHub; a _pull request_ (PR) asks to bring a branch into `main`, and GitHub runs the checks
   (CI) on it; _merge_ adds it to `main` once the checks are green.
 
 ## Session log
+
+- **Session 18 (2026-10-01), CI on PR #48:** the first full CI run (quota restored) failed 3 of 40
+  perf scenarios. Undo of "delete 1,000 of 2,000 pages" took 37–49 s: the viewer refresh after a
+  change asked EmbedPDF's selection plugin for every changed page's text geometry at once, and the
+  Work scheduler ran those ~1,000 jobs back to back ahead of `setLive`. Now only changed pages
+  within 10 of the shown one are refreshed and the rest lose their cached geometry (reloaded on
+  demand): undo 1.0 s. The two Oxide scenarios had one ~430 ms task right as the 2,000-page
+  extraction finished; the test probe returned the whole output (9.7 MB, twice) through
+  `page.evaluate`. Not reproduced in this container (older Chromium); the perf scenarios now use a
+  probe that returns times and sizes only.
+
+- **Session 18 (2026-09-30), M4-20 and M4-21:** typecheck, lint, format, 999 unit tests (incl. 7
+  Node integration tests on real PDFium + qpdf), license gate (763 packages, no new dependency),
+  icons regenerated, the full e2e suite (260 of 260, 12.1 min, 2 workers; the new specs 5 of 5),
+  the import perf scenario (three runs; one earlier run caught the test's own picker stub decoding
+  test data in the measured window — moved out of it) and the three page perf scenarios. The perf
+  test first showed 95–110 s until imported comments appeared; traced to every page being
+  refreshed after a change (fixed) and to a closed-document read in the indexer (fixed).
+
+- **Session 18 (2026-09-30), M4-11:** typecheck, lint, format, 966 unit tests (incl. 5 new Node
+  tests on real PDFium + qpdf), icons up to date, the full e2e suite (254 of 255; the one failure,
+  a second `status` role from the new Thumbnails live region clashing with an annotations test's
+  locator, fixed by showing the region only while it speaks — both specs then 15 of 15), and the
+  merge perf scenario.
+
+- **Session 18 (2026-09-30), pages:** M4-09 and M4-10 (one commit, with M4-11's worker groundwork).
+  Checks: typecheck, lint, format, 962 unit tests (incl. the 31-case page-operation save matrix on
+  real PDFium + qpdf), license gate (763 packages, `fflate` added), icons up to date, the full e2e
+  suite on M4-09 (250 of 250, 9.0 min, 2 workers; a first run found Save Optimized broken by a
+  transferred buffer — fixed), then the page, ribbon, thumbnail and a11y specs on M4-10 (36 of 36)
+  and the two page perf scenarios (twice each).
+
+- **Session 18 (2026-09-29), M4-19:** spike only (no production code). Checks: typecheck
+  (app + spikes), lint, format, the spike's 6 unit tests, the Node matrix twice (all 13 object-copy
+  cases pass; outputs qpdf-checked), full-page renders reviewed by eye.
+
+- **Session 18 (2026-09-29), exports:** M4-05, M4-06, M4-07, M4-08 on `claude/upbeat-cray-lknggv`
+  (one commit each). Local checks on M4-08: typecheck, lint, format, 908 unit tests, license gate
+  (762 packages), build, the new `e2e/annotation-export.spec.ts` (2) and perf
+  `e2e/perf/annotation-export.spec.ts` (2), then the full e2e suite: 241 of 241 passed (7.0 min, 2
+  workers). The ribbon e2e test still listed the tabs without Convert (missed in M4-05) — fixed.
+
+- **Session 18 (2026-09-29), continued:** M4-01, M4-02, M4-03, M4-04 on `claude/upbeat-cray-lknggv`
+  (one commit each). Spikes S14/S15 in Node with real PDFium and qpdf 11.9 (installed in the
+  container). Local checks on M4-04: typecheck, lint, format, 869 unit tests, license gate (711
+  packages), build + `check:dist`, bundle report (within budget), the new `e2e/oxide.spec.ts` (4)
+  and perf `e2e/perf/oxide.spec.ts`, 32 affected e2e specs (offline, i18n, headers, work
+  worker, search, CRS, ribbon, gallery, update), then the full e2e suite: 233 of 233 passed (8.1 min,
+  2 workers).
+
+- **Session 18 (2026-09-29):** M4 plan only (docs); no code, so no checks beyond Prettier on the
+  changed Markdown.
 
 - **Session 17 (2026-09-28/29):** M3-16, M3-17, M3-18, M3-19, M3-20 on
   `claude/m3-tasks-16-20-vdqo8q` (one commit each). Local checks on the last commit: typecheck,
@@ -792,20 +965,35 @@ M0–M2 are merged into `main` (M2 complete on the agent side, owner pack in
    (L/M) and the still-open §D/§F in Acrobat Reader and PDF-XChange (they decide ADR-007
    decisions 2 and 3: the grouped measurement label and viewport semantics), snapping on the local
    P&ID and CAD drawings (`npm run owner:timings`), the CRS in Excel.
-2. **Owner:** review and merge `claude/m3-tasks-16-20-vdqo8q` (M3-16 … M3-20) after
-   `claude/m3-task-breakdown-tlyokp` (M3-01 … M3-15, merged as PR #46).
+2. **Agent:** M4 so far (M4-01 … M4-11, M4-19 … M4-21) goes into `main` through PR #48
+   (`claude/upbeat-cray-lknggv`) once CI is green. (M3 is in `main`: PRs #46 and #47.)
 3. **Owner:** the M2 owner pack in [docs/acceptance/M2.md](acceptance/M2.md) §4 and the M1/M0
    owner runs (below, unchanged).
 4. **Owner:** decide the items under "Decisions needed" (keyboard text selection, committed
    corpus PDFs, Pages project).
-5. **Agent:** M4 planning (`docs/plan/M4.md`) once the owner approves starting M4.
-6. **Owner (M0/M1, still open):** S1 interop checklist; S1 FSA button on the 500 MB contract; S5
+5. **Owner:** review the M4 icons in the e2e gallery.
+6. **Agent:** tables (M4-12 … M4-15), then redaction (M4-16 … M4-18), then the M4 acceptance
+   pass (M4-22).
+7. **Owner (M0/M1, still open):** S1 interop checklist; S1 FSA button on the 500 MB contract; S5
    search on the FAR and the 500 MB contract; S7 on the CAD drawings and the P&ID
    (`node spikes/s7-snap/run-node.ts <files>`); S4 on the pipe chart and a parts list; FAR, 500 MB
    and A0 through the S3 harness; S8 Firefox check and Pages preview.
 
 ## Open issues
 
+- **Comment transfer (M4-20/21):** JSON-imported measurements come in as plain markups (v1 carries
+  the value, not `/Measure`; ADR-018's object-layer patches for JSON are not built yet — importing
+  from the PDF keeps them); no context menu for Copy/Paste yet (ribbon and keys only); the owner
+  check with real Acrobat/PDF-XChange Rev A files is in the M4-22 pack.
+
+- **Page operations, deferred parts of ADR-016 decision 7 (M4-09):** after deleting pages, form
+  fields whose widgets were all on them stay in `/AcroForm /Fields` (valid PDF; the object layer
+  needs an AcroForm patch target), the Delete dialog has no page-labels note, and bookmarks to a
+  deleted page are not yet marked "target page deleted". Planned with M4-10/M4-11 or the M4
+  acceptance task.
+- **Undo of a page operation after Save Optimized:** Save Optimized becomes the disk baseline for
+  the semantic save (every object of the rewrite is kept in the Render worker's memory until the
+  next save replaces it). Fine for the rare optimized save; noted for very large files.
 - **Perf stalls in this container (M3-20):** three full perf runs each had one or two one-off
   main-thread tasks of 103–331 ms in a different scenario (snap, indexing, ink, print); each passes
   alone. Two of them have no M3 code. Watch CI and the owner's machine: a scenario that fails
@@ -907,6 +1095,9 @@ M0–M2 are merged into `main` (M2 complete on the agent side, owner pack in
 
 | Date       | Ref              | Decision                                                                                                                                                                                                                                                                                                                                                                                                                                                  |
 | ---------- | ---------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| 2026-09-29 | ADR-018          | Owner accepted ADR-018 decisions 2–3 after the M4-19 spike: hybrid route — object copy in the Work worker for Import from PDF and copy/paste (pending import section folded into the next Ctrl+S), re-creation + object-layer patches for JSON import. ARCHITECTURE.md Rev 0.6 (§7.1 comment transfer, §7.6 JSON imports, §13 M4).                                                                                                                        |
+| 2026-09-29 | ADR-016, ADR-017 | Owner accepted ADR-016 (page operations: semantic dirty set, digest with page identity, page-cache purge, reopen-based undo, dangling references) and ADR-017 (redaction on a Work copy, crossing paths re-cut via PDFium's page-object API, wider sanitize list, location verification). ARCHITECTURE.md Rev 0.5 (§7.9 steps 0 and 3), ADR-001 B8 wording amended.                                                                                       |
+| 2026-09-29 | M4 plan, ADR-018 | M4 plan approved with M4-Q1 … Q11 as proposed. Follow-ups: Word/Markdown export place images in reading order with our own step (Oxide puts them at page end); comment transfer (import from PDF or JSON v1, copy/paste between documents) added to M4 as M4-19 … M4-21, ADR-018 scope accepted, route decided by the M4-19 spike.                                                                                                                        |
 | 2026-09-27 | ADR-014, ADR-015 | Owner accepted ADR-014 (annotations loaded through the Work worker; markups drawn as our own annotation tiles) and ADR-015 (PNG image stamps at 4×; ExcelJS 4.4.0 with an npm override `unzipper@0.12.3`, added in M3-19). Proceed with M3-04 … M3-08.                                                                                                                                                                                                    |
 | 2026-09-27 | M3 plan          | M3 plan approved with M3-Q1 … Q10 as proposed: annotation export in M4; ADR-007 label/viewport defaults until the interop run; review status = standard `/StateModel /Review` replies, schemes drive stamps and the CRS header; image-stamp route (spike first); derived auto-numbers; keyboard creation for note/text box/stamp only; `/T` = reviewer name; own MD5/RC4; ExcelJS in the Work worker (non-core); `m3/<task>` branches.                    |
 | 2026-09-26 | ADR-012, ADR-013 | Owner approved all pending ADRs. ADR-012 decision 5: list-only Layers pane (M2-11). ADR-013 decision 7: §10.1 CSP gains `frame-src blob:` for M2-16's browser-viewer print route (ARCHITECTURE.md updated with M2-16).                                                                                                                                                                                                                                    |

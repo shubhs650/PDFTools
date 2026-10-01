@@ -14,6 +14,14 @@ interface Entry {
   tail: ArrayBuffer | null;
   /** Tail waiting to be applied (null: nothing pending). */
   pendingTail: ArrayBuffer | null;
+  /**
+   * Unsaved changes the jobs must see, after the saved tail (M4-09: a page
+   * operation moves pages, so text, annotations and geometry by index change
+   * before any save). Relative to original + tail; verification never uses it.
+   */
+  live: ArrayBuffer | null;
+  /** `live` changed and is not applied yet. */
+  livePending: boolean;
   appliedTailBytes: number;
   doc: PdfDocumentObject;
   generation: number;
@@ -39,6 +47,13 @@ export function concat(a: ArrayBuffer, b: ArrayBuffer | null | undefined): Array
 export class WorkDocs {
   private readonly entries = new Map<string, Entry>();
   private readonly candidates = new Map<string, PdfDocumentObject>();
+  /**
+   * Copies replaced by a reload, closed only when no job runs (closeRetired):
+   * a job suspended at a checkpoint may still hold one (M4-20 found the
+   * background indexer working on a closed document after a live-section
+   * change — minutes of blocking, and stale text in the search cache).
+   */
+  private readonly retired: PdfDocumentObject[] = [];
   private verifySeq = 0;
   private readonly native: () => PdfiumNative;
 
@@ -84,6 +99,8 @@ export class WorkDocs {
       ownerPassword,
       tail: tail ?? null,
       pendingTail: null,
+      live: null,
+      livePending: false,
       appliedTailBytes: tail?.byteLength ?? 0,
       doc,
       generation: 0,
@@ -104,9 +121,21 @@ export class WorkDocs {
     return true;
   }
 
+  /** Unsaved changes for the jobs to see (null: none); applied lazily like refresh. */
+  setLive(docId: string, live: ArrayBuffer | null): void {
+    const e = this.require(docId);
+    e.live = live && live.byteLength > 0 ? live : null;
+    e.livePending = true;
+  }
+
   /** A saved tail piece appended after the current tail; applied lazily like refresh. */
   append(docId: string, piece: ArrayBuffer): number {
     const e = this.require(docId);
+    // The live section was relative to the file before this save: it is stale now.
+    if (e.live) {
+      e.live = null;
+      e.livePending = true;
+    }
     const tail = concat(e.tail ?? new ArrayBuffer(0), piece);
     e.tail = tail;
     e.pendingTail = tail;
@@ -177,29 +206,50 @@ export class WorkDocs {
   /** The document with any pending tail applied (reopens original + tail). */
   async get(docId: string): Promise<{ doc: PdfDocumentObject; appliedTailBytes: number }> {
     const e = this.require(docId);
-    if (e.pendingTail) {
-      const tail = e.pendingTail;
+    if (e.pendingTail || e.livePending) {
+      const tail = e.pendingTail ?? e.tail;
       const generation = e.generation + 1;
       const doc = await this.load(
         docId,
-        concat(e.original, tail),
+        concat(concat(e.original, tail), e.live),
         e.password,
         generation,
         e.ownerPassword,
       );
-      await this.native().closeDocument(e.doc).toPromise();
+      this.retired.push(e.doc);
       e.doc = doc;
       e.generation = generation;
-      e.appliedTailBytes = tail.byteLength;
+      e.appliedTailBytes = tail?.byteLength ?? 0;
       e.pendingTail = null;
+      e.livePending = false;
     }
     return { doc: e.doc, appliedTailBytes: e.appliedTailBytes };
+  }
+
+  /** Closes the copies replaced by reloads; call only while no job runs. */
+  async closeRetired(): Promise<void> {
+    for (const doc of this.retired.splice(0))
+      await this.native()
+        .closeDocument(doc)
+        .toPromise()
+        .catch(() => undefined);
+  }
+
+  /** The current copy's engine id changed since `doc` was taken (a reload). */
+  isCurrent(docId: string, doc: PdfDocumentObject): boolean {
+    return this.entries.get(docId)?.doc.id === doc.id;
   }
 
   /** The file as saved so far (original + tail): for readers of raw PDF syntax (M2-11, M2-12). */
   bytes(docId: string): Uint8Array {
     const e = this.require(docId);
     return new Uint8Array(concat(e.original, e.tail));
+  }
+
+  /** The current state (original + tail + live section): comment transfer reads it (M4-20). */
+  liveBytes(docId: string): Uint8Array {
+    const e = this.require(docId);
+    return new Uint8Array(concat(concat(e.original, e.tail), e.live));
   }
 
   /** Unlocks the kept copy with the owner password; remembered for later reloads. */

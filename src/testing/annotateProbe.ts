@@ -18,6 +18,7 @@ import { capability, hostStore } from '../features/view/host';
 import { diagnostics } from '../app/diagnostics';
 import { ensurePage, rtts, snapStore } from '../features/measure/snapping';
 import { lastCrs } from '../features/crs/crsExport';
+import { lastAnnotationExport } from '../features/annotate/export/annotationExport';
 import { placeDynamicStamp } from '../features/stamps/stampTools';
 import { MEASURE_INTENT, type MeasureKind } from '../model/measurement';
 import type { TestHook } from './hook';
@@ -106,6 +107,16 @@ export function registerAnnotateProbe(hook: TestHook): void {
       if (!f) return null;
       let bin = '';
       for (const b of f.bytes) bin += String.fromCharCode(b);
+      return { name: f.name, b64: btoa(bin) };
+    },
+    /** The last annotation export made (M4-08): name and bytes as base64. */
+    lastAnnotationExport: async () => {
+      const f = lastAnnotationExport;
+      if (!f) return null;
+      const bytes = new Uint8Array(await f.blob.arrayBuffer());
+      let bin = '';
+      for (let i = 0; i < bytes.length; i += 0x8000)
+        bin += String.fromCharCode(...bytes.subarray(i, i + 0x8000));
       return { name: f.name, b64: btoa(bin) };
     },
     /**

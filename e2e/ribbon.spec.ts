@@ -14,7 +14,7 @@ test('the ribbon, its tabs and the backstage pass axe', async ({ page }) => {
   expect((await new AxeBuilder({ page }).analyze()).violations.map((v) => v.id)).toEqual([]);
 });
 
-test('shows File, Home, View, Comment (from M3-07), Measure (from M3-15), Protect (from M2-03) and Help only (M1-Q2)', async ({
+test('shows File, Home, View, Comment (from M3-07), Measure (from M3-15), Organize (from M4-09), Convert (from M4-05), Protect (from M2-03) and Help only (M1-Q2)', async ({
   page,
 }) => {
   await page.goto('/');
@@ -23,6 +23,8 @@ test('shows File, Home, View, Comment (from M3-07), Measure (from M3-15), Protec
     'View',
     'Comment',
     'Measure',
+    'Organize',
+    'Convert',
     'Protect',
     'Help',
   ]);

@@ -772,6 +772,43 @@ export const COMMANDS: readonly CommandDef[] = [
     size: 'small',
     fluent: 'ArrowExport',
     milestone: 'M4', // M3-Q1: annotation export is M4 (§13)
+    shipped: true, // M4-08
+  },
+  {
+    id: 'comment.importComments',
+    tab: 'comment',
+    group: 'manageComments',
+    size: 'small',
+    fluent: 'ArrowImport',
+    milestone: 'M4',
+    shipped: true, // M4-20
+  },
+  {
+    id: 'comment.copyComments',
+    tab: 'comment',
+    group: 'manageComments',
+    size: 'small',
+    fluent: 'Copy',
+    milestone: 'M4',
+    shipped: true, // M4-21
+  },
+  {
+    id: 'comment.pasteComments',
+    tab: 'comment',
+    group: 'manageComments',
+    size: 'small',
+    fluent: 'ClipboardPaste',
+    milestone: 'M4',
+    shipped: true, // M4-21
+  },
+  {
+    id: 'comment.pasteToOriginal',
+    tab: 'comment',
+    group: 'manageComments',
+    size: 'small',
+    fluent: 'ClipboardArrowRight',
+    milestone: 'M4',
+    shipped: true, // M4-21
   },
   {
     id: 'comment.exportCrs',
@@ -919,6 +956,7 @@ export const COMMANDS: readonly CommandDef[] = [
     size: 'large',
     fluent: 'DocumentOnePageAdd',
     milestone: 'M4',
+    shipped: true, // M4-09
   },
   {
     id: 'organize.insertFromFile',
@@ -927,6 +965,7 @@ export const COMMANDS: readonly CommandDef[] = [
     size: 'large',
     fluent: 'DocumentAdd',
     milestone: 'M4',
+    shipped: true, // M4-11
   },
   {
     id: 'organize.delete',
@@ -935,6 +974,16 @@ export const COMMANDS: readonly CommandDef[] = [
     size: 'large',
     fluent: 'DocumentDismiss',
     milestone: 'M4',
+    shipped: true, // M4-09
+  },
+  {
+    id: 'organize.move',
+    tab: 'organize',
+    group: 'pages',
+    size: 'large',
+    fluent: 'ReOrder',
+    milestone: 'M4',
+    shipped: true, // M4-10
   },
   {
     id: 'organize.extract',
@@ -943,6 +992,7 @@ export const COMMANDS: readonly CommandDef[] = [
     size: 'large',
     fluent: 'DocumentArrowRight',
     milestone: 'M4',
+    shipped: true, // M4-11
   },
   {
     id: 'organize.merge',
@@ -951,6 +1001,7 @@ export const COMMANDS: readonly CommandDef[] = [
     size: 'large',
     fluent: 'DocumentMultiple',
     milestone: 'M4',
+    shipped: true, // M4-11
   },
   {
     id: 'organize.rotateCw',
@@ -959,6 +1010,7 @@ export const COMMANDS: readonly CommandDef[] = [
     size: 'large',
     fluent: 'RotateRight',
     milestone: 'M4',
+    shipped: true, // M4-09
   },
   {
     id: 'organize.rotateCcw',
@@ -967,6 +1019,7 @@ export const COMMANDS: readonly CommandDef[] = [
     size: 'large',
     fluent: 'RotateLeft',
     milestone: 'M4',
+    shipped: true, // M4-09
   },
   {
     id: 'convert.text',
@@ -975,6 +1028,7 @@ export const COMMANDS: readonly CommandDef[] = [
     size: 'large',
     fluent: 'DocumentText',
     milestone: 'M4',
+    shipped: true, // M4-05
   },
   {
     id: 'convert.markdown',
@@ -983,6 +1037,7 @@ export const COMMANDS: readonly CommandDef[] = [
     size: 'large',
     fluent: 'Markdown',
     milestone: 'M4',
+    shipped: true, // M4-05
   },
   {
     id: 'convert.html',
@@ -991,6 +1046,7 @@ export const COMMANDS: readonly CommandDef[] = [
     size: 'large',
     fluent: 'WebAsset',
     milestone: 'M4',
+    shipped: true, // M4-05
   },
   {
     id: 'convert.word',
@@ -999,7 +1055,8 @@ export const COMMANDS: readonly CommandDef[] = [
     size: 'large',
     fluent: 'DocumentEdit',
     milestone: 'M4',
-    customPending: true,
+    shipped: true, // M4-07
+    custom: 'convert.word', // M4-03
   },
   {
     id: 'convert.images',
@@ -1008,6 +1065,7 @@ export const COMMANDS: readonly CommandDef[] = [
     size: 'large',
     fluent: 'ImageMultiple',
     milestone: 'M4',
+    shipped: true, // M4-06
   },
   {
     id: 'convert.expressExtract',
@@ -1041,7 +1099,7 @@ export const COMMANDS: readonly CommandDef[] = [
     fluent: 'TextStrikethrough',
     milestone: 'M4',
     toggle: true,
-    customPending: true,
+    custom: 'protect.markRedaction', // M4-03
   },
   {
     id: 'protect.markRedactionArea',
@@ -1051,7 +1109,7 @@ export const COMMANDS: readonly CommandDef[] = [
     fluent: 'RectangleLandscape',
     milestone: 'M4',
     toggle: true,
-    customPending: true,
+    custom: 'protect.markRedactionArea', // M4-03
   },
   {
     id: 'protect.applyRedactions',
@@ -1060,7 +1118,7 @@ export const COMMANDS: readonly CommandDef[] = [
     size: 'large',
     fluent: 'CheckmarkCircle',
     milestone: 'M4',
-    customPending: true,
+    custom: 'protect.applyRedactions', // M4-03
   },
   {
     id: 'protect.redactionList',

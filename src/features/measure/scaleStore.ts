@@ -83,6 +83,15 @@ export function scaleOf(s: Pick<ScaleState, 'docs'>, docId: string, page: number
   return layoutFor(s, docId, page).pageDefault;
 }
 
+/** Pages changed (M4-09): scales are listed by page index; read them again. */
+export async function reloadScales(docId: string): Promise<void> {
+  if (!(docId in scaleStore.getState().docs)) return;
+  scaleStore.setState((s) => ({
+    docs: Object.fromEntries(Object.entries(s.docs).filter(([id]) => id !== docId)),
+  }));
+  await loadScales(docId);
+}
+
 export async function loadScales(docId: string): Promise<void> {
   const cur = scaleStore.getState().docs[docId];
   if (cur && cur !== 'failed') return;

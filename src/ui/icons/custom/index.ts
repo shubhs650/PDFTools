@@ -9,6 +9,7 @@ import {
   scalePath,
 } from './paths';
 import { M3_DESIGNS, type Design } from './m3';
+import { M4_DESIGNS } from './m4';
 
 const at32 = (paths: string[]): string[] => paths.map((d) => scalePath(d, 1.6));
 
@@ -33,7 +34,7 @@ export const ContinuousFacing20Filled = createFluentIcon(
   CONTINUOUS_FACING_FILLED,
 );
 
-/** Fluent-style components for one M3 design: 20 px, and 32 px for large buttons (M3-06). */
+/** Fluent-style components for one design: 20 px, and 32 px for large buttons (M3-06, M4-03). */
 function glyphs(id: string, design: Design, large: boolean): FluentGlyphs {
   const name = id.replace(/[^A-Za-z0-9]/g, '_');
   const set = (variant: 'regular' | 'filled') => {
@@ -46,13 +47,16 @@ function glyphs(id: string, design: Design, large: boolean): FluentGlyphs {
   return { regular: set('regular'), filled: set('filled') };
 }
 
-const M3_GLYPHS: Record<string, FluentGlyphs> = Object.fromEntries(
-  Object.entries(M3_DESIGNS).map(([id, d]) => [id, glyphs(id, d.design, d.large === true)]),
+const DESIGNED_GLYPHS: Record<string, FluentGlyphs> = Object.fromEntries(
+  Object.entries({ ...M3_DESIGNS, ...M4_DESIGNS }).map(([id, d]) => [
+    id,
+    glyphs(id, d.design, d.large === true),
+  ]),
 );
 
 /** Glyph sets for commands whose `custom` field names one of these ids. */
 export const CUSTOM_GLYPHS: Record<string, FluentGlyphs> = {
-  ...M3_GLYPHS,
+  ...DESIGNED_GLYPHS,
   'file.saveOptimized': {
     regular: { small: SaveOptimized20Regular, large: SaveOptimized32Regular, largeNative: 32 },
   },

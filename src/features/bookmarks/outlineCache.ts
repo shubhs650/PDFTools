@@ -31,6 +31,11 @@ export function outlineOf(docId: string): Promise<PdfBookmarkObject[]> {
   return p;
 }
 
+/** Pages changed (M4-09): destinations resolve to other indexes now. */
+export function dropOutline(docId: string): void {
+  cache.delete(docId);
+}
+
 documentStore.subscribe((s, prev) => {
   if (s.docs === prev.docs) return;
   for (const id of Object.keys(prev.docs)) if (!(id in s.docs)) cache.delete(id);

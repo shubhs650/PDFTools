@@ -164,3 +164,28 @@ describe('Work-worker scheduler', () => {
     expect(log.filter((x) => x.startsWith('search'))).toHaveLength(20);
   });
 });
+
+describe('Scheduler onIdle (M4-20)', () => {
+  it('fires once nothing runs or waits, never while a job is suspended', async () => {
+    let idle = 0;
+    const s = new Scheduler({
+      sleep: tick,
+      onIdle: () => {
+        idle++;
+      },
+    });
+    const ac = new AbortController();
+    let release!: () => void;
+    const gate = new Promise<void>((r) => (release = r));
+    const first = s.run('background', ac.signal, async (sl) => {
+      await gate;
+      await sl.checkpoint();
+    });
+    const second = s.run('interactive', ac.signal, () => Promise.resolve());
+    await tick();
+    expect(idle).toBe(0);
+    release();
+    await Promise.all([first, second]);
+    expect(idle).toBeGreaterThan(0);
+  });
+});

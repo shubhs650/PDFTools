@@ -4,6 +4,7 @@
 // between pages, so cancellation and higher-priority work get in (rule 2).
 import { PdfiumNative } from '@embedpdf/engines/pdfium';
 import { init, type WrappedPdfiumModule } from '@embedpdf/pdfium';
+import oxideWasmUrl from 'pdf-oxide-wasm/wasm?url';
 import { RpcError } from '../engine/errors';
 import type { WorkApi } from '../engine/workApi';
 import { Transfer } from '../engine/protocol';
@@ -27,6 +28,14 @@ import { checkSignatures } from './work/signatures';
 import { extractGeometry } from './work/geometry';
 import { exportCrs } from './work/crs';
 import { buildGrid, DENSE_BYTES, DENSE_SEGMENTS, thin } from '../model/snapIndex';
+import { OxideHost, webLoader } from './work/oxide';
+import { requireCapability, securityOf } from './work/permissionGate';
+import { extract } from './work/extract';
+import { zipBlob } from './work/zip';
+import { exportImages } from './work/images';
+import { assemble, fullAccess, type AssemblePart } from './work/assemble';
+import { commentSource, copyComments, transferComments } from './work/transferJobs';
+import type { PdfDocumentObject } from '@embedpdf/models';
 
 let mod: WrappedPdfiumModule | undefined;
 let native: PdfiumNative | undefined;
@@ -37,8 +46,15 @@ function need(): PdfiumNative {
   return native;
 }
 
+/**
+ * PDF Oxide (M4-04, ADR-009): lazy, one instance, its WASM from our own origin
+ * by an explicit URL (never the glue's default).
+ */
+const oxide = new OxideHost(webLoader(() => new URL(oxideWasmUrl, self.location.href).href));
+
+/** PDFium's and Oxide's WASM memory: both count for the respawn policy (ADR-004 d4, ADR-009). */
 function wasmBytes(): number {
-  const bytes = mod ? (wasmMemory(mod)?.buffer.byteLength ?? 0) : 0;
+  const bytes = (mod ? (wasmMemory(mod)?.buffer.byteLength ?? 0) : 0) + oxide.memoryBytes();
   peak = Math.max(peak, bytes);
   return bytes;
 }
@@ -53,7 +69,12 @@ async function inflate(bytes: Uint8Array): Promise<Uint8Array> {
 /** Snap geometry per document and page (M3-18): extracted once, reused at every zoom. */
 const geometry = new Map<string, Map<number, Float32Array>>();
 
-const scheduler = new Scheduler();
+const scheduler = new Scheduler({
+  onIdle: () => {
+    void docs.closeRetired();
+  },
+});
+let assembleSeq = 0;
 const activity = new Activity();
 const search = new SearchEngine(() => {
   if (!mod) throw new RpcError('not-initialized', 'The work worker is not initialized');
@@ -83,6 +104,97 @@ serve<WorkApi>(self, {
 
   append: ({ docId, piece }) => ({ tailBytes: docs.append(docId, piece) }),
 
+  assemble: ({ parts, outline }, ctx) =>
+    scheduler.run('interactive', ctx.signal, async (slice) => {
+      if (!mod) throw new RpcError('not-initialized', 'The work worker is not initialized');
+      const m = mod;
+      const n = need();
+      const opened: PdfDocumentObject[] = [];
+      try {
+        const resolved: AssemblePart[] = [];
+        for (const part of parts) {
+          let ptr: number;
+          if ('docId' in part) {
+            const { doc } = await docs.get(part.docId);
+            ptr = docPtrOf(n, doc.id);
+          } else {
+            const doc = await n
+              .openDocumentBuffer(
+                { id: `assemble-${String(++assembleSeq)}`, content: part.bytes },
+                part.password === undefined ? {} : { password: part.password },
+              )
+              .toPromise();
+            opened.push(doc);
+            ptr = docPtrOf(n, doc.id);
+          }
+          if (!fullAccess(m, ptr))
+            throw new RpcError('permission-denied:assemble', 'The source file is restricted');
+          resolved.push({ docPtr: ptr, pages: part.pages, title: part.title });
+        }
+        const bytes = await assemble(m, resolved, outline, slice, (p) => {
+          ctx.progress(p);
+        });
+        const buf = bytes.slice().buffer;
+        return new Transfer({ bytes: buf }, [buf]);
+      } finally {
+        for (const doc of opened) await n.closeDocument(doc).toPromise();
+        wasmBytes();
+      }
+    }),
+
+  commentSource: (source, ctx) =>
+    scheduler.run('interactive', ctx.signal, async () => {
+      if (!mod) throw new RpcError('not-initialized', 'The work worker is not initialized');
+      try {
+        return await commentSource(mod, need(), source, inflate);
+      } finally {
+        wasmBytes();
+      }
+    }),
+
+  transferComments: ({ docId, source, spec }, ctx) =>
+    scheduler.run('interactive', ctx.signal, async (slice) => {
+      if (!mod) throw new RpcError('not-initialized', 'The work worker is not initialized');
+      try {
+        const r = await transferComments(
+          mod,
+          need(),
+          docs,
+          docId,
+          source,
+          spec,
+          inflate,
+          slice,
+          (p) => {
+            ctx.progress(p);
+          },
+        );
+        return new Transfer(r, [...new Set(r.objects.map((o) => o.bytes.buffer as ArrayBuffer))]);
+      } finally {
+        wasmBytes();
+      }
+    }),
+
+  copyComments: ({ docId, ids, withReplies }, ctx) =>
+    scheduler.run('interactive', ctx.signal, async (slice) => {
+      if (!mod) throw new RpcError('not-initialized', 'The work worker is not initialized');
+      try {
+        const r = await copyComments(mod, need(), docs, docId, ids, withReplies, inflate, slice);
+        const buf = r.bytes.slice().buffer;
+        return new Transfer({ bytes: buf, pages: r.pages, count: r.count }, [buf]);
+      } finally {
+        wasmBytes();
+      }
+    }),
+
+  setLive: ({ docId, live }) => {
+    docs.setLive(docId, live);
+    oxide.drop(docId);
+    search.cache.drop(docId);
+    geometry.delete(docId);
+    return null;
+  },
+
   verify: ({ docId, piece, expected }, ctx) =>
     scheduler.run('save-verify', ctx.signal, async () => {
       if (!mod) throw new RpcError('not-initialized', 'The work worker is not initialized');
@@ -101,6 +213,7 @@ serve<WorkApi>(self, {
     }),
 
   close: async ({ docId }) => {
+    oxide.drop(docId);
     search.cache.drop(docId);
     geometry.delete(docId);
     await docs.close(docId);
@@ -326,11 +439,110 @@ serve<WorkApi>(self, {
     scheduler.run('background', ctx.signal, async (slice) => {
       const { doc } = await docs.get(docId);
       try {
-        return await indexDocument(search, docId, doc, visible, slice, activity, (p) => {
-          ctx.progress(p);
-        });
+        // A live-section change reloads the copy: indexing follows the current one.
+        const current = async () => (await docs.get(docId)).doc;
+        return await indexDocument(
+          search,
+          docId,
+          doc,
+          visible,
+          slice,
+          activity,
+          (p) => {
+            ctx.progress(p);
+          },
+          undefined,
+          undefined,
+          current,
+        );
       } finally {
         wasmBytes();
+      }
+    }),
+
+  oxideWarm: (_args, ctx) =>
+    scheduler.run('background', ctx.signal, async () => {
+      try {
+        return { warmUpMs: await oxide.warmUp(), oxideBytes: oxide.memoryBytes() };
+      } finally {
+        wasmBytes();
+      }
+    }),
+
+  extract: ({ docId, pages, options, packaging }, ctx) =>
+    scheduler.run('interactive', ctx.signal, async (slice) => {
+      if (!mod) throw new RpcError('not-initialized', 'The work worker is not initialized');
+      const { doc, appliedTailBytes } = await docs.get(docId);
+      // Rule 9 before Oxide sees a byte (ADR-009 decision 3).
+      requireCapability(securityOf(mod, docPtrOf(need(), doc.id)), 'copy');
+      const odoc = await oxide.document(
+        docId,
+        `${doc.id}:${String(appliedTailBytes)}`,
+        () => docs.bytes(docId),
+        docs.passwordOf(docId),
+      );
+      try {
+        const r = await extract(odoc, pages, options, slice, (p) => {
+          ctx.progress(p);
+        });
+        const { pages: n, chars, images } = r;
+        const blobOf = (f: (typeof r.files)[number]) =>
+          new Blob([f.data as BlobPart], { type: f.type });
+        const [main] = r.files;
+        if (!main) throw new RpcError('export-empty', 'Nothing was extracted');
+        if (packaging === 'single')
+          return { blob: blobOf(main), name: main.path, pages: n, chars, images };
+        if (packaging === 'zip') {
+          const enc = new TextEncoder();
+          const blob = zipBlob(
+            r.files.map((f) => ({
+              name: f.path,
+              data: typeof f.data === 'string' ? enc.encode(f.data) : f.data,
+            })),
+          );
+          return { blob, name: `${options.baseName}.zip`, pages: n, chars, images };
+        }
+        return {
+          files: r.files.map((f) => ({ path: f.path, blob: blobOf(f) })),
+          pages: n,
+          chars,
+          images,
+        };
+      } finally {
+        wasmBytes(); // Oxide's heap counts for the respawn policy
+      }
+    }),
+
+  exportImages: ({ docId, pages, baseName, packaging }, ctx) =>
+    scheduler.run('interactive', ctx.signal, async (slice) => {
+      if (!mod) throw new RpcError('not-initialized', 'The work worker is not initialized');
+      const { doc } = await docs.get(docId);
+      const ptr = docPtrOf(need(), doc.id);
+      requireCapability(securityOf(mod, ptr), 'copy'); // rule 9
+      try {
+        const r = await exportImages(mod, ptr, pages, slice, (p) => {
+          ctx.progress(p);
+        });
+        const { images, duplicates, skipped } = r;
+        const counts = { pages: r.pages, images, duplicates, skipped };
+        if (packaging === 'zip') {
+          const blob = zipBlob(
+            r.files.map((f) => ({
+              name: f.path,
+              data: typeof f.data === 'string' ? new TextEncoder().encode(f.data) : f.data,
+            })),
+          );
+          return { blob, name: `${baseName}.zip`, ...counts };
+        }
+        return {
+          files: r.files.map((f) => ({
+            path: f.path,
+            blob: new Blob([f.data as BlobPart], { type: f.type }),
+          })),
+          ...counts,
+        };
+      } finally {
+        wasmBytes(); // decoded images grow the heap (ADR-004 respawn policy)
       }
     }),
 

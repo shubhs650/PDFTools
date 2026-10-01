@@ -12,6 +12,14 @@ function selection(): SelectionCapability | null {
   return registry ? capability<SelectionCapability>(registry, 'selection') : null;
 }
 
+import {
+  copyRoute,
+  copySelectedComments,
+  pasteBlocked,
+  pasteComments,
+  selectedCount,
+} from '../annotate/transfer/copyPaste';
+
 const activeId = (): string | null => selectActive(documentStore.getState())?.meta.id ?? null;
 
 /** Selects all text on the active document's current page. */
@@ -43,11 +51,24 @@ export function clearSelection(): void {
 
 export function registerSelectionCommands(): () => void {
   const offs = [
+    // Ctrl+C (M4-21): selected comments go to the in-app clipboard; text otherwise.
     registerCommand('edit.copy', {
       requires: 'copy',
-      run: () => {
+      run: async () => {
         const id = activeId();
-        if (id) selection()?.forDocument(id).copyToClipboard();
+        if (!id) return;
+        const text = selection()?.forDocument(id).getFormattedSelection().length ?? 0;
+        if (copyRoute({ comments: selectedCount(id), text: text > 0 }) === 'comments')
+          await copySelectedComments(id);
+        else selection()?.forDocument(id).copyToClipboard();
+      },
+    }),
+    // Ctrl+V (M4-21): the copied comments onto the current page; the browser keeps it otherwise.
+    registerCommand('edit.paste', {
+      disabledReason: () => pasteBlocked(activeId()),
+      run: async () => {
+        const id = activeId();
+        if (id) await pasteComments(id, 'current');
       },
     }),
     registerCommand('edit.selectAll', {

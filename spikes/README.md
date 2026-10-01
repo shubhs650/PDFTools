@@ -4,18 +4,21 @@ Throwaway spike code for [docs/plan/M0.md](../docs/plan/M0.md) (S1–S8) and M1-
 [docs/plan/M1.md](../docs/plan/M1.md)). Nothing here is imported by
 `/src` or shipped. Each spike ends with an ADR in `docs/adr/`.
 
-| Spike | Folder                                   | ADR                                                  | Outcome               |
-| ----- | ---------------------------------------- | ---------------------------------------------------- | --------------------- |
-| S8    | [`s8-csp/`](s8-csp/)                     | [ADR-003](../docs/adr/003-s8-csp-wasm-workers-sw.md) | Works with workaround |
-| S3    | [`s3-two-engines/`](s3-two-engines/)     | [ADR-004](../docs/adr/004-s3-two-engines.md)         | Works with workaround |
-| S1    | [`s1-save/`](s1-save/)                   | [ADR-005](../docs/adr/005-s1-incremental-save.md)    | Works with workaround |
-| S5    | [`s5-search/`](s5-search/)               | [ADR-006](../docs/adr/006-s5-search-work-worker.md)  | Works with workaround |
-| S2    | [`s2-measure/`](s2-measure/)             | [ADR-007](../docs/adr/007-s2-measure-viewport.md)    | Works with workaround |
-| S7    | [`s7-snap/`](s7-snap/)                   | [ADR-008](../docs/adr/008-s7-snap-geometry.md)       | Works with workaround |
-| S4    | [`s4-oxide/`](s4-oxide/)                 | [ADR-009](../docs/adr/009-s4-pdf-oxide.md)           | Works with workaround |
-| S6    | [`s6-icons/`](s6-icons/)                 | [ADR-010](../docs/adr/010-s6-fluent-icons.md)        | Works with workaround |
-| S9    | [`s9-plugins/`](s9-plugins/) (M1-01)     | [ADR-011](../docs/adr/011-m1-embedpdf-plugins.md)    | Works with workaround |
-| S12   | [`s12-annotate/`](s12-annotate/) (M3-01) | [ADR-014](../docs/adr/014-m3-annotations.md)         | Works with workaround |
+| Spike | Folder                                                   | ADR                                                  | Outcome               |
+| ----- | -------------------------------------------------------- | ---------------------------------------------------- | --------------------- |
+| S8    | [`s8-csp/`](s8-csp/)                                     | [ADR-003](../docs/adr/003-s8-csp-wasm-workers-sw.md) | Works with workaround |
+| S3    | [`s3-two-engines/`](s3-two-engines/)                     | [ADR-004](../docs/adr/004-s3-two-engines.md)         | Works with workaround |
+| S1    | [`s1-save/`](s1-save/)                                   | [ADR-005](../docs/adr/005-s1-incremental-save.md)    | Works with workaround |
+| S5    | [`s5-search/`](s5-search/)                               | [ADR-006](../docs/adr/006-s5-search-work-worker.md)  | Works with workaround |
+| S2    | [`s2-measure/`](s2-measure/)                             | [ADR-007](../docs/adr/007-s2-measure-viewport.md)    | Works with workaround |
+| S7    | [`s7-snap/`](s7-snap/)                                   | [ADR-008](../docs/adr/008-s7-snap-geometry.md)       | Works with workaround |
+| S4    | [`s4-oxide/`](s4-oxide/)                                 | [ADR-009](../docs/adr/009-s4-pdf-oxide.md)           | Works with workaround |
+| S6    | [`s6-icons/`](s6-icons/)                                 | [ADR-010](../docs/adr/010-s6-fluent-icons.md)        | Works with workaround |
+| S9    | [`s9-plugins/`](s9-plugins/) (M1-01)                     | [ADR-011](../docs/adr/011-m1-embedpdf-plugins.md)    | Works with workaround |
+| S12   | [`s12-annotate/`](s12-annotate/) (M3-01)                 | [ADR-014](../docs/adr/014-m3-annotations.md)         | Works with workaround |
+| S14   | [`s14-pages/`](s14-pages/) (M4-01)                       | [ADR-016](../docs/adr/016-m4-page-operations.md)     | Works with workaround |
+| S15   | [`s15-redaction/`](s15-redaction/) (M4-02)               | [ADR-017](../docs/adr/017-m4-redaction.md)           | Works with workaround |
+| S16   | [`s16-comment-transfer/`](s16-comment-transfer/) (M4-19) | [ADR-018](../docs/adr/018-m4-comment-transfer.md)    | Works with workaround |
 
 ## Shared pieces (`shared/`)
 
@@ -66,6 +69,9 @@ node spikes/s6-icons/bundle.ts && node spikes/s6-icons/icon-map.ts   # → docs/
 
 # S5 search while scrolling (self-made 2,000-page contract stand-in)
 node spikes/s5-search/make-contract.ts && SPIKE=s5 npm run spikes -- --project=s5
+
+# S16 comment transfer (M4-19, needs qpdf): object copy vs re-create, save, pixels, timings
+node --import ./spikes/shared/ts-ext.ts spikes/s16-comment-transfer/run-node.ts   # → out/s16-node.json, out/*.png
 ```
 
 ### Owner run: real-disk Ctrl+S timing (S1)

@@ -89,6 +89,13 @@ function fakeSpawn(world: FakeWorld) {
       },
       readAttachment: () => ({ blob: new Blob([]) }),
       indexText: () => ({ pages: 3, extracted: 3, pausedMs: 0, ms: 1 }),
+      oxideWarm: () => ({ warmUpMs: 1, oxideBytes: 0 }),
+      exportImages: () => {
+        throw new Error('not used');
+      },
+      extract: () => {
+        throw new Error('not used');
+      },
       activity: () => {
         world.jobsSeen.push('activity');
         return null;
@@ -96,6 +103,26 @@ function fakeSpawn(world: FakeWorld) {
       hitRects: ({ hits }) => hits.map(() => []),
       refresh: () => ({ pending: true }),
       append: ({ piece }) => ({ tailBytes: piece.byteLength }),
+      setLive: () => null,
+      assemble: () => ({ bytes: new ArrayBuffer(0) }),
+      commentSource: () => ({ pages: 0, comments: [], copyAllowed: true, encrypted: false }),
+      transferComments: () => ({
+        objects: [],
+        firstNew: 1,
+        counts: {
+          selected: 0,
+          roots: 0,
+          skipped: {
+            duplicate: 0,
+            missingPage: 0,
+            filtered: 0,
+            nonMarkup: 0,
+            orphanReply: 0,
+            offPage: 0,
+          },
+        },
+      }),
+      copyComments: () => ({ bytes: new ArrayBuffer(0), pages: [], count: 0 }),
       verify: () => ({ ok: true }),
       digest: () => ({ pageCount: 3, pages: [] }),
       close: () => ({ wasmBytes: world.memory }),
