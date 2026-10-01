@@ -4,6 +4,7 @@ import { BOUNDARY } from './diagnostics';
 import { ErrorBoundary } from './ErrorBoundary';
 import { LeftRail } from './LeftRail';
 import { PropertiesPane } from './PropertiesPane';
+import { ReviewPanel } from '../features/tables/ReviewPanel';
 import { StatusBar, type StatusBarProps } from './StatusBar';
 import { TabStrip } from './TabStrip';
 
@@ -41,6 +42,8 @@ export function AppFrame({ ribbon, children, status }: AppFrameProps) {
           <ErrorBoundary where={BOUNDARY.document}>{children}</ErrorBoundary>
         </main>
         <PropertiesPane />
+        {/* Review & Extract (M4-14) while it is on. */}
+        <ReviewPanel />
       </div>
       <StatusBar {...status} />
     </div>

@@ -13,7 +13,7 @@ import { docPtrOf, wasmMemory } from './render/pdfium';
 import { digestDocument } from './render/save/digest';
 import { WorkDocs } from './work/docs';
 import { verifyCandidate } from './work/verify';
-import { Scheduler } from './work/scheduler';
+import { Scheduler, type JobSlice } from './work/scheduler';
 import { listAnnotations } from './work/annotations';
 import { Activity, indexDocument } from './work/indexer';
 import { SearchEngine } from './work/search';
@@ -35,6 +35,7 @@ import { zipBlob } from './work/zip';
 import { exportImages } from './work/images';
 import { assemble, fullAccess, type AssemblePart } from './work/assemble';
 import { commentSource, copyComments, transferComments } from './work/transferJobs';
+import { detectTables, exportTables, tableCells, type TableSources } from './work/tables/job';
 import type { PdfDocumentObject } from '@embedpdf/models';
 
 let mod: WrappedPdfiumModule | undefined;
@@ -60,6 +61,41 @@ function wasmBytes(): number {
 }
 
 const docs = new WorkDocs(need);
+
+/**
+ * What the table jobs read (M4-12): Oxide's copy of the current state and
+ * PDFium's segments (the snap geometry cache). Copy permission first (rule 9).
+ */
+async function tableSources(docId: string, slice: JobSlice): Promise<TableSources> {
+  if (!mod) throw new RpcError('not-initialized', 'The work worker is not initialized');
+  const m = mod;
+  const { doc, appliedTailBytes } = await docs.get(docId);
+  const ptr = docPtrOf(need(), doc.id);
+  requireCapability(securityOf(m, ptr), 'copy');
+  const key = `${doc.id}:${String(appliedTailBytes)}`;
+  const odoc = await oxide.document(
+    docId,
+    key,
+    () => docs.liveBytes(docId),
+    docs.passwordOf(docId),
+  );
+  return {
+    oxide: odoc,
+    key,
+    segments: async (page) => {
+      const pages = geometry.get(docId) ?? new Map<number, Float32Array>();
+      geometry.set(docId, pages);
+      let segs = pages.get(page);
+      if (!segs) {
+        segs = (
+          await extractGeometry(m, docPtrOf(need(), (await docs.get(docId)).doc.id), page, slice)
+        ).segs;
+        pages.set(page, segs);
+      }
+      return segs;
+    },
+  };
+}
 
 /** zlib inflate (FlateDecode) with the platform's DecompressionStream. */
 async function inflate(bytes: Uint8Array): Promise<Uint8Array> {
@@ -182,6 +218,49 @@ serve<WorkApi>(self, {
         const r = await copyComments(mod, need(), docs, docId, ids, withReplies, inflate, slice);
         const buf = r.bytes.slice().buffer;
         return new Transfer({ bytes: buf, pages: r.pages, count: r.count }, [buf]);
+      } finally {
+        wasmBytes();
+      }
+    }),
+
+  detectTables: ({ docId, pages }, ctx) =>
+    scheduler.run('interactive', ctx.signal, async (slice) => {
+      try {
+        const src = await tableSources(docId, slice);
+        return {
+          pages: await detectTables(src, pages, slice, (p) => {
+            ctx.progress(p);
+          }),
+        };
+      } finally {
+        wasmBytes();
+      }
+    }),
+
+  tableCells: ({ docId, grids }, ctx) =>
+    scheduler.run('interactive', ctx.signal, async (slice) => {
+      try {
+        return { tables: await tableCells(await tableSources(docId, slice), grids, slice) };
+      } finally {
+        wasmBytes();
+      }
+    }),
+
+  exportTables: ({ docId, pages, grids, tables, format, packaging, baseName }, ctx) =>
+    scheduler.run('interactive', ctx.signal, async (slice) => {
+      try {
+        const src = await tableSources(docId, slice);
+        return await exportTables(
+          src,
+          tables ? { tables } : grids ? { grids } : { pages: pages ?? [] },
+          format,
+          packaging,
+          baseName,
+          slice,
+          (p) => {
+            ctx.progress(p);
+          },
+        );
       } finally {
         wasmBytes();
       }
@@ -478,7 +557,7 @@ serve<WorkApi>(self, {
       const odoc = await oxide.document(
         docId,
         `${doc.id}:${String(appliedTailBytes)}`,
-        () => docs.bytes(docId),
+        () => docs.liveBytes(docId),
         docs.passwordOf(docId),
       );
       try {

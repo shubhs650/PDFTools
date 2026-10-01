@@ -1,5 +1,6 @@
 // IndexedDB: small app data only (ARCHITECTURE §10.3, D-04). Settings, the
-// recent-files list (file handles + display metadata) and the reviewer profile. Never document bytes:
+// recent-files list (file handles + display metadata), the reviewer profile,
+// status schemes and table templates. Never document bytes:
 // those live in the user's file and, for recovery, in OPFS (§4.3).
 //
 // The schema is versioned by the MIGRATIONS list: version N runs migrations
@@ -35,6 +36,10 @@ export const MIGRATIONS: readonly Migration[] = [
   // v3 (M3-13): custom status schemes (D-23), by id.
   (db) => {
     db.createObjectStore('schemes', { keyPath: 'id' });
+  },
+  // v4 (M4-15): table templates (M4-Q9), by id.
+  (db) => {
+    db.createObjectStore('tableTemplates', { keyPath: 'id' });
   },
 ];
 
@@ -137,6 +142,24 @@ export class AppDb {
   async deleteScheme(id: string): Promise<void> {
     const tx = this.db.transaction('schemes', 'readwrite');
     tx.objectStore('schemes').delete(id);
+    await done(tx);
+  }
+
+  /** Table templates as stored (validate them: tableTemplate.ts). */
+  async listTableTemplates(): Promise<unknown[]> {
+    const tx = this.db.transaction('tableTemplates', 'readonly');
+    return request(tx.objectStore('tableTemplates').getAll());
+  }
+
+  async putTableTemplate(value: { id: string }): Promise<void> {
+    const tx = this.db.transaction('tableTemplates', 'readwrite');
+    tx.objectStore('tableTemplates').put(value);
+    await done(tx);
+  }
+
+  async deleteTableTemplate(id: string): Promise<void> {
+    const tx = this.db.transaction('tableTemplates', 'readwrite');
+    tx.objectStore('tableTemplates').delete(id);
     await done(tx);
   }
 

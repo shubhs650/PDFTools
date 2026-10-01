@@ -6,6 +6,7 @@ import type { AnnotationCapability } from '@embedpdf/plugin-annotation';
 import type { HistoryCapability } from '@embedpdf/plugin-history';
 import { pagesBusy } from '../pages/pageOps';
 import { notify, registerCommand, type CommandHandler } from '../../app/commands/dispatch';
+import { undoOverride } from '../../app/commands/undoOverride';
 import { appStore } from '../../app/store/appStore';
 import { documentStore, selectActive } from '../../app/store/documentStore';
 import { msg } from '../../i18n';
@@ -119,11 +120,18 @@ export function registerAnnotateCommands(): () => void {
     registerCommand('qat.undo', {
       requiresDocument: true,
       disabledReason: () => {
+        const o = undoOverride();
+        if (o) return o.canUndo() ? null : o.nothingToUndo;
         const id = activeId();
         if (id && pagesBusy()) return msg('pages.busy');
         return id && history(id)?.canUndo() ? null : msg('annotate.nothingToUndo');
       },
       run: () => {
+        const o = undoOverride();
+        if (o) {
+          o.undo();
+          return;
+        }
         const id = activeId();
         if (id) history(id)?.undo();
       },
@@ -131,11 +139,18 @@ export function registerAnnotateCommands(): () => void {
     registerCommand('qat.redo', {
       requiresDocument: true,
       disabledReason: () => {
+        const o = undoOverride();
+        if (o) return o.canRedo() ? null : o.nothingToRedo;
         const id = activeId();
         if (id && pagesBusy()) return msg('pages.busy');
         return id && history(id)?.canRedo() ? null : msg('annotate.nothingToRedo');
       },
       run: () => {
+        const o = undoOverride();
+        if (o) {
+          o.redo();
+          return;
+        }
         const id = activeId();
         if (id) history(id)?.redo();
       },

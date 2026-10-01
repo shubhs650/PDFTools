@@ -9,6 +9,9 @@ import { installRecovery } from '../features/recovery/recovery';
 import { registerFormCommands } from '../features/forms/commands';
 import { registerPrintCommands } from '../features/print/commands';
 import { registerExtractCommands } from '../features/extract/commands';
+import { registerTableCommands } from '../features/tables/commands';
+import { ExpressExtractDialog } from '../features/tables/ExpressExtractDialog';
+import { TemplatesDialog } from '../features/tables/TemplatesDialog';
 import { registerPageCommands } from '../features/pages/commands';
 import { PageDialogs } from '../features/pages/PageDialogs';
 import { FileDialogs } from '../features/pages/FileDialogs';
@@ -87,6 +90,7 @@ export function App() {
   useEffect(() => registerFormCommands(), []);
   useEffect(() => registerPrintCommands(), []);
   useEffect(() => registerExtractCommands(), []);
+  useEffect(() => registerTableCommands(), []);
   useEffect(() => registerPageCommands(), []);
   useEffect(() => registerReportCommands(), []);
   useEffect(() => registerSelectionCommands(), []);
@@ -176,6 +180,8 @@ export function App() {
         <AnnotationExportDialog />
         <ImportCommentsDialog />
         <ExportDialog />
+        <ExpressExtractDialog />
+        <TemplatesDialog />
         <PageDialogs />
         <FileDialogs />
         <UpdateWaitDialog />

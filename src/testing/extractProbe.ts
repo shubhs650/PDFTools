@@ -2,7 +2,14 @@
 // reach the Work worker's extraction directly through here, and read back what
 // the dialog produced. Never shipped.
 import { lastExport, openExport, type ExportFormat } from '../features/extract/exportJob';
+import {
+  expressStore,
+  lastTableExport,
+  openExpressExtract,
+} from '../features/tables/expressExtract';
+import { dispatchReview, selectTable } from '../features/tables/reviewStore';
 import { workClient } from '../features/view/host';
+import { makeGrid } from '../model/tableGrid';
 import type { ExtractFormat, ExtractOptions } from '../workers/work/extract';
 import type { TestHook } from './hook';
 
@@ -22,11 +29,12 @@ export function registerExtractProbe(hook: TestHook): void {
       openExport(docId, format);
     },
     /** The last output: packaging and each file's path, size and (for text files) text. */
-    lastExport: async () => {
-      if (!lastExport) return null;
+    lastExport: async (which: 'export' | 'tables' = 'export') => {
+      const last = which === 'tables' ? lastTableExport : lastExport;
+      if (!last) return null;
       const files = await Promise.all(
-        lastExport.files.map(async (f) => {
-          const text = /\.(txt|md|html)$/.test(f.path) ? await f.blob.text() : null;
+        last.files.map(async (f) => {
+          const text = /\.(txt|md|html|csv)$/.test(f.path) ? await f.blob.text() : null;
           let b64: string | null = null;
           if (text === null && f.blob.size < 4_000_000) {
             let bin = '';
@@ -37,7 +45,7 @@ export function registerExtractProbe(hook: TestHook): void {
           return { path: f.path, size: f.blob.size, text, b64 };
         }),
       );
-      return { packaging: lastExport.packaging, files };
+      return { packaging: last.packaging, files };
     },
     /** The Work worker's warm-up (ADR-009 d2), timed on the main thread. */
     warm: async () => {
@@ -99,6 +107,25 @@ export function registerExtractProbe(hook: TestHook): void {
       } catch (err) {
         return { ok: false, code: (err as { code?: string }).code ?? String(err) };
       }
+    },
+    /** Opens Express Extract (M4-13) for the given pages, as if they were selected. */
+    openExpress: (docId: string, pages: number[]) => {
+      openExpressExtract(docId);
+      expressStore.setState({ pages });
+    },
+    /** Adds a cols × rows table over `box` to Review & Extract and selects it (perf, M4-14). */
+    reviewAdd: (
+      page: number,
+      box: [number, number, number, number],
+      cols: number,
+      rows: number,
+    ) => {
+      const id = `probe-${String(page)}-${String(cols)}x${String(rows)}`;
+      dispatchReview({
+        type: 'add',
+        table: { id, grid: makeGrid(page, box, cols, rows), accepted: true },
+      });
+      selectTable(id);
     },
     /** Starts an extraction and cancels it after `afterMs`: how long until it stops. */
     cancelAfter: async (docId: string, pages: number[], afterMs: number) => {

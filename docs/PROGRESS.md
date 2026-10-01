@@ -1,6 +1,6 @@
 # PDFTools — Progress
 
-_Last updated: 2026-09-30 (session 18: M4-20 and M4-21 comment transfer done)_
+_Last updated: 2026-10-01 (session 18: tables M4-12 … M4-15 done)_
 
 **Current milestone:** M3 — Review. Plan approved (2026-09-27); M3-01 … M3-08 done in session 16
 on `claude/m3-task-breakdown-tlyokp` (ADR-014 and ADR-015 accepted).
@@ -8,6 +8,29 @@ M0–M2 are merged into `main` (M2 complete on the agent side, owner pack in
 [docs/acceptance/M2.md](acceptance/M2.md)); the M0, M1 and M2 owner runs are open.
 
 ## Done
+
+- **Session 18 — M4-15 table templates.** Save a reviewed table's grid as a named template;
+  rename, delete, apply it to a page range (into Review & Extract or straight to a file), pages of
+  another size or rotation skipped and named. Stored in IndexedDB v4, listed on the Privacy page,
+  removed by Clear all local data. M4 tables (M4-12 … M4-15) complete.
+
+- **Session 18 — M4-14 Review & Extract.** Convert → Review & Extract: detected tables as
+  outlines with a side panel (include, delete, find on a page, draw with the pointer or the
+  keyboard), dividers dragged or moved from the keyboard, header rows and merged cells from the
+  cell grid (keys and context menu), live preview from the Work worker, the mode's own undo, and
+  export of the accepted tables. Dragging a 60 × 20 grid has no main-thread long task.
+
+- **Session 18 — M4-13 Express Extract.** Convert → Tables (Beta) → Express Extract: the tables of
+  the selected pages (else the current page) as an Excel workbook (a sheet per table, merged
+  header cells, numbers as numbers) or CSV files (folder, else ZIP); "No tables found" and an OCR
+  note; progress and Cancel. 200 pages in ~3 s with no main-thread long task.
+
+- **Session 18 — M4-12 table model and detectors.** The table grid model (dividers, header rows,
+  merged cells, text by word centre) and detection in the Work worker: ruled tables from the
+  page's own rulings (merged headers rebuilt from missing rulings) plus Oxide's candidates, our
+  own unruled-table detector (wrapped rows, side-by-side tables), OCR note for scanned pages.
+  100 % of cells on every fixture table. Oxide's table finder proved unreliable on ruled tables
+  (ADR-009 implementation note).
 
 - **Session 18 — M4-21 copy/paste comments.** Comment → Copy Comments / Paste Comments / Paste
   to Original Pages, Ctrl+C (comments when comments are selected, text otherwise), Ctrl+V and
@@ -811,7 +834,8 @@ M0–M2 are merged into `main` (M2 complete on the agent side, owner pack in
 - **M3 done on the agent side (session 17):** M3-16 … M3-20 as one commit each on
   `claude/m3-tasks-16-20-vdqo8q`, merged into `main` as PR #47. Waiting on the owner pack
   ([docs/acceptance/M3.md](acceptance/M3.md) §4).
-- **M4 in progress (session 18):** [docs/plan/M4.md](plan/M4.md), 22 tasks. Done: M4-01 and M4-02
+- **M4 in progress (session 18):** tables M4-12 … M4-15 done (on `claude/upbeat-cray-lknggv`,
+  after PR #48 was merged). Earlier: [docs/plan/M4.md](plan/M4.md), 22 tasks. Done: M4-01 and M4-02
   (spikes; ADR-016 and ADR-017 accepted), M4-03 (icons), M4-04 (Oxide and the export
   framework), M4-05 (text, Markdown, HTML), M4-06 (images), M4-07 (Word, Beta), M4-08 (annotation export), M4-19 (comment-transfer
   spike), M4-09 (page operations core), M4-10 (reorder), M4-11 (insert from file, extract,
@@ -824,6 +848,17 @@ M0–M2 are merged into `main` (M2 complete on the agent side, owner pack in
   (CI) on it; _merge_ adds it to `main` once the checks are green.
 
 ## Session log
+
+- **Session 18 (2026-10-01), tables M4-12 … M4-15:** PDF Oxide's `extractTables` missed or split
+  the fixture's ruled tables, so ruled tables come from the page's own rulings first (ADR-009
+  implementation note) and unruled ones from our detector. Express Extract has two steps (Find
+  Tables, then Save…): the save picker needs a fresh click and must not create an empty file when
+  nothing is found. Review & Extract keeps its own undo history; while it is on, Ctrl+Z/Y and the
+  QAT Undo/Redo act on it (`src/app/commands/undoOverride.ts`), never on the document. Dense grids
+  shrink divider hit areas so column dividers stay reachable between row dividers. The right-hand
+  panes now sit side by side (the frame grid had room for one: a second pane wrapped below the
+  window), and the panel's parts don't shrink (the cell grid was squashed under the buttons). A racy
+  Express Extract cancel test (5 pages could finish before Cancel) now cancels a 200-page search.
 
 - **Session 18 (2026-10-01), CI on PR #48:** the first full CI run (quota restored) failed 3 of 40
   perf scenarios. Undo of "delete 1,000 of 2,000 pages" took 37–49 s: the viewer refresh after a
@@ -965,15 +1000,16 @@ M0–M2 are merged into `main` (M2 complete on the agent side, owner pack in
    (L/M) and the still-open §D/§F in Acrobat Reader and PDF-XChange (they decide ADR-007
    decisions 2 and 3: the grouped measurement label and viewport semantics), snapping on the local
    P&ID and CAD drawings (`npm run owner:timings`), the CRS in Excel.
-2. **Agent:** M4 so far (M4-01 … M4-11, M4-19 … M4-21) goes into `main` through PR #48
-   (`claude/upbeat-cray-lknggv`) once CI is green. (M3 is in `main`: PRs #46 and #47.)
+2. **Agent:** M4-01 … M4-11 and M4-19 … M4-21 are in `main` (PR #48). The tables (M4-12 …
+   M4-15) are on `claude/upbeat-cray-lknggv`, for the next PR once CI is green.
 3. **Owner:** the M2 owner pack in [docs/acceptance/M2.md](acceptance/M2.md) §4 and the M1/M0
    owner runs (below, unchanged).
 4. **Owner:** decide the items under "Decisions needed" (keyboard text selection, committed
    corpus PDFs, Pages project).
 5. **Owner:** review the M4 icons in the e2e gallery.
-6. **Agent:** tables (M4-12 … M4-15), then redaction (M4-16 … M4-18), then the M4 acceptance
-   pass (M4-22).
+6. **Agent:** redaction (M4-16 … M4-18), then the M4 acceptance pass (M4-22).
+   **Owner:** try the tables (Convert → Tables (Beta)) on a real pipe chart and parts list (S4
+   owner run): detection quality on real files is untested beyond the self-made fixture.
 7. **Owner (M0/M1, still open):** S1 interop checklist; S1 FSA button on the 500 MB contract; S5
    search on the FAR and the 500 MB contract; S7 on the CAD drawings and the P&ID
    (`node spikes/s7-snap/run-node.ts <files>`); S4 on the pipe chart and a parts list; FAR, 500 MB
@@ -1095,6 +1131,7 @@ M0–M2 are merged into `main` (M2 complete on the agent side, owner pack in
 
 | Date       | Ref              | Decision                                                                                                                                                                                                                                                                                                                                                                                                                                                  |
 | ---------- | ---------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| 2026-10-01 | ADR-019          | Owner accepted Express Extract in two steps (Find Tables, then Save…): the save picker needs a fresh click and nothing is created when no table is found. ARCHITECTURE.md Rev 0.7 (§7.7).                                                                                                                                                                                                                                                                 |
 | 2026-09-29 | ADR-018          | Owner accepted ADR-018 decisions 2–3 after the M4-19 spike: hybrid route — object copy in the Work worker for Import from PDF and copy/paste (pending import section folded into the next Ctrl+S), re-creation + object-layer patches for JSON import. ARCHITECTURE.md Rev 0.6 (§7.1 comment transfer, §7.6 JSON imports, §13 M4).                                                                                                                        |
 | 2026-09-29 | ADR-016, ADR-017 | Owner accepted ADR-016 (page operations: semantic dirty set, digest with page identity, page-cache purge, reopen-based undo, dangling references) and ADR-017 (redaction on a Work copy, crossing paths re-cut via PDFium's page-object API, wider sanitize list, location verification). ARCHITECTURE.md Rev 0.5 (§7.9 steps 0 and 3), ADR-001 B8 wording amended.                                                                                       |
 | 2026-09-29 | M4 plan, ADR-018 | M4 plan approved with M4-Q1 … Q11 as proposed. Follow-ups: Word/Markdown export place images in reading order with our own step (Oxide puts them at page end); comment transfer (import from PDF or JSON v1, copy/paste between documents) added to M4 as M4-19 … M4-21, ADR-018 scope accepted, route decided by the M4-19 spike.                                                                                                                        |

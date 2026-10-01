@@ -55,6 +55,7 @@ export function frameOf(docId: string, page: number) {
   const p = registry?.getStore().getState().core.documents[docId]?.document?.pages[page];
   const crop = p?.boxes?.crop;
   return {
+    width: p?.size.width ?? 612,
     height: p?.size.height ?? 792,
     originX: crop?.left ?? 0,
     originY: crop?.bottom ?? 0,
