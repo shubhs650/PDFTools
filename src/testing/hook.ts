@@ -44,6 +44,9 @@ export function installTestHook(): TestHook {
   void import('./pagesProbe').then((m) => {
     m.registerPagesProbe(hook);
   });
+  void import('./redactProbe').then((m) => {
+    m.registerRedactProbe(hook);
+  });
   void import('../app/commands/dispatch').then((d) => {
     const calls: string[] = [];
     hook.capabilities['commands'] = {

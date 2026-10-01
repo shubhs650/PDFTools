@@ -1993,6 +1993,17 @@ textarea.form-field {
   outline-offset: 2px;
 }
 
+.redact-list {
+  margin: var(--space-0);
+  padding-left: var(--space-4);
+  font-size: var(--font-size-s);
+}
+
+.redact-ok {
+  margin: var(--space-0);
+  font-weight: var(--font-weight-semibold);
+}
+
 .redact-panel {
   display: flex;
   flex-direction: column;

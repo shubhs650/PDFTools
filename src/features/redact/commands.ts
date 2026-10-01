@@ -1,12 +1,13 @@
 // Protect → Redact (M4-16, §7.9 step 1): Mark for Redaction (text), Mark Area
 // for Redaction and Pending Redactions. Marks are annotations, so they need
-// the annotate permission (M4-Q2, rule 9). Apply comes with M4-17/18.
+// the annotate permission (M4-Q2, rule 9); Apply Redactions needs modify.
 import { registerCommand } from '../../app/commands/dispatch';
 import { appStore } from '../../app/store/appStore';
 import { documentStore, selectActive } from '../../app/store/documentStore';
 import { requestProfile } from '../settings/profile/profileStore';
 import { cancelKeyRect, keyRectStore, markSelection, startKeyRect } from './markTools';
 import { redactPanelStore, setRedactPanel } from './redactStore';
+import { openApply } from './applyFlow';
 
 const activeId = (): string | null => selectActive(documentStore.getState())?.meta.id ?? null;
 
@@ -59,6 +60,15 @@ export function registerRedactCommands(): () => void {
         setRedactPanel(true);
         // From the keyboard: a rectangle at the current page's centre (M4-Q10).
         if (fromKeyboard()) startKeyRect(id, documentStore.getState().docs[id]?.view.page ?? 0);
+      },
+    }),
+    // Apply (M4-17/18): a new, verified file; needs modify (M4-Q2, rule 9).
+    registerCommand('protect.applyRedactions', {
+      requiresDocument: true,
+      requires: 'modify',
+      run: () => {
+        const id = activeId();
+        if (id) openApply(id);
       },
     }),
     registerCommand('protect.redactionList', {

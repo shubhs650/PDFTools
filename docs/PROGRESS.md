@@ -9,6 +9,14 @@ M0–M2 are merged into `main` (M2 complete on the agent side, owner pack in
 
 ## Done
 
+- **Session 18 — M4-17/18 Apply Redactions, verified.** Protect → Apply Redactions makes a new
+  file: the marks applied on a copy (crossing drawing lines re-cut exactly, comments/links/fields
+  over the areas removed), document data sanitized (metadata, thumbnails, tagging, JavaScript,
+  attachments, bookmarks into the areas), fully rewritten (encryption kept), then reopened and
+  checked: nothing left inside any area, no redacted word anywhere, one revision. Only then is it
+  written; otherwise nothing is saved and the pages and checks that failed are named. 200 pages
+  with 600 marks in 3.5 s, no long task.
+
 - **Session 18 — M4-16 redaction marks.** Protect → Mark for Redaction (selected text, or the
   tool on), Mark Area for Redaction (pointer or keyboard rectangle) and Pending Redactions (jump,
   remove, status-bar count). Marks are standard `/Redact` annotations: undoable, saved by Ctrl+S,
@@ -839,8 +847,8 @@ M0–M2 are merged into `main` (M2 complete on the agent side, owner pack in
 - **M3 done on the agent side (session 17):** M3-16 … M3-20 as one commit each on
   `claude/m3-tasks-16-20-vdqo8q`, merged into `main` as PR #47. Waiting on the owner pack
   ([docs/acceptance/M3.md](acceptance/M3.md) §4).
-- **M4 in progress (session 18):** tables M4-12 … M4-15 merged (PR #49); redaction M4-16 done,
-  M4-17 and M4-18 next. Earlier: [docs/plan/M4.md](plan/M4.md), 22 tasks. Done: M4-01 and M4-02
+- **M4 in progress (session 18):** tables M4-12 … M4-15 merged (PR #49); redaction M4-16 … M4-18
+  done. Earlier: [docs/plan/M4.md](plan/M4.md), 22 tasks. Done: M4-01 and M4-02
   (spikes; ADR-016 and ADR-017 accepted), M4-03 (icons), M4-04 (Oxide and the export
   framework), M4-05 (text, Markdown, HTML), M4-06 (images), M4-07 (Word, Beta), M4-08 (annotation export), M4-19 (comment-transfer
   spike), M4-09 (page operations core), M4-10 (reorder), M4-11 (insert from file, extract,
@@ -853,6 +861,15 @@ M0–M2 are merged into `main` (M2 complete on the agent side, owner pack in
   (CI) on it; _merge_ adds it to `main` once the checks are green.
 
 ## Session log
+
+- **Session 18 (2026-10-01), redaction M4-16 … M4-18:** `@embedpdf/plugin-redaction` was not
+  added — `plugin-annotation` already reads, writes and selects `/Redact`, and the plugin has no
+  body renderer for it, so our layer draws, hovers and selects marks. Three changes from the S15
+  spike for production: areas are the marks' **quads** (the rectangle would flag the unredacted
+  text between a text mark's lines); crossing paths are re-cut **before** the engine applies (it
+  paints its fill as a path that a later re-cut would remove); curves are verified exactly, not by
+  their control polygon (exact sub-curves end on the area's edge with control points inside). The
+  spike's sanitize wrote the empty `/Info` object after its xref; fixed.
 
 - **Session 18 (2026-10-01), tables M4-12 … M4-15:** PDF Oxide's `extractTables` missed or split
   the fixture's ruled tables, so ruled tables come from the page's own rulings first (ADR-009
@@ -1012,7 +1029,8 @@ M0–M2 are merged into `main` (M2 complete on the agent side, owner pack in
 4. **Owner:** decide the items under "Decisions needed" (keyboard text selection, committed
    corpus PDFs, Pages project).
 5. **Owner:** review the M4 icons in the e2e gallery.
-6. **Agent:** redaction (M4-16 … M4-18), then the M4 acceptance pass (M4-22).
+6. **Agent:** the M4 acceptance pass (M4-22), incl. the §M4 interop file (redaction marks in
+   Acrobat Reader / PDF-XChange, a redacted output opened in both).
    **Owner:** try the tables (Convert → Tables (Beta)) on a real pipe chart and parts list (S4
    owner run): detection quality on real files is untested beyond the self-made fixture.
 7. **Owner (M0/M1, still open):** S1 interop checklist; S1 FSA button on the 500 MB contract; S5

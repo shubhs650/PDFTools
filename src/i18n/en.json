@@ -1664,7 +1664,55 @@
       "textItem": "{{n}}. Text, page {{page}}",
       "areaItem": "{{n}}. Area, page {{page}}",
       "remove": "Remove mark {{name}}",
-      "applyLater": "Marks are saved with the document (Ctrl+S) and can be applied later. Applying them creates a new, redacted copy; this document stays as it is."
+      "applyLater": "Marks are saved with the document (Ctrl+S) and can be applied later. Applying them creates a new, redacted copy; this document stays as it is.",
+      "apply": "Apply Redactions…"
+    },
+    "apply": {
+      "title": "Apply Redactions",
+      "description": "Removes the marked content for good, in a new file. Done on this device; nothing is sent anywhere.",
+      "summary_one": "{{marks}} mark on {{pages}} page will be applied.",
+      "summary_other": "{{marks}} marks on {{pages}} pages will be applied.",
+      "newFile": "A new file is created ({{name}}). The open document and the original file stay as they are.",
+      "removesLabel": "The new file will not contain:",
+      "removes": {
+        "content": "text, images and drawing inside the marked areas (replaced by black boxes)",
+        "annotations": "comments, links and form fields over the marked areas, and bookmarks pointing into them",
+        "metadata": "document properties and XMP metadata, page thumbnails",
+        "hidden": "tagging (structure tree), JavaScript, attached files and private application data"
+      },
+      "signed_one": "This document has {{n}} digital signature. It will not be valid in the redacted file.",
+      "signed_other": "This document has {{n}} digital signatures. They will not be valid in the redacted file.",
+      "apply": "Apply and Save As…",
+      "close": "Close",
+      "cancel": "Cancel",
+      "progressName": "Redaction progress",
+      "applying": "Applying: page {{done}} of {{total}}",
+      "verifying": "Checking the result: step {{done}} of {{total}}",
+      "success": "Saved {{name}}. Every check passed.",
+      "applied_one": "{{marks}} mark applied on {{pages}} page.",
+      "applied_other": "{{marks}} marks applied on {{pages}} pages.",
+      "checksPassed": "Checked: no text, image, drawing or comment is left inside any marked area, and no redacted word can be found in the file.",
+      "annotationsRemoved_one": "{{n}} comment, link or field over a marked area was removed.",
+      "annotationsRemoved_other": "{{n}} comments, links or fields over marked areas were removed.",
+      "simplified": "Some drawing details around marked areas were simplified (clipping, blending or layer membership of cut lines).",
+      "openNew": "Open Redacted File",
+      "report": "Send Error Report…",
+      "failedVerify": "Redaction could not be verified, so nothing was saved. Content may remain at:",
+      "leakPage": "page {{page}}: {{checks}}",
+      "leakDocument": "the document: {{checks}}",
+      "noMarks": "There are no marks to apply.",
+      "failed": "The redaction could not be completed. Nothing was saved.",
+      "fileName": "{{base}}-redacted.pdf"
+    },
+    "check": {
+      "text": "text",
+      "textObject": "text objects",
+      "path": "drawing (vector lines or areas)",
+      "image": "image pixels",
+      "shading": "shadings",
+      "annotation": "comments or marks",
+      "string": "a redacted word found elsewhere in the file",
+      "structure": "hidden document data or more than one revision"
     }
   }
 }

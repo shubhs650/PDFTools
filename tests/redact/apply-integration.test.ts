@@ -23,10 +23,14 @@ import {
 } from '../../e2e/fixtures/redaction';
 import { isDict, PdfStream, PdfString, type PdfValue } from '../../src/model/pdf/objects';
 import { PdfReader } from '../../src/model/pdf/reader';
-import { applyRedactions, type RedactOutcome } from '../../src/workers/work/redact/apply';
+import {
+  applyRedactions,
+  redactAreas,
+  type RedactOutcome,
+} from '../../src/workers/work/redact/apply';
 import type { JobSlice } from '../../src/workers/work/scheduler';
-import { docPtrOf } from '../../src/workers/render/pdfium';
-import { Verifier } from '../../src/workers/work/redact/verify';
+import { docPtrOf, rawCall } from '../../src/workers/render/pdfium';
+import { Verifier, type Leak } from '../../src/workers/work/redact/verify';
 
 const require = createRequire(import.meta.url);
 let mod: WrappedPdfiumModule;
@@ -100,6 +104,38 @@ function qpdfOk(bytes: Uint8Array, password?: string): boolean {
     ]).status === 0
   );
 }
+
+describe('negative controls: the verifier on the unredacted source flags every page', () => {
+  it('each page with content in its area is reported, with the right kind', async () => {
+    const src = adversarialPdf();
+    const doc = await native
+      .openDocumentBuffer({ id: 'neg', content: src.slice().buffer })
+      .toPromise();
+    try {
+      const d = docPtrOf(native, doc.id);
+      const areas = redactAreas(mod, d);
+      const v = new Verifier(mod);
+      const leaks: Leak[] = [];
+      for (const [i, rs] of areas) {
+        const page = rawCall(mod, 'FPDF_LoadPage', d, i);
+        v.textInRects(i, page, rs, leaks);
+        v.objectsInRects(i, page, rs, leaks);
+        v.annotsInRects(i, page, rs, leaks);
+        rawCall(mod, 'FPDF_ClosePage', page);
+      }
+      const pages = new Set(leaks.map((l) => l.page));
+      expect([...pages].sort()).toEqual([0, 1, 2, 3, 4, 5, 6, 7, 8]);
+      const kinds = (page: number) => leaks.filter((l) => l.page === page).map((l) => l.kind);
+      expect(kinds(0)).toContain('text');
+      expect(kinds(1)).toContain('image');
+      expect(kinds(3)).toContain('path');
+      expect(kinds(6)).toContain('annotation');
+      expect(kinds(8)).toContain('path');
+    } finally {
+      await native.closeDocument(doc).toPromise();
+    }
+  });
+});
 
 describe('apply redactions on the adversarial file', () => {
   let out: RedactOutcome;

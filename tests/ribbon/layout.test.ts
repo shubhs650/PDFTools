@@ -40,11 +40,11 @@ describe('ribbon layout from the command table (§8, ADR-001 B6, M1-Q2)', () => 
     expect(shown).toContain('comment.exportCrs'); // M3-19
     expect(shown).toContain('comment.exportAnnotations'); // M4-08
     const protect = m1.tabs.find((t) => t.tab === 'protect');
-    // Only what works: redaction marks and the pending list (M4-16; Apply waits for M4-18),
-    // Security Info (M2-12), Unlock (M2-03), Signatures (M2-13).
+    // Redaction (M4-16 … M4-18), Security Info (M2-12), Unlock (M2-03), Signatures (M2-13).
     expect(protect?.groups.flatMap((g) => g.commands.map((c) => c.id))).toEqual([
       'protect.markRedaction',
       'protect.markRedactionArea',
+      'protect.applyRedactions',
       'protect.redactionList',
       'protect.securityInfo',
       'protect.unlock',

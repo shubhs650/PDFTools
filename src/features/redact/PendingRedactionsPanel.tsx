@@ -7,10 +7,13 @@ import { securityOf, useDocuments } from '../../app/store/documentStore';
 import { format, msg } from '../../i18n';
 import { allows } from '../../model/permissions';
 import { Button, IconButton } from '../../ui/components';
+import { runCommand } from '../../app/commands/dispatch';
 import { annotationCapability } from '../annotate/selection';
 import { goToPoint } from '../view/controller';
 import { markKind } from './markModel';
 import { setRedactPanel, useMarks, useRedactPanel } from './redactStore';
+
+const APPLY = 'protect.applyRedactions';
 
 /** Longest snippet shown per mark. */
 const SNIPPET = 60;
@@ -18,7 +21,7 @@ const SNIPPET = 60;
 /**
  * Pending Redactions (M4-16, §7.9 step 1): every /Redact mark of the active
  * document — page, kind, the marked text when copying is allowed (rule 9) —
- * to jump to or remove. Apply comes with M4-17/18.
+ * to jump to or remove, and Apply (M4-18).
  */
 export function PendingRedactionsPanel() {
   const open = useRedactPanel((s) => s.open);
@@ -35,6 +38,7 @@ function Panel({ docId }: { docId: string }) {
   const canCopy = meta ? allows(securityOf(meta), 'copy') : false;
   const canAnnotate = meta ? allows(securityOf(meta), 'annotate') : false;
 
+  const apply = () => void runCommand(APPLY);
   const jump = (m: PdfRedactAnnoObject) => {
     goToPoint(m.pageIndex, m.rect.origin.x, m.rect.origin.y);
     annotationCapability()?.forDocument(docId).selectAnnotation(m.pageIndex, m.id);
@@ -106,6 +110,12 @@ function Panel({ docId }: { docId: string }) {
           })}
         </ul>
         <p className="print-note">{t('redact.panel.applyLater')}</p>
+        <Button
+          label={t('redact.panel.apply')}
+          variant="primary"
+          disabled={marks.length === 0}
+          onClick={apply}
+        />
         <Button
           label={t('redact.panel.close')}
           onClick={() => {

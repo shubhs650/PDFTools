@@ -1124,6 +1124,7 @@ export const COMMANDS: readonly CommandDef[] = [
     fluent: 'CheckmarkCircle',
     milestone: 'M4',
     custom: 'protect.applyRedactions', // M4-03
+    shipped: true, // M4-18
   },
   {
     id: 'protect.redactionList',

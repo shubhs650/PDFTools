@@ -12,6 +12,7 @@ import { registerExtractCommands } from '../features/extract/commands';
 import { registerTableCommands } from '../features/tables/commands';
 import { registerRedactCommands } from '../features/redact/commands';
 import { RedactionStatus } from '../features/redact/PendingRedactionsPanel';
+import { ApplyDialog } from '../features/redact/ApplyDialog';
 import { ExpressExtractDialog } from '../features/tables/ExpressExtractDialog';
 import { TemplatesDialog } from '../features/tables/TemplatesDialog';
 import { registerPageCommands } from '../features/pages/commands';
@@ -186,6 +187,7 @@ export function App() {
         <ExportDialog />
         <ExpressExtractDialog />
         <TemplatesDialog />
+        <ApplyDialog />
         <PageDialogs />
         <FileDialogs />
         <UpdateWaitDialog />
