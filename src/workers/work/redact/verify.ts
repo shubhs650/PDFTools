@@ -141,9 +141,39 @@ export class Verifier {
     return words;
   }
 
+  /**
+   * Text objects the text page indexes → whether one of their own characters
+   * lies inside a rectangle. PDFium removes covered glyphs but keeps the rest
+   * of a line in one object, so the object's bounds can span a mark that no
+   * longer has any of its characters inside (a word redacted mid-line).
+   */
+  private textObjectHits(pagePtr: number, rects: readonly Rect[]): Map<number, boolean> {
+    const hits = new Map<number, boolean>();
+    const tp = this.call('FPDFText_LoadPage', pagePtr);
+    try {
+      const n = this.call('FPDFText_CountChars', tp);
+      this.withBuf(32, (p) => {
+        for (let i = 0; i < n; i++) {
+          const obj = this.call('FPDFText_GetTextObject', tp, i);
+          if (!obj) continue;
+          let inside = false;
+          if (this.call('FPDFText_GetCharBox', tp, i, p, p + 8, p + 16, p + 24)) {
+            const [l, r, b, t] = [0, 1, 2, 3].map((k) => this.heap.getValue(p + k * 8, 'double'));
+            inside = rects.some((rc) => overlapsInside([l ?? 0, b ?? 0, r ?? 0, t ?? 0], rc));
+          }
+          hits.set(obj, (hits.get(obj) ?? false) || inside);
+        }
+      });
+    } finally {
+      this.call('FPDFText_ClosePage', tp);
+    }
+    return hits;
+  }
+
   /** Page objects (into Form XObjects) with content inside a rectangle. */
   objectsInRects(page: number, pagePtr: number, rects: readonly Rect[], leaks: Leak[]): void {
     const kinds = new Set<LeakKind>();
+    let textHits: Map<number, boolean> | null = null;
     const visit = (obj: number, parent: M, depth: number) => {
       const type = this.call('FPDFPageObj_GetType', obj);
       const own = this.matrixOf(obj);
@@ -175,8 +205,11 @@ export class Verifier {
       ];
       const hit = rects.filter((r) => overlapsInside(pb, r));
       if (hit.length === 0) return;
-      if (type === TYPE_TEXT) kinds.add('text-object');
-      else if (type === TYPE_PATH) {
+      if (type === TYPE_TEXT) {
+        // Objects the text page does not index keep the conservative bounds rule.
+        textHits ??= this.textObjectHits(pagePtr, rects);
+        if (textHits.get(obj) ?? true) kinds.add('text-object');
+      } else if (type === TYPE_PATH) {
         if (this.pathHits(obj, mul(own, parent), pb, hit)) kinds.add('path');
       } else if (type === TYPE_IMAGE) {
         if (this.imageHits(obj, mul(own, parent), hit)) kinds.add('image');

@@ -117,7 +117,7 @@ for (const q of ['/', '/?locale=pseudo']) {
   });
 }
 
-test('every command M1, M2 and M3 show has a handler: none says "Not available yet" (M1-28, M2-19, M3-20)', async ({
+test('every command M1 … M4 show has a handler: none says "Not available yet" (M1-28, M2-19, M3-20, M4-22)', async ({
   page,
   pdfs,
 }) => {
@@ -148,8 +148,8 @@ test('every command M1, M2 and M3 show has a handler: none says "Not available y
     expect(await notReady()).toEqual([]);
   };
   await collect(); // quick access + Home
-  for (const tab of ['View', 'Comment', 'Measure', 'Protect', 'Help']) {
-    await page.getByRole('tab', { name: tab }).click();
+  for (const tab of ['View', 'Comment', 'Organize', 'Convert', 'Measure', 'Protect', 'Help']) {
+    await page.getByRole('tab', { name: tab, exact: true }).click();
     await collect();
   }
   await page.getByTestId('file-tab').click();
@@ -193,6 +193,32 @@ test('every command M1, M2 and M3 show has a handler: none says "Not available y
     'measure.scaleViewport',
     'measure.snapping',
     'measure.snapNearest',
+    // M4: every M4 command is on a ribbon tab.
+    'comment.exportAnnotations',
+    'comment.importComments',
+    'comment.copyComments',
+    'comment.pasteComments',
+    'comment.pasteToOriginal',
+    'organize.insertBlank',
+    'organize.insertFromFile',
+    'organize.delete',
+    'organize.move',
+    'organize.extract',
+    'organize.merge',
+    'organize.rotateCw',
+    'organize.rotateCcw',
+    'convert.text',
+    'convert.markdown',
+    'convert.html',
+    'convert.word',
+    'convert.images',
+    'convert.expressExtract',
+    'convert.reviewExtract',
+    'convert.tableTemplates',
+    'protect.markRedaction',
+    'protect.markRedactionArea',
+    'protect.applyRedactions',
+    'protect.redactionList',
   ])
     expect(seen).toContain(id);
 });

@@ -257,3 +257,54 @@ Files: [`e2e/fixtures/self-made/m3-interop/`](../fixtures/self-made/m3-interop/)
 | M2  | The viewer's measurements keep **their own** values (their `/Measure`, ADR-007 d3), even though the page says 1:100; select one: the Properties pane says "Scale: from the file". |         |             |
 | M3  | Our own measurements still show 20.00 m / 60.00 m / 200.00 m²; Ctrl+S, reopen in the viewer: nothing of theirs was lost.                                                          |         |             |
 | M4  | Comment → Export CRS: every comment of theirs and ours is a row, with replies and statuses.                                                                                       |         |             |
+
+## M4 — page operations, redaction, exports, comment transfer (D-06, D-27, D-31; [M4 acceptance](../../docs/acceptance/M4.md))
+
+Files: [`e2e/fixtures/self-made/m4-interop/`](../fixtures/self-made/m4-interop/), made by the
+**real app** by `M4_INTEROP_OUT=1 npm run owner:interop:m4` (`e2e/interop-m4.spec.ts`). Every PDF
+passes `qpdf --check`. Passwords of the encrypted file: user `user-pw`, owner `owner-pw`.
+
+| File                         | What it is                                                                                                                                                                                                                                                                     |
+| ---------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `pages__ctrl-s.pdf`          | "Sheet 1…4": page 1 rotated 90°, Sheet 3 deleted, a blank A4 page inserted, the last page moved to position 2 — one Ctrl+S (narrow incremental revision). Order: Sheet 1 (rotated), Sheet 4, Sheet 2, blank.                                                                   |
+| `merged.pdf`                 | Organize → Merge Files of "A 1–2" and "B 1–2": four pages, one bookmark per file ("a", "b").                                                                                                                                                                                   |
+| `redact-marks__ctrl-s.pdf`   | Two pending `/Redact` marks (black `/IC`, red outline): one over the word "Confidential" (with the text in its comment), one area mark below it. Nothing applied.                                                                                                              |
+| `redacted.pdf`               | The self-made adversarial file (8 of its 9 marks applied, verified): secrets removed from text, images, vector drawing, hidden layers and annotations; metadata, thumbnails, tagging, JavaScript, attachments gone. Kept words: PUBLICLEFT, PUBLICRIGHT, KEEPNOTE, REPEATKILO. |
+| `redacted-aes256.pdf`        | The same from an AES-256 source: stays AES-256 (user `user-pw`, owner `owner-pw`).                                                                                                                                                                                             |
+| `export.docx`                | Convert → To Word (Beta) of the extraction fixture: headings, paragraphs, a list, a table and an image between its paragraphs.                                                                                                                                                 |
+| `tables.xlsx`                | Convert → Express Extract of the pipe-chart page: two sheets (`p1-t1`, `p1-t2`), merged header cells, bold frozen header rows, numbers as numbers.                                                                                                                             |
+| `annotations.xlsx`           | Comment → Export Comments as Excel: one comment.                                                                                                                                                                                                                               |
+| `transfer-rev-a__ctrl-s.pdf` | "Rev A": a square with a reply (Bo Vendor) on page 1, a highlight on page 2.                                                                                                                                                                                                   |
+| `transfer-rev-b__ctrl-s.pdf` | "Rev B" after Comment → Import Comments from Rev A, then Ctrl+S: the same three comments on the same pages.                                                                                                                                                                    |
+
+### N. Ours → theirs (both viewers)
+
+| #   | File                         | Check                                                                                                                                                        | Acrobat | PDF-XChange |
+| --- | ---------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------ | ------- | ----------- |
+| N1  | all PDFs                     | Opens without a repair message; closing without edits does not ask "Save changes?".                                                                          |         |             |
+| N2  | `pages__ctrl-s.pdf`          | Four pages in the order above; page 1 is rotated; thumbnails agree.                                                                                          |         |             |
+| N3  | `merged.pdf`                 | Four pages A 1, A 2, B 1, B 2; bookmarks "a" and "b" jump to A 1 and B 1.                                                                                    |         |             |
+| N4  | `redact-marks__ctrl-s.pdf`   | Both marks show as **pending redactions** (Acrobat: Redact tool; PDF-XChange: Redaction list), with a black fill when applied there.                         |         |             |
+| N5  | `redacted.pdf`               | No marks left. Search for SECRETALPHA, UNDERMIKE, ROTATEDNOVEMBER, FORMDELTA: **not found**; PUBLICLEFT and REPEATKILO found. Select-all copy has no secret. |         |             |
+| N6  | `redacted.pdf`               | File → Properties: no title, author or keywords; no attachments, no bookmark "OUTLINEINDIA"; no JavaScript prompt.                                           |         |             |
+| N7  | `redacted-aes256.pdf`        | Asks for a password; `user-pw` opens it; Properties show AES-256; checks as N5.                                                                              |         |             |
+| N8  | `transfer-rev-b__ctrl-s.pdf` | The square with Bo Vendor's reply on page 1 and the highlight on page 2, with authors, dates and text as in Rev A.                                           |         |             |
+
+| #   | File               | Check (Word / LibreOffice / Excel)                                                                                        | Result |
+| --- | ------------------ | ------------------------------------------------------------------------------------------------------------------------- | ------ |
+| N9  | `export.docx`      | Opens in Word and LibreOffice without a repair message; headings use Heading styles; the image is between its paragraphs. |        |
+| N10 | `tables.xlsx`      | Opens in Excel without a repair message; merged header cells; numbers right-aligned and summable.                         |        |
+| N11 | `annotations.xlsx` | Opens in Excel; one row with type, author, page and text.                                                                 |        |
+
+### O. Theirs → ours
+
+1. In each viewer: mark two areas for redaction on a copy of `transfer-rev-a__ctrl-s.pdf` (do
+   not apply), and add a sticky note and a highlight. Save.
+2. Open the saved file in PDFTools and record:
+
+| #   | Check                                                                                                                                                                             | Acrobat | PDF-XChange |
+| --- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------- | ----------- |
+| O1  | Their marks appear in Pending Redactions (status bar count) and as outlines on the page.                                                                                          |         |             |
+| O2  | Protect → Apply Redactions on their marks: "Every check passed"; the new file opens in their viewer with the areas blacked out and the text not searchable.                       |         |             |
+| O3  | Comment → Import Comments from their saved file into `transfer-rev-b__ctrl-s.pdf`: their note and highlight come in with their author and text (Rev A → Rev B from their viewer). |         |             |
+| O4  | Organize → rotate and delete a page of their file, Ctrl+S, reopen in their viewer: their comments are still on the right pages.                                                   |         |             |
