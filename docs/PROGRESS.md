@@ -1040,6 +1040,16 @@ M0–M2 are merged into `main` (M2 complete on the agent side, owner pack in
 
 ## Open issues
 
+- **Perf gate, first document open (`perf/open.spec.ts`, three files):** on CI one task of
+  103–113 ms at the first open (limit 100 ms); it passed on `main` after PR #49 and failed on
+  PR #49 twice and PR #50 once — it sits at the limit. A 4× CPU-throttled profile of that task:
+  React's first commit of the document view ~30 %, EmbedPDF plugin start-up (`initialize`,
+  `instantiatePlugin`) ~12 %, and 10–15 % is Playwright's own role query (`toHaveCount` polling
+  runs on the page's main thread). Removing the new table/redaction page layers does not change
+  it. Proposed fix (owner decision, it changes ADR-004's lazy engine start): start the Render
+  engine and EmbedPDF's registry when the app is idle after boot, so the first open no longer
+  pays for plugin start-up; and poll with cheap selectors in perf specs.
+
 - **Comment transfer (M4-20/21):** JSON-imported measurements come in as plain markups (v1 carries
   the value, not `/Measure`; ADR-018's object-layer patches for JSON are not built yet — importing
   from the PDF keeps them); no context menu for Copy/Paste yet (ribbon and keys only); the owner
