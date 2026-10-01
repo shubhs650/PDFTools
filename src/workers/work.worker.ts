@@ -36,6 +36,7 @@ import { exportImages } from './work/images';
 import { assemble, fullAccess, type AssemblePart } from './work/assemble';
 import { commentSource, copyComments, transferComments } from './work/transferJobs';
 import { detectTables, exportTables, tableCells, type TableSources } from './work/tables/job';
+import { applyRedactions } from './work/redact/apply';
 import type { PdfDocumentObject } from '@embedpdf/models';
 
 let mod: WrappedPdfiumModule | undefined;
@@ -260,6 +261,44 @@ serve<WorkApi>(self, {
           (p) => {
             ctx.progress(p);
           },
+        );
+      } finally {
+        wasmBytes();
+      }
+    }),
+
+  redact: ({ docId, skip }, ctx) =>
+    scheduler.run('interactive', ctx.signal, async (slice) => {
+      if (!mod) throw new RpcError('not-initialized', 'The work worker is not initialized');
+      const { doc } = await docs.get(docId);
+      requireCapability(securityOf(mod, docPtrOf(need(), doc.id)), 'modify'); // rule 9, M4-Q2
+      try {
+        const r = await applyRedactions(
+          mod,
+          need(),
+          docs.liveBytes(docId),
+          docs.passwordOf(docId),
+          slice,
+          (p) => {
+            ctx.progress(p);
+          },
+          // The failure-path probe exists in e2e builds only.
+          import.meta.env.MODE === 'e2e' ? skip : undefined,
+        );
+        const buf = r.bytes.buffer;
+        return new Transfer(
+          {
+            bytes: buf,
+            marks: r.marks,
+            pages: r.pages,
+            removedAnnotations: r.removedAnnotations,
+            recut: r.recut,
+            removed: [...new Set(r.sanitize.removed)],
+            outlineItemsRemoved: r.sanitize.outlineItemsRemoved,
+            fieldsRemoved: r.sanitize.fieldsRemoved,
+            leaks: r.leaks,
+          },
+          [buf],
         );
       } finally {
         wasmBytes();

@@ -1942,6 +1942,94 @@ textarea.form-field {
   white-space: nowrap;
 }
 
+/* ------------------------------------------------------------ redaction (M4-16) */
+
+.redact-layer {
+  position: absolute;
+  inset: var(--space-0);
+  pointer-events: none;
+}
+
+.redact-layer--draw {
+  pointer-events: auto;
+  cursor: crosshair;
+}
+
+.redact-mark {
+  position: absolute;
+  box-sizing: border-box;
+  border: 2px solid var(--color-danger);
+  pointer-events: none;
+}
+
+.redact-mark--draft {
+  border-style: dashed;
+}
+
+.redact-mark--key {
+  border-style: dashed;
+  background: color-mix(in srgb, var(--color-danger) 12%, transparent);
+  pointer-events: auto;
+}
+
+.redact-mark--key:focus-visible {
+  outline: 2px solid var(--color-focus);
+  outline-offset: 2px;
+}
+
+.redact-mark--pick {
+  pointer-events: auto;
+  cursor: pointer;
+}
+
+/* The fill Apply will paint, previewed on hover and while selected. */
+.redact-mark--pick:hover,
+.redact-mark[data-selected] {
+  background: color-mix(in srgb, var(--color-text) 75%, transparent);
+}
+
+.redact-mark[data-selected] {
+  outline: 2px solid var(--color-focus);
+  outline-offset: 2px;
+}
+
+.redact-list {
+  margin: var(--space-0);
+  padding-left: var(--space-4);
+  font-size: var(--font-size-s);
+}
+
+.redact-ok {
+  margin: var(--space-0);
+  font-weight: var(--font-weight-semibold);
+}
+
+.redact-panel {
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+}
+
+.redact-snippet {
+  display: block;
+  overflow: hidden;
+  color: var(--color-text-muted);
+  font-size: var(--font-size-xs);
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.status-chip {
+  padding: var(--space-0) var(--space-2);
+  border: var(--border-width) solid var(--color-border);
+  border-radius: var(--radius-m);
+  background: none;
+  color: var(--color-text);
+  font: inherit;
+  font-size: var(--font-size-s);
+  cursor: pointer;
+}
+
 /* ------------------------------------------------------------ tables (M4-14) */
 
 .table-layer {

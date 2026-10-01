@@ -10,7 +10,8 @@ import {
 } from '@embedpdf/models';
 
 /** Not comments: links (link layer), form fields, popups (a markup's window). */
-const NOT_COMMENTS = new Set([S.LINK, S.WIDGET, S.POPUP]);
+// Redaction marks are listed in Pending Redactions (M4-16), not as comments.
+const NOT_COMMENTS = new Set([S.LINK, S.WIDGET, S.POPUP, S.REDACT]);
 
 export interface Comment {
   id: string;

@@ -27,6 +27,7 @@ import { NumberOverlay } from '../annotate/comments/NumberOverlay';
 import { MeasureOverlay } from '../measure/MeasureOverlay';
 import { ViewportLayer } from '../measure/ViewportLayer';
 import { TableOverlay } from '../tables/TableOverlay';
+import { RedactionLayer } from '../redact/RedactionLayer';
 import { SnapMarker } from '../measure/SnapMarker';
 import { isMarkupTool } from '../annotate/tools/markupModel';
 import { LinkLayer } from './LinkLayer';
@@ -123,6 +124,8 @@ function Page({
               <NumberOverlay documentId={documentId} pageIndex={layout.pageIndex} scale={scale} />
               {/* Scale viewports while on the Measure tab (M3-17). */}
               <ViewportLayer documentId={documentId} pageIndex={layout.pageIndex} scale={scale} />
+              {/* Pending redaction marks and the area tool (M4-16). */}
+              <RedactionLayer documentId={documentId} pageIndex={layout.pageIndex} scale={scale} />
               {/* Review & Extract's table outlines and dividers (M4-14). */}
               <TableOverlay documentId={documentId} pageIndex={layout.pageIndex} scale={scale} />
               {/* Where the pointer snaps (M3-18). */}
@@ -243,7 +246,11 @@ export function DocumentView({ documentId }: { documentId: string }) {
     const im = capability<InteractionManagerCapability>(registry, 'interaction-manager');
     // A text markup tool is the annotation plugin's interaction mode of the same id (M3-08).
     im.forDocument(documentId).activate(
-      tool === 'hand' ? HAND_MODE : isMarkupTool(tool) || isDrawTool(tool) ? tool : POINTER_MODE,
+      tool === 'hand'
+        ? HAND_MODE
+        : isMarkupTool(tool) || isDrawTool(tool) || tool === 'redactText'
+          ? tool
+          : POINTER_MODE,
     );
     // Select Text and Hand never pick up annotations (M3-05); Select and Select Objects do.
     try {

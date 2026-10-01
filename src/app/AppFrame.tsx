@@ -5,6 +5,7 @@ import { ErrorBoundary } from './ErrorBoundary';
 import { LeftRail } from './LeftRail';
 import { PropertiesPane } from './PropertiesPane';
 import { ReviewPanel } from '../features/tables/ReviewPanel';
+import { PendingRedactionsPanel } from '../features/redact/PendingRedactionsPanel';
 import { StatusBar, type StatusBarProps } from './StatusBar';
 import { TabStrip } from './TabStrip';
 
@@ -44,6 +45,8 @@ export function AppFrame({ ribbon, children, status }: AppFrameProps) {
         <PropertiesPane />
         {/* Review & Extract (M4-14) while it is on. */}
         <ReviewPanel />
+        {/* Pending Redactions (M4-16) while it is open. */}
+        <PendingRedactionsPanel />
       </div>
       <StatusBar {...status} />
     </div>

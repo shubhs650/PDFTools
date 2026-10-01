@@ -103,7 +103,7 @@ import { TableLightning20Regular, TableLightning28Regular } from '@fluentui/reac
 import { TableSettings20Regular, TableSettings28Regular } from '@fluentui/react-icons/svg/table-settings';
 import { Target20Filled, Target20Regular } from '@fluentui/react-icons/svg/target';
 import { TextAdd20Filled, TextAdd20Regular } from '@fluentui/react-icons/svg/text-add';
-import { TextBulletListSquare20Regular, TextBulletListSquare32Regular } from '@fluentui/react-icons/svg/text-bullet-list-square';
+import { TextBulletListSquare20Filled, TextBulletListSquare20Regular, TextBulletListSquare32Filled, TextBulletListSquare32Regular } from '@fluentui/react-icons/svg/text-bullet-list-square';
 import { TextEditStyle20Filled, TextEditStyle20Regular } from '@fluentui/react-icons/svg/text-edit-style';
 import { TextStrikethrough20Filled, TextStrikethrough20Regular, TextStrikethrough24Filled, TextStrikethrough24Regular } from '@fluentui/react-icons/svg/text-strikethrough';
 import { TextT20Filled, TextT20Regular, TextT32Filled, TextT32Regular } from '@fluentui/react-icons/svg/text-t';
@@ -230,7 +230,7 @@ export const FLUENT_GLYPHS: Record<string, FluentGlyphs> = {
   'protect.markRedaction': { regular: { small: TextStrikethrough20Regular, large: TextStrikethrough24Regular, largeNative: 24 }, filled: { small: TextStrikethrough20Filled, large: TextStrikethrough24Filled, largeNative: 24 } },
   'protect.markRedactionArea': { regular: { small: RectangleLandscape20Regular, large: RectangleLandscape32Regular, largeNative: 32 }, filled: { small: RectangleLandscape20Filled, large: RectangleLandscape32Filled, largeNative: 32 } },
   'protect.applyRedactions': { regular: { small: CheckmarkCircle20Regular, large: CheckmarkCircle32Regular, largeNative: 32 } },
-  'protect.redactionList': { regular: { small: TextBulletListSquare20Regular, large: TextBulletListSquare32Regular, largeNative: 32 } },
+  'protect.redactionList': { regular: { small: TextBulletListSquare20Regular, large: TextBulletListSquare32Regular, largeNative: 32 }, filled: { small: TextBulletListSquare20Filled, large: TextBulletListSquare32Filled, largeNative: 32 } },
   'protect.securityInfo': { regular: { small: LockShield20Regular, large: LockShield32Regular, largeNative: 32 } },
   'protect.unlock': { regular: { small: LockOpen20Regular, large: LockOpen32Regular, largeNative: 32 } },
   'protect.signatures': { regular: { small: Signature20Regular, large: Signature32Regular, largeNative: 32 } },

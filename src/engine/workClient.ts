@@ -67,7 +67,8 @@ type JobMethod =
   | 'copyComments'
   | 'detectTables'
   | 'tableCells'
-  | 'exportTables';
+  | 'exportTables'
+  | 'redact';
 
 export interface WorkClientOptions {
   wasmUrl?: string;
