@@ -1,6 +1,6 @@
 # PDFTools — Progress
 
-_Last updated: 2026-09-30 (session 18: M4-20 and M4-21 comment transfer done)_
+_Last updated: 2026-10-01 (session 18: tables M4-12 … M4-15 done)_
 
 **Current milestone:** M3 — Review. Plan approved (2026-09-27); M3-01 … M3-08 done in session 16
 on `claude/m3-task-breakdown-tlyokp` (ADR-014 and ADR-015 accepted).
@@ -8,6 +8,17 @@ M0–M2 are merged into `main` (M2 complete on the agent side, owner pack in
 [docs/acceptance/M2.md](acceptance/M2.md)); the M0, M1 and M2 owner runs are open.
 
 ## Done
+
+- **Session 18 — M4-15 table templates.** Save a reviewed table's grid as a named template;
+  rename, delete, apply it to a page range (into Review & Extract or straight to a file), pages of
+  another size or rotation skipped and named. Stored in IndexedDB v4, listed on the Privacy page,
+  removed by Clear all local data. M4 tables (M4-12 … M4-15) complete.
+
+- **Session 18 — M4-14 Review & Extract.** Convert → Review & Extract: detected tables as
+  outlines with a side panel (include, delete, find on a page, draw with the pointer or the
+  keyboard), dividers dragged or moved from the keyboard, header rows and merged cells from the
+  cell grid (keys and context menu), live preview from the Work worker, the mode's own undo, and
+  export of the accepted tables. Dragging a 60 × 20 grid has no main-thread long task.
 
 - **Session 18 — M4-13 Express Extract.** Convert → Tables (Beta) → Express Extract: the tables of
   the selected pages (else the current page) as an Excel workbook (a sheet per table, merged
@@ -823,8 +834,8 @@ M0–M2 are merged into `main` (M2 complete on the agent side, owner pack in
 - **M3 done on the agent side (session 17):** M3-16 … M3-20 as one commit each on
   `claude/m3-tasks-16-20-vdqo8q`, merged into `main` as PR #47. Waiting on the owner pack
   ([docs/acceptance/M3.md](acceptance/M3.md) §4).
-- **M4 in progress (session 18):** tables M4-12 and M4-13 done; M4-14 and M4-15 next.
-  Earlier: [docs/plan/M4.md](plan/M4.md), 22 tasks. Done: M4-01 and M4-02
+- **M4 in progress (session 18):** tables M4-12 … M4-15 done (on `claude/upbeat-cray-lknggv`,
+  after PR #48 was merged). Earlier: [docs/plan/M4.md](plan/M4.md), 22 tasks. Done: M4-01 and M4-02
   (spikes; ADR-016 and ADR-017 accepted), M4-03 (icons), M4-04 (Oxide and the export
   framework), M4-05 (text, Markdown, HTML), M4-06 (images), M4-07 (Word, Beta), M4-08 (annotation export), M4-19 (comment-transfer
   spike), M4-09 (page operations core), M4-10 (reorder), M4-11 (insert from file, extract,
@@ -837,6 +848,17 @@ M0–M2 are merged into `main` (M2 complete on the agent side, owner pack in
   (CI) on it; _merge_ adds it to `main` once the checks are green.
 
 ## Session log
+
+- **Session 18 (2026-10-01), tables M4-12 … M4-15:** PDF Oxide's `extractTables` missed or split
+  the fixture's ruled tables, so ruled tables come from the page's own rulings first (ADR-009
+  implementation note) and unruled ones from our detector. Express Extract has two steps (Find
+  Tables, then Save…): the save picker needs a fresh click and must not create an empty file when
+  nothing is found. Review & Extract keeps its own undo history; while it is on, Ctrl+Z/Y and the
+  QAT Undo/Redo act on it (`src/app/commands/undoOverride.ts`), never on the document. Dense grids
+  shrink divider hit areas so column dividers stay reachable between row dividers. The right-hand
+  panes now sit side by side (the frame grid had room for one: a second pane wrapped below the
+  window), and the panel's parts don't shrink (the cell grid was squashed under the buttons). A racy
+  Express Extract cancel test (5 pages could finish before Cancel) now cancels a 200-page search.
 
 - **Session 18 (2026-10-01), CI on PR #48:** the first full CI run (quota restored) failed 3 of 40
   perf scenarios. Undo of "delete 1,000 of 2,000 pages" took 37–49 s: the viewer refresh after a
@@ -978,15 +1000,16 @@ M0–M2 are merged into `main` (M2 complete on the agent side, owner pack in
    (L/M) and the still-open §D/§F in Acrobat Reader and PDF-XChange (they decide ADR-007
    decisions 2 and 3: the grouped measurement label and viewport semantics), snapping on the local
    P&ID and CAD drawings (`npm run owner:timings`), the CRS in Excel.
-2. **Agent:** M4 so far (M4-01 … M4-11, M4-19 … M4-21) goes into `main` through PR #48
-   (`claude/upbeat-cray-lknggv`) once CI is green. (M3 is in `main`: PRs #46 and #47.)
+2. **Agent:** M4-01 … M4-11 and M4-19 … M4-21 are in `main` (PR #48). The tables (M4-12 …
+   M4-15) are on `claude/upbeat-cray-lknggv`, for the next PR once CI is green.
 3. **Owner:** the M2 owner pack in [docs/acceptance/M2.md](acceptance/M2.md) §4 and the M1/M0
    owner runs (below, unchanged).
 4. **Owner:** decide the items under "Decisions needed" (keyboard text selection, committed
    corpus PDFs, Pages project).
 5. **Owner:** review the M4 icons in the e2e gallery.
-6. **Agent:** tables (M4-12 … M4-15), then redaction (M4-16 … M4-18), then the M4 acceptance
-   pass (M4-22).
+6. **Agent:** redaction (M4-16 … M4-18), then the M4 acceptance pass (M4-22).
+   **Owner:** try the tables (Convert → Tables (Beta)) on a real pipe chart and parts list (S4
+   owner run): detection quality on real files is untested beyond the self-made fixture.
 7. **Owner (M0/M1, still open):** S1 interop checklist; S1 FSA button on the 500 MB contract; S5
    search on the FAR and the 500 MB contract; S7 on the CAD drawings and the P&ID
    (`node spikes/s7-snap/run-node.ts <files>`); S4 on the pipe chart and a parts list; FAR, 500 MB
@@ -1088,6 +1111,14 @@ M0–M2 are merged into `main` (M2 complete on the agent side, owner pack in
   Drawings are supplied locally by the owner anyway (ADR-002).
 
 ## Decisions needed (owner)
+
+- **Express Extract: one click or two (M4-13, ARCHITECTURE §7.7).** §7.7 says "one click →
+  auto-detect → XLSX/CSV". Built: one click (Find Tables) detects, a second (Save…) asks where to
+  save, because the browser's save picker only opens on a fresh click, and asking first would
+  create an empty file when no table is found. Options: (a) keep two steps (recommended; amend
+  §7.7 by ADR); (b) ask where to save first, in one click, and delete/leave an empty file when
+  nothing is found; (c) one click that downloads to the Downloads folder (no picker) once tables
+  are found.
 
 - **Keyboard text selection (M2-04).** Caret-based selection (Shift+arrows) is not built; the
   keyboard path is Ctrl+A (page text) + Ctrl+C. Accept as an exception to the M2-04 criterion, or

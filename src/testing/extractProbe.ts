@@ -7,7 +7,9 @@ import {
   lastTableExport,
   openExpressExtract,
 } from '../features/tables/expressExtract';
+import { dispatchReview, selectTable } from '../features/tables/reviewStore';
 import { workClient } from '../features/view/host';
+import { makeGrid } from '../model/tableGrid';
 import type { ExtractFormat, ExtractOptions } from '../workers/work/extract';
 import type { TestHook } from './hook';
 
@@ -110,6 +112,20 @@ export function registerExtractProbe(hook: TestHook): void {
     openExpress: (docId: string, pages: number[]) => {
       openExpressExtract(docId);
       expressStore.setState({ pages });
+    },
+    /** Adds a cols × rows table over `box` to Review & Extract and selects it (perf, M4-14). */
+    reviewAdd: (
+      page: number,
+      box: [number, number, number, number],
+      cols: number,
+      rows: number,
+    ) => {
+      const id = `probe-${String(page)}-${String(cols)}x${String(rows)}`;
+      dispatchReview({
+        type: 'add',
+        table: { id, grid: makeGrid(page, box, cols, rows), accepted: true },
+      });
+      selectTable(id);
     },
     /** Starts an extraction and cancels it after `afterMs`: how long until it stops. */
     cancelAfter: async (docId: string, pages: number[], afterMs: number) => {

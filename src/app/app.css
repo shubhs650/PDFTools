@@ -103,7 +103,10 @@ body {
 
 .app-body {
   display: grid;
-  grid-template-columns: auto minmax(0, 1fr) auto;
+  /* Rail, document, then the right-hand panes side by side (Properties, Review & Extract). */
+  grid-template-columns: auto minmax(0, 1fr);
+  grid-auto-columns: auto;
+  grid-auto-flow: column;
   min-height: var(--space-0);
 }
 
@@ -1937,6 +1940,219 @@ textarea.form-field {
   color: var(--color-text-on-accent);
   font-size: var(--font-size-xs);
   white-space: nowrap;
+}
+
+/* ------------------------------------------------------------ tables (M4-14) */
+
+.table-layer {
+  position: absolute;
+  inset: var(--space-0);
+  pointer-events: none;
+}
+
+.table-layer--draw,
+.table-layer--dragging {
+  pointer-events: auto;
+  cursor: crosshair;
+}
+
+.table-layer--draw .table-outline {
+  pointer-events: none;
+}
+
+.table-outline {
+  position: absolute;
+  box-sizing: border-box;
+  border: 2px dashed var(--color-accent);
+  pointer-events: auto;
+  cursor: pointer;
+}
+
+.table-outline[data-accepted] {
+  border-style: solid;
+}
+
+.table-outline[data-selected] {
+  background: color-mix(in srgb, var(--color-accent) 6%, transparent);
+  cursor: copy;
+}
+
+.table-outline--draft {
+  display: none;
+  border-style: solid;
+  pointer-events: none;
+}
+
+.table-outline--key {
+  border-style: solid;
+  background: color-mix(in srgb, var(--color-accent) 10%, transparent);
+}
+
+.table-outline--key:focus-visible {
+  outline: 2px solid var(--color-focus);
+  outline-offset: 2px;
+}
+
+.table-header-band {
+  position: absolute;
+  background: color-mix(in srgb, var(--color-accent) 14%, transparent);
+  pointer-events: none;
+}
+
+.table-merge {
+  position: absolute;
+  box-sizing: border-box;
+  border: 1px solid var(--color-accent);
+  background: color-mix(in srgb, var(--color-page) 70%, transparent);
+  pointer-events: none;
+}
+
+.table-divider {
+  position: absolute;
+  pointer-events: auto;
+  touch-action: none;
+}
+
+.table-divider::after {
+  position: absolute;
+  background: var(--color-accent);
+  content: '';
+}
+
+.table-divider--col {
+  z-index: 1;
+  cursor: col-resize;
+}
+
+.table-divider--col::after {
+  top: var(--space-0);
+  bottom: var(--space-0);
+  left: calc(50% - 0.5px);
+  width: 1px;
+}
+
+.table-divider--row {
+  cursor: row-resize;
+}
+
+.table-divider--row::after {
+  top: calc(50% - 0.5px);
+  right: var(--space-0);
+  left: var(--space-0);
+  height: 1px;
+}
+
+.table-divider:hover::after,
+.table-divider:focus-visible::after {
+  background: var(--color-focus);
+  box-shadow: 0 0 0 1px var(--color-focus);
+}
+
+.table-divider:focus-visible {
+  outline: none;
+}
+
+.table-review-panel {
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+}
+
+.table-review-body {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  padding: var(--space-3);
+  overflow: auto;
+}
+
+.table-review-body > * {
+  /* The body scrolls; its parts (the cell grid above all) keep their height. */
+  flex-shrink: 0;
+}
+
+.table-review-tools {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-1);
+}
+
+.table-review-heading {
+  margin: var(--space-0);
+  font-size: var(--font-size-s);
+  font-weight: var(--font-weight-semibold);
+}
+
+.table-review-list {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+  margin: var(--space-0);
+  padding: var(--space-0);
+  list-style: none;
+}
+
+.table-review-item {
+  display: flex;
+  align-items: center;
+  gap: var(--space-1);
+}
+
+.table-review-select {
+  flex: 1;
+  padding: var(--space-1);
+  border: var(--border-width) solid transparent;
+  background: none;
+  color: var(--color-text);
+  font: inherit;
+  font-size: var(--font-size-s);
+  text-align: start;
+  cursor: pointer;
+}
+
+.table-review-select[aria-pressed='true'] {
+  border-color: var(--color-accent);
+  background: var(--color-selected);
+}
+
+.table-template-edit {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  gap: var(--space-1);
+}
+
+.table-preview-wrap {
+  max-height: 320px;
+  overflow: auto;
+}
+
+.table-preview {
+  border-collapse: collapse;
+  font-size: var(--font-size-xs);
+}
+
+.table-preview td {
+  max-width: 160px;
+  padding: var(--space-0) var(--space-1);
+  overflow: hidden;
+  border: var(--border-width) solid var(--color-border);
+  text-overflow: ellipsis;
+  white-space: pre-line;
+  vertical-align: top;
+}
+
+.table-preview td[aria-selected='true'] {
+  background: var(--color-selected);
+}
+
+.table-preview td:focus-visible {
+  outline: 2px solid var(--color-focus);
+  outline-offset: -2px;
+}
+
+.table-preview .table-preview-header {
+  font-weight: var(--font-weight-semibold);
 }
 
 .prop-subtitle {

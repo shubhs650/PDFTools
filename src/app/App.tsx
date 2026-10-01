@@ -11,6 +11,7 @@ import { registerPrintCommands } from '../features/print/commands';
 import { registerExtractCommands } from '../features/extract/commands';
 import { registerTableCommands } from '../features/tables/commands';
 import { ExpressExtractDialog } from '../features/tables/ExpressExtractDialog';
+import { TemplatesDialog } from '../features/tables/TemplatesDialog';
 import { registerPageCommands } from '../features/pages/commands';
 import { PageDialogs } from '../features/pages/PageDialogs';
 import { FileDialogs } from '../features/pages/FileDialogs';
@@ -180,6 +181,7 @@ export function App() {
         <ImportCommentsDialog />
         <ExportDialog />
         <ExpressExtractDialog />
+        <TemplatesDialog />
         <PageDialogs />
         <FileDialogs />
         <UpdateWaitDialog />

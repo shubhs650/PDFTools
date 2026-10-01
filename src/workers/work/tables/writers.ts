@@ -6,14 +6,14 @@
 import type ExcelJS from 'exceljs';
 import type { TableData } from '../../../model/tableGrid';
 
-export interface NamedTable {
+export interface NamedTable<T extends { page: number } = TableData> {
   /** Sheet / file name stem, e.g. "p3-t1". */
   name: string;
-  data: TableData;
+  data: T;
 }
 
 /** "p<page>-t<k>" per table, k counting tables on each page from 1. */
-export function nameTables(tables: readonly TableData[]): NamedTable[] {
+export function nameTables<T extends { page: number }>(tables: readonly T[]): NamedTable<T>[] {
   const perPage = new Map<number, number>();
   return tables.map((data) => {
     const k = (perPage.get(data.page) ?? 0) + 1;

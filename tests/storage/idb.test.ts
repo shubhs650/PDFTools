@@ -24,6 +24,7 @@ describe('AppDb (M1-12)', () => {
       'recent',
       'schemes',
       'settings',
+      'tableTemplates',
     ]);
     db.close();
   });
@@ -119,7 +120,7 @@ describe('AppDb v3 (M3-13)', () => {
     const v2 = await AppDb.open({ factory, migrations: MIGRATIONS.slice(0, 2) });
     await v2.setProfile({ name: 'Ana' });
     v2.close();
-    const db = await AppDb.open({ factory });
+    const db = await AppDb.open({ factory, migrations: MIGRATIONS.slice(0, 3) });
     expect(db.db.version).toBe(3);
     expect(await db.getProfile()).toEqual({ name: 'Ana' });
     const s1 = { id: 's1', name: 'Site' };
@@ -128,6 +129,28 @@ describe('AppDb v3 (M3-13)', () => {
     await db.putScheme(s2);
     await db.deleteScheme('s1');
     expect(await db.listSchemes()).toEqual([{ id: 's2', name: 'Shop' }]);
+    db.close();
+  });
+});
+
+describe('AppDb v4 (M4-15)', () => {
+  it('stores table templates by id, keeping the profile and schemes of v3', async () => {
+    const factory = new IDBFactory();
+    const v3 = await AppDb.open({ factory, migrations: MIGRATIONS.slice(0, 3) });
+    await v3.setProfile({ name: 'Ana' });
+    const scheme = { id: 's1', name: 'Site' };
+    await v3.putScheme(scheme);
+    v3.close();
+    const db = await AppDb.open({ factory });
+    expect(db.db.version).toBe(4);
+    expect(await db.getProfile()).toEqual({ name: 'Ana' });
+    expect(await db.listSchemes()).toEqual([{ id: 's1', name: 'Site' }]);
+    await db.putTableTemplate({ id: 't1' });
+    await db.putTableTemplate({ id: 't2' });
+    await db.deleteTableTemplate('t1');
+    expect(await db.listTableTemplates()).toEqual([{ id: 't2' }]);
+    await db.clearAll();
+    expect(await db.listTableTemplates()).toEqual([]);
     db.close();
   });
 });

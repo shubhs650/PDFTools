@@ -9,7 +9,7 @@ import { recordError } from '../../app/diagnostics';
 import { documentStore } from '../../app/store/documentStore';
 import { RpcError } from '../../engine/errors';
 import { t } from '../../i18n';
-import type { TableData } from '../../model/tableGrid';
+import type { TableData, TableGrid } from '../../model/tableGrid';
 import {
   accessStrategy,
   canPickFolder,
@@ -134,11 +134,11 @@ type Target =
   | { packaging: 'single' | 'zip'; handle?: FileSystemFileHandle; name: string }
   | { packaging: 'folder'; dir: FileSystemDirectoryHandle };
 
-/** File name of the output: "plan.xlsx", "plan p3-t1.csv", "plan tables.zip". */
+/** File name of the output: "plan tables.xlsx", "plan p3-t1.csv", "plan tables.zip". */
 export function outputName(
   base: string,
   format: TableFormat,
-  tables: readonly TableData[],
+  tables: readonly { page: number }[],
 ): string {
   if (format === 'xlsx') return t('tables.express.fileXlsx', { base });
   const [only] = nameTables(tables);
@@ -150,7 +150,7 @@ export function outputName(
 async function pickTarget(
   base: string,
   format: TableFormat,
-  tables: readonly TableData[],
+  tables: readonly { page: number }[],
 ): Promise<Target | null> {
   const multi = format === 'csv' && tables.length > 1;
   if (multi && canPickFolder()) {
@@ -162,6 +162,42 @@ async function pickTarget(
   if (accessStrategy() !== 'fsa') return { packaging, name };
   const handle = await pickFileSaveTarget(name);
   return handle ? { packaging, handle, name } : null;
+}
+
+/**
+ * Asks where to save, has the Work worker build the tables (already read, or
+ * the text of edited grids — Review & Extract, M4-14) and writes them. false
+ * when the user cancelled the picker; throws when the job fails or is cancelled.
+ */
+export async function writeTables(
+  docId: string,
+  base: string,
+  input: { tables: TableData[] } | { grids: TableGrid[] },
+  format: TableFormat,
+  signal: AbortSignal,
+): Promise<boolean> {
+  const items: readonly { page: number }[] = 'tables' in input ? input.tables : input.grids;
+  const target = await pickTarget(base, format, items);
+  if (!target) return false;
+  const r = await workClient().run(
+    'exportTables',
+    { docId, ...input, format, packaging: target.packaging, baseName: base },
+    { signal },
+  ).promise;
+  signal.throwIfAborted();
+  if (target.packaging === 'folder') {
+    const files = r.files ?? [];
+    if (import.meta.env.MODE === 'e2e') lastTableExport = { files, packaging: 'folder' };
+    await writeFilesToFolder(target.dir, files, { signal });
+  } else {
+    const blob = r.blob;
+    if (!blob) throw new Error('no output');
+    if (import.meta.env.MODE === 'e2e')
+      lastTableExport = { files: [{ path: target.name, blob }], packaging: target.packaging };
+    if (target.handle) await writeToHandle(target.handle, blob, signal);
+    else downloadBytes(blob, target.name);
+  }
+  return true;
 }
 
 /** Step 2: write the tables found as `format`. Closes the dialog once written. */
@@ -181,30 +217,14 @@ export async function saveTables(format: TableFormat): Promise<void> {
     error: null,
   });
   try {
-    const target = await pickTarget(base, format, found.tables);
-    if (!target) {
-      expressStore.setState({ running: null });
-      return;
-    }
-    const r = await workClient().run(
-      'exportTables',
-      { docId, tables: found.tables, format, packaging: target.packaging, baseName: base },
-      { signal: controller.signal },
-    ).promise;
-    controller.signal.throwIfAborted();
-    if (target.packaging === 'folder') {
-      const files = r.files ?? [];
-      if (import.meta.env.MODE === 'e2e') lastTableExport = { files, packaging: 'folder' };
-      await writeFilesToFolder(target.dir, files, { signal: controller.signal });
-    } else {
-      const blob = r.blob;
-      if (!blob) throw new Error('no output');
-      if (import.meta.env.MODE === 'e2e')
-        lastTableExport = { files: [{ path: target.name, blob }], packaging: target.packaging };
-      if (target.handle) await writeToHandle(target.handle, blob, controller.signal);
-      else downloadBytes(blob, target.name);
-    }
-    expressStore.setState(CLOSED);
+    const written = await writeTables(
+      docId,
+      base,
+      { tables: found.tables },
+      format,
+      controller.signal,
+    );
+    expressStore.setState(written ? CLOSED : { running: null });
   } catch (err) {
     fail(err, controller);
   } finally {

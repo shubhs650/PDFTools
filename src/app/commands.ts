@@ -1083,6 +1083,7 @@ export const COMMANDS: readonly CommandDef[] = [
     size: 'large',
     fluent: 'TableEdit',
     milestone: 'M4',
+    shipped: true, // M4-14
   },
   {
     id: 'convert.tableTemplates',
@@ -1091,6 +1092,7 @@ export const COMMANDS: readonly CommandDef[] = [
     size: 'large',
     fluent: 'TableSettings',
     milestone: 'M4',
+    shipped: true, // M4-15
   },
   {
     id: 'protect.markRedaction',

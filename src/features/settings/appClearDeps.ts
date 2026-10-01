@@ -5,6 +5,7 @@ import { recentStore } from '../recent/recent';
 import { recoveryStore } from '../recovery/recovery';
 import { resetProfile } from './profile/profileStore';
 import { resetSchemes } from '../stamps/schemes/schemeStore';
+import { resetTemplates } from '../tables/templateStore';
 import type { ClearDeps } from './clearAll';
 
 const hasCaches = (): boolean => typeof caches !== 'undefined';
@@ -22,5 +23,6 @@ export const appClearDeps: ClearDeps = {
     recentStore.setState({ entries: [], problem: null });
     resetProfile();
     resetSchemes();
+    resetTemplates();
   },
 };

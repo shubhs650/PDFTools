@@ -116,14 +116,12 @@ test('selected pages → CSV files into a folder; OCR note for the scanned page'
   expect(rows[0]).toBe(BOLTS.cells[0]?.join(','));
 });
 
-test('a page without tables says so and saves nothing; Cancel stops the search', async ({
-  page,
-}) => {
+test('a page without tables says so and saves nothing', async ({ page }) => {
   const id = await open(page);
   await stubSavePicker(page);
   await thumb(page, '5').click();
   await expect.poll(() => cap(page, 'pages', 'selection', id)).toEqual([4]);
-  let dialog = await express(page);
+  const dialog = await express(page);
   await dialog.getByRole('button', { name: 'Find Tables' }).click();
   await expect(dialog.getByRole('status')).toContainText('No tables found on these pages.', {
     timeout: 20_000,
@@ -131,14 +129,20 @@ test('a page without tables says so and saves nothing; Cancel stops the search',
   await expect(dialog.getByRole('button', { name: 'Save…' })).toHaveCount(0);
   await dialog.getByRole('button', { name: 'Close' }).first().click();
   await expect(dialog).toBeHidden();
+  expect(await savedFiles(page)).toEqual([]);
+});
 
-  // All five pages, cancelled as soon as the search starts.
-  await thumb(page, '1').click();
-  await thumb(page, '5').click({ modifiers: ['Shift'] });
-  dialog = await express(page);
+test('Cancel stops the search', async ({ page }) => {
+  // 200 pages: the search is still running when Cancel is pressed.
+  await page.goto('/');
+  await drop(page, [{ name: 'many.pdf', b64: b64(tablesPdf(40)) }]);
+  await expect(page.locator('[data-page="0"] img.page-preview')).toBeVisible();
+  const id = (await cap(page, 'view', 'activeDocId')) as string;
+  await cap(page, 'extract', 'openExpress', id, [...Array(200).keys()]);
+  const dialog = page.getByRole('dialog', { name: 'Express Extract (Beta)' });
   await dialog.getByRole('button', { name: 'Find Tables' }).click();
   await dialog.getByRole('button', { name: 'Cancel' }).click();
   await expect(dialog.getByRole('button', { name: 'Find Tables' })).toBeVisible();
   await expect(dialog.getByRole('alert')).toHaveCount(0);
-  expect(await savedFiles(page)).toEqual([]);
+  await expect(dialog).not.toContainText('tables found');
 });
