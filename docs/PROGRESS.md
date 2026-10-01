@@ -9,6 +9,11 @@ M0–M2 are merged into `main` (M2 complete on the agent side, owner pack in
 
 ## Done
 
+- **Session 18 — M4-13 Express Extract.** Convert → Tables (Beta) → Express Extract: the tables of
+  the selected pages (else the current page) as an Excel workbook (a sheet per table, merged
+  header cells, numbers as numbers) or CSV files (folder, else ZIP); "No tables found" and an OCR
+  note; progress and Cancel. 200 pages in ~3 s with no main-thread long task.
+
 - **Session 18 — M4-12 table model and detectors.** The table grid model (dividers, header rows,
   merged cells, text by word centre) and detection in the Work worker: ruled tables from the
   page's own rulings (merged headers rebuilt from missing rulings) plus Oxide's candidates, our
@@ -818,7 +823,7 @@ M0–M2 are merged into `main` (M2 complete on the agent side, owner pack in
 - **M3 done on the agent side (session 17):** M3-16 … M3-20 as one commit each on
   `claude/m3-tasks-16-20-vdqo8q`, merged into `main` as PR #47. Waiting on the owner pack
   ([docs/acceptance/M3.md](acceptance/M3.md) §4).
-- **M4 in progress (session 18):** tables M4-12 done; M4-13 … M4-15 next.
+- **M4 in progress (session 18):** tables M4-12 and M4-13 done; M4-14 and M4-15 next.
   Earlier: [docs/plan/M4.md](plan/M4.md), 22 tasks. Done: M4-01 and M4-02
   (spikes; ADR-016 and ADR-017 accepted), M4-03 (icons), M4-04 (Oxide and the export
   framework), M4-05 (text, Markdown, HTML), M4-06 (images), M4-07 (Word, Beta), M4-08 (annotation export), M4-19 (comment-transfer

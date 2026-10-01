@@ -35,7 +35,7 @@ import { zipBlob } from './work/zip';
 import { exportImages } from './work/images';
 import { assemble, fullAccess, type AssemblePart } from './work/assemble';
 import { commentSource, copyComments, transferComments } from './work/transferJobs';
-import { detectTables, tableCells, type TableSources } from './work/tables/job';
+import { detectTables, exportTables, tableCells, type TableSources } from './work/tables/job';
 import type { PdfDocumentObject } from '@embedpdf/models';
 
 let mod: WrappedPdfiumModule | undefined;
@@ -241,6 +241,26 @@ serve<WorkApi>(self, {
     scheduler.run('interactive', ctx.signal, async (slice) => {
       try {
         return { tables: await tableCells(await tableSources(docId, slice), grids, slice) };
+      } finally {
+        wasmBytes();
+      }
+    }),
+
+  exportTables: ({ docId, pages, grids, tables, format, packaging, baseName }, ctx) =>
+    scheduler.run('interactive', ctx.signal, async (slice) => {
+      try {
+        const src = await tableSources(docId, slice);
+        return await exportTables(
+          src,
+          tables ? { tables } : grids ? { grids } : { pages: pages ?? [] },
+          format,
+          packaging,
+          baseName,
+          slice,
+          (p) => {
+            ctx.progress(p);
+          },
+        );
       } finally {
         wasmBytes();
       }

@@ -201,10 +201,15 @@ function page5(): string {
   ].join('\n');
 }
 
-/** The five pages. Fonts: F1 Helvetica, F2 Helvetica-Bold; page 4 is one image. */
-export function tablesPdf(): Uint8Array {
-  const contents = [page1(), page2(), page3(), 'q 595 0 0 842 0 0 cm /Im1 Do Q', page5()];
-  const sizes = ['0 0 842 595', '0 0 595 842', '0 0 595 842', '0 0 595 842', '0 0 595 842'];
+/**
+ * The five pages (repeated `copies` times for perf runs). Fonts: F1 Helvetica,
+ * F2 Helvetica-Bold; page 4 is one image.
+ */
+export function tablesPdf(copies = 1): Uint8Array {
+  const one = [page1(), page2(), page3(), 'q 595 0 0 842 0 0 cm /Im1 Do Q', page5()];
+  const oneSizes = ['0 0 842 595', '0 0 595 842', '0 0 595 842', '0 0 595 842', '0 0 595 842'];
+  const contents = Array.from({ length: copies }, () => one).flat();
+  const sizes = Array.from({ length: copies }, () => oneSizes).flat();
   const n = contents.length;
   const fonts = 3 + n * 2;
   const image = fonts + 2;

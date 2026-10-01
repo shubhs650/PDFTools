@@ -1074,6 +1074,7 @@ export const COMMANDS: readonly CommandDef[] = [
     size: 'large',
     fluent: 'TableLightning',
     milestone: 'M4',
+    shipped: true, // M4-13
   },
   {
     id: 'convert.reviewExtract',

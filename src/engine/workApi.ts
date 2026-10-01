@@ -33,6 +33,7 @@ import type {
 } from '../workers/work/transferJobs';
 import type { TableData, TableGrid } from '../model/tableGrid';
 import type { PageTables } from '../workers/work/tables/detect';
+import type { TableExportResult, TableFormat, TablePackaging } from '../workers/work/tables/job';
 import type { MethodSpec } from './protocol';
 
 export type WorkPriority = 'interactive' | 'save-verify' | 'geometry' | 'background';
@@ -111,6 +112,25 @@ export interface WorkApi {
   >;
   /** The cells of given grids (review edits, templates): text by word centre. */
   tableCells: MethodSpec<{ docId: string; grids: TableGrid[] }, { tables: TableData[] }>;
+  /**
+   * Express Extract (M4-13) / Review & Extract export (M4-14): the tables of
+   * `pages` (detected) or of `grids` → one workbook or CSV files; `tables: 0`
+   * when there are none.
+   */
+  exportTables: MethodSpec<
+    {
+      docId: string;
+      pages?: number[];
+      grids?: TableGrid[];
+      /** Tables already read (Express Extract's detection result). */
+      tables?: TableData[];
+      format: TableFormat;
+      packaging: TablePackaging;
+      baseName: string;
+    },
+    TableExportResult,
+    { done: number; total: number }
+  >;
   /** Appends a saved tail piece to the document's tail (after a committed save). */
   append: MethodSpec<{ docId: string; piece: ArrayBuffer }, { tailBytes: number }>;
   /**

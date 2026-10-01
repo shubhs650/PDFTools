@@ -1546,5 +1546,35 @@
       "insertAfter": "Insert Blank Page After",
       "delete": "Delete Pages…"
     }
+  },
+  "tables": {
+    "express": {
+      "title": "Express Extract (Beta)",
+      "description": "Finds the tables on the pages and saves them as a spreadsheet. Done on this device; nothing is sent anywhere.",
+      "pages_one": "Page {{list}} (select pages in the Thumbnails pane to search others).",
+      "pages_other": "Pages {{list}}.",
+      "format": "Save as",
+      "xlsx": "Excel workbook (.xlsx), one sheet per table",
+      "csv": "CSV (.csv), one file per table",
+      "folderNote": "The CSV files go into the folder you choose.",
+      "zipNote": "The CSV files are saved as one ZIP file.",
+      "beta": "Beta: check the result. Tables with unusual layouts may need Review & Extract.",
+      "find": "Find Tables",
+      "save": "Save…",
+      "close": "Close",
+      "cancel": "Cancel",
+      "progressName": "Table search progress",
+      "progress": "Page {{done}} of {{total}}",
+      "saving": "Saving…",
+      "found_one": "{{n}} table found.",
+      "found_other": "{{n}} tables found.",
+      "none": "No tables found on these pages.",
+      "ocr_one": "Page {{list}} has no text layer: tables on scanned pages need OCR, which is planned.",
+      "ocr_other": "Pages {{list}} have no text layer: tables on scanned pages need OCR, which is planned.",
+      "failed": "The tables could not be extracted. Nothing was saved.",
+      "fileXlsx": "{{base}} tables.xlsx",
+      "fileCsv": "{{base}} {{table}}.csv",
+      "fileZip": "{{base}} tables.zip"
+    }
   }
 }
