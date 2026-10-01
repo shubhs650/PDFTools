@@ -1,13 +1,27 @@
 # PDFTools — Progress
 
-_Last updated: 2026-10-01 (session 18: tables M4-12 … M4-15 done)_
+_Last updated: 2026-10-01 (session 18: M4-22 acceptance — M4 complete on the agent side)_
 
-**Current milestone:** M3 — Review. Plan approved (2026-09-27); M3-01 … M3-08 done in session 16
-on `claude/m3-task-breakdown-tlyokp` (ADR-014 and ADR-015 accepted).
-M0–M2 are merged into `main` (M2 complete on the agent side, owner pack in
-[docs/acceptance/M2.md](acceptance/M2.md)); the M0, M1 and M2 owner runs are open.
+**Current milestone:** M4 — Extract, **complete on the agent side** (all 22 tasks; acceptance in
+[docs/acceptance/M4.md](acceptance/M4.md)). With M4 the Rev 0 feature set is complete; the public
+beta (D-32) waits on the owner items in the readiness list (M4.md §5). M0–M3 are merged into
+`main`; the M0–M4 owner runs are open.
 
 ## Done
+
+- **Session 18 — M4-22 M4 acceptance: M4 complete (agent side).**
+  [docs/acceptance/M4.md](acceptance/M4.md): every §13 M4 item mapped to its tasks and tests; §12
+  rows met on typical files except two not clean in this container (one M3 scenario failed once in
+  the full perf run and passes alone; A0 sharp tiles 514 ms, the same range as the M3 build on the
+  same machine today); all 12 M4 perf scenarios without a long task. `AVAILABLE_MILESTONES` = M1 …
+  M4; every M4 command has a handler; axe clean for the M4 panes, dialogs and review mode in light,
+  dark and pseudo-locale; M4 offline proof (tables, page op, comment import, verified redaction,
+  zero outbound requests); interop pack §M4 (`npm run owner:interop:m4`, CHECKLIST N/O);
+  `scripts/acceptance.ts` M4 rows; `owner:timings` adds Markdown export, Express Extract, redaction
+  and a self-merge; public-beta readiness list. Found and fixed: a redaction mark across the middle
+  of a line failed verification (the text-object check now uses the object's own characters);
+  `owner:timings` hung on any multi-page file (M3-20 snapping step). Bundle 7.38 MB core / 50.84 MB
+  installed of 60 MB; licenses 763 OK; unit 1058 green.
 
 - **Session 18 — M4-17/18 Apply Redactions, verified.** Protect → Apply Redactions makes a new
   file: the marks applied on a copy (crossing drawing lines re-cut exactly, comments/links/fields
@@ -847,8 +861,10 @@ M0–M2 are merged into `main` (M2 complete on the agent side, owner pack in
 - **M3 done on the agent side (session 17):** M3-16 … M3-20 as one commit each on
   `claude/m3-tasks-16-20-vdqo8q`, merged into `main` as PR #47. Waiting on the owner pack
   ([docs/acceptance/M3.md](acceptance/M3.md) §4).
-- **M4 in progress (session 18):** tables M4-12 … M4-15 merged (PR #49); redaction M4-16 … M4-18
-  done. Earlier: [docs/plan/M4.md](plan/M4.md), 22 tasks. Done: M4-01 and M4-02
+- **M4 done on the agent side (session 18):** M4-22 acceptance on `claude/upbeat-cray-lknggv`,
+  for the next PR. Waiting on the owner pack ([docs/acceptance/M4.md](acceptance/M4.md) §4) and the
+  public-beta readiness items (§5). Tables M4-12 … M4-15 merged (PR #49); redaction M4-16 … M4-18
+  merged (PR #50). Earlier: [docs/plan/M4.md](plan/M4.md), 22 tasks. Done: M4-01 and M4-02
   (spikes; ADR-016 and ADR-017 accepted), M4-03 (icons), M4-04 (Oxide and the export
   framework), M4-05 (text, Markdown, HTML), M4-06 (images), M4-07 (Word, Beta), M4-08 (annotation export), M4-19 (comment-transfer
   spike), M4-09 (page operations core), M4-10 (reorder), M4-11 (insert from file, extract,
@@ -861,6 +877,13 @@ M0–M2 are merged into `main` (M2 complete on the agent side, owner pack in
   (CI) on it; _merge_ adds it to `main` once the checks are green.
 
 ## Session log
+
+- **Session 18 (2026-10-01), M4-22 acceptance:** the M4 offline proof found a real verification
+  false positive: PDFium keeps the uncovered rest of a cut line as one text object, so its bounds
+  span the mark; the check now maps characters to objects (`FPDFText_GetTextObject`). The
+  owner-timings spec had hung on multi-page files since M3-20 (it waited for page 1's snap index
+  after a zoom moved the view). Perf in this container was slower than at M3 for both builds (A0
+  sharp tiles ~400–520 ms for M3 and M4 builds alike), so that row is reported, not claimed.
 
 - **Session 18 (2026-10-01), redaction M4-16 … M4-18:** `@embedpdf/plugin-redaction` was not
   added — `plugin-annotation` already reads, writes and selects `/Redact`, and the plugin has no
@@ -1022,17 +1045,17 @@ M0–M2 are merged into `main` (M2 complete on the agent side, owner pack in
    (L/M) and the still-open §D/§F in Acrobat Reader and PDF-XChange (they decide ADR-007
    decisions 2 and 3: the grouped measurement label and viewport semantics), snapping on the local
    P&ID and CAD drawings (`npm run owner:timings`), the CRS in Excel.
-2. **Agent:** M4-01 … M4-11 and M4-19 … M4-21 are in `main` (PR #48). The tables (M4-12 …
-   M4-15) are on `claude/upbeat-cray-lknggv`, for the next PR once CI is green.
+2. **Owner:** the M4 owner pack in [docs/acceptance/M4.md](acceptance/M4.md) §4 (interop §M4,
+   heavy-file Markdown export / merge / redaction via `npm run owner:timings`, tables on a real
+   pipe chart and parts list, a redaction by hand) and the public-beta readiness list (§5).
+   **Agent:** M4-22 is on `claude/upbeat-cray-lknggv`, for the next PR once CI is green.
 3. **Owner:** the M2 owner pack in [docs/acceptance/M2.md](acceptance/M2.md) §4 and the M1/M0
    owner runs (below, unchanged).
 4. **Owner:** decide the items under "Decisions needed" (keyboard text selection, committed
    corpus PDFs, Pages project).
 5. **Owner:** review the M4 icons in the e2e gallery.
-6. **Agent:** the M4 acceptance pass (M4-22), incl. the §M4 interop file (redaction marks in
-   Acrobat Reader / PDF-XChange, a redacted output opened in both).
-   **Owner:** try the tables (Convert → Tables (Beta)) on a real pipe chart and parts list (S4
-   owner run): detection quality on real files is untested beyond the self-made fixture.
+6. **Owner:** after the owner runs, decide what follows Rev 0 (§14 roadmap). Do not start
+   revision compare (parked, CLAUDE.md rule 14).
 7. **Owner (M0/M1, still open):** S1 interop checklist; S1 FSA button on the 500 MB contract; S5
    search on the FAR and the 500 MB contract; S7 on the CAD drawings and the P&ID
    (`node spikes/s7-snap/run-node.ts <files>`); S4 on the pipe chart and a parts list; FAR, 500 MB
@@ -1058,11 +1081,14 @@ M0–M2 are merged into `main` (M2 complete on the agent side, owner pack in
 - **Page operations, deferred parts of ADR-016 decision 7 (M4-09):** after deleting pages, form
   fields whose widgets were all on them stay in `/AcroForm /Fields` (valid PDF; the object layer
   needs an AcroForm patch target), the Delete dialog has no page-labels note, and bookmarks to a
-  deleted page are not yet marked "target page deleted". Planned with M4-10/M4-11 or the M4
-  acceptance task.
+  deleted page are not yet marked "target page deleted". Not built in M4; listed as non-blocking
+  for the public beta (docs/acceptance/M4.md §3).
 - **Undo of a page operation after Save Optimized:** Save Optimized becomes the disk baseline for
   the semantic save (every object of the rewrite is kept in the Render worker's memory until the
   next save replaces it). Fine for the rare optimized save; noted for very large files.
+- **A0 sharp tiles after zoom (M4-22):** 400–520 ms at worst in this container today for both
+  the M3 build and this one (target 0.5 s; 349 ms at the M3 acceptance). Watch CI and the owner's
+  machine.
 - **Perf stalls in this container (M3-20):** three full perf runs each had one or two one-off
   main-thread tasks of 103–331 ms in a different scenario (snap, indexing, ink, print); each passes
   alone. Two of them have no M3 code. Watch CI and the owner's machine: a scenario that fails

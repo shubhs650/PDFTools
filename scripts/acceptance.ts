@@ -84,6 +84,9 @@ export const M4_PERF = [
   'annotation-export',
 ] as const;
 
+/** The M4 offline proofs: "M4 offline: …" and "M4 exports offline: …". */
+const M4_OFFLINE = /^M4 [\w ]*offline\b/u;
+
 export function evaluate(rows: readonly PerfRow[]): TargetResult[] {
   const m = metric(rows);
   const scroll = json(m, 'm1-scroll') as ScrollResult | undefined;
@@ -94,11 +97,11 @@ export function evaluate(rows: readonly PerfRow[]): TargetResult[] {
       r.title.includes('zero outbound requests') &&
       !r.title.startsWith('M2 offline') &&
       !r.title.startsWith('M3 offline') &&
-      !r.title.startsWith('M4 offline'),
+      !M4_OFFLINE.test(r.title),
   );
   const offlineM2 = rows.filter((r) => r.title.startsWith('M2 offline'));
   const offlineM3 = rows.filter((r) => r.title.startsWith('M3 offline'));
-  const offlineM4 = rows.filter((r) => r.title.startsWith('M4 offline'));
+  const offlineM4 = rows.filter((r) => M4_OFFLINE.test(r.title));
   const perfM4 = rows.filter((r) => M4_PERF.some((f) => r.file.endsWith(`perf/${f}.spec.ts`)));
   const m4Files = new Set(perfM4.map((r) => r.file.replace(/^.*perf\//u, '')));
   const statusOf = (metricKey: string) =>
@@ -311,7 +314,7 @@ export function evaluate(rows: readonly PerfRow[]): TargetResult[] {
     {
       area: 'Offline proof (M4)',
       target:
-        'network off → tables, page operations, comment import, verified redaction; zero outbound requests',
+        'network off → exports, tables, page operations, comment import, verified redaction; zero outbound requests',
       measured: offlineM4.length ? offlineM4.map((r) => r.status).join(', ') : '—',
       verdict: !offlineM4.length
         ? 'not measured'

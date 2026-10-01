@@ -44,6 +44,7 @@ const GOOD: PerfRow[] = [
   row('perf/redact.spec.ts', 'redact', { 'm4-redact': JSON.stringify({ ms: 9000 }) }),
   row('perf/annotation-export.spec.ts', 'annotation export'),
   row('offline.spec.ts', 'M4 offline: tables, … zero outbound requests'),
+  row('export.spec.ts', 'M4 exports offline: PDF Oxide from the cache, zero outbound requests'),
 ];
 
 describe('M1 … M4 acceptance table (M1-28, M2-19, M3-20, M4-22)', () => {
@@ -95,9 +96,14 @@ describe('M1 … M4 acceptance table (M1-28, M2-19, M3-20, M4-22)', () => {
     const failedMerge = GOOD.map((r) => (r.title === 'merge' ? { ...r, status: 'failed' } : r));
     expect(byArea(failedMerge).get('Merge 10 files of 200 pages')).toBe('missed');
     expect([...byArea(failedMerge)].find(([a]) => m4(a))?.[1]).toBe('missed');
-    const noM4Offline = GOOD.filter((r) => !r.title.startsWith('M4 offline'));
+    const noM4Offline = GOOD.filter((r) => !r.title.startsWith('M4 '));
     expect(byArea(noM4Offline).get('Offline proof (M4)')).toBe('not measured');
-    // The M4 offline run is not counted as the M1 proof.
+    // The M4 offline runs are not counted as the M1 proof.
     expect(byArea(noM4Offline).get('Offline proof')).toBe('met');
+    const failedExports = GOOD.map((r) =>
+      r.title.startsWith('M4 exports') ? { ...r, status: 'failed' } : r,
+    );
+    expect(byArea(failedExports).get('Offline proof (M4)')).toBe('missed');
+    expect(byArea(failedExports).get('Offline proof')).toBe('met');
   });
 });
