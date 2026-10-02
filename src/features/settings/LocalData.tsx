@@ -1,5 +1,5 @@
 import { Dismiss20Regular } from '@fluentui/react-icons/svg/dismiss';
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useDocuments } from '../../app/store/documentStore';
 import { storageClient } from '../../engine/storageClient';
@@ -43,6 +43,7 @@ export function LocalData() {
   const [confirming, setConfirming] = useState(false);
   const [busy, setBusy] = useState(false);
   const [outcome, setOutcome] = useState<Outcome>(null);
+  const cancelRef = useRef<HTMLButtonElement>(null);
   const open = useDocuments((s) => s.order.length);
   const unsaved = useDocuments((s) => Object.values(s.docs).filter((d) => d.dirty).length);
 
@@ -105,6 +106,7 @@ export function LocalData() {
         title={t('settings.localData.confirmTitle')}
         description={t('settings.localData.confirmDescription')}
         closeIcon={<Dismiss20Regular />}
+        initialFocus={cancelRef}
         footer={
           <>
             <Button
@@ -114,6 +116,7 @@ export function LocalData() {
               onClick={clear}
             />
             <Button
+              ref={cancelRef}
               label={t('settings.localData.cancel')}
               disabled={busy}
               onClick={() => {
@@ -128,6 +131,11 @@ export function LocalData() {
             {unsaved > 0
               ? t('settings.localData.warnUnsaved', { count: unsaved })
               : t('settings.localData.warnOpen', { count: open })}
+          </p>
+        ) : null}
+        {usage && usage.snapshots > unsaved ? (
+          <p className="local-data-warning" data-testid="local-data-warn-snapshots">
+            {t('settings.localData.warnSnapshots', { count: usage.snapshots - unsaved })}
           </p>
         ) : null}
       </Dialog>

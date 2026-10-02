@@ -1,6 +1,6 @@
 # PDFTools — Progress
 
-_Last updated: 2026-10-01 (session 19: Cloudflare Pages deployment readiness)_
+_Last updated: 2026-10-02 (session 20: preview review fixes — ribbon, deletion, dialogs, Help)_
 
 **Current milestone:** M4 — Extract, **complete on the agent side** (all 22 tasks; acceptance in
 [docs/acceptance/M4.md](acceptance/M4.md)). With M4 the Rev 0 feature set is complete; the public
@@ -8,6 +8,29 @@ beta (D-32) waits on the owner items in the readiness list (M4.md §5). M0–M3 
 `main`; the M0–M4 owner runs are open.
 
 ## Done
+
+- **Session 20 — preview review fixes (owner's Codex audit of the deployed preview, D-01, D-29,
+  D-30).** _Ribbon (UI01):_ a group mixing one large button with small ones no longer renders as
+  one long row — small buttons flow down three rows beside the large ones (`groupCells`); the text
+  markup and drawing tools are icon-only grids with their names as tooltips; Manage Comments is
+  split into Comments, Review (Reply, **Delete**, Set Status, Copy Style, Apply Style) and
+  Transfer; nine long labels have a short visible text (`commandShort.<id>`, the full label stays
+  the accessible name and the tooltip; a test enforces label-in-name); Home's repeated commands are
+  small buttons in Home's own groups (Zoom, Comment, Measure, Pages, Protect), Select Text and
+  Select Comments small; groups never shrink. Comment 3174 → 1247 px and Home 1509 → 1265 px at a
+  1280 px window (DejaVu, the widest font); every tab fits 1280 … 1920 with and without a
+  document (e2e). _Deletion (USR01/OBS01):_ `comment.delete` is a ribbon command (Comment →
+  Review), bound to Delete in the document, Delete in the Comments pane list and a "Delete
+  comment" button on the selected thread; the same path (replies ask first, one undo step).
+  _Clear data (UI02):_ destructive confirmations (clear data, delete comments, delete pages,
+  reset form) open on Cancel (`Dialog initialFocus`), the clear-data text names custom status
+  schemes and table templates and warns about recovery snapshots of documents that are not open.
+  _Privacy and Help (UI03/UI04):_ Privacy discloses the optional error report; Help renders its
+  keys from the keymap for the platform (Cmd on macOS) through `keys/labels.ts`, shared with the
+  shortcut sheet ("Ctrl+Plus", not "Ctrl+="), and gains Reviewing comments, Comment transfer,
+  Measuring, Extracting tables and Redacting; the incremental-save text now says earlier signed
+  revisions are kept and points to the Signatures pane. Dialogs size their padding inside the
+  window. No new dependency.
 
 - **Session 19 — Cloudflare Pages deployment readiness (D-11, D-22).** Owner setup guide
   [docs/deploy/cloudflare-pages.md](deploy/cloudflare-pages.md) (Git-connected project, build
@@ -1071,6 +1094,12 @@ beta (D-32) waits on the owner items in the readiness list (M4.md §5). M0–M3 
    and A0 through the S3 harness; S8 Firefox check and Pages preview.
 
 ## Open issues
+
+- **Ribbon width in long locales (session 20):** English fits every tab at 1280 px, but the
+  pseudo-locale (+40 % labels) still overflows Home, Comment, View, Measure, Organize and Protect
+  inside the ribbon panel (it scrolls; the page never does). A translation will need either
+  shorter labels or a responsive ribbon that collapses groups into menus — a design choice for
+  the owner before any locale beyond English.
 
 - **Perf gate, first document open (`perf/open.spec.ts`, three files):** on CI one task of
   103–113 ms at the first open (limit 100 ms); it passed on `main` after PR #49 and failed on

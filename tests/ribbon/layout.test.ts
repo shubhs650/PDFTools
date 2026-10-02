@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { COMMANDS, RIBBON_TABS } from '../../src/app/commands';
-import { ribbonLayout } from '../../src/app/ribbon/layout';
+import { groupCells, ribbonLayout } from '../../src/app/ribbon/layout';
 
 describe('ribbon layout from the command table (§8, ADR-001 B6, M1-Q2)', () => {
   const m1 = ribbonLayout();
@@ -59,21 +59,17 @@ describe('ribbon layout from the command table (§8, ADR-001 B6, M1-Q2)', () => 
     expect(ids).toContain('view.continuousFacing');
   });
 
-  it('Home repeats available commands from other tabs under their own group labels', () => {
+  it('Home repeats available commands from other tabs as small buttons in Home groups (preview review UI01)', () => {
     const home = m1.tabs.find((t) => t.tab === 'home');
     expect(home?.groups.map((g) => `${g.tab}.${g.group}`)).toEqual([
       'home.tools',
       'home.find',
       'home.forms',
-      'view.zoom',
-      'comment.textMarkup', // Highlight (M3-08)
-      'comment.text', // Text box (M3-09)
-      'comment.note', // Sticky note (M3-09)
-      'comment.drawing', // Cloud (M3-09)
-      'comment.stamp', // Stamp (M3-14)
-      'measure.measure', // Distance (M3-16)
-      'organize.transform', // Rotate Clockwise (M4-09)
-      'protect.security', // Signatures (M2-13)
+      'home.zoom',
+      'home.comment',
+      'home.measure',
+      'home.pages',
+      'home.protect',
     ]);
     expect(home?.groups[3]?.commands.map((c) => c.id)).toEqual([
       'view.zoomIn',
@@ -81,6 +77,50 @@ describe('ribbon layout from the command table (§8, ADR-001 B6, M1-Q2)', () => 
       'view.fitPage',
       'view.fitWidth',
     ]);
+    // Copies keep the original's id, icon and short label; large tools become small
+    // and icon-only tool grids get their labels back.
+    const copies = home?.groups.slice(3).flatMap((g) => g.commands) ?? [];
+    expect(copies.map((c) => c.id)).toEqual([
+      'view.zoomIn',
+      'view.zoomOut',
+      'view.fitPage',
+      'view.fitWidth',
+      'comment.highlight',
+      'comment.stickyNote',
+      'comment.textBox',
+      'comment.cloud',
+      'comment.stamp',
+      'measure.distance',
+      'organize.rotateCw',
+      'protect.signatures',
+    ]);
+    expect(copies.every((c) => c.size === 'small' && c.compact === undefined)).toBe(true);
+    expect(copies.find((c) => c.id === 'comment.textBox')?.short).toBe(true);
+  });
+
+  it('Comment keeps the selection actions together and the tool grids compact (UI01/OBS01)', () => {
+    const comment = m1.tabs.find((t) => t.tab === 'comment');
+    expect(comment?.groups.map((g) => g.group)).toEqual([
+      'textMarkup',
+      'note',
+      'text',
+      'drawing',
+      'stamp',
+      'comments',
+      'review',
+      'transfer',
+    ]);
+    expect(comment?.groups[6]?.commands.map((c) => c.id)).toEqual([
+      'comment.reply',
+      'comment.delete',
+      'comment.setStatus',
+      'comment.copyStyle',
+      'comment.applyStyle',
+    ]);
+    for (const g of ['textMarkup', 'drawing'])
+      expect(comment?.groups.find((x) => x.group === g)?.commands.every((c) => c.compact)).toBe(
+        true,
+      );
   });
 
   it('builds the File backstage and quick access toolbar', () => {
@@ -109,5 +149,24 @@ describe('ribbon layout from the command table (§8, ADR-001 B6, M1-Q2)', () => 
   it('shows every §8 tab once every milestone is available', () => {
     const all = ribbonLayout(COMMANDS, () => true);
     expect(all.tabs.map((t) => t.tab)).toEqual(RIBBON_TABS.filter((t) => t !== 'file'));
+  });
+});
+
+describe('group cells (UI01)', () => {
+  it('keeps large buttons on their own and runs of small buttons together', () => {
+    const transfer = ribbonLayout()
+      .tabs.find((t) => t.tab === 'comment')
+      ?.groups.find((g) => g.group === 'transfer');
+    expect(groupCells(transfer?.commands ?? []).map((cell) => cell.map((c) => c.id))).toEqual([
+      [
+        'comment.importComments',
+        'comment.exportAnnotations',
+        'comment.copyComments',
+        'comment.pasteComments',
+        'comment.pasteToOriginal',
+      ],
+      ['comment.exportCrs'],
+    ]);
+    expect(groupCells([])).toEqual([]);
   });
 });

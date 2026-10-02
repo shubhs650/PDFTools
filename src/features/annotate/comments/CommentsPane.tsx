@@ -3,7 +3,7 @@ import { useEffect, useId, useMemo, useRef, useState, type KeyboardEvent } from 
 import { useTranslation } from 'react-i18next';
 import { documentStore, useDocuments } from '../../../app/store/documentStore';
 import { format, msg, type MessageKey } from '../../../i18n';
-import { runCommand } from '../../../app/commands/dispatch';
+import { commandState, runCommand } from '../../../app/commands/dispatch';
 import { goToPoint } from '../../view/controller';
 import { annotationTypeKey } from '../annotationTypes';
 import { annotationCapability, annotationState, useSelectedAnnotations } from '../selection';
@@ -329,6 +329,14 @@ function CommentList({ docId, rows }: { docId: string; rows: CommentRow[] }) {
     if (mod && e.key === ' ') {
       e.preventDefault();
       toggle(current);
+      return;
+    }
+    // Delete removes the selected comments from the list too (preview review
+    // USR01): the list's selection is the page's selection.
+    if (e.key === 'Delete' && !mod && !e.altKey) {
+      if (!commandState('comment.delete').enabled) return;
+      e.preventDefault();
+      void runCommand('comment.delete');
       return;
     }
     if (e.shiftKey && (e.key === 'ArrowDown' || e.key === 'ArrowUp')) {
