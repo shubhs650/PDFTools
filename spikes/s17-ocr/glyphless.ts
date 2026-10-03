@@ -23,13 +23,18 @@ const rss = () => Math.round(process.memoryUsage().rss / 1048576);
 {
   const core = require('tesseract.js-core/tesseract-core-simd-lstm.js') as (
     o: object,
-  ) => Promise<{ FS: { writeFile(p: string, d: Uint8Array): void }; TessBaseAPI: new () => { Init(p: null, l: string, o: number): number; End(): void } }>;
+  ) => Promise<{
+    FS: { writeFile(p: string, d: Uint8Array): void };
+    TessBaseAPI: new () => { Init(p: null, l: string, o: number): number; End(): void };
+  }>;
   const tess = await core({});
   const t0 = performance.now();
   const langs = ['eng', 'chi_sim', 'hin', 'spa', 'fra'];
   let bytes = 0;
   for (const l of langs) {
-    const gz = readFileSync(require.resolve(`@tesseract.js-data/${l}/4.0.0_best_int/${l}.traineddata.gz`));
+    const gz = readFileSync(
+      require.resolve(`@tesseract.js-data/${l}/4.0.0_best_int/${l}.traineddata.gz`),
+    );
     const data = gunzipSync(gz);
     bytes += data.length;
     tess.FS.writeFile(`/${l}.traineddata`, data);
@@ -37,12 +42,20 @@ const rss = () => Math.round(process.memoryUsage().rss / 1048576);
   const t1 = performance.now();
   const api = new tess.TessBaseAPI();
   const ok = api.Init(null, langs.join('+'), 1);
-  out.fiveLanguages = { initOk: ok === 0, inflatedMB: Math.round(bytes / 1e5) / 10, loadMs: Math.round(t1 - t0), initMs: Math.round(performance.now() - t1), rssMB: rss() };
+  out.fiveLanguages = {
+    initOk: ok === 0,
+    inflatedMB: Math.round(bytes / 1e5) / 10,
+    loadMs: Math.round(t1 - t0),
+    initMs: Math.round(performance.now() - t1),
+    rssMB: rss(),
+  };
   api.End();
 }
 
 // ---- (2) the glyphless font layer ----
-const mod = await init({ wasmBinary: readFileSync(require.resolve('@embedpdf/pdfium/pdfium.wasm')) });
+const mod = await init({
+  wasmBinary: readFileSync(require.resolve('@embedpdf/pdfium/pdfium.wasm')),
+});
 (mod as unknown as { PDFiumExt_Init(): void }).PDFiumExt_Init();
 const heap = mod.pdfium as unknown as {
   wasmExports: { malloc(n: number): number; free(p: number): void };
@@ -70,9 +83,13 @@ const words: [string, number, number][] = [
   ['tolérance', 60, 520],
 ];
 // Each word at 12 pt, stretched so its box is 40 pt wide: Tm = [40/(n*1) ... ] with DW 1000 → natural = n em.
-const ops = words.map(([w, x, y]) => `${(40 / (w.length * 12)).toFixed(4)} 0 0 1 ${String(x)} ${String(y)} Tm ${hex16(w)} Tj`);
+const ops = words.map(
+  ([w, x, y]) =>
+    `${(40 / (w.length * 12)).toFixed(4)} 0 0 1 ${String(x)} ${String(y)} Tm ${hex16(w)} Tj`,
+);
 const content = `BT\n3 Tr\n/PDFToolsOCR 12 Tf\n${ops.join('\n')}\nET`;
-const toUnicode = '/CIDInit /ProcSet findresource begin\n12 dict begin\nbegincmap\n/CIDSystemInfo << /Registry (Adobe) /Ordering (UCS) /Supplement 0 >> def\n/CMapName /Adobe-Identity-UCS def\n/CMapType 2 def\n1 begincodespacerange\n<0000> <FFFF>\nendcodespacerange\n1 beginbfrange\n<0000> <FFFF> <0000>\nendbfrange\nendcmap\nCMapName currentdict /CMap defineresource pop\nend\nend';
+const toUnicode =
+  '/CIDInit /ProcSet findresource begin\n12 dict begin\nbegincmap\n/CIDSystemInfo << /Registry (Adobe) /Ordering (UCS) /Supplement 0 >> def\n/CMapName /Adobe-Identity-UCS def\n/CMapType 2 def\n1 begincodespacerange\n<0000> <FFFF>\nendcodespacerange\n1 beginbfrange\n<0000> <FFFF> <0000>\nendbfrange\nendcmap\nCMapName currentdict /CMap defineresource pop\nend\nend';
 const objs: PdfObject[] = [
   '<< /Type /Catalog /Pages 2 0 R >>',
   '<< /Type /Pages /Kids [3 0 R] /Count 1 >>',
@@ -95,17 +112,24 @@ const tp = call('FPDFText_LoadPage', page);
 const n = call('FPDFText_CountChars', tp);
 const buf = heap.wasmExports.malloc((n + 1) * 2);
 const written = call('FPDFText_GetText', tp, 0, n, buf);
-const text = String.fromCharCode(...new Uint16Array(heap.HEAPU8.buffer, buf, Math.max(0, written - 1)));
+const text = String.fromCharCode(
+  ...new Uint16Array(heap.HEAPU8.buffer, buf, Math.max(0, written - 1)),
+);
 const b = heap.wasmExports.malloc(32);
 const boxes: Record<string, number[]> = {};
 for (const [w] of words) {
   const at = text.indexOf(w);
   if (at < 0) continue;
-  let l = Infinity, r = -Infinity, bo = Infinity, t = -Infinity;
+  let l = Infinity,
+    r = -Infinity,
+    bo = Infinity,
+    t = -Infinity;
   for (let i = at; i < at + w.length; i++) {
     call('FPDFText_GetCharBox', tp, i, b, b + 8, b + 16, b + 24);
-    l = Math.min(l, heap.getValue(b, 'double')); r = Math.max(r, heap.getValue(b + 8, 'double'));
-    bo = Math.min(bo, heap.getValue(b + 16, 'double')); t = Math.max(t, heap.getValue(b + 24, 'double'));
+    l = Math.min(l, heap.getValue(b, 'double'));
+    r = Math.max(r, heap.getValue(b + 8, 'double'));
+    bo = Math.min(bo, heap.getValue(b + 16, 'double'));
+    t = Math.max(t, heap.getValue(b + 24, 'double'));
   }
   boxes[w] = [l, bo, r, t].map((v) => Math.round(v * 10) / 10);
 }
@@ -113,7 +137,10 @@ out.glyphless = { chars: n, text, found: words.map(([w]) => text.includes(w)), b
 const bmp = call('FPDFBitmap_CreateEx', 200, 300, 4, 0, 0);
 call('FPDFBitmap_FillRect', bmp, 0, 0, 200, 300, 0xffffffff);
 call('FPDF_RenderPageBitmap', bmp, page, 0, 0, 200, 300, 0, 0);
-const px = heap.HEAPU8.subarray(call('FPDFBitmap_GetBuffer', bmp), call('FPDFBitmap_GetBuffer', bmp) + 200 * 300 * 4);
+const px = heap.HEAPU8.subarray(
+  call('FPDFBitmap_GetBuffer', bmp),
+  call('FPDFBitmap_GetBuffer', bmp) + 200 * 300 * 4,
+);
 out.inkPixels = px.filter((v, i) => i % 4 === 0 && v < 250).length; // must be 0: invisible
 const dir = mkdtempSync(join(tmpdir(), 's17g-'));
 writeFileSync(join(dir, 'g.pdf'), pdf);
