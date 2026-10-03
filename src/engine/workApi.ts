@@ -32,6 +32,8 @@ import type {
   TransferSpec,
 } from '../workers/work/transferJobs';
 import type { TableData, TableGrid } from '../model/tableGrid';
+import type { PageOcr } from '../model/ocr/types';
+import type { LayerResult } from '../workers/work/ocrLayer';
 import type { RedactProgress, SkipStep } from '../workers/work/redact/apply';
 import type { RecutReport } from '../workers/work/redact/pathRecut';
 import type { Leak } from '../workers/work/redact/verify';
@@ -98,6 +100,20 @@ export interface WorkApi {
     { objects: TransferObject[]; firstNew: number; counts: TransferCounts },
     { done: number; total: number }
   >;
+  /**
+   * OCR (M5, ADR-020 d3, d5): the page as displayed, 8-bit gray at `dpi`, from
+   * the document as it is now (live section current); `hasText` and no pixels
+   * when the page has a text layer already. Needs modify (rule 9).
+   */
+  ocrRaster: MethodSpec<
+    { docId: string; pageIndex: number; dpi: number },
+    { hasText: boolean; width: number; height: number; data: ArrayBuffer }
+  >;
+  /**
+   * The recognized pages as text-layer objects for the Render worker's
+   * `pagesApply` (ADR-020 d4), built on the document's current state.
+   */
+  ocrLayer: MethodSpec<{ docId: string; pages: PageOcr[] }, LayerResult>;
   /** The in-app clipboard (M4-21): the chosen comments as a small PDF. Needs copy. */
   copyComments: MethodSpec<
     { docId: string; ids: string[]; withReplies: boolean },

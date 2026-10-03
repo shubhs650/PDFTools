@@ -1,12 +1,14 @@
 // Vite plugin: self-hosts the fallback fonts (ADR-003 decision 3) under
 // /fonts/<package>/<file>, each with its OFL-1.1 license text, in the build and
 // in the dev server. Regular weight only; which fonts are core vs background
-// precache is decided in M1-25 (CORE_FONT_PACKAGES).
+// precache is decided in M1-25 (CORE_FONT_PACKAGES). Since M5 (ADR-020 d2) also
+// the OCR language data under /ocr/ (background precache).
 import { readFileSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import type { Plugin } from 'vite';
 import { FONT_FILES, fontPath, type FontPackage } from '../src/engine/fonts.ts';
+import { OCR_DATA_PATH } from '../src/engine/ocrApi.ts';
 import { NOTICES_FILE, collectNotices, renderNotices } from './notices.ts';
 
 const root = join(dirname(fileURLToPath(import.meta.url)), '..');
@@ -19,6 +21,18 @@ export function selfHostedAssets(): Plugin {
     files.set(fontPath(pkg), () => readFileSync(join(pkgDir(pkg), 'fonts', FONT_FILES[pkg])));
     files.set(`fonts/${pkg}/LICENSE`, () => readFileSync(join(pkgDir(pkg), 'LICENSE')));
   }
+  files.set(OCR_DATA_PATH, () =>
+    readFileSync(
+      join(
+        root,
+        'node_modules',
+        '@tesseract.js-data',
+        'eng',
+        '4.0.0_best_int',
+        'eng.traineddata.gz',
+      ),
+    ),
+  );
   return {
     name: 'pdftools-self-hosted-assets',
     configureServer(server) {

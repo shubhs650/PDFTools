@@ -3,6 +3,7 @@
 // expose (ADR-001 B14).
 import type { FontFallbackConfig } from '@embedpdf/engines/pdfium';
 import type { PdfJson } from '../model/pdf/wire';
+import type { Capability } from '../model/permissions';
 import type { AnnotTileRequest } from '../workers/render/annotTiles';
 import type { PageOp } from '../workers/render/pages';
 import type { PageInfo } from '../workers/render/pdfium';
@@ -75,6 +76,8 @@ export interface RenderApi {
       docId: string;
       objects: { num: number; gen: number; bytes: Uint8Array }[];
       firstNew: number;
+      /** What the objects need (rule 9): annotate for comments (default), modify for OCR (M5). */
+      capability?: Capability;
     },
     { pages: PageInfo[] }
   >;

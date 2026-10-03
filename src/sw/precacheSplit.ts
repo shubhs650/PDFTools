@@ -2,7 +2,7 @@
 // worker caches at install (the core: shell, UI, Render worker, PDFium WASM,
 // Latin/Arabic/Hebrew fonts) and what it caches in the background after the
 // first render (Work and Snap workers, CJK fonts, ExcelJS, PDF Oxide, the Word
-// builder) and the third-party notices (File → About). Shared by the service worker and its unit test.
+// builder, the OCR worker with its WASM and data) and the third-party notices (File → About). Shared by the service worker and its unit test.
 
 export interface PrecacheEntry {
   url: string;
@@ -21,6 +21,10 @@ const BACKGROUND = [
   // The Word builder (M4-07): docx and the Markdown parser, only for To Word.
   /(^|\/)assets\/docxBuild[\w.-]*\.js$/,
   /(^|\/)fonts\/(sc|tc|jp|kr)\//,
+  // OCR (M5, ADR-020 d2): the worker, Tesseract's WASM and the English data, only for OCR.
+  /(^|\/)assets\/ocr\.worker-[\w-]+\.js$/,
+  /(^|\/)assets\/tesseract-core[\w.-]*\.wasm$/,
+  /(^|\/)ocr\//,
   /(^|\/)third-party-notices\.txt$/,
 ];
 
@@ -39,6 +43,8 @@ export const PRECACHE_EXTENSIONS = [
   'svg',
   'webmanifest',
   'txt',
+  // The OCR language data (M5), inflated by the OCR worker itself.
+  'gz',
 ] as const;
 
 export function splitPrecache(entries: readonly PrecacheEntry[]): {

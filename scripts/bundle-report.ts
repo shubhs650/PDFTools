@@ -34,6 +34,7 @@ export type ModuleId =
   | 'excelJs'
   | 'oxide'
   | 'docx'
+  | 'ocr'
   | 'pdfium'
   | 'coreFonts'
   | 'cjkFonts'
@@ -42,6 +43,12 @@ export type ModuleId =
 export const MODULES: readonly { id: ModuleId; label: string; test: RegExp }[] = [
   { id: 'renderWorker', label: 'Render worker', test: /^assets\/render\.worker-[\w-]+\.js$/ },
   { id: 'workWorker', label: 'Work worker', test: /^assets\/work\.worker-[\w-]+\.js$/ },
+  // M5 (ADR-020): the OCR worker, Tesseract's WASM and the English data, background precache.
+  {
+    id: 'ocr',
+    label: 'OCR (worker, Tesseract WASM, English data)',
+    test: /^(assets\/(ocr\.worker|tesseract-core)[\w.-]*\.(js|wasm)|ocr\/.*)$/,
+  },
   {
     id: 'otherWorkers',
     label: 'Storage, encoder and snap workers',

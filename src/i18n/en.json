@@ -140,7 +140,8 @@
       "images": "Export Images",
       "expressExtract": "Express Extract",
       "reviewExtract": "Review & Extract",
-      "tableTemplates": "Table Templates"
+      "tableTemplates": "Table Templates",
+      "ocr": "Recognize Text (OCR)"
     },
     "protect": {
       "markRedaction": "Mark for Redaction",
@@ -220,7 +221,8 @@
       },
       "convert": {
         "export": "Export",
-        "tablesBeta": "Tables (Beta)"
+        "tablesBeta": "Tables (Beta)",
+        "ocr": "OCR"
       },
       "protect": {
         "redact": "Redact",
@@ -1713,6 +1715,35 @@
       "annotation": "comments or marks",
       "string": "a redacted word found elsewhere in the file",
       "structure": "hidden document data or more than one revision"
+    }
+  },
+  "ocr": {
+    "title": "Recognize Text (OCR)",
+    "description": "Scanned pages get an invisible text layer, so their text can be searched, selected and copied. Recognition runs on this device; nothing is sent anywhere.",
+    "scope": {
+      "legend": "Pages",
+      "all": "All pages",
+      "current": "Current page ({{page}})",
+      "selected": "Selected pages ({{count}})",
+      "custom": "Pages:",
+      "customLabel": "Page range",
+      "customHint": "e.g. 1-3, 8"
+    },
+    "skipNote": "Pages that already have text are skipped. English text only (Beta).",
+    "start": "Recognize",
+    "close": "Close",
+    "recognizing": "Recognizing text…",
+    "restricted": "This document's security settings don't allow changes.",
+    "done_one": "{{count}} page recognized ({{words}} words); {{skipped}} skipped.",
+    "done_other": "{{count}} pages recognized ({{words}} words); {{skipped}} skipped.",
+    "nothing": "No text was found on the selected pages; {{skipped}} already had text.",
+    "failed": "The text could not be recognized. The document is as it was before.",
+    "error": {
+      "empty": "Enter the pages to recognize.",
+      "syntax": "Use page numbers and ranges, e.g. 1-3, 8.",
+      "outOfRange": "Some pages are not in this document.",
+      "noSelection": "Select pages in the Thumbnails pane first.",
+      "noDocument": "The document is no longer open."
     }
   }
 }

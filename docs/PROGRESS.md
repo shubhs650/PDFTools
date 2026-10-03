@@ -1,13 +1,46 @@
 # PDFTools — Progress
 
-_Last updated: 2026-10-01 (session 19: Cloudflare Pages deployment readiness)_
+_Last updated: 2026-10-03 (session 20: M5 OCR — spike, ADR-020, implementation)_
 
-**Current milestone:** M4 — Extract, **complete on the agent side** (all 22 tasks; acceptance in
-[docs/acceptance/M4.md](acceptance/M4.md)). With M4 the Rev 0 feature set is complete; the public
-beta (D-32) waits on the owner items in the readiness list (M4.md §5). M0–M3 are merged into
-`main`; the M0–M4 owner runs are open.
+**Current milestone:** M5 — OCR (Rev 1 item 1, opened at the owner's request on 2026-10-03;
+plan in [docs/plan/M5.md](plan/M5.md)). M5-01 … M5-04 done on the agent side under
+[ADR-020](adr/020-m5-ocr.md) (**Proposed**: the owner accepts its decisions, then
+ARCHITECTURE.md is amended as the ADR lists); M5-05 (acceptance, owner interop) open. Rev 0
+(M0–M4) is complete on the agent side; the public beta (D-32) waits on the owner items in
+[docs/acceptance/M4.md](acceptance/M4.md) §5.
 
 ## Done
+
+- **Session 20 — M5 OCR (M5-01 … M5-04, ADR-020).** A user asked for OCR; the owner found that
+  Tesseract runs as WASM. **Spike S17** (`spikes/s17-ocr/`, Node + browser): `tesseract.js-core`
+  7.0.0 (Apache-2.0; Tesseract 5.1) used directly — not tesseract.js's worker layer, which
+  defaults to jsDelivr for its worker, core and data — recognizes a 300 dpi A4 page in ~0.9 s
+  (Node) / 0.7–1.0 s (Chromium worker, SIMD), 89/89 words on the self-made datasheet, under the
+  verbatim CSP with zero outbound requests, cancel by `terminate()` in 0 ms. **Text layer**: PDFium's
+  text objects + `FPDFPage_GenerateContent` were rejected (it regenerates every content stream of
+  the page, one font name per word, 187 KB tail); our own object layer writes one invisible text
+  stream per page (`3 Tr`, Helvetica/WinAnsi, per-word matrices on Tesseract's baselines in any
+  direction) behind a `q`/`Q` wrap, originals byte for byte, 13 KB for three pages, qpdf clean,
+  FPDFText finds every word with ≥ 50 % box overlap. **Shipped:** Convert → **Recognize Text
+  (OCR)** (`convert.ocr`, milestone M5): dialog (all / current / selected / custom pages; pages
+  with text are skipped), the page-operation busy dialog's progress and Cancel, one undo step
+  through the comment-transfer route (`pagesApply` now takes the capability: **modify**, rule 9),
+  Ctrl+S one narrow verified revision, announcement "n pages recognized (w words); m skipped".
+  New: OCR worker (`src/workers/ocr.worker.ts`, own typed RPC, `OcrClient` starts it on first use
+  and terminates it when the job ends), Work worker `ocrRaster` (gray raster of the displayed
+  page, live document) and `ocrLayer` (`ocrLayer.ts`, pure, from the spike), `src/model/ocr/`
+  (types, WinAnsi, a Helvetica width table generated from PDFium and tested against it), the
+  English data self-hosted at `/ocr/eng.traineddata.gz` (`@tesseract.js-data/eng` 1.0.0, MIT;
+  data Apache-2.0) and precached in the background with the worker and its WASM (`gz` joins the
+  precache extensions). Search in scans, selection, copy, exports and table detection follow
+  with no new code (the layer is real page text for PDFium). Tests: unit 20 new (WinAnsi,
+  iterator parsing, widths vs PDFium, layer geometry incl. sideways lines and resources
+  handling, client lifecycle, raster + layer + reopen on real PDFium), e2e `e2e/ocr.spec.ts`
+  (recognize all, find, undo/redo, save verified, range and cancel, denied without modify,
+  offline), perf `e2e/perf/ocr.spec.ts` (20 scanned pages while scrolling). Build: install
+  56.76 MB of 60 (OCR module 5.90 MB raw / 3.91 MB brotli, background); licenses 765 OK;
+  dist and Pages checks clean. Limits (ADR-020 consequences): English, Latin characters in the
+  layer, no orientation detection or deskew, pages with text are never re-recognized.
 
 - **Session 19 — Cloudflare Pages deployment readiness (D-11, D-22).** Owner setup guide
   [docs/deploy/cloudflare-pages.md](deploy/cloudflare-pages.md) (Git-connected project, build
@@ -867,6 +900,11 @@ beta (D-32) waits on the owner items in the readiness list (M4.md §5). M0–M3 
 
 ## In progress
 
+- **M5 OCR (session 20):** M5-01 … M5-04 done on the agent side on the session's branch, for the
+  next PR. [ADR-020](adr/020-m5-ocr.md) is **Proposed**: the owner's acceptance amends
+  ARCHITECTURE.md (Rev 0.8: §1.5, §3.1, §3.2, §7.14, §9, §13, §14) as the ADR lists. Open:
+  M5-05 (acceptance table, interop pack §M5 — a file recognized here searchable and selectable in
+  Acrobat Reader and PDF-XChange; their OCR output searchable here).
 - **M3 done on the agent side (session 17):** M3-16 … M3-20 as one commit each on
   `claude/m3-tasks-16-20-vdqo8q`, merged into `main` as PR #47. Waiting on the owner pack
   ([docs/acceptance/M3.md](acceptance/M3.md) §4).
@@ -1050,6 +1088,10 @@ beta (D-32) waits on the owner items in the readiness list (M4.md §5). M0–M3 
 
 ## Next
 
+0. **Owner:** read [ADR-020](adr/020-m5-ocr.md) (OCR) and accept or amend it; try Convert →
+   Recognize Text (OCR) on a real scan and check the result in Acrobat Reader / PDF-XChange
+   (search and select the text; it must be invisible). **Agent:** on acceptance, ARCHITECTURE.md
+   Rev 0.8 and M5-05 (acceptance table, interop pack §M5, `npm run owner:interop:m5`).
 1. **Owner:** the M3 owner pack in [docs/acceptance/M3.md](acceptance/M3.md) §4 — interop §M3
    (L/M) and the still-open §D/§F in Acrobat Reader and PDF-XChange (they decide ADR-007
    decisions 2 and 3: the grouped measurement label and viewport semantics), snapping on the local
@@ -1180,6 +1222,12 @@ beta (D-32) waits on the owner items in the readiness list (M4.md §5). M0–M3 
 
 ## Decisions needed (owner)
 
+- **ADR-020 (OCR, M5).** Accept the decisions (Tesseract WASM core in our own worker; English
+  data as an npm package, background precache; text layer by our object layer with
+  Helvetica/WinAnsi; modify permission; fixed 300 dpi; worker terminated after each job), or
+  amend. Two scope questions for Rev 1: which **languages** beyond English (each is one package
+  of 3–15 MB and a picker in the dialog), and whether a **"recognize pages that already have
+  text"** option is wanted (today such pages are always skipped).
 - **Keyboard text selection (M2-04).** Caret-based selection (Shift+arrows) is not built; the
   keyboard path is Ctrl+A (page text) + Ctrl+C. Accept as an exception to the M2-04 criterion, or
   schedule caret selection (about one session).

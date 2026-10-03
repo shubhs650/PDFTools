@@ -25,5 +25,5 @@
     "noPropertyAccessFromIndexSignature": true,
     "useUnknownInCatchVariables": true
   },
-  "include": ["src"]
+  "include": ["src", "types"]
 }

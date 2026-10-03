@@ -19,6 +19,7 @@ Throwaway spike code for [docs/plan/M0.md](../docs/plan/M0.md) (S1–S8) and M1-
 | S14   | [`s14-pages/`](s14-pages/) (M4-01)                       | [ADR-016](../docs/adr/016-m4-page-operations.md)     | Works with workaround |
 | S15   | [`s15-redaction/`](s15-redaction/) (M4-02)               | [ADR-017](../docs/adr/017-m4-redaction.md)           | Works with workaround |
 | S16   | [`s16-comment-transfer/`](s16-comment-transfer/) (M4-19) | [ADR-018](../docs/adr/018-m4-comment-transfer.md)    | Works with workaround |
+| S17   | [`s17-ocr/`](s17-ocr/) (M5-01)                           | [ADR-020](../docs/adr/020-m5-ocr.md)                 | Works with workaround |
 
 ## Shared pieces (`shared/`)
 
@@ -72,6 +73,12 @@ node spikes/s5-search/make-contract.ts && SPIKE=s5 npm run spikes -- --project=s
 
 # S16 comment transfer (M4-19, needs qpdf): object copy vs re-create, save, pixels, timings
 node --import ./spikes/shared/ts-ext.ts spikes/s16-comment-transfer/run-node.ts   # → out/s16-node.json, out/*.png
+
+# S17 OCR (M5-01, needs qpdf; tesseract.js-core and @tesseract.js-data/eng are runtime dependencies
+# since M5-02): Tesseract core in Node, text layer by PDFium vs our object layer, saved-file checks;
+# then the core in a module worker under the CSP (timing, cancel, no network)
+node --import ./spikes/shared/ts-ext.ts spikes/s17-ocr/run-node.ts   # → out/s17-node.json
+SPIKE=s17 npm run spikes -- --project=s17                           # → test-results/s17-results.json
 ```
 
 ### Owner run: real-disk Ctrl+S timing (S1)

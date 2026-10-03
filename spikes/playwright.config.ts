@@ -17,8 +17,9 @@ export const S9_PORT = 4186;
 export const S11_PORT = 4187;
 export const S11_FRAME_PORT = 4188;
 export const S13_PORT = 4189;
+export const S17_PORT = 4190;
 
-// SPIKE=s8|s3|s1|s5|s7|s4|s9|s11|s13 limits which spike gets built and served (default: both).
+// SPIKE=s8|s3|s1|s5|s7|s4|s9|s11|s13|s17 limits which spike gets built and served (default: both).
 const only = process.env.SPIKE;
 const want = (name: string): boolean => !only || only === name;
 
@@ -97,6 +98,11 @@ export default defineConfig({
       testMatch: ['s13-stamps-crs/**/*.spec.ts'],
       use: { ...devices['Desktop Chrome'], baseURL: `http://localhost:${String(S13_PORT)}` },
     },
+    {
+      name: 's17',
+      testMatch: ['s17-ocr/**/*.spec.ts'],
+      use: { ...devices['Desktop Chrome'], baseURL: `http://localhost:${String(S17_PORT)}` },
+    },
   ],
   webServer: [
     ...(want('s8') ? [server('s8', 's8-csp', S8_PORT)] : []),
@@ -163,5 +169,16 @@ export default defineConfig({
         ]
       : []),
     ...(want('s13') ? [server('s13', 's13-stamps-crs', S13_PORT, ' --coi')] : []),
+    ...(want('s17')
+      ? [
+          server(
+            's17',
+            's17-ocr',
+            S17_PORT,
+            ' --coi',
+            'node --import ./spikes/shared/ts-ext.ts spikes/s17-ocr/run-node.ts > /dev/null && ',
+          ),
+        ]
+      : []),
   ],
 });

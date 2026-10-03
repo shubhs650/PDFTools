@@ -11,6 +11,8 @@ import { registerPrintCommands } from '../features/print/commands';
 import { registerExtractCommands } from '../features/extract/commands';
 import { registerTableCommands } from '../features/tables/commands';
 import { registerRedactCommands } from '../features/redact/commands';
+import { registerOcrCommands } from '../features/ocr/commands';
+import { OcrDialog } from '../features/ocr/OcrDialog';
 import { RedactionStatus } from '../features/redact/PendingRedactionsPanel';
 import { ApplyDialog } from '../features/redact/ApplyDialog';
 import { ExpressExtractDialog } from '../features/tables/ExpressExtractDialog';
@@ -95,6 +97,7 @@ export function App() {
   useEffect(() => registerExtractCommands(), []);
   useEffect(() => registerTableCommands(), []);
   useEffect(() => registerRedactCommands(), []);
+  useEffect(() => registerOcrCommands(), []);
   useEffect(() => registerPageCommands(), []);
   useEffect(() => registerReportCommands(), []);
   useEffect(() => registerSelectionCommands(), []);
@@ -188,6 +191,7 @@ export function App() {
         <ExpressExtractDialog />
         <TemplatesDialog />
         <ApplyDialog />
+        <OcrDialog />
         <PageDialogs />
         <FileDialogs />
         <UpdateWaitDialog />

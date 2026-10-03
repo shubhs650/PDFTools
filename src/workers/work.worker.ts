@@ -14,6 +14,9 @@ import { digestDocument } from './render/save/digest';
 import { WorkDocs } from './work/docs';
 import { verifyCandidate } from './work/verify';
 import { Scheduler, type JobSlice } from './work/scheduler';
+import { buildTextLayer } from './work/ocrLayer';
+import { pageMapper, rasterForOcr } from './work/ocrRaster';
+import { PdfReader } from '../model/pdf/reader';
 import { listAnnotations } from './work/annotations';
 import { Activity, indexDocument } from './work/indexer';
 import { SearchEngine } from './work/search';
@@ -208,6 +211,58 @@ serve<WorkApi>(self, {
         );
         return new Transfer(r, [...new Set(r.objects.map((o) => o.bytes.buffer as ArrayBuffer))]);
       } finally {
+        wasmBytes();
+      }
+    }),
+
+  ocrRaster: ({ docId, pageIndex, dpi }, ctx) =>
+    scheduler.run('interactive', ctx.signal, async () => {
+      const m = mod;
+      if (!m) throw new RpcError('not-initialized', 'The work worker is not initialized');
+      const { doc } = await docs.get(docId);
+      const ptr = docPtrOf(need(), doc.id);
+      requireCapability(securityOf(m, ptr), 'modify');
+      try {
+        const r = rasterForOcr(m, ptr, pageIndex, dpi);
+        const data = r.data.buffer;
+        return new Transfer({ hasText: r.hasText, width: r.width, height: r.height, data }, [data]);
+      } finally {
+        wasmBytes();
+      }
+    }),
+
+  ocrLayer: ({ docId, pages }, ctx) =>
+    scheduler.run('interactive', ctx.signal, async (slice) => {
+      const m = mod;
+      if (!m) throw new RpcError('not-initialized', 'The work worker is not initialized');
+      const { doc } = await docs.get(docId);
+      const ptr = docPtrOf(need(), doc.id);
+      requireCapability(securityOf(m, ptr), 'modify');
+      const bytes = docs.liveBytes(docId);
+      const password = docs.passwordOf(docId);
+      const reader = await PdfReader.open(
+        bytes,
+        inflate,
+        password === undefined ? {} : { password },
+      );
+      if (!reader.readable) throw new RpcError('pdfium:4', 'The file could not be decrypted');
+      await slice.checkpoint();
+      const mappers = new Map<number, ReturnType<typeof pageMapper>>();
+      try {
+        const r = await buildTextLayer(reader, pages, {
+          toPage: (pageIndex, dx, dy) => {
+            let mp = mappers.get(pageIndex);
+            if (!mp) {
+              const size = pages.find((p) => p.pageIndex === pageIndex);
+              mp = pageMapper(m, ptr, pageIndex, size?.width ?? 1, size?.height ?? 1);
+              mappers.set(pageIndex, mp);
+            }
+            return mp.toPage(dx, dy);
+          },
+        });
+        return new Transfer(r, [...new Set(r.objects.map((o) => o.bytes.buffer as ArrayBuffer))]);
+      } finally {
+        for (const mp of mappers.values()) mp.release();
         wasmBytes();
       }
     }),

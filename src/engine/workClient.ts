@@ -68,7 +68,9 @@ type JobMethod =
   | 'detectTables'
   | 'tableCells'
   | 'exportTables'
-  | 'redact';
+  | 'redact'
+  | 'ocrRaster'
+  | 'ocrLayer';
 
 export interface WorkClientOptions {
   wasmUrl?: string;
