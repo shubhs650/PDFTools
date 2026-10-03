@@ -21,9 +21,7 @@ const rss = () => Math.round(process.memoryUsage().rss / 1048576);
 
 // ---- (1) five languages ----
 {
-  const core = require('tesseract.js-core/tesseract-core-simd-lstm.js') as (
-    o: object,
-  ) => Promise<{
+  const core = require('tesseract.js-core/tesseract-core-simd-lstm.js') as (o: object) => Promise<{
     FS: { writeFile(p: string, d: Uint8Array): void };
     TessBaseAPI: new () => { Init(p: null, l: string, o: number): number; End(): void };
   }>;
