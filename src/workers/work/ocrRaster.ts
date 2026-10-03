@@ -2,7 +2,7 @@
 // as displayed (its /Rotate applied) rendered by PDFium #2 to 8-bit gray at
 // OCR_DPI, from the document as it is now; and the raster → page mapping the
 // text layer needs (FPDF_DeviceToPage). Pages that already have a text layer
-// are reported, not rendered (decision 5).
+// are reported, not rendered (decision 5), unless the caller forces it (decision 11).
 import type { WrappedPdfiumModule } from '@embedpdf/pdfium';
 import { RpcError } from '../../engine/errors';
 import { rawCall } from '../render/pdfium';
@@ -37,17 +37,19 @@ export function textChars(mod: WrappedPdfiumModule, page: number): number {
   }
 }
 
+/** `force`: render a page that has a text layer too (the dialog's "also recognize" option). */
 export function rasterForOcr(
   mod: WrappedPdfiumModule,
   docPtr: number,
   pageIndex: number,
   dpi: number,
+  force = false,
 ): OcrRasterResult {
   const page = rawCall(mod, 'FPDF_LoadPage', docPtr, pageIndex);
   if (!page) throw new RpcError('page-not-loaded', 'The page could not be loaded');
   try {
-    if (textChars(mod, page) > 0)
-      return { hasText: true, width: 0, height: 0, data: new Uint8Array(0) };
+    const hasText = textChars(mod, page) > 0;
+    if (hasText && !force) return { hasText, width: 0, height: 0, data: new Uint8Array(0) };
     const scale = dpi / 72;
     const width = Math.max(1, Math.round(rawCall(mod, 'FPDF_GetPageWidthF', page) * scale));
     const height = Math.max(1, Math.round(rawCall(mod, 'FPDF_GetPageHeightF', page) * scale));
@@ -65,7 +67,7 @@ export function rasterForOcr(
       const data = new Uint8Array(width * height);
       for (let y = 0; y < height; y++)
         data.set(heap.subarray(buf + y * stride, buf + y * stride + width), y * width);
-      return { hasText: false, width, height, data };
+      return { hasText, width, height, data };
     } finally {
       rawCall(mod, 'FPDFBitmap_Destroy', bmp);
     }

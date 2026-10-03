@@ -1,7 +1,11 @@
-// The absolute same-origin URL of the OCR language data (rule 4): a separate
+// The absolute same-origin URLs of the OCR language data (rule 4): a separate
 // module so the client can be unit-tested in Node without `location`.
-import { OCR_DATA_PATH } from './ocrApi';
+import { ocrDataPath, type OcrLanguage } from '../model/ocr/languages';
+import type { OcrDataSource } from './ocrApi';
 
-export default function ocrDataUrl(): string {
-  return new URL(`/${OCR_DATA_PATH}`, location.origin).href;
+export default function ocrDataSources(codes: readonly OcrLanguage[]): OcrDataSource[] {
+  return codes.map((code) => ({
+    code,
+    url: new URL(`/${ocrDataPath(code)}`, location.origin).href,
+  }));
 }

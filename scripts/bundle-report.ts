@@ -102,6 +102,8 @@ export interface Totals {
   background: number;
   reserved: number;
   projected: number;
+  /** Known to the service worker but fetched on first use, never installed (OCR languages). */
+  onDemand: number;
 }
 
 export interface Report {
@@ -125,7 +127,10 @@ export function aggregate(
   budgets: { install: number; core: number } = { install: INSTALL_BUDGET, core: CORE_BUDGET },
 ): Report {
   const cached = files.filter((f) => isPrecached(f.path));
-  const { core, background } = splitPrecache(cached.map((f) => ({ url: f.path, revision: null })));
+  const { core, background, onDemand } = splitPrecache(
+    cached.map((f) => ({ url: f.path, revision: null })),
+  );
+  const onDemandSet = new Set(onDemand.map((e) => e.url));
   const coreSet = new Set(core.map((e) => e.url));
   const inSplit = new Set([...coreSet, ...background.map((e) => e.url)]);
   const rows = new Map<ModuleId, ModuleRow>();
@@ -153,6 +158,7 @@ export function aggregate(
     background: sum('raw') - sum('core'),
     reserved,
     projected: sum('raw') + reserved,
+    onDemand: cached.filter((f) => onDemandSet.has(f.path)).reduce((s, f) => s + f.raw, 0),
   };
   const problems: string[] = [];
   if (totals.raw > budgets.install) {
@@ -196,6 +202,7 @@ export function renderMarkdown(r: Report): string {
     `- Core precache: **${mb(t.core)}** of ${mb(CORE_BUDGET)} budget; background: ${mb(t.background)}.`,
     `- Install total: **${mb(t.raw)}** of ${mb(INSTALL_BUDGET)} budget; ` +
       `projected with reserved modules: ${mb(t.projected)}.`,
+    `- On demand (not installed; cached when first used): ${mb(t.onDemand)} (OCR languages other than English, ADR-020).`,
     '',
     r.problems.length ? r.problems.map((p) => `- ❌ ${p}`).join('\n') : '- ✅ Within budget.',
     '',

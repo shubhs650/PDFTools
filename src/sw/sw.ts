@@ -4,7 +4,8 @@
 //   once, an update waits (installed → "Update ready" in the app);
 // - the app asks for the background precache after its first render;
 // - fetch: same-origin GETs from the cache, else the network (a background
-//   module fetched on demand is cached and reported, for the app's spinner);
+//   or on-demand module fetched on demand is cached and reported, for the
+//   app's spinner);
 // - SKIP_WAITING from the app activates a waiting update (never while
 //   documents are open — the app decides).
 // No other origin is ever contacted (rule 4).
@@ -13,7 +14,7 @@ import { splitPrecache, type PrecacheEntry } from './precacheSplit';
 declare const self: ServiceWorkerGlobalScope & { __WB_MANIFEST: PrecacheEntry[] };
 
 const MANIFEST = self.__WB_MANIFEST;
-const { core, background } = splitPrecache(MANIFEST);
+const { core, background, onDemand } = splitPrecache(MANIFEST);
 const REVISION_HEADER = 'x-pdftools-revision';
 
 /** One cache per build: its name hashes the manifest, so any change is a new version. */
@@ -31,6 +32,8 @@ const CACHE = `pdftools-${VERSION}`;
 const abs = (url: string): string => new URL(url, self.registration.scope).href;
 const coreUrls = new Map(core.map((e) => [abs(e.url), e.revision]));
 const backgroundUrls = new Map(background.map((e) => [abs(e.url), e.revision]));
+/** Never precached, cached when first fetched (OCR languages other than English, ADR-020). */
+const onDemandUrls = new Map(onDemand.map((e) => [abs(e.url), e.revision]));
 const INDEX = abs('index.html');
 
 async function broadcast(message: unknown): Promise<void> {
@@ -117,14 +120,17 @@ async function respond(request: Request, url: URL): Promise<Response> {
   const key = url.origin + url.pathname;
   const hit = await cache.match(key);
   if (hit) return hit;
-  const isBackground = backgroundUrls.has(key);
+  const isBackground = backgroundUrls.has(key) || onDemandUrls.has(key);
   if (isBackground) await setPriority(1);
   try {
     const res = await fetch(request);
     if (res.ok && (isBackground || coreUrls.has(key))) {
       await cache.put(
         key,
-        await tagged(res.clone(), backgroundUrls.get(key) ?? coreUrls.get(key) ?? null),
+        await tagged(
+          res.clone(),
+          backgroundUrls.get(key) ?? onDemandUrls.get(key) ?? coreUrls.get(key) ?? null,
+        ),
       );
     }
     return res;

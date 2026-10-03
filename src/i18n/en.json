@@ -1729,7 +1729,7 @@
       "customLabel": "Page range",
       "customHint": "e.g. 1-3, 8"
     },
-    "skipNote": "Pages that already have text are skipped. English text only (Beta).",
+    "skipNote": "Pages that already have text are skipped unless the option below is on.",
     "start": "Recognize",
     "close": "Close",
     "recognizing": "Recognizing text…",
@@ -1743,7 +1743,18 @@
       "syntax": "Use page numbers and ranges, e.g. 1-3, 8.",
       "outOfRange": "Some pages are not in this document.",
       "noSelection": "Select pages in the Thumbnails pane first.",
-      "noDocument": "The document is no longer open."
-    }
+      "noDocument": "The document is no longer open.",
+      "noLanguage": "Choose at least one language."
+    },
+    "languages": {
+      "legend": "Languages",
+      "downloadNote": "Languages other than English are downloaded when first used ({{size}}) and then kept for offline use.",
+      "eng": "English",
+      "chi_sim": "Chinese (Simplified)",
+      "hin": "Hindi",
+      "spa": "Spanish",
+      "fra": "French"
+    },
+    "reRecognize": "Also recognize pages that already have text (a text layer this app added before is replaced; other text stays)"
   }
 }

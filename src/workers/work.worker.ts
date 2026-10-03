@@ -215,7 +215,7 @@ serve<WorkApi>(self, {
       }
     }),
 
-  ocrRaster: ({ docId, pageIndex, dpi }, ctx) =>
+  ocrRaster: ({ docId, pageIndex, dpi, force }, ctx) =>
     scheduler.run('interactive', ctx.signal, async () => {
       const m = mod;
       if (!m) throw new RpcError('not-initialized', 'The work worker is not initialized');
@@ -223,7 +223,7 @@ serve<WorkApi>(self, {
       const ptr = docPtrOf(need(), doc.id);
       requireCapability(securityOf(m, ptr), 'modify');
       try {
-        const r = rasterForOcr(m, ptr, pageIndex, dpi);
+        const r = rasterForOcr(m, ptr, pageIndex, dpi, force ?? false);
         const data = r.data.buffer;
         return new Transfer({ hasText: r.hasText, width: r.width, height: r.height, data }, [data]);
       } finally {

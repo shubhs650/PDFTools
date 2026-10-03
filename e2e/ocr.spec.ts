@@ -82,6 +82,10 @@ test('recognize all pages: text page skipped, the three scans get a layer, find 
 
   const dialog = await openDialog(page);
   await expect(dialog).toContainText('Pages that already have text are skipped');
+  await expect(dialog.getByRole('checkbox', { name: 'English' })).toBeChecked();
+  for (const name of ['Chinese (Simplified)', 'Hindi', 'Spanish', 'French'])
+    await expect(dialog.getByRole('checkbox', { name })).not.toBeChecked();
+  await expect(dialog.getByRole('checkbox', { name: /Also recognize pages/ })).not.toBeChecked();
   const { violations } = await new AxeBuilder({ page }).include('[role="dialog"]').analyze();
   expect(violations.map((v) => v.id)).toEqual([]);
   await expect(dialog.getByRole('radio', { name: 'All pages' })).toBeChecked();
@@ -206,3 +210,45 @@ test(
     await context.setOffline(false);
   },
 );
+
+test('English + French: the French data is fetched on first use; re-recognizing replaces the layer instead of doubling it', async ({
+  page,
+  pdfs,
+}) => {
+  test.setTimeout(180_000);
+  await open(page, await pdfs.scanned());
+  const fetched: string[] = [];
+  page.on('request', (r) => {
+    if (r.url().includes('/ocr/')) fetched.push(new URL(r.url()).pathname);
+  });
+  let dialog = await openDialog(page);
+  await dialog.getByRole('radio', { name: 'Pages:' }).check();
+  await dialog.getByLabel('Page range').fill('1');
+  await dialog.getByRole('checkbox', { name: 'French' }).check();
+  await dialog.getByRole('button', { name: 'Recognize' }).click();
+  await expect(dialog).toBeHidden();
+  await waitDone(page);
+  expect(await last(page)).toMatchObject({ recognized: 1, skipped: 0, replaced: 0 });
+  expect(fetched).toContain('/ocr/fra.traineddata.gz');
+  expect(fetched).toContain('/ocr/eng.traineddata.gz');
+  expect(await find(page, SCANNED_NEEDLE)).toMatch(/1 of 1/);
+
+  // Again on the same page with the option on: still one hit (the earlier layer was replaced).
+  dialog = await openDialog(page);
+  await expect(dialog.getByRole('checkbox', { name: 'French' })).toBeChecked(); // remembered
+  await dialog.getByRole('radio', { name: 'Pages:' }).check();
+  await dialog.getByLabel('Page range').fill('1');
+  await dialog.getByRole('checkbox', { name: /Also recognize pages/ }).check();
+  await dialog.getByRole('button', { name: 'Recognize' }).click();
+  await waitDone(page);
+  expect(await last(page)).toMatchObject({ recognized: 1, skipped: 0, replaced: 1 });
+  expect(await find(page, SCANNED_NEEDLE)).toMatch(/1 of 1/);
+  // Without the option the page is skipped now.
+  dialog = await openDialog(page);
+  await dialog.getByRole('radio', { name: 'Pages:' }).check();
+  await dialog.getByLabel('Page range').fill('1');
+  await dialog.getByRole('checkbox', { name: /Also recognize pages/ }).uncheck();
+  await dialog.getByRole('button', { name: 'Recognize' }).click();
+  await waitDone(page);
+  expect(await last(page)).toMatchObject({ recognized: 0, skipped: 1 });
+});

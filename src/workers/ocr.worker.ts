@@ -26,17 +26,20 @@ async function gunzip(bytes: ArrayBuffer): Promise<Uint8Array> {
 }
 
 serve<OcrApi>(self, {
-  init: async ({ dataUrl }) => {
+  init: async ({ languages }) => {
     const t0 = performance.now();
+    if (languages.length === 0) throw new RpcError('ocr-init', 'No OCR language chosen');
     tess = await TesseractCore({
       locateFile: () => new URL(wasmUrl, self.location.href).href,
       TesseractProgress: (p) => onPercent?.(p),
     });
-    const res = await fetch(dataUrl);
-    if (!res.ok) throw new RpcError('ocr-data', 'The OCR language data could not be loaded');
-    tess.FS.writeFile('/eng.traineddata', await gunzip(await res.arrayBuffer()));
+    for (const { code, url } of languages) {
+      const res = await fetch(url);
+      if (!res.ok) throw new RpcError('ocr-data', 'The OCR language data could not be loaded');
+      tess.FS.writeFile(`/${code}.traineddata`, await gunzip(await res.arrayBuffer()));
+    }
     api = new tess.TessBaseAPI();
-    if (api.Init(null, 'eng', OEM_LSTM_ONLY) !== 0)
+    if (api.Init(null, languages.map((l) => l.code).join('+'), OEM_LSTM_ONLY) !== 0)
       throw new RpcError('ocr-init', 'The OCR engine could not be initialized');
     api.SetVariable('tessedit_pageseg_mode', String(PSM_AUTO));
     return { ms: performance.now() - t0, version: api.Version() };

@@ -3,13 +3,15 @@
 // when the job ends or when a page is cancelled mid-recognition (the only way
 // to interrupt Tesseract's synchronous Recognize). A later call starts a fresh
 // worker. Nothing here touches pixels (rule 1): rasters are transferred.
-import dataUrlDefault from './ocrDataUrl';
+import ocrDataSources from './ocrDataUrl';
 import { AbortError } from './errors';
-import type { OcrApi, OcrRaster } from './ocrApi';
+import type { OcrApi, OcrDataSource, OcrRaster } from './ocrApi';
 import { RpcClient } from './rpc';
+import { ocrLanguageString, type OcrLanguage } from '../model/ocr/languages';
 
 export interface OcrClientOptions {
-  dataUrl?: string;
+  /** Where each language's data comes from (default: this origin's /ocr/ files). */
+  sources?: (codes: readonly OcrLanguage[]) => OcrDataSource[];
   /** Test seam: how to start a worker. */
   spawn?: () => Worker;
 }
@@ -23,13 +25,15 @@ export class OcrClient {
   private worker: Worker | null = null;
   private rpc: RpcClient<OcrApi> | null = null;
   private ready: Promise<unknown> | null = null;
-  private readonly dataUrl: string;
+  /** The languages the running worker was initialized with ("eng+hin"). */
+  private langs = '';
+  private readonly sources: (codes: readonly OcrLanguage[]) => OcrDataSource[];
   private readonly spawnWorker: () => Worker;
   /** Workers started so far (observable for tests). */
   starts = 0;
 
   constructor(opts: OcrClientOptions = {}) {
-    this.dataUrl = opts.dataUrl ?? dataUrlDefault();
+    this.sources = opts.sources ?? ocrDataSources;
     this.spawnWorker =
       opts.spawn ??
       (() =>
@@ -43,21 +47,28 @@ export class OcrClient {
     return this.worker !== null;
   }
 
-  private start(): RpcClient<OcrApi> {
+  private start(codes: readonly OcrLanguage[]): RpcClient<OcrApi> {
     this.worker = this.spawnWorker();
     this.rpc = new RpcClient<OcrApi>(this.worker, 'ocr');
-    this.ready = this.rpc.call('init', { dataUrl: this.dataUrl }).promise;
+    this.langs = ocrLanguageString(codes);
+    this.ready = this.rpc.call('init', { languages: this.sources(codes) }).promise;
     this.starts++;
     return this.rpc;
   }
 
-  /** Recognizes one page; `raster.data` is transferred. Rejects with AbortError on cancel. */
+  /**
+   * Recognizes one page with `languages` (a worker initialized with other
+   * languages is replaced); `raster.data` is transferred. Rejects with
+   * AbortError on cancel.
+   */
   async recognize(
     raster: OcrRaster,
+    languages: readonly OcrLanguage[],
     opts: RecognizeOptions = {},
   ): Promise<{ lines: OcrLine[]; conf: number; ms: number }> {
     if (opts.signal?.aborted) throw new AbortError();
-    const rpc = this.rpc ?? this.start();
+    if (this.rpc && this.langs !== ocrLanguageString(languages)) this.stop();
+    const rpc = this.rpc ?? this.start(languages);
     await this.ready;
     if (opts.signal?.aborted) throw new AbortError();
     const job = rpc.call('recognize', raster, {
@@ -84,6 +95,7 @@ export class OcrClient {
     this.worker = null;
     this.rpc = null;
     this.ready = null;
+    this.langs = '';
   }
 }
 

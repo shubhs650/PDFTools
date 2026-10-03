@@ -103,10 +103,10 @@ export interface WorkApi {
   /**
    * OCR (M5, ADR-020 d3, d5): the page as displayed, 8-bit gray at `dpi`, from
    * the document as it is now (live section current); `hasText` and no pixels
-   * when the page has a text layer already. Needs modify (rule 9).
+   * when the page has a text layer already (rendered anyway with `force`). Needs modify (rule 9).
    */
   ocrRaster: MethodSpec<
-    { docId: string; pageIndex: number; dpi: number },
+    { docId: string; pageIndex: number; dpi: number; force?: boolean },
     { hasText: boolean; width: number; height: number; data: ArrayBuffer }
   >;
   /**

@@ -22,6 +22,8 @@ describe('precache split (§9, ADR-003 decision 3)', () => {
     'assets/ocr.worker-Yz56.js',
     'assets/tesseract-core-simd-lstm-Ab78.wasm',
     'ocr/eng.traineddata.gz',
+    'ocr/hin.traineddata.gz',
+    'ocr/chi_sim.traineddata.gz',
     'assets/pdfium-Mn34.wasm',
     'fonts/latin/NotoSans-Regular.ttf',
     'fonts/arabic/NotoNaskhArabic-Regular.ttf',
@@ -34,7 +36,7 @@ describe('precache split (§9, ADR-003 decision 3)', () => {
     'sw.js',
     'workbox-2fbc6a65.js',
   ].map(e);
-  const { core, background } = splitPrecache(entries);
+  const { core, background, onDemand } = splitPrecache(entries);
   const urls = (l: { url: string }[]) => l.map((x) => x.url);
 
   it('core: shell, UI, Render/storage/encoder workers, PDFium WASM, Latin/Arabic/Hebrew fonts', () => {
@@ -70,6 +72,10 @@ describe('precache split (§9, ADR-003 decision 3)', () => {
       'fonts/jp/NotoSansJP-Regular.otf',
       'fonts/kr/NotoSansKR-Regular.otf',
     ]);
+  });
+
+  it('on demand (never installed, cached when first fetched): the other OCR languages', () => {
+    expect(urls(onDemand)).toEqual(['ocr/hin.traineddata.gz', 'ocr/chi_sim.traineddata.gz']);
   });
 
   it('never the service worker itself or license texts', () => {

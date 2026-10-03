@@ -1,7 +1,7 @@
-# PDFTools — Architecture & Product Specification (Rev 0.7)
+# PDFTools — Architecture & Product Specification (Rev 0.8)
 
 **App:** PDFTools · **URL:** `pdf-tools.openengtools.com` · **Platform:** Open Engineering Tools (OET)
-**Status:** Approved for implementation · **Last updated:** 01-Oct-2026 (Rev 0.7)
+**Status:** Approved for implementation · **Last updated:** 03-Oct-2026 (Rev 0.8)
 **Companion file:** `CLAUDE.md` (standing rules for the coding agent — read it first)
 
 > This document is the single source of truth. Where code and this document disagree, this document wins until it is deliberately amended. Decisions are numbered (D-xx) so commits, issues and ADRs can reference them.
@@ -15,6 +15,8 @@
 > **Rev 0.4 amendment** — [ADR-010](docs/adr/010-s6-fluent-icons.md) (owner-approved): Fluent **Regular** icons (Filled for active states) replace the deprecated Color style (D-20, §8).
 
 > **Rev 0.5 amendment** — [ADR-017](docs/adr/017-m4-redaction.md) decisions 3 and 5 (owner-approved 2026-09-29): §7.9 steps 0 and 3 (crossing paths re-cut through PDFium's page-object API; wider sanitize list).
+
+> **Rev 0.8 amendment** — [ADR-020](docs/adr/020-m5-ocr.md) (owner-approved with amendments 2026-10-03): **OCR** (Rev 1 item 1) — the Tesseract WASM core in an OCR worker, five languages, the text layer by our object layer with a glyphless font (§1.5, §3.1, §3.2, §7.14, §9, §13 M5, §14, D-34).
 
 > **Rev 0.7 amendment** — [ADR-019](docs/adr/019-m4-express-extract-two-steps.md) (owner-approved 2026-10-01): Express Extract in two steps, Find Tables then Save… (§7.7).
 
@@ -44,7 +46,7 @@ All performance work and acceptance tests target both:
 | **Drawing** | CAD-exported (AutoCAD / SmartPlant / E3D), < 100 MB, A0, dense vectors | pan, deep zoom to 6400 %, crisp tiled re-render, never freezes |
 
 ### 1.5 Non-goals for Rev 0
-Tablet/phone UI · Safari parity · OCR · scanned-table extraction · PDF text/content editing · form design · XFA forms · revision compare (**parked, see §14**) · applying passwords / creating signatures · certificate trust validation · any server-side processing · any analytics beyond Cloudflare's server-side request counts (no analytics script; ADR-001 B1).
+Tablet/phone UI · Safari parity · PDF text/content editing · form design · XFA forms · revision compare (**parked, see §14**) · applying passwords / creating signatures · certificate trust validation · any server-side processing · any analytics beyond Cloudflare's server-side request counts (no analytics script; ADR-001 B1).
 
 ---
 
@@ -85,6 +87,7 @@ Tablet/phone UI · Safari parity · OCR · scanned-table extraction · PDF text/
 | D-31 | Redaction in Rev 0 with strict safety rules (§7.9), using EmbedPDF's redaction engine (ADR-001 B8) |
 | D-32 | Public beta only after M1–M4 complete; solo internal testing with **public or self-made PDFs only** |
 | D-33 | Interop verified against **Acrobat Reader + PDF-XChange**. Bluebeam "expected, not verified" — never claimed publicly until confirmed |
+| D-34 | **OCR** (Rev 1 item 1, ADR-020): Tesseract WASM core in its own worker, five languages (English precached, the rest on first use), invisible text layer written by our object layer with a glyphless font, pages with text skipped unless asked; needs the modify permission |
 
 ---
 
@@ -115,6 +118,12 @@ Tablet/phone UI · Safari parity · OCR · scanned-table extraction · PDF text/
                 │                             │  snap queries (ADR-008)    │
                 │                             └────────────────────────────┘
                 │                                        │
+                │                             ┌──────────────────────────────┐
+                │                             │  OCR WORKER (tesseract.js-   │
+                │                             │  core WASM, per job): page   │
+                │                             │  rasters in, words out       │
+                │                             │  (ADR-020)                   │
+                │                             └──────────────────────────────┘
                 └─────────── OPFS (recovery) · IndexedDB (settings, handles, recent) ───────────┘
 ```
 
@@ -126,6 +135,7 @@ Rules:
 - Render cancellation: tiles are 256 px; stale queued tiles are aborted on every scroll/zoom change; renders expected to take > 100 ms use PDFium's progressive path with cancel between slices. One in-flight tile (~2–50 ms) is not interruptible — the accepted exception to "every call cancellable" (ADR-004).
 - Memory: WASM memory only grows. The Work worker is respawned when idle after a job whose peak exceeds ~256 MB and on document eviction (remaining documents reload original bytes + tail); the Render worker is respawned only when no document is open (ADR-004).
 - The **Snap worker** holds per-page snap indexes (typed arrays) transferred from the Work worker and answers pointer queries (≤ 1 in flight per animation frame), so snapping never waits for PDFium work (ADR-008).
+- The **OCR worker** hosts the Tesseract WASM core behind the typed RPC, started for a job with the chosen languages and terminated when it ends (its memory only grows) or on a mid-page cancel. The Work worker renders the page raster and builds the text-layer objects; the Render worker applies them like transferred comments (§7.14, ADR-020).
 
 ### 3.2 Technology stack (all permissive — verify each at install)
 
@@ -147,6 +157,8 @@ Rules:
 | Unit tests | Vitest | MIT |
 | E2E / perf | Playwright | Apache-2.0 |
 | Fallback fonts (CJK, Arabic, Hebrew, Latin) | `@embedpdf/fonts-*`, **self-hosted** (never EmbedPDF's CDN default) | OFL-1.1 (ADR-002) |
+| OCR engine | `tesseract.js-core` (the WASM core only, in our own worker; never tesseract.js's CDN-defaulting worker layer) | Apache-2.0 (Tesseract; Leptonica BSD-2) |
+| OCR language data | `@tesseract.js-data/{eng,chi_sim,hin,spa,fra}`, **self-hosted** under `/ocr/` | MIT (packages); data Apache-2.0 |
 | License gate | own script `scripts/check-licenses.ts` + `scripts/license-policy.ts` in CI | MIT (ours) |
 
 **Forbidden:** GPL, LGPL-with-static-link concerns, AGPL (incl. PyMuPDF, Ghostscript, CoherentPDF, BentoPDF source), SSPL, "non-commercial" licenses, any runtime CDN dependency. MPL-2.0 is forbidden in anything that ships; it is allowed only for dev-only tooling that npm marks `dev` in the lockfile (e.g. Vite's lightningcss, axe-core) (ADR-002).
@@ -311,6 +323,9 @@ Open-password prompt; read permission flags; disable restricted commands with an
 ### 7.13 Print (D-25)
 Own dialog: range (all, current page, current view, selected area, custom), fit / actual / custom %, markups on / off / only, quality (standard / high DPI for drawings), orientation auto. Renders pages in the Work worker (refreshed to the current revision first, annotations included) at the chosen DPI into a print iframe. **Export Print-Ready PDF**: copy with annotations flattened (vector-quality elsewhere). For large/high-DPI jobs, printing the flattened print-ready PDF through the browser's built-in PDF viewer is acceptable; the required narrowly scoped `frame-src blob:` CSP addition is designed in M2 (ADR-001 B13).
 
+### 7.14 OCR (D-34)
+Convert → **Recognize Text (OCR)** (ADR-020). Dialog: pages (all / current / selected / custom), **languages** as tick boxes (English, Chinese Simplified, Hindi, Spanish, French — several at once; English precached, the others downloaded on first use and kept for offline use, said in the dialog), and **"Also recognize pages that already have text"** (off by default: such pages are skipped and counted). The Work worker renders each page as displayed (8-bit gray, 300 dpi, the document as it is now); the OCR worker (Tesseract LSTM, SIMD build) returns words with boxes and lines with baselines; the Work worker writes the **text layer** with our object layer: per page one invisible text stream (render mode 3) appended to `/Contents` behind a `q`/`Q` wrap of the untouched original streams, words on their baselines in any direction and stretched to their boxes, one embedded **glyphless font** per document (Tesseract's `pdf.ttf`: CIDFontType2, Identity-H, identity ToUnicode) so every script round-trips in Acrobat, PDF-XChange and here; a layer this app wrote before is replaced, other text stays. Applied by the Render worker as one undo step (the comment-transfer route, capability **modify**, rule 9); Ctrl+S stays a narrow verified revision. Progress per page with Cancel (between pages, or the worker terminated mid-page). Search, selection, copy, exports and table detection then see the text like any text page (§6, §7.6, §7.7). Limits: BMP characters; no orientation detection or deskew; a foreign OCR layer is never removed.
+
 ---
 
 ## 8. UI specification
@@ -333,7 +348,7 @@ No user-visible string literals in components — all via i18n keys in `en.json`
 
 ## 9. Offline, PWA & updates (D-17, D-18)
 
-- Service worker precaches the **core** (shell, UI, Render worker, PDFium WASM, base fonts) first; after first render, background-precaches the rest (Work worker, PDF Oxide WASM, CJK/extra fonts, ExcelJS, docx). Status bar shows progress then "✓ Ready offline".
+- Service worker precaches the **core** (shell, UI, Render worker, PDFium WASM, base fonts) first; after first render, background-precaches the rest (Work worker, PDF Oxide WASM, CJK/extra fonts, ExcelJS, docx, the OCR worker with its WASM and the English data). Status bar shows progress then "✓ Ready offline". **On demand** (ADR-020): the other OCR languages are never precached (the install budget) but cached by the service worker when first fetched.
 - A feature used before its module is cached triggers a priority fetch with a spinner.
 - Fonts bundled; **EmbedPDF CDN font fallback disabled** (`fontFallback: null` or local config with absolute same-origin URLs — never `undefined`, ADR-003). Fallback fonts: Regular weight only; Latin, Arabic and Hebrew in core, SC/TC/JP/KR in the background precache (ADR-003). No runtime CDN anything. EmbedPDF defaults both `pdfium.wasm` and `@embedpdf/fonts-*` to `cdn.jsdelivr.net`; both must be overridden with self-hosted copies (verified in M0-S8).
 - Updates: new SW installs in the background; app shows "Update ready" and activates only on user click or next launch; never while documents are open.
@@ -423,11 +438,14 @@ Text/images/MD/HTML, Word (beta), tables (beta: Express + Review), page operatio
 
 **Public beta after M4** (D-32).
 
+### M5 — OCR (Rev 1 item 1)
+Convert → Recognize Text (OCR) per §7.14: spike S17 and ADR-020, the OCR worker and client, the raster and text-layer jobs, the dialog with languages and the re-recognize option, acceptance and interop (`docs/plan/M5.md`).
+
 ---
 
 ## 14. Roadmap after Rev 0
 
-**Rev 1 (in order):** 1. OCR (scanned docs, search in scans, scanned tables) · 2. CRS round-trip import + custom column templates · 3. Protect: apply password/permissions, create digital signatures from user's certificate file (offline) · small items: stamp designer, shortcut remapping, poster tiling.
+**Rev 1 (in order):** 1. OCR (scanned docs, search in scans, scanned tables) — **in progress as M5** (ADR-020) · 2. CRS round-trip import + custom column templates · 3. Protect: apply password/permissions, create digital signatures from user's certificate file (offline) · small items: stamp designer, shortcut remapping, poster tiling.
 
 **Rev 2+:** PDF text editing · form design · advanced page tools (headers/footers, watermarks, Bates) · tablet UI · local folder search · native wrapper (.exe/.msi) · dark theme.
 

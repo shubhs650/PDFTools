@@ -24,9 +24,16 @@ const BACKGROUND = [
   // OCR (M5, ADR-020 d2): the worker, Tesseract's WASM and the English data, only for OCR.
   /(^|\/)assets\/ocr\.worker-[\w-]+\.js$/,
   /(^|\/)assets\/tesseract-core[\w.-]*\.wasm$/,
-  /(^|\/)ocr\//,
+  /(^|\/)ocr\/eng\.traineddata\.gz$/,
   /(^|\/)third-party-notices\.txt$/,
 ];
+
+/**
+ * Known but never precached (§9 install budget): fetched on first use and
+ * then kept by the service worker like a background module — the OCR data of
+ * the languages other than English (ADR-020 d2, amended).
+ */
+const ON_DEMAND = [/(^|\/)ocr\/(?!eng\.)[\w]+\.traineddata\.gz$/];
 
 /** Never precached: the service worker itself, and font license texts. */
 const SKIP = [/(^|\/)sw\.js$/, /(^|\/)workbox-[\w-]+\.js$/, /(^|\/)LICENSE$/, /(^|\/)_headers$/];
@@ -50,12 +57,15 @@ export const PRECACHE_EXTENSIONS = [
 export function splitPrecache(entries: readonly PrecacheEntry[]): {
   core: PrecacheEntry[];
   background: PrecacheEntry[];
+  onDemand: PrecacheEntry[];
 } {
   const core: PrecacheEntry[] = [];
   const background: PrecacheEntry[] = [];
+  const onDemand: PrecacheEntry[] = [];
   for (const e of entries) {
     if (SKIP.some((r) => r.test(e.url))) continue;
-    (BACKGROUND.some((r) => r.test(e.url)) ? background : core).push(e);
+    if (ON_DEMAND.some((r) => r.test(e.url))) onDemand.push(e);
+    else (BACKGROUND.some((r) => r.test(e.url)) ? background : core).push(e);
   }
-  return { core, background };
+  return { core, background, onDemand };
 }

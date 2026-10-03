@@ -38,7 +38,7 @@ function fakeSpawn(world: FakeWorld) {
       },
       unlock: ({ ownerPassword }) => ({ unlocked: ownerPassword === 'owner' }),
       ocrRaster: () => ({ hasText: true, width: 0, height: 0, data: new ArrayBuffer(0) }),
-      ocrLayer: () => ({ objects: [], firstNew: 0, words: 0, skipped: 0, pages: [] }),
+      ocrLayer: () => ({ objects: [], firstNew: 0, words: 0, skipped: 0, pages: [], replaced: 0 }),
       pageGeometry: ({ docId }) => {
         world.jobsSeen.push(`geometry:${docId}`);
         return { runs: [] };

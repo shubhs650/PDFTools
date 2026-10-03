@@ -2,11 +2,15 @@
 // own worker behind the typed RPC. One page raster per call; Recognize is one
 // synchronous WASM call, so a mid-page cancel is the client terminating the
 // worker (ocrClient.ts).
+import type { OcrLanguage } from '../model/ocr/languages';
 import type { OcrLine } from '../model/ocr/types';
 import type { MethodSpec } from './protocol';
 
-/** The English data, self-hosted (scripts/vite-assets.ts) and precached in the background. */
-export const OCR_DATA_PATH = 'ocr/eng.traineddata.gz';
+/** One language's data file (self-hosted, scripts/vite-assets.ts). */
+export interface OcrDataSource {
+  code: OcrLanguage;
+  url: string;
+}
 
 export interface OcrRaster {
   width: number;
@@ -17,8 +21,8 @@ export interface OcrRaster {
 }
 
 export interface OcrApi {
-  /** Loads the core (its WASM from this origin) and the language data from `dataUrl`. */
-  init: MethodSpec<{ dataUrl: string }, { ms: number; version: string }>;
+  /** Loads the core (its WASM from this origin) and the data of `languages`, in that order. */
+  init: MethodSpec<{ languages: OcrDataSource[] }, { ms: number; version: string }>;
   /** Recognizes one raster; progress is Tesseract's percent within the page. */
   recognize: MethodSpec<
     OcrRaster,
