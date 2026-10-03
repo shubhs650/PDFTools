@@ -37,7 +37,8 @@ ARCHITECTURE.md is amended as the ADR lists); M5-05 (acceptance, owner interop) 
   iterator parsing, widths vs PDFium, layer geometry incl. sideways lines and resources
   handling, client lifecycle, raster + layer + reopen on real PDFium), e2e `e2e/ocr.spec.ts`
   (recognize all, find, undo/redo, save verified, range and cancel, denied without modify,
-  offline), perf `e2e/perf/ocr.spec.ts` (20 scanned pages while scrolling). Build: install
+  offline), perf `e2e/perf/ocr.spec.ts` (20 scanned pages recognized in 20.6 s — 1.03 s per
+  page — while scrolling, 0 blank frames, no main-thread long task). Build: install
   56.76 MB of 60 (OCR module 5.90 MB raw / 3.91 MB brotli, background); licenses 765 OK;
   dist and Pages checks clean. Limits (ADR-020 consequences): English, Latin characters in the
   layer, no orientation detection or deskew, pages with text are never re-recognized.
