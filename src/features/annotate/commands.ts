@@ -450,7 +450,9 @@ export function registerAnnotateCommands(): () => void {
     registerCommand('comment.reviewerProfile', {
       run: openProfileDialog,
     }),
-    registerCommand('annotation.delete', {
+    // Delete: the ribbon button (Comment → Review), the Delete key in the
+    // document and in the Comments pane (preview review USR01/OBS01).
+    registerCommand('comment.delete', {
       ...withSelection,
       run: () => {
         const id = activeId();

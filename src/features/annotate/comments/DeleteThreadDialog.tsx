@@ -1,4 +1,5 @@
 import { Dismiss20Regular } from '@fluentui/react-icons/svg/dismiss';
+import { useRef } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Button, Dialog } from '../../../ui/components';
 import { confirmDelete, useDeleteConfirm } from './threadActions';
@@ -7,6 +8,7 @@ import { confirmDelete, useDeleteConfirm } from './threadActions';
 export function DeleteThreadDialog() {
   const { t } = useTranslation();
   const pending = useDeleteConfirm((s) => s.pending);
+  const cancelRef = useRef<HTMLButtonElement>(null);
   if (!pending) return null;
   return (
     <Dialog
@@ -17,6 +19,7 @@ export function DeleteThreadDialog() {
       title={t('comments.deleteTitle')}
       description={t('comments.deleteDescription', { count: pending.replies })}
       closeIcon={<Dismiss20Regular />}
+      initialFocus={cancelRef}
       footer={
         <>
           <Button
@@ -27,6 +30,7 @@ export function DeleteThreadDialog() {
             }}
           />
           <Button
+            ref={cancelRef}
             label={t('annotate.caret.cancel')}
             onClick={() => {
               confirmDelete(false);

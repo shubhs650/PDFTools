@@ -95,11 +95,12 @@
       "link": "Link",
       "commentsPane": "Comments Pane",
       "reply": "Reply",
+      "delete": "Delete Selected Comments",
       "setStatus": "Set Status",
       "filter": "Filter Comments",
       "autoNumber": "Show Numbers on Page",
-      "copyStyle": "Copy Comment Style",
-      "applyStyle": "Apply Comment Style",
+      "copyStyle": "Copy Style",
+      "applyStyle": "Apply Style",
       "reviewerProfile": "Reviewer Profile",
       "exportAnnotations": "Export Comments (CSV / XLSX / JSON)",
       "importComments": "Import Comments",
@@ -129,8 +130,8 @@
       "move": "Move Pages",
       "extract": "Extract Pages",
       "merge": "Merge Files",
-      "rotateCw": "Rotate Pages Clockwise",
-      "rotateCcw": "Rotate Pages Counterclockwise"
+      "rotateCw": "Rotate Clockwise",
+      "rotateCcw": "Rotate Counterclockwise"
     },
     "convert": {
       "text": "To Text",
@@ -192,7 +193,12 @@
       "home": {
         "tools": "Tools",
         "find": "Find",
-        "forms": "Forms"
+        "forms": "Forms",
+        "zoom": "Zoom",
+        "comment": "Comment",
+        "measure": "Measure",
+        "pages": "Pages",
+        "protect": "Protect"
       },
       "view": {
         "goTo": "Go To",
@@ -206,7 +212,9 @@
         "text": "Text",
         "drawing": "Drawing",
         "stamp": "Stamp",
-        "manageComments": "Manage Comments"
+        "comments": "Comments",
+        "review": "Review",
+        "transfer": "Transfer"
       },
       "measure": {
         "measure": "Measure",
@@ -295,7 +303,6 @@
       "editSelectAll": "Select Page Text",
       "findNext": "Find Next",
       "findPrev": "Find Previous",
-      "annotationDelete": "Delete Selected Comments",
       "annotationNext": "Next Comment on the Page",
       "annotationPrev": "Previous Comment on the Page",
       "annotationNudge": "Move Selected Comments (1 pt)",
@@ -316,7 +323,9 @@
       "arrowUp": "Up Arrow",
       "arrowDown": "Down Arrow",
       "delete": "Delete",
-      "tab": "Tab"
+      "tab": "Tab",
+      "plus": "Plus",
+      "minus": "Minus"
     }
   },
   "open": {
@@ -435,14 +444,16 @@
       "snapshots": "Recovery snapshots",
       "used": "Storage used by PDFTools",
       "unknown": "Not reported by this browser",
-      "note": "Your PDF files stay where they are. PDFTools keeps only settings, your reviewer profile, the recent files list and recovery snapshots of unsaved changes. Storage used includes the offline copy of the app.",
+      "note": "Your PDF files stay where they are. PDFTools keeps only settings, your reviewer profile, custom status schemes, table templates, the recent files list and recovery snapshots of unsaved changes. Storage used includes the offline copy of the app.",
       "clear": "Clear all local data…",
       "confirmTitle": "Clear all local data?",
-      "confirmDescription": "This deletes your settings, reviewer profile, the recent files list and all recovery snapshots on this device. Your PDF files are not changed. The offline copy of the app is kept, so PDFTools keeps working offline.",
+      "confirmDescription": "This deletes your settings, reviewer profile, custom status schemes, table templates, the recent files list and all recovery snapshots on this device. Your PDF files are not changed. The offline copy of the app is kept, so PDFTools keeps working offline.",
       "warnOpen_one": "{{count}} document is open. It stays open.",
       "warnOpen_other": "{{count}} documents are open. They stay open.",
       "warnUnsaved_one": "{{count}} open document has unsaved changes. Its recovery snapshot is deleted too, so those changes could not be recovered after a crash until you change the document again.",
       "warnUnsaved_other": "{{count}} open documents have unsaved changes. Their recovery snapshots are deleted too, so those changes could not be recovered after a crash until you change the documents again.",
+      "warnSnapshots_one": "{{count}} recovery snapshot of a document that is not open is deleted too. To keep that work, open the document and save it first.",
+      "warnSnapshots_other": "{{count}} recovery snapshots of documents that are not open are deleted too. To keep that work, open the documents and save them first.",
       "confirm": "Clear data",
       "cancel": "Cancel",
       "cleared": "Local data cleared.",
@@ -459,7 +470,8 @@
       "documents": "Your documents never leave this device. PDFTools opens, renders and saves them in your browser.",
       "account": "No account, no login and no cookies.",
       "telemetry": "No analytics scripts, no tracking and no telemetry.",
-      "network": "The only network requests PDFTools makes are checks for app updates on its own website."
+      "network": "On its own, PDFTools only loads its program files and checks for app updates from its own website. Nothing about you or your documents is sent.",
+      "reports": "If you choose Help → Send Error Report, PDFTools sends the description you typed and the diagnostic details shown in the report dialog to its own website, and nothing else: no documents, file names or document text."
     },
     "kind": {
       "indexedDB": "IndexedDB",
@@ -830,39 +842,59 @@
     "section": {
       "start": {
         "title": "Opening files",
-        "body": "Press Ctrl+O, drop PDF files on the window, or open a recent file from File → Recent. Each file opens in its own tab. Password-protected files ask for their password."
+        "body": "Press {{open}}, drop PDF files on the window, or open a recent file from File → Recent. Each file opens in its own tab. Password-protected files ask for their password."
       },
       "view": {
         "title": "Viewing",
-        "body": "Zoom with Ctrl+plus and Ctrl+minus or Ctrl+mouse wheel; Ctrl+0 fits the page and Ctrl+2 the width. Hold Space or press H to pan. The View tab has page layouts and rotation."
+        "body": "Zoom with {{zoomIn}} and {{zoomOut}} or {{mod}}+mouse wheel; {{fitPage}} fits the page and {{fitWidth}} the width. Hold Space or press H to pan. The View tab has page layouts and rotation."
       },
       "find": {
         "title": "Finding text",
-        "body": "Ctrl+F opens Quick Find; press Enter to search and F3 for the next hit. Ctrl+Shift+F opens Advanced Search, which also looks in comments, bookmarks and other open documents."
+        "body": "{{find}} opens Quick Find; press Enter to search and {{findNext}} for the next hit. {{advancedSearch}} opens Advanced Search, which also looks in comments, bookmarks and other open documents."
       },
       "panes": {
         "title": "Side panes",
         "body": "The rail on the left opens Thumbnails, Bookmarks, Attachments, Layers, Signatures and Search. Esc returns to the rail."
       },
+      "review": {
+        "title": "Reviewing comments",
+        "body": "The Comment tab has the markup, note, text and drawing tools; single letters such as N (note) or B (rectangle) turn them on while the document has focus. Select a comment with Home → Select Comments or from the Comments pane; then edit it in the Properties pane, reply or set its status in the Comments pane, and remove it with Comment → Delete or the {{delete}} key ({{undo}} brings it back). {{save}} keeps your comments in the file. On a file that forbids changes, comments are read-only."
+      },
+      "transfer": {
+        "title": "Comment transfer",
+        "body": "Comment → Import brings comments from another PDF or a PDFTools JSON export into the open file; Export writes them as CSV, Excel or JSON, and Export CRS builds a comment resolution sheet. Copy and Paste move the selected comments between open documents; Paste to Original Pages puts them on the pages they came from."
+      },
+      "measure": {
+        "title": "Measuring",
+        "body": "Measure → Distance, Perimeter and Area draw measurements on the page. Set the drawing's scale first: Calibrate by clicking two points of a known length, or Set Scale to type a ratio; Scale Viewport gives part of a page its own scale. Snapping to endpoints, midpoints, intersections and nearby lines is on the Measure tab, and Units sets the units and precision."
+      },
+      "tables": {
+        "title": "Extracting tables",
+        "body": "Convert → Express Extract (Beta) saves the tables PDFTools finds on the chosen pages as an Excel workbook or CSV files. Review & Extract shows the detected grids on the page so you can add, move or delete dividers, mark header rows and merged cells, and save the grid as a template for similar pages. Scanned pages have no text to extract."
+      },
+      "redact": {
+        "title": "Redacting",
+        "body": "Protect → Mark for Redaction marks the selected text and Mark Area for Redaction marks a rectangle; Pending Redactions lists the marks. Apply Redactions writes a new, fully rewritten file with the marked text, images and drawings removed and the document's hidden data cleared, and checks it before saving. The original file is not changed."
+      },
       "forms": {
         "title": "Forms",
-        "body": "Click a form field or press Tab to move through the fields. Ctrl+S saves the values. Home → Reset Form restores the defaults."
+        "body": "Click a form field or press Tab to move through the fields. {{save}} saves the values. Home → Reset Form restores the defaults."
       },
       "save": {
         "title": "Saving",
-        "body": "Ctrl+S adds your changes to the end of the file, so earlier signatures stay valid. Save As writes a copy; Save Optimized rewrites the file compactly. Unsaved work is kept on this device in case the browser closes."
+        "body": "{{save}} adds your changes to the end of the file as an incremental update, so earlier signed revisions are kept as they were; the Signatures pane shows whether each one is still intact. Save As writes a copy; Save Optimized rewrites the file compactly. Unsaved work is kept on this device in case the browser closes."
       },
       "print": {
         "title": "Printing",
-        "body": "Ctrl+P opens the print dialog: choose pages, size, markups and quality. Large drawings print sharpest through the browser's PDF viewer. File → Export Print-Ready PDF saves a copy with markups and form values burned in."
+        "body": "{{print}} opens the print dialog: choose pages, size, markups and quality. Large drawings print sharpest through the browser's PDF viewer. File → Export Print-Ready PDF saves a copy with markups and form values burned in."
       },
       "protect": {
         "title": "Protected and signed files",
-        "body": "Protect → Security Info shows what a file allows. Signatures are checked on this device; the Signatures pane shows whether each signed part is unchanged."
+        "body": "Protect → Security Info shows what a file allows; PDFTools honours those restrictions. Signatures are checked on this device; the Signatures pane shows whether each signed part is unchanged."
       },
       "privacy": {
         "title": "Privacy",
-        "body": "PDFTools makes no network requests with your documents. Error reports are sent only when you choose to, and you see every word of them first."
+        "body": "PDFTools makes no network requests with your documents; on its own it only loads its program files and checks for updates from its website. Error reports are sent only when you choose to, and you see every word of them first."
       }
     }
   },
@@ -1030,6 +1062,7 @@
     "save": "Save",
     "edit": "Edit reply",
     "delete": "Delete reply",
+    "deleteComment": "Delete comment",
     "replyLabel": "Reply",
     "reply": "Post reply",
     "deleteTitle": "Delete comments and their replies?",
@@ -1713,6 +1746,20 @@
       "annotation": "comments or marks",
       "string": "a redacted word found elsewhere in the file",
       "structure": "hidden document data or more than one revision"
+    }
+  },
+  "commandShort": {
+    "comment": {
+      "textBox": "Text Box",
+      "filter": "Filter",
+      "autoNumber": "Numbers",
+      "delete": "Delete",
+      "exportAnnotations": "Export",
+      "importComments": "Import",
+      "copyComments": "Copy",
+      "pasteComments": "Paste",
+      "pasteToOriginal": "Paste to Original",
+      "exportCrs": "Export CRS"
     }
   }
 }

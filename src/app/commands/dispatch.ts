@@ -47,8 +47,8 @@ export const INTERNAL_ACTIONS = [
   'edit.selectAll',
   'find.next',
   'find.prev',
-  // Annotations (M3-05): delete, cycle with Tab, nudge with the arrow keys.
-  'annotation.delete',
+  // Annotations (M3-05): cycle with Tab, nudge with the arrow keys (delete is
+  // the ribbon command comment.delete).
   'annotation.next',
   'annotation.prev',
   'annotation.nudgeLeft',

@@ -82,7 +82,7 @@ export const KEYMAP: readonly Binding[] = [
   // (scrolling, focus), so they are never swallowed then.
   b('qat.undo', ['Ctrl+Z']),
   b('qat.redo', ['Ctrl+Y', 'Ctrl+Shift+Z']),
-  { ...b('annotation.delete', ['Delete'], 'document'), preventWhenDisabled: false },
+  { ...b('comment.delete', ['Delete'], 'document'), preventWhenDisabled: false },
   { ...b('annotation.next', ['Tab'], 'document'), preventWhenDisabled: false },
   { ...b('annotation.prev', ['Shift+Tab'], 'document'), preventWhenDisabled: false },
   { ...b('annotation.nudgeLeft', ['ArrowLeft'], 'document'), preventWhenDisabled: false },

@@ -122,3 +122,31 @@ test('Help → Help: bundled help with a way to the shortcut sheet', async ({ pa
   await expect(d).toHaveCount(0);
   await expect(page.getByRole('dialog', { name: 'Keyboard shortcuts' })).toBeVisible();
 });
+
+// Preview review UI04: Help and the shortcut sheet take their keys from the
+// same keymap and name the platform's modifier.
+for (const [platform, mod] of [
+  ['Win32', 'Ctrl'],
+  ['MacIntel', 'Cmd'],
+] as const) {
+  test(`Help and the shortcut sheet both say ${mod} on ${platform}`, async ({ page }) => {
+    await page.addInitScript((p) => {
+      Object.defineProperty(navigator, 'platform', { get: () => p });
+    }, platform);
+    await page.goto('/');
+    await helpCommand(page, 'Help');
+    const d = page.getByRole('dialog', { name: 'PDFTools Help' });
+    await expect(d.getByRole('heading', { name: 'Opening files' })).toBeVisible();
+    await expect(d).toContainText(`Press ${mod}+O`);
+    await expect(d).toContainText(`${mod}+S adds your changes`);
+    await expect(d).not.toContainText(mod === 'Cmd' ? 'Ctrl+' : 'Cmd+');
+    // The review workflow is documented, with the Delete key.
+    await expect(d.getByRole('heading', { name: 'Reviewing comments' })).toBeVisible();
+    await expect(d).toContainText('Comment → Delete or the Delete key');
+    for (const heading of ['Comment transfer', 'Measuring', 'Extracting tables', 'Redacting'])
+      await expect(d.getByRole('heading', { name: heading })).toBeVisible();
+    await d.getByRole('button', { name: 'Keyboard shortcuts' }).click();
+    const sheet = page.getByRole('dialog', { name: 'Keyboard shortcuts' });
+    await expect(sheet.getByRole('row', { name: /^Open/ })).toContainText(`${mod}+O`);
+  });
+}

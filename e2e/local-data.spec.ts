@@ -167,3 +167,45 @@ test('Help → Clear All Local Data opens File → Settings', async ({ page }) =
     backstage(page).getByRole('heading', { name: 'Settings', exact: true }),
   ).toBeVisible();
 });
+
+test('the clear-data dialog names everything it deletes and starts on Cancel (preview review UI02)', async ({
+  page,
+}) => {
+  await page.goto('/');
+  await section(page, 'Settings');
+  const button = backstage(page).getByRole('button', { name: 'Clear all local data…' });
+  await button.focus();
+  await page.keyboard.press('Enter');
+  const confirm = page.getByRole('dialog', { name: 'Clear all local data?' });
+  await expect(confirm).toBeVisible();
+  for (const what of [
+    'settings',
+    'reviewer profile',
+    'custom status schemes',
+    'table templates',
+    'recent files list',
+    'recovery snapshots',
+  ])
+    await expect(confirm).toContainText(what);
+  // Enter right after opening is harmless; Esc cancels and returns focus.
+  await expect(confirm.getByRole('button', { name: 'Cancel' })).toBeFocused();
+  await page.keyboard.press('Enter');
+  await expect(confirm).toBeHidden();
+  await expect(backstage(page).getByRole('status')).toHaveText('');
+  await button.click();
+  await expect(confirm).toBeVisible();
+  await page.keyboard.press('Escape');
+  await expect(confirm).toBeHidden();
+  await expect(button).toBeFocused();
+});
+
+test('Privacy discloses the optional error report and the update check (UI03)', async ({
+  page,
+}) => {
+  await page.goto('/');
+  await section(page, 'Privacy');
+  const privacy = backstage(page).getByTestId('privacy');
+  await expect(privacy).toContainText('checks for app updates');
+  await expect(privacy).toContainText('Send Error Report');
+  await expect(privacy).toContainText('no documents, file names or document text');
+});

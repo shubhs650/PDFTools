@@ -6,11 +6,17 @@ import { describe, expect, it } from 'vitest';
 import {
   AVAILABLE_MILESTONES,
   COMMANDS,
+  HOME_REUSE_GROUPS,
   HOME_REUSES,
   RIBBON_TABS,
   isAvailable,
 } from '../src/app/commands';
-import { commandLabelKey, groupLabelKey, tabLabelKey } from '../src/app/commandLabels';
+import {
+  commandLabelKey,
+  commandShortKey,
+  groupLabelKey,
+  tabLabelKey,
+} from '../src/app/commandLabels';
 import en from '../src/i18n/en.json';
 import { CUSTOM_GLYPHS } from '../src/ui/icons/custom';
 import { scalePath } from '../src/ui/icons/custom/paths';
@@ -42,9 +48,27 @@ describe('command table (M1-06)', () => {
         if (typeof lookup(groupLabelKey(c)) !== 'string') missing.push(groupLabelKey(c));
       }
     }
+    for (const g of HOME_REUSE_GROUPS) {
+      const key = groupLabelKey({ tab: 'home', group: g.group });
+      if (typeof lookup(key) !== 'string') missing.push(key);
+    }
     for (const t of RIBBON_TABS)
       if (typeof lookup(tabLabelKey(t)) !== 'string') missing.push(tabLabelKey(t));
     expect(missing).toEqual([]);
+  });
+
+  it('a short ribbon text exists for every `short` command and is part of its full label (WCAG 2.5.3)', () => {
+    const problems: string[] = [];
+    for (const c of COMMANDS) {
+      const short = lookup(commandShortKey(c.id));
+      if (c.short) {
+        const full = lookup(commandLabelKey(c.id));
+        if (typeof short !== 'string') problems.push(`${c.id}: no short text`);
+        else if (typeof full !== 'string' || !full.includes(short))
+          problems.push(`${c.id}: "${short}" is not part of "${String(full)}"`);
+      } else if (short !== undefined) problems.push(`${c.id}: short text without the flag`);
+    }
+    expect(problems).toEqual([]);
   });
 
   it('shows M1 … M4 commands (M4 complete, M4-22); the rest are omitted (M1-Q2)', () => {

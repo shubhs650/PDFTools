@@ -159,7 +159,9 @@
   transform: translate(-50%, -50%);
   min-width: var(--dialog-min-width);
   max-width: var(--dialog-max-width);
-  /* A long dialog scrolls inside the window (M4-20: a 200-page source's summary). */
+  /* A long dialog scrolls inside the window (M4-20: a 200-page source's summary),
+     keeping a margin to the window's edges (padding counts). */
+  box-sizing: border-box;
   max-height: calc(100vh - 2 * var(--space-6));
   overflow-y: auto;
   padding: var(--space-6);
