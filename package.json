@@ -98,6 +98,11 @@
     "@radix-ui/react-dropdown-menu": "2.1.24",
     "@radix-ui/react-toggle": "1.1.18",
     "@radix-ui/react-tooltip": "1.2.16",
+    "@tesseract.js-data/chi_sim": "^1.0.0",
+    "@tesseract.js-data/eng": "^1.0.0",
+    "@tesseract.js-data/fra": "^1.0.0",
+    "@tesseract.js-data/hin": "^1.0.0",
+    "@tesseract.js-data/spa": "^1.0.0",
     "asn1js": "^3.0.10",
     "docx": "9.8.1",
     "exceljs": "4.4.0",
@@ -111,6 +116,7 @@
     "react": "^19.3.0",
     "react-dom": "^19.3.0",
     "react-i18next": "17.0.15",
+    "tesseract.js-core": "^7.0.0",
     "zustand": "5.0.15"
   },
   "overrides": {

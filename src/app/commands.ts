@@ -12,7 +12,7 @@
 //   shown like an available milestone's commands.
 
 export type CommandSize = 'large' | 'small';
-export type Milestone = 'M1' | 'M2' | 'M3' | 'M4' | 'later';
+export type Milestone = 'M1' | 'M2' | 'M3' | 'M4' | 'M5' | 'later';
 export type CommandTab =
   | 'quickAccess'
   | 'file'
@@ -53,7 +53,7 @@ export interface CommandDef {
 }
 
 /** Milestones whose commands are shown. Extend as milestones land. */
-export const AVAILABLE_MILESTONES: readonly Milestone[] = ['M1', 'M2', 'M3', 'M4'];
+export const AVAILABLE_MILESTONES: readonly Milestone[] = ['M1', 'M2', 'M3', 'M4', 'M5'];
 
 /** Ribbon tabs in order (§8, authoritative). */
 export const RIBBON_TABS = [
@@ -1150,6 +1150,14 @@ export const COMMANDS: readonly CommandDef[] = [
     fluent: 'TableSettings',
     milestone: 'M4',
     shipped: true, // M4-15
+  },
+  {
+    id: 'convert.ocr',
+    tab: 'convert',
+    group: 'ocr',
+    size: 'large',
+    fluent: 'ScanText',
+    milestone: 'M5', // ADR-020, M5-04
   },
   {
     id: 'protect.markRedaction',

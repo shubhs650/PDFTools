@@ -88,6 +88,7 @@ import { RotateRight20Regular, RotateRight24Regular } from '@fluentui/react-icon
 import { Ruler20Filled, Ruler20Regular, Ruler32Filled, Ruler32Regular } from '@fluentui/react-icons/svg/ruler';
 import { Save20Regular, Save32Regular } from '@fluentui/react-icons/svg/save';
 import { SaveCopy20Regular, SaveCopy24Regular } from '@fluentui/react-icons/svg/save-copy';
+import { ScanText20Regular, ScanText32Regular } from '@fluentui/react-icons/svg/scan-text';
 import { Search20Filled, Search20Regular } from '@fluentui/react-icons/svg/search';
 import { SearchSquare20Filled, SearchSquare20Regular } from '@fluentui/react-icons/svg/search-square';
 import { SelectObject20Filled, SelectObject20Regular, SelectObject24Filled, SelectObject24Regular } from '@fluentui/react-icons/svg/select-object';
@@ -228,6 +229,7 @@ export const FLUENT_GLYPHS: Record<string, FluentGlyphs> = {
   'convert.expressExtract': { regular: { small: TableLightning20Regular, large: TableLightning28Regular, largeNative: 28 } },
   'convert.reviewExtract': { regular: { small: TableEdit20Regular, large: TableEdit28Regular, largeNative: 28 } },
   'convert.tableTemplates': { regular: { small: TableSettings20Regular, large: TableSettings28Regular, largeNative: 28 } },
+  'convert.ocr': { regular: { small: ScanText20Regular, large: ScanText32Regular, largeNative: 32 } },
   'protect.markRedaction': { regular: { small: TextStrikethrough20Regular, large: TextStrikethrough24Regular, largeNative: 24 }, filled: { small: TextStrikethrough20Filled, large: TextStrikethrough24Filled, largeNative: 24 } },
   'protect.markRedactionArea': { regular: { small: RectangleLandscape20Regular, large: RectangleLandscape32Regular, largeNative: 32 }, filled: { small: RectangleLandscape20Filled, large: RectangleLandscape32Filled, largeNative: 32 } },
   'protect.applyRedactions': { regular: { small: CheckmarkCircle20Regular, large: CheckmarkCircle32Regular, largeNative: 32 } },

@@ -34,6 +34,7 @@ import {
   contractPdf,
   simplePdf,
 } from '../fixtures/generate.ts';
+import { scannedFixture, scannedPagesFixture } from '../fixtures/scanned.ts';
 
 export class Guard {
   readonly thirdPartyRequests: string[] = [];
@@ -140,6 +141,10 @@ export interface Pdfs {
   /** The A0 sheet with `n` square markups (M3-01). */
   markedSheet(segments: number, n?: number): Buffer;
   cjk(): Buffer;
+  /** The four-page scanned datasheet (M5 OCR): three image-only pages (one sideways), one text page. */
+  scanned(): Promise<Buffer>;
+  /** `n` image-only scanned pages (perf). */
+  scannedPages(n: number): Promise<Buffer>;
 }
 
 function makePdfs(): Pdfs {
@@ -167,6 +172,21 @@ function makePdfs(): Pdfs {
     markedSheet: (segments, n = 1000) =>
       memo(`marked-a0-${String(segments)}-${String(n)}`, () => markedSheetPdf(segments, n)),
     cjk: () => memo('cjk', () => cjkFallbackPdf()),
+    scanned: async () => {
+      const hit = cache.get('scanned');
+      if (hit) return hit;
+      const b = Buffer.from(await scannedFixture());
+      cache.set('scanned', b);
+      return b;
+    },
+    scannedPages: async (n) => {
+      const key = `scanned-${String(n)}`;
+      const hit = cache.get(key);
+      if (hit) return hit;
+      const b = Buffer.from(await scannedPagesFixture(n));
+      cache.set(key, b);
+      return b;
+    },
   };
 }
 

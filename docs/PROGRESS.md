@@ -1,36 +1,66 @@
 # PDFTools — Progress
 
-_Last updated: 2026-10-02 (session 20: preview review fixes — ribbon, deletion, dialogs, Help)_
+_Last updated: 2026-10-03 (session 20: M5 OCR — spike, ADR-020 accepted with amendments, implementation)_
 
-**Current milestone:** M4 — Extract, **complete on the agent side** (all 22 tasks; acceptance in
-[docs/acceptance/M4.md](acceptance/M4.md)). With M4 the Rev 0 feature set is complete; the public
-beta (D-32) waits on the owner items in the readiness list (M4.md §5). M0–M3 are merged into
-`main`; the M0–M4 owner runs are open.
+**Current milestone:** M5 — OCR (Rev 1 item 1, opened at the owner's request on 2026-10-03;
+plan in [docs/plan/M5.md](plan/M5.md)). M5-01 … M5-04 done on the agent side under
+[ADR-020](adr/020-m5-ocr.md), **accepted with amendments** the same day (five languages
+including Hindi; a tick box to re-recognize pages with text) and applied in ARCHITECTURE.md
+Rev 0.8; M5-05 (acceptance, owner interop) open. Rev 0
+(M0–M4) is complete on the agent side; the public beta (D-32) waits on the owner items in
+[docs/acceptance/M4.md](acceptance/M4.md) §5.
 
 ## Done
 
-- **Session 20 — preview review fixes (owner's Codex audit of the deployed preview, D-01, D-29,
-  D-30).** _Ribbon (UI01):_ a group mixing one large button with small ones no longer renders as
-  one long row — small buttons flow down three rows beside the large ones (`groupCells`); the text
-  markup and drawing tools are icon-only grids with their names as tooltips; Manage Comments is
-  split into Comments, Review (Reply, **Delete**, Set Status, Copy Style, Apply Style) and
-  Transfer; nine long labels have a short visible text (`commandShort.<id>`, the full label stays
-  the accessible name and the tooltip; a test enforces label-in-name); Home's repeated commands are
-  small buttons in Home's own groups (Zoom, Comment, Measure, Pages, Protect), Select Text and
-  Select Comments small; groups never shrink. Comment 3174 → 1247 px and Home 1509 → 1265 px at a
-  1280 px window (DejaVu, the widest font); every tab fits 1280 … 1920 with and without a
-  document (e2e). _Deletion (USR01/OBS01):_ `comment.delete` is a ribbon command (Comment →
-  Review), bound to Delete in the document, Delete in the Comments pane list and a "Delete
-  comment" button on the selected thread; the same path (replies ask first, one undo step).
-  _Clear data (UI02):_ destructive confirmations (clear data, delete comments, delete pages,
-  reset form) open on Cancel (`Dialog initialFocus`), the clear-data text names custom status
-  schemes and table templates and warns about recovery snapshots of documents that are not open.
-  _Privacy and Help (UI03/UI04):_ Privacy discloses the optional error report; Help renders its
-  keys from the keymap for the platform (Cmd on macOS) through `keys/labels.ts`, shared with the
-  shortcut sheet ("Ctrl+Plus", not "Ctrl+="), and gains Reviewing comments, Comment transfer,
-  Measuring, Extracting tables and Redacting; the incremental-save text now says earlier signed
-  revisions are kept and points to the Signatures pane. Dialogs size their padding inside the
-  window. No new dependency.
+- **Session 20 (later) — ADR-020 amendments (owner answers).** Five languages — English, Chinese
+  (Simplified), Hindi, Spanish, French (`@tesseract.js-data/*`, MIT; data Apache-2.0) — as tick
+  boxes in the dialog (several at once, `eng+hin`), remembered for the session; English stays
+  in the background precache, the other four (5.9 MB) are a new **on-demand** class: never
+  precached (the install would reach 62.7 MB of 60), fetched on first use and then kept by the
+  service worker (`precacheSplit.ts` `onDemand`, `sw.ts`), said in the dialog. The text layer
+  switched from Helvetica/WinAnsi (Latin only) to Tesseract's **GlyphLessFont** (the 572-byte
+  `pdf.ttf`, embedded once: CIDFontType2, Identity-H with UTF-16 codes, identity ToUnicode), so
+  Devanagari and Chinese words round-trip; checked with PDFium (seven words in three scripts
+  extracted as written, 0 ink pixels, qpdf ok, `spikes/s17-ocr/glyphless.ts`); the Helvetica
+  width table and WinAnsi map are gone. **"Also recognize pages that already have text"**: the
+  raster is rendered anyway and a layer this app wrote before is replaced (its `q` and `Q`+text
+  streams recognized and dropped from `/Contents`); foreign text stays. ARCHITECTURE.md
+  **Rev 0.8** (§1.5, §2 D-34, §3.1, §3.2, §7.14, §9, §13 M5, §14). Tests: layer (hex text, six
+  font objects, replacement, a foreign three-stream page not mistaken), client (languages →
+  fresh worker), precache (on-demand set), e2e (English + French with the French data fetched
+  on first use; re-recognize keeps one hit; skipped without the option).
+
+- **Session 20 — M5 OCR (M5-01 … M5-04, ADR-020).** A user asked for OCR; the owner found that
+  Tesseract runs as WASM. **Spike S17** (`spikes/s17-ocr/`, Node + browser): `tesseract.js-core`
+  7.0.0 (Apache-2.0; Tesseract 5.1) used directly — not tesseract.js's worker layer, which
+  defaults to jsDelivr for its worker, core and data — recognizes a 300 dpi A4 page in ~0.9 s
+  (Node) / 0.7–1.0 s (Chromium worker, SIMD), 89/89 words on the self-made datasheet, under the
+  verbatim CSP with zero outbound requests, cancel by `terminate()` in 0 ms. **Text layer**: PDFium's
+  text objects + `FPDFPage_GenerateContent` were rejected (it regenerates every content stream of
+  the page, one font name per word, 187 KB tail); our own object layer writes one invisible text
+  stream per page (`3 Tr`, Helvetica/WinAnsi, per-word matrices on Tesseract's baselines in any
+  direction) behind a `q`/`Q` wrap, originals byte for byte, 13 KB for three pages, qpdf clean,
+  FPDFText finds every word with ≥ 50 % box overlap. **Shipped:** Convert → **Recognize Text
+  (OCR)** (`convert.ocr`, milestone M5): dialog (all / current / selected / custom pages; pages
+  with text are skipped), the page-operation busy dialog's progress and Cancel, one undo step
+  through the comment-transfer route (`pagesApply` now takes the capability: **modify**, rule 9),
+  Ctrl+S one narrow verified revision, announcement "n pages recognized (w words); m skipped".
+  New: OCR worker (`src/workers/ocr.worker.ts`, own typed RPC, `OcrClient` starts it on first use
+  and terminates it when the job ends), Work worker `ocrRaster` (gray raster of the displayed
+  page, live document) and `ocrLayer` (`ocrLayer.ts`, pure, from the spike), `src/model/ocr/`
+  (types, WinAnsi, a Helvetica width table generated from PDFium and tested against it), the
+  English data self-hosted at `/ocr/eng.traineddata.gz` (`@tesseract.js-data/eng` 1.0.0, MIT;
+  data Apache-2.0) and precached in the background with the worker and its WASM (`gz` joins the
+  precache extensions). Search in scans, selection, copy, exports and table detection follow
+  with no new code (the layer is real page text for PDFium). Tests: unit 20 new (WinAnsi,
+  iterator parsing, widths vs PDFium, layer geometry incl. sideways lines and resources
+  handling, client lifecycle, raster + layer + reopen on real PDFium), e2e `e2e/ocr.spec.ts`
+  (recognize all, find, undo/redo, save verified, range and cancel, denied without modify,
+  offline), perf `e2e/perf/ocr.spec.ts` (20 scanned pages recognized in 20.6 s — 1.03 s per
+  page — while scrolling, 0 blank frames, no main-thread long task). Build: install
+  56.76 MB of 60 (OCR module 5.90 MB raw / 3.91 MB brotli, background); licenses 765 OK;
+  dist and Pages checks clean. Limits (ADR-020 consequences): English, Latin characters in the
+  layer, no orientation detection or deskew, pages with text are never re-recognized.
 
 - **Session 19 — Cloudflare Pages deployment readiness (D-11, D-22).** Owner setup guide
   [docs/deploy/cloudflare-pages.md](deploy/cloudflare-pages.md) (Git-connected project, build
@@ -890,6 +920,11 @@ beta (D-32) waits on the owner items in the readiness list (M4.md §5). M0–M3 
 
 ## In progress
 
+- **M5 OCR (session 20):** M5-01 … M5-04 done on the agent side on branch `m5/ocr`, for the
+  next PR. [ADR-020](adr/020-m5-ocr.md) accepted with amendments; ARCHITECTURE.md Rev 0.8
+  applied. Open: M5-05 (acceptance table, interop pack §M5 — a file recognized here searchable
+  and selectable in Acrobat Reader and PDF-XChange, a Hindi and a Chinese scan among them; their
+  OCR output searchable here).
 - **M3 done on the agent side (session 17):** M3-16 … M3-20 as one commit each on
   `claude/m3-tasks-16-20-vdqo8q`, merged into `main` as PR #47. Waiting on the owner pack
   ([docs/acceptance/M3.md](acceptance/M3.md) §4).
@@ -1073,6 +1108,12 @@ beta (D-32) waits on the owner items in the readiness list (M4.md §5). M0–M3 
 
 ## Next
 
+0. **Owner:** try Convert → Recognize Text (OCR) on real scans — an English one, a Hindi one
+   and a Chinese one — and check the result in Acrobat Reader / PDF-XChange (search and select
+   the text; it must be invisible; the Hindi words must copy out as Devanagari). The Hindi and
+   Chinese recognition quality could not be checked in the container (no Devanagari font to
+   make a fixture). **Agent:** M5-05 (acceptance table, interop pack §M5,
+   `npm run owner:interop:m5`).
 1. **Owner:** the M3 owner pack in [docs/acceptance/M3.md](acceptance/M3.md) §4 — interop §M3
    (L/M) and the still-open §D/§F in Acrobat Reader and PDF-XChange (they decide ADR-007
    decisions 2 and 3: the grouped measurement label and viewport semantics), snapping on the local
@@ -1229,6 +1270,7 @@ beta (D-32) waits on the owner items in the readiness list (M4.md §5). M0–M3 
 
 | Date       | Ref              | Decision                                                                                                                                                                                                                                                                                                                                                                                                                                                  |
 | ---------- | ---------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| 2026-10-03 | ADR-020          | Owner accepted ADR-020 (OCR) with amendments: the five most spoken languages including Hindi (English precached, the others on first use), and a tick box to recognize pages that already have text. The text layer uses Tesseract's glyphless font so every script round-trips. ARCHITECTURE.md Rev 0.8 (§1.5, §2 D-34, §3.1, §3.2, §7.14, §9, §13 M5, §14).                                                                                             |
 | 2026-10-01 | ADR-019          | Owner accepted Express Extract in two steps (Find Tables, then Save…): the save picker needs a fresh click and nothing is created when no table is found. ARCHITECTURE.md Rev 0.7 (§7.7).                                                                                                                                                                                                                                                                 |
 | 2026-09-29 | ADR-018          | Owner accepted ADR-018 decisions 2–3 after the M4-19 spike: hybrid route — object copy in the Work worker for Import from PDF and copy/paste (pending import section folded into the next Ctrl+S), re-creation + object-layer patches for JSON import. ARCHITECTURE.md Rev 0.6 (§7.1 comment transfer, §7.6 JSON imports, §13 M4).                                                                                                                        |
 | 2026-09-29 | ADR-016, ADR-017 | Owner accepted ADR-016 (page operations: semantic dirty set, digest with page identity, page-cache purge, reopen-based undo, dangling references) and ADR-017 (redaction on a Work copy, crossing paths re-cut via PDFium's page-object API, wider sanitize list, location verification). ARCHITECTURE.md Rev 0.5 (§7.9 steps 0 and 3), ADR-001 B8 wording amended.                                                                                       |

@@ -19,6 +19,11 @@ describe('precache split (§9, ADR-003 decision 3)', () => {
     'assets/pdf_oxide-St90.js',
     'assets/pdf_oxide_bg-Uv12.wasm',
     'assets/docxBuild-Wx34.js',
+    'assets/ocr.worker-Yz56.js',
+    'assets/tesseract-core-simd-lstm-Ab78.wasm',
+    'ocr/eng.traineddata.gz',
+    'ocr/hin.traineddata.gz',
+    'ocr/chi_sim.traineddata.gz',
     'assets/pdfium-Mn34.wasm',
     'fonts/latin/NotoSans-Regular.ttf',
     'fonts/arabic/NotoNaskhArabic-Regular.ttf',
@@ -31,7 +36,7 @@ describe('precache split (§9, ADR-003 decision 3)', () => {
     'sw.js',
     'workbox-2fbc6a65.js',
   ].map(e);
-  const { core, background } = splitPrecache(entries);
+  const { core, background, onDemand } = splitPrecache(entries);
   const urls = (l: { url: string }[]) => l.map((x) => x.url);
 
   it('core: shell, UI, Render/storage/encoder workers, PDFium WASM, Latin/Arabic/Hebrew fonts', () => {
@@ -51,7 +56,7 @@ describe('precache split (§9, ADR-003 decision 3)', () => {
     ]);
   });
 
-  it('background: the Work and Snap workers, ExcelJS, PDF Oxide, the Word builder and the CJK fonts', () => {
+  it('background: the Work and Snap workers, ExcelJS, PDF Oxide, the Word builder, OCR and the CJK fonts', () => {
     expect(urls(background)).toEqual([
       'assets/work.worker-Kl12.js',
       'assets/snap.worker-Op56.js',
@@ -59,11 +64,18 @@ describe('precache split (§9, ADR-003 decision 3)', () => {
       'assets/pdf_oxide-St90.js',
       'assets/pdf_oxide_bg-Uv12.wasm',
       'assets/docxBuild-Wx34.js',
+      'assets/ocr.worker-Yz56.js',
+      'assets/tesseract-core-simd-lstm-Ab78.wasm',
+      'ocr/eng.traineddata.gz',
       'fonts/sc/NotoSansHans-Regular.otf',
       'fonts/tc/NotoSansHant-Regular.otf',
       'fonts/jp/NotoSansJP-Regular.otf',
       'fonts/kr/NotoSansKR-Regular.otf',
     ]);
+  });
+
+  it('on demand (never installed, cached when first fetched): the other OCR languages', () => {
+    expect(urls(onDemand)).toEqual(['ocr/hin.traineddata.gz', 'ocr/chi_sim.traineddata.gz']);
   });
 
   it('never the service worker itself or license texts', () => {
