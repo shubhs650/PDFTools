@@ -1789,5 +1789,19 @@
       "fra": "French"
     },
     "reRecognize": "Also recognize pages that already have text (a text layer this app added before is replaced; other text stays)"
+  },
+  "commandShort": {
+    "comment": {
+      "textBox": "Text Box",
+      "filter": "Filter",
+      "autoNumber": "Numbers",
+      "delete": "Delete",
+      "exportAnnotations": "Export",
+      "importComments": "Import",
+      "copyComments": "Copy",
+      "pasteComments": "Paste",
+      "pasteToOriginal": "Paste to Original",
+      "exportCrs": "Export CRS"
+    }
   }
 }

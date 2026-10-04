@@ -1,6 +1,6 @@
 # PDFTools — Progress
 
-_Last updated: 2026-10-03 (session 20: M5 OCR — spike, ADR-020 accepted with amendments, implementation)_
+_Last updated: 2026-10-04 (session 21: repair of the PR #53 merge — main's typecheck, lint and ribbon e2e green again)_
 
 **Current milestone:** M5 — OCR (Rev 1 item 1, opened at the owner's request on 2026-10-03;
 plan in [docs/plan/M5.md](plan/M5.md)). M5-01 … M5-04 done on the agent side under
@@ -11,6 +11,14 @@ Rev 0.8; M5-05 (acceptance, owner interop) open. Rev 0
 [docs/acceptance/M4.md](acceptance/M4.md) §5.
 
 ## Done
+
+- **Session 21 — merge repair (PR #53 ↔ PR #54).** The merge of `main` into `m5/ocr` resolved
+  its three conflicts (`en.json`, `tests/icons.test.ts`, this file) by keeping the OCR side only,
+  so `main` lost PR #54's `commandShort` strings, the WCAG 2.5.3 label-in-name test and the
+  session-20 preview-review entry: typecheck and lint failed on the unused import, and the two
+  ribbon e2e tests failed because the short buttons rendered raw i18n keys. Both sides are now
+  kept (verified against `git merge-tree` of the two parents: no other file differed). No code
+  change.
 
 - **Session 20 (later) — ADR-020 amendments (owner answers).** Five languages — English, Chinese
   (Simplified), Hindi, Spanish, French (`@tesseract.js-data/*`, MIT; data Apache-2.0) — as tick
@@ -61,6 +69,29 @@ Rev 0.8; M5-05 (acceptance, owner interop) open. Rev 0
   56.76 MB of 60 (OCR module 5.90 MB raw / 3.91 MB brotli, background); licenses 765 OK;
   dist and Pages checks clean. Limits (ADR-020 consequences): English, Latin characters in the
   layer, no orientation detection or deskew, pages with text are never re-recognized.
+
+- **Session 20 — preview review fixes (owner's Codex audit of the deployed preview, D-01, D-29,
+  D-30).** _Ribbon (UI01):_ a group mixing one large button with small ones no longer renders as
+  one long row — small buttons flow down three rows beside the large ones (`groupCells`); the text
+  markup and drawing tools are icon-only grids with their names as tooltips; Manage Comments is
+  split into Comments, Review (Reply, **Delete**, Set Status, Copy Style, Apply Style) and
+  Transfer; nine long labels have a short visible text (`commandShort.<id>`, the full label stays
+  the accessible name and the tooltip; a test enforces label-in-name); Home's repeated commands are
+  small buttons in Home's own groups (Zoom, Comment, Measure, Pages, Protect), Select Text and
+  Select Comments small; groups never shrink. Comment 3174 → 1247 px and Home 1509 → 1265 px at a
+  1280 px window (DejaVu, the widest font); every tab fits 1280 … 1920 with and without a
+  document (e2e). _Deletion (USR01/OBS01):_ `comment.delete` is a ribbon command (Comment →
+  Review), bound to Delete in the document, Delete in the Comments pane list and a "Delete
+  comment" button on the selected thread; the same path (replies ask first, one undo step).
+  _Clear data (UI02):_ destructive confirmations (clear data, delete comments, delete pages,
+  reset form) open on Cancel (`Dialog initialFocus`), the clear-data text names custom status
+  schemes and table templates and warns about recovery snapshots of documents that are not open.
+  _Privacy and Help (UI03/UI04):_ Privacy discloses the optional error report; Help renders its
+  keys from the keymap for the platform (Cmd on macOS) through `keys/labels.ts`, shared with the
+  shortcut sheet ("Ctrl+Plus", not "Ctrl+="), and gains Reviewing comments, Comment transfer,
+  Measuring, Extracting tables and Redacting; the incremental-save text now says earlier signed
+  revisions are kept and points to the Signatures pane. Dialogs size their padding inside the
+  window. No new dependency.
 
 - **Session 19 — Cloudflare Pages deployment readiness (D-11, D-22).** Owner setup guide
   [docs/deploy/cloudflare-pages.md](deploy/cloudflare-pages.md) (Git-connected project, build
@@ -1135,6 +1166,13 @@ Rev 0.8; M5-05 (acceptance, owner interop) open. Rev 0
    and A0 through the S3 harness; S8 Firefox check and Pages preview.
 
 ## Open issues
+
+- **Perf gate on `main` after PR #53 (CI run 381, 2026-10-04):** three scenarios failed on the
+  GitHub runner — `perf/annotation-load.spec.ts` (one 157 ms task), `perf/scroll.spec.ts` (one
+  104 ms task) and `perf/thumbnails.spec.ts` (30 s timeout waiting for the test capability).
+  None of the three specs or the code they exercise changed in PR #53 or PR #54; not yet
+  reproduced or profiled. To watch on the next `main` runs; if it repeats, profile like the
+  first-open task below.
 
 - **Ribbon width in long locales (session 20):** English fits every tab at 1280 px, but the
   pseudo-locale (+40 % labels) still overflows Home, Comment, View, Measure, Organize and Protect
