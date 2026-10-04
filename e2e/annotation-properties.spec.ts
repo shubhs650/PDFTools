@@ -102,9 +102,9 @@ test('contents and subject; Copy Style → Apply Style', async ({ page }) => {
   await pane(page).getByLabel('Line style').selectOption({ label: 'Dashed' });
   await page.getByRole('tab', { name: 'Comment' }).click();
   const ribbon = page.getByRole('toolbar', { name: 'Comment commands' });
-  await ribbon.getByRole('button', { name: 'Copy Comment Style' }).click();
+  await ribbon.getByRole('button', { name: 'Copy Style' }).click();
   await cap(page, 'annotate', 'selectMany', id, [b]);
-  await ribbon.getByRole('button', { name: 'Apply Comment Style' }).click();
+  await ribbon.getByRole('button', { name: 'Apply Style' }).click();
   await expect
     .poll(async () => {
       const o = (await objects(page, id)).find((x) => x.id === b);

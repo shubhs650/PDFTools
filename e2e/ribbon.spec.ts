@@ -1,4 +1,5 @@
 import AxeBuilder from '@axe-core/playwright';
+import type { Page } from '@playwright/test';
 import { expect, test } from './support/fixtures.ts';
 import { cap } from './support/app.ts';
 
@@ -221,4 +222,66 @@ test('every command M1 … M4 show has a handler: none says "Not available yet" 
     'protect.redactionList',
   ])
     expect(seen).toContain(id);
+});
+
+// Preview review UI01: every tab fits the supported desktop widths without a
+// horizontal scrollbar, with and without a document open.
+const WIDTHS = [1280, 1366, 1440, 1920];
+const TABS = ['Home', 'View', 'Comment', 'Measure', 'Organize', 'Convert', 'Protect', 'Help'];
+
+async function overflowingTabs(page: Page): Promise<string[]> {
+  const out: string[] = [];
+  for (const tab of TABS) {
+    await page.getByRole('tab', { name: tab, exact: true }).click();
+    const over = await page.evaluate(() => {
+      const panel = document.getElementById('ribbon-panel');
+      return panel ? panel.scrollWidth - panel.clientWidth : -1;
+    });
+    if (over > 1) out.push(`${tab}: ${String(over)} px`);
+  }
+  return out;
+}
+
+test('no ribbon tab needs horizontal scrolling at 1280 … 1920 px', async ({ page, pdfs }) => {
+  for (const width of WIDTHS) {
+    await page.setViewportSize({ width, height: 800 });
+    await page.goto('/');
+    expect(await overflowingTabs(page), `${String(width)} px, no document`).toEqual([]);
+  }
+  await page.setViewportSize({ width: 1280, height: 800 });
+  await cap(page, 'open', 'openHandles', [
+    { name: 'doc.pdf', b64: pdfs.simple(1).toString('base64') },
+  ]);
+  await expect(page.getByRole('tablist', { name: 'Open documents' }).getByRole('tab')).toHaveCount(
+    1,
+  );
+  expect(await overflowingTabs(page), '1280 px, document open').toEqual([]);
+});
+
+test('Comment keeps the selection actions together, with a visible Delete (OBS01)', async ({
+  page,
+}) => {
+  await page.goto('/');
+  await page.getByRole('tab', { name: 'Comment', exact: true }).click();
+  const review = page.getByRole('group', { name: 'Review' });
+  await expect(review.locator('.ribbon-label')).toHaveText([
+    'Reply',
+    'Delete',
+    'Set Status',
+    'Copy Style',
+    'Apply Style',
+  ]);
+  // Short visible text, full accessible name (label in name), tooltip on hover.
+  const exp = page
+    .getByRole('group', { name: 'Transfer' })
+    .getByRole('button', { name: 'Export Comments (CSV / XLSX / JSON)' });
+  await expect(exp.locator('.ribbon-label')).toHaveText('Export');
+  await exp.hover();
+  await expect(page.getByRole('tooltip')).toHaveText(/Export Comments \(CSV \/ XLSX \/ JSON\)/);
+  // Icon-only tool grids keep their names.
+  const drawing = page.getByRole('group', { name: 'Drawing' });
+  await expect(drawing.getByRole('button', { name: 'Polyline' })).toBeVisible();
+  await expect(
+    drawing.getByRole('button', { name: 'Polyline' }).locator('.ribbon-label'),
+  ).toHaveCount(0);
 });

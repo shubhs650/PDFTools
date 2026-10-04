@@ -107,7 +107,7 @@ import { TextAdd20Filled, TextAdd20Regular } from '@fluentui/react-icons/svg/tex
 import { TextBulletListSquare20Filled, TextBulletListSquare20Regular, TextBulletListSquare32Filled, TextBulletListSquare32Regular } from '@fluentui/react-icons/svg/text-bullet-list-square';
 import { TextEditStyle20Filled, TextEditStyle20Regular } from '@fluentui/react-icons/svg/text-edit-style';
 import { TextStrikethrough20Filled, TextStrikethrough20Regular, TextStrikethrough24Filled, TextStrikethrough24Regular } from '@fluentui/react-icons/svg/text-strikethrough';
-import { TextT20Filled, TextT20Regular, TextT32Filled, TextT32Regular } from '@fluentui/react-icons/svg/text-t';
+import { TextT20Filled, TextT20Regular } from '@fluentui/react-icons/svg/text-t';
 import { TextUnderline20Filled, TextUnderline20Regular } from '@fluentui/react-icons/svg/text-underline';
 import { Textbox20Filled, Textbox20Regular } from '@fluentui/react-icons/svg/textbox';
 import { TooltipQuote20Filled, TooltipQuote20Regular } from '@fluentui/react-icons/svg/tooltip-quote';
@@ -136,8 +136,8 @@ export const FLUENT_GLYPHS: Record<string, FluentGlyphs> = {
   'file.privacy': { regular: { small: ShieldCheckmark20Regular, large: ShieldCheckmark32Regular, largeNative: 32 } },
   'home.hand': { regular: { small: HandLeft20Regular, large: HandLeft28Regular, largeNative: 28 }, filled: { small: HandLeft20Filled, large: HandLeft28Filled, largeNative: 28 } },
   'home.select': { regular: { small: Cursor20Regular, large: Cursor32Regular, largeNative: 32 }, filled: { small: Cursor20Filled, large: Cursor32Filled, largeNative: 32 } },
-  'home.selectText': { regular: { small: TextT20Regular, large: TextT32Regular, largeNative: 32 }, filled: { small: TextT20Filled, large: TextT32Filled, largeNative: 32 } },
-  'home.selectAnnotations': { regular: { small: Cursor20Regular, large: Cursor32Regular, largeNative: 32 }, filled: { small: Cursor20Filled, large: Cursor32Filled, largeNative: 32 } },
+  'home.selectText': { regular: { small: TextT20Regular }, filled: { small: TextT20Filled } },
+  'home.selectAnnotations': { regular: { small: Cursor20Regular }, filled: { small: Cursor20Filled } },
   'home.find': { regular: { small: Search20Regular } },
   'home.advancedSearch': { regular: { small: DocumentSearch20Regular } },
   'home.resetForm': { regular: { small: ArrowReset20Regular } },
@@ -184,18 +184,19 @@ export const FLUENT_GLYPHS: Record<string, FluentGlyphs> = {
   'comment.inkHighlighter': { regular: { small: InkingTool20Regular }, filled: { small: InkingTool20Filled } },
   'comment.stamp': { regular: { small: ApprovalsApp20Regular, large: ApprovalsApp32Regular, largeNative: 32 }, filled: { small: ApprovalsApp20Filled, large: ApprovalsApp32Filled, largeNative: 32 } },
   'comment.imageStamp': { regular: { small: ImageAdd20Regular } },
-  'comment.statusSchemes': { regular: { small: Status20Regular } },
   'comment.link': { regular: { small: Link20Regular }, filled: { small: Link20Filled } },
   'comment.commentsPane': { regular: { small: CommentMultiple20Regular } },
-  'comment.reply': { regular: { small: ArrowReply20Regular } },
-  'comment.setStatus': { regular: { small: CheckmarkCircle20Regular } },
+  'comment.reviewerProfile': { regular: { small: PersonEdit20Regular } },
+  'comment.statusSchemes': { regular: { small: Status20Regular } },
   'comment.filter': { regular: { small: Filter20Regular } },
   'comment.autoNumber': { regular: { small: NumberSymbolSquare20Regular }, filled: { small: NumberSymbolSquare20Filled } },
+  'comment.reply': { regular: { small: ArrowReply20Regular } },
+  'comment.delete': { regular: { small: Delete20Regular } },
+  'comment.setStatus': { regular: { small: CheckmarkCircle20Regular } },
   'comment.copyStyle': { regular: { small: PaintBrush20Regular } },
   'comment.applyStyle': { regular: { small: PaintBrushArrowDown20Regular } },
-  'comment.reviewerProfile': { regular: { small: PersonEdit20Regular } },
-  'comment.exportAnnotations': { regular: { small: ArrowExport20Regular } },
   'comment.importComments': { regular: { small: ArrowImport20Regular } },
+  'comment.exportAnnotations': { regular: { small: ArrowExport20Regular } },
   'comment.copyComments': { regular: { small: Copy20Regular } },
   'comment.pasteComments': { regular: { small: ClipboardPaste20Regular } },
   'comment.pasteToOriginal': { regular: { small: ClipboardArrowRight20Regular } },

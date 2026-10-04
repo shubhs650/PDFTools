@@ -35,9 +35,21 @@ export interface CommandDef {
   fluent: string;
   milestone: Milestone;
   toggle?: true;
+  /**
+   * Icon only in the ribbon (a tool grid): the label is the accessible name and
+   * the tooltip, as in a desktop editor's drawing palette. Keeps the Comment tab
+   * inside 1280 px (§8) without clipping any label.
+   */
+  compact?: true;
   custom?: string;
   customPending?: true;
   shipped?: true;
+  /**
+   * Shorter visible ribbon text (en.json `commandShort.<id>`); the full label
+   * stays the accessible name and the tooltip, and must contain the short text
+   * (WCAG 2.5.3 label in name; checked by tests/icons.test.ts).
+   */
+  short?: true;
 }
 
 /** Milestones whose commands are shown. Extend as milestones land. */
@@ -56,21 +68,30 @@ export const RIBBON_TABS = [
   'help',
 ] as const satisfies readonly CommandTab[];
 
-/** Home repeats frequent commands from other tabs with the same icons (layout reference). */
-export const HOME_REUSES = [
-  'view.zoomIn',
-  'view.zoomOut',
-  'view.fitPage',
-  'view.fitWidth',
-  'comment.highlight',
-  'comment.textBox',
-  'comment.stickyNote',
-  'comment.cloud',
-  'comment.stamp',
-  'measure.distance',
-  'organize.rotateCw',
-  'protect.signatures',
-] as const;
+/**
+ * Home repeats frequent commands from other tabs with the same icons (layout
+ * reference), as small buttons in Home's own groups (labels
+ * `ribbon.group.home.<group>`) so the tab fits 1280 px (§8).
+ */
+export const HOME_REUSE_GROUPS: readonly { group: string; ids: readonly string[] }[] = [
+  { group: 'zoom', ids: ['view.zoomIn', 'view.zoomOut', 'view.fitPage', 'view.fitWidth'] },
+  {
+    group: 'comment',
+    ids: [
+      'comment.highlight',
+      'comment.stickyNote',
+      'comment.textBox',
+      'comment.cloud',
+      'comment.stamp',
+    ],
+  },
+  { group: 'measure', ids: ['measure.distance'] },
+  { group: 'pages', ids: ['organize.rotateCw'] },
+  { group: 'protect', ids: ['protect.signatures'] },
+];
+
+/** Every command Home repeats, in order. */
+export const HOME_REUSES: readonly string[] = HOME_REUSE_GROUPS.flatMap((g) => g.ids);
 
 export const COMMANDS: readonly CommandDef[] = [
   {
@@ -230,7 +251,7 @@ export const COMMANDS: readonly CommandDef[] = [
     id: 'home.selectText',
     tab: 'home',
     group: 'tools',
-    size: 'large',
+    size: 'small',
     fluent: 'TextT',
     milestone: 'M2',
     shipped: true, // M2-19 (text selection itself: M2-04)
@@ -240,7 +261,7 @@ export const COMMANDS: readonly CommandDef[] = [
     id: 'home.selectAnnotations',
     tab: 'home',
     group: 'tools',
-    size: 'large',
+    size: 'small',
     fluent: 'Cursor',
     milestone: 'M3',
     shipped: true, // M3-05
@@ -478,6 +499,7 @@ export const COMMANDS: readonly CommandDef[] = [
     fluent: 'Highlight',
     milestone: 'M3',
     toggle: true,
+    compact: true,
     shipped: true, // M3-08
   },
   {
@@ -488,6 +510,7 @@ export const COMMANDS: readonly CommandDef[] = [
     fluent: 'TextUnderline',
     milestone: 'M3',
     toggle: true,
+    compact: true,
     shipped: true, // M3-08
   },
   {
@@ -498,6 +521,7 @@ export const COMMANDS: readonly CommandDef[] = [
     fluent: 'TextStrikethrough',
     milestone: 'M3',
     toggle: true,
+    compact: true,
     shipped: true, // M3-08
   },
   {
@@ -508,6 +532,7 @@ export const COMMANDS: readonly CommandDef[] = [
     fluent: 'TextUnderline',
     milestone: 'M3',
     toggle: true,
+    compact: true,
     shipped: true, // M3-08
     custom: 'comment.squiggly', // M3-06
   },
@@ -519,6 +544,7 @@ export const COMMANDS: readonly CommandDef[] = [
     fluent: 'TextAdd',
     milestone: 'M3',
     toggle: true,
+    compact: true,
     shipped: true, // M3-08
   },
   {
@@ -529,6 +555,7 @@ export const COMMANDS: readonly CommandDef[] = [
     fluent: 'TextEditStyle',
     milestone: 'M3',
     toggle: true,
+    compact: true,
     shipped: true, // M3-08
     custom: 'comment.replaceText', // M3-06
   },
@@ -549,6 +576,7 @@ export const COMMANDS: readonly CommandDef[] = [
     size: 'small',
     fluent: 'Textbox',
     milestone: 'M3',
+    short: true,
     toggle: true,
     shipped: true, // M3-09
   },
@@ -570,6 +598,7 @@ export const COMMANDS: readonly CommandDef[] = [
     fluent: 'Line',
     milestone: 'M3',
     toggle: true,
+    compact: true,
     shipped: true, // M3-09
   },
   {
@@ -580,6 +609,7 @@ export const COMMANDS: readonly CommandDef[] = [
     fluent: 'ArrowUpRight',
     milestone: 'M3',
     toggle: true,
+    compact: true,
     shipped: true, // M3-09
   },
   {
@@ -590,6 +620,7 @@ export const COMMANDS: readonly CommandDef[] = [
     fluent: 'LineFlowDiagonalUpRight',
     milestone: 'M3',
     toggle: true,
+    compact: true,
     shipped: true, // M3-09
   },
   {
@@ -600,6 +631,7 @@ export const COMMANDS: readonly CommandDef[] = [
     fluent: 'Pentagon',
     milestone: 'M3',
     toggle: true,
+    compact: true,
     shipped: true, // M3-09
   },
   {
@@ -610,6 +642,7 @@ export const COMMANDS: readonly CommandDef[] = [
     fluent: 'RectangleLandscape',
     milestone: 'M3',
     toggle: true,
+    compact: true,
     shipped: true, // M3-09
   },
   {
@@ -620,6 +653,7 @@ export const COMMANDS: readonly CommandDef[] = [
     fluent: 'Oval',
     milestone: 'M3',
     toggle: true,
+    compact: true,
     shipped: true, // M3-09
   },
   {
@@ -630,6 +664,7 @@ export const COMMANDS: readonly CommandDef[] = [
     fluent: 'Cloud',
     milestone: 'M3',
     toggle: true,
+    compact: true,
     shipped: true, // M3-09
     custom: 'comment.cloud', // M3-06
   },
@@ -641,6 +676,7 @@ export const COMMANDS: readonly CommandDef[] = [
     fluent: 'Pen',
     milestone: 'M3',
     toggle: true,
+    compact: true,
     shipped: true, // M3-09
   },
   {
@@ -651,6 +687,7 @@ export const COMMANDS: readonly CommandDef[] = [
     fluent: 'InkingTool',
     milestone: 'M3',
     toggle: true,
+    compact: true,
     shipped: true, // M3-09
   },
   {
@@ -674,15 +711,6 @@ export const COMMANDS: readonly CommandDef[] = [
     shipped: true, // M3-14
   },
   {
-    id: 'comment.statusSchemes',
-    tab: 'comment',
-    group: 'stamp',
-    size: 'small',
-    fluent: 'Status',
-    milestone: 'M3',
-    shipped: true, // M3-13
-  },
-  {
     id: 'comment.link',
     tab: 'comment',
     group: 'stamp',
@@ -695,53 +723,85 @@ export const COMMANDS: readonly CommandDef[] = [
   {
     id: 'comment.commentsPane',
     tab: 'comment',
-    group: 'manageComments',
+    group: 'comments',
     size: 'small',
     fluent: 'CommentMultiple',
     milestone: 'M3',
     shipped: true, // M3-11
   },
   {
+    id: 'comment.reviewerProfile',
+    tab: 'comment',
+    group: 'comments',
+    size: 'small',
+    fluent: 'PersonEdit',
+    milestone: 'M3',
+    shipped: true, // M3-07
+  },
+  {
+    id: 'comment.statusSchemes',
+    tab: 'comment',
+    group: 'comments',
+    size: 'small',
+    fluent: 'Status',
+    milestone: 'M3',
+    shipped: true, // M3-13
+  },
+  {
+    id: 'comment.filter',
+    tab: 'comment',
+    group: 'comments',
+    size: 'small',
+    fluent: 'Filter',
+    milestone: 'M3',
+    short: true,
+    shipped: true, // M3-11
+  },
+  {
+    id: 'comment.autoNumber',
+    tab: 'comment',
+    group: 'comments',
+    size: 'small',
+    fluent: 'NumberSymbolSquare',
+    milestone: 'M3',
+    short: true,
+    toggle: true,
+    shipped: true, // M3-11
+  },
+  {
     id: 'comment.reply',
     tab: 'comment',
-    group: 'manageComments',
+    group: 'review',
     size: 'small',
     fluent: 'ArrowReply',
     milestone: 'M3',
     shipped: true, // M3-12
   },
   {
+    // A visible Delete beside Reply and Set Status (preview review OBS01): the
+    // same action as the Delete key and the Comments pane.
+    id: 'comment.delete',
+    tab: 'comment',
+    group: 'review',
+    size: 'small',
+    fluent: 'Delete',
+    milestone: 'M3',
+    short: true,
+    shipped: true,
+  },
+  {
     id: 'comment.setStatus',
     tab: 'comment',
-    group: 'manageComments',
+    group: 'review',
     size: 'small',
     fluent: 'CheckmarkCircle',
     milestone: 'M3',
     shipped: true, // M3-12
   },
   {
-    id: 'comment.filter',
-    tab: 'comment',
-    group: 'manageComments',
-    size: 'small',
-    fluent: 'Filter',
-    milestone: 'M3',
-    shipped: true, // M3-11
-  },
-  {
-    id: 'comment.autoNumber',
-    tab: 'comment',
-    group: 'manageComments',
-    size: 'small',
-    fluent: 'NumberSymbolSquare',
-    milestone: 'M3',
-    toggle: true,
-    shipped: true, // M3-11
-  },
-  {
     id: 'comment.copyStyle',
     tab: 'comment',
-    group: 'manageComments',
+    group: 'review',
     size: 'small',
     fluent: 'PaintBrush',
     milestone: 'M3',
@@ -750,73 +810,70 @@ export const COMMANDS: readonly CommandDef[] = [
   {
     id: 'comment.applyStyle',
     tab: 'comment',
-    group: 'manageComments',
+    group: 'review',
     size: 'small',
     fluent: 'PaintBrushArrowDown',
     milestone: 'M3',
     shipped: true, // M3-10
   },
   {
-    id: 'comment.reviewerProfile',
+    id: 'comment.importComments',
     tab: 'comment',
-    group: 'manageComments',
+    group: 'transfer',
     size: 'small',
-    fluent: 'PersonEdit',
-    milestone: 'M3',
-    shipped: true, // M3-07
+    fluent: 'ArrowImport',
+    milestone: 'M4',
+    short: true,
+    shipped: true, // M4-20
   },
   {
     id: 'comment.exportAnnotations',
     tab: 'comment',
-    group: 'manageComments',
+    group: 'transfer',
     size: 'small',
     fluent: 'ArrowExport',
-    milestone: 'M4', // M3-Q1: annotation export is M4 (§13)
-    shipped: true, // M4-08
-  },
-  {
-    id: 'comment.importComments',
-    tab: 'comment',
-    group: 'manageComments',
-    size: 'small',
-    fluent: 'ArrowImport',
     milestone: 'M4',
-    shipped: true, // M4-20
+    short: true, // M3-Q1: annotation export is M4 (§13)
+    shipped: true, // M4-08
   },
   {
     id: 'comment.copyComments',
     tab: 'comment',
-    group: 'manageComments',
+    group: 'transfer',
     size: 'small',
     fluent: 'Copy',
     milestone: 'M4',
+    short: true,
     shipped: true, // M4-21
   },
   {
     id: 'comment.pasteComments',
     tab: 'comment',
-    group: 'manageComments',
+    group: 'transfer',
     size: 'small',
     fluent: 'ClipboardPaste',
     milestone: 'M4',
+    short: true,
     shipped: true, // M4-21
   },
   {
     id: 'comment.pasteToOriginal',
     tab: 'comment',
-    group: 'manageComments',
+    group: 'transfer',
     size: 'small',
     fluent: 'ClipboardArrowRight',
     milestone: 'M4',
+    short: true,
     shipped: true, // M4-21
   },
   {
     id: 'comment.exportCrs',
     tab: 'comment',
-    group: 'manageComments',
+    group: 'transfer',
     size: 'large',
     fluent: 'DocumentTableArrowRight',
     milestone: 'M3',
+    short: true,
     shipped: true, // M3-19
     custom: 'comment.exportCrs', // M3-06
   },

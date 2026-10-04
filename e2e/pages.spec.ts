@@ -63,7 +63,7 @@ test('rotate, delete and insert from the Organize tab, undo and redo, save verif
   await page.getByRole('tab', { name: 'Organize' }).click();
 
   // Rotate the current page (page 1).
-  await organize(page).getByRole('button', { name: 'Rotate Pages Clockwise' }).click();
+  await organize(page).getByRole('button', { name: 'Rotate Clockwise' }).click();
   await expect.poll(async () => (await info(page, id))[0]?.rot).toBe(1);
 
   // Select pages 2 and 4 in the thumbnails, delete them.
@@ -208,8 +208,8 @@ test('without the assemble permission the page commands are disabled', async ({ 
   await expect(page.locator('[data-page="0"] img.page-preview')).toBeVisible();
   await page.getByRole('tab', { name: 'Organize' }).click();
   for (const name of [
-    'Rotate Pages Clockwise',
-    'Rotate Pages Counterclockwise',
+    'Rotate Clockwise',
+    'Rotate Counterclockwise',
     'Delete Pages',
     'Insert Blank Page',
   ])

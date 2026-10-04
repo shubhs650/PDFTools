@@ -6,7 +6,8 @@ import { Button, Dialog } from '../../ui/components';
 import { commandLabelKey } from '../commandLabels';
 import type { InternalAction } from '../commands/dispatch';
 import { appStore, useApp } from '../store/appStore';
-import { formatChord, isMac, type KeyLabels } from './chord';
+import { formatChord } from './chord';
+import { keyLabels } from './labels';
 import { KEYMAP } from './keymap';
 
 const ACTION_LABELS: Record<InternalAction, MessageKey> = {
@@ -20,7 +21,6 @@ const ACTION_LABELS: Record<InternalAction, MessageKey> = {
   'edit.selectAll': msg('shortcuts.action.editSelectAll'),
   'find.next': msg('shortcuts.action.findNext'),
   'find.prev': msg('shortcuts.action.findPrev'),
-  'annotation.delete': msg('shortcuts.action.annotationDelete'),
   'annotation.next': msg('shortcuts.action.annotationNext'),
   'annotation.prev': msg('shortcuts.action.annotationPrev'),
   'annotation.nudgeLeft': msg('shortcuts.action.annotationNudge'),
@@ -37,27 +37,7 @@ const ACTION_LABELS: Record<InternalAction, MessageKey> = {
 export function ShortcutSheet() {
   const { t } = useTranslation();
   const open = useApp((s) => s.shortcutsOpen);
-  const mac = isMac();
-  const NAMED: Record<string, MessageKey> = {
-    PageUp: msg('shortcuts.key.pageUp'),
-    PageDown: msg('shortcuts.key.pageDown'),
-    Escape: msg('shortcuts.key.escape'),
-    ArrowLeft: msg('shortcuts.key.arrowLeft'),
-    ArrowRight: msg('shortcuts.key.arrowRight'),
-    ArrowUp: msg('shortcuts.key.arrowUp'),
-    ArrowDown: msg('shortcuts.key.arrowDown'),
-    Delete: msg('shortcuts.key.delete'),
-    Tab: msg('shortcuts.key.tab'),
-  };
-  const labels: KeyLabels = {
-    ctrl: mac ? t('shortcuts.key.cmd') : t('shortcuts.key.ctrl'),
-    shift: t('shortcuts.key.shift'),
-    alt: mac ? t('shortcuts.key.option') : t('shortcuts.key.alt'),
-    named: (k) => {
-      const key = NAMED[k];
-      return key ? t(key) : k;
-    },
-  };
+  const labels = keyLabels(t);
   const label = (target: string): string =>
     t((ACTION_LABELS as Record<string, MessageKey | undefined>)[target] ?? commandLabelKey(target));
 

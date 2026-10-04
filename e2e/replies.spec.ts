@@ -133,3 +133,55 @@ test('deleting a comment with replies asks first; undo brings the thread back', 
   await page.keyboard.press('Control+z');
   await expect.poll(async () => (await list(page, id))?.length).toBe(3);
 });
+
+// Preview review USR01/OBS01: deleting is reachable from the ribbon, from the
+// Comments pane (Delete key and the thread's button), not only from the page.
+
+test('Comment → Delete removes the selected comment; disabled without a selection', async ({
+  page,
+}) => {
+  const id = await open(page);
+  await page.getByRole('tab', { name: 'Comment' }).click();
+  const del = page
+    .getByRole('toolbar', { name: 'Comment commands' })
+    .getByRole('button', { name: 'Delete Selected Comments' });
+  await expect(del).not.toHaveAttribute('aria-disabled', 'true');
+  await del.click();
+  const dialog = page.getByRole('dialog', { name: 'Delete comments and their replies?' });
+  await expect(dialog).toBeVisible();
+  // A destructive confirmation starts on Cancel: Enter right away deletes nothing (UI02).
+  await expect(dialog.getByRole('button', { name: 'Cancel' })).toBeFocused();
+  await page.keyboard.press('Enter');
+  await expect(dialog).toBeHidden();
+  expect((await list(page, id))?.length).toBe(3);
+  await del.click();
+  await dialog.getByRole('button', { name: 'Delete' }).click();
+  await expect.poll(async () => (await list(page, id))?.length).toBe(0);
+  await expect(del).toHaveAttribute('aria-disabled', 'true');
+  await expect(del).toHaveAccessibleDescription(/Select a comment first/);
+});
+
+test('Delete in the Comments pane list and the thread’s Delete comment button', async ({
+  page,
+}) => {
+  const id = await open(page);
+  // The row is selected (open() clicked it): Delete in the list deletes it.
+  await page.getByTestId('comments-list').focus();
+  await page.keyboard.press('Delete');
+  const dialog = page.getByRole('dialog', { name: 'Delete comments and their replies?' });
+  await dialog.getByRole('button', { name: 'Delete' }).click();
+  await expect.poll(async () => (await list(page, id))?.length).toBe(0);
+  await page.getByTestId('document-view').focus();
+  await page.keyboard.press('Control+z');
+  await expect.poll(async () => (await list(page, id))?.length).toBe(3);
+
+  await page
+    .getByTestId('comments-list')
+    .getByRole('option', { name: /See detail 4/ })
+    .click();
+  await expect(thread(page)).toBeVisible();
+  await thread(page).getByRole('button', { name: 'Delete comment' }).click();
+  await dialog.getByRole('button', { name: 'Delete' }).click();
+  await expect.poll(async () => (await list(page, id))?.length).toBe(0);
+  await expect(thread(page)).toHaveCount(0);
+});

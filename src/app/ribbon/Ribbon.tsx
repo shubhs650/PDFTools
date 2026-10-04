@@ -6,7 +6,7 @@ import { IconButton } from '../../ui/components';
 import { groupLabelKey, tabLabelKey } from '../commandLabels';
 import { appStore, useApp } from '../store/appStore';
 import { RibbonButton } from './RibbonButton';
-import { ribbonLayout, type RibbonTabLayout } from './layout';
+import { groupCells, ribbonLayout, type RibbonTabLayout } from './layout';
 import { useRovingToolbar } from './useRovingToolbar';
 
 const PANEL_ID = 'ribbon-panel';
@@ -144,20 +144,31 @@ function RibbonPanel({ tab, onEscape }: { tab: RibbonTabLayout; onEscape: () => 
             role="group"
             aria-labelledby={`grp-${tab.tab}-${g.tab}-${g.group}`}
             className="ribbon-group"
+            data-group={`${g.tab}.${g.group}`}
           >
-            <div
-              className={`ribbon-group-body ribbon-group-body--${g.commands.some((c) => c.size === 'large') ? 'large' : 'small'}`}
-            >
-              {g.commands.map((c) => {
-                const i = n++;
+            <div className="ribbon-group-body">
+              {groupCells(g.commands).map((cell) => {
+                const buttons = cell.map((c) => {
+                  const i = n++;
+                  return (
+                    <RibbonButton
+                      key={c.id}
+                      ref={roving.register(i)}
+                      command={c}
+                      large={c.size === 'large'}
+                      tabIndex={i === roving.index ? 0 : -1}
+                    />
+                  );
+                });
+                const first = cell[0];
+                if (!first || first.size === 'large') return buttons;
                 return (
-                  <RibbonButton
-                    key={c.id}
-                    ref={roving.register(i)}
-                    command={c}
-                    large={c.size === 'large'}
-                    tabIndex={i === roving.index ? 0 : -1}
-                  />
+                  <div
+                    key={first.id}
+                    className={`ribbon-cell${cell.every((c) => c.compact) ? ' ribbon-cell--compact' : ''}`}
+                  >
+                    {buttons}
+                  </div>
                 );
               })}
             </div>

@@ -8,3 +8,5 @@ export const commandLabelKey = (id: string): MessageKey => `command.${id}` as Me
 export const tabLabelKey = (tab: CommandTab): MessageKey => `ribbon.tab.${tab}` as MessageKey;
 export const groupLabelKey = (c: Pick<CommandDef, 'tab' | 'group'>): MessageKey =>
   `ribbon.group.${c.tab}.${c.group}` as MessageKey;
+/** The shorter visible ribbon text of a `short` command (its full label stays its name). */
+export const commandShortKey = (id: string): MessageKey => `commandShort.${id}` as MessageKey;

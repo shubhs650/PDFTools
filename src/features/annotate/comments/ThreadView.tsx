@@ -56,6 +56,17 @@ export function ThreadView({
       </h3>
       <p className="thread-root">{comment.contents ?? ''}</p>
       <fieldset disabled={!canEdit} className="thread-fields">
+        <div className="thread-actions thread-actions--root">
+          <Button
+            label={t('comments.deleteComment')}
+            size="small"
+            variant="subtle"
+            onClick={() => {
+              // The same path as the Delete key and the ribbon (replies ask first).
+              deleteComments(docId, [comment]);
+            }}
+          />
+        </div>
         <div className="thread-status">
           <label htmlFor={`${ids}-status`}>{t('comments.setStatus')}</label>
           <select

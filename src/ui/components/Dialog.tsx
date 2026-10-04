@@ -1,5 +1,5 @@
 import * as RadixDialog from '@radix-ui/react-dialog';
-import { useRef, type ReactNode } from 'react';
+import { useRef, type ReactNode, type RefObject } from 'react';
 import { useTranslation } from 'react-i18next';
 import { IconButton } from './IconButton';
 
@@ -14,6 +14,12 @@ export interface DialogProps {
   footer?: ReactNode;
   /** The close glyph (an icon from the registry). */
   closeIcon: ReactNode;
+  /**
+   * The control that takes focus when the dialog opens (default: the first
+   * focusable one). A destructive confirmation points this at Cancel, so Enter
+   * right after opening never deletes anything (preview review UI02).
+   */
+  initialFocus?: RefObject<HTMLElement | null>;
 }
 
 /** Modal dialog: focus is trapped, Esc closes, focus returns to the opener (Radix). */
@@ -25,6 +31,7 @@ export function Dialog({
   children,
   footer,
   closeIcon,
+  initialFocus,
 }: DialogProps) {
   const { t } = useTranslation();
   // Give focus back to whatever opened the dialog (rule 12). Radix only does
@@ -37,9 +44,14 @@ export function Dialog({
         <RadixDialog.Overlay className="ui-dialog-backdrop" />
         <RadixDialog.Content
           className="ui-dialog"
-          onOpenAutoFocus={() => {
+          onOpenAutoFocus={(e) => {
             const active = document.activeElement;
             returnTo.current = active instanceof HTMLElement ? active : null;
+            const el = initialFocus?.current;
+            if (el) {
+              e.preventDefault();
+              el.focus();
+            }
           }}
           onCloseAutoFocus={(e) => {
             const el = returnTo.current;

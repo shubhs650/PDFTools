@@ -375,22 +375,33 @@ body {
 
 .ribbon-group {
   display: flex;
+  /* Never shrink: an overflowing tab scrolls honestly instead of squeezing labels. */
+  flex: none;
   flex-direction: column;
-  padding: var(--space-2) var(--space-3) var(--space-1);
+  padding: var(--space-2) var(--space-2) var(--space-1);
   border-right: var(--border-width) solid var(--color-border);
 }
 
 .ribbon-group-body {
   display: flex;
   flex: 1;
+  align-items: flex-start;
   gap: var(--space-1);
 }
 
-.ribbon-group-body--small {
+/* A run of small buttons flows down three rows, column by column, next to the
+   group's large buttons (so one large button never forces a single long row). */
+.ribbon-cell {
   display: grid;
   grid-auto-flow: column;
   grid-template-rows: repeat(3, auto);
+  gap: var(--space-1);
   align-content: start;
+}
+
+/* Icon-only tool grids (text markup, drawing): tighter cells, same targets. */
+.ribbon-cell--compact .ribbon-button--small {
+  padding: var(--space-0) var(--space-1);
 }
 
 .ribbon-group-label {

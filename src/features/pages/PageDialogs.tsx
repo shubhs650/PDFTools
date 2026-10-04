@@ -1,5 +1,5 @@
 import { Dismiss20Regular } from '@fluentui/react-icons/svg/dismiss';
-import { useEffect, useId, useState } from 'react';
+import { useEffect, useId, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useDocuments } from '../../app/store/documentStore';
 import { format, msg, type MessageKey } from '../../i18n';
@@ -68,6 +68,7 @@ function usePageSizes(docId: string) {
 
 function DeleteDialog({ docId }: { docId: string }) {
   const { t } = useTranslation();
+  const cancelRef = useRef<HTMLButtonElement>(null);
   const ids = useId();
   const pageCount = useDocuments((s) => s.docs[docId]?.meta.pageCount ?? 0);
   const current = useDocuments((s) => s.docs[docId]?.view.page ?? 0);
@@ -103,6 +104,7 @@ function DeleteDialog({ docId }: { docId: string }) {
       title={t('pages.delete.title')}
       description={t('pages.delete.description')}
       closeIcon={<Dismiss20Regular />}
+      initialFocus={cancelRef}
       footer={
         <>
           <Button
@@ -112,7 +114,7 @@ function DeleteDialog({ docId }: { docId: string }) {
             form={`${ids}-form`}
             disabled={!r.ok || tooMany}
           />
-          <Button label={t('pages.delete.cancel')} onClick={closeDialog} />
+          <Button ref={cancelRef} label={t('pages.delete.cancel')} onClick={closeDialog} />
         </>
       }
     >

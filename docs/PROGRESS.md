@@ -1136,6 +1136,12 @@ Rev 0.8; M5-05 (acceptance, owner interop) open. Rev 0
 
 ## Open issues
 
+- **Ribbon width in long locales (session 20):** English fits every tab at 1280 px, but the
+  pseudo-locale (+40 % labels) still overflows Home, Comment, View, Measure, Organize and Protect
+  inside the ribbon panel (it scrolls; the page never does). A translation will need either
+  shorter labels or a responsive ribbon that collapses groups into menus — a design choice for
+  the owner before any locale beyond English.
+
 - **Perf gate, first document open (`perf/open.spec.ts`, three files):** on CI one task of
   103–113 ms at the first open (limit 100 ms); it passed on `main` after PR #49 and failed on
   PR #49 twice and PR #50 once — it sits at the limit. A 4× CPU-throttled profile of that task:
