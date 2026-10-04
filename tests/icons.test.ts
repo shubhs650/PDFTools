@@ -57,6 +57,20 @@ describe('command table (M1-06)', () => {
     expect(missing).toEqual([]);
   });
 
+  it('a short ribbon text exists for every `short` command and is part of its full label (WCAG 2.5.3)', () => {
+    const problems: string[] = [];
+    for (const c of COMMANDS) {
+      const short = lookup(commandShortKey(c.id));
+      if (c.short) {
+        const full = lookup(commandLabelKey(c.id));
+        if (typeof short !== 'string') problems.push(`${c.id}: no short text`);
+        else if (typeof full !== 'string' || !full.includes(short))
+          problems.push(`${c.id}: "${short}" is not part of "${String(full)}"`);
+      } else if (short !== undefined) problems.push(`${c.id}: short text without the flag`);
+    }
+    expect(problems).toEqual([]);
+  });
+
   it('shows M1 … M5 commands (M4 complete, M4-22; M5 OCR, ADR-020); the rest are omitted (M1-Q2)', () => {
     expect(AVAILABLE_MILESTONES).toEqual(['M1', 'M2', 'M3', 'M4', 'M5']);
     // Every M2 … M4 command works: none is left for the milestone flag alone to show.
