@@ -82,7 +82,7 @@ export function formatChord(chord: Chord, labels: KeyLabels): string {
   if (chord.shift) parts.push(labels.shift);
   if (chord.alt) parts.push(labels.alt);
   parts.push(
-    chord.key.length === 1 && !/[+\-]/.test(chord.key)
+    chord.key.length === 1 && !/[+-]/.test(chord.key)
       ? chord.key.toUpperCase()
       : labels.named(chord.key),
   );
