@@ -68,7 +68,7 @@ const quads = (tail: string): number[][] =>
     (m[1] ?? '').trim().split(/\s+/).map(Number),
   );
 
-test('Highlight tool: on until Esc; drag makes a highlight saved with quads, /T and /Contents @smoke', async ({
+test('Highlight tool: on until Esc; drag makes a highlight saved with quads, /T and /Contents', async ({
   page,
 }) => {
   const bytes = simplePdf(1);

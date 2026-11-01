@@ -4,9 +4,17 @@
 import { checkForUpdates } from '../../features/offline/offline';
 import { openFiles, requestClose } from '../../features/open/openDocument';
 import { pickPdfFiles } from '../../storage/fileAccess';
+import { canFullScreen, isFullScreen, subscribeFullScreen, toggleFullScreen } from '../fullScreen';
+import { msg, t } from '../../i18n';
+import { currentIssueUrl, OPENENGTOOLS_URL } from '../links';
 import { appStore } from '../store/appStore';
 import { documentStore } from '../store/documentStore';
-import { registerCommand } from './dispatch';
+import { notify, registerCommand } from './dispatch';
+
+/** A link of the top bar from a command (keyboard, menus): a new tab, no opener (M6-01). */
+const openTab = (url: string): void => {
+  window.open(url, '_blank', 'noopener,noreferrer');
+};
 
 export function registerBuiltinCommands(): () => void {
   const offs = [
@@ -48,6 +56,25 @@ export function registerBuiltinCommands(): () => void {
       },
       isPressed: () => appStore.getState().ribbonCollapsed,
     }),
+    // Top bar (M6-01, ADR-021 D-35).
+    registerCommand('app.home', {
+      run: () => {
+        openTab(OPENENGTOOLS_URL);
+      },
+    }),
+    registerCommand('app.reportIssue', {
+      run: () => {
+        openTab(currentIssueUrl(t));
+      },
+    }),
+    ...(['view.fullScreen', 'view.exitFullScreen'] as const).map((id) =>
+      registerCommand(id, {
+        run: () => toggleFullScreen(),
+        isPressed: isFullScreen,
+        disabledReason: () => (canFullScreen() ? null : msg('topBar.fullScreenUnavailable')),
+      }),
+    ),
+    subscribeFullScreen(notify),
     registerCommand('help.shortcuts', {
       run: () => {
         appStore.getState().setShortcutsOpen(true);

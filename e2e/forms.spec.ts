@@ -44,7 +44,7 @@ async function saved(page: Page, name: string): Promise<void> {
   );
 }
 
-test('keyboard-only: fields in /Tabs /R order, named by /TU, flags honoured; Ctrl+S saves and they reopen @smoke', async ({
+test('keyboard-only: fields in /Tabs /R order, named by /TU, flags honoured; Ctrl+S saves and they reopen', async ({
   page,
 }) => {
   const original = fullFormPdf();

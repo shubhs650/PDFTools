@@ -45,7 +45,7 @@ async function saveAsTarget(page: Page, name: string): Promise<void> {
   }, name);
 }
 
-test('Ctrl+S appends to the original; a second Ctrl+S is a no-op; the dirty mark clears @smoke', async ({
+test('Ctrl+S appends to the original; a second Ctrl+S is a no-op; the dirty mark clears', async ({
   page,
   pdfs,
 }) => {
@@ -79,7 +79,7 @@ test('Ctrl+S appends to the original; a second Ctrl+S is a no-op; the dirty mark
   expect([0, 3, 'absent']).toContain(qpdfCheck(twice));
 });
 
-test('Save As writes original + changes to a new file, which becomes the document @smoke', async ({
+test('Save As writes original + changes to a new file, which becomes the document', async ({
   page,
   pdfs,
 }) => {

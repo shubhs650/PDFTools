@@ -11,6 +11,8 @@ import { beforeAll, describe, expect, it } from 'vitest';
 import { hasQpdf, qpdfEncrypt } from '../../e2e/fixtures/encrypted';
 import { fullFormPdf, printPdf } from '../../e2e/fixtures/generate';
 import { RpcError } from '../../src/engine/errors';
+import { isDict, type PdfValue } from '../../src/model/pdf/objects';
+import { PdfReader } from '../../src/model/pdf/reader';
 import { prunePrintReady, PrintReadyFormatError, removeKey } from '../../src/model/printReady';
 import { docPtrOf, rawCall } from '../../src/workers/render/pdfium';
 import { flattenCopy, type FlattenOptions } from '../../src/workers/work/flatten';
@@ -103,6 +105,22 @@ function diff(a: Uint8ClampedArray, b: Uint8ClampedArray): number {
   return n / (a.length / 4);
 }
 
+/**
+ * Indexes of pages with no /Resources, on the page or a /Pages ancestor. The
+ * key is required (ISO 32000-1 Table 30); qpdf 12's --check warns without it.
+ */
+async function pagesWithoutResources(bytes: Uint8Array): Promise<number[]> {
+  const reader = await PdfReader.open(bytes);
+  const out: number[] = [];
+  for (const [i, { dict }] of (await reader.pages()).entries()) {
+    let node: PdfValue | undefined = dict;
+    for (let depth = 0; isDict(node) && !node.has('Resources') && depth < 64; depth++)
+      node = await reader.resolve(node.get('Parent'));
+    if (!isDict(node) || !node.has('Resources')) out.push(i);
+  }
+  return out;
+}
+
 function qpdfCheck(bytes: Uint8Array, password?: string): number | null {
   if (!hasQpdf()) return null;
   const dir = mkdtempSync(join(tmpdir(), 'pdftools-pr-'));
@@ -143,6 +161,7 @@ describe('flattenCopy', () => {
     const pOff = await pixels(off);
     expect(at(pOff, 100, 90)).toEqual([255, 255, 255, 255]);
     expect(at(pOff, 100, 220)).toEqual([0, 0, 0, 255]);
+    expect(await pagesWithoutResources(on)).toEqual([]);
     expect(qpdfCheck(on)).toBe(hasQpdf() ? 0 : null);
   });
 
@@ -155,6 +174,7 @@ describe('flattenCopy', () => {
     expect(f.pages).toBe(2);
     expect(out.length).toBeLessThan(all.length);
     expect(text(out)).not.toContain('50 602 250 40 re f'); // page 1's content stream
+    expect(await pagesWithoutResources(out)).toEqual([]);
     expect(qpdfCheck(out)).toBe(hasQpdf() ? 0 : null);
   });
 
@@ -205,11 +225,11 @@ describe('prunePrintReady', () => {
     return Buffer.from(body, 'latin1');
   };
 
-  it('drops /AcroForm (a reference) and what only it reached; keeps streams verbatim', () => {
+  it('drops /AcroForm (a reference) and what only it reached; keeps streams verbatim', async () => {
     const src = pdf([
       '<< /Type /Catalog /Pages 2 0 R /AcroForm 4 0 R >>',
       '<< /Type /Pages /Kids [3 0 R] /Count 1 >>',
-      '<< /Type /Page /Parent 2 0 R /MediaBox [0 0 99 99] /Contents 6 0 R >>',
+      '<< /Type /Page /Parent 2 0 R /MediaBox [0 0 99 99] /Resources << >> /Contents 6 0 R >>',
       '<< /Fields [5 0 R] >>',
       '<< /T (secret) >>',
       '<< /Length 13 >>\nstream\n(7 0 R) Tj xx\nendstream',
@@ -223,6 +243,7 @@ describe('prunePrintReady', () => {
     expect(t).not.toContain('Unused'); // "7 0 R" inside stream data is not a reference
     expect(t).toContain('(7 0 R) Tj xx');
     expect(t).toMatch(/xref\n0 8\n/);
+    expect(await pagesWithoutResources(bytes)).toEqual([]);
     if (hasQpdf()) expect(qpdfCheck(bytes)).toBe(0);
   });
 

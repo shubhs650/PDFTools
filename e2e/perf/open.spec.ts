@@ -16,7 +16,7 @@ async function openMeasured(page: Page, files: DropFile[]): Promise<number> {
   return Math.round((await page.evaluate(() => performance.now())) - t0);
 }
 
-test('dropping three files, switching and closing them: no long tasks @smoke', async ({
+test('dropping three files, switching and closing them: no long tasks', async ({
   page,
   pdfs,
   guard,

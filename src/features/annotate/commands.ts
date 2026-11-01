@@ -28,6 +28,7 @@ import { commentsStore } from './comments/commentsStore';
 import { deleteComments } from './comments/threadActions';
 import { MARKUP_TOOLS } from './tools/markupModel';
 import { markupFromSelection } from './tools/textMarkup';
+import { selectionSettled } from '../select/commands';
 import { openAnnotationExport } from './export/annotationExport';
 import { openImportComments } from './transfer/importComments';
 import {
@@ -157,11 +158,13 @@ export function registerAnnotateCommands(): () => void {
     }),
     // Text markup tools (M3-08): selected text becomes the markup at once;
     // otherwise the tool turns on (profile first, M3-07) or, if on, off.
+    // A Select All still reading the page's text counts as a selection.
     ...MARKUP_TOOLS.map((tool) =>
       registerCommand(`comment.${tool}`, {
         requires: 'annotate',
         isPressed: () => appStore.getState().tool === tool,
         run: async () => {
+          await selectionSettled();
           const id = activeId();
           if (!id || markupFromSelection(id, tool)) return;
           if (appStore.getState().tool === tool) {

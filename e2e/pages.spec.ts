@@ -55,7 +55,7 @@ async function undo(page: Page) {
   await expect.poll(() => cap(page, 'pages', 'busy')).toBe(false);
 }
 
-test('rotate, delete and insert from the Organize tab, undo and redo, save verified @smoke', async ({
+test('rotate, delete and insert from the Organize tab, undo and redo, save verified', async ({
   page,
 }) => {
   const original = sizedPdf(6);

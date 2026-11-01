@@ -29,7 +29,7 @@ async function openSigned(page: Page, name: string, bytes: Uint8Array) {
   return banner;
 }
 
-test('a valid signature: unchanged since signing, identity not verified offline @smoke', async ({
+test('a valid signature: unchanged since signing, identity not verified offline', async ({
   page,
 }) => {
   const alice = await makeSigner('Alice Tester');

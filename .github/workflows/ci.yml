@@ -1,32 +1,16 @@
 name: CI
 
-# When CI runs:
-# - Pull requests: the checks job, plus the @smoke e2e flows with the offline and
-#   accessibility gates and the @smoke perf scenarios. A PR whose files are all
-#   Markdown or under docs/ skips e2e. Add the `full-e2e` label to a PR to run
-#   the full suite on it instead.
-# - Push to main, nightly, and Run workflow (workflow_dispatch): the checks job,
-#   the full e2e suite (with the accessibility gate) in 3 shards, and the offline
-#   flow, perf gate and acceptance table in their own job.
-# A branch push runs CI only through its PR: with both `push: ['**']` and
-# `pull_request`, every PR commit ran CI twice, in two concurrency groups
-# (refs/heads/<branch> and refs/pull/<n>/merge).
-
 on:
   push:
-    branches: [main]
+    branches: ['**']
   pull_request:
-    types: [opened, synchronize, reopened, labeled]
-  schedule:
-    - cron: '23 2 * * *'
-  workflow_dispatch:
 
 permissions:
   contents: read
 
 concurrency:
-  group: ci-${{ github.event_name }}-${{ github.event.pull_request.number || github.ref }}
-  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
 
 jobs:
   checks:
@@ -68,95 +52,8 @@ jobs:
           path: reports/
           retention-days: 30
 
-  changes:
-    name: Which e2e suite to run
-    runs-on: ubuntu-24.04
-    outputs:
-      suite: ${{ steps.pick.outputs.suite }}
-    steps:
-      - uses: actions/checkout@v4
-        if: github.event_name == 'pull_request'
-        with:
-          fetch-depth: 2
-      - name: full (main, nightly, manual, `full-e2e` label) · none (docs-only PR) · smoke (other PRs)
-        id: pick
-        env:
-          EVENT: ${{ github.event_name }}
-          FULL_LABEL: ${{ contains(github.event.pull_request.labels.*.name, 'full-e2e') }}
-        run: |
-          if [ "$EVENT" != "pull_request" ] || [ "$FULL_LABEL" = "true" ]; then
-            suite=full
-          else
-            # HEAD is the PR merge commit; its first parent is the base branch.
-            changed=$(git diff --name-only HEAD^1 HEAD)
-            echo "$changed"
-            if echo "$changed" | grep -vE '(^docs/|\.md$)' | grep -q .; then suite=smoke; else suite=none; fi
-          fi
-          echo "suite=$suite" | tee -a "$GITHUB_OUTPUT"
-
-  e2e-smoke:
-    name: E2E smoke · Offline · Accessibility (Playwright, Chromium)
-    needs: changes
-    if: needs.changes.outputs.suite == 'smoke'
-    runs-on: ubuntu-24.04
-    steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
-        with:
-          node-version-file: .nvmrc
-          cache: npm
-      - run: npm ci
-      - name: Install Chromium
-        run: npx playwright install --with-deps chromium
-      - name: Install qpdf (test fixtures only; not a dependency)
-        run: sudo apt-get install -y qpdf
-      - name: Smoke flows, offline and update flow, accessibility gate (built app under the production _headers)
-        run: npm run e2e -- --grep "@smoke|@offline|@a11y"
-      - name: Perf gate, @smoke scenarios (no main-thread task > 100 ms after boot)
-        if: success() || failure()
-        run: npm run perf -- --grep @smoke
-        env:
-          E2E_SKIP_BUILD: '1'
-      - uses: actions/upload-artifact@v4
-        if: failure()
-        with:
-          name: playwright-report-smoke
-          path: playwright-report/
-          retention-days: 7
-
   e2e:
-    name: E2E · Accessibility (full suite, shard ${{ matrix.shard }}/3)
-    needs: changes
-    if: needs.changes.outputs.suite == 'full'
-    runs-on: ubuntu-24.04
-    strategy:
-      fail-fast: false
-      matrix:
-        shard: [1, 2, 3]
-    steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
-        with:
-          node-version-file: .nvmrc
-          cache: npm
-      - run: npm ci
-      - name: Install Chromium
-        run: npx playwright install --with-deps chromium
-      - name: Install qpdf (test fixtures only; not a dependency)
-        run: sudo apt-get install -y qpdf
-      - name: E2E tests and accessibility gate (built app under the production _headers)
-        run: npm run e2e -- --grep-invert "@offline" --shard=${{ matrix.shard }}/3
-      - uses: actions/upload-artifact@v4
-        if: failure()
-        with:
-          name: playwright-report-shard-${{ matrix.shard }}
-          path: playwright-report/
-          retention-days: 7
-
-  gates:
-    name: Offline · Perf · Acceptance (Playwright, Chromium)
-    needs: changes
-    if: needs.changes.outputs.suite == 'full'
+    name: E2E · Offline · Accessibility · Perf (Playwright, Chromium)
     runs-on: ubuntu-24.04
     steps:
       - uses: actions/checkout@v4
@@ -169,10 +66,19 @@ jobs:
         run: npx playwright install --with-deps chromium
       - name: Install qpdf (test fixtures only; not a dependency)
         run: sudo apt-get install -y qpdf
+      - name: E2E tests (built app under the production _headers)
+        run: npm run e2e -- --grep-invert "@offline|@a11y"
       - name: Offline and update flow (§9, D-17, D-18)
+        if: success() || failure()
         run: npm run e2e:offline -- --reporter=github,json
         env:
+          E2E_SKIP_BUILD: '1'
           PLAYWRIGHT_JSON_OUTPUT_NAME: reports/offline.json
+      - name: Accessibility gate (axe, rule 12)
+        if: success() || failure()
+        run: npm run e2e:a11y
+        env:
+          E2E_SKIP_BUILD: '1'
       - name: Perf gate (no main-thread task > 100 ms after boot)
         if: success() || failure()
         run: npm run perf -- --reporter=github,json
@@ -194,6 +100,6 @@ jobs:
       - uses: actions/upload-artifact@v4
         if: failure()
         with:
-          name: playwright-report-gates
+          name: playwright-report
           path: playwright-report/
           retention-days: 7

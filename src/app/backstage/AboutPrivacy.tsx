@@ -36,6 +36,7 @@ const PROMISES: MessageKey[] = [
   msg('privacy.promise.telemetry'),
   msg('privacy.promise.network'),
   msg('privacy.promise.reports'),
+  msg('privacy.promise.links'),
 ];
 
 /**

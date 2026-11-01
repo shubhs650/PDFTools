@@ -50,9 +50,12 @@ import { DocumentTableArrowRight20Regular, DocumentTableArrowRight24Regular } fr
 import { DocumentText20Regular, DocumentText32Regular } from '@fluentui/react-icons/svg/document-text';
 import { Filter20Regular } from '@fluentui/react-icons/svg/filter';
 import { FolderOpen20Regular, FolderOpen28Regular } from '@fluentui/react-icons/svg/folder-open';
+import { FullScreenMaximize20Regular } from '@fluentui/react-icons/svg/full-screen-maximize';
+import { FullScreenMinimize20Regular } from '@fluentui/react-icons/svg/full-screen-minimize';
 import { HandLeft20Filled, HandLeft20Regular, HandLeft28Filled, HandLeft28Regular } from '@fluentui/react-icons/svg/hand-left';
 import { Highlight20Filled, Highlight20Regular } from '@fluentui/react-icons/svg/highlight';
 import { History20Regular, History32Regular } from '@fluentui/react-icons/svg/history';
+import { Home20Regular } from '@fluentui/react-icons/svg/home';
 import { ImageAdd20Regular } from '@fluentui/react-icons/svg/image-add';
 import { ImageMultiple20Regular, ImageMultiple32Regular } from '@fluentui/react-icons/svg/image-multiple';
 import { Info20Regular, Info32Regular } from '@fluentui/react-icons/svg/info';
@@ -249,6 +252,10 @@ export const FLUENT_GLYPHS: Record<string, FluentGlyphs> = {
   'rail.signatures': { regular: { small: Signature20Regular }, filled: { small: Signature20Filled } },
   'rail.search': { regular: { small: Search20Regular }, filled: { small: Search20Filled } },
   'rail.layers': { regular: { small: Layer20Regular }, filled: { small: Layer20Filled } },
+  'app.home': { regular: { small: Home20Regular } },
+  'app.reportIssue': { regular: { small: Bug20Regular } },
+  'view.fullScreen': { regular: { small: FullScreenMaximize20Regular } },
+  'view.exitFullScreen': { regular: { small: FullScreenMinimize20Regular } },
   'status.readyOffline': { regular: { small: CloudCheckmark20Regular } },
   'status.preparingOffline': { regular: { small: ArrowDownload20Regular } },
   'status.updateReady': { regular: { small: ArrowSync20Regular } },

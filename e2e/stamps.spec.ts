@@ -44,7 +44,7 @@ async function savedTail(page: Page, id: string): Promise<string> {
   return Buffer.from(saved.tail, 'base64').toString('latin1');
 }
 
-test('dynamic stamp: code, reviewer, date, document number; saved with /Subj, /Contents and an appearance @smoke', async ({
+test('dynamic stamp: code, reviewer, date, document number; saved with /Subj, /Contents and an appearance', async ({
   page,
 }) => {
   const id = await open(page);

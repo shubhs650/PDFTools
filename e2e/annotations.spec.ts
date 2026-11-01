@@ -73,7 +73,7 @@ async function clickPagePoint(page: Page, x: number, y: number, pageWidth = 595)
 const rectOf = async (page: Page, docId: string, id: string) =>
   (await list(page, docId))?.find((a) => a.id === id)?.rect ?? null;
 
-test('Select, nudge with the arrow keys, undo/redo, delete and undo (keyboard and mouse) @smoke', async ({
+test('Select, nudge with the arrow keys, undo/redo, delete and undo (keyboard and mouse)', async ({
   page,
 }) => {
   const id = await openFile(page, 'old.pdf', noNmPdf());

@@ -21,7 +21,7 @@ const pageBox = (page: Page) =>
     .getByRole('contentinfo', { name: 'Status bar' })
     .getByRole('textbox', { name: 'Page number' });
 
-test('typing never searches; Enter finds the needle far away; F3 and Shift+F3 walk the hits @smoke', async ({
+test('typing never searches; Enter finds the needle far away; F3 and Shift+F3 walk the hits', async ({
   page,
   pdfs,
 }) => {
