@@ -10,12 +10,17 @@ import { formatChord } from './chord';
 import { keyLabels } from './labels';
 import { KEYMAP } from './keymap';
 
-const ACTION_LABELS: Record<InternalAction, MessageKey> = {
+// The sheet's own wording where a command's label is too short to explain its keys.
+const ACTION_LABELS: Record<
+  InternalAction | 'edit.copy' | 'edit.paste' | 'edit.selectAll',
+  MessageKey
+> = {
   'tab.close': msg('shortcuts.action.tabClose'),
   'tab.next': msg('shortcuts.action.tabNext'),
   'tab.prev': msg('shortcuts.action.tabPrev'),
   'tool.cancel': msg('shortcuts.action.toolCancel'),
   'tool.enter': msg('shortcuts.action.toolEnter'),
+  'menu.context': msg('shortcuts.action.menuContext'),
   'edit.copy': msg('shortcuts.action.editCopy'),
   'edit.paste': msg('shortcuts.action.editPaste'),
   'edit.selectAll': msg('shortcuts.action.editSelectAll'),

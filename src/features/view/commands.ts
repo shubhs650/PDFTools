@@ -8,6 +8,7 @@ import { documentStore, selectActive, type ZoomSetting } from '../../app/store/d
 import type { ViewMode } from '../../app/store/documentStore';
 import { msg } from '../../i18n';
 import { move, rotate, setViewMode, setZoom, zoomStep, type ZoomTarget } from './controller';
+import { openDocumentMenu } from './documentMenus';
 import { canGoBack, canGoForward, nextView, previousView } from './viewHistory';
 
 const modeIs = (m: ViewMode): boolean => selectActive(documentStore.getState())?.view.mode === m;
@@ -77,6 +78,14 @@ export function registerViewCommands(): () => void {
         isPressed: () => modeIs(mode),
       }),
     ),
+    // Shift+F10 / the Menu key in the document (M6-02): its context menu.
+    registerCommand('menu.context', {
+      requiresDocument: true,
+      run: () => {
+        const id = selectActive(documentStore.getState())?.meta.id;
+        if (id) openDocumentMenu(id);
+      },
+    }),
     registerCommand('view.rotateCw', {
       requiresDocument: true,
       run: () => {

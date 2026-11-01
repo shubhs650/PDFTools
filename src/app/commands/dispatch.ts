@@ -12,8 +12,22 @@ export interface CommandContext {
   security: Security | null;
 }
 
+/** A point on a page: page index and page points (top-left origin, as displayed unrotated). */
+export interface PagePoint {
+  docId: string;
+  page: number;
+  x: number;
+  y: number;
+}
+
+/** What a context menu adds to a command it runs (M6-02): where it was opened. */
+export interface CommandArgs {
+  /** The page point under the pointer (or the keyboard's anchor) when the menu opened. */
+  at?: PagePoint;
+}
+
 export interface CommandHandler {
-  run(ctx: CommandContext): void | Promise<void>;
+  run(ctx: CommandContext, args?: CommandArgs): void | Promise<void>;
   /** Needs an open document (disabled with a reason otherwise). */
   requiresDocument?: boolean;
   /**
@@ -42,9 +56,8 @@ export const INTERNAL_ACTIONS = [
   'tab.next',
   'tab.prev',
   'tool.cancel',
-  'edit.copy',
-  'edit.paste',
-  'edit.selectAll',
+  // Shift+F10 / the Menu key in the document: its context menu (M6-02).
+  'menu.context',
   'find.next',
   'find.prev',
   // Annotations (M3-05): cycle with Tab, nudge with the arrow keys (delete is
@@ -96,10 +109,10 @@ export function commandState(id: string, ctx: CommandContext = commandContext())
 }
 
 /** Runs a command if it is enabled; returns whether it ran. */
-export async function runCommand(id: string): Promise<boolean> {
+export async function runCommand(id: string, args?: CommandArgs): Promise<boolean> {
   const ctx = commandContext();
   if (!commandState(id, ctx).enabled) return false;
-  await handlers.get(id)?.run(ctx);
+  await handlers.get(id)?.run(ctx, args);
   notify();
   return true;
 }

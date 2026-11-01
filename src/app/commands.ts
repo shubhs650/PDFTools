@@ -27,7 +27,9 @@ export type CommandTab =
   | 'rail'
   | 'status'
   /** The right end of the ribbon's tab row (M6-01, ADR-021 D-35). */
-  | 'topBar';
+  | 'topBar'
+  /** Context menus only (M6-02, ADR-021 D-38): never a ribbon button. */
+  | 'menu';
 
 export interface CommandDef {
   id: string;
@@ -1379,6 +1381,54 @@ export const COMMANDS: readonly CommandDef[] = [
     fluent: 'FullScreenMinimize',
     milestone: 'M6',
     shipped: true, // M6-01: the full-screen button while full screen is on
+  },
+  // Context menus (M6-02, ADR-021 D-38): the edit commands behind Ctrl+X/C/V/A
+  // and the menus' Properties item; labels, icons, shortcuts and disabled
+  // reasons come from here like any ribbon command.
+  {
+    id: 'edit.cut',
+    tab: 'menu',
+    group: 'menu',
+    size: 'small',
+    fluent: 'Cut',
+    milestone: 'M6',
+    shipped: true, // M6-02: Ctrl+X, the comment menu
+  },
+  {
+    id: 'edit.copy',
+    tab: 'menu',
+    group: 'menu',
+    size: 'small',
+    fluent: 'Copy',
+    milestone: 'M6',
+    shipped: true, // M6-02: Ctrl+C (text or comments), the comment menu
+  },
+  {
+    id: 'edit.paste',
+    tab: 'menu',
+    group: 'menu',
+    size: 'small',
+    fluent: 'ClipboardPaste',
+    milestone: 'M6',
+    shipped: true, // M6-02: Ctrl+V, the menus (at the pointer)
+  },
+  {
+    id: 'edit.selectAll',
+    tab: 'menu',
+    group: 'menu',
+    size: 'small',
+    fluent: 'SelectAllOn',
+    milestone: 'M6',
+    shipped: true, // M6-02: Ctrl+A, the page menu
+  },
+  {
+    id: 'edit.properties',
+    tab: 'menu',
+    group: 'menu',
+    size: 'small',
+    fluent: 'Info',
+    milestone: 'M6',
+    shipped: true, // M6-02: opens the Properties pane
   },
   {
     id: 'status.readyOffline',

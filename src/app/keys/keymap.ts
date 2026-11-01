@@ -73,11 +73,16 @@ export const KEYMAP: readonly Binding[] = [
   b('home.select', ['V'], 'document'),
   // Text selection (M2-04): in the document only, so text fields keep their own.
   b('edit.copy', ['Ctrl+C'], 'document'),
+  // Comments (M6-02): Ctrl+X copies the selected comments and deletes them (one undo step).
+  b('edit.cut', ['Ctrl+X'], 'document'),
   // Comments (M4-21): Ctrl+V pastes copied comments; Ctrl+Shift+V onto their own pages.
   { ...b('edit.paste', ['Ctrl+V'], 'document'), preventWhenDisabled: false },
   { ...b('comment.pasteToOriginal', ['Ctrl+Shift+V'], 'document'), preventWhenDisabled: false },
   b('edit.selectAll', ['Ctrl+A'], 'document'),
   { ...b('tool.cancel', ['Escape']), preventWhenDisabled: false },
+  // The document's context menu from the keyboard (M6-02, D-38): on the selected
+  // comment, or the page menu at the middle of the view.
+  b('menu.context', ['Shift+F10', 'ContextMenu'], 'document'),
   // Annotations (M3-05, §7.1): undo/redo per document; in the document, the
   // selected annotations are deleted, nudged (1 pt, Shift: 10 pt) and Tab walks
   // a page's annotations. Without a selection the keys keep their usual job

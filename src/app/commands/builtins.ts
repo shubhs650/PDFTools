@@ -50,6 +50,12 @@ export function registerBuiltinCommands(): () => void {
       },
       isPressed: () => appStore.getState().propertiesOpen,
     }),
+    // A context menu's Properties (M6-02): opens the pane (never closes it).
+    registerCommand('edit.properties', {
+      run: () => {
+        appStore.getState().setProperties(true);
+      },
+    }),
     registerCommand('view.collapseRibbon', {
       run: () => {
         appStore.getState().toggleRibbon();

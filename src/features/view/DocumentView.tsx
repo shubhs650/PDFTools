@@ -31,6 +31,8 @@ import { RedactionLayer } from '../redact/RedactionLayer';
 import { SnapMarker } from '../measure/SnapMarker';
 import { isMarkupTool } from '../annotate/tools/markupModel';
 import { LinkLayer } from './LinkLayer';
+import { DocumentMenu } from './DocumentMenu';
+import { notePointerDown } from './pagePoint';
 import { capability, useHost } from './host';
 import { HAND_MODE, PAGE_GAP, POINTER_MODE } from './plugins';
 import { PreviewLayer } from './PreviewLayer';
@@ -386,39 +388,45 @@ export function DocumentView({ documentId }: { documentId: string }) {
 
   if (!ready) return null;
   return (
-    <div
-      ref={host}
-      className="document-host"
-      data-tool={tool}
-      data-panning={panning || undefined}
-      data-mode={mode}
-    >
-      <SelectionAnnouncer documentId={documentId} />
-      <Viewport
-        documentId={documentId}
-        className="viewport ui-focusable"
-        data-testid={VIEW_TEST_ID}
-        data-doc-id={documentId}
-        role={REGION}
-        aria-label={name}
-        tabIndex={0}
-        onKeyDown={onKeyDown}
-        onPointerDown={onPointerDown}
-        onPointerMove={onPointerMove}
-        onPointerUp={endPan}
-        onPointerCancel={endPan}
+    <DocumentMenu documentId={documentId}>
+      <div
+        ref={host}
+        className="document-host"
+        data-tool={tool}
+        data-panning={panning || undefined}
+        data-mode={mode}
+        // The page last clicked: Ctrl+V pastes there while it is in view (M6-02).
+        onPointerDownCapture={(e) => {
+          notePointerDown(documentId, e.target);
+        }}
       >
-        <Scroller
+        <SelectionAnnouncer documentId={documentId} />
+        <Viewport
           documentId={documentId}
-          renderPage={(layout) => (
-            <Page
-              documentId={documentId}
-              layout={layout}
-              hidden={paged && !shown.has(layout.pageIndex)}
-            />
-          )}
-        />
-      </Viewport>
-    </div>
+          className="viewport ui-focusable"
+          data-testid={VIEW_TEST_ID}
+          data-doc-id={documentId}
+          role={REGION}
+          aria-label={name}
+          tabIndex={0}
+          onKeyDown={onKeyDown}
+          onPointerDown={onPointerDown}
+          onPointerMove={onPointerMove}
+          onPointerUp={endPan}
+          onPointerCancel={endPan}
+        >
+          <Scroller
+            documentId={documentId}
+            renderPage={(layout) => (
+              <Page
+                documentId={documentId}
+                layout={layout}
+                hidden={paged && !shown.has(layout.pageIndex)}
+              />
+            )}
+          />
+        </Viewport>
+      </div>
+    </DocumentMenu>
   );
 }

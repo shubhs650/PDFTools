@@ -823,6 +823,11 @@ body {
   height: 100%;
 }
 
+/* The document's context menu area (M6-02): no box of its own. */
+.document-menu-area {
+  display: contents;
+}
+
 /* Quick Find (M2-07) */
 .find-bar {
   display: flex;

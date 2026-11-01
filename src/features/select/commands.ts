@@ -15,6 +15,8 @@ function selection(): SelectionCapability | null {
 import {
   copyRoute,
   copySelectedComments,
+  cutBlocked,
+  cutSelectedComments,
   pasteBlocked,
   pasteComments,
   selectedCount,
@@ -83,12 +85,24 @@ export function registerSelectionCommands(): () => void {
         else selection()?.forDocument(id).copyToClipboard();
       },
     }),
-    // Ctrl+V (M4-21): the copied comments onto the current page; the browser keeps it otherwise.
-    registerCommand('edit.paste', {
-      disabledReason: () => pasteBlocked(activeId()),
+    // Ctrl+X and the comment menu (M6-02): the selected comments to the
+    // in-app clipboard, then deleted with their replies (one undo step).
+    registerCommand('edit.cut', {
+      requires: 'annotate',
+      disabledReason: () => cutBlocked(activeId()),
       run: async () => {
         const id = activeId();
-        if (id) await pasteComments(id, 'current');
+        if (id) await cutSelectedComments(id);
+      },
+    }),
+    // Ctrl+V (M4-21): the copied comments onto the page last clicked (in view)
+    // or the current page; from a context menu (M6-02), at the pointer. The
+    // browser keeps Ctrl+V when there is nothing to paste.
+    registerCommand('edit.paste', {
+      disabledReason: () => pasteBlocked(activeId()),
+      run: async (_ctx, args) => {
+        const id = activeId();
+        if (id) await pasteComments(id, 'current', args?.at);
       },
     }),
     registerCommand('edit.selectAll', {
