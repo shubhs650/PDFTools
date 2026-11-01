@@ -20,8 +20,18 @@ jobs:
           cache: npm
       - run: npm ci
       - run: sudo apt-get install -y qpdf && qpdf --version && lsb_release -a
-      - name: Run the two failing test files (failures expected)
-        run: npx vitest run tests/save/patch-save.test.ts tests/print/print-ready.test.ts || true
+      - name: AppArmor and qpdf output paths
+        run: |
+          set +e
+          ls /etc/apparmor.d | grep -i qpdf
+          sudo aa-status 2>/dev/null | grep -i qpdf
+          sudo cat /etc/apparmor.d/*qpdf* 2>/dev/null
+          d=$(mktemp -d)
+          printf '%%PDF-1.4\n1 0 obj<</Type/Catalog/Pages 2 0 R>>endobj 2 0 obj<</Type/Pages/Kids[]/Count 0>>endobj\ntrailer<</Root 1 0 R>>\n%%%%EOF\n' > $d/in.pdf
+          for o in $d/a.pdf $d/a.pdf.out $d/a.out $d/a.PDF; do qpdf $d/in.pdf $o; echo "$o -> exit $?"; done
+          sudo dmesg 2>/dev/null | grep -i 'apparmor="DENIED"' | tail -5
+      - name: Full unit test suite on 26.04
+        run: npm run test || true
       - name: qpdf --check and --decrypt on every written file
         run: |
           set +e
