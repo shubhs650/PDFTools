@@ -645,14 +645,14 @@ export function printPdf(): Uint8Array {
   return buildPdf([
     '<< /Type /Catalog /Pages 2 0 R >>',
     '<< /Type /Pages /Kids [3 0 R 8 0 R 10 0 R] /Count 3 >>',
-    '<< /Type /Page /Parent 2 0 R /MediaBox [0 0 595 842] /Contents 4 0 R /Annots [5 0 R 6 0 R] >>',
+    '<< /Type /Page /Parent 2 0 R /MediaBox [0 0 595 842] /Contents 4 0 R /Annots [5 0 R 6 0 R] /Resources << >> >>',
     { dict: '<< >>', stream: '0 g 50 602 250 40 re f' },
     '<< /Type /Annot /Subtype /Square /Rect [50 700 150 800] /F 4 /C [1 0 0] /AP << /N 7 0 R >> >>',
     '<< /Type /Annot /Subtype /Square /Rect [400 50 500 150] /F 0 /C [0 0 1] /AP << /N 12 0 R >> >>',
     ap('1 0 0'),
-    '<< /Type /Page /Parent 2 0 R /MediaBox [0 0 842 595] /Contents 9 0 R >>',
+    '<< /Type /Page /Parent 2 0 R /MediaBox [0 0 842 595] /Contents 9 0 R /Resources << >> >>',
     { dict: '<< >>', stream: '0.5 g 50 500 400 40 re f' },
-    '<< /Type /Page /Parent 2 0 R /MediaBox [0 0 595 842] /Rotate 90 /Contents 11 0 R >>',
+    '<< /Type /Page /Parent 2 0 R /MediaBox [0 0 595 842] /Rotate 90 /Contents 11 0 R /Resources << >> >>',
     { dict: '<< >>', stream: '0 g 50 50 100 100 re f' },
     ap('0 0 1'),
   ]);
