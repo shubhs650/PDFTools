@@ -139,16 +139,14 @@ export function App() {
               </>
             ),
           }}
+          quickAccess={<QuickAccess />}
           ribbon={
-            <>
-              <QuickAccess />
-              <Ribbon
-                onOpenBackstage={() => {
-                  setBackstage({});
-                }}
-                focusDocument={focusDocument}
-              />
-            </>
+            <Ribbon
+              onOpenBackstage={() => {
+                setBackstage({});
+              }}
+              focusDocument={focusDocument}
+            />
           }
         >
           <DocumentArea />

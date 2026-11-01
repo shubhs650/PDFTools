@@ -4,6 +4,7 @@ import { useTranslation } from 'react-i18next';
 import { format, msg, type MessageKey } from '../../i18n';
 import { LIMITS } from '../../model/report';
 import { Button, Dialog } from '../../ui/components';
+import { currentIssueUrl, EXTERNAL_LINK } from '../../app/links';
 import {
   closeReport,
   copyReport,
@@ -115,6 +116,13 @@ export function ReportDialog() {
             {t(statusKey)}
           </p>
         ) : null}
+        {/* The other way to report (M6-01, D-35): a GitHub issue in a new tab. */}
+        <p className="print-note">
+          {t('report.github')}{' '}
+          <a className="ui-focusable" href={currentIssueUrl(t)} {...EXTERNAL_LINK}>
+            {t('report.githubLink')}
+          </a>
+        </p>
         {copied ? (
           <p className="print-note" role="status">
             {t('report.copied')}

@@ -68,7 +68,9 @@
       "rotateCcw": "Rotate View Counterclockwise",
       "leftPanes": "Panes",
       "propertiesPane": "Properties Pane",
-      "collapseRibbon": "Collapse Ribbon"
+      "collapseRibbon": "Collapse Ribbon",
+      "fullScreen": "Full Screen",
+      "exitFullScreen": "Exit Full Screen"
     },
     "comment": {
       "highlight": "Highlight",
@@ -173,6 +175,10 @@
       "readyOffline": "Ready offline",
       "preparingOffline": "Preparing offline",
       "updateReady": "Update ready"
+    },
+    "app": {
+      "home": "OpenEngTools Home",
+      "reportIssue": "Report an Issue on GitHub"
     }
   },
   "ribbon": {
@@ -473,7 +479,8 @@
       "account": "No account, no login and no cookies.",
       "telemetry": "No analytics scripts, no tracking and no telemetry.",
       "network": "On its own, PDFTools only loads its program files and checks for app updates from its own website. Nothing about you or your documents is sent.",
-      "reports": "If you choose Help → Send Error Report, PDFTools sends the description you typed and the diagnostic details shown in the report dialog to its own website, and nothing else: no documents, file names or document text."
+      "reports": "If you choose Help → Send Error Report, PDFTools sends the description you typed and the diagnostic details shown in the report dialog to its own website, and nothing else: no documents, file names or document text.",
+      "links": "The OpenEngTools Home and Report an Issue on GitHub buttons at the top right open those websites in a new tab, and only when you click them. They send nothing by themselves; the GitHub issue page is prefilled only with the app version, browser and OS."
     },
     "kind": {
       "indexedDB": "IndexedDB",
@@ -833,7 +840,9 @@
       "offline": "You're offline, so the report can't be sent now. Try again later, or copy it.",
       "rateLimited": "Too many reports were sent from here recently. Try again in an hour, or copy it.",
       "failed": "The report couldn't be sent. Try again later, or copy it."
-    }
+    },
+    "github": "You can also report a problem on GitHub. The issue page opens in a new tab with only the app version, browser and OS filled in.",
+    "githubLink": "Report an issue on GitHub"
   },
   "help": {
     "title": "PDFTools Help",
@@ -848,7 +857,7 @@
       },
       "view": {
         "title": "Viewing",
-        "body": "Zoom with {{zoomIn}} and {{zoomOut}} or {{mod}}+mouse wheel; {{fitPage}} fits the page and {{fitWidth}} the width. Hold Space or press H to pan. The View tab has page layouts and rotation."
+        "body": "Zoom with {{zoomIn}} and {{zoomOut}} or {{mod}}+mouse wheel; {{fitPage}} fits the page and {{fitWidth}} the width. Hold Space or press H to pan. The View tab has page layouts and rotation. {{fullScreen}} or the full-screen button at the top right shows the whole app full screen; Esc leaves."
       },
       "find": {
         "title": "Finding text",
@@ -896,7 +905,7 @@
       },
       "privacy": {
         "title": "Privacy",
-        "body": "PDFTools makes no network requests with your documents; on its own it only loads its program files and checks for updates from its website. Error reports are sent only when you choose to, and you see every word of them first."
+        "body": "PDFTools makes no network requests with your documents; on its own it only loads its program files and checks for updates from its website. Error reports are sent only when you choose to, and you see every word of them first. The OpenEngTools and GitHub buttons open those websites in a new tab and send nothing by themselves."
       }
     }
   },
@@ -1802,6 +1811,14 @@
       "pasteComments": "Paste",
       "pasteToOriginal": "Paste to Original",
       "exportCrs": "Export CRS"
+    }
+  },
+  "topBar": {
+    "label": "App",
+    "fullScreenUnavailable": "This browser doesn't allow full screen here",
+    "issue": {
+      "title": "Problem: ",
+      "body": "What happened?\n\n\nWhat did you expect?\n\n\nSteps to reproduce:\n1. \n\nPlease don't attach or paste confidential documents or their text.\n\n---\nApp: {{app}}\nBrowser: {{browser}}\nOS: {{os}}"
     }
   }
 }

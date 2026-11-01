@@ -4,6 +4,7 @@ import { useEffect, useMemo, useRef, useState, type KeyboardEvent } from 'react'
 import { useTranslation } from 'react-i18next';
 import { IconButton } from '../../ui/components';
 import { groupLabelKey, tabLabelKey } from '../commandLabels';
+import { TopBarActions } from '../TopBar';
 import { appStore, useApp } from '../store/appStore';
 import { RibbonButton } from './RibbonButton';
 import { groupCells, ribbonLayout, type RibbonTabLayout } from './layout';
@@ -94,6 +95,7 @@ export function Ribbon({ onOpenBackstage, focusDocument }: RibbonProps) {
           ))}
         </div>
         <span className="ribbon-tabs-end">
+          <TopBarActions />
           <IconButton
             label={collapsed ? t('ribbon.expand') : t('command.view.collapseRibbon')}
             icon={collapsed ? <ChevronDown20Regular /> : <ChevronUp20Regular />}
