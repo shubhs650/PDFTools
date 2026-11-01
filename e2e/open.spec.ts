@@ -26,7 +26,7 @@ async function withoutFsa(page: Page): Promise<void> {
 
 const tabs = (page: Page) => page.getByRole('tablist', { name: 'Open documents' }).getByRole('tab');
 
-test('Ctrl+O opens files through the picker, each in its own tab; reopening focuses it', async ({
+test('Ctrl+O opens files through the picker, each in its own tab; reopening focuses it @smoke', async ({
   page,
   pdfs,
 }) => {

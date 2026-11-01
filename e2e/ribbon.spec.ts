@@ -31,7 +31,7 @@ test('shows File, Home, View, Comment (from M3-07), Measure (from M3-15), Organi
   ]);
 });
 
-test('keyboard: arrows between tabs and controls, Tab into the toolbar, Esc to the document', async ({
+test('keyboard: arrows between tabs and controls, Tab into the toolbar, Esc to the document @smoke', async ({
   page,
 }) => {
   await page.goto('/');

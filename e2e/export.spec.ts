@@ -36,7 +36,7 @@ interface Last {
 }
 const last = async (page: Page) => (await cap(page, 'extract', 'lastExport')) as Last;
 
-test('To Markdown with images: a new folder with the .md and its image, in reading order', async ({
+test('To Markdown with images: a new folder with the .md and its image, in reading order @smoke', async ({
   page,
 }) => {
   await page.goto('/');
