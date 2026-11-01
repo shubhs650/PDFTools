@@ -17,7 +17,7 @@ interop) folds into M6-15. Rev 0 (M0–M4) is complete on the agent side.
   `/IT /FreeTextTypeWriter`, red 10 pt text, no border), registered and saved like the others;
   its ribbon button comes with the Comment tab redesign (M6-08) — today's "Text Box /
   Typewriter" button stays the text box. **Defaults store:** `src/features/annotate/tools/
-  toolDefaults.ts` (pure: the shipped table, validation, versioned record `{ v: 1, props }`,
+toolDefaults.ts` (pure: the shipped table, validation, versioned record `{ v: 1, props }`,
   migration) and `toolDefaultsStore.ts` (zustand; IndexedDB **v5** object store `toolDefaults`,
   tool id → the user's overrides only, so later changes to a shipped default still reach
   everyone; damaged / unknown / newer records are skipped). Nothing was stored before, so every
