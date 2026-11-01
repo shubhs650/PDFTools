@@ -4,7 +4,7 @@ name: CI
 # - Pull requests: the checks job, plus the @smoke e2e flows with the offline and
 #   accessibility gates and the @smoke perf scenarios. A PR whose files are all
 #   Markdown or under docs/ skips e2e. Add the `full-e2e` label to a PR to run
-#   the full suite on it instead.
+#   the full suite on it instead (removing it runs the smoke set again).
 # - Push to main, nightly, and Run workflow (workflow_dispatch): the checks job,
 #   the full e2e suite in 3 shards, the accessibility gate, and the offline flow,
 #   perf gate and acceptance table, each set in its own job.
@@ -19,7 +19,7 @@ on:
   push:
     branches: [main]
   pull_request:
-    types: [opened, synchronize, reopened, labeled]
+    types: [opened, synchronize, reopened, labeled, unlabeled]
   schedule:
     - cron: '23 2 * * *'
   workflow_dispatch:
