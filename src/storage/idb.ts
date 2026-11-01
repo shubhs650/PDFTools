@@ -1,6 +1,7 @@
 // IndexedDB: small app data only (ARCHITECTURE §10.3, D-04). Settings, the
 // recent-files list (file handles + display metadata), the reviewer profile,
-// status schemes and table templates. Never document bytes:
+// status schemes, table templates and the comment tools' default styles.
+// Never document bytes:
 // those live in the user's file and, for recovery, in OPFS (§4.3).
 //
 // The schema is versioned by the MIGRATIONS list: version N runs migrations
@@ -40,6 +41,12 @@ export const MIGRATIONS: readonly Migration[] = [
   // v4 (M4-15): table templates (M4-Q9), by id.
   (db) => {
     db.createObjectStore('tableTemplates', { keyPath: 'id' });
+  },
+  // v5 (M6-03): the comment tools' own default styles (D-37), tool id → record
+  // (validate it: toolDefaults.ts). Nothing was stored before, so every
+  // existing user starts on the shipped defaults.
+  (db) => {
+    db.createObjectStore('toolDefaults');
   },
 ];
 
@@ -160,6 +167,29 @@ export class AppDb {
   async deleteTableTemplate(id: string): Promise<void> {
     const tx = this.db.transaction('tableTemplates', 'readwrite');
     tx.objectStore('tableTemplates').delete(id);
+    await done(tx);
+  }
+
+  /** The comment tools' stored default styles as [tool id, record] (validate them: toolDefaults.ts). */
+  async listToolDefaults(): Promise<[string, unknown][]> {
+    const tx = this.db.transaction('toolDefaults', 'readonly');
+    const store = tx.objectStore('toolDefaults');
+    const [keys, values] = await Promise.all([
+      request(store.getAllKeys()),
+      request(store.getAll()),
+    ]);
+    return keys.map((k, i) => [typeof k === 'string' ? k : JSON.stringify(k), values[i]]);
+  }
+
+  async putToolDefaults(tool: string, value: unknown): Promise<void> {
+    const tx = this.db.transaction('toolDefaults', 'readwrite');
+    tx.objectStore('toolDefaults').put(value, tool);
+    await done(tx);
+  }
+
+  async deleteToolDefaults(tool: string): Promise<void> {
+    const tx = this.db.transaction('toolDefaults', 'readwrite');
+    tx.objectStore('toolDefaults').delete(tool);
     await done(tx);
   }
 

@@ -1,5 +1,6 @@
 // EmbedPDF's drawing tools, as the Comment tab uses them (M3-09): our
-// defaults, Shift-constrained drawing, Enter/Esc for click-by-click shapes, a
+// defaults (per-tool styles, M6-03 D-37: toolDefaults.ts), a Typewriter tool
+// (a text box with /IT /FreeTextTypeWriter), Shift-constrained drawing, Enter/Esc for click-by-click shapes, a
 // Cloud tool (a polygon with a cloudy border, /BE), the note text asked right
 // after a note is placed, and the Link dialog after a link is drawn. The plugin
 // still draws, previews and commits; appearances are PDFium's (B7).
@@ -15,6 +16,8 @@ import { capability } from '../../view/host';
 import { openContentsPrompt } from './contentsPrompt';
 import { centred, constrain, VERTEX_TOOLS, type DrawTool, type Pt } from './drawModel';
 import { openLinkEdit } from './linkEdit';
+import { defaultsPatch, isStyleTool, type StyleTool } from './toolDefaults';
+import { defaultsFor, loadToolDefaults, toolDefaultsStore } from './toolDefaultsStore';
 
 type Handlers = ReturnType<HandlerFactory<PdfAnnotationObject>['create']>;
 export type HandlerContext = Parameters<HandlerFactory<PdfAnnotationObject>['create']>[0];
@@ -143,6 +146,7 @@ function textDefaults(): Record<string, unknown> {
   return { contents: t('annotate.freeText.placeholder') };
 }
 
+/** The plugin's own tools we rewrap under the same id. */
 const REWRAPPED: readonly DrawTool[] = [
   'textComment',
   'freeText',
@@ -158,6 +162,9 @@ const REWRAPPED: readonly DrawTool[] = [
   'link',
 ];
 
+/** The intent that makes a free text annotation a typewriter (PDF 32000-1 §12.5.6.6). */
+export const TYPEWRITER_INTENT = 'FreeTextTypeWriter';
+
 /** Called once the plugin registry is up (DocumentHost). */
 export function installDrawTools(registry: PluginRegistry): () => void {
   let cap: AnnotationCapability;
@@ -166,32 +173,57 @@ export function installDrawTools(registry: PluginRegistry): () => void {
   } catch {
     return () => undefined;
   }
+  // Each styled tool's defaults without our style, and what was last applied.
+  const bases = new Map<StyleTool, Record<string, unknown>>();
+  const applied = new Map<StyleTool, Record<string, unknown>>();
+  const styled = (id: DrawTool, defaults: Record<string, unknown>): Record<string, unknown> => {
+    if (!isStyleTool(id)) return defaults;
+    bases.set(id, defaults);
+    const full = { ...defaults, ...defaultsFor(id) };
+    applied.set(id, full);
+    return full;
+  };
   const rewrap = (id: DrawTool, base: AnnotationTool, extra: Partial<AnnotationTool> = {}) => {
     const handler = base.pointerHandler;
     if (!handler) return;
+    const defaults = styled(id, { ...base.defaults, ...extra.defaults });
     cap.addTool({
       ...base,
       ...extra,
       id,
+      defaults,
       pointerHandler: wrapFactory(id, handler),
     });
   };
+  // The plugin's own text box, before it is rewrapped, for the typewriter.
+  const freeTextBase = cap.getTool('freeText');
+  const textExtra = (base: AnnotationTool): Partial<AnnotationTool> => ({
+    defaults: { ...base.defaults, ...textDefaults() },
+    ...(base.clickBehavior
+      ? {
+          clickBehavior: {
+            ...base.clickBehavior,
+            defaultContent: t('annotate.freeText.placeholder'),
+          },
+        }
+      : {}),
+  });
   for (const id of REWRAPPED) {
     const base = cap.getTool(id);
     if (!base) continue;
-    if (id === 'freeText' || id === 'freeTextCallout') {
-      rewrap(id, base, {
-        defaults: { ...base.defaults, ...textDefaults() },
-        ...(base.clickBehavior
-          ? {
-              clickBehavior: {
-                ...base.clickBehavior,
-                defaultContent: t('annotate.freeText.placeholder'),
-              },
-            }
-          : {}),
-      });
-    } else rewrap(id, base);
+    if (id === 'freeText' || id === 'freeTextCallout') rewrap(id, base, textExtra(base));
+    else rewrap(id, base);
+  }
+  if (freeTextBase) {
+    const extra = textExtra(freeTextBase);
+    rewrap('typewriter', freeTextBase, {
+      ...extra,
+      name: 'Typewriter',
+      labelKey: 'annotation.typewriter',
+      defaults: { ...extra.defaults, intent: TYPEWRITER_INTENT },
+      matchScore: (a: PdfAnnotationObject) =>
+        a.type === PdfAnnotationSubtype.FREETEXT && a.intent === TYPEWRITER_INTENT ? 10 : 0,
+    });
   }
   const polygon = cap.getTool('polygon');
   if (polygon)
@@ -203,8 +235,19 @@ export function installDrawTools(registry: PluginRegistry): () => void {
         a.type === PdfAnnotationSubtype.POLYGON && (a.cloudyBorderIntensity ?? 0) > 0 ? 20 : 0,
     });
 
+  // The user's own defaults: once loaded, and whenever they change (M6-06/07).
+  const reapply = () => {
+    for (const [id, base] of bases) {
+      const full = { ...base, ...defaultsFor(id) };
+      cap.setToolDefaults(id, defaultsPatch(applied.get(id) ?? {}, full));
+      applied.set(id, full);
+    }
+  };
+  const stopDefaults = toolDefaultsStore.subscribe(reapply);
+  void loadToolDefaults();
+
   // What comes right after a tool made its annotation.
-  return cap.onAnnotationEvent((e) => {
+  const stopEvents = cap.onAnnotationEvent((e) => {
     if (e.type !== 'create') return;
     const a = e.annotation;
     if (a.type === PdfAnnotationSubtype.TEXT && !a.inReplyToId && !a.contents)
@@ -212,6 +255,10 @@ export function installDrawTools(registry: PluginRegistry): () => void {
     else if (a.type === PdfAnnotationSubtype.LINK && !a.target)
       openLinkEdit(e.documentId, a.pageIndex, a.id);
   });
+  return () => {
+    stopDefaults();
+    stopEvents();
+  };
 }
 
 /**

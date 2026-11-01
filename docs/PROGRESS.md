@@ -1,12 +1,38 @@
 # PDFTools — Progress
 
-_Last updated: 2026-11-01 (session 24: M6-02 context menus, cut / copy / paste of comments on the page)_
+_Last updated: 2026-11-01 (session 25: M6-03 default comment styles)_
 
 **Current milestone:** M6 — Beta review (plan in [docs/plan/M6.md](plan/M6.md), scope changes in
-[ADR-021](adr/021-m6-beta-review.md), **Accepted** 2026-11-01; ARCHITECTURE.md Rev 0.9; M6-01 and M6-02 done; next task M6-03). M5 — OCR: M5-01 … M5-04 done under [ADR-020](adr/020-m5-ocr.md); M5-05 (owner
+[ADR-021](adr/021-m6-beta-review.md), **Accepted** 2026-11-01; ARCHITECTURE.md Rev 0.9; M6-01 … M6-03 done; next task M6-04). M5 — OCR: M5-01 … M5-04 done under [ADR-020](adr/020-m5-ocr.md); M5-05 (owner
 interop) folds into M6-15. Rev 0 (M0–M4) is complete on the agent side.
 
 ## Done
+
+- **Session 25 — M6-03 default comment styles (ADR-021 D-37, beta review B6).** New comments
+  are **red (#FF0000) with 1 pt lines and borders, no fill**, and text is **red at 10 pt**:
+  text box (red 1 pt border), callout, line, arrow, polyline, polygon, rectangle, oval, cloud
+  and pencil. Highlight and the sticky note stay yellow (owner, 2026-11-01); the measurement
+  tools keep their own style; underline / strikeout / squiggly / insert / replace are unchanged.
+  **Typewriter:** a new plugin tool id `typewriter` (the free text tool with
+  `/IT /FreeTextTypeWriter`, red 10 pt text, no border), registered and saved like the others;
+  its ribbon button comes with the Comment tab redesign (M6-08) — today's "Text Box /
+  Typewriter" button stays the text box. **Defaults store:** `src/features/annotate/tools/
+  toolDefaults.ts` (pure: the shipped table, validation, versioned record `{ v: 1, props }`,
+  migration) and `toolDefaultsStore.ts` (zustand; IndexedDB **v5** object store `toolDefaults`,
+  tool id → the user's overrides only, so later changes to a shipped default still reach
+  everyone; damaged / unknown / newer records are skipped). Nothing was stored before, so every
+  existing user gets the new defaults. `drawTools.ts` applies shipped ⊕ user defaults when it
+  rewraps the plugin's tools and re-applies on every store change (`setToolDefaults`, clearing
+  keys that are gone); M6-06 / M6-07 write through `setToolDefaults` / `resetToolDefaults`.
+  Privacy lists the store; Clear all local data empties it and resets the open document's tools
+  at once. Tests: unit `tests/annotate/toolDefaults.test.ts` (shipped values, yellow kept,
+  validation, migration, v4 → v5 upgrade, persistence across a restart, damaged records, Clear
+  data), `tests/storage/idb.test.ts` (v5); e2e `e2e/default-styles.spec.ts` (@smoke: draw all
+  eleven tools, save narrow, `/C [1 0 0]`, `/BS /W 1`, `/DA … 10 Tf … 1 0 0 rg`, `/IT` for
+  callout and typewriter, reopened and read back by PDFium; the sticky note stays yellow; a user
+  default applies after a reload, is listed on the Privacy page and is reset by Clear data).
+  Note for e2e authors: at the default fit-width zoom only page points above y ≈ 350 are inside
+  the 1280 × 800 window.
 
 - **Session 24 — M6-02 context menus; cut / copy / paste of comments on the page (ADR-021
   D-38 a, b).** _Reproduced on the deployed beta first_ (Playwright, real mouse): selecting a

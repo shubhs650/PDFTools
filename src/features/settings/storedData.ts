@@ -60,6 +60,13 @@ export const LOCAL_DATA: readonly LocalDataItem[] = [
     cleared: true,
   },
   {
+    kind: 'indexedDB',
+    location: `${DB_NAME} › toolDefaults`,
+    store: 'toolDefaults',
+    what: msg('privacy.data.toolDefaults'),
+    cleared: true,
+  },
+  {
     kind: 'opfs',
     location: `${RECOVERY_DIR}/`,
     store: RECOVERY_DIR,

@@ -25,6 +25,7 @@ describe('AppDb (M1-12)', () => {
       'schemes',
       'settings',
       'tableTemplates',
+      'toolDefaults',
     ]);
     db.close();
   });
@@ -141,7 +142,7 @@ describe('AppDb v4 (M4-15)', () => {
     const scheme = { id: 's1', name: 'Site' };
     await v3.putScheme(scheme);
     v3.close();
-    const db = await AppDb.open({ factory });
+    const db = await AppDb.open({ factory, migrations: MIGRATIONS.slice(0, 4) });
     expect(db.db.version).toBe(4);
     expect(await db.getProfile()).toEqual({ name: 'Ana' });
     expect(await db.listSchemes()).toEqual([{ id: 's1', name: 'Site' }]);
@@ -151,6 +152,26 @@ describe('AppDb v4 (M4-15)', () => {
     expect(await db.listTableTemplates()).toEqual([{ id: 't2' }]);
     await db.clearAll();
     expect(await db.listTableTemplates()).toEqual([]);
+    db.close();
+  });
+});
+
+describe('AppDb v5 (M6-03)', () => {
+  it('stores tool defaults by tool id, keeping the table templates of v4', async () => {
+    const factory = new IDBFactory();
+    const v4 = await AppDb.open({ factory, migrations: MIGRATIONS.slice(0, 4) });
+    await v4.putTableTemplate({ id: 't1' });
+    v4.close();
+    const db = await AppDb.open({ factory });
+    expect(db.db.version).toBe(5);
+    expect(await db.listTableTemplates()).toEqual([{ id: 't1' }]);
+    expect(await db.listToolDefaults()).toEqual([]);
+    await db.putToolDefaults('square', { v: 1, props: { strokeWidth: 2 } });
+    await db.putToolDefaults('line', { v: 1, props: { strokeWidth: 3 } });
+    await db.deleteToolDefaults('line');
+    expect(await db.listToolDefaults()).toEqual([['square', { v: 1, props: { strokeWidth: 2 } }]]);
+    await db.clearAll();
+    expect(await db.listToolDefaults()).toEqual([]);
     db.close();
   });
 });
