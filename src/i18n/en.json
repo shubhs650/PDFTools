@@ -509,7 +509,8 @@
       "appFiles": "The offline copy of the app (program files only, no documents)",
       "profile": "Reviewer profile: the name, initials, discipline and company you entered",
       "schemes": "Status schemes you made or imported (codes, labels, colours) and which one is active",
-      "tableTemplates": "Table templates you saved (column and row dividers, header rows, merged cells, page size)"
+      "tableTemplates": "Table templates you saved (column and row dividers, header rows, merged cells, page size)",
+      "toolDefaults": "Comment tool defaults you set (colours, line widths, font sizes); the shipped defaults are used until you change one"
     },
     "clearHint": "To delete this data, use File → Settings → Clear all local data."
   },

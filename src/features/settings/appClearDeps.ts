@@ -6,6 +6,7 @@ import { recoveryStore } from '../recovery/recovery';
 import { resetProfile } from './profile/profileStore';
 import { resetSchemes } from '../stamps/schemes/schemeStore';
 import { resetTemplates } from '../tables/templateStore';
+import { resetAllToolDefaults } from '../annotate/tools/toolDefaultsStore';
 import type { ClearDeps } from './clearAll';
 
 const hasCaches = (): boolean => typeof caches !== 'undefined';
@@ -24,5 +25,6 @@ export const appClearDeps: ClearDeps = {
     resetProfile();
     resetSchemes();
     resetTemplates();
+    resetAllToolDefaults();
   },
 };
