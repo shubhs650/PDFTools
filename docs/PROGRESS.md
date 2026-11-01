@@ -1,16 +1,29 @@
 # PDFTools — Progress
 
-_Last updated: 2026-10-04 (session 21: repair of the PR #53 merge — main's typecheck, lint and ribbon e2e green again)_
+_Last updated: 2026-11-01 (session 22: M6 plan from the beta users' review)_
 
-**Current milestone:** M5 — OCR (Rev 1 item 1, opened at the owner's request on 2026-10-03;
-plan in [docs/plan/M5.md](plan/M5.md)). M5-01 … M5-04 done on the agent side under
-[ADR-020](adr/020-m5-ocr.md), **accepted with amendments** the same day (five languages
-including Hindi; a tick box to re-recognize pages with text) and applied in ARCHITECTURE.md
-Rev 0.8; M5-05 (acceptance, owner interop) open. Rev 0
-(M0–M4) is complete on the agent side; the public beta (D-32) waits on the owner items in
-[docs/acceptance/M4.md](acceptance/M4.md) §5.
+**Current milestone:** M6 — Beta review (plan in [docs/plan/M6.md](plan/M6.md), scope changes in
+[ADR-021](adr/021-m6-beta-review.md), **Accepted** 2026-11-01; ARCHITECTURE.md Rev 0.9; next task M6-01). M5 — OCR: M5-01 … M5-04 done under [ADR-020](adr/020-m5-ocr.md); M5-05 (owner
+interop) folds into M6-15. Rev 0 (M0–M4) is complete on the agent side.
 
 ## Done
+
+- **Session 22 — M6 plan (beta review).** The owner collated beta users' feedback
+  (`PDF_Tools_review.docx`, 17 screenshots, not in the repository): A — top bar (brand, OpenEngTools
+  home link, GitHub issue link, full screen), Home additions (snapshot, properties, rotate pair,
+  more comment tools), magnet snapping toggle; B — Comments pane (filters crowd out comments; card
+  list with selection sync), right-click menus everywhere with **copy/paste of comments from the
+  page (non-negotiable)**, a property grid, a style palette, red/10 pt/1 pt defaults, a
+  PDF-XChange-like Comment ribbon with Select Comments, Attach File and Flatten; C — sign document,
+  password protection, form field creation. Checked against EmbedPDF 2.15.1 (the pinned stable):
+  `plugin-form` (five field types), `plugin-signature` (visual), engine
+  `setDocumentEncryption`/`removeEncryption`, `flattenAnnotation`, `setBookmarks` — no 3.0 upgrade
+  needed; no FileAttachment creation (object layer, spike S22). Fluent has no magnet (custom icon).
+  [docs/plan/M6.md](plan/M6.md): observation → task map, 15 serial tasks (one thread and one PR
+  each), spikes S18–S22 in M6-04. [ADR-021](adr/021-m6-beta-review.md) (Accepted by the owner the same day): D-35 … D-40,
+  applied as ARCHITECTURE.md Rev 0.9. The owner answered the ten
+  planning questions the same day (recorded at the end of the plan; one change from the draft:
+  Home's rotate buttons rotate the view, Organize rotates pages).
 
 - **Session 21 — merge repair (PR #53 ↔ PR #54).** The merge of `main` into `m5/ocr` resolved
   its three conflicts (`en.json`, `tests/icons.test.ts`, this file) by keeping the OCR side only,
@@ -1319,6 +1332,7 @@ Rev 0.8; M5-05 (acceptance, owner interop) open. Rev 0
 
 | Date       | Ref              | Decision                                                                                                                                                                                                                                                                                                                                                                                                                                                  |
 | ---------- | ---------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| 2026-11-01 | ADR-021          | Owner accepted the M6 plan (beta review) and ADR-021: shell (D-35), adaptive ribbon with a Form tab (D-36), comment styles (D-37), comment workflow incl. page copy/paste, flatten, attach file, snapshot, bookmark editing (D-38), basic form fields (D-39), password security and visual signatures (D-40). Home rotates the view, Organize the pages. ARCHITECTURE.md Rev 0.9.                                                                         |
 | 2026-10-03 | ADR-020          | Owner accepted ADR-020 (OCR) with amendments: the five most spoken languages including Hindi (English precached, the others on first use), and a tick box to recognize pages that already have text. The text layer uses Tesseract's glyphless font so every script round-trips. ARCHITECTURE.md Rev 0.8 (§1.5, §2 D-34, §3.1, §3.2, §7.14, §9, §13 M5, §14).                                                                                             |
 | 2026-10-01 | ADR-019          | Owner accepted Express Extract in two steps (Find Tables, then Save…): the save picker needs a fresh click and nothing is created when no table is found. ARCHITECTURE.md Rev 0.7 (§7.7).                                                                                                                                                                                                                                                                 |
 | 2026-09-29 | ADR-018          | Owner accepted ADR-018 decisions 2–3 after the M4-19 spike: hybrid route — object copy in the Work worker for Import from PDF and copy/paste (pending import section folded into the next Ctrl+S), re-creation + object-layer patches for JSON import. ARCHITECTURE.md Rev 0.6 (§7.1 comment transfer, §7.6 JSON imports, §13 M4).                                                                                                                        |
