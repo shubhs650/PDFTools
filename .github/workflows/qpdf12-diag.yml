@@ -1,0 +1,53 @@
+# TEMPORARY: reports what qpdf 12 (ubuntu-latest = 26.04) says about the files the
+# save and print-ready tests write. Removed before the PR merges.
+name: qpdf 12 diagnostics
+
+on:
+  push:
+    branches: ['claude/project-thread-4pihgu']
+
+permissions:
+  contents: read
+
+jobs:
+  diag:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: .nvmrc
+          cache: npm
+      - run: npm ci
+      - run: sudo apt-get install -y qpdf && qpdf --version && lsb_release -a
+      - name: Run the two failing test files (failures expected)
+        run: npx vitest run tests/save/patch-save.test.ts tests/print/print-ready.test.ts || true
+      - name: qpdf --check and --decrypt on every written file
+        run: |
+          set +e
+          mkdir -p diag
+          for f in /tmp/pdftools-*/*.pdf; do
+            for pw in "" owner-pw o u user-pw; do
+              out=$(qpdf ${pw:+--password=$pw} --check "$f" 2>&1); s=$?
+              echo "$out" | grep -q "invalid password" || break
+            done
+            if [ $s -ne 0 ]; then
+              echo "::group::$f (check exit $s, pw '$pw')"
+              echo "$out"
+              echo "::endgroup::"
+              cp "$f" "diag/$(basename "$(dirname "$f")")__$(basename "$f")"
+            fi
+          done
+          for f in /tmp/pdftools-patch-*/dec-*.pdf; do
+            echo "::group::decrypt $f"
+            qpdf --decrypt --password=owner-pw "$f" "$f.diag.out"; echo "exit $?"
+            ls -la "$f.diag.out" || true
+            echo "::endgroup::"
+            cp "$f" diag/
+          done
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: qpdf12-diag
+          path: diag/
+          retention-days: 7
