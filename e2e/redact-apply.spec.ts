@@ -65,7 +65,7 @@ async function removePage9Mark(page: Page) {
   await expect(panel(page)).toContainText('8 marks waiting to be applied.');
 }
 
-test('apply: a new verified file without any secret; the open document stays as it is', async ({
+test('apply: a new verified file without any secret; the open document stays as it is @smoke', async ({
   page,
 }) => {
   const id = await open(page, adversarialPdf());

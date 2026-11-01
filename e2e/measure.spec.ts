@@ -110,7 +110,7 @@ const R = [
   { x: 100, y: 500 - 100 * MM },
 ];
 
-test('Distance at 1:100: live value, value and label, vertex edit in one undo step, saved and read back', async ({
+test('Distance at 1:100: live value, value and label, vertex edit in one undo step, saved and read back @smoke', async ({
   page,
 }) => {
   const bytes = simplePdf(1);

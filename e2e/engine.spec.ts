@@ -61,7 +61,7 @@ test('CJK text renders with the self-hosted fallback fonts, from our origin', as
   expect(fontRequests).toContain('/fonts/sc/NotoSansHans-Regular.otf');
 });
 
-test('negative control: EmbedPDF’s default CDN fonts are blocked by the CSP (ADR-003)', async ({
+test('negative control: EmbedPDF’s default CDN fonts are blocked by the CSP (ADR-003) @smoke', async ({
   page,
   pdfs,
   guard,

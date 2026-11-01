@@ -44,7 +44,7 @@ async function openContract(page: Page, pdfs: { contract(n?: number): Buffer }, 
   await expect(status(page)).toContainText(`of ${String(pages)}`);
 }
 
-test('zoom shortcuts, the zoom box, the level menu and the 1 %–6400 % clamp', async ({
+test('zoom shortcuts, the zoom box, the level menu and the 1 %–6400 % clamp @smoke', async ({
   page,
   pdfs,
 }) => {

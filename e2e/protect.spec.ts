@@ -37,7 +37,7 @@ async function axeClean(page: Page, selector: string): Promise<void> {
   ).toEqual([]);
 }
 
-test('open password: wrong, then right; the document opens restricted with a banner', async ({
+test('open password: wrong, then right; the document opens restricted with a banner @smoke', async ({
   page,
 }) => {
   await page.goto('/');
