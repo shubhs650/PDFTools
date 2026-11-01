@@ -39,6 +39,13 @@ test('keyboard: arrows between tabs and controls, Tab into the toolbar, Esc to t
   await page.keyboard.press('ArrowRight');
   await expect(page.getByRole('tab', { name: 'View' })).toBeFocused();
   await expect(page.getByRole('tab', { name: 'View' })).toHaveAttribute('aria-selected', 'true');
+  // The top bar (M6-01): OpenEngTools Home, Report an Issue, Full Screen; then collapse.
+  for (const name of ['OpenEngTools Home', 'Report an Issue on GitHub']) {
+    await page.keyboard.press('Tab');
+    await expect(page.getByRole('link', { name })).toBeFocused();
+  }
+  await page.keyboard.press('Tab');
+  await expect(page.getByRole('button', { name: 'Full Screen' })).toBeFocused();
   await page.keyboard.press('Tab'); // collapse button
   await page.keyboard.press('Tab'); // into the toolbar: one tab stop
   const toolbar = page.getByRole('toolbar', { name: 'View commands' });

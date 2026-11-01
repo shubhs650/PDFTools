@@ -1,12 +1,37 @@
 # PDFTools — Progress
 
-_Last updated: 2026-11-01 (session 22: M6 plan from the beta users' review)_
+_Last updated: 2026-11-01 (session 23: M6-01 top bar, full screen, magnet toggle)_
 
 **Current milestone:** M6 — Beta review (plan in [docs/plan/M6.md](plan/M6.md), scope changes in
-[ADR-021](adr/021-m6-beta-review.md), **Accepted** 2026-11-01; ARCHITECTURE.md Rev 0.9; next task M6-01). M5 — OCR: M5-01 … M5-04 done under [ADR-020](adr/020-m5-ocr.md); M5-05 (owner
+[ADR-021](adr/021-m6-beta-review.md), **Accepted** 2026-11-01; ARCHITECTURE.md Rev 0.9; M6-01 done; next task M6-02). M5 — OCR: M5-01 … M5-04 done under [ADR-020](adr/020-m5-ocr.md); M5-05 (owner
 interop) folds into M6-15. Rev 0 (M0–M4) is complete on the agent side.
 
 ## Done
+
+- **Session 23 — M6-01 top bar, full screen, magnet toggle (ADR-021 D-35).** The banner's first
+  row starts with the app icon (drawn inline from `public/icons/icon.svg`, so no request; a unit
+  test keeps the two equal) and **PDFTools**, which is now the page's visible `h1`, then the quick
+  access toolbar. The right end of the ribbon's tab row has **OpenEngTools Home** (Fluent `Home`,
+  `https://www.openengtools.com`), **Report an Issue on GitHub** (Fluent `Bug`, the repository's
+  new-issue page prefilled with the app version + commit, browser family and OS family only:
+  `src/app/links.ts` `issueUrl`, which takes no document state) and **Full Screen** /
+  **Exit Full Screen** (Fluent `FullScreenMaximize` / `FullScreenMinimize`; the Fullscreen API on
+  the document element, so the ribbon, panes and status bar stay; `Ctrl+Shift+F11` in the keymap,
+  named in Help → Viewing; Esc is the browser's own exit). Both links are `<a target="_blank"
+rel="noopener noreferrer">`; the commands `app.home` / `app.reportIssue` open the same URLs with
+  `window.open(…, 'noopener,noreferrer')` for later menus. The status bar's "Enable Snapping"
+  text button is now an icon toggle with the **Measure tab's magnet** (`measure.snapping`, drawn
+  in M3-06, Filled while pressed) instead of a new drawing, so the two snapping controls match;
+  name and tooltip "Enable Snapping". The error report dialog has a line and link to the GitHub
+  option; File → Privacy and Help → Privacy say both links open a new tab and send nothing by
+  themselves. New: `src/app/TopBar.tsx`, `src/app/fullScreen.ts`, `src/app/links.ts`; commands
+  `app.home`, `app.reportIssue`, `view.fullScreen`, `view.exitFullScreen` (tab `topBar`,
+  milestone `M6`). Tests: unit `tests/app/topBar.test.tsx` (URL builder, nothing from an open
+  document, icon equality, link attributes, key), e2e `e2e/top-bar.spec.ts` (brand left of the
+  quick access toolbar and the tab row not scrolling at 1280 px; both links open new tabs with no
+  opener, the app page itself requests nothing; full screen by button and key with the frame
+  filling the screen; magnet pressed/unpressed by keyboard, axe clean); `keys.spec` (56
+  bindings) and `ribbon.spec` (Tab order through the top bar) updated.
 
 - **Session 22 — M6 plan (beta review).** The owner collated beta users' feedback
   (`PDF_Tools_review.docx`, 17 screenshots, not in the repository): A — top bar (brand, OpenEngTools
