@@ -22,8 +22,9 @@ interop) folds into M6-15. Rev 0 (M0–M4) is complete on the agent side.
   needed; no FileAttachment creation (object layer, spike S22). Fluent has no magnet (custom icon).
   [docs/plan/M6.md](plan/M6.md): observation → task map, 15 serial tasks (one thread and one PR
   each), spikes S18–S22 in M6-04. [ADR-021](adr/021-m6-beta-review.md) (Proposed): D-35 … D-40 and
-  the ARCHITECTURE.md Rev 0.9 amendments, applied only after acceptance. Ten questions asked of
-  the owner; the plan follows the recommended answers until they reply.
+  the ARCHITECTURE.md Rev 0.9 amendments, applied only after acceptance. The owner answered the ten
+  planning questions the same day (recorded at the end of the plan; one change from the draft:
+  Home's rotate buttons rotate the view, Organize rotates pages).
 
 - **Session 21 — merge repair (PR #53 ↔ PR #54).** The merge of `main` into `m5/ocr` resolved
   its three conflicts (`en.json`, `tests/icons.test.ts`, this file) by keeping the OCR side only,

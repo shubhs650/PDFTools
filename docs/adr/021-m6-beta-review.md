@@ -62,7 +62,7 @@ needed):
 **D-35 — App shell (top bar, full screen, status bar).**
 The banner gets, left of the quick access toolbar, the product mark (our existing app icon,
 `public/icons/icon.svg`) and the name "PDFTools"; at the right end of the tab row: **OpenEngTools
-home** (opens `https://www.openengtools.com` in a new tab), **Report an issue on GitHub** (opens
+home** (standard Fluent Home icon; opens `https://www.openengtools.com` in a new tab), **Report an issue on GitHub** (opens
 the repository's new-issue page in a new tab, prefilled only with app version, commit, browser
 and OS — never document content, rule 10), and **Full screen** (Fullscreen API on the whole app
 root — ribbon, panes and status bar together; toggle button plus `F11`-style shortcut defined in
