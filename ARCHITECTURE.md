@@ -1,7 +1,7 @@
-# PDFTools — Architecture & Product Specification (Rev 0.8)
+# PDFTools — Architecture & Product Specification (Rev 0.9)
 
 **App:** PDFTools · **URL:** `pdf-tools.openengtools.com` · **Platform:** Open Engineering Tools (OET)
-**Status:** Approved for implementation · **Last updated:** 03-Oct-2026 (Rev 0.8)
+**Status:** Approved for implementation · **Last updated:** 01-Nov-2026 (Rev 0.9)
 **Companion file:** `CLAUDE.md` (standing rules for the coding agent — read it first)
 
 > This document is the single source of truth. Where code and this document disagree, this document wins until it is deliberately amended. Decisions are numbered (D-xx) so commits, issues and ADRs can reference them.
@@ -15,6 +15,8 @@
 > **Rev 0.4 amendment** — [ADR-010](docs/adr/010-s6-fluent-icons.md) (owner-approved): Fluent **Regular** icons (Filled for active states) replace the deprecated Color style (D-20, §8).
 
 > **Rev 0.5 amendment** — [ADR-017](docs/adr/017-m4-redaction.md) decisions 3 and 5 (owner-approved 2026-09-29): §7.9 steps 0 and 3 (crossing paths re-cut through PDFium's page-object API; wider sanitize list).
+
+> **Rev 0.9 amendment** — [ADR-021](docs/adr/021-m6-beta-review.md) (owner-approved 2026-11-01): **M6 — beta review** — top bar, full screen and magnet snapping (D-35), adaptive ribbon with a **Form** tab (D-36), comment styles and defaults (D-37), context menus, page cut/copy/paste, flatten, attach file, snapshot, flags and bookmark editing (D-38), basic AcroForm field creation (D-39), password security and visual signatures (D-40) (§1.5, §2, §3.2, §5, §7.1, §7.10–§7.12, §7.15, §8, §10.2, §10.3, §13 M6, §14).
 
 > **Rev 0.8 amendment** — [ADR-020](docs/adr/020-m5-ocr.md) (owner-approved with amendments 2026-10-03): **OCR** (Rev 1 item 1) — the Tesseract WASM core in an OCR worker, five languages, the text layer by our object layer with a glyphless font (§1.5, §3.1, §3.2, §7.14, §9, §13 M5, §14, D-34).
 
@@ -46,7 +48,7 @@ All performance work and acceptance tests target both:
 | **Drawing** | CAD-exported (AutoCAD / SmartPlant / E3D), < 100 MB, A0, dense vectors | pan, deep zoom to 6400 %, crisp tiled re-render, never freezes |
 
 ### 1.5 Non-goals for Rev 0
-Tablet/phone UI · Safari parity · PDF text/content editing · form design · XFA forms · revision compare (**parked, see §14**) · applying passwords / creating signatures · certificate trust validation · any server-side processing · any analytics beyond Cloudflare's server-side request counts (no analytics script; ADR-001 B1).
+Tablet/phone UI · Safari parity · PDF text/content editing · form design beyond the basic AcroForm fields of §7.10 (signature, button, barcode, image and scripted fields; calculations) · JavaScript in forms · XFA forms · revision compare (**parked, see §14**) · certificate-based signing (visual signatures only, §7.11) · certificate trust validation · any server-side processing · any analytics beyond Cloudflare's server-side request counts (no analytics script; ADR-001 B1).
 
 ---
 
@@ -87,6 +89,12 @@ Tablet/phone UI · Safari parity · PDF text/content editing · form design · X
 | D-31 | Redaction in Rev 0 with strict safety rules (§7.9), using EmbedPDF's redaction engine (ADR-001 B8) |
 | D-32 | Public beta only after M1–M4 complete; solo internal testing with **public or self-made PDFs only** |
 | D-33 | Interop verified against **Acrobat Reader + PDF-XChange**. Bluebeam "expected, not verified" — never claimed publicly until confirmed |
+| D-35 | App shell (ADR-021): product mark and name in the banner; **OpenEngTools home** and **Report an issue on GitHub** open in a new tab (user navigations, no app request, no document content); **Full screen** of the whole app; status-bar snapping is a magnet toggle |
+| D-36 | **Adaptive ribbon** (ADR-021): groups step down from full labels to icons to a group dropdown so every tab fits 1280 px; ribbon tabs gain **Form** |
+| D-37 | **Comment styles** (ADR-021): per-tool defaults (red, 10 pt text, 1 pt lines; highlight and sticky note yellow) and style palettes, stored on the device |
+| D-38 | **Comment workflow** (ADR-021): context menus; cut/copy/paste of comments on the page; flatten; Attach File; Snapshot; Locked/Printable/Marked flags and review history; bookmark editing |
+| D-39 | **Form field creation** (ADR-021): Text, Check Box, Radio, List, Dropdown via EmbedPDF's form plugin; no JavaScript |
+| D-40 | **Password security** (apply/remove, new file, full rewrite, verified, AES-256) and **visual signatures** (draw/type/image as standard annotations; not certificate signing) (ADR-021) |
 | D-34 | **OCR** (Rev 1 item 1, ADR-020): Tesseract WASM core in its own worker, five languages (English precached, the rest on first use), invisible text layer written by our object layer with a glyphless font, pages with text skipped unless asked; needs the modify permission |
 
 ---
@@ -159,6 +167,8 @@ Rules:
 | Fallback fonts (CJK, Arabic, Hebrew, Latin) | `@embedpdf/fonts-*`, **self-hosted** (never EmbedPDF's CDN default) | OFL-1.1 (ADR-002) |
 | OCR engine | `tesseract.js-core` (the WASM core only, in our own worker; never tesseract.js's CDN-defaulting worker layer) | Apache-2.0 (Tesseract; Leptonica BSD-2) |
 | OCR language data | `@tesseract.js-data/{eng,chi_sim,hin,spa,fra}`, **self-hosted** under `/ocr/` | MIT (packages); data Apache-2.0 |
+| Context menus | `@radix-ui/react-context-menu` (ADR-021) | MIT |
+| Form field creation · visual signatures | `@embedpdf/plugin-form`, `@embedpdf/plugin-signature` at the pinned EmbedPDF version (ADR-021) | MIT |
 | License gate | own script `scripts/check-licenses.ts` + `scripts/license-policy.ts` in CI | MIT (ours) |
 
 **Forbidden:** GPL, LGPL-with-static-link concerns, AGPL (incl. PyMuPDF, Ghostscript, CoherentPDF, BentoPDF source), SSPL, "non-commercial" licenses, any runtime CDN dependency. MPL-2.0 is forbidden in anything that ships; it is allowed only for dev-only tooling that npm marks `dev` in the lockfile (e.g. Vite's lightningcss, axe-core) (ADR-002).
@@ -221,7 +231,8 @@ Ctrl+S calls PDFium `FPDF_SaveAsCopy(FPDF_INCREMENTAL)` in the Render worker, th
 - Thumbnails and text layers load lazily in viewport order.
 - View modes: single, continuous, facing, continuous facing; rotate view; fit page / width / visible / actual size; loupe and pan-and-zoom window are **nice-to-have** within Rev 0.
 - Left rail panes: Bookmarks, Thumbnails, Comments, Attachments, Signatures, Search results, Layers (display toggle only).
-- Status bar: page nav, zoom, view mode, **Enable Snapping**, "✓ Ready offline" / "Preparing offline… n %", "Update ready".
+- Comments pane: one toolbar row (options menu with sort, group and filters; Find runs on Enter), cards grouped by page with replies, status and lock, selection mirrored with the page, context menu (ADR-021).
+- Status bar: page nav, zoom, view mode, **snapping** (magnet toggle, ADR-021), "✓ Ready offline" / "Preparing offline… n %", "Update ready".
 
 ---
 
@@ -260,6 +271,12 @@ Types: **every annotation type/tool supported by EmbedPDF** (ADR-001 B7). No cus
 - Undo/redo per document, unlimited within a session.
 - Comments pane: list, filter (author, status, type, page), sort, reply, set status, jump-to.
 - **Comment transfer:** import comments from another PDF (e.g. an earlier revision; page range, filters, page mapping, duplicates skipped by `/NM`) or from our JSON export, and copy/paste comments between documents; imported comments are standard annotation objects saved by the next Ctrl+S (ADR-018).
+- **Styles** (D-37, ADR-021): every tool has default properties (red `#FF0000`, 10 pt text, 1 pt lines and borders; highlight and sticky note yellow), editable in the Properties pane while the tool is active; a **style palette** per tool (presets incl. cloudy variants, the user's own styles, Comment Styles Palette manager, export/import `.pdftools-styles.json`). Styles are property sets applied through the normal property path; appearances stay PDFium's.
+- **Context menus and clipboard** (D-38, ADR-021): right-click (or Shift+F10 / Menu key) on a comment on the page, a comment card, the page background, bookmarks and thumbnails; every item is a command-table command. Cut/Copy/Paste of comments on the page (Ctrl+X/C/V; Paste from the page menu lands at the pointer).
+- **Flatten** selected or all comments (page range) into page content in the Render worker; one undo step; capability **modify**; marks the document "optimize recommended".
+- **Attach File**: a standard `/FileAttachment` annotation with an embedded file written by our object layer with a paperclip appearance drawn by us — the one exception to "no custom appearance streams" (spike S22; fallback: a document attachment).
+- **Snapshot**: a rectangle rendered by the Render worker and written to the system clipboard as PNG; needs **copy**.
+- **Flags and marks**: Locked, Printable, Read only, Marked (review state model) and review history in the Properties pane (a property grid: General, Style, Text) and the context menu.
 - **Auto-numbering**: each markup gets a sequence number shown in the comments pane and optionally on-page; used by the CRS export.
 
 ### 7.2 Reviewer profile (D-16)
@@ -314,11 +331,17 @@ Rotate, delete, insert (blank / from file), extract to new PDF, merge files, reo
 ### 7.10 Forms (D-26)
 Fill & save AcroForm text, checkbox, radio, combo, list; tab order; reset form. Saved incrementally. XFA → banner "XFA forms are not supported."
 
+**Create fields (D-39, ADR-021):** Form tab — Select Fields, Text, Check Box, Radio, List, Dropdown, Highlight Fields, Reset Form — on `@embedpdf/plugin-form`; field properties (name, tooltip, required, read-only, default, options, export values, font, colors) in the Properties pane; tab order editable; capability **modify**; saved incrementally (narrow tail). No JavaScript is written or run; signature, button, barcode, image and scripted date fields are later.
+
 ### 7.11 Signatures (D-24)
 Signature pane: signer, time, reason, location, covered revision. Integrity: hash of byte ranges vs CMS message digest (PKI.js) → "Unchanged since signing" / "Modified after signing". Trust: always "Not verified (offline)". Never contacts OCSP/CRL.
 
+**Sign Document (D-40, ADR-021):** visual signatures and initials — drawn, typed or an image — via `@embedpdf/plugin-signature`, placed as standard Stamp/Ink annotations (optionally flattened); saved signatures stay on this device. The UI states it is **not** a certificate-based digital signature (that remains Rev 1 item 3).
+
 ### 7.12 Protected PDFs (D-19)
 Open-password prompt; read permission flags; disable restricted commands with an explanatory banner; owner password grants full access. Never bypass restrictions.
+
+**Password Security (D-40, ADR-021):** set an open and/or permissions password with permission tick boxes, or **Remove Security** with full rights; engine `setDocumentEncryption` / `removeEncryption`, AES-256 only (spike S18). Output is always a **new file via Save As with a full rewrite** (never Ctrl+S, never the original by default), reopened and verified in the Work worker (passwords, permissions, page and annotation counts) before success; signed documents warn first. Passwords are never stored.
 
 ### 7.13 Print (D-25)
 Own dialog: range (all, current page, current view, selected area, custom), fit / actual / custom %, markups on / off / only, quality (standard / high DPI for drawings), orientation auto. Renders pages in the Work worker (refreshed to the current revision first, annotations included) at the chosen DPI into a print iframe. **Export Print-Ready PDF**: copy with annotations flattened (vector-quality elsewhere). For large/high-DPI jobs, printing the flattened print-ready PDF through the browser's built-in PDF viewer is acceptable; the required narrowly scoped `frame-src blob:` CSP addition is designed in M2 (ADR-001 B13).
@@ -326,12 +349,17 @@ Own dialog: range (all, current page, current view, selected area, custom), fit 
 ### 7.14 OCR (D-34)
 Convert → **Recognize Text (OCR)** (ADR-020). Dialog: pages (all / current / selected / custom), **languages** as tick boxes (English, Chinese Simplified, Hindi, Spanish, French — several at once; English precached, the others downloaded on first use and kept for offline use, said in the dialog), and **"Also recognize pages that already have text"** (off by default: such pages are skipped and counted). The Work worker renders each page as displayed (8-bit gray, 300 dpi, the document as it is now); the OCR worker (Tesseract LSTM, SIMD build) returns words with boxes and lines with baselines; the Work worker writes the **text layer** with our object layer: per page one invisible text stream (render mode 3) appended to `/Contents` behind a `q`/`Q` wrap of the untouched original streams, words on their baselines in any direction and stretched to their boxes, one embedded **glyphless font** per document (Tesseract's `pdf.ttf`: CIDFontType2, Identity-H, identity ToUnicode) so every script round-trips in Acrobat, PDF-XChange and here; a layer this app wrote before is replaced, other text stays. Applied by the Render worker as one undo step (the comment-transfer route, capability **modify**, rule 9); Ctrl+S stays a narrow verified revision. Progress per page with Cancel (between pages, or the worker terminated mid-page). Search, selection, copy, exports and table detection then see the text like any text page (§6, §7.6, §7.7). Limits: BMP characters; no orientation detection or deskew; a foreign OCR layer is never removed.
 
+### 7.15 Bookmark editing (D-38)
+New (from the current view), rename (F2), delete / delete but keep children / delete only children, set destination, cut/copy/paste within the document, drag to reorder and nest, expand/collapse all — from the Bookmarks pane toolbar and context menu. Edits go through the engine's `setBookmarks` in the Render worker as one undo step each (capability **modify**) and are saved by Ctrl+S (spike S21 confirms the narrow tail) (ADR-021).
+
 ---
 
 ## 8. UI specification
 
-- Ribbon tabs (Rev 0) — this list is authoritative; `docs/ui-reference/` images are layout-only, and out-of-scope commands are omitted rather than shown disabled (ADR-001 B6): **File** (backstage: open, recent, save, save as, save optimized, print, properties, settings, about/privacy), **Home**, **View**, **Comment**, **Measure**, **Organize**, **Convert**, **Protect** (redact, security info, signatures), **Help**.
+- Ribbon tabs (Rev 0) — this list is authoritative; `docs/ui-reference/` images are layout-only, and out-of-scope commands are omitted rather than shown disabled (ADR-001 B6): **File** (backstage: open, recent, save, save as, save optimized, print, properties, settings, about/privacy), **Home**, **View**, **Comment**, **Form** (ADR-021), **Measure**, **Organize**, **Convert**, **Protect** (redact, security info, signatures), **Help**.
+- **Top bar** (D-35, ADR-021): product mark and "PDFTools" at the left; **OpenEngTools** (standard Home icon), **Report an issue** (GitHub, new tab, version/browser/OS only) and **Full screen** (the whole app; Esc leaves) at the right.
 - Large (32 px) and small (16/20 px) buttons, groups with labels, split buttons and dropdowns, collapsible ribbon, keyboard access (Alt key tips — nice-to-have).
+- **Adaptive ribbon** (D-36, ADR-021): when a tab does not fit, groups step down by priority — full labels → icons with short labels → icon-only grid → one group button opening a dropdown — so every tab fits 1280 px and every command keeps its accessible name and keyboard path. Home's rotate buttons rotate the **view**; Organize rotates pages.
 - Icons: Fluent System Icons **Regular** style (Filled for active/toggled states), colored via design tokens (`currentColor`); small buttons use 20 px glyphs, large (32 px) buttons use the native 32 px glyph or the 28/24 px glyph scaled up. The 23 missing icons listed in [ADR-010](docs/adr/010-s6-fluent-icons.md) and [S6-icon-map.md](docs/plan/S6-icon-map.md) (incl. cloud, calibrate, scale viewport, CRS export, stamp; express extract uses Fluent `TableLightning`) are drawn in the same grid/line style in `/src/ui/icons`. Fluent icons are imported per icon by path, via one registry (ADR-010).
 - Design tokens (color, spacing, type, radius, elevation) as CSS variables; light theme default; dark theme deferred but tokens must support it.
 - Layout minimum 1280 px wide.
@@ -374,9 +402,10 @@ Analytics uses **Cloudflare's server-side request analytics only**. No beacon sc
 - Dialog shows the **exact payload** (editable description + app version, browser, OS, error stack, feature/module, anonymous session id). User reviews → Submit.
 - POST to same-origin `/api/report` (Cloudflare Pages Function) → store in D1 → email notification to the developer. Rate-limited per IP.
 - **Hard rule: never include document content** — no page text, file names, paths, annotation text or screenshots.
+- The top bar's **Report an issue** opens the repository's GitHub new-issue page in a new tab, prefilled with app version, commit, browser and OS only; the app itself sends nothing (D-35, ADR-021).
 
 ### 10.3 Local data
-IndexedDB: profile, schemes, settings, recent-file handles, table templates. OPFS: recovery snapshots. Privacy page lists all of it; Settings → "Clear all local data".
+IndexedDB: profile, schemes, settings, recent-file handles, table templates, comment tool defaults and styles, saved visual signatures (ADR-021). OPFS: recovery snapshots. Privacy page lists all of it; Settings → "Clear all local data".
 
 ---
 
@@ -441,13 +470,16 @@ Text/images/MD/HTML, Word (beta), tables (beta: Express + Review), page operatio
 ### M5 — OCR (Rev 1 item 1)
 Convert → Recognize Text (OCR) per §7.14: spike S17 and ADR-020, the OCR worker and client, the raster and text-layer jobs, the dialog with languages and the re-recognize option, acceptance and interop (`docs/plan/M5.md`).
 
+### M6 — Beta review (ADR-021)
+The beta users' review (2026-11-01): top bar and full screen, context menus and page copy/paste, comment styles and defaults, Comments pane and property grid, adaptive ribbon with new Comment, Home and Form tabs, flatten, snapshot, attach file, bookmark editing, password security, visual signatures, form field creation; spikes S18–S22; acceptance (`docs/plan/M6.md`).
+
 ---
 
 ## 14. Roadmap after Rev 0
 
-**Rev 1 (in order):** 1. OCR (scanned docs, search in scans, scanned tables) — **in progress as M5** (ADR-020) · 2. CRS round-trip import + custom column templates · 3. Protect: apply password/permissions, create digital signatures from user's certificate file (offline) · small items: stamp designer, shortcut remapping, poster tiling.
+**Rev 1 (in order):** 1. OCR (scanned docs, search in scans, scanned tables) — **in progress as M5** (ADR-020) · 2. CRS round-trip import + custom column templates · 3. Protect: create certificate-based digital signatures from the user's certificate file (offline) (applying passwords and visual signatures moved to M6, ADR-021) · small items: stamp designer, shortcut remapping, poster tiling.
 
-**Rev 2+:** PDF text editing · form design · advanced page tools (headers/footers, watermarks, Bates) · tablet UI · local folder search · native wrapper (.exe/.msi) · dark theme.
+**Rev 2+:** PDF text editing · form design beyond M6's basic fields · advanced page tools (headers/footers, watermarks, Bates) · tablet UI · local folder search · native wrapper (.exe/.msi) · dark theme.
 
 **Parked:** Revision compare for drawings — **blocked pending the owner's employment-agreement / IP clearance.** Do not design or build until explicitly unblocked. If later cleared: clean-room implementation from public techniques only.
 

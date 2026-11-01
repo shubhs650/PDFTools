@@ -1,6 +1,6 @@
 # ADR-021: M6 — beta review: UI polish, comment workflow, forms, passwords, signatures
 
-- **Status:** Proposed
+- **Status:** Accepted (owner, 2026-11-01; ARCHITECTURE.md Rev 0.9 applied)
 - **Date:** 2026-11-01
 - **Deciders:** owner (Shubham) / agent planning session
 - **Related decisions:** D-01, D-03, D-19, D-20, D-22, D-24, D-26, D-29, D-30 (ARCHITECTURE.md §2);
@@ -141,7 +141,7 @@ this device only (Privacy page and Clear all local data cover them). The UI says
 is **not** a certificate-based digital signature. Certificate signing (PKCS#12, CMS) stays Rev 1
 item 3.
 
-### ARCHITECTURE.md changes (Rev 0.9, after acceptance)
+### ARCHITECTURE.md changes (Rev 0.9, applied 2026-11-01)
 
 - Header: Rev 0.9 amendment note citing this ADR.
 - §1.5: drop "form design" (basic AcroForm fields are in, per D-39) and "applying passwords"; keep

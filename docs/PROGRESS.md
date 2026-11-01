@@ -3,8 +3,7 @@
 _Last updated: 2026-11-01 (session 22: M6 plan from the beta users' review)_
 
 **Current milestone:** M6 — Beta review (plan in [docs/plan/M6.md](plan/M6.md), scope changes in
-[ADR-021](adr/021-m6-beta-review.md), **Proposed** — waiting for the owner's review; no code
-until accepted). M5 — OCR: M5-01 … M5-04 done under [ADR-020](adr/020-m5-ocr.md); M5-05 (owner
+[ADR-021](adr/021-m6-beta-review.md), **Accepted** 2026-11-01; ARCHITECTURE.md Rev 0.9; next task M6-01). M5 — OCR: M5-01 … M5-04 done under [ADR-020](adr/020-m5-ocr.md); M5-05 (owner
 interop) folds into M6-15. Rev 0 (M0–M4) is complete on the agent side.
 
 ## Done
@@ -21,8 +20,8 @@ interop) folds into M6-15. Rev 0 (M0–M4) is complete on the agent side.
   `setDocumentEncryption`/`removeEncryption`, `flattenAnnotation`, `setBookmarks` — no 3.0 upgrade
   needed; no FileAttachment creation (object layer, spike S22). Fluent has no magnet (custom icon).
   [docs/plan/M6.md](plan/M6.md): observation → task map, 15 serial tasks (one thread and one PR
-  each), spikes S18–S22 in M6-04. [ADR-021](adr/021-m6-beta-review.md) (Proposed): D-35 … D-40 and
-  the ARCHITECTURE.md Rev 0.9 amendments, applied only after acceptance. The owner answered the ten
+  each), spikes S18–S22 in M6-04. [ADR-021](adr/021-m6-beta-review.md) (Accepted by the owner the same day): D-35 … D-40,
+  applied as ARCHITECTURE.md Rev 0.9. The owner answered the ten
   planning questions the same day (recorded at the end of the plan; one change from the draft:
   Home's rotate buttons rotate the view, Organize rotates pages).
 
@@ -1322,6 +1321,7 @@ interop) folds into M6-15. Rev 0 (M0–M4) is complete on the agent side.
 
 | Date       | Ref              | Decision                                                                                                                                                                                                                                                                                                                                                                                                                                                  |
 | ---------- | ---------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| 2026-11-01 | ADR-021          | Owner accepted the M6 plan (beta review) and ADR-021: shell (D-35), adaptive ribbon with a Form tab (D-36), comment styles (D-37), comment workflow incl. page copy/paste, flatten, attach file, snapshot, bookmark editing (D-38), basic form fields (D-39), password security and visual signatures (D-40). Home rotates the view, Organize the pages. ARCHITECTURE.md Rev 0.9.                                                                         |
 | 2026-10-03 | ADR-020          | Owner accepted ADR-020 (OCR) with amendments: the five most spoken languages including Hindi (English precached, the others on first use), and a tick box to recognize pages that already have text. The text layer uses Tesseract's glyphless font so every script round-trips. ARCHITECTURE.md Rev 0.8 (§1.5, §2 D-34, §3.1, §3.2, §7.14, §9, §13 M5, §14).                                                                                             |
 | 2026-10-01 | ADR-019          | Owner accepted Express Extract in two steps (Find Tables, then Save…): the save picker needs a fresh click and nothing is created when no table is found. ARCHITECTURE.md Rev 0.7 (§7.7).                                                                                                                                                                                                                                                                 |
 | 2026-09-29 | ADR-018          | Owner accepted ADR-018 decisions 2–3 after the M4-19 spike: hybrid route — object copy in the Work worker for Import from PDF and copy/paste (pending import section folded into the next Ctrl+S), re-creation + object-layer patches for JSON import. ARCHITECTURE.md Rev 0.6 (§7.1 comment transfer, §7.6 JSON imports, §13 M4).                                                                                                                        |
