@@ -1167,6 +1167,17 @@ Rev 0.8; M5-05 (acceptance, owner interop) open. Rev 0
 
 ## Open issues
 
+- **CI pinned to `ubuntu-24.04` (2026-11-01).** `ubuntu-latest` became 26.04 (apt qpdf 12.3.2) and
+  7 unit tests failed. Both were test-side, not output problems: qpdf 12's `--check` warns on a
+  page with no `/Resources`, which `printPdf()` and a `prunePrintReady` fixture lacked (now added,
+  and `print-ready.test.ts` asserts it on any qpdf); and 26.04's AppArmor profile for qpdf only
+  lets it write `*.pdf`/`*.json`/`*.qdf` under `/tmp`, so `qpdfDecrypt` now writes `-plain.pdf`.
+  All 1089 unit tests passed on 26.04. Also fixed: Ctrl+A then a markup key could arrive before
+  Select All set its selection (the page text is read in the Render worker), arming the tool
+  instead (`e2e/text-markup.spec.ts:136` on 26.04); markup commands now wait for it
+  (`selectionSettled`, M3-08). Left before moving to 26.04: the tile p95 budget in
+  `e2e/perf/annotation-load.spec.ts:37` (56.7 vs 48.25 once on 26.04).
+
 - **Perf gate on `main` after PR #53 (CI run 381, 2026-10-04):** three scenarios failed on the
   GitHub runner — `perf/annotation-load.spec.ts` (one 157 ms task), `perf/scroll.spec.ts` (one
   104 ms task) and `perf/thumbnails.spec.ts` (30 s timeout waiting for the test capability).
