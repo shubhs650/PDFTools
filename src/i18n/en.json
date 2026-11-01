@@ -323,7 +323,7 @@
       "annotationNudge": "Move Selected Comments (1 pt)",
       "annotationNudgeFar": "Move Selected Comments (10 pt)",
       "toolEnter": "Place a note or text box, or finish a polyline",
-      "menuContext": "Open the Context Menu"
+      "menuContext": "Context Menu"
     },
     "key": {
       "ctrl": "Ctrl",

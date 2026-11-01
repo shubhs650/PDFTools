@@ -105,12 +105,8 @@ test('the shortcut sheet opens from Help and lists every binding', async ({ page
   await expect(dialog.getByRole('row', { name: /Find Next/ })).toContainText('F3');
   await expect(dialog.getByRole('row', { name: /Copy Selected Text/ })).toContainText('Ctrl+C');
   await expect(dialog.getByRole('row', { name: /^Cut/ })).toContainText('Ctrl+X'); // M6-02
-  await expect(dialog.getByRole('row', { name: /Open the Context Menu/ })).toContainText(
-    'Shift+F10',
-  );
-  await expect(dialog.getByRole('row', { name: /Open the Context Menu/ })).toContainText(
-    'Menu key',
-  );
+  await expect(dialog.getByRole('row', { name: /^Context Menu/ })).toContainText('Shift+F10');
+  await expect(dialog.getByRole('row', { name: /^Context Menu/ })).toContainText('Menu key');
   await expect(dialog.getByRole('rowheader', { name: 'Close Tab' })).toBeVisible();
   await expect(dialog.getByRole('row', { name: /Close Tab/ })).toContainText('Ctrl+Alt+W');
   await expect(dialog.getByRole('row', { name: /^Undo/ })).toContainText('Ctrl+Z');
