@@ -9,7 +9,7 @@ import { expect, test } from '../support/fixtures.ts';
 const tab = (page: Page) =>
   page.getByRole('tablist', { name: 'Open documents' }).getByRole('tab').first();
 
-test('Ctrl+S with 100 markups: < 1 s, no long tasks', async ({ page, pdfs, guard }) => {
+test('Ctrl+S with 100 markups: < 1 s, no long tasks @smoke', async ({ page, pdfs, guard }) => {
   await page.goto('/');
   const [id] = (await cap(page, 'open', 'openHandles', [
     { name: 'markups.pdf', b64: pdfs.simple(3).toString('base64') },
