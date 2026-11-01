@@ -1,16 +1,29 @@
 # PDFTools — Progress
 
-_Last updated: 2026-10-04 (session 21: repair of the PR #53 merge — main's typecheck, lint and ribbon e2e green again)_
+_Last updated: 2026-11-01 (session 22: M6 plan from the beta users' review)_
 
-**Current milestone:** M5 — OCR (Rev 1 item 1, opened at the owner's request on 2026-10-03;
-plan in [docs/plan/M5.md](plan/M5.md)). M5-01 … M5-04 done on the agent side under
-[ADR-020](adr/020-m5-ocr.md), **accepted with amendments** the same day (five languages
-including Hindi; a tick box to re-recognize pages with text) and applied in ARCHITECTURE.md
-Rev 0.8; M5-05 (acceptance, owner interop) open. Rev 0
-(M0–M4) is complete on the agent side; the public beta (D-32) waits on the owner items in
-[docs/acceptance/M4.md](acceptance/M4.md) §5.
+**Current milestone:** M6 — Beta review (plan in [docs/plan/M6.md](plan/M6.md), scope changes in
+[ADR-021](adr/021-m6-beta-review.md), **Proposed** — waiting for the owner's review; no code
+until accepted). M5 — OCR: M5-01 … M5-04 done under [ADR-020](adr/020-m5-ocr.md); M5-05 (owner
+interop) folds into M6-15. Rev 0 (M0–M4) is complete on the agent side.
 
 ## Done
+
+- **Session 22 — M6 plan (beta review).** The owner collated beta users' feedback
+  (`PDF_Tools_review.docx`, 17 screenshots, not in the repository): A — top bar (brand, OpenEngTools
+  home link, GitHub issue link, full screen), Home additions (snapshot, properties, rotate pair,
+  more comment tools), magnet snapping toggle; B — Comments pane (filters crowd out comments; card
+  list with selection sync), right-click menus everywhere with **copy/paste of comments from the
+  page (non-negotiable)**, a property grid, a style palette, red/10 pt/1 pt defaults, a
+  PDF-XChange-like Comment ribbon with Select Comments, Attach File and Flatten; C — sign document,
+  password protection, form field creation. Checked against EmbedPDF 2.15.1 (the pinned stable):
+  `plugin-form` (five field types), `plugin-signature` (visual), engine
+  `setDocumentEncryption`/`removeEncryption`, `flattenAnnotation`, `setBookmarks` — no 3.0 upgrade
+  needed; no FileAttachment creation (object layer, spike S22). Fluent has no magnet (custom icon).
+  [docs/plan/M6.md](plan/M6.md): observation → task map, 15 serial tasks (one thread and one PR
+  each), spikes S18–S22 in M6-04. [ADR-021](adr/021-m6-beta-review.md) (Proposed): D-35 … D-40 and
+  the ARCHITECTURE.md Rev 0.9 amendments, applied only after acceptance. Ten questions asked of
+  the owner; the plan follows the recommended answers until they reply.
 
 - **Session 21 — merge repair (PR #53 ↔ PR #54).** The merge of `main` into `m5/ocr` resolved
   its three conflicts (`en.json`, `tests/icons.test.ts`, this file) by keeping the OCR side only,
