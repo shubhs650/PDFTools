@@ -34,6 +34,7 @@ import { CloudCheckmark20Regular } from '@fluentui/react-icons/svg/cloud-checkma
 import { CommentMultiple20Filled, CommentMultiple20Regular } from '@fluentui/react-icons/svg/comment-multiple';
 import { Copy20Regular } from '@fluentui/react-icons/svg/copy';
 import { Cursor20Filled, Cursor20Regular, Cursor32Filled, Cursor32Regular } from '@fluentui/react-icons/svg/cursor';
+import { Cut20Regular } from '@fluentui/react-icons/svg/cut';
 import { Delete20Regular, Delete32Regular } from '@fluentui/react-icons/svg/delete';
 import { Dismiss20Filled, Dismiss20Regular } from '@fluentui/react-icons/svg/dismiss';
 import { DocumentAdd20Regular, DocumentAdd28Regular } from '@fluentui/react-icons/svg/document-add';
@@ -94,6 +95,7 @@ import { SaveCopy20Regular, SaveCopy24Regular } from '@fluentui/react-icons/svg/
 import { ScanText20Regular, ScanText32Regular } from '@fluentui/react-icons/svg/scan-text';
 import { Search20Filled, Search20Regular } from '@fluentui/react-icons/svg/search';
 import { SearchSquare20Filled, SearchSquare20Regular } from '@fluentui/react-icons/svg/search-square';
+import { SelectAllOn20Regular } from '@fluentui/react-icons/svg/select-all-on';
 import { SelectObject20Filled, SelectObject20Regular, SelectObject24Filled, SelectObject24Regular } from '@fluentui/react-icons/svg/select-object';
 import { Settings20Regular, Settings32Regular } from '@fluentui/react-icons/svg/settings';
 import { ShieldCheckmark20Regular, ShieldCheckmark32Regular } from '@fluentui/react-icons/svg/shield-checkmark';
@@ -256,6 +258,11 @@ export const FLUENT_GLYPHS: Record<string, FluentGlyphs> = {
   'app.reportIssue': { regular: { small: Bug20Regular } },
   'view.fullScreen': { regular: { small: FullScreenMaximize20Regular } },
   'view.exitFullScreen': { regular: { small: FullScreenMinimize20Regular } },
+  'edit.cut': { regular: { small: Cut20Regular } },
+  'edit.copy': { regular: { small: Copy20Regular } },
+  'edit.paste': { regular: { small: ClipboardPaste20Regular } },
+  'edit.selectAll': { regular: { small: SelectAllOn20Regular } },
+  'edit.properties': { regular: { small: Info20Regular } },
   'status.readyOffline': { regular: { small: CloudCheckmark20Regular } },
   'status.preparingOffline': { regular: { small: ArrowDownload20Regular } },
   'status.updateReady': { regular: { small: ArrowSync20Regular } },

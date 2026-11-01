@@ -49,6 +49,10 @@ function helpKeys(t: TFunction) {
     advancedSearch: k('home.advancedSearch'),
     undo: k('qat.undo'),
     delete: k('comment.delete'),
+    copy: k('edit.copy'),
+    cut: k('edit.cut'),
+    paste: k('edit.paste'),
+    menu: k('menu.context'),
   };
 }
 

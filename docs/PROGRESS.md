@@ -1,12 +1,45 @@
 # PDFTools — Progress
 
-_Last updated: 2026-11-01 (session 23: M6-01 top bar, full screen, magnet toggle)_
+_Last updated: 2026-11-01 (session 24: M6-02 context menus, cut / copy / paste of comments on the page)_
 
 **Current milestone:** M6 — Beta review (plan in [docs/plan/M6.md](plan/M6.md), scope changes in
-[ADR-021](adr/021-m6-beta-review.md), **Accepted** 2026-11-01; ARCHITECTURE.md Rev 0.9; M6-01 done; next task M6-02). M5 — OCR: M5-01 … M5-04 done under [ADR-020](adr/020-m5-ocr.md); M5-05 (owner
+[ADR-021](adr/021-m6-beta-review.md), **Accepted** 2026-11-01; ARCHITECTURE.md Rev 0.9; M6-01 and M6-02 done; next task M6-03). M5 — OCR: M5-01 … M5-04 done under [ADR-020](adr/020-m5-ocr.md); M5-05 (owner
 interop) folds into M6-15. Rev 0 (M0–M4) is complete on the agent side.
 
 ## Done
+
+- **Session 24 — M6-02 context menus; cut / copy / paste of comments on the page (ADR-021
+  D-38 a, b).** _Reproduced on the deployed beta first_ (Playwright, real mouse): selecting a
+  comment and Ctrl+C worked, but Ctrl+V after clicking another page pasted onto the page the view
+  had scrolled to (page 1 while page 2 was clicked, often out of sight), and a right click showed
+  only the browser's menu, whose Copy and Paste do nothing for comments. The failing e2e was
+  committed before the fix. **Ctrl+V** now pastes onto the page last clicked while any of it is in
+  view (else the current page), at the same place (+10 pt on the page they came from, ADR-018).
+  **Right-click menus** (`@radix-ui/react-context-menu` 2.3.7, MIT, on the same `react-menu`
+  2.1.24 as the dropdowns; licenses 770 OK): a shared `src/ui/components/ContextMenu.tsx` whose
+  items are command ids — label, icon, shortcut text (keymap) and disabled reason come from the
+  command table (`contextMenuModel.ts`, pure); disabled items stay focusable and are described by
+  their reason (as in the ribbon); toggles are `menuitemcheckbox`. On a comment (the annotation
+  plugin selects it on pointerdown; the menu is the comment one when the pointer is on a selected
+  comment): Cut, Copy, Paste, Delete · Reply · Set Status ▸ (No status, Accepted, Rejected,
+  Cancelled, Completed) · Copy Style, Apply Style · Properties. On the page background: Paste,
+  Select All · Hand, Select Text, Select Comments · Zoom In/Out, Fit Page, Fit Width · Rotate View
+  Clockwise · Properties. **Paste from a menu** puts the comments' top-left corner at the pointer
+  (kept on the page), on that page (`CommandArgs.at`, a page point; the Work worker's shift in
+  displayed space). New commands (tab `menu`, never in the ribbon): `edit.cut` (**Ctrl+X**: copy,
+  then the threads deleted without asking, one undo step via `joinStep`; a cut pastes back in
+  place, no offset), `edit.copy`, `edit.paste`, `edit.selectAll` (moved from internal actions),
+  `edit.properties` (opens the Properties pane). **Keyboard:** Shift+F10 and the Menu key
+  (`menu.context`, document scope) open the menu on the selected comment or mid-view; Esc closes
+  and focus returns to the document; form fields and text being edited keep the browser's menu.
+  Help → Comment transfer names the keys. New: `src/features/view/{DocumentMenu.tsx,
+documentMenus.ts,pagePoint.ts}`. Tests: unit `tests/app/contextMenu.test.tsx` (menu model,
+  rendered items and disabled reasons, pointer → page point on all four rotations, paste at the
+  pointer, cut without offset, hit test); e2e `e2e/context-menus.spec.ts` (the beta repro; menu
+  Copy → page-menu Paste at the pointer on another page, one undo step, axe clean; Ctrl+X with
+  replies, undo/redo, paste back; Shift+F10 / Menu key, Set Status by keyboard, keyboard paste;
+  page-menu tools/zoom/rotate/properties; a form field keeps the browser menu; a restricted file
+  shows the reasons and runs nothing); `keys.spec` (58 bindings).
 
 - **Session 23 — M6-01 top bar, full screen, magnet toggle (ADR-021 D-35).** The banner's first
   row starts with the app icon (drawn inline from `public/icons/icon.svg`, so no request; a unit

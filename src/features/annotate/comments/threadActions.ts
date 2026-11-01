@@ -7,6 +7,7 @@ import { createStore, useStore } from 'zustand';
 import { t } from '../../../i18n';
 import { requestProfile } from '../../settings/profile/profileStore';
 import { currentAuthor } from '../authoring';
+import { joinStep } from '../historyJoin';
 import { annotationCapability, annotationState } from '../selection';
 import { STATUS_KEYS } from './statusLabels';
 import { descendants, makeReply, makeState } from './thread';
@@ -99,6 +100,21 @@ function planDelete(docId: string, targets: readonly PdfAnnotationObject[]): Del
 function remove(docId: string, plan: DeletePlan): void {
   const sc = scope(docId);
   for (const a of [...plan.deep, ...plan.tops]) sc?.deleteAnnotation(a.pageIndex, a.id);
+}
+
+/**
+ * Cut (M6-02): deletes the comments and their threads without asking (the copy
+ * holds them), as one undo step.
+ */
+export function removeThreads(docId: string, targets: readonly PdfAnnotationObject[]): void {
+  const plan = planDelete(docId, targets);
+  const sc = scope(docId);
+  const [first, ...rest] = [...plan.deep, ...plan.tops];
+  if (!first || !sc) return;
+  sc.deleteAnnotation(first.pageIndex, first.id);
+  joinStep(() => {
+    for (const a of rest) sc.deleteAnnotation(a.pageIndex, a.id);
+  });
 }
 
 /** Delete: at once, or after asking when the comments have replies (M3-12). */

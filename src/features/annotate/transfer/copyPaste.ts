@@ -7,7 +7,13 @@
 // they came from; every copy gets a new /NM, replies follow their copies; one
 // undo step. Copying needs copy in the source, pasting annotate in the target
 // (rule 9).
-import type { PdfAnnotationObject } from '@embedpdf/models';
+//
+// M6-02 (ADR-021 D-38 b): Cut (copy, then delete the threads: one undo step);
+// Paste from a context menu puts the comments at the pointer; Ctrl+V pastes
+// onto the page last clicked while it is in view (the beta pasted onto the
+// page the view had scrolled to), at the same place (+10 pt on their own page
+// unless they were cut).
+import type { PdfAnnotationObject, Rect } from '@embedpdf/models';
 import { createStore, useStore } from 'zustand';
 import { recordError } from '../../../app/diagnostics';
 import { documentStore, securityOf } from '../../../app/store/documentStore';
@@ -15,8 +21,11 @@ import { RpcError } from '../../../engine/errors';
 import { msg, t, type MessageKey } from '../../../i18n';
 import { allows } from '../../../model/permissions';
 import { runTransfer, showPagesError, syncLive, transferBlocked } from '../../pages/pageOps';
+import type { PagePoint } from '../../../app/commands/dispatch';
 import { workClient } from '../../view/host';
+import { pageSizeOf, pasteTargetPage, type Point, type Size } from '../../view/pagePoint';
 import { objectsOf } from '../comments/commentsStore';
+import { removeThreads } from '../comments/threadActions';
 import { annotationState } from '../selection';
 import { announceTransfer } from './transferAnnounce';
 
@@ -28,6 +37,17 @@ export interface Clip {
   sourceDocId: string;
   /** Comments (thread roots) copied. */
   count: number;
+  /** The copied comments' bounding box in their pages' points (Paste at the pointer). */
+  bounds: Box | null;
+  /** Cut: the originals are gone, so a paste onto their page is not shifted. */
+  cut: boolean;
+}
+
+export interface Box {
+  x: number;
+  y: number;
+  width: number;
+  height: number;
 }
 
 export const clipboardStore = createStore<{ clip: Clip | null }>()(() => ({ clip: null }));
@@ -69,16 +89,36 @@ export function rootsOf(
  * on a page it came from, in the same document). Pure.
  */
 export function pastePlan(
-  clip: Pick<Clip, 'pages' | 'sourceDocId'>,
+  clip: Pick<Clip, 'pages' | 'sourceDocId'> & { cut?: boolean },
   target: { docId: string; page: number; pageCount: number },
   mode: PasteMode,
 ): { pageMap: (number | null)[]; shift: boolean } {
   const pageMap = clip.pages.map((p) =>
     mode === 'current' ? target.page : p < target.pageCount ? p : null,
   );
-  const same = clip.sourceDocId === target.docId;
+  const same = clip.sourceDocId === target.docId && clip.cut !== true;
   const shift = same && pageMap.some((p, i) => p !== null && p === clip.pages[i]);
   return { pageMap, shift };
+}
+
+/** The bounding box of rects (page points), or null for none. Pure. */
+export function boundsOf(rects: readonly Rect[]): Box | null {
+  if (rects.length === 0) return null;
+  const x = Math.min(...rects.map((r) => r.origin.x));
+  const y = Math.min(...rects.map((r) => r.origin.y));
+  const right = Math.max(...rects.map((r) => r.origin.x + r.size.width));
+  const bottom = Math.max(...rects.map((r) => r.origin.y + r.size.height));
+  return { x, y, width: right - x, height: bottom - y };
+}
+
+/**
+ * The move that puts the copied comments' top-left corner at `at`, kept on a
+ * page of `page` size when they fit (else at its top or left edge). Pure.
+ */
+export function shiftTo(bounds: Box, at: Point, page: Size): { dx: number; dy: number } {
+  const x = Math.max(0, Math.min(at.x, page.width - bounds.width));
+  const y = Math.max(0, Math.min(at.y, page.height - bounds.height));
+  return { dx: x - bounds.x, dy: y - bounds.y };
 }
 
 function selectedObjects(docId: string): PdfAnnotationObject[] {
@@ -106,18 +146,46 @@ export function pasteBlocked(docId: string | null): MessageKey | null {
   return transferBlocked(docId);
 }
 
-/** Copies the selected comments (with their replies) to the in-app clipboard. */
-export async function copySelectedComments(docId: string): Promise<boolean> {
-  if (copyBlocked(docId)) return false;
+/** Why the selection can't be cut now (null: it can): copy in, and annotate (rule 9). */
+export function cutBlocked(docId: string | null): MessageKey | null {
+  const copy = copyBlocked(docId);
+  if (copy || !docId) return copy;
+  const d = documentStore.getState().docs[docId];
+  return d && !allows(securityOf(d.meta), 'annotate') ? msg('protect.restricted') : null;
+}
+
+/** The thread roots of the selection, as objects. */
+function selectedRoots(docId: string): PdfAnnotationObject[] {
   const st = annotationState(docId);
-  const ids = rootsOf(selectedObjects(docId), st ? objectsOf(st.byUid) : []);
+  const all = st ? objectsOf(st.byUid) : [];
+  const byId = new Map(all.map((a) => [a.id, a]));
+  return rootsOf(selectedObjects(docId), all)
+    .map((id) => byId.get(id))
+    .filter((o): o is PdfAnnotationObject => o !== undefined);
+}
+
+/** Copies the selected comments (with their replies) to the in-app clipboard. */
+export async function copySelectedComments(docId: string, cut = false): Promise<boolean> {
+  if (copyBlocked(docId)) return false;
+  const roots = selectedRoots(docId);
+  const ids = roots.map((o) => o.id);
   try {
     await syncLive(docId);
     const r = await workClient().run('copyComments', { docId, ids, withReplies: true }).promise;
     clipboardStore.setState({
-      clip: { bytes: r.bytes, pages: r.pages, sourceDocId: docId, count: r.count },
+      clip: {
+        bytes: r.bytes,
+        pages: r.pages,
+        sourceDocId: docId,
+        count: r.count,
+        bounds: boundsOf(roots.map((o) => o.rect)),
+        cut,
+      },
     });
-    announceTransfer(docId, t('transfer.copied', { count: r.count }));
+    announceTransfer(
+      docId,
+      cut ? t('transfer.cut', { count: r.count }) : t('transfer.copied', { count: r.count }),
+    );
     return true;
   } catch (err) {
     if (err instanceof RpcError && err.code.startsWith('permission-denied'))
@@ -130,17 +198,43 @@ export async function copySelectedComments(docId: string): Promise<boolean> {
   }
 }
 
-/** Pastes the clipboard into the document (one undo step). */
-export async function pasteComments(docId: string, mode: PasteMode): Promise<boolean> {
+/**
+ * Cut (M6-02): the selected comments go to the clipboard, then they and their
+ * replies are deleted without asking (they travel with the copy): one undo step.
+ */
+export async function cutSelectedComments(docId: string): Promise<boolean> {
+  if (cutBlocked(docId)) return false;
+  const roots = selectedRoots(docId);
+  if (!(await copySelectedComments(docId, true))) return false;
+  removeThreads(docId, roots);
+  return true;
+}
+
+/**
+ * Pastes the clipboard into the document (one undo step). `at` (a context
+ * menu's pointer): every comment onto that page, the group's top-left corner
+ * at the point.
+ */
+export async function pasteComments(
+  docId: string,
+  mode: PasteMode,
+  at?: PagePoint,
+): Promise<boolean> {
   const clip = clipboardStore.getState().clip;
   if (!clip || pasteBlocked(docId)) return false;
   const d = documentStore.getState().docs[docId];
   if (!d) return false;
-  const { pageMap, shift } = pastePlan(
-    clip,
-    { docId, page: d.view.page, pageCount: d.meta.pageCount },
-    mode,
-  );
+  const pointed = mode === 'current' && at?.docId === docId ? at : undefined;
+  const page = pointed?.page ?? pasteTargetPage(docId, d.view.page);
+  const plan = pastePlan(clip, { docId, page, pageCount: d.meta.pageCount }, mode);
+  const { pageMap } = plan;
+  const size = pointed ? pageSizeOf(docId, pointed.page) : null;
+  const move =
+    pointed && size && clip.bounds
+      ? shiftTo(clip.bounds, pointed, size)
+      : plan.shift
+        ? { dx: PASTE_OFFSET, dy: PASTE_OFFSET }
+        : null;
   let count = 0;
   try {
     const ok = await runTransfer(docId, msg('transfer.pasting'), async (progress, onCancel) => {
@@ -153,7 +247,7 @@ export async function pasteComments(docId: string, mode: PasteMode): Promise<boo
             newNames: true,
             withReplies: true,
             pageMap,
-            ...(shift ? { shift: { dx: PASTE_OFFSET, dy: PASTE_OFFSET } } : {}),
+            ...(move ? { shift: move } : {}),
           },
         },
         { onProgress: progress },
