@@ -22,7 +22,15 @@ import { lastAnnotationExport } from '../features/annotate/export/annotationExpo
 import { placeDynamicStamp } from '../features/stamps/stampTools';
 import { MEASURE_INTENT, type MeasureKind } from '../model/measurement';
 import { isStyleTool, type StyleProps } from '../features/annotate/tools/toolDefaults';
-import { setToolDefaults, toolDefaultsStore } from '../features/annotate/tools/toolDefaultsStore';
+import {
+  defaultsFor,
+  setToolDefaults,
+  toolDefaultsStore,
+} from '../features/annotate/tools/toolDefaultsStore';
+import {
+  commentStylesStore,
+  loadCommentStyles,
+} from '../features/annotate/tools/commentStylesStore';
 import type { TestHook } from './hook';
 
 function history(): HistoryCapability | null {
@@ -197,6 +205,13 @@ export function registerAnnotateProbe(hook: TestHook): void {
       if (isStyleTool(toolId)) await setToolDefaults(toolId, props);
     },
     toolDefaultsLoaded: () => toolDefaultsStore.getState().loaded,
+    /** What a new comment of a style tool gets now (shipped + user's defaults, M6-03/07). */
+    styleOf: (toolId: string) => (isStyleTool(toolId) ? defaultsFor(toolId) : null),
+    /** The user's own palette styles (M6-07), loaded first. */
+    commentStyles: async () => {
+      await loadCommentStyles();
+      return commentStylesStore.getState().styles;
+    },
     setProfile: (name: string) => saveProfile({ name, initials: '', discipline: '', company: '' }),
     profile: () => {
       const s = profileStore.getState();

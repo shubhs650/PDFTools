@@ -1,4 +1,4 @@
-import { forwardRef, useId } from 'react';
+import { forwardRef, useId, type Ref } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Tooltip } from '../../ui/components';
 import { CommandIcon } from '../../ui/icons/CommandIcon';
@@ -6,6 +6,8 @@ import type { CommandDef } from '../commands';
 import { commandLabelKey, commandShortKey } from '../commandLabels';
 import { runCommand } from '../commands/dispatch';
 import { useCommandState } from '../commands/useCommandState';
+import { StylePaletteMenu } from '../../features/annotate/palette/StylePaletteMenu';
+import type { StyleTool } from '../../features/annotate/tools/toolDefaults';
 
 export interface RibbonButtonProps {
   command: CommandDef;
@@ -70,3 +72,46 @@ export const RibbonButton = forwardRef<HTMLButtonElement, RibbonButtonProps>(fun
     button
   );
 });
+
+export interface RibbonSplitButtonProps {
+  command: CommandDef;
+  tool: StyleTool;
+  large: boolean;
+  /** The tool button's and the arrow's roving refs and tab indexes. */
+  mainRef: Ref<HTMLButtonElement>;
+  arrowRef: Ref<HTMLButtonElement>;
+  mainTabIndex: number;
+  arrowTabIndex: number;
+}
+
+/**
+ * A comment tool as a split button (M6-07, D-37): the main part starts the
+ * tool with its current style; the arrow opens the tool's style palette. Two
+ * toolbar stops, each with its own accessible name; disabled together.
+ */
+export function RibbonSplitButton({
+  command,
+  tool,
+  large,
+  mainRef,
+  arrowRef,
+  mainTabIndex,
+  arrowTabIndex,
+}: RibbonSplitButtonProps) {
+  const { t } = useTranslation();
+  const state = useCommandState(command.id);
+  return (
+    <span className="ribbon-split" data-split={command.id}>
+      <RibbonButton ref={mainRef} command={command} large={large} tabIndex={mainTabIndex} />
+      <StylePaletteMenu
+        ref={arrowRef}
+        tool={tool}
+        command={command.id}
+        label={t(commandLabelKey(command.id))}
+        tabIndex={arrowTabIndex}
+        disabled={!state.enabled}
+        reason={state.enabled ? null : t(state.reason)}
+      />
+    </span>
+  );
+}

@@ -1,6 +1,7 @@
 // IndexedDB: small app data only (ARCHITECTURE §10.3, D-04). Settings, the
 // recent-files list (file handles + display metadata), the reviewer profile,
-// status schemes, table templates and the comment tools' default styles.
+// status schemes, table templates, the comment tools' default styles and the
+// user's own comment styles (style palette).
 // Never document bytes:
 // those live in the user's file and, for recovery, in OPFS (§4.3).
 //
@@ -47,6 +48,11 @@ export const MIGRATIONS: readonly Migration[] = [
   // existing user starts on the shipped defaults.
   (db) => {
     db.createObjectStore('toolDefaults');
+  },
+  // v6 (M6-07): the user's own comment styles for the style palette (D-37),
+  // tool id → record (validate it: stylePalette.ts). The presets are not stored.
+  (db) => {
+    db.createObjectStore('commentStyles');
   },
 ];
 
@@ -190,6 +196,29 @@ export class AppDb {
   async deleteToolDefaults(tool: string): Promise<void> {
     const tx = this.db.transaction('toolDefaults', 'readwrite');
     tx.objectStore('toolDefaults').delete(tool);
+    await done(tx);
+  }
+
+  /** The user's comment styles as [tool id, record] (validate them: stylePalette.ts). */
+  async listCommentStyles(): Promise<[string, unknown][]> {
+    const tx = this.db.transaction('commentStyles', 'readonly');
+    const store = tx.objectStore('commentStyles');
+    const [keys, values] = await Promise.all([
+      request(store.getAllKeys()),
+      request(store.getAll()),
+    ]);
+    return keys.map((k, i) => [typeof k === 'string' ? k : JSON.stringify(k), values[i]]);
+  }
+
+  async putCommentStyles(tool: string, value: unknown): Promise<void> {
+    const tx = this.db.transaction('commentStyles', 'readwrite');
+    tx.objectStore('commentStyles').put(value, tool);
+    await done(tx);
+  }
+
+  async deleteCommentStyles(tool: string): Promise<void> {
+    const tx = this.db.transaction('commentStyles', 'readwrite');
+    tx.objectStore('commentStyles').delete(tool);
     await done(tx);
   }
 

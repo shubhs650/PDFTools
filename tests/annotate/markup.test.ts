@@ -48,6 +48,16 @@ describe('text markups from a selection (M3-08)', () => {
     expect(made.every((a) => !('custom' in a))).toBe(true);
   });
 
+  it('a highlight takes the style its palette set (M6-07); yellow by default', () => {
+    const [plain] = buildMarkups('highlight', [nextPage], opts(null));
+    expect(plain).toMatchObject({ strokeColor: '#FFE14D', color: '#FFE14D', opacity: 1 });
+    const [styled] = buildMarkups('highlight', [nextPage], {
+      ...opts(null),
+      style: { color: '#A4EBA4', opacity: 0.5 },
+    });
+    expect(styled).toMatchObject({ strokeColor: '#A4EBA4', color: '#A4EBA4', opacity: 0.5 });
+  });
+
   it('makes the markup without text when copying is denied (rule 9)', () => {
     for (const tool of ['underline', 'strikeout', 'squiggly'] as const) {
       const [a] = buildMarkups(tool, [nextPage], opts(null));

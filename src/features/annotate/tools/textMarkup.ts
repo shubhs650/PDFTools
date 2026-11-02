@@ -18,6 +18,15 @@ import { capability, hostStore } from '../../view/host';
 import { annotationCapability } from '../selection';
 import { openContentsPrompt } from './contentsPrompt';
 import { buildMarkups, textsPerPage, type MarkupTool, type PageSelection } from './markupModel';
+import { defaultsFor } from './toolDefaultsStore';
+
+/** The highlight's current style (its palette, M6-07); the other markups keep theirs. */
+function styleOf(tool: MarkupTool): { color: string; opacity: number } | undefined {
+  if (tool !== 'highlight') return undefined;
+  const d = defaultsFor('highlight');
+  const color = d.strokeColor ?? d.color;
+  return color ? { color, opacity: d.opacity ?? 1 } : undefined;
+}
 
 function selection(): SelectionCapability | null {
   const registry = hostStore.getState().registry;
@@ -57,6 +66,7 @@ async function make(
     now: new Date(),
     newId: uuidV4,
     texts: textsPerPage(selections, await text),
+    style: styleOf(tool),
   });
   const scope = annotationCapability()?.forDocument(docId);
   if (!scope) return [];

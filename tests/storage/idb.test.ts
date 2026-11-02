@@ -20,6 +20,7 @@ describe('AppDb (M1-12)', () => {
     const db = await AppDb.open({ factory: new IDBFactory() });
     expect(db.db.version).toBe(MIGRATIONS.length);
     expect([...db.db.objectStoreNames].sort()).toEqual([
+      'commentStyles',
       'profile',
       'recent',
       'schemes',
@@ -162,7 +163,7 @@ describe('AppDb v5 (M6-03)', () => {
     const v4 = await AppDb.open({ factory, migrations: MIGRATIONS.slice(0, 4) });
     await v4.putTableTemplate({ id: 't1' });
     v4.close();
-    const db = await AppDb.open({ factory });
+    const db = await AppDb.open({ factory, migrations: MIGRATIONS.slice(0, 5) });
     expect(db.db.version).toBe(5);
     expect(await db.listTableTemplates()).toEqual([{ id: 't1' }]);
     expect(await db.listToolDefaults()).toEqual([]);
@@ -172,6 +173,27 @@ describe('AppDb v5 (M6-03)', () => {
     expect(await db.listToolDefaults()).toEqual([['square', { v: 1, props: { strokeWidth: 2 } }]]);
     await db.clearAll();
     expect(await db.listToolDefaults()).toEqual([]);
+    db.close();
+  });
+});
+
+describe('AppDb v6 (M6-07)', () => {
+  it('stores the user’s comment styles by tool id, keeping the tool defaults of v5', async () => {
+    const factory = new IDBFactory();
+    const v5 = await AppDb.open({ factory, migrations: MIGRATIONS.slice(0, 5) });
+    await v5.putToolDefaults('square', { v: 1, props: { strokeWidth: 2 } });
+    v5.close();
+    const db = await AppDb.open({ factory });
+    expect(db.db.version).toBe(6);
+    expect(await db.listToolDefaults()).toEqual([['square', { v: 1, props: { strokeWidth: 2 } }]]);
+    expect(await db.listCommentStyles()).toEqual([]);
+    const rec = { v: 1, styles: [{ id: 'a', name: 'Blue 2 pt', props: { strokeWidth: 2 } }] };
+    await db.putCommentStyles('square', rec);
+    await db.putCommentStyles('line', rec);
+    await db.deleteCommentStyles('line');
+    expect(await db.listCommentStyles()).toEqual([['square', rec]]);
+    await db.clearAll();
+    expect(await db.listCommentStyles()).toEqual([]);
     db.close();
   });
 });

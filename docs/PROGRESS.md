@@ -1,13 +1,48 @@
 # PDFTools — Progress
 
-_Last updated: 2026-11-02 (session 28: M6-06 Properties pane as a property grid)_
+_Last updated: 2026-11-02 (session 29: M6-07 comment style palette)_
 
 **Current milestone:** M6 — Beta review (plan in [docs/plan/M6.md](plan/M6.md), scope changes in
-[ADR-021](adr/021-m6-beta-review.md), **Accepted** 2026-11-01; ARCHITECTURE.md Rev 0.10; M6-01 … M6-06 done; spike results in
-[ADR-022](adr/022-m6-spikes-s18-s22.md), **Accepted** 2026-11-02 (bookmark route B); next task M6-07). M5 — OCR: M5-01 … M5-04 done under [ADR-020](adr/020-m5-ocr.md); M5-05 (owner
+[ADR-021](adr/021-m6-beta-review.md), **Accepted** 2026-11-01; ARCHITECTURE.md Rev 0.10; M6-01 … M6-07 done; spike results in
+[ADR-022](adr/022-m6-spikes-s18-s22.md), **Accepted** 2026-11-02 (bookmark route B); next task M6-08). M5 — OCR: M5-01 … M5-04 done under [ADR-020](adr/020-m5-ocr.md); M5-05 (owner
 interop) folds into M6-15. Rev 0 (M0–M4) is complete on the agent side.
 
 ## Done
+
+- **Session 29 — M6-07 Comment style palette (ADR-021 D-37; beta review B5).** Text Box,
+  Callout, Line, Arrow, Polyline, Polygon, Rectangle, Oval, Cloud, Pencil and Highlight are
+  **split buttons** (Comment and Home tabs): the main part starts the tool with its current
+  style; the arrow ("‹Tool› styles", its own toolbar stop, disabled with the tool) opens a
+  **palette**: preset swatches drawn by us from the style (Red, Purple, Indigo, Blue, Green,
+  Yellow, Black; plus their Cloudy variants for rectangles, ovals and polygons), the user's own
+  styles under "My styles", and **Comment Styles Palette…**. Keyboard: Down/Enter opens, the
+  arrow keys move in two dimensions (7 to a row, Up/Down keep the column), Home/End, Enter
+  applies, Esc closes back to the arrow. A swatch **restyles the selected comments** of the
+  tool's group (text boxes and callouts; lines, arrows and polylines; rectangles, ovals,
+  polygons and clouds; pencil; highlight — locked and read-only ones skipped) in one undo step;
+  with none selected it **sets the tool's style** (M6-03 store) and turns the tool on (the
+  hint line in the palette says which). The Highlight joined the styled tools (still yellow by
+  default; markupModel reads its style, and it now has Tool Properties too); its presets are
+  highlighter tints and there is no black one. **Owner's choice (2026-11-02):** no Cloudy
+  variants for text boxes (EmbedPDF 2.15.1 has no cloudy free-text border; drawing our own
+  appearance would break §7.1). **Comment Styles Palette** dialog (also the Comment tab's
+  "Styles" button, `comment.stylesPalette`): per tool, Add from Current Properties, Rename,
+  Move Up/Down, Delete; Export… writes every tool's styles as
+  `comment-styles.pdftools-styles.json` (`{format, version, tools}`); Import… appends and is
+  all-or-nothing, with the reason when refused (JSON, format, version, unknown tool, bad
+  style, empty, too many, too large). Styles live in IndexedDB v6 store `commentStyles` (tool
+  id → `{v: 1, styles}`), listed on the Privacy page and cleared by Clear all local data. The
+  Comment tab still fits 1280 px (narrow borderless arrows, `--split-arrow-width`; the Styles
+  button uses a short label). **Fixed on the way:** `scripts/icon-catalog.ts` picked a
+  per-glyph Fluent atom (`color-16-filled`) for icons that also ship one; the base atom now
+  wins. Tests: unit `tests/annotate/stylePalette.test.ts` (presets, current mark, groups,
+  stored records, reorder, names, merge, file round trip and every refusal, grid keys),
+  `tests/storage/idb.test.ts` (v6), `tests/annotate/markup.test.ts` (highlight style),
+  `tests/annotate/toolDefaults.test.ts`; e2e `e2e/style-palette.spec.ts` (@smoke: keyboard grid,
+  Enter sets the style and starts the tool, persists across reloads, axe on the menu; a
+  selected rectangle restyled to Green cloudy and undone in one step; the dialog end to end with
+  export, a refused and an accepted import, axe; the highlight's tint on the next highlight;
+  Home and Comment fit at 1280 px). Screenshots: project files `m6-07/`.
 
 - **Session 28 — M6-06 Properties pane as a property grid (ADR-021 D-37, D-38 f; beta review
   B4).** The pane is a two-column grid (property | value, CSS subgrid) in collapsible sections
@@ -1359,8 +1394,8 @@ rel="noopener noreferrer">`; the commands `app.home` / `app.reportIssue` open th
 
 ## Next
 
-- **Agent:** M6-07 (comment style palette). ADR-022 is accepted and applied (ARCHITECTURE.md
-  Rev 0.10).
+- **Agent:** M6-08 (adaptive ribbon; new Comment and Home ribbons; the typewriter's button
+  should be a split button too: add `comment.typewriter` to `PALETTE_COMMANDS`).
 
 0. **Owner:** try Convert → Recognize Text (OCR) on real scans — an English one, a Hindi one
    and a Chinese one — and check the result in Acrobat Reader / PDF-XChange (search and select

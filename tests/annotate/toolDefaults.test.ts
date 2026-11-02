@@ -58,7 +58,12 @@ describe('shipped comment styles (M6-03, D-37, B6)', () => {
   });
 
   it('highlight and sticky note keep yellow; measurements keep their own', () => {
-    expect(STYLE_TOOLS).not.toContain('highlight');
+    // The highlight has a style (its palette, M6-07), still the yellow of before.
+    expect(SHIPPED_DEFAULTS.highlight).toEqual({
+      strokeColor: MARKUP_DEFAULTS.highlight.color,
+      color: MARKUP_DEFAULTS.highlight.color,
+      opacity: 1,
+    });
     expect(STYLE_TOOLS).not.toContain('textComment');
     expect(STYLE_TOOLS).not.toContain('inkHighlighter');
     for (const m of ['measureDistance', 'measurePerimeter', 'measureArea'])
@@ -66,8 +71,8 @@ describe('shipped comment styles (M6-03, D-37, B6)', () => {
     expect(MARKUP_DEFAULTS.highlight.color).toBe('#FFE14D');
   });
 
-  it('every styled tool is a drawing tool', () => {
-    for (const tool of STYLE_TOOLS) expect(DRAW_TOOLS).toContain(tool);
+  it('every styled tool is a drawing tool, or the highlight', () => {
+    for (const tool of STYLE_TOOLS) if (tool !== 'highlight') expect(DRAW_TOOLS).toContain(tool);
   });
 });
 

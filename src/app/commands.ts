@@ -752,6 +752,16 @@ export const COMMANDS: readonly CommandDef[] = [
     shipped: true, // M3-13
   },
   {
+    id: 'comment.stylesPalette',
+    tab: 'comment',
+    group: 'comments',
+    size: 'small',
+    fluent: 'Color',
+    milestone: 'M6',
+    short: true,
+    shipped: true, // M6-07: the user's own comment styles (D-37)
+  },
+  {
     id: 'comment.filter',
     tab: 'comment',
     group: 'comments',

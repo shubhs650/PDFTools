@@ -113,7 +113,8 @@
       "toggleLocked": "Locked",
       "togglePrintable": "Printable",
       "toggleMarked": "Marked",
-      "makeDefault": "Make Current Properties Default"
+      "makeDefault": "Make Current Properties Default",
+      "stylesPalette": "Comment Styles"
     },
     "measure": {
       "distance": "Distance",
@@ -514,7 +515,8 @@
       "profile": "Reviewer profile: the name, initials, discipline and company you entered",
       "schemes": "Status schemes you made or imported (codes, labels, colours) and which one is active",
       "tableTemplates": "Table templates you saved (column and row dividers, header rows, merged cells, page size)",
-      "toolDefaults": "Comment tool defaults you set (colours, line widths, font sizes); the shipped defaults are used until you change one"
+      "toolDefaults": "Comment tool defaults you set (colours, line widths, font sizes); the shipped defaults are used until you change one",
+      "commentStyles": "Comment styles you saved in the style palette (names, colours, line widths, font sizes)"
     },
     "clearHint": "To delete this data, use File → Settings → Clear all local data."
   },
@@ -1122,7 +1124,8 @@
       "square": "Rectangle",
       "circle": "Oval",
       "cloud": "Cloud",
-      "ink": "Pencil"
+      "ink": "Pencil",
+      "highlight": "Highlight"
     }
   },
   "comments": {
@@ -1939,7 +1942,8 @@
       "copyComments": "Copy",
       "pasteComments": "Paste",
       "pasteToOriginal": "Paste to Original",
-      "exportCrs": "Export CRS"
+      "exportCrs": "Export CRS",
+      "stylesPalette": "Styles"
     }
   },
   "topBar": {
@@ -1953,5 +1957,67 @@
   "contextMenu": {
     "comment": "Comment",
     "page": "Page"
+  },
+  "stylePalette": {
+    "open": "{{tool}} styles",
+    "presets": "Preset styles",
+    "mine": "My styles",
+    "manage": "Comment Styles Palette…",
+    "hintTool": "Sets the {{tool}} tool’s style",
+    "hintSelection_one": "Applies to the selected comment",
+    "hintSelection_other": "Applies to the {{count}} selected comments",
+    "cloudyName": "{{color}} cloudy",
+    "color": {
+      "red": "Red",
+      "purple": "Purple",
+      "indigo": "Indigo",
+      "blue": "Blue",
+      "green": "Green",
+      "yellow": "Yellow",
+      "black": "Black"
+    },
+    "applied_one": "Style {{name}} applied to the selected comment",
+    "applied_other": "Style {{name}} applied to {{count}} comments",
+    "toolSet": "{{tool}} tool style: {{name}}",
+    "title": "Comment Styles Palette",
+    "description": "Your own styles for each comment tool. They appear under the preset colours in the tool’s palette.",
+    "tool": "Tool",
+    "listOf": "{{tool}} styles",
+    "none": "No styles of your own for the {{tool}} tool yet. Add one from the tool’s current properties.",
+    "addCurrent": "Add from Current Properties",
+    "newName": "Style {{n}}",
+    "added": "{{name}} added to the {{tool}} styles",
+    "export": "Export…",
+    "exported": "Every tool’s styles exported",
+    "import": "Import…",
+    "imported_one": "1 style imported",
+    "imported_other": "{{count}} styles imported",
+    "importRefused": "Nothing imported. {{reasons}}",
+    "full": "A tool holds up to {{max}} styles of your own.",
+    "name": "Style name",
+    "save": "Save",
+    "cancel": "Cancel",
+    "rename": "Rename",
+    "renameNamed": "Rename {{name}}",
+    "renamed": "Renamed to {{name}}",
+    "badName": "A style name is 1 to {{max}} characters.",
+    "up": "Move Up",
+    "upNamed": "Move {{name}} up",
+    "down": "Move Down",
+    "downNamed": "Move {{name}} down",
+    "delete": "Delete",
+    "deleteNamed": "Delete {{name}}",
+    "deleted": "{{name}} deleted",
+    "close": "Close",
+    "error": {
+      "tooLarge": "The file is too large for a styles file.",
+      "json": "The file is not valid JSON.",
+      "format": "The file is not a PDFTools comment styles file.",
+      "version": "The file was made by a newer version of PDFTools.",
+      "tool": "The file has styles for a tool PDFTools does not know.",
+      "style": "A style in the file has no name or a property PDFTools cannot use.",
+      "empty": "The file has no styles.",
+      "tooMany": "A tool would have more styles than it can hold."
+    }
   }
 }

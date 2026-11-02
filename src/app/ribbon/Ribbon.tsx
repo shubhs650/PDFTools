@@ -6,7 +6,8 @@ import { IconButton } from '../../ui/components';
 import { groupLabelKey, tabLabelKey } from '../commandLabels';
 import { TopBarActions } from '../TopBar';
 import { appStore, useApp } from '../store/appStore';
-import { RibbonButton } from './RibbonButton';
+import { PALETTE_COMMANDS } from '../../features/annotate/tools/stylePalette';
+import { RibbonButton, RibbonSplitButton } from './RibbonButton';
 import { groupCells, ribbonLayout, type RibbonTabLayout } from './layout';
 import { useRovingToolbar } from './useRovingToolbar';
 
@@ -118,7 +119,9 @@ export function Ribbon({ onOpenBackstage, focusDocument }: RibbonProps) {
 function RibbonPanel({ tab, onEscape }: { tab: RibbonTabLayout; onEscape: () => void }) {
   const { t } = useTranslation();
   const flat = tab.groups.flatMap((g) => g.commands);
-  const roving = useRovingToolbar(flat.length);
+  // A split button (a comment tool and its style palette, M6-07) is two stops.
+  const stops = flat.length + flat.filter((c) => PALETTE_COMMANDS[c.id]).length;
+  const roving = useRovingToolbar(stops);
   let n = 0;
   return (
     <div
@@ -152,6 +155,22 @@ function RibbonPanel({ tab, onEscape }: { tab: RibbonTabLayout; onEscape: () => 
               {groupCells(g.commands).map((cell) => {
                 const buttons = cell.map((c) => {
                   const i = n++;
+                  const tool = PALETTE_COMMANDS[c.id];
+                  if (tool) {
+                    const j = n++;
+                    return (
+                      <RibbonSplitButton
+                        key={c.id}
+                        command={c}
+                        tool={tool}
+                        large={c.size === 'large'}
+                        mainRef={roving.register(i)}
+                        arrowRef={roving.register(j)}
+                        mainTabIndex={i === roving.index ? 0 : -1}
+                        arrowTabIndex={j === roving.index ? 0 : -1}
+                      />
+                    );
+                  }
                   return (
                     <RibbonButton
                       key={c.id}
