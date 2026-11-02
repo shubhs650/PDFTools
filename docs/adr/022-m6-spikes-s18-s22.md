@@ -1,6 +1,6 @@
 # ADR-022: M6 spikes S18 – S22 — passwords, forms, signatures, bookmarks, attach file
 
-- **Status:** Proposed (2026-11-01; decision 5 route B chosen by the owner 2026-11-02)
+- **Status:** Accepted (owner, 2026-11-02; decision 5 route B). ARCHITECTURE.md Rev 0.10.
 - **Date:** 2026-11-01
 - **Deciders:** owner (Shubham); recorded by the coding agent (task M6-04)
 - **Related decisions:** D-03, D-19, D-26, D-38 (d)(g), D-39, D-40 (ARCHITECTURE.md §2); ADR-005
@@ -106,12 +106,12 @@ by reopening in PDFium and with `qpdf --check` / `qpdf --json`.
   call; M6-11 uses route B (our own outline writer); M6-12 uses the copy route, the owner-rights gate and
   the 127-byte limit; M6-13 bundles a font and passes it to the type pad; M6-14 adds the license
   exception, readable radio ids, `/TU` via the object layer and the modify + annotate gate.
-- ARCHITECTURE.md changes **after this ADR is accepted** (not in this commit): §3.2 add
+- ARCHITECTURE.md changes (applied in Rev 0.10 after acceptance): §3.2 add
   `@embedpdf/default-signature-fonts` (Apache-2.0 AND OFL-1.1, exact pin) and note the
   plugin-form license exception; §7.1 Attach File "created by direct PDFium calls in the Render
   worker" instead of "written by our object layer"; §7.10 the modify + annotate gate and `/TU`;
   §7.11 the bundled handwriting font; §7.12 the copy route, the owner-rights gate and the
-  127-byte limit; §7.16 the bookmark route B (our own outline writer).
+  127-byte limit; §7.15 the bookmark route B (our own outline writer).
 - Risks: all three EmbedPDF additions are on the pinned 2.15.1; an upgrade must re-run these
   spikes. The fonts package is a prerelease (pinned). Interop with Acrobat / PDF-XChange
   (forms, signatures, attach file, edited outlines) joins the owner's M6-15 checklist.

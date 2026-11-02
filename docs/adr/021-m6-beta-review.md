@@ -178,7 +178,7 @@ item 3.
 ## Evidence
 
 Task M6-04 ran spikes S18 – S22 (`spikes/s18-s22-m6/`, 2026-11-01). Commands, numbers and the
-decisions that follow are in [ADR-022](022-m6-spikes-s18-s22.md) (Proposed). Summary:
+decisions that follow are in [ADR-022](022-m6-spikes-s18-s22.md) (Accepted 2026-11-02). Summary:
 
 | Spike | Feature     | Verdict               | What changes                                                                                        |
 | ----- | ----------- | --------------------- | --------------------------------------------------------------------------------------------------- |
