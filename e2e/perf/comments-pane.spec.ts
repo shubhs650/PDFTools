@@ -1,9 +1,10 @@
 import { cap, drop } from '../support/app.ts';
 import { expect, test } from '../support/fixtures.ts';
 
-// M3-11: the Comments pane on the 2,000-page stand-in with 10,000 markups —
-// first rows in < 1 s once the comments are loaded, no long task while it
-// opens, scrolls and filters (rule 1, the list is virtualized).
+// M3-11, cards since M6-05: the Comments pane on the 2,000-page stand-in with
+// 10,000 markups — first cards in < 1 s once the comments are loaded, no long
+// task while it opens, scrolls (measured, variable-height rows), sorts,
+// regroups, collapses and finds (rule 1, the list is virtualized).
 
 test('comments pane: 10,000 comments, first rows < 1 s, no long tasks', async ({
   page,
@@ -33,15 +34,34 @@ test('comments pane: 10,000 comments, first rows < 1 s, no long tasks', async ({
   await expect(page.getByTestId('comments-pane').getByRole('status')).toHaveText(
     '10,000 of 10,000 comments',
   );
+  const pane = page.getByTestId('comments-pane');
   const list = page.getByTestId('comments-list');
   await list.focus();
   for (let i = 0; i < 20; i++) await page.keyboard.press('PageDown');
   await page.keyboard.press('End');
-  await page
-    .getByTestId('comments-pane')
-    .getByLabel('Sort by')
-    .selectOption({ label: 'Date (newest first)' });
-  await page.getByTestId('comments-pane').getByLabel('Sort by').selectOption({ label: 'Page' });
+  await list.evaluate((el) => {
+    el.scrollTop = el.scrollHeight / 2;
+  });
+  await page.mouse.wheel(0, 2000);
+  const choose = async (menu: string, item: string) => {
+    await pane.getByRole('button', { name: 'Options' }).click();
+    await page.getByRole('menuitem', { name: menu, exact: true }).click();
+    await page.getByRole('menuitemradio', { name: item, exact: true }).click();
+  };
+  await choose('Sort by', 'Date (newest first)');
+  await choose('Group by', 'Author');
+  await choose('Group by', 'Page');
+  await pane.getByRole('button', { name: 'Options' }).click();
+  await page.getByRole('menuitem', { name: 'Collapse all' }).click();
+  await pane.getByRole('button', { name: 'Options' }).click();
+  await page.getByRole('menuitem', { name: 'Expand all' }).click();
+  await choose('Sort by', 'Page');
+  const find = pane.getByRole('searchbox', { name: 'Find in comments' });
+  await find.fill('weld');
+  await find.press('Enter');
+  await expect(pane.getByRole('status')).not.toHaveText('10,000 of 10,000 comments');
+  await find.press('Escape');
+  await expect(pane.getByRole('status')).toHaveText('10,000 of 10,000 comments');
   test
     .info()
     .annotations.push({ type: 'm3-comments-first-rows-ms', description: String(firstRowsMs) });

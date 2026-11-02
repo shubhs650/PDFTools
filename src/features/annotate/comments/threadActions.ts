@@ -9,6 +9,8 @@ import { requestProfile } from '../../settings/profile/profileStore';
 import { currentAuthor } from '../authoring';
 import { joinStep } from '../historyJoin';
 import { annotationCapability, annotationState } from '../selection';
+import { rootOf } from './commentsModel';
+import { objectsOf, setEditing } from './commentsStore';
 import { STATUS_KEYS } from './statusLabels';
 import { descendants, makeReply, makeState } from './thread';
 
@@ -25,11 +27,32 @@ export async function addReply(
   scope(docId)?.createAnnotation(parent.pageIndex, reply);
 }
 
-export function editReply(docId: string, reply: PdfAnnotationObject, text: string): void {
-  scope(docId)?.updateAnnotation(reply.pageIndex, reply.id, {
+/** The text of a comment or a reply (/Contents and /M; M3-12, M6-05). */
+export function editText(docId: string, a: PdfAnnotationObject, text: string): void {
+  if ((a.contents ?? '') === text) return;
+  scope(docId)?.updateAnnotation(a.pageIndex, a.id, {
     contents: text,
     modified: new Date(),
   });
+}
+
+/** The thread roots of the selected comments (a selected reply stands for its comment). */
+export function selectedRoots(docId: string): PdfAnnotationObject[] {
+  const st = annotationState(docId);
+  if (!st) return [];
+  const all = objectsOf(st.byUid);
+  const selected = st.selectedUids
+    .map((uid) => st.byUid[uid]?.object)
+    .filter((o): o is PdfAnnotationObject => o !== undefined);
+  const byId = new Map(all.map((a) => [a.id, a]));
+  const roots = [...new Set(selected.map((a) => rootOf(a, byId)))];
+  return roots.map((id) => byId.get(id)).filter((a): a is PdfAnnotationObject => !!a);
+}
+
+/** Reply (M6-05): the reply editor in the card of the first selected comment. */
+export function startReply(docId: string): void {
+  const [root] = selectedRoots(docId);
+  if (root) setEditing({ docId, kind: 'reply', root: root.id });
 }
 
 export async function setStatus(

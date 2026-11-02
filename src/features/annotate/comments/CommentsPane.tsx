@@ -1,14 +1,25 @@
-import type { PdfAnnotationState } from '@embedpdf/models';
-import { useEffect, useId, useMemo, useRef, useState, type KeyboardEvent } from 'react';
+import { Dismiss12Regular } from '@fluentui/react-icons/svg/dismiss';
+import { Search20Regular } from '@fluentui/react-icons/svg/search';
+import type { PdfAnnotationObject } from '@embedpdf/models';
+import { useEffect, useId, useMemo, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { documentStore, useDocuments } from '../../../app/store/documentStore';
-import { format, msg, type MessageKey } from '../../../i18n';
-import { commandState, runCommand } from '../../../app/commands/dispatch';
+import { securityOf, useDocuments } from '../../../app/store/documentStore';
+import { format } from '../../../i18n';
+import { allows } from '../../../model/permissions';
+import { IconButton } from '../../../ui/components';
 import { goToPoint } from '../../view/controller';
 import { annotationTypeKey } from '../annotationTypes';
-import { annotationCapability, annotationState, useSelectedAnnotations } from '../selection';
-import { buildRows, type CommentRow, type CommentSort } from './commentsModel';
-import { STATUS_FILTERS, STATUS_KEYS } from './statusLabels';
+import { annotationCapability, useSelectedAnnotations } from '../selection';
+import { CommentList } from './CommentList';
+import { CommentsToolbar } from './CommentsToolbar';
+import {
+  findText,
+  groupKeys,
+  isFiltered,
+  layoutComments,
+  rootOf,
+  type CommentFilter,
+} from './commentsModel';
 import {
   commentsFor,
   objectsOf,
@@ -16,439 +27,283 @@ import {
   useAnnotationMap,
   useComments,
   viewOf,
+  type CommentsView,
 } from './commentsStore';
-import { ThreadView } from './ThreadView';
+import { STATUS_KEYS } from './statusLabels';
+import { buildThread, childrenOf, type Thread } from './thread';
 
-/** Row height in CSS px (fixed: the list is virtualized by index). */
-const ROW_H = 44;
-const OVERSCAN = 6;
-
-const SORTS: readonly { value: CommentSort; key: MessageKey }[] = [
-  { value: 'page', key: msg('comments.sort.page') },
-  { value: 'date', key: msg('comments.sort.date') },
-  { value: 'author', key: msg('comments.sort.author') },
-  { value: 'type', key: msg('comments.sort.type') },
-];
+const NO_THREAD: Thread = { replies: [], states: [], history: [] };
 
 /**
- * The Comments pane (M3-11, §5, §7.1): every comment of the document, new
- * and unsaved ones included, numbered (M3-Q5), filtered and sorted per
- * document; Enter or a click selects the comment on its page. A listbox with
- * one tab stop (rule 12), virtualized for 10,000 comments (rule 1).
+ * The Comments pane (M3-11, redesigned in M6-05, ADR-021 D-38 a): a one-row
+ * toolbar with the Options menu, Find (on Enter, rule 3), the active filters
+ * as chips, and the comments as cards under collapsible group headers, with
+ * their replies and an inline editor; the list's selection is the page's.
  */
 export function CommentsPane() {
   const { t } = useTranslation();
   const docId = useDocuments((s) => s.activeId);
   const byUid = useAnnotationMap(docId);
   const view = useComments((s) => (docId ? viewOf(s, docId) : null));
-  const focusFilters = useComments((s) => s.focusFilters);
-  const filtersRef = useRef<HTMLSelectElement>(null);
-  const ids = useId();
-  useEffect(() => {
-    if (focusFilters > 0) filtersRef.current?.focus();
-  }, [focusFilters]);
+  const page = useDocuments((s) => (docId ? (s.docs[docId]?.view.page ?? 0) : 0));
+  const canEdit = useDocuments((s) => {
+    const meta = docId ? s.docs[docId]?.meta : undefined;
+    return meta ? allows(securityOf(meta), 'annotate') : false;
+  });
+  const selected = useSelectedAnnotations(docId);
+
+  const all = useMemo(() => (byUid ? objectsOf(byUid) : []), [byUid]);
   const comments = useMemo(() => (byUid ? commentsFor(byUid) : []), [byUid]);
   const authors = useMemo(() => [...new Set(comments.map((c) => c.author))].sort(), [comments]);
   const types = useMemo(
     () => [...new Set(comments.map((c) => c.type))].sort((a, b) => a - b),
     [comments],
   );
-  const rows = useMemo(
-    () => (view ? buildRows(comments, view.filter, view.sort) : []),
-    [comments, view],
+  // Threads, built once per annotation state from one map of replies.
+  const threadOf = useMemo(() => {
+    const kids = childrenOf(all);
+    const threads = new Map<string, Thread>(
+      [...kids.keys()].map((id) => [id, buildThread(all, id, kids)]),
+    );
+    return (id: string): Thread => threads.get(id) ?? NO_THREAD;
+  }, [all]);
+  const layout = useMemo(
+    () =>
+      view
+        ? layoutComments(comments, view.filter, view.sort, {
+            group: view.group,
+            collapsed: new Set(view.collapsed),
+            repliesOf: (id) => threadOf(id).replies,
+          })
+        : null,
+    [comments, view, threadOf],
   );
-  if (!docId || !view) return <p className="pane-empty">{t('comments.noDocument')}</p>;
-  const f = view.filter;
-  const shown = rows.filter((r) => r.kind === 'comment').length;
+  const roots = useMemo(() => {
+    const byId = new Map(all.map((a) => [a.id, a]));
+    return new Set(selected.map((a) => rootOf(a, byId)));
+  }, [selected, all]);
+
+  // Current page only follows the page (M6-05).
+  useEffect(() => {
+    if (!docId || !view?.currentPageOnly) return;
+    const p = view.filter.pages;
+    if (p?.[0] !== page || p[1] !== page)
+      setView(docId, { filter: { ...view.filter, pages: [page, page] } });
+  }, [docId, view, page]);
+
+  if (!docId || !view || !layout) return <p className="pane-empty">{t('comments.noDocument')}</p>;
+
+  const open = (a: PdfAnnotationObject): void => {
+    goToPoint(a.pageIndex, a.rect.origin.x, a.rect.origin.y);
+    annotationCapability()?.forDocument(docId).selectAnnotation(a.pageIndex, a.id);
+  };
+  // Previous / Next: from the selected comment, through every comment shown (collapsed too).
+  const at = layout.order.findIndex((c) => roots.has(c.id));
+  const step = (dir: 1 | -1) => {
+    const to = at < 0 ? (dir === 1 ? 0 : layout.order.length - 1) : at + dir;
+    const c = layout.order[to];
+    if (!c) return null;
+    return () => {
+      const group = layout.groupOf.get(c.id);
+      if (group && view.collapsed.includes(group))
+        setView(docId, { collapsed: view.collapsed.filter((k) => k !== group) });
+      open(c.annot);
+    };
+  };
+
   return (
     <div className="comments-pane" data-testid="comments-pane">
-      <div className="comments-filters" role="group" aria-label={t('comments.filters')}>
-        <label htmlFor={`${ids}-author`}>{t('comments.author')}</label>
-        <select
-          ref={filtersRef}
-          id={`${ids}-author`}
-          className="ui-field-input"
-          value={f.authors?.[0] ?? '*'}
-          onChange={(e) => {
-            const v = e.currentTarget.value;
-            setView(docId, { filter: { ...f, authors: v === '*' ? [] : [v] } });
-          }}
-        >
-          <option value="*">{t('comments.all')}</option>
-          {authors.map((a) => (
-            <option key={a} value={a}>
-              {a || t('annotate.noAuthor')}
-            </option>
-          ))}
-        </select>
-        <label htmlFor={`${ids}-type`}>{t('comments.type')}</label>
-        <select
-          id={`${ids}-type`}
-          className="ui-field-input"
-          value={f.types?.[0] ?? '*'}
-          onChange={(e) => {
-            const v = e.currentTarget.value;
-            setView(docId, {
-              filter: { ...f, types: v === '*' ? [] : [Number(v)] },
-            });
-          }}
-        >
-          <option value="*">{t('comments.all')}</option>
-          {types.map((ty) => (
-            <option key={ty} value={ty}>
-              {t(annotationTypeKey({ type: ty } as never))}
-            </option>
-          ))}
-        </select>
-        <label htmlFor={`${ids}-status`}>{t('comments.statusLabel')}</label>
-        <select
-          id={`${ids}-status`}
-          className="ui-field-input"
-          value={f.statuses?.[0] ?? '*'}
-          onChange={(e) => {
-            const v = e.currentTarget.value;
-            setView(docId, {
-              filter: { ...f, statuses: v === '*' ? [] : [v as PdfAnnotationState | 'none'] },
-            });
-          }}
-        >
-          <option value="*">{t('comments.all')}</option>
-          {STATUS_FILTERS.map((s) => (
-            <option key={s} value={s}>
-              {t(STATUS_KEYS[s])}
-            </option>
-          ))}
-        </select>
-        <label className="comments-check">
-          <input
-            type="checkbox"
-            checked={!!f.pages}
-            onChange={(e) => {
-              const page = e.currentTarget.checked ? currentPage(docId) : null;
-              const rest = { ...f };
-              delete rest.pages;
-              setView(docId, {
-                filter: page === null ? rest : { ...rest, pages: [page, page] },
-              });
-            }}
-          />
-          {t('comments.thisPage')}
-        </label>
-        <label htmlFor={`${ids}-sort`}>{t('comments.sortLabel')}</label>
-        <select
-          id={`${ids}-sort`}
-          className="ui-field-input"
-          value={view.sort}
-          onChange={(e) => {
-            setView(docId, { sort: e.currentTarget.value as CommentSort });
-          }}
-        >
-          {SORTS.map((s) => (
-            <option key={s.value} value={s.value}>
-              {t(s.key)}
-            </option>
-          ))}
-        </select>
-      </div>
+      <CommentsToolbar
+        docId={docId}
+        view={view}
+        authors={authors}
+        types={types}
+        groupKeys={groupKeys(layout)}
+        onPrev={step(-1)}
+        onNext={step(1)}
+        page={page}
+      />
+      <FindBox docId={docId} filter={view.filter} />
+      {isFiltered(view.filter) ? <FilterChips docId={docId} view={view} /> : null}
+      {layout.rows.length > 0 ? (
+        <CommentList
+          docId={docId}
+          layout={layout}
+          threadOf={threadOf}
+          selectedRoots={roots}
+          canEdit={canEdit}
+          onOpen={open}
+        />
+      ) : (
+        <p className="comments-empty">
+          {comments.length === 0 ? t('comments.none') : t('comments.noMatch')}
+        </p>
+      )}
       <p className="comments-count" role="status">
         {comments.length === 0
           ? t('comments.none')
           : t('comments.count', {
-              shown: format.number(shown, 0),
+              shown: format.number(layout.shown, 0),
               total: format.number(comments.length, 0),
               count: comments.length,
-            })}
+            }) +
+            (selected.length
+              ? ` · ${t('comments.selected', { count: selected.length, n: format.number(selected.length, 0) })}`
+              : '')}
       </p>
-      {rows.length > 0 ? <CommentList docId={docId} rows={rows} /> : null}
-      {byUid ? <SelectedThread docId={docId} byUid={byUid} /> : null}
     </div>
   );
 }
 
-/** The thread of the comment selected on the page (M3-12). */
-function SelectedThread({
-  docId,
-  byUid,
-}: {
-  docId: string;
-  byUid: Parameters<typeof objectsOf>[0];
-}) {
-  const selected = useSelectedAnnotations(docId);
-  const focusReply = useComments((s) => s.focusReply);
-  const focusStatus = useComments((s) => s.focusStatus);
-  const replyRef = useRef<HTMLTextAreaElement>(null);
-  const statusRef = useRef<HTMLSelectElement>(null);
+/** Find (M6-05): filters the cards by their text; runs on Enter or the button (rule 3). */
+function FindBox({ docId, filter }: { docId: string; filter: CommentFilter }) {
+  const { t } = useTranslation();
+  const id = useId();
+  const input = useRef<HTMLInputElement>(null);
+  const [text, setText] = useState(filter.text ?? '');
+  const applied = filter.text ?? '';
+  const [shown, setShown] = useState(applied);
+  // A chip's × (or another document) changes the applied text: the box follows.
+  if (applied !== shown) {
+    setShown(applied);
+    setText(applied);
+  }
+  const focusFilters = useComments((s) => s.focusFilters);
   useEffect(() => {
-    if (focusReply > 0) replyRef.current?.focus();
-  }, [focusReply]);
-  useEffect(() => {
-    if (focusStatus > 0) statusRef.current?.focus();
-  }, [focusStatus]);
-  const comments = commentsFor(byUid);
-  const only = selected.length === 1 ? selected[0] : undefined;
-  const c = only ? comments.find((x) => x.id === only.id) : undefined;
-  if (!c) return null;
+    if (focusFilters > 0) input.current?.focus();
+  }, [focusFilters]);
+  const apply = (value: string): void => {
+    const rest = { ...filter };
+    delete rest.text;
+    setView(docId, { filter: findText(value) ? { ...rest, text: value.trim() } : rest });
+  };
   return (
-    <ThreadView
-      docId={docId}
-      comment={c.annot}
-      number={c.number}
-      all={objectsOf(byUid)}
-      replyRef={replyRef}
-      statusRef={statusRef}
-    />
+    <div className="comments-find" role="search">
+      <label htmlFor={`${id}-find`} className="ui-visually-hidden">
+        {t('comments.find')}
+      </label>
+      <input
+        ref={input}
+        id={`${id}-find`}
+        type="search"
+        className="ui-field-input comments-find-input"
+        placeholder={t('comments.findPlaceholder')}
+        value={text}
+        enterKeyHint="search"
+        onChange={(e) => {
+          setText(e.currentTarget.value);
+        }}
+        onKeyDown={(e) => {
+          if (e.key === 'Enter') {
+            e.preventDefault();
+            apply(text);
+          } else if (e.key === 'Escape' && text) {
+            e.preventDefault();
+            e.stopPropagation();
+            setText('');
+            apply('');
+          }
+        }}
+      />
+      <IconButton
+        label={t('comments.findButton')}
+        icon={<Search20Regular />}
+        className="comments-tool"
+        onClick={() => {
+          apply(text);
+        }}
+      />
+    </div>
   );
 }
 
-function currentPage(docId: string): number {
-  return documentStore.getState().docs[docId]?.view.page ?? 0;
-}
-
-function CommentList({ docId, rows }: { docId: string; rows: CommentRow[] }) {
+/** The filters that are set, each removable, and Clear all (M6-05). */
+function FilterChips({ docId, view }: { docId: string; view: CommentsView }) {
   const { t } = useTranslation();
-  const list = useRef<HTMLDivElement>(null);
-  const listId = useId();
-  const [scrollTop, setScrollTop] = useState(0);
-  const [viewHeight, setViewHeight] = useState(400);
-  const [active, setActive] = useState(0);
-  const selected = useSelectedAnnotations(docId);
-  const selectedId = selected[0]?.id ?? null;
-  const selectedIds = new Set(selected.map((a) => a.id));
-
-  useEffect(() => {
-    const el = list.current;
-    if (!el) return;
-    const ro = new ResizeObserver(() => {
-      setViewHeight(el.clientHeight);
+  const f = view.filter;
+  const chips: { key: string; label: string; clear: () => CommentFilter; page?: boolean }[] = [];
+  const without = <K extends keyof CommentFilter>(k: K, keep?: CommentFilter[K]): CommentFilter => {
+    const rest = Object.fromEntries(
+      Object.entries(f).filter(([key]) => key !== k),
+    ) as CommentFilter;
+    return keep === undefined ? rest : { ...rest, [k]: keep };
+  };
+  if (f.text)
+    chips.push({
+      key: 'text',
+      label: t('comments.chip.find', { text: f.text }),
+      clear: () => without('text'),
     });
-    ro.observe(el);
-    return () => {
-      ro.disconnect();
-    };
-  }, []);
-
-  const scrollIntoView = (i: number): void => {
-    const el = list.current;
-    if (!el) return;
-    const top = i * ROW_H;
-    if (top < el.scrollTop) el.scrollTop = top;
-    else if (top + ROW_H > el.scrollTop + el.clientHeight)
-      el.scrollTop = top + ROW_H - el.clientHeight;
-    setScrollTop(el.scrollTop);
-  };
-
-  // The comment selected on the page is the active row (and scrolled to).
-  const selectedRow = selectedId
-    ? rows.findIndex((r) => r.kind === 'comment' && r.comment.id === selectedId)
-    : -1;
-  const [followed, setFollowed] = useState<string | null>(null);
-  if (selectedId !== followed) {
-    setFollowed(selectedId);
-    if (selectedRow >= 0) setActive(selectedRow);
-  }
-  useEffect(() => {
-    if (selectedRow >= 0) scrollIntoView(selectedRow);
-    // eslint-disable-next-line react-hooks/exhaustive-deps -- follow the page's selection only
-  }, [selectedId]);
-
-  const current = Math.min(active, rows.length - 1);
-  // The active row as keys see it: moved by moveTo before the next render.
-  const activeRef = useRef(current);
-  useEffect(() => {
-    activeRef.current = current;
-  }, [current]);
-  const first = Math.max(0, Math.floor(scrollTop / ROW_H) - OVERSCAN);
-  const last = Math.min(rows.length - 1, Math.ceil((scrollTop + viewHeight) / ROW_H) + OVERSCAN);
-
-  const open = (i: number): void => {
-    const row = rows[i];
-    if (!row) return;
-    if (row.kind === 'page') {
-      goToPoint(row.page, 0, 0, 0);
-      return;
-    }
-    const a = row.comment.annot;
-    goToPoint(a.pageIndex, a.rect.origin.x, a.rect.origin.y);
-    annotationCapability()?.forDocument(docId).selectAnnotation(a.pageIndex, a.id);
-  };
-
-  const moveTo = (i: number): number => {
-    const to = Math.max(0, Math.min(rows.length - 1, i));
-    activeRef.current = to;
-    setActive(to);
-    scrollIntoView(to);
-    return to;
-  };
-
-  // Multi-select (M4-21): Ctrl+click or Ctrl+Space toggles a comment,
-  // Shift+click or Shift+arrows extend; the page selection follows.
-  const commentAt = (i: number) => {
-    const row = rows[i];
-    return row?.kind === 'comment' ? row.comment.annot : null;
-  };
-  const setSelection = (ids: string[]): void => {
-    annotationCapability()?.forDocument(docId).setSelection(ids);
-  };
-  // The plugin's selection now (keys can arrive before the pane re-renders).
-  const liveSelection = (): Set<string> => {
-    const st = annotationState(docId);
-    if (!st) return new Set();
-    return new Set(
-      st.selectedUids.map((uid) => st.byUid[uid]?.object.id).filter((x): x is string => !!x),
-    );
-  };
-  const toggle = (i: number): void => {
-    const a = commentAt(i);
-    if (!a) return;
-    const now = liveSelection();
-    const ids = [...now];
-    setSelection(now.has(a.id) ? ids.filter((x) => x !== a.id) : [...ids, a.id]);
-  };
-  const extend = (from: number, to: number): void => {
-    const ids = liveSelection();
-    for (let k = Math.min(from, to); k <= Math.max(from, to); k++) {
-      const a = commentAt(k);
-      if (a) ids.add(a.id);
-    }
-    setSelection([...ids]);
-  };
-
-  const onKeyDown = (e: KeyboardEvent): void => {
-    const mod = e.ctrlKey || e.metaKey;
-    // Copy and paste comments (M4-21): the pane is outside the document area's keys.
-    const clip: Record<string, string> = {
-      c: 'comment.copyComments',
-      v: e.shiftKey ? 'comment.pasteToOriginal' : 'comment.pasteComments',
-    };
-    const command = mod && !e.altKey ? clip[e.key.toLowerCase()] : undefined;
-    if (command) {
-      e.preventDefault();
-      void runCommand(command);
-      return;
-    }
-    if (mod && e.key === ' ') {
-      e.preventDefault();
-      toggle(current);
-      return;
-    }
-    // Delete removes the selected comments from the list too (preview review
-    // USR01): the list's selection is the page's selection.
-    if (e.key === 'Delete' && !mod && !e.altKey) {
-      if (!commandState('comment.delete').enabled) return;
-      e.preventDefault();
-      void runCommand('comment.delete');
-      return;
-    }
-    if (e.shiftKey && (e.key === 'ArrowDown' || e.key === 'ArrowUp')) {
-      e.preventDefault();
-      extend(activeRef.current, moveTo(activeRef.current + (e.key === 'ArrowDown' ? 1 : -1)));
-      return;
-    }
-    const perView = Math.max(1, Math.floor(viewHeight / ROW_H) - 1);
-    const keys: Record<string, () => void> = {
-      ArrowDown: () => {
-        moveTo(current + 1);
-      },
-      ArrowUp: () => {
-        moveTo(current - 1);
-      },
-      PageDown: () => {
-        moveTo(current + perView);
-      },
-      PageUp: () => {
-        moveTo(current - perView);
-      },
-      Home: () => {
-        moveTo(0);
-      },
-      End: () => {
-        moveTo(rows.length - 1);
-      },
-      Enter: () => {
-        open(current);
-      },
-    };
-    const action = keys[e.key];
-    if (!action) return;
-    e.preventDefault();
-    action();
-  };
-
-  const items = [];
-  for (let i = first; i <= last; i++) {
-    const row = rows[i];
-    if (!row) continue;
-    const common = {
-      key: i,
-      id: `${listId}-${String(i)}`,
-      role: 'option',
-      'aria-selected': row.kind === 'comment' ? selectedIds.has(row.comment.id) : false,
-      'data-row': i,
-      style: { top: i * ROW_H, height: ROW_H },
-    } as const;
-    if (row.kind === 'page') {
-      items.push(
-        <div
-          {...common}
-          className={`comment-row comment-row--page${i === current ? ' comment-row--active' : ''}`}
-        >
-          {t('comments.page', { page: format.number(row.page + 1, 0), count: row.count })}
-        </div>,
-      );
-      continue;
-    }
-    const c = row.comment;
-    const meta = [
-      t(annotationTypeKey(c.annot)),
-      c.author || t('annotate.noAuthor'),
-      c.date ? format.dateTime(c.date) : null,
-      c.status ? t(STATUS_KEYS[c.status]) : null,
-      c.replies ? t('comments.replies', { count: c.replies }) : null,
-    ].filter(Boolean);
-    items.push(
-      <div
-        {...common}
-        className={`comment-row${i === current ? ' comment-row--active' : ''}`}
-        data-comment={c.id}
-      >
-        <span className="comment-number">{format.number(c.number, 0)}</span>
-        <span className="comment-body">
-          <span className="comment-meta">{meta.join(' · ')}</span>
-          <span className="comment-text">{c.firstLine || '—'}</span>
-        </span>
-      </div>,
-    );
-  }
-
+  for (const a of f.authors ?? [])
+    chips.push({
+      key: `a:${a}`,
+      label: t('comments.chip.author', { name: a || t('annotate.noAuthor') }),
+      clear: () =>
+        without(
+          'authors',
+          (f.authors ?? []).filter((x) => x !== a),
+        ),
+    });
+  for (const ty of f.types ?? [])
+    chips.push({
+      key: `t:${String(ty)}`,
+      label: t('comments.chip.type', { name: t(annotationTypeKey({ type: ty } as never)) }),
+      clear: () =>
+        without(
+          'types',
+          (f.types ?? []).filter((x) => x !== ty),
+        ),
+    });
+  for (const s of f.statuses ?? [])
+    chips.push({
+      key: `s:${s}`,
+      label: t('comments.chip.status', { name: t(STATUS_KEYS[s]) }),
+      clear: () =>
+        without(
+          'statuses',
+          (f.statuses ?? []).filter((x) => x !== s),
+        ),
+    });
+  if (f.pages)
+    chips.push({
+      key: 'pages',
+      label: view.currentPageOnly
+        ? t('comments.thisPage')
+        : t('comments.chip.pages', {
+            from: format.number(f.pages[0] + 1, 0),
+            to: format.number(f.pages[1] + 1, 0),
+          }),
+      clear: () => without('pages'),
+      page: true,
+    });
   return (
-    <div
-      ref={list}
-      className="comments-list"
-      role="listbox"
-      tabIndex={0}
-      aria-label={t('comments.list')}
-      aria-multiselectable
-      aria-activedescendant={`${listId}-${String(current)}`}
-      data-testid="comments-list"
-      onScroll={(e) => {
-        setScrollTop(e.currentTarget.scrollTop);
-      }}
-      onKeyDown={onKeyDown}
-      onClick={(e) => {
-        const el = (e.target as HTMLElement).closest<HTMLElement>('[data-row]');
-        if (!el) return;
-        const i = Number(el.dataset['row']);
-        if (e.ctrlKey || e.metaKey) toggle(i);
-        else if (e.shiftKey) extend(current, i);
-        else {
-          open(i);
-        }
-        setActive(i);
-      }}
-    >
-      <div className="comments-list-content" style={{ height: rows.length * ROW_H }}>
-        {items}
-      </div>
+    <div className="comments-chips" role="group" aria-label={t('comments.activeFilters')}>
+      {chips.map((c) => (
+        <button
+          key={c.key}
+          type="button"
+          className="comments-chip"
+          aria-label={t('comments.chip.remove', { filter: c.label })}
+          onClick={() => {
+            setView(docId, {
+              filter: c.clear(),
+              ...(c.page ? { currentPageOnly: false } : {}),
+            });
+          }}
+        >
+          <span className="comments-chip-label">{c.label}</span>
+          <Dismiss12Regular aria-hidden />
+        </button>
+      ))}
+      <button
+        type="button"
+        className="comments-chip comments-chip--clear"
+        onClick={() => {
+          setView(docId, { filter: {}, currentPageOnly: false });
+        }}
+      >
+        {t('comments.clearFilters')}
+      </button>
     </div>
   );
 }

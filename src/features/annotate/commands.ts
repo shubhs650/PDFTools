@@ -25,7 +25,7 @@ import { DRAW_COMMANDS, isDrawTool, KEYBOARD_PLACED, VERTEX_TOOLS } from './tool
 import { finishDrawing, placeAtCentre } from './tools/drawTools';
 import { copiedStyle, copyStyle, pasteStyle } from './properties/style';
 import { commentsStore } from './comments/commentsStore';
-import { deleteComments } from './comments/threadActions';
+import { deleteComments, startReply } from './comments/threadActions';
 import { MARKUP_TOOLS } from './tools/markupModel';
 import { markupFromSelection } from './tools/textMarkup';
 import { selectionSettled } from '../select/commands';
@@ -290,21 +290,29 @@ export function registerAnnotateCommands(): () => void {
         commentsStore.setState((c) => ({ focusFilters: c.focusFilters + 1 }));
       },
     }),
-    // Reply / Set Status (M3-12): the selected comment's thread in the Comments pane.
-    ...(['comment.reply', 'comment.setStatus'] as const).map((command) =>
-      registerCommand(command, {
-        ...withSelection,
-        run: () => {
-          const s = appStore.getState();
-          if (!(s.leftPaneOpen && s.leftPane === 'rail.comments')) s.choosePane('rail.comments');
-          const key = command === 'comment.reply' ? 'focusReply' : 'focusStatus';
-          // After the pane has rendered the thread.
-          requestAnimationFrame(() => {
-            commentsStore.setState((c) => ({ [key]: c[key] + 1 }));
-          });
-        },
-      }),
-    ),
+    // Reply (M3-12, M6-05): the reply editor in the selected comment's card;
+    // Set Status: the Comments pane's Set status menu.
+    registerCommand('comment.reply', {
+      ...withSelection,
+      run: () => {
+        const id = activeId();
+        if (!id) return;
+        const s = appStore.getState();
+        if (!(s.leftPaneOpen && s.leftPane === 'rail.comments')) s.choosePane('rail.comments');
+        startReply(id);
+      },
+    }),
+    registerCommand('comment.setStatus', {
+      ...withSelection,
+      run: () => {
+        const s = appStore.getState();
+        if (!(s.leftPaneOpen && s.leftPane === 'rail.comments')) s.choosePane('rail.comments');
+        // After the pane has rendered its toolbar.
+        requestAnimationFrame(() => {
+          commentsStore.setState((c) => ({ focusStatus: c.focusStatus + 1 }));
+        });
+      },
+    }),
     registerCommand('comment.autoNumber', {
       run: () => {
         commentsStore.setState((c) => ({ numbersOnPage: !c.numbersOnPage }));
