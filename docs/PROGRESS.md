@@ -15,8 +15,9 @@ interop) folds into M6-15. Rev 0 (M0–M4) is complete on the agent side.
   `wrangler preview`) don't autoconfigure, so every PR's "Workers Builds" check was red. #55
   (merged 2026-11-02) commits `wrangler.jsonc` (assets from `dist/`, SPA fallback, observability
   off) and `functions/worker.ts` (`POST /api/report` now reaches the handler; it answered 405
-  before). Owner set the dashboard preview command to `npx wrangler versions upload` (Builds →
-  Previews Base). Report bindings (D1, email, `REPORT_SALT`) are still to be added to
+  before). Previews use Cloudflare's Worker Previews (Builds → Previews Base → Preview command
+  `npx wrangler preview`), which needs the empty `"previews": {}` block in `wrangler.jsonc`;
+  `npx wrangler versions upload` fails there with a Worker-name mismatch (tried, PR #67). Report bindings (D1, email, `REPORT_SALT`) are still to be added to
   `wrangler.jsonc`, see docs/deploy/cloudflare-pages.md.
 
 - **Session 27 — M6-05 Comments pane redesign (ADR-021 D-38 a; beta review B1, B2, B3b).** The

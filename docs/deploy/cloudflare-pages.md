@@ -72,8 +72,10 @@ command and then a deploy command, and both read [`wrangler.jsonc`](../../wrangl
 repository root: the Worker's name, the static assets (`dist/`, with `_headers` and the SPA
 fallback) and the small Worker script [`functions/worker.ts`](../../functions/worker.ts), which
 answers `POST /api/report` with the same handler as the Pages Function and hands every other
-request to the assets. Without that file a non-production branch build fails as soon as wrangler
-runs (`npx wrangler versions upload` has no assets directory or entry point to upload).
+request to the assets. Without that file a preview build fails as soon as wrangler runs (no assets
+directory or entry point to upload; production only works because `wrangler deploy` then generates a
+config of its own). `npx wrangler preview` also needs the `previews` block, which is empty here, so
+previews inherit the top-level settings.
 
 Settings for the Worker (Settings → Builds; the **Production** tab holds the deploy command and the
 **Previews Base** tab the preview command):
@@ -83,7 +85,7 @@ Settings for the Worker (Settings → Builds; the **Production** tab holds the d
 | Production branch | `main`                                                                                         |
 | Build command     | `npm run build`                                                                                |
 | Deploy command    | `npx wrangler deploy` (the default)                                                            |
-| Preview command   | `npx wrangler versions upload`: Builds → **Previews Base** tab (not `npx wrangler preview`)    |
+| Preview command   | `npx wrangler preview` (the default), on the **Previews Base** tab                             |
 | Root directory    | `/`                                                                                            |
 | Node version      | 22.x ≥ 22.18 — `.nvmrc` says `22`; set `NODE_VERSION` only if the build log shows another Node |
 | Build watch paths | leave empty                                                                                    |
@@ -116,11 +118,12 @@ Differences from Pages that matter here:
 
 ## Troubleshooting
 
-| Symptom                                           | Cause / fix                                                                                    |
-| ------------------------------------------------- | ---------------------------------------------------------------------------------------------- |
-| Build fails at `npm ci` or with a Node error      | `NODE_VERSION` not set to 22.x (step 1).                                                       |
-| Workers build fails right after `npm run build`   | `wrangler.jsonc` missing or renamed: wrangler needs it for the assets and the entry (Worker).  |
-| "File too large" at upload                        | An asset over 25 MiB; `npm run check:pages` catches this in CI.                                |
-| Blank page, CSP errors naming a Cloudflare script | An injected script (step 4).                                                                   |
-| `crossOriginIsolated` is `false`                  | `_headers` not applied: the output directory must be `dist` so `dist/_headers` is at the root. |
-| `/api/report` returns 500                         | D1 binding `REPORT_DB` or secret `REPORT_SALT` missing, or no redeploy after adding them.      |
+| Symptom                                              | Cause / fix                                                                                    |
+| ---------------------------------------------------- | ---------------------------------------------------------------------------------------------- |
+| Build fails at `npm ci` or with a Node error         | `NODE_VERSION` not set to 22.x (step 1).                                                       |
+| Workers build fails right after `npm run build`      | `wrangler.jsonc` missing or renamed: wrangler needs it for the assets and the entry (Worker).  |
+| Preview: "name … must match the name of your Worker" | Preview command set to `npx wrangler versions upload`; use `npx wrangler preview`.             |
+| "File too large" at upload                           | An asset over 25 MiB; `npm run check:pages` catches this in CI.                                |
+| Blank page, CSP errors naming a Cloudflare script    | An injected script (step 4).                                                                   |
+| `crossOriginIsolated` is `false`                     | `_headers` not applied: the output directory must be `dist` so `dist/_headers` is at the root. |
+| `/api/report` returns 500                            | D1 binding `REPORT_DB` or secret `REPORT_SALT` missing, or no redeploy after adding them.      |
