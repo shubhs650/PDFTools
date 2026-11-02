@@ -64,6 +64,47 @@ Largest file: PDF Oxide's WASM, ~17.6 MB (Pages limit 25 MiB per file); about 35
 6. **Previews (optional).** Preview deployments are public by default. To keep them private,
    the project → Settings → General → Access policy → enable Cloudflare Access for previews.
 
+## Deploying as a Worker instead
+
+The preview at `pdftools.shubhampatil650.workers.dev` is a **Git-connected Worker** (Workers &
+Pages → Create → Workers → Import a repository), not a Pages project. Workers Builds runs a build
+command and then a deploy command, and both read [`wrangler.jsonc`](../../wrangler.jsonc) at the
+repository root: the Worker's name, the static assets (`dist/`, with `_headers` and the SPA
+fallback) and the small Worker script [`functions/worker.ts`](../../functions/worker.ts), which
+answers `POST /api/report` with the same handler as the Pages Function and hands every other
+request to the assets. Without that file a non-production branch build fails as soon as wrangler
+runs (`npx wrangler versions upload` has no assets directory or entry point to upload).
+
+Settings for the Worker (Settings → Build):
+
+| Setting                              | Value                                                                                          |
+| ------------------------------------ | ---------------------------------------------------------------------------------------------- |
+| Production branch                    | `main`                                                                                         |
+| Build command                        | `npm run build`                                                                                |
+| Deploy command                       | `npx wrangler deploy` (the default)                                                            |
+| Non-production branch deploy command | `npx wrangler versions upload` (the default; gives each branch a preview version)              |
+| Root directory                       | empty                                                                                          |
+| Node version                         | 22.x ≥ 22.18 — `.nvmrc` says `22`; set `NODE_VERSION` only if the build log shows another Node |
+| Build watch paths                    | leave empty                                                                                    |
+
+`wrangler` runs in Cloudflare's build container only; it is still not a dependency of this
+repository (ADR-003). The pre-deploy checks (`npm run check:pages`: file sizes, `_headers`, no
+`404.html`) apply unchanged, as the Workers asset limits are the same 25 MiB per file.
+
+Differences from Pages that matter here:
+
+- **Bindings live in `wrangler.jsonc`**, not in the dashboard: a deploy replaces the dashboard's
+  bindings with the file's. The error-report bindings from [error-report.md](error-report.md)
+  (`REPORT_DB`, `REPORT_MAIL`, the `REPORT_MAIL_*` vars) are a commented template at the end of
+  `wrangler.jsonc`; `REPORT_SALT` stays a secret (dashboard → Settings → Variables and Secrets,
+  or `wrangler secret put`). Until they are filled in, `/api/report` answers 500 and the app
+  shows "couldn't be sent", exactly as on a Pages project without bindings.
+- **Version in File → About:** Workers Builds sets `WORKERS_CI_COMMIT_SHA` rather than
+  `CF_PAGES_COMMIT_SHA`; both are read.
+- **Custom domain:** the Worker → Settings → Domains & Routes → add `pdf-tools.openengtools.com`.
+  Step 4 (no injected scripts) applies to the zone in the same way.
+- **Rollback:** the Worker → Deployments → an earlier deployment → Rollback.
+
 ## Releasing
 
 - Merge to `main` → Pages builds and deploys production. Users get the update prompt from the
@@ -77,6 +118,7 @@ Largest file: PDF Oxide's WASM, ~17.6 MB (Pages limit 25 MiB per file); about 35
 | Symptom                                           | Cause / fix                                                                                    |
 | ------------------------------------------------- | ---------------------------------------------------------------------------------------------- |
 | Build fails at `npm ci` or with a Node error      | `NODE_VERSION` not set to 22.x (step 1).                                                       |
+| Workers build fails right after `npm run build`   | `wrangler.jsonc` missing or renamed: wrangler needs it for the assets and the entry (Worker).  |
 | "File too large" at upload                        | An asset over 25 MiB; `npm run check:pages` catches this in CI.                                |
 | Blank page, CSP errors naming a Cloudflare script | An injected script (step 4).                                                                   |
 | `crossOriginIsolated` is `false`                  | `_headers` not applied: the output directory must be `dist` so `dist/_headers` is at the root. |
