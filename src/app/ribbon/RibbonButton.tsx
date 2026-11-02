@@ -59,15 +59,20 @@ export const RibbonButton = forwardRef<HTMLButtonElement, RibbonButtonProps>(fun
     >
       <CommandIcon id={command.id} large={large} pressed={state.pressed} className="ribbon-icon" />
       {visible === null ? null : <span className="ribbon-label">{visible}</span>}
-      {reason ? (
-        <span id={reasonId} className="ui-visually-hidden">
-          {reason}
-        </span>
-      ) : null}
     </button>
   );
+  // Outside the button, so the reason describes it without becoming part of its
+  // name (a labelled button's name is its text, M6-08).
+  const why = reason ? (
+    <span id={reasonId} className="ui-visually-hidden">
+      {reason}
+    </span>
+  ) : null;
   return visible !== label || reason ? (
-    <Tooltip content={reason ? `${label} — ${reason}` : label}>{button}</Tooltip>
+    <>
+      <Tooltip content={reason ? `${label} — ${reason}` : label}>{button}</Tooltip>
+      {why}
+    </>
   ) : (
     button
   );

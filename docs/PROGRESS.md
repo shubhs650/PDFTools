@@ -1,13 +1,52 @@
 # PDFTools — Progress
 
-_Last updated: 2026-11-02 (session 29: M6-07 comment style palette)_
+_Last updated: 2026-11-02 (session 30: M6-08 adaptive ribbon)_
 
 **Current milestone:** M6 — Beta review (plan in [docs/plan/M6.md](plan/M6.md), scope changes in
-[ADR-021](adr/021-m6-beta-review.md), **Accepted** 2026-11-01; ARCHITECTURE.md Rev 0.10; M6-01 … M6-07 done; spike results in
-[ADR-022](adr/022-m6-spikes-s18-s22.md), **Accepted** 2026-11-02 (bookmark route B); next task M6-08). M5 — OCR: M5-01 … M5-04 done under [ADR-020](adr/020-m5-ocr.md); M5-05 (owner
+[ADR-021](adr/021-m6-beta-review.md), **Accepted** 2026-11-01; ARCHITECTURE.md Rev 0.10; M6-01 … M6-08 done; spike results in
+[ADR-022](adr/022-m6-spikes-s18-s22.md), **Accepted** 2026-11-02 (bookmark route B); next task M6-09). M5 — OCR: M5-01 … M5-04 done under [ADR-020](adr/020-m5-ocr.md); M5-05 (owner
 interop) folds into M6-15. Rev 0 (M0–M4) is complete on the agent side.
 
 ## Done
+
+- **Session 30 — M6-08 Adaptive ribbon; new Comment and Home ribbons (ADR-021 D-36; beta
+  review A2b–A2d, B7a, B7b).** **Adaptive steps:** every group has steps — 0 as designed, 1
+  large buttons become small labelled ones, 2 icons only (the label stays the name and the
+  tooltip), 3 one button with the group's name that opens the group as a menu (only groups of
+  two or more). `reductionPlans` steps one group down at a time, a round per step (every group
+  to small before any goes to icons), lowest `GROUP_PRIORITY` first and of equal ones the
+  rightmost; `choosePlan` takes the widest layout that fits the panel and `relaxPlan` gives the
+  room left back to the highest-priority groups (pure, `layout.ts`, unit-tested).
+  `useAdaptiveSteps` measures a hidden copy of each group at each of its steps once per tab and
+  language (an inert, aria-hidden, `position: fixed` layer, gone before the first paint) and
+  follows the panel with a ResizeObserver. A folded group's menu (`CommandDropdown`, the context
+  menus' item rendering on a Radix dropdown) shows each command's icon, label, shortcut, tick
+  and disabled reason; it is one toolbar stop, Down/Enter opens it, Esc returns to it. With
+  English labels nothing folds at 1280 px (Comment needs ~1120 px with icons; long translations
+  or a narrow panel fold Manage Comments first). **Comment tab:** Tools (Hand, Select Text,
+  Select Comments — reused from Home), Text (Typewriter, Text Box, Callout), Note (Sticky Note),
+  Text Markup (Highlight, Underline, Strikeout, Squiggly, Insert Text, Replace Text, Highlight
+  Area, Free Highlight — labelled), Drawing (icon grid of split buttons), Stamp, Measure
+  (Distance, Perimeter, Area — reused), Manage Comments (Comments Pane, Import, Export, Export
+  CRS, Comment Styles, Filter, Status Schemes, Reviewer Profile, Numbers). Reply, Delete, Set
+  Status, Copy/Apply Style and Copy/Paste Comments left the ribbon (tab `menu`: still commands
+  with their keys); **Paste to Original Pages** joined the comment and page context menus.
+  Reuses are generalised: `REUSE_GROUPS` (tab, group, ids, large ids) and `GROUP_ORDER`.
+  **Home:** Comment gains Callout, Line, Arrow, Rectangle; **Rotate View** (view.rotateCw /
+  view.rotateCcw side by side; page rotation only on Organize, owner's answer 6); **View**
+  (Properties Pane; Snapshot comes with M6-09). **New tools:** `comment.typewriter` (the M6-03
+  tool, now a split button with its palette, Fluent `DrawText`); `comment.highlightArea` (the
+  plugin's square with a yellow fill, no border, `/BM /Multiply` in PDFium's appearance —
+  standard keys only; Fluent `SquareHint`; fixed defaults, not a styled tool). Labels: "Text
+  Box" (was "Text Box / Typewriter"), "Free Highlight" (was "Ink Highlighter"). **Fixed on the
+  way:** a labelled ribbon button's disabled reason was inside the button, so it became part of
+  its accessible name ("Typewriter Open a document…"); it is now a sibling (still its
+  description). Tests: unit `tests/ribbon/layout.test.ts` (layouts, steps, plans, choose,
+  relax); e2e `e2e/adaptive-ribbon.spec.ts` (@smoke: every tab at 1280/1366/1600/1920 px with
+  no group clipped; a folded group's menu by keyboard with axe; Typewriter and Highlight Area
+  make their comments, `/BM /Multiply` saved; labels at ≥ 1600 px; Home's view rotation);
+  specs that clicked the old Review/Transfer buttons now use the menus or the pane.
+  Screenshots: project files `m6-08/`.
 
 - **Session 29 — M6-07 Comment style palette (ADR-021 D-37; beta review B5).** Text Box,
   Callout, Line, Arrow, Polyline, Polygon, Rectangle, Oval, Cloud, Pencil and Highlight are
@@ -1394,8 +1433,8 @@ rel="noopener noreferrer">`; the commands `app.home` / `app.reportIssue` open th
 
 ## Next
 
-- **Agent:** M6-08 (adaptive ribbon; new Comment and Home ribbons; the typewriter's button
-  should be a split button too: add `comment.typewriter` to `PALETTE_COMMANDS`).
+- **Agent:** M6-09 (Flatten in Comment → Manage Comments and the comment menu; Snapshot in
+  Home → View: both are new entries in the command table and `REUSE_GROUPS`).
 
 0. **Owner:** try Convert → Recognize Text (OCR) on real scans — an English one, a Hindi one
    and a Chinese one — and check the result in Acrobat Reader / PDF-XChange (search and select

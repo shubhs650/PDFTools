@@ -49,8 +49,9 @@ import { DocumentMultiple20Regular, DocumentMultiple24Regular } from '@fluentui/
 import { DocumentOnePage20Filled, DocumentOnePage20Regular } from '@fluentui/react-icons/svg/document-one-page';
 import { DocumentOnePageAdd20Regular, DocumentOnePageAdd24Regular } from '@fluentui/react-icons/svg/document-one-page-add';
 import { DocumentSearch20Regular } from '@fluentui/react-icons/svg/document-search';
-import { DocumentTableArrowRight20Regular, DocumentTableArrowRight24Regular } from '@fluentui/react-icons/svg/document-table-arrow-right';
+import { DocumentTableArrowRight20Regular } from '@fluentui/react-icons/svg/document-table-arrow-right';
 import { DocumentText20Regular, DocumentText32Regular } from '@fluentui/react-icons/svg/document-text';
+import { DrawText20Filled, DrawText20Regular } from '@fluentui/react-icons/svg/draw-text';
 import { Filter20Regular } from '@fluentui/react-icons/svg/filter';
 import { FolderOpen20Regular, FolderOpen28Regular } from '@fluentui/react-icons/svg/folder-open';
 import { FullScreenMaximize20Regular } from '@fluentui/react-icons/svg/full-screen-maximize';
@@ -105,6 +106,7 @@ import { ShieldCheckmark20Regular, ShieldCheckmark32Regular } from '@fluentui/re
 import { Signature20Filled, Signature20Regular, Signature32Regular } from '@fluentui/react-icons/svg/signature';
 import { SlideMultiple20Filled, SlideMultiple20Regular } from '@fluentui/react-icons/svg/slide-multiple';
 import { Square20Filled, Square20Regular } from '@fluentui/react-icons/svg/square';
+import { SquareHint20Filled, SquareHint20Regular } from '@fluentui/react-icons/svg/square-hint';
 import { StackVertical20Filled, StackVertical20Regular } from '@fluentui/react-icons/svg/stack-vertical';
 import { Status20Regular } from '@fluentui/react-icons/svg/status';
 import { TableEdit20Regular, TableEdit28Regular } from '@fluentui/react-icons/svg/table-edit';
@@ -172,15 +174,18 @@ export const FLUENT_GLYPHS: Record<string, FluentGlyphs> = {
   'view.leftPanes': { regular: { small: PanelLeft20Regular }, filled: { small: PanelLeft20Filled } },
   'view.propertiesPane': { regular: { small: PanelRight20Regular }, filled: { small: PanelRight20Filled } },
   'view.collapseRibbon': { regular: { small: PanelTopContract20Regular } },
+  'comment.typewriter': { regular: { small: DrawText20Regular }, filled: { small: DrawText20Filled } },
+  'comment.textBox': { regular: { small: Textbox20Regular }, filled: { small: Textbox20Filled } },
+  'comment.callout': { regular: { small: TooltipQuote20Regular }, filled: { small: TooltipQuote20Filled } },
+  'comment.stickyNote': { regular: { small: Note20Regular, large: Note28Regular, largeNative: 28 }, filled: { small: Note20Filled, large: Note28Filled, largeNative: 28 } },
   'comment.highlight': { regular: { small: Highlight20Regular }, filled: { small: Highlight20Filled } },
   'comment.underline': { regular: { small: TextUnderline20Regular }, filled: { small: TextUnderline20Filled } },
   'comment.strikeout': { regular: { small: TextStrikethrough20Regular }, filled: { small: TextStrikethrough20Filled } },
   'comment.squiggly': { regular: { small: TextUnderline20Regular }, filled: { small: TextUnderline20Filled } },
   'comment.insertText': { regular: { small: TextAdd20Regular }, filled: { small: TextAdd20Filled } },
   'comment.replaceText': { regular: { small: TextEditStyle20Regular }, filled: { small: TextEditStyle20Filled } },
-  'comment.stickyNote': { regular: { small: Note20Regular, large: Note28Regular, largeNative: 28 }, filled: { small: Note20Filled, large: Note28Filled, largeNative: 28 } },
-  'comment.textBox': { regular: { small: Textbox20Regular }, filled: { small: Textbox20Filled } },
-  'comment.callout': { regular: { small: TooltipQuote20Regular }, filled: { small: TooltipQuote20Filled } },
+  'comment.highlightArea': { regular: { small: SquareHint20Regular }, filled: { small: SquareHint20Filled } },
+  'comment.inkHighlighter': { regular: { small: InkingTool20Regular }, filled: { small: InkingTool20Filled } },
   'comment.line': { regular: { small: Line20Regular }, filled: { small: Line20Filled } },
   'comment.arrow': { regular: { small: ArrowUpRight20Regular }, filled: { small: ArrowUpRight20Filled } },
   'comment.polyline': { regular: { small: LineFlowDiagonalUpRight20Regular }, filled: { small: LineFlowDiagonalUpRight20Filled } },
@@ -189,27 +194,26 @@ export const FLUENT_GLYPHS: Record<string, FluentGlyphs> = {
   'comment.oval': { regular: { small: Oval20Regular }, filled: { small: Oval20Filled } },
   'comment.cloud': { regular: { small: Cloud20Regular }, filled: { small: Cloud20Filled } },
   'comment.pencil': { regular: { small: Pen20Regular }, filled: { small: Pen20Filled } },
-  'comment.inkHighlighter': { regular: { small: InkingTool20Regular }, filled: { small: InkingTool20Filled } },
   'comment.stamp': { regular: { small: ApprovalsApp20Regular, large: ApprovalsApp32Regular, largeNative: 32 }, filled: { small: ApprovalsApp20Filled, large: ApprovalsApp32Filled, largeNative: 32 } },
   'comment.imageStamp': { regular: { small: ImageAdd20Regular } },
   'comment.link': { regular: { small: Link20Regular }, filled: { small: Link20Filled } },
   'comment.commentsPane': { regular: { small: CommentMultiple20Regular } },
-  'comment.reviewerProfile': { regular: { small: PersonEdit20Regular } },
-  'comment.statusSchemes': { regular: { small: Status20Regular } },
+  'comment.importComments': { regular: { small: ArrowImport20Regular } },
+  'comment.exportAnnotations': { regular: { small: ArrowExport20Regular } },
+  'comment.exportCrs': { regular: { small: DocumentTableArrowRight20Regular } },
   'comment.stylesPalette': { regular: { small: Color20Regular } },
   'comment.filter': { regular: { small: Filter20Regular } },
+  'comment.statusSchemes': { regular: { small: Status20Regular } },
+  'comment.reviewerProfile': { regular: { small: PersonEdit20Regular } },
   'comment.autoNumber': { regular: { small: NumberSymbolSquare20Regular }, filled: { small: NumberSymbolSquare20Filled } },
   'comment.reply': { regular: { small: ArrowReply20Regular } },
   'comment.delete': { regular: { small: Delete20Regular } },
   'comment.setStatus': { regular: { small: CheckmarkCircle20Regular } },
   'comment.copyStyle': { regular: { small: PaintBrush20Regular } },
   'comment.applyStyle': { regular: { small: PaintBrushArrowDown20Regular } },
-  'comment.importComments': { regular: { small: ArrowImport20Regular } },
-  'comment.exportAnnotations': { regular: { small: ArrowExport20Regular } },
   'comment.copyComments': { regular: { small: Copy20Regular } },
   'comment.pasteComments': { regular: { small: ClipboardPaste20Regular } },
   'comment.pasteToOriginal': { regular: { small: ClipboardArrowRight20Regular } },
-  'comment.exportCrs': { regular: { small: DocumentTableArrowRight20Regular, large: DocumentTableArrowRight24Regular, largeNative: 24 } },
   'measure.distance': { regular: { small: Ruler20Regular, large: Ruler32Regular, largeNative: 32 }, filled: { small: Ruler20Filled, large: Ruler32Filled, largeNative: 32 } },
   'measure.perimeter': { regular: { small: Pentagon20Regular, large: Pentagon32Regular, largeNative: 32 }, filled: { small: Pentagon20Filled, large: Pentagon32Filled, largeNative: 32 } },
   'measure.area': { regular: { small: Pentagon20Regular, large: Pentagon32Regular, largeNative: 32 }, filled: { small: Pentagon20Filled, large: Pentagon32Filled, largeNative: 32 } },

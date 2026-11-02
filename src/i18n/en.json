@@ -79,8 +79,10 @@
       "squiggly": "Squiggly",
       "insertText": "Insert Text",
       "replaceText": "Replace Text",
+      "highlightArea": "Highlight Area",
       "stickyNote": "Sticky Note",
-      "textBox": "Text Box / Typewriter",
+      "typewriter": "Typewriter",
+      "textBox": "Text Box",
       "callout": "Callout",
       "line": "Line",
       "arrow": "Arrow",
@@ -90,7 +92,7 @@
       "oval": "Oval",
       "cloud": "Cloud",
       "pencil": "Pencil",
-      "inkHighlighter": "Ink Highlighter",
+      "inkHighlighter": "Free Highlight",
       "stamp": "Stamp",
       "imageStamp": "Image Stamp",
       "statusSchemes": "Status Schemes",
@@ -216,7 +218,8 @@
         "zoom": "Zoom",
         "comment": "Comment",
         "measure": "Measure",
-        "pages": "Pages",
+        "rotation": "Rotate View",
+        "view": "View",
         "protect": "Protect"
       },
       "view": {
@@ -226,14 +229,14 @@
         "window": "Window"
       },
       "comment": {
-        "textMarkup": "Text Markup",
-        "note": "Note",
+        "tools": "Tools",
         "text": "Text",
+        "note": "Note",
+        "textMarkup": "Text Markup",
         "drawing": "Drawing",
         "stamp": "Stamp",
-        "comments": "Comments",
-        "review": "Review",
-        "transfer": "Transfer"
+        "measure": "Measure",
+        "manage": "Manage Comments"
       },
       "measure": {
         "measure": "Measure",
@@ -1933,17 +1936,12 @@
   },
   "commandShort": {
     "comment": {
-      "textBox": "Text Box",
+      "commentsPane": "Comments",
       "filter": "Filter",
       "autoNumber": "Numbers",
-      "delete": "Delete",
       "exportAnnotations": "Export",
       "importComments": "Import",
-      "copyComments": "Copy",
-      "pasteComments": "Paste",
-      "pasteToOriginal": "Paste to Original",
-      "exportCrs": "Export CRS",
-      "stylesPalette": "Styles"
+      "exportCrs": "Export CRS"
     }
   },
   "topBar": {

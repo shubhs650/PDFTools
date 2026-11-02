@@ -100,11 +100,15 @@ test('contents and subject; Copy Style → Apply Style', async ({ page }) => {
   await pane(page).getByLabel('Line width').fill('6');
   await pane(page).getByLabel('Line width').press('Enter');
   await pane(page).getByLabel('Line style').selectOption({ label: 'Dashed' });
-  await page.getByRole('tab', { name: 'Comment' }).click();
-  const ribbon = page.getByRole('toolbar', { name: 'Comment commands' });
-  await ribbon.getByRole('button', { name: 'Copy Style' }).click();
+  // The comment menu (Copy/Apply Style left the ribbon in M6-08, B7a).
+  const menuItem = async (name: string) => {
+    await page.getByTestId('document-view').focus();
+    await page.keyboard.press('Shift+F10');
+    await page.getByRole('menu', { name: 'Comment' }).getByRole('menuitem', { name }).click();
+  };
+  await menuItem('Copy Style');
   await cap(page, 'annotate', 'selectMany', id, [b]);
-  await ribbon.getByRole('button', { name: 'Apply Style' }).click();
+  await menuItem('Apply Style');
   await expect
     .poll(async () => {
       const o = (await objects(page, id)).find((x) => x.id === b);

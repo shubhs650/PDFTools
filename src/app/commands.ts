@@ -73,29 +73,82 @@ export const RIBBON_TABS = [
 ] as const satisfies readonly CommandTab[];
 
 /**
- * Home repeats frequent commands from other tabs with the same icons (layout
- * reference), as small buttons in Home's own groups (labels
- * `ribbon.group.home.<group>`) so the tab fits 1280 px (§8).
+ * A tab's copies of other tabs' commands (layout reference): same ids, icons
+ * and handlers, in the tab's own group (label `ribbon.group.<tab>.<group>`).
+ * Copies are small buttons with labels, except the ids in `large`.
  */
-export const HOME_REUSE_GROUPS: readonly { group: string; ids: readonly string[] }[] = [
-  { group: 'zoom', ids: ['view.zoomIn', 'view.zoomOut', 'view.fitPage', 'view.fitWidth'] },
+export interface ReuseGroup {
+  tab: CommandTab;
+  group: string;
+  ids: readonly string[];
+  large?: readonly string[];
+}
+
+export const REUSE_GROUPS: readonly ReuseGroup[] = [
+  // Home (preview review UI01; M6-08, beta review A2b–A2d).
   {
+    tab: 'home',
+    group: 'zoom',
+    ids: ['view.zoomIn', 'view.zoomOut', 'view.fitPage', 'view.fitWidth'],
+  },
+  {
+    tab: 'home',
     group: 'comment',
     ids: [
       'comment.highlight',
       'comment.stickyNote',
       'comment.textBox',
+      'comment.callout',
+      'comment.line',
+      'comment.arrow',
+      'comment.rectangle',
       'comment.cloud',
       'comment.stamp',
     ],
   },
-  { group: 'measure', ids: ['measure.distance'] },
-  { group: 'pages', ids: ['organize.rotateCw'] },
-  { group: 'protect', ids: ['protect.signatures'] },
+  { tab: 'home', group: 'measure', ids: ['measure.distance'] },
+  // Home rotates the view; Organize rotates the pages (owner's answer 6, M6 plan).
+  { tab: 'home', group: 'rotation', ids: ['view.rotateCw', 'view.rotateCcw'] },
+  { tab: 'home', group: 'view', ids: ['view.propertiesPane'] },
+  { tab: 'home', group: 'protect', ids: ['protect.signatures'] },
+  // Comment (M6-08, beta review B7a, B7b): the pointer tools and the measurements.
+  {
+    tab: 'comment',
+    group: 'tools',
+    ids: ['home.hand', 'home.selectText', 'home.selectAnnotations'],
+    large: ['home.selectAnnotations'],
+  },
+  {
+    tab: 'comment',
+    group: 'measure',
+    ids: ['measure.distance', 'measure.perimeter', 'measure.area'],
+  },
 ];
 
-/** Every command Home repeats, in order. */
-export const HOME_REUSES: readonly string[] = HOME_REUSE_GROUPS.flatMap((g) => g.ids);
+/**
+ * Group order where a tab mixes its own and reused groups (M6-08); other tabs
+ * keep the command table's order, reused groups last.
+ */
+export const GROUP_ORDER: Partial<Record<CommandTab, readonly string[]>> = {
+  comment: ['tools', 'text', 'note', 'textMarkup', 'drawing', 'stamp', 'measure', 'manage'],
+};
+
+/**
+ * How long a group keeps its full size as the window narrows (D-36): higher
+ * steps down later; equal ones step down from the right. Default 0.
+ */
+export const GROUP_PRIORITY: Readonly<Record<string, number>> = {
+  'comment.text': 4,
+  'comment.textMarkup': 4,
+  'comment.drawing': 4,
+  'comment.note': 3,
+  'comment.tools': 2,
+  'comment.stamp': 1,
+  'home.tools': 4,
+  'home.comment': 3,
+  'home.zoom': 2,
+  'home.find': 1,
+};
 
 export const COMMANDS: readonly CommandDef[] = [
   {
@@ -495,73 +548,37 @@ export const COMMANDS: readonly CommandDef[] = [
     fluent: 'PanelTopContract',
     milestone: 'M1',
   },
+  // Comment tab (M6-08, ADR-021 D-36, beta review B7a): Tools (reused from Home),
+  // Text, Note, Text Markup, Drawing, Stamp, Measure (reused), Manage Comments.
   {
-    id: 'comment.highlight',
+    id: 'comment.typewriter',
     tab: 'comment',
-    group: 'textMarkup',
+    group: 'text',
     size: 'small',
-    fluent: 'Highlight',
-    milestone: 'M3',
+    fluent: 'DrawText',
+    milestone: 'M6',
     toggle: true,
-    compact: true,
-    shipped: true, // M3-08
+    shipped: true, // M6-08 (the tool itself: M6-03)
   },
   {
-    id: 'comment.underline',
+    id: 'comment.textBox',
     tab: 'comment',
-    group: 'textMarkup',
+    group: 'text',
     size: 'small',
-    fluent: 'TextUnderline',
+    fluent: 'Textbox',
     milestone: 'M3',
     toggle: true,
-    compact: true,
-    shipped: true, // M3-08
+    shipped: true, // M3-09
   },
   {
-    id: 'comment.strikeout',
+    id: 'comment.callout',
     tab: 'comment',
-    group: 'textMarkup',
+    group: 'text',
     size: 'small',
-    fluent: 'TextStrikethrough',
+    fluent: 'TooltipQuote',
     milestone: 'M3',
     toggle: true,
-    compact: true,
-    shipped: true, // M3-08
-  },
-  {
-    id: 'comment.squiggly',
-    tab: 'comment',
-    group: 'textMarkup',
-    size: 'small',
-    fluent: 'TextUnderline',
-    milestone: 'M3',
-    toggle: true,
-    compact: true,
-    shipped: true, // M3-08
-    custom: 'comment.squiggly', // M3-06
-  },
-  {
-    id: 'comment.insertText',
-    tab: 'comment',
-    group: 'textMarkup',
-    size: 'small',
-    fluent: 'TextAdd',
-    milestone: 'M3',
-    toggle: true,
-    compact: true,
-    shipped: true, // M3-08
-  },
-  {
-    id: 'comment.replaceText',
-    tab: 'comment',
-    group: 'textMarkup',
-    size: 'small',
-    fluent: 'TextEditStyle',
-    milestone: 'M3',
-    toggle: true,
-    compact: true,
-    shipped: true, // M3-08
-    custom: 'comment.replaceText', // M3-06
+    shipped: true, // M3-09
   },
   {
     id: 'comment.stickyNote',
@@ -574,22 +591,84 @@ export const COMMANDS: readonly CommandDef[] = [
     shipped: true, // M3-09
   },
   {
-    id: 'comment.textBox',
+    id: 'comment.highlight',
     tab: 'comment',
-    group: 'text',
+    group: 'textMarkup',
     size: 'small',
-    fluent: 'Textbox',
+    fluent: 'Highlight',
     milestone: 'M3',
-    short: true,
     toggle: true,
-    shipped: true, // M3-09
+    shipped: true, // M3-08
   },
   {
-    id: 'comment.callout',
+    id: 'comment.underline',
     tab: 'comment',
-    group: 'text',
+    group: 'textMarkup',
     size: 'small',
-    fluent: 'TooltipQuote',
+    fluent: 'TextUnderline',
+    milestone: 'M3',
+    toggle: true,
+    shipped: true, // M3-08
+  },
+  {
+    id: 'comment.strikeout',
+    tab: 'comment',
+    group: 'textMarkup',
+    size: 'small',
+    fluent: 'TextStrikethrough',
+    milestone: 'M3',
+    toggle: true,
+    shipped: true, // M3-08
+  },
+  {
+    id: 'comment.squiggly',
+    tab: 'comment',
+    group: 'textMarkup',
+    size: 'small',
+    fluent: 'TextUnderline',
+    milestone: 'M3',
+    toggle: true,
+    shipped: true, // M3-08
+    custom: 'comment.squiggly', // M3-06
+  },
+  {
+    id: 'comment.insertText',
+    tab: 'comment',
+    group: 'textMarkup',
+    size: 'small',
+    fluent: 'TextAdd',
+    milestone: 'M3',
+    toggle: true,
+    shipped: true, // M3-08
+  },
+  {
+    id: 'comment.replaceText',
+    tab: 'comment',
+    group: 'textMarkup',
+    size: 'small',
+    fluent: 'TextEditStyle',
+    milestone: 'M3',
+    toggle: true,
+    shipped: true, // M3-08
+    custom: 'comment.replaceText', // M3-06
+  },
+  {
+    // A yellow rectangle blended with Multiply (a Square annotation, /BM in its appearance).
+    id: 'comment.highlightArea',
+    tab: 'comment',
+    group: 'textMarkup',
+    size: 'small',
+    fluent: 'SquareHint',
+    milestone: 'M6',
+    toggle: true,
+    shipped: true, // M6-08
+  },
+  {
+    id: 'comment.inkHighlighter',
+    tab: 'comment',
+    group: 'textMarkup',
+    size: 'small',
+    fluent: 'InkingTool',
     milestone: 'M3',
     toggle: true,
     shipped: true, // M3-09
@@ -684,17 +763,6 @@ export const COMMANDS: readonly CommandDef[] = [
     shipped: true, // M3-09
   },
   {
-    id: 'comment.inkHighlighter',
-    tab: 'comment',
-    group: 'drawing',
-    size: 'small',
-    fluent: 'InkingTool',
-    milestone: 'M3',
-    toggle: true,
-    compact: true,
-    shipped: true, // M3-09
-  },
-  {
     id: 'comment.stamp',
     tab: 'comment',
     group: 'stamp',
@@ -727,113 +795,17 @@ export const COMMANDS: readonly CommandDef[] = [
   {
     id: 'comment.commentsPane',
     tab: 'comment',
-    group: 'comments',
+    group: 'manage',
     size: 'small',
     fluent: 'CommentMultiple',
     milestone: 'M3',
-    shipped: true, // M3-11
-  },
-  {
-    id: 'comment.reviewerProfile',
-    tab: 'comment',
-    group: 'comments',
-    size: 'small',
-    fluent: 'PersonEdit',
-    milestone: 'M3',
-    shipped: true, // M3-07
-  },
-  {
-    id: 'comment.statusSchemes',
-    tab: 'comment',
-    group: 'comments',
-    size: 'small',
-    fluent: 'Status',
-    milestone: 'M3',
-    shipped: true, // M3-13
-  },
-  {
-    id: 'comment.stylesPalette',
-    tab: 'comment',
-    group: 'comments',
-    size: 'small',
-    fluent: 'Color',
-    milestone: 'M6',
-    short: true,
-    shipped: true, // M6-07: the user's own comment styles (D-37)
-  },
-  {
-    id: 'comment.filter',
-    tab: 'comment',
-    group: 'comments',
-    size: 'small',
-    fluent: 'Filter',
-    milestone: 'M3',
     short: true,
     shipped: true, // M3-11
-  },
-  {
-    id: 'comment.autoNumber',
-    tab: 'comment',
-    group: 'comments',
-    size: 'small',
-    fluent: 'NumberSymbolSquare',
-    milestone: 'M3',
-    short: true,
-    toggle: true,
-    shipped: true, // M3-11
-  },
-  {
-    id: 'comment.reply',
-    tab: 'comment',
-    group: 'review',
-    size: 'small',
-    fluent: 'ArrowReply',
-    milestone: 'M3',
-    shipped: true, // M3-12
-  },
-  {
-    // A visible Delete beside Reply and Set Status (preview review OBS01): the
-    // same action as the Delete key and the Comments pane.
-    id: 'comment.delete',
-    tab: 'comment',
-    group: 'review',
-    size: 'small',
-    fluent: 'Delete',
-    milestone: 'M3',
-    short: true,
-    shipped: true,
-  },
-  {
-    id: 'comment.setStatus',
-    tab: 'comment',
-    group: 'review',
-    size: 'small',
-    fluent: 'CheckmarkCircle',
-    milestone: 'M3',
-    shipped: true, // M3-12
-  },
-  {
-    id: 'comment.copyStyle',
-    tab: 'comment',
-    group: 'review',
-    size: 'small',
-    fluent: 'PaintBrush',
-    milestone: 'M3',
-    shipped: true, // M3-10
-  },
-  {
-    id: 'comment.applyStyle',
-    tab: 'comment',
-    group: 'review',
-    size: 'small',
-    fluent: 'PaintBrushArrowDown',
-    milestone: 'M3',
-    shipped: true, // M3-10
   },
   {
     id: 'comment.importComments',
     tab: 'comment',
-    group: 'transfer',
+    group: 'manage',
     size: 'small',
     fluent: 'ArrowImport',
     milestone: 'M4',
@@ -843,7 +815,7 @@ export const COMMANDS: readonly CommandDef[] = [
   {
     id: 'comment.exportAnnotations',
     tab: 'comment',
-    group: 'transfer',
+    group: 'manage',
     size: 'small',
     fluent: 'ArrowExport',
     milestone: 'M4',
@@ -851,45 +823,138 @@ export const COMMANDS: readonly CommandDef[] = [
     shipped: true, // M4-08
   },
   {
-    id: 'comment.copyComments',
-    tab: 'comment',
-    group: 'transfer',
-    size: 'small',
-    fluent: 'Copy',
-    milestone: 'M4',
-    short: true,
-    shipped: true, // M4-21
-  },
-  {
-    id: 'comment.pasteComments',
-    tab: 'comment',
-    group: 'transfer',
-    size: 'small',
-    fluent: 'ClipboardPaste',
-    milestone: 'M4',
-    short: true,
-    shipped: true, // M4-21
-  },
-  {
-    id: 'comment.pasteToOriginal',
-    tab: 'comment',
-    group: 'transfer',
-    size: 'small',
-    fluent: 'ClipboardArrowRight',
-    milestone: 'M4',
-    short: true,
-    shipped: true, // M4-21
-  },
-  {
     id: 'comment.exportCrs',
     tab: 'comment',
-    group: 'transfer',
-    size: 'large',
+    group: 'manage',
+    size: 'small',
     fluent: 'DocumentTableArrowRight',
     milestone: 'M3',
     short: true,
     shipped: true, // M3-19
     custom: 'comment.exportCrs', // M3-06
+  },
+  {
+    id: 'comment.stylesPalette',
+    tab: 'comment',
+    group: 'manage',
+    size: 'small',
+    fluent: 'Color',
+    milestone: 'M6',
+    shipped: true, // M6-07: the user's own comment styles (D-37)
+  },
+  {
+    id: 'comment.filter',
+    tab: 'comment',
+    group: 'manage',
+    size: 'small',
+    fluent: 'Filter',
+    milestone: 'M3',
+    short: true,
+    shipped: true, // M3-11
+  },
+  {
+    id: 'comment.statusSchemes',
+    tab: 'comment',
+    group: 'manage',
+    size: 'small',
+    fluent: 'Status',
+    milestone: 'M3',
+    shipped: true, // M3-13
+  },
+  {
+    id: 'comment.reviewerProfile',
+    tab: 'comment',
+    group: 'manage',
+    size: 'small',
+    fluent: 'PersonEdit',
+    milestone: 'M3',
+    shipped: true, // M3-07
+  },
+  {
+    id: 'comment.autoNumber',
+    tab: 'comment',
+    group: 'manage',
+    size: 'small',
+    fluent: 'NumberSymbolSquare',
+    milestone: 'M3',
+    short: true,
+    toggle: true,
+    shipped: true, // M3-11
+  },
+  // Review and transfer (M3-10 … M4-21): no longer ribbon buttons (M6-08, B7a);
+  // the comment menus and the Comments pane's toolbar show them, the keymap keeps them.
+  {
+    id: 'comment.reply',
+    tab: 'menu',
+    group: 'menu',
+    size: 'small',
+    fluent: 'ArrowReply',
+    milestone: 'M3',
+    shipped: true, // M3-12
+  },
+  {
+    // The same action as the Delete key, the comment menus and the Comments pane.
+    id: 'comment.delete',
+    tab: 'menu',
+    group: 'menu',
+    size: 'small',
+    fluent: 'Delete',
+    milestone: 'M3',
+    shipped: true,
+  },
+  {
+    id: 'comment.setStatus',
+    tab: 'menu',
+    group: 'menu',
+    size: 'small',
+    fluent: 'CheckmarkCircle',
+    milestone: 'M3',
+    shipped: true, // M3-12
+  },
+  {
+    id: 'comment.copyStyle',
+    tab: 'menu',
+    group: 'menu',
+    size: 'small',
+    fluent: 'PaintBrush',
+    milestone: 'M3',
+    shipped: true, // M3-10
+  },
+  {
+    id: 'comment.applyStyle',
+    tab: 'menu',
+    group: 'menu',
+    size: 'small',
+    fluent: 'PaintBrushArrowDown',
+    milestone: 'M3',
+    shipped: true, // M3-10
+  },
+  {
+    id: 'comment.copyComments',
+    tab: 'menu',
+    group: 'menu',
+    size: 'small',
+    fluent: 'Copy',
+    milestone: 'M4',
+    shipped: true, // M4-21
+  },
+  {
+    id: 'comment.pasteComments',
+    tab: 'menu',
+    group: 'menu',
+    size: 'small',
+    fluent: 'ClipboardPaste',
+    milestone: 'M4',
+    shipped: true, // M4-21
+  },
+  {
+    id: 'comment.pasteToOriginal',
+    tab: 'menu',
+    group: 'menu',
+    size: 'small',
+    fluent: 'ClipboardArrowRight',
+    milestone: 'M4',
+    shipped: true, // M4-21
   },
   {
     id: 'measure.distance',

@@ -8,6 +8,8 @@ export const DRAW_TOOLS = [
   // A text box without a box (/IT /FreeTextTypeWriter, M6-03): a tool of ours on the plugin's free text.
   'typewriter',
   'freeTextCallout',
+  // Highlight Area (M6-08): a yellow rectangle blended with Multiply, on the plugin's square.
+  'highlightArea',
   'line',
   'lineArrow',
   'polyline',
@@ -40,6 +42,7 @@ export const isDrawTool = (t: string): t is DrawTool =>
 /** Comment tab command → plugin tool. */
 export const DRAW_COMMANDS: Record<string, DrawTool> = {
   'comment.stickyNote': 'textComment',
+  'comment.typewriter': 'typewriter',
   'comment.textBox': 'freeText',
   'comment.callout': 'freeTextCallout',
   'comment.line': 'line',
@@ -51,6 +54,7 @@ export const DRAW_COMMANDS: Record<string, DrawTool> = {
   'comment.cloud': 'cloud',
   'comment.pencil': 'ink',
   'comment.inkHighlighter': 'inkHighlighter',
+  'comment.highlightArea': 'highlightArea',
   'comment.link': 'link',
 };
 
@@ -83,7 +87,7 @@ const ANGLED: ReadonlySet<DrawTool> = new Set([
   'measureArea',
 ]);
 /** … and boxes square. */
-const BOXED: ReadonlySet<DrawTool> = new Set(['square', 'circle', 'link']);
+const BOXED: ReadonlySet<DrawTool> = new Set(['square', 'highlightArea', 'circle', 'link']);
 
 export interface Pt {
   x: number;

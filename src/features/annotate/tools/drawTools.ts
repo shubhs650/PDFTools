@@ -5,7 +5,12 @@
 // after a note is placed, and the Link dialog after a link is drawn. The plugin
 // still draws, previews and commits; appearances are PDFium's (B7).
 import type { PluginRegistry } from '@embedpdf/core';
-import { PdfAnnotationSubtype, uuidV4, type PdfAnnotationObject } from '@embedpdf/models';
+import {
+  PdfAnnotationSubtype,
+  PdfBlendMode,
+  uuidV4,
+  type PdfAnnotationObject,
+} from '@embedpdf/models';
 import type {
   AnnotationCapability,
   AnnotationTool,
@@ -16,7 +21,7 @@ import { capability } from '../../view/host';
 import { openContentsPrompt } from './contentsPrompt';
 import { centred, constrain, VERTEX_TOOLS, type DrawTool, type Pt } from './drawModel';
 import { openLinkEdit } from './linkEdit';
-import { defaultsPatch, isStyleTool, type StyleTool } from './toolDefaults';
+import { defaultsPatch, HIGHLIGHT_YELLOW, isStyleTool, type StyleTool } from './toolDefaults';
 import { defaultsFor, loadToolDefaults, toolDefaultsStore } from './toolDefaultsStore';
 
 type Handlers = ReturnType<HandlerFactory<PdfAnnotationObject>['create']>;
@@ -36,6 +41,7 @@ const SNAPS: ReadonlySet<DrawTool> = new Set([
   'polygon',
   'cloud',
   'square',
+  'highlightArea',
   'circle',
   'measureDistance',
   'measurePerimeter',
@@ -162,6 +168,18 @@ const REWRAPPED: readonly DrawTool[] = [
   'link',
 ];
 
+/**
+ * Highlight Area (M6-08): a Square annotation filled yellow, no border, whose
+ * appearance PDFium draws with /BM /Multiply (so the text shows through).
+ */
+export const HIGHLIGHT_AREA_DEFAULTS = {
+  color: HIGHLIGHT_YELLOW,
+  strokeColor: HIGHLIGHT_YELLOW,
+  strokeWidth: 0,
+  opacity: 1,
+  blendMode: PdfBlendMode.Multiply,
+} as const;
+
 /** The intent that makes a free text annotation a typewriter (PDF 32000-1 §12.5.6.6). */
 export const TYPEWRITER_INTENT = 'FreeTextTypeWriter';
 
@@ -195,8 +213,10 @@ export function installDrawTools(registry: PluginRegistry): () => void {
       pointerHandler: wrapFactory(id, handler),
     });
   };
-  // The plugin's own text box, before it is rewrapped, for the typewriter.
+  // The plugin's own text box and rectangle, before they are rewrapped, for the
+  // typewriter and the highlight area.
   const freeTextBase = cap.getTool('freeText');
+  const squareBase = cap.getTool('square');
   const textExtra = (base: AnnotationTool): Partial<AnnotationTool> => ({
     defaults: { ...base.defaults, ...textDefaults() },
     ...(base.clickBehavior
@@ -225,6 +245,14 @@ export function installDrawTools(registry: PluginRegistry): () => void {
         a.type === PdfAnnotationSubtype.FREETEXT && a.intent === TYPEWRITER_INTENT ? 10 : 0,
     });
   }
+  if (squareBase)
+    rewrap('highlightArea', squareBase, {
+      name: 'Highlight Area',
+      labelKey: 'annotation.highlightArea',
+      defaults: { ...squareBase.defaults, ...HIGHLIGHT_AREA_DEFAULTS },
+      matchScore: (a: PdfAnnotationObject) =>
+        a.type === PdfAnnotationSubtype.SQUARE && a.blendMode === PdfBlendMode.Multiply ? 10 : 0,
+    });
   const polygon = cap.getTool('polygon');
   if (polygon)
     rewrap('cloud', polygon, {

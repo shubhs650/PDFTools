@@ -29,6 +29,7 @@ export function commentMenu(docId: string): ContextMenuEntry[] {
     cmd('edit.cut'),
     cmd('edit.copy'),
     cmd('edit.paste'),
+    cmd('comment.pasteToOriginal'),
     cmd('comment.delete'),
     sep('thread'),
     cmd('comment.reply'),
@@ -49,6 +50,8 @@ export function commentMenu(docId: string): ContextMenuEntry[] {
 /** The page background. */
 export const PAGE_MENU: readonly ContextMenuEntry[] = [
   cmd('edit.paste'),
+  // Cross-document paste (M4-21): out of the ribbon since M6-08 (B7a).
+  cmd('comment.pasteToOriginal'),
   cmd('edit.selectAll'),
   sep('tools'),
   cmd('home.hand'),
