@@ -37,7 +37,10 @@ interface Heap {
 const heapOf = (mod: WrappedPdfiumModule): Heap => mod.pdfium as unknown as Heap;
 
 /** A UTF-16LE string from a PDFium "get into buffer" call that returns the byte length. */
-function readWide(mod: WrappedPdfiumModule, call: (buf: number, len: number) => number): string {
+export function readWide(
+  mod: WrappedPdfiumModule,
+  call: (buf: number, len: number) => number,
+): string {
   const heap = heapOf(mod);
   const len = call(0, 0);
   if (len <= 2) return '';
@@ -62,7 +65,7 @@ function fileSize(mod: WrappedPdfiumModule, att: number): number | null {
   }
 }
 
-function fileBytes(mod: WrappedPdfiumModule, att: number): ArrayBuffer {
+export function fileBytes(mod: WrappedPdfiumModule, att: number): ArrayBuffer {
   const size = fileSize(mod, att);
   if (size === null)
     throw new RpcError('attachment-unreadable', 'The attachment could not be read');

@@ -82,6 +82,8 @@
       "replaceText": "Replace Text",
       "highlightArea": "Highlight Area",
       "stickyNote": "Sticky Note",
+      "attachFile": "Attach File",
+      "saveAttachment": "Save Attachment…",
       "typewriter": "Typewriter",
       "textBox": "Text Box",
       "callout": "Callout",
@@ -954,6 +956,7 @@
       "stamp": "Stamp",
       "caret": "Inserted text",
       "ink": "Pencil drawing",
+      "fileAttachment": "File attachment",
       "other": "Comment",
       "distance": "Distance measurement",
       "perimeter": "Perimeter measurement",
@@ -1566,6 +1569,13 @@
     "done_other": "{{count}} comments flattened.",
     "failedSome_one": "{{count}} comment could not be drawn and is left as it is.",
     "failedSome_other": "{{count}} comments could not be drawn and are left as they are."
+  },
+  "attachFile": {
+    "restricted": "This document's security settings don't allow adding comments.",
+    "tooLarge": "This file is too large to attach. Files up to {{max}} can be attached.",
+    "saveFailed": "The attachment could not be saved.",
+    "noneSelected": "Select a file attachment first",
+    "layer": "Click where the file attachment goes"
   },
   "snapshot": {
     "copied": "Snapshot copied",

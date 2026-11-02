@@ -3280,3 +3280,16 @@ textarea.form-field {
 .snapshot-toast--error {
   color: var(--color-danger);
 }
+
+/* Attach File (M6-10): the page takes the pointer while the tool is on. */
+.attach-file-layer {
+  position: absolute;
+  inset: var(--space-0);
+  cursor: copy;
+}
+
+/* A file attachment's hit area; the paperclip is drawn by the annotation tiles. */
+.file-attachment-hit {
+  position: absolute;
+  inset: var(--space-0);
+}

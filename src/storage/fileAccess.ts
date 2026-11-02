@@ -103,6 +103,25 @@ export async function pickCommentSource(win: Window = window): Promise<File | nu
   return picked?.file ?? null;
 }
 
+/** Attach File (M6-10): one file of any type. Resolves null when cancelled. */
+export async function pickAnyFile(win: Window = window): Promise<File | null> {
+  if (accessStrategy(win) === 'fsa') {
+    try {
+      const [handle] =
+        (await (win as PickerWindow).showOpenFilePicker?.({
+          multiple: false,
+          id: 'pdftools-attach',
+        })) ?? [];
+      return handle ? await handle.getFile() : null;
+    } catch (err) {
+      if (isAbort(err)) return null;
+      throw err;
+    }
+  }
+  const [picked] = await pickWithInput(win.document, '', false);
+  return picked?.file ?? null;
+}
+
 function pickWithInput(
   doc: Document,
   accept = '.pdf,application/pdf',

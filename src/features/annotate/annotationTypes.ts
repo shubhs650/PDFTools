@@ -24,6 +24,7 @@ const TYPE: Partial<Record<PdfAnnotationSubtype, MessageKey>> = {
   [PdfAnnotationSubtype.STAMP]: msg('annotate.type.stamp'),
   [PdfAnnotationSubtype.CARET]: msg('annotate.type.caret'),
   [PdfAnnotationSubtype.INK]: msg('annotate.type.ink'),
+  [PdfAnnotationSubtype.FILEATTACHMENT]: msg('annotate.type.fileAttachment'),
 };
 
 export function annotationTypeKey(a: PdfAnnotationObject): MessageKey {

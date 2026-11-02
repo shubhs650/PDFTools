@@ -188,3 +188,60 @@ export function isNormalized(native: PdfiumNative, docId: string): boolean {
   if (!ctx) throw new Error('Document is not open');
   return ctx.normalizeRotation === true;
 }
+
+/** Rect in PDF page space, as PDFium stores /Rect. */
+export interface PageSpaceRect {
+  left: number;
+  top: number;
+  right: number;
+  bottom: number;
+}
+
+/**
+ * PdfiumNative's private annotation writers (M6-10, ADR-022 decision 1): the
+ * helpers its own create/update use, so an annotation EmbedPDF can't create
+ * (FileAttachment) gets the same /Rect conversion, colour and base keys
+ * (/T, /Contents, /Subj, /M, /CreationDate, /F, /IRT, /RT) as every other.
+ */
+export interface AnnotWriter {
+  /** Device rect (top-left, points) → /Rect, as EmbedPDF converts it. */
+  setRect(doc: unknown, page: unknown, annot: number, rect: unknown): boolean;
+  readRect(annot: number): PageSpaceRect;
+  /** `#RRGGBB` → /C. */
+  setColor(annot: number, hex: string): boolean;
+  /** PdfAnnotationName → /Name. */
+  setIcon(annot: number, name: number): boolean;
+  applyBase(doc: unknown, page: unknown, pagePtr: number, annot: number, object: unknown): boolean;
+  /** The page's annotation with this /NM (0: none); the caller closes it. */
+  byName(pagePtr: number, id: string): number;
+  removeByName(pagePtr: number, id: string): boolean;
+}
+
+type Fn = (...a: unknown[]) => unknown;
+
+export function annotWriter(native: PdfiumNative): AnnotWriter {
+  const n = native as unknown as Record<string, Fn | undefined>;
+  const get = (name: string): Fn => {
+    const f = n[name];
+    if (typeof f !== 'function')
+      throw new Error(`EmbedPDF internals changed: PdfiumNative.${name} is missing`);
+    return f.bind(native);
+  };
+  const setRect = get('setPageAnnoRect');
+  const readRect = get('readPageAnnoRect');
+  const setColor = get('setAnnotationColor');
+  const setIcon = get('setAnnotationName');
+  const applyBase = get('applyBaseAnnotationProperties');
+  const byName = get('getAnnotationByName');
+  const removeByName = get('removeAnnotationByName');
+  return {
+    setRect: (doc, page, annot, rect) => Boolean(setRect(doc, page, annot, rect)),
+    readRect: (annot) => readRect(annot) as PageSpaceRect,
+    setColor: (annot, hex) => Boolean(setColor(annot, hex, 0)),
+    setIcon: (annot, name) => Boolean(setIcon(annot, name)),
+    applyBase: (doc, page, pagePtr, annot, object) =>
+      Boolean(applyBase(doc, page, pagePtr, annot, object)),
+    byName: (pagePtr, id) => Number(byName(pagePtr, id)),
+    removeByName: (pagePtr, id) => Boolean(removeByName(pagePtr, id)),
+  };
+}

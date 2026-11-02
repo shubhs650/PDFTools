@@ -34,8 +34,11 @@ export function useSnapshot<T>(selector: (s: SnapshotState) => T): T {
 let messageTimer: ReturnType<typeof setTimeout> | undefined;
 let seq = 0;
 
-/** Shown in the toast and said by the document's annotation live region (rule 12). */
-function say(docId: string, text: string, ok: boolean): void {
+/**
+ * Shown in the toast and said by the document's annotation live region (rule
+ * 12). Attach File (M6-10) reports through it too.
+ */
+export function showStatusToast(docId: string, text: string, ok: boolean): void {
   announceTransfer(docId, text);
   clearTimeout(messageTimer);
   snapshotStore.setState({ message: { text, ok, seq: ++seq } });
@@ -98,7 +101,7 @@ export async function renderSnapshot(docId: string, page: number, rect: Rect): P
 export function copySnapshot(docId: string, page: number, rect: Rect): void {
   const blocked = snapshotBlocked(docId);
   if (blocked) {
-    say(docId, blocked, false);
+    showStatusToast(docId, blocked, false);
     return;
   }
   const png = renderSnapshot(docId, page, rect);
@@ -112,11 +115,11 @@ export function copySnapshot(docId: string, page: number, rect: Rect): void {
   png.catch(() => undefined);
   write.then(
     () => {
-      say(docId, t('snapshot.copied'), true);
+      showStatusToast(docId, t('snapshot.copied'), true);
     },
     (err: unknown) => {
       recordError('snapshot.copy', err);
-      say(docId, t('snapshot.failed'), false);
+      showStatusToast(docId, t('snapshot.failed'), false);
     },
   );
 }

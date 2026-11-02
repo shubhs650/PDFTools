@@ -19,7 +19,7 @@ import { ArrowRotateCounterclockwise20Regular } from '@fluentui/react-icons/svg/
 import { ArrowSync20Regular, ArrowSync24Regular } from '@fluentui/react-icons/svg/arrow-sync';
 import { ArrowUndo20Regular } from '@fluentui/react-icons/svg/arrow-undo';
 import { ArrowUpRight20Filled, ArrowUpRight20Regular } from '@fluentui/react-icons/svg/arrow-up-right';
-import { Attach20Filled, Attach20Regular } from '@fluentui/react-icons/svg/attach';
+import { Attach20Filled, Attach20Regular, Attach32Filled, Attach32Regular } from '@fluentui/react-icons/svg/attach';
 import { BookOpen20Filled, BookOpen20Regular } from '@fluentui/react-icons/svg/book-open';
 import { Bookmark20Filled, Bookmark20Regular } from '@fluentui/react-icons/svg/bookmark';
 import { Bug20Regular, Bug24Regular } from '@fluentui/react-icons/svg/bug';
@@ -181,6 +181,7 @@ export const FLUENT_GLYPHS: Record<string, FluentGlyphs> = {
   'comment.textBox': { regular: { small: Textbox20Regular }, filled: { small: Textbox20Filled } },
   'comment.callout': { regular: { small: TooltipQuote20Regular }, filled: { small: TooltipQuote20Filled } },
   'comment.stickyNote': { regular: { small: Note20Regular, large: Note28Regular, largeNative: 28 }, filled: { small: Note20Filled, large: Note28Filled, largeNative: 28 } },
+  'comment.attachFile': { regular: { small: Attach20Regular, large: Attach32Regular, largeNative: 32 }, filled: { small: Attach20Filled, large: Attach32Filled, largeNative: 32 } },
   'comment.highlight': { regular: { small: Highlight20Regular }, filled: { small: Highlight20Filled } },
   'comment.underline': { regular: { small: TextUnderline20Regular }, filled: { small: TextUnderline20Filled } },
   'comment.strikeout': { regular: { small: TextStrikethrough20Regular }, filled: { small: TextStrikethrough20Filled } },
@@ -212,6 +213,7 @@ export const FLUENT_GLYPHS: Record<string, FluentGlyphs> = {
   'comment.autoNumber': { regular: { small: NumberSymbolSquare20Regular }, filled: { small: NumberSymbolSquare20Filled } },
   'comment.reply': { regular: { small: ArrowReply20Regular } },
   'comment.delete': { regular: { small: Delete20Regular } },
+  'comment.saveAttachment': { regular: { small: ArrowDownload20Regular } },
   'comment.flattenSelected': { regular: { small: LayerDiagonal20Regular } },
   'comment.setStatus': { regular: { small: CheckmarkCircle20Regular } },
   'comment.copyStyle': { regular: { small: PaintBrush20Regular } },

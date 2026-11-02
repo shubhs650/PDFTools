@@ -12,6 +12,7 @@ import { installMeasureTools } from '../measure/measureTools';
 import { installViewportTool } from '../measure/viewports';
 import { installSnapping } from '../measure/snapping';
 import { installHistoryJoin } from '../annotate/historyJoin';
+import { installAttachmentRefresh } from '../attachments/attachments';
 import { capability, setRegistry, useHost } from './host';
 
 const onInitialized = (registry: Parameters<typeof setRegistry>[0]): Promise<void> => {
@@ -34,6 +35,7 @@ const onInitialized = (registry: Parameters<typeof setRegistry>[0]): Promise<voi
     installViewportTool(registry);
     installMeasurements(registry);
     installSnapping();
+    installAttachmentRefresh(registry);
   }
   setRegistry(registry);
   return Promise.resolve();

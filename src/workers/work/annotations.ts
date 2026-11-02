@@ -9,9 +9,14 @@
 // and writes it as /NM before the first edit that targets it (annotId.ts), so
 // the edit also persists it (ADR-005 consequence).
 import type { PdfiumNative } from '@embedpdf/engines/pdfium';
-import type { PdfAnnotationObject, PdfDocumentObject } from '@embedpdf/models';
+import {
+  PdfAnnotationSubtype,
+  type PdfAnnotationObject,
+  type PdfDocumentObject,
+} from '@embedpdf/models';
 import type { WrappedPdfiumModule } from '@embedpdf/pdfium';
 import { readAnnotString } from '../render/annotTiles';
+import { fileAttachmentColors } from '../render/fileAttach';
 import { acquirePage, rawCall, withWideString } from '../render/pdfium';
 import { stableAnnotId } from '../shared/annotId';
 import type { JobSlice } from './scheduler';
@@ -47,6 +52,8 @@ export function nameAnnotations(
   }
   return named;
 }
+
+const FILE_ATTACHMENT = PdfAnnotationSubtype.FILEATTACHMENT;
 
 // Line, polygon, polyline (PdfAnnotationSubtype and FPDF_ANNOT_* agree).
 const GEOMETRY = new Set([4, 7, 8]);
@@ -120,6 +127,14 @@ export async function listAnnotations(
     for (const p of pages) nameAnnotations(mod, native, doc.id, p.index);
     const batch = await native.getAnnotationsBatch(doc, pages).toPromise();
     for (const [index, list] of Object.entries(batch)) {
+      // Attach File (M6-10): EmbedPDF reads no colour for a FileAttachment.
+      if (list.some((a) => a.type === FILE_ATTACHMENT)) {
+        const colors = fileAttachmentColors(mod, native, doc.id, Number(index));
+        for (const a of list) {
+          const c = a.type === FILE_ATTACHMENT ? colors.get(a.id) : undefined;
+          if (c) Object.assign(a, { strokeColor: c, color: c });
+        }
+      }
       if (!list.some((a) => GEOMETRY.has(a.type) && !a.intent)) continue;
       const intents = geometryIntents(mod, native, doc.id, Number(index));
       for (const a of list) {

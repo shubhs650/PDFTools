@@ -248,7 +248,8 @@ describe('adaptive steps (D-36)', () => {
     expect(groupSteps(group('tools'))).toEqual([0, 1, 2, 3]);
     expect(groupSteps(group('textMarkup'))).toEqual([0, 2, 3]); // no large buttons
     expect(groupSteps(group('drawing'))).toEqual([0, 3]); // already icons only
-    expect(groupSteps(group('note'))).toEqual([0, 1, 2]); // one button: no menu
+    // Sticky Note and Attach File (M6-10): two buttons, so it can fold into a menu.
+    expect(groupSteps(group('note'))).toEqual([0, 1, 2, 3]);
   });
 
   it('steps down one group at a time: a round per step, low priority and then the right first', () => {
