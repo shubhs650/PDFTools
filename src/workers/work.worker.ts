@@ -41,6 +41,7 @@ import { commentSource, copyComments, transferComments } from './work/transferJo
 import { detectTables, exportTables, tableCells, type TableSources } from './work/tables/job';
 import { applyRedactions } from './work/redact/apply';
 import type { PdfDocumentObject } from '@embedpdf/models';
+import { installFontReadback } from './render/freeTextFonts';
 
 let mod: WrappedPdfiumModule | undefined;
 let native: PdfiumNative | undefined;
@@ -128,6 +129,8 @@ serve<WorkApi>(self, {
     mod = await init({ wasmBinary });
     // No fallback fonts: the Work worker never renders text for display (rule 4).
     native = new PdfiumNative(mod, { fontFallback: null });
+    // Text boxes keep their standard font when listed (M6-06).
+    installFontReadback(native);
     return { ms: performance.now() - t0, wasmBytes: wasmBytes() };
   },
 

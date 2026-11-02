@@ -28,6 +28,7 @@ import { objectsOf } from '../comments/commentsStore';
 import { removeThreads } from '../comments/threadActions';
 import { annotationState } from '../selection';
 import { announceTransfer } from './transferAnnounce';
+import { fixedReason } from '../properties/flagActions';
 
 export interface Clip {
   /** The clipboard PDF: empty pages with the copied comments. */
@@ -151,7 +152,9 @@ export function cutBlocked(docId: string | null): MessageKey | null {
   const copy = copyBlocked(docId);
   if (copy || !docId) return copy;
   const d = documentStore.getState().docs[docId];
-  return d && !allows(securityOf(d.meta), 'annotate') ? msg('protect.restricted') : null;
+  if (d && !allows(securityOf(d.meta), 'annotate')) return msg('protect.restricted');
+  // A Locked or Read only comment is never deleted, so never cut (M6-06).
+  return fixedReason(selectedObjects(docId));
 }
 
 /** The thread roots of the selection, as objects. */

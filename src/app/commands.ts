@@ -1430,6 +1430,46 @@ export const COMMANDS: readonly CommandDef[] = [
     milestone: 'M6',
     shipped: true, // M6-02: opens the Properties pane
   },
+  // Comment flags, review mark and tool defaults in the comment menu (M6-06, D-37, D-38 f).
+  {
+    id: 'comment.toggleLocked',
+    tab: 'menu',
+    group: 'menu',
+    size: 'small',
+    fluent: 'LockClosed',
+    toggle: true,
+    milestone: 'M6',
+    shipped: true, // M6-06: the comment menu; the Properties pane's Locked
+  },
+  {
+    id: 'comment.togglePrintable',
+    tab: 'menu',
+    group: 'menu',
+    size: 'small',
+    fluent: 'Print',
+    toggle: true,
+    milestone: 'M6',
+    shipped: true, // M6-06: the comment menu; the Properties pane's Printable
+  },
+  {
+    id: 'comment.toggleMarked',
+    tab: 'menu',
+    group: 'menu',
+    size: 'small',
+    fluent: 'CheckmarkSquare',
+    toggle: true,
+    milestone: 'M6',
+    shipped: true, // M6-06: the reviewer's own mark (/StateModel /Marked)
+  },
+  {
+    id: 'comment.makeDefault',
+    tab: 'menu',
+    group: 'menu',
+    size: 'small',
+    fluent: 'PaintBrushArrowDown',
+    milestone: 'M6',
+    shipped: true, // M6-06: the comment's style becomes its tool's defaults
+  },
   {
     id: 'status.readyOffline',
     tab: 'status',

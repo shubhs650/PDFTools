@@ -1,13 +1,60 @@
 # PDFTools — Progress
 
-_Last updated: 2026-11-02 (session 27: M6-05 Comments pane redesign)_
+_Last updated: 2026-11-02 (session 28: M6-06 Properties pane as a property grid)_
 
 **Current milestone:** M6 — Beta review (plan in [docs/plan/M6.md](plan/M6.md), scope changes in
-[ADR-021](adr/021-m6-beta-review.md), **Accepted** 2026-11-01; ARCHITECTURE.md Rev 0.10; M6-01 … M6-05 done; spike results in
-[ADR-022](adr/022-m6-spikes-s18-s22.md), **Accepted** 2026-11-02 (bookmark route B); next task M6-06). M5 — OCR: M5-01 … M5-04 done under [ADR-020](adr/020-m5-ocr.md); M5-05 (owner
+[ADR-021](adr/021-m6-beta-review.md), **Accepted** 2026-11-01; ARCHITECTURE.md Rev 0.10; M6-01 … M6-06 done; spike results in
+[ADR-022](adr/022-m6-spikes-s18-s22.md), **Accepted** 2026-11-02 (bookmark route B); next task M6-07). M5 — OCR: M5-01 … M5-04 done under [ADR-020](adr/020-m5-ocr.md); M5-05 (owner
 interop) folds into M6-15. Rev 0 (M0–M4) is complete on the agent side.
 
 ## Done
+
+- **Session 28 — M6-06 Properties pane as a property grid (ADR-021 D-37, D-38 f; beta review
+  B4).** The pane is a two-column grid (property | value, CSS subgrid) in collapsible sections
+  (heading buttons with `aria-expanded`; collapsed state kept for the session). **General:**
+  Subject, Comment text, Author, Name (`/NM`), Created, Modified (Intl; read-only rows are
+  read-only inputs, so they stay reachable), **Read only**, **Printable**, **Locked** (/F bits),
+  **Marked** and **Review history** (a disclosure listing every status and mark: state, author,
+  date). **Style:** Fill color, Stroke color, Line style (solid / dashed / cloudy), Line width,
+  Opacity, **Blend mode** (the 16 PDF modes; written into the regenerated appearance's
+  `/ExtGState /BM`), **Rotation** (types EmbedPDF turns; not callouts), line start / end.
+  **Text** (text boxes, callouts, typewriter): Font (Helvetica / Times / Courier), Bold, Italic
+  (the standard-14 variant), Font size, Text color, Alignment (`/Q`), Vertical alignment.
+  "Mixed" for a selection (indeterminate tick boxes; a click from Mixed turns it on for all);
+  every change to a selection is one undo step. **Marked** is the reviewer's own tick, as
+  Acrobat writes it: a hidden Text reply with `/StateModel (Marked) /State (Marked|Unmarked)`,
+  the latest per author counts; marks are never listed as replies or as the review status
+  (`isMarkReply`, `isAnyState`). **Locked / Read only:** the grid then changes only the flags
+  (Read only: Read only, Locked, Marked; Locked: Locked, Marked), with a note saying how to
+  unlock; Delete, Cut, Apply Style and the arrow-key nudge are disabled with the reason; the
+  plugin already refuses to drag, resize or rotate a `locked` comment. EmbedPDF treats a
+  `readOnly` comment as not interactive at all (it can't be selected, so a Read only set here
+  could never be cleared): `flagPolicy.ts` hooks the plugin instance so a Read only comment is
+  selectable but fixed (structure and content locked), like Locked. **Tool Properties:** with
+  one of the eleven styled comment tools on, the pane is "‹Tool› Tool Properties" and edits that
+  tool's defaults in the M6-03 store (Style and Text, no blend mode or rotation), with Reset to
+  defaults; the store's record gained border style / dashes / cloudy, line endings, font,
+  alignment and vertical alignment (same version 1: older apps drop the new keys).
+  **Comment menu** (page and card): Marked, then Locked and Printable (tick items), and Make
+  Current Properties Default after Apply Style (the comment's style becomes its tool's
+  defaults; announced). **Fixed on the way:** a reopened text box in Times or Courier came back
+  as Unknown (Helvetica): EmbedPDF writes `/DA (/FXF_Times-Bold 10 Tf)` but its reader only knows
+  `/Helv`; `freeTextFonts.ts` hooks the engine instance's `/DA` reader in the Work and Render
+  workers and maps PDFium's `FXF_` names, base font names and the usual short names (`/TiBo`,
+  `/Cour`, …); the colour picker listened on its first input only, so a second colour change
+  after the swatch was remade was lost. **For the owner's interop check (M6-15):** rotation is
+  stored by EmbedPDF as `/EPDFRotate` + `/EPDFUnrotatedRect` and vertical alignment as
+  `/EPDF:VerticalAlignment` (both already the case for the rotate handle), with the appearance
+  stream drawn turned / aligned, so other viewers show them right but don't know the values.
+  Tests: unit `tests/annotate/properties.test.ts` (sections and types, fonts split and joined,
+  blend mode, rotation, flags with Mixed, the gate, tool styles), `tests/annotate/thread.test.ts`
+  (marks per author, not replies or status, history), `tests/annotate/toolDefaults.test.ts` (new
+  keys), `tests/render/freeTextFonts.test.ts`; e2e `e2e/property-grid.spec.ts` (@smoke: every
+  General / Style / Text field and the flags round-trip through a narrow save and a reopen,
+  read back by PDFium, `/BM /Multiply`, `/F`, `/Q`, the mark; Mixed, one undo step, sections,
+  axe; Locked not dragged, nudged or deleted, Read only selectable and cleared; the comment
+  menu's ticks, Make Current Properties Default and Tool Properties). Screenshots: project files
+  `m6-06/`.
 
 - **Session 27 — M6-05 Comments pane redesign (ADR-021 D-38 a; beta review B1, B2, B3b).** The
   five stacked filter fields and the thread panel under the list are gone. **Toolbar** (one row,
@@ -1301,8 +1348,8 @@ rel="noopener noreferrer">`; the commands `app.home` / `app.reportIssue` open th
 
 ## Next
 
-- **Agent:** M6-06 (Properties pane as a property grid; flags and review marks). ADR-022 is
-  accepted and applied (ARCHITECTURE.md Rev 0.10).
+- **Agent:** M6-07 (comment style palette). ADR-022 is accepted and applied (ARCHITECTURE.md
+  Rev 0.10).
 
 0. **Owner:** try Convert → Recognize Text (OCR) on real scans — an English one, a Hindi one
    and a Chinese one — and check the result in Acrobat Reader / PDF-XChange (search and select

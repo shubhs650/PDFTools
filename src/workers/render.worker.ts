@@ -15,6 +15,7 @@ import { applyPageOp, withSource } from './render/pages';
 import { renderProgressive } from './render/progressive';
 import { AnnotBoxCache, annotBoxes, renderAnnotTile } from './render/annotTiles';
 import { dropCustom, keepAuthor, nameTargets, writeMarkupIntent } from './render/annotIds';
+import { installFontReadback } from './render/freeTextFonts';
 import { SaveTracker, isMutation } from './render/save/tracker';
 
 const FPDF_PAGEOBJ_PATH = 2;
@@ -76,6 +77,8 @@ serve<RenderApi>(self, {
     const wasmBinary = await (await fetch(wasmUrl)).arrayBuffer();
     mod = await init({ wasmBinary });
     native = new PdfiumNative(mod, { fontFallback });
+    // Text boxes keep their standard font when read back (M6-06).
+    installFontReadback(native);
     tracker = new SaveTracker(mod, native);
     return { ms: performance.now() - t0, wasmBytes: wasmMemory(mod)?.buffer.byteLength ?? 0 };
   },

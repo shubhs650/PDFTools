@@ -109,7 +109,11 @@
       "copyComments": "Copy Comments",
       "pasteComments": "Paste Comments",
       "pasteToOriginal": "Paste to Original Pages",
-      "exportCrs": "Export CRS (Excel)"
+      "exportCrs": "Export CRS (Excel)",
+      "toggleLocked": "Locked",
+      "togglePrintable": "Printable",
+      "toggleMarked": "Marked",
+      "makeDefault": "Make Current Properties Default"
     },
     "measure": {
       "distance": "Distance",
@@ -1009,8 +1013,8 @@
     "mixed": "Mixed",
     "noFill": "No fill",
     "range": "Enter a number from {{min}} to {{max}}.",
-    "color": "Color",
-    "fill": "Fill",
+    "color": "Stroke color",
+    "fill": "Fill color",
     "fontColor": "Text color",
     "opacity": "Opacity",
     "width": "Line width",
@@ -1037,7 +1041,89 @@
       "butt": "Butt",
       "slash": "Slash"
     },
-    "noStyle": "Copy a style first"
+    "noStyle": "Copy a style first",
+    "section": {
+      "general": "General",
+      "style": "Style",
+      "text": "Text"
+    },
+    "name": "Name",
+    "created": "Created",
+    "modified": "Modified",
+    "flag": {
+      "readOnly": "Read only",
+      "print": "Printable",
+      "locked": "Locked",
+      "marked": "Marked"
+    },
+    "history": "Review history",
+    "historyNone": "None",
+    "historyShow_one": "Show {{count}} entry",
+    "historyShow_other": "Show {{count}} entries",
+    "historyHide": "Hide",
+    "historyEntry": "{{state}}, {{author}}, {{date}}",
+    "noteLocked": "This comment is locked. Clear Locked to change it.",
+    "noteReadOnly": "This comment is read only. Clear Read only to change it.",
+    "lockedReason": "The comment is locked",
+    "readOnlyReason": "The comment is read only",
+    "blendMode": "Blend mode",
+    "blend": {
+      "normal": "Normal",
+      "multiply": "Multiply",
+      "screen": "Screen",
+      "overlay": "Overlay",
+      "darken": "Darken",
+      "lighten": "Lighten",
+      "colorDodge": "Color dodge",
+      "colorBurn": "Color burn",
+      "hardLight": "Hard light",
+      "softLight": "Soft light",
+      "difference": "Difference",
+      "exclusion": "Exclusion",
+      "hue": "Hue",
+      "saturation": "Saturation",
+      "color": "Color",
+      "luminosity": "Luminosity"
+    },
+    "rotation": "Rotation",
+    "font": {
+      "label": "Font",
+      "helvetica": "Helvetica",
+      "times": "Times",
+      "courier": "Courier"
+    },
+    "bold": "Bold",
+    "italic": "Italic",
+    "textAlign": "Alignment",
+    "align": {
+      "left": "Left",
+      "center": "Center",
+      "right": "Right"
+    },
+    "verticalAlign": "Vertical alignment",
+    "valign": {
+      "top": "Top",
+      "middle": "Middle",
+      "bottom": "Bottom"
+    },
+    "toolTitle": "{{tool}} Tool Properties",
+    "toolHint": "New comments made with this tool get these properties.",
+    "resetTool": "Reset to defaults",
+    "noDefaultTool": "Select comments made with one drawing or text tool",
+    "madeDefault": "{{tool}} tool defaults updated",
+    "toolName": {
+      "freeText": "Text Box",
+      "typewriter": "Typewriter",
+      "freeTextCallout": "Callout",
+      "line": "Line",
+      "lineArrow": "Arrow",
+      "polyline": "Polyline",
+      "polygon": "Polygon",
+      "square": "Rectangle",
+      "circle": "Oval",
+      "cloud": "Cloud",
+      "ink": "Pencil"
+    }
   },
   "comments": {
     "noDocument": "Open a document to see its comments.",

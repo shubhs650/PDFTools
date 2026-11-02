@@ -116,7 +116,7 @@ test('contents and subject; Copy Style → Apply Style', async ({ page }) => {
 test('the pane passes axe with a selection', async ({ page }) => {
   const { id, a } = await setup(page);
   await cap(page, 'annotate', 'selectMany', id, [a]);
-  await expect(pane(page).getByLabel('Color')).toBeEnabled();
+  await expect(pane(page).getByLabel('Stroke color')).toBeEnabled();
   const { violations } = await new AxeBuilder({ page })
     .include('[data-testid="properties-pane"]')
     .analyze();

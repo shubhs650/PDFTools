@@ -2,13 +2,13 @@
 // is one plugin batch update, so one undo step.
 import type { PdfAnnotationObject } from '@embedpdf/models';
 import { annotationCapability } from '../selection';
-import { applyStyle, patchFor, styleOf, type Prop, type Style } from './model';
+import { applyStyle, patchFor, styleOf, type Plain, type Prop, type Style } from './model';
 
 export function applyProp(
   docId: string,
   sel: readonly PdfAnnotationObject[],
   p: Prop,
-  v: string | number,
+  v: Plain,
 ): void {
   const patches = sel
     .map((a) => ({ a, patch: patchFor(a, p, v) }))

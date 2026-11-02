@@ -24,6 +24,16 @@ import { cycleTarget, pageAnnotations } from './model';
 import { DRAW_COMMANDS, isDrawTool, KEYBOARD_PLACED, VERTEX_TOOLS } from './tools/drawModel';
 import { finishDrawing, placeAtCentre } from './tools/drawTools';
 import { copiedStyle, copyStyle, pasteStyle } from './properties/style';
+import {
+  allFlagged,
+  fixedReason,
+  flagTargets,
+  marksOf,
+  setFlag,
+  setMarked,
+} from './properties/flagActions';
+import { defaultToolOf, makeCurrentDefault } from './properties/toolProperties';
+import type { Flag } from './properties/model';
 import { commentsStore } from './comments/commentsStore';
 import { deleteComments, startReply } from './comments/threadActions';
 import { MARKUP_TOOLS } from './tools/markupModel';
@@ -84,6 +94,40 @@ const withSelection: Pick<CommandHandler, 'requires' | 'disabledReason'> = {
     return id && selectedOf(id).length > 0 ? null : msg('annotate.noneSelected');
   },
 };
+
+/** Delete, nudge, Apply Style: not on a Locked or Read only comment (M6-06). */
+const withMovable: Pick<CommandHandler, 'requires' | 'disabledReason'> = {
+  requires: 'annotate',
+  disabledReason: () => {
+    const id = activeId();
+    const sel = id ? selectedOf(id).map((t) => t.object) : [];
+    return sel.length > 0 ? fixedReason(sel) : msg('annotate.noneSelected');
+  },
+};
+
+/** Locked / Printable in the comment menu (M6-06, D-38 f): a tick for the whole selection. */
+function flagCommand(f: Flag): CommandHandler {
+  return {
+    requires: 'annotate',
+    disabledReason: () => {
+      const id = activeId();
+      const targets = id ? flagTargets(id) : [];
+      if (targets.length === 0) return msg('annotate.noneSelected');
+      // Locked itself is always changeable; Printable not while Locked or Read only.
+      return f === 'locked' ? null : fixedReason(targets);
+    },
+    isPressed: () => {
+      const id = activeId();
+      return id ? allFlagged(flagTargets(id), f) : false;
+    },
+    run: () => {
+      const id = activeId();
+      if (!id) return;
+      const targets = flagTargets(id);
+      setFlag(id, targets, f, !allFlagged(targets, f));
+    },
+  };
+}
 
 /** 1 pt per arrow key, 10 with Shift (§8.1 conventions). */
 const STEP = 1;
@@ -257,10 +301,9 @@ export function registerAnnotateCommands(): () => void {
     }),
     registerCommand('comment.applyStyle', {
       ...withSelection,
-      disabledReason: () => {
+      disabledReason: (ctx) => {
         if (!copiedStyle()) return msg('annotProps.noStyle');
-        const id = activeId();
-        return id && selectedOf(id).length > 0 ? null : msg('annotate.noneSelected');
+        return withMovable.disabledReason?.(ctx) ?? null;
       },
       run: () => {
         const id = activeId();
@@ -464,7 +507,7 @@ export function registerAnnotateCommands(): () => void {
     // Delete: the ribbon button (Comment → Review), the Delete key in the
     // document and in the Comments pane (preview review USR01/OBS01).
     registerCommand('comment.delete', {
-      ...withSelection,
+      ...withMovable,
       run: () => {
         const id = activeId();
         if (!id) return;
@@ -475,52 +518,90 @@ export function registerAnnotateCommands(): () => void {
         );
       },
     }),
+    // Flags, review mark and tool defaults from the comment menu (M6-06, D-37, D-38 f).
+    registerCommand('comment.toggleLocked', flagCommand('locked')),
+    registerCommand('comment.togglePrintable', flagCommand('print')),
+    registerCommand('comment.toggleMarked', {
+      requires: 'annotate',
+      disabledReason: () => {
+        const id = activeId();
+        return id && flagTargets(id).length > 0 ? null : msg('annotate.noneSelected');
+      },
+      isPressed: () => {
+        const id = activeId();
+        const marks = id ? marksOf(id, flagTargets(id)) : [];
+        return marks.length > 0 && marks.every(Boolean);
+      },
+      run: async () => {
+        const id = activeId();
+        if (!id) return;
+        const targets = flagTargets(id);
+        await setMarked(id, targets, !marksOf(id, targets).every(Boolean));
+      },
+    }),
+    registerCommand('comment.makeDefault', {
+      requires: 'annotate',
+      disabledReason: () => {
+        const id = activeId();
+        const sel = id ? selectedOf(id).map((t) => t.object) : [];
+        if (sel.length === 0) return msg('annotate.noneSelected');
+        return defaultToolOf(sel) ? null : msg('annotProps.noDefaultTool');
+      },
+      run: async () => {
+        const id = activeId();
+        if (id)
+          await makeCurrentDefault(
+            id,
+            selectedOf(id).map((t) => t.object),
+          );
+      },
+    }),
     registerCommand('annotation.next', cycle(1)),
     registerCommand('annotation.prev', cycle(-1)),
     registerCommand('annotation.nudgeLeft', {
-      ...withSelection,
+      ...withMovable,
       run: () => {
         nudge(-STEP, 0);
       },
     }),
     registerCommand('annotation.nudgeRight', {
-      ...withSelection,
+      ...withMovable,
       run: () => {
         nudge(STEP, 0);
       },
     }),
     registerCommand('annotation.nudgeUp', {
-      ...withSelection,
+      ...withMovable,
       run: () => {
         nudge(0, -STEP);
       },
     }),
     registerCommand('annotation.nudgeDown', {
-      ...withSelection,
+      ...withMovable,
       run: () => {
         nudge(0, STEP);
       },
     }),
     registerCommand('annotation.nudgeLeftFar', {
-      ...withSelection,
+      ...withMovable,
       run: () => {
         nudge(-BIG_STEP, 0);
       },
     }),
     registerCommand('annotation.nudgeRightFar', {
-      ...withSelection,
+      ...withMovable,
       run: () => {
         nudge(BIG_STEP, 0);
       },
     }),
     registerCommand('annotation.nudgeUpFar', {
-      ...withSelection,
+      ...withMovable,
       run: () => {
         nudge(0, -BIG_STEP);
       },
     }),
     registerCommand('annotation.nudgeDownFar', {
-      ...withSelection,
+      ...withMovable,
       run: () => {
         nudge(0, BIG_STEP);
       },

@@ -23,7 +23,7 @@ const STATUSES = [
 const sep = (key: string): ContextMenuEntry => ({ kind: 'separator', key });
 const cmd = (id: string): ContextMenuEntry => ({ kind: 'command', id });
 
-/** A comment on the page. Later tasks add their items here (Flatten, flags: D-38). */
+/** A comment on the page (and its card). Later tasks add their items here (Flatten: D-38 c). */
 export function commentMenu(docId: string): ContextMenuEntry[] {
   return [
     cmd('edit.cut'),
@@ -33,9 +33,14 @@ export function commentMenu(docId: string): ContextMenuEntry[] {
     sep('thread'),
     cmd('comment.reply'),
     { kind: 'submenu', id: 'comment.setStatus', choices: statusChoices(docId) },
+    cmd('comment.toggleMarked'),
+    sep('flags'),
+    cmd('comment.toggleLocked'),
+    cmd('comment.togglePrintable'),
     sep('style'),
     cmd('comment.copyStyle'),
     cmd('comment.applyStyle'),
+    cmd('comment.makeDefault'),
     sep('properties'),
     cmd('edit.properties'),
   ];

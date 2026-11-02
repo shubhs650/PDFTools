@@ -54,6 +54,16 @@ export const isStateReply = (a: PdfAnnotationObject): boolean =>
   (a as { stateModel?: string }).stateModel === PdfAnnotationStateModel.Review &&
   typeof (a as { state?: string }).state === 'string';
 
+/** A review mark (/StateModel /Marked, Marked or Unmarked; M6-06): the reviewer's own tick. */
+export const isMarkReply = (a: PdfAnnotationObject): boolean =>
+  a.type === S.TEXT &&
+  !!a.inReplyToId &&
+  (a as { stateModel?: string }).stateModel === PdfAnnotationStateModel.Marked &&
+  typeof (a as { state?: string }).state === 'string';
+
+/** A state reply of either model: never listed as a reply. */
+export const isAnyState = (a: PdfAnnotationObject): boolean => isStateReply(a) || isMarkReply(a);
+
 /**
  * M3-Q5: comments numbered by page, then creation date (/CreationDate, else
  * /M; undated last), then /NM. Derived, never stored: deleting one renumbers
@@ -102,7 +112,7 @@ export function commentsOf(all: readonly PdfAnnotationObject[]): Comment[] {
       const prev = states.get(a.inReplyToId);
       if (!prev || at >= prev.at)
         states.set(a.inReplyToId, { at, state: (a as { state: PdfAnnotationState }).state });
-    } else if (a.type === S.TEXT) {
+    } else if (a.type === S.TEXT && !isMarkReply(a)) {
       replies.set(a.inReplyToId, (replies.get(a.inReplyToId) ?? 0) + 1);
       const root = rootOf(a, byId);
       if (root !== a.id && a.contents) {
