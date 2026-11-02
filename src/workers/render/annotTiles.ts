@@ -38,7 +38,8 @@ export interface PageFrame {
 
 // FPDF_ANNOT_* subtypes we never draw in annotation tiles: links (the link
 // layer), popups (never drawn), widgets (form fields have their own layer).
-const SKIP_SUBTYPES = new Set([2, 16, 20]);
+const WIDGET = 20;
+const SKIP_SUBTYPES = new Set([2, 16, WIDGET]);
 // Annotation flags: Hidden (bit 2), NoView (bit 6).
 const HIDDEN = 1 << 1;
 const NO_VIEW = 1 << 5;
@@ -69,11 +70,15 @@ function isReply(mod: WrappedPdfiumModule, annot: number): boolean {
 const readNm = (mod: WrappedPdfiumModule, annot: number): string =>
   readAnnotString(mod, annot, 'NM');
 
-/** The drawable annotations of a page, with their boxes (cached by the caller). */
+/**
+ * The drawable annotations of a page, with their boxes (cached by the caller).
+ * `widgets`: form fields too (a snapshot draws them; the tiles leave them to the form layer).
+ */
 export function annotBoxes(
   mod: WrappedPdfiumModule,
   pagePtr: number,
   frame: PageFrame,
+  opts: { widgets?: boolean } = {},
 ): AnnotBox[] {
   const heap = mod.pdfium as unknown as Heap;
   const buf = heap.wasmExports.malloc(16);
@@ -85,7 +90,7 @@ export function annotBoxes(
       if (!a) continue;
       try {
         const subtype = rawCall(mod, 'FPDFAnnot_GetSubtype', a);
-        if (SKIP_SUBTYPES.has(subtype)) continue;
+        if (SKIP_SUBTYPES.has(subtype) && !(opts.widgets && subtype === WIDGET)) continue;
         // Replies (a Text note with /IRT, M3-12) live in the thread, not on the page.
         if (subtype === TEXT && isReply(mod, a)) continue;
         if (rawCall(mod, 'FPDFAnnot_GetFlags', a) & (HIDDEN | NO_VIEW)) continue;

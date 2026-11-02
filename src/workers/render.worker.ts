@@ -14,6 +14,7 @@ import { acquirePage, docPtrOf, pageInfos, rawCall, wasmMemory } from './render/
 import { applyPageOp, withSource } from './render/pages';
 import { renderProgressive } from './render/progressive';
 import { AnnotBoxCache, annotBoxes, renderAnnotTile } from './render/annotTiles';
+import { renderSnapshot } from './render/snapshot';
 import { dropCustom, keepAuthor, nameTargets, writeMarkupIntent } from './render/annotIds';
 import { installFontReadback } from './render/freeTextFonts';
 import { SaveTracker, isMutation } from './render/save/tracker';
@@ -250,6 +251,14 @@ serve<RenderApi>(self, {
     return tile ? new Transfer(tile, [tile.data.buffer]) : null;
   },
 
+  snapshot: ({ docId, ...req }) => {
+    const { mod: m, native: n, tracker: t } = ready();
+    // Rule 9: a snapshot copies the page's content (M6-09).
+    t.requireCapability(docId, 'copy');
+    const out = renderSnapshot(m, n, docId, req);
+    return new Transfer(out, [out.data.buffer]);
+  },
+
   pageCost: ({ docId, pageIndex }) => {
     const { mod: m, native: n } = ready();
     const page = acquirePage(n, docId, pageIndex);
@@ -287,7 +296,12 @@ serve<RenderApi>(self, {
 
   pagesOp: async ({ docId, op }, ctx) => {
     const { mod: m, native: n, tracker: t } = ready();
-    t.requireCapability(docId, 'assemble');
+    // Rule 9: page operations need assemble (ADR-016 d9); a flatten changes page
+    // content and removes comments, so it needs modify and annotate (M6-09).
+    if (op.kind === 'flatten') {
+      t.requireCapability(docId, 'modify');
+      t.requireCapability(docId, 'annotate');
+    } else t.requireCapability(docId, 'assemble');
     let map: number[] | null = null;
     try {
       const r = await applyPageOp(m, n, docId, op, {

@@ -279,6 +279,7 @@ test('Comment: Manage Comments with short labels and full names; the tool grid k
     'Import',
     'Export',
     'Export CRS',
+    'Flatten',
     'Comment Styles',
     'Filter',
     'Status Schemes',

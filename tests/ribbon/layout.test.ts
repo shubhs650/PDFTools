@@ -103,6 +103,8 @@ describe('ribbon layout from the command table (§8, ADR-001 B6, M1-Q2)', () => 
       // The view turns both ways; the pages turn on Organize (owner's answer 6).
       'view.rotateCw',
       'view.rotateCcw',
+      // Home's own Snapshot (M6-09, A2a) leads the View group.
+      'home.snapshot',
       'view.propertiesPane',
       'protect.signatures',
     ]);
@@ -154,6 +156,7 @@ describe('ribbon layout from the command table (§8, ADR-001 B6, M1-Q2)', () => 
       'comment.importComments',
       'comment.exportAnnotations',
       'comment.exportCrs',
+      'comment.flatten',
       'comment.stylesPalette',
       'comment.filter',
       'comment.statusSchemes',

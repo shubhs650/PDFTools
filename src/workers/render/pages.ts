@@ -10,6 +10,7 @@ import type { PdfiumNative } from '@embedpdf/engines/pdfium';
 import type { WrappedPdfiumModule } from '@embedpdf/pdfium';
 import { RpcError } from '../../engine/errors';
 import { CAPABILITIES, allows } from '../../model/permissions';
+import { checkFlattenPlan, flattenOnPage, type FlattenCounts, type FlattenPage } from './flatten';
 import { docPtrOf, pageInfos, purgePageCache, rawCall, type PageInfo } from './pdfium';
 
 export type PageOp =
@@ -21,12 +22,19 @@ export type PageOp =
   /** Move the pages (in document order) so the first lands at `to` (an index in the result). */
   | { kind: 'move'; pages: number[]; to: number }
   /** Insert pages of another PDF (M4-11), the first at index `at`. */
-  | { kind: 'import'; source: ArrayBuffer; password?: string; pages: number[]; at: number };
+  | { kind: 'import'; source: ArrayBuffer; password?: string; pages: number[]; at: number }
+  /**
+   * Flatten comments into page content (M6-09, ADR-021 D-38 c): needs modify
+   * and annotate, not assemble (render.worker.ts). Pages keep their identity.
+   */
+  | { kind: 'flatten'; pages: FlattenPage[] };
 
 export interface PageOpResult {
   pages: PageInfo[];
   /** Old page index → new index (−1: deleted). */
   map: number[];
+  /** A flatten's outcome (M6-09). */
+  flattened?: FlattenCounts;
 }
 
 /** Largest page size PDFium accepts for a new page (ISO 32000: 14,400 units). */
@@ -87,9 +95,27 @@ export async function applyPageOp(
     rawCall(mod, 'EPDFDoc_GetPageObjectNumberByIndex', doc, i),
   );
   const pause = yielder(ctx.signal);
+  let flattened: FlattenCounts | undefined;
   purgePageCache(native, docId);
   try {
-    if (op.kind === 'rotate') {
+    if (op.kind === 'flatten') {
+      const plan = checkFlattenPlan(op.pages, count);
+      flattened = { flattened: 0, removed: 0, failed: 0 };
+      for (const [i, entry] of plan.entries()) {
+        const page = rawCall(mod, 'FPDF_LoadPage', doc, entry.page);
+        if (!page) throw new RpcError('page-not-loaded', 'The page could not be loaded');
+        try {
+          const c = flattenOnPage(mod, page, entry);
+          flattened.flattened += c.flattened;
+          flattened.removed += c.removed;
+          flattened.failed += c.failed;
+        } finally {
+          rawCall(mod, 'FPDF_ClosePage', page);
+        }
+        ctx.progress({ done: i + 1, total: plan.length });
+        await pause();
+      }
+    } else if (op.kind === 'rotate') {
       const pages = checkPages(op.pages, count);
       for (const [i, index] of pages.entries()) {
         // FPDFPage_SetRotation needs a loaded page (ADR-016 finding 6).
@@ -173,7 +199,8 @@ export async function applyPageOp(
   }
   const pages = pageInfos(mod, native, docId);
   const after = new Map(pages.map((p) => [p.objectNumber, p.index]));
-  return { pages, map: before.map((obj) => (obj > 0 ? (after.get(obj) ?? -1) : -1)) };
+  const map = before.map((obj) => (obj > 0 ? (after.get(obj) ?? -1) : -1));
+  return flattened ? { pages, map, flattened } : { pages, map };
 }
 
 export interface SourceInfo {

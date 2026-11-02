@@ -31,6 +31,7 @@ import { RedactionLayer } from '../redact/RedactionLayer';
 import { SnapMarker } from '../measure/SnapMarker';
 import { isMarkupTool } from '../annotate/tools/markupModel';
 import { LinkLayer } from './LinkLayer';
+import { SnapshotLayer } from '../snapshot/SnapshotLayer';
 import { DocumentMenu } from './DocumentMenu';
 import { notePointerDown } from './pagePoint';
 import { capability, useHost } from './host';
@@ -138,6 +139,8 @@ function Page({
               <LinkLayer documentId={documentId} pageIndex={layout.pageIndex} scale={scale} />
               {/* Form fields (M2-14) on top: a field under a link is still filled. */}
               <FormLayer documentId={documentId} pageIndex={layout.pageIndex} scale={scale} />
+              {/* The Snapshot tool (M6-09) takes the pointer over everything while it is on. */}
+              <SnapshotLayer documentId={documentId} pageIndex={layout.pageIndex} scale={scale} />
             </div>
           </PagePointerProvider>
         </Rotate>

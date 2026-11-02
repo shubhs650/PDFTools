@@ -5,6 +5,8 @@ import type { FontFallbackConfig } from '@embedpdf/engines/pdfium';
 import type { PdfJson } from '../model/pdf/wire';
 import type { Capability } from '../model/permissions';
 import type { AnnotTileRequest } from '../workers/render/annotTiles';
+import type { FlattenCounts } from '../workers/render/flatten';
+import type { SnapshotPixels, SnapshotRequest } from '../workers/render/snapshot';
 import type { PageOp } from '../workers/render/pages';
 import type { PageInfo } from '../workers/render/pdfium';
 import type { DocDigest } from '../workers/render/save/digest';
@@ -44,13 +46,13 @@ export interface RenderApi {
   memory: MethodSpec<null, { wasmBytes: number }>;
   /**
    * A page operation (M4-09 … M4-11, ADR-016): needs the assemble permission
-   * (rule 9). Returns the new page list and old index → new index (−1:
-   * deleted). Cancellable between pages; a cancelled operation may be partly
-   * done, so the caller restores its snapshot.
+   * (rule 9; a flatten, M6-09: modify and annotate). Returns the new page list
+   * and old index → new index (−1: deleted). Cancellable between pages; a
+   * cancelled operation may be partly done, so the caller restores its snapshot.
    */
   pagesOp: MethodSpec<
     { docId: string; op: PageOp },
-    { pages: PageInfo[]; map: number[] },
+    { pages: PageInfo[]; map: number[]; flattened?: FlattenCounts },
     { done: number; total: number }
   >;
   /**
@@ -141,6 +143,12 @@ export interface RenderApi {
     } & AnnotTileRequest,
     { data: Uint8ClampedArray<ArrayBuffer>; drawn: number } | null
   >;
+  /**
+   * A region of a page as the view shows it (M6-09 snapshot): content, the
+   * drawn markups and form fields, at the given rotation; RGBA, transferred.
+   * Needs the copy permission.
+   */
+  snapshot: MethodSpec<{ docId: string } & SnapshotRequest, SnapshotPixels>;
   /** What a render of this page costs (M1-17 cost model): objects and path segments. */
   pageCost: MethodSpec<{ docId: string; pageIndex: number }, { objects: number; segments: number }>;
   /**

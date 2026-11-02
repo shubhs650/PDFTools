@@ -117,6 +117,7 @@ test('the comment menu: right click selects the comment; Copy, then Paste from t
     /^Copy Style$/,
     /^Apply Style$/,
     /^Make Current Properties Default$/,
+    /^Flatten Selected Comments$/, // M6-09
     /^Properties$/,
   ]);
   // Nothing copied yet: Paste says why, and stays in the menu, focusable.
@@ -336,7 +337,14 @@ test('a document that forbids copying and commenting: the items are disabled and
   await page.keyboard.press('Shift+F10');
   const m = menu(page);
   await expect(m).toHaveAccessibleName('Comment');
-  for (const name of ['Cut', 'Copy', 'Delete Selected Comments', 'Apply Style']) {
+  for (const name of [
+    'Cut',
+    'Copy',
+    'Delete Selected Comments',
+    'Apply Style',
+    // M6-09: flattening changes the page content (modify).
+    'Flatten Selected Comments',
+  ]) {
     const item = m.getByRole('menuitem', { name, exact: true });
     await expect(item).toHaveAttribute('aria-disabled', 'true');
     await expect(item).toHaveAccessibleDescription(

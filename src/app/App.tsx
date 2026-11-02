@@ -11,6 +11,8 @@ import { registerPrintCommands } from '../features/print/commands';
 import { registerExtractCommands } from '../features/extract/commands';
 import { registerTableCommands } from '../features/tables/commands';
 import { registerRedactCommands } from '../features/redact/commands';
+import { registerSnapshotCommands } from '../features/snapshot/snapshot';
+import { SnapshotToast } from '../features/snapshot/SnapshotLayer';
 import { registerOcrCommands } from '../features/ocr/commands';
 import { OcrDialog } from '../features/ocr/OcrDialog';
 import { RedactionStatus } from '../features/redact/PendingRedactionsPanel';
@@ -49,6 +51,7 @@ import { SnapStatus } from '../features/measure/SnapStatus';
 import { CrsDialog } from '../features/crs/CrsDialog';
 import { AnnotationExportDialog } from '../features/annotate/export/AnnotationExportDialog';
 import { ImportCommentsDialog } from '../features/annotate/transfer/ImportCommentsDialog';
+import { FlattenDialog } from '../features/annotate/flatten/FlattenDialog';
 import { ExportDialog } from '../features/extract/ExportDialog';
 import { ScaleIndicator } from '../features/measure/ScaleIndicator';
 import { GrowthPrompt, SaveOptimizedDialog } from '../features/save/SaveDialogs';
@@ -98,6 +101,7 @@ export function App() {
   useEffect(() => registerExtractCommands(), []);
   useEffect(() => registerTableCommands(), []);
   useEffect(() => registerRedactCommands(), []);
+  useEffect(() => registerSnapshotCommands(), []);
   useEffect(() => registerOcrCommands(), []);
   useEffect(() => registerPageCommands(), []);
   useEffect(() => registerReportCommands(), []);
@@ -187,6 +191,8 @@ export function App() {
         <CrsDialog />
         <AnnotationExportDialog />
         <ImportCommentsDialog />
+        <FlattenDialog />
+        <SnapshotToast />
         <ExportDialog />
         <ExpressExtractDialog />
         <TemplatesDialog />
