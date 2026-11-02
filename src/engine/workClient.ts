@@ -70,7 +70,10 @@ type JobMethod =
   | 'exportTables'
   | 'redact'
   | 'ocrRaster'
-  | 'ocrLayer';
+  | 'ocrLayer'
+  | 'readOutline'
+  | 'copyOutline'
+  | 'editOutline';
 
 export interface WorkClientOptions {
   wasmUrl?: string;

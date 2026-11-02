@@ -1,13 +1,51 @@
 # PDFTools — Progress
 
-_Last updated: 2026-11-02 (session 32: M6-10 Attach File)_
+_Last updated: 2026-11-02 (session 33: M6-11 Bookmark editing)_
 
 **Current milestone:** M6 — Beta review (plan in [docs/plan/M6.md](plan/M6.md), scope changes in
-[ADR-021](adr/021-m6-beta-review.md), **Accepted** 2026-11-01; ARCHITECTURE.md Rev 0.10; M6-01 … M6-10 done; spike results in
-[ADR-022](adr/022-m6-spikes-s18-s22.md), **Accepted** 2026-11-02 (bookmark route B); next task M6-11). M5 — OCR: M5-01 … M5-04 done under [ADR-020](adr/020-m5-ocr.md); M5-05 (owner
+[ADR-021](adr/021-m6-beta-review.md), **Accepted** 2026-11-01; ARCHITECTURE.md Rev 0.10; M6-01 … M6-11 done; spike results in
+[ADR-022](adr/022-m6-spikes-s18-s22.md), **Accepted** 2026-11-02 (bookmark route B); next task M6-12). M5 — OCR: M5-01 … M5-04 done under [ADR-020](adr/020-m5-ocr.md); M5-05 (owner
 interop) folds into M6-15. Rev 0 (M0–M4) is complete on the agent side.
 
 ## Done
+
+- **Session 33 — M6-11 Bookmark editing (ADR-021 D-38, ADR-022 decision 5 route B, §7.15;
+  beta review B3c).** The Bookmarks pane edits the outline. **Pane toolbar** (one tab stop,
+  roving focus): New Bookmark, Delete, Expand All, Collapse All and a **Bookmark options** menu
+  with every command. **Context menu** (right click, Shift+F10 or the Menu key): Go to Bookmark
+  (Enter), New Bookmark (Insert, after the focused one, from the current view: Fit Page → /Fit,
+  Fit Width → /FitH top, else /XYZ left top zoom), New Child Bookmark, Cut / Copy / Paste
+  (Ctrl+X/C/V, within the same document; a pasted copy keeps every key: colour, style, action),
+  Delete, Delete but Retain Children, Delete Only Children, Expand All, Collapse All, Rename (F2,
+  in place: Enter commits, Esc cancels, blur commits), Set Destination (current view), Bookmark
+  Properties… (Alt+Enter: title, colour, bold, italic, destination page and zoom — Inherit, Fit
+  Page, Fit Width or a custom %; an action other than a link in this document is shown and kept
+  unless a destination is set). **Moves:** HTML5 drag and drop (top quarter of a row before,
+  bottom quarter after, the middle inside; never into itself) and, from the keyboard,
+  Alt+Shift+Up/Down (among siblings), Alt+Shift+Left (out of the parent), Alt+Shift+Right (into
+  the bookmark above). The keys live in a new keymap scope `bookmarks`, active only with focus in
+  the tree; a scoped binding wins over a global one there (the shortcut sheet lists them as
+  "(Bookmarks pane)"). Rows show the file's colour, bold and italic, and the file's closed
+  parents stay closed. **Writer** (Work worker, `workers/work/outline.ts`, route B): reads the
+  live outline (original + saved tail + unsaved objects, `syncLive`), applies one edit
+  (insert / update / remove in three modes / move) addressed by index path and checked against
+  the titles the pane saw (`bookmark-stale` otherwise), and writes only changed objects: items
+  keep their object numbers, new items get new numbers, /First /Last /Prev /Next /Parent /Count
+  are rebuilt (the /Count sign keeps open/closed), the catalog is written only when it gains
+  /Outlines, and strings are encrypted for encrypted files. Named destinations, /A GoTo, URI,
+  GoToR and JavaScript actions are read and kept. The Render worker applies the objects through
+  the reopen route (`pagesApply`), so each edit is **one undo step** (ADR-016 snapshot, tagged
+  `bookmarks`, the view stays put) and **Ctrl+S** saves them in the narrow tail, verified. Needs
+  the modify permission (rule 9): without it the commands are disabled with a reason and Go to
+  Bookmark still works. The pane remaps its expanded branches and focus through each edit
+  (`outlineEdit.ts`, pure). Tests: unit `tests/bookmarks/outline-edit.test.ts` (real PDFium and
+  qpdf: every edit kind, keys kept, AES-256, the 1,000-bookmark outline read in ~17 ms and renamed
+  in ~23 ms with a 904-byte tail) and `tests/bookmarks/outlineEdit.test.ts` (remapPath agrees
+  with the writer on 936 positions; drops, nudges, focus after delete), `tests/keys/keys.test.ts`
+  (scopes); e2e `e2e/bookmark-editing.spec.ts` (@smoke new from the view / rename / Esc /
+  menu / delete / undo / narrow verified save / reopen / axe; drag, Alt+Shift, cut and paste,
+  Properties; 1,000 bookmarks; a document forbidding changes), `e2e/keys.spec.ts` (70 rows).
+  Screenshots: project files `m6-11/`.
 
 - **Session 32 — M6-10 Attach File (ADR-021 D-38 d, ADR-022 decision 1; beta review B7c).**
   Comment → Note → **Attach File** (`comment.attachFile`, Fluent `Attach`, a toggle tool like
@@ -1502,7 +1540,7 @@ rel="noopener noreferrer">`; the commands `app.home` / `app.reportIssue` open th
 
 ## Next
 
-- **Agent:** M6-11 (Bookmark editing, beta review B3c; route B per ADR-022).
+- **Agent:** M6-12 (Password security: apply and remove; ADR-022).
 
 0. **Owner:** try Convert → Recognize Text (OCR) on real scans — an English one, a Hindi one
    and a Chinese one — and check the result in Acrobat Reader / PDF-XChange (search and select

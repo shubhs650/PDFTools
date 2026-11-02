@@ -101,6 +101,86 @@ export function annotatedPdf(): Uint8Array {
   ]);
 }
 
+/**
+ * Three pages ("Page n") whose outline has what bookmark editing must keep
+ * (M6-11, from spike S21): a named destination ("chap2" → page 2, /Fit), a
+ * web link, another file (GoToR), a script, a red bold closed parent with a
+ * child at /XYZ 72 700 1.5 on page 2, and a blue italic "Last" → page 3.
+ */
+export function richOutlinePdf(): Uint8Array {
+  const page = (contents: number) =>
+    `<< /Type /Page /Parent 2 0 R /MediaBox [0 0 595 842] /Resources << /Font << /F1 18 0 R >> >> /Contents ${String(contents)} 0 R >>`;
+  const text = (n: number) => ({
+    dict: '<< >>',
+    stream: `BT /F1 36 Tf 72 740 Td (Page ${String(n)}) Tj ET`,
+  });
+  return buildPdf([
+    '<< /Type /Catalog /Pages 2 0 R /Outlines 9 0 R /Names << /Dests 17 0 R >> /PageMode /UseOutlines >>',
+    '<< /Type /Pages /Kids [3 0 R 5 0 R 7 0 R] /Count 3 >>',
+    page(4),
+    text(1),
+    page(6),
+    text(2),
+    page(8),
+    text(3),
+    // 9: the root; 10..16 the items.
+    '<< /Type /Outlines /First 10 0 R /Last 16 0 R /Count 6 >>',
+    '<< /Title (Named destination) /Parent 9 0 R /Next 11 0 R /Dest (chap2) >>',
+    '<< /Title (Web link) /Parent 9 0 R /Prev 10 0 R /Next 12 0 R /A << /S /URI /URI (https://example.com/) >> >>',
+    '<< /Title (Other file) /Parent 9 0 R /Prev 11 0 R /Next 13 0 R /A << /S /GoToR /F (other.pdf) /D [0 /Fit] >> >>',
+    '<< /Title (Script) /Parent 9 0 R /Prev 12 0 R /Next 15 0 R /A << /S /JavaScript /JS (app.alert\\(1\\)) >> >>',
+    '<< /Title (Child of closed) /Parent 15 0 R /Dest [5 0 R /XYZ 72 700 1.5] >>',
+    '<< /Title (Red bold, closed) /Parent 9 0 R /Prev 13 0 R /Next 16 0 R /First 14 0 R /Last 14 0 R /Count -1 /C [1 0 0] /F 2 /Dest [3 0 R /FitH 500] >>',
+    '<< /Title (Last) /Parent 9 0 R /Prev 15 0 R /C [0 0 1] /F 1 /Dest [7 0 R /XYZ 0 842 0] >>',
+    '<< /Names [(chap2) [5 0 R /Fit]] >>',
+    '<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica >>',
+  ]);
+}
+
+/**
+ * `pages` pages with an outline of `parts` × `per` bookmarks under `parts`
+ * open parents ("Part p", "Item p.i" → page (p·per+i) mod pages), every item
+ * an object of its own (M6-11: a 1,000-bookmark outline stays smooth).
+ */
+export function bigOutlinePdf(parts = 20, per = 49, pages = 20): Uint8Array {
+  const pageObj = (i: number) => 3 + i * 2;
+  const font = 3 + pages * 2;
+  const root = font + 1;
+  const objs: PdfObject[] = [
+    `<< /Type /Catalog /Pages 2 0 R /Outlines ${String(root)} 0 R >>`,
+    `<< /Type /Pages /Kids [${Array.from({ length: pages }, (_, i) => `${String(pageObj(i))} 0 R`).join(' ')}] /Count ${String(pages)} >>`,
+  ];
+  for (let i = 0; i < pages; i++)
+    objs.push(
+      `<< /Type /Page /Parent 2 0 R /MediaBox [0 0 595 842] /Resources << /Font << /F1 ${String(font)} 0 R >> >> /Contents ${String(4 + i * 2)} 0 R >>`,
+      { dict: '<< >>', stream: `BT /F1 36 Tf 72 740 Td (Page ${String(i + 1)}) Tj ET` },
+    );
+  objs.push('<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica >>');
+  const partNum = (p: number) => root + 1 + p * (per + 1);
+  const itemNum = (p: number, i: number) => partNum(p) + 1 + i;
+  objs.push(
+    `<< /Type /Outlines /First ${String(partNum(0))} 0 R /Last ${String(partNum(parts - 1))} 0 R /Count ${String(parts * (per + 1))} >>`,
+  );
+  for (let p = 0; p < parts; p++) {
+    const link = (n: number) => `${String(n)} 0 R`;
+    objs.push(
+      `<< /Title (Part ${String(p + 1)}) /Parent ${link(root)}` +
+        (p > 0 ? ` /Prev ${link(partNum(p - 1))}` : '') +
+        (p < parts - 1 ? ` /Next ${link(partNum(p + 1))}` : '') +
+        ` /First ${link(itemNum(p, 0))} /Last ${link(itemNum(p, per - 1))} /Count ${String(per)}` +
+        ` /Dest [${link(pageObj((p * per) % pages))} /XYZ 0 842 0] >>`,
+    );
+    for (let i = 0; i < per; i++)
+      objs.push(
+        `<< /Title (Item ${String(p + 1)}.${String(i + 1)}) /Parent ${link(partNum(p))}` +
+          (i > 0 ? ` /Prev ${link(itemNum(p, i - 1))}` : '') +
+          (i < per - 1 ? ` /Next ${link(itemNum(p, i + 1))}` : '') +
+          ` /Dest [${link(pageObj((p * per + i) % pages))} /XYZ 0 842 0] >>`,
+      );
+  }
+  return buildPdf(objs);
+}
+
 /** The external address of outlinedPdf's URI link. */
 export const LINK_URL = 'https://example.com/spec?section=4.2';
 

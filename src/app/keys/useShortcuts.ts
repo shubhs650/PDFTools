@@ -19,6 +19,14 @@ export interface FocusContext {
   editable: boolean;
   /** Focus is inside the document area. */
   inDocument: boolean;
+  /** Focus is in the Bookmarks pane's tree (M6-11). */
+  inBookmarks?: boolean;
+}
+
+function inScope(binding: Binding, focus: FocusContext): boolean {
+  if (binding.scope === 'document') return focus.inDocument;
+  if (binding.scope === 'bookmarks') return focus.inBookmarks === true;
+  return true;
 }
 
 /** The binding a key event triggers, honouring scopes and text fields (pure). */
@@ -28,11 +36,14 @@ export function resolveBinding(
   mac: boolean,
   keymap: readonly Binding[] = KEYMAP,
 ): Binding | undefined {
-  const binding = keymap.find((bnd) => bnd.chords.some((c) => matches(c, e, mac)));
+  // A chord can be bound once per scope (Delete in the document and in the bookmark tree).
+  const binding =
+    keymap.find((bnd) => bnd.chords.some((c) => matches(c, e, mac)) && inScope(bnd, focus)) ??
+    keymap.find((bnd) => bnd.chords.some((c) => matches(c, e, mac)));
   if (!binding) return undefined;
   const isEscape = e.key === 'Escape';
   if (focus.editable && !isEscape && binding.inText !== true) return undefined;
-  if (binding.scope === 'document' && !focus.inDocument) return undefined;
+  if (!inScope(binding, focus)) return undefined;
   return binding;
 }
 
@@ -52,6 +63,7 @@ export function useShortcuts(): void {
         {
           editable: isEditable(active),
           inDocument: Boolean(active?.closest('#document-panel')),
+          inBookmarks: Boolean(active?.closest('[data-key-scope="bookmarks"]')),
         },
         mac,
       );

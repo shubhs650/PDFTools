@@ -6,7 +6,11 @@ import { ArrowAutofitContent20Regular } from '@fluentui/react-icons/svg/arrow-au
 import { ArrowAutofitWidth20Regular } from '@fluentui/react-icons/svg/arrow-autofit-width';
 import { ArrowCircleLeft20Regular } from '@fluentui/react-icons/svg/arrow-circle-left';
 import { ArrowCircleRight20Regular } from '@fluentui/react-icons/svg/arrow-circle-right';
+import { ArrowCollapseAll20Regular } from '@fluentui/react-icons/svg/arrow-collapse-all';
+import { ArrowDown20Regular } from '@fluentui/react-icons/svg/arrow-down';
 import { ArrowDownload20Regular } from '@fluentui/react-icons/svg/arrow-download';
+import { ArrowEnter20Regular } from '@fluentui/react-icons/svg/arrow-enter';
+import { ArrowExpandAll20Regular } from '@fluentui/react-icons/svg/arrow-expand-all';
 import { ArrowExport20Regular } from '@fluentui/react-icons/svg/arrow-export';
 import { ArrowImport20Regular } from '@fluentui/react-icons/svg/arrow-import';
 import { ArrowNext20Regular } from '@fluentui/react-icons/svg/arrow-next';
@@ -18,10 +22,13 @@ import { ArrowRotateClockwise20Regular } from '@fluentui/react-icons/svg/arrow-r
 import { ArrowRotateCounterclockwise20Regular } from '@fluentui/react-icons/svg/arrow-rotate-counterclockwise';
 import { ArrowSync20Regular, ArrowSync24Regular } from '@fluentui/react-icons/svg/arrow-sync';
 import { ArrowUndo20Regular } from '@fluentui/react-icons/svg/arrow-undo';
+import { ArrowUp20Regular } from '@fluentui/react-icons/svg/arrow-up';
 import { ArrowUpRight20Filled, ArrowUpRight20Regular } from '@fluentui/react-icons/svg/arrow-up-right';
 import { Attach20Filled, Attach20Regular, Attach32Filled, Attach32Regular } from '@fluentui/react-icons/svg/attach';
 import { BookOpen20Filled, BookOpen20Regular } from '@fluentui/react-icons/svg/book-open';
 import { Bookmark20Filled, Bookmark20Regular } from '@fluentui/react-icons/svg/bookmark';
+import { BookmarkAdd20Regular } from '@fluentui/react-icons/svg/bookmark-add';
+import { BookmarkMultiple20Regular } from '@fluentui/react-icons/svg/bookmark-multiple';
 import { Bug20Regular, Bug24Regular } from '@fluentui/react-icons/svg/bug';
 import { CheckmarkCircle20Regular, CheckmarkCircle32Regular } from '@fluentui/react-icons/svg/checkmark-circle';
 import { CheckmarkSquare20Filled, CheckmarkSquare20Regular } from '@fluentui/react-icons/svg/checkmark-square';
@@ -38,6 +45,8 @@ import { Copy20Regular } from '@fluentui/react-icons/svg/copy';
 import { Cursor20Filled, Cursor20Regular, Cursor32Filled, Cursor32Regular } from '@fluentui/react-icons/svg/cursor';
 import { Cut20Regular } from '@fluentui/react-icons/svg/cut';
 import { Delete20Regular, Delete32Regular } from '@fluentui/react-icons/svg/delete';
+import { DeleteArrowBack20Regular } from '@fluentui/react-icons/svg/delete-arrow-back';
+import { DeleteLines20Regular } from '@fluentui/react-icons/svg/delete-lines';
 import { Dismiss20Filled, Dismiss20Regular } from '@fluentui/react-icons/svg/dismiss';
 import { DocumentAdd20Regular, DocumentAdd28Regular } from '@fluentui/react-icons/svg/document-add';
 import { DocumentArrowRight20Regular, DocumentArrowRight24Regular } from '@fluentui/react-icons/svg/document-arrow-right';
@@ -92,6 +101,7 @@ import { QuestionCircle20Regular, QuestionCircle32Regular } from '@fluentui/reac
 import { RatioOneToOne20Filled, RatioOneToOne20Regular, RatioOneToOne24Filled, RatioOneToOne24Regular } from '@fluentui/react-icons/svg/ratio-one-to-one';
 import { ReOrder20Regular, ReOrder24Regular } from '@fluentui/react-icons/svg/re-order';
 import { RectangleLandscape20Filled, RectangleLandscape20Regular, RectangleLandscape32Filled, RectangleLandscape32Regular } from '@fluentui/react-icons/svg/rectangle-landscape';
+import { Rename20Regular } from '@fluentui/react-icons/svg/rename';
 import { RotateLeft20Regular, RotateLeft24Regular } from '@fluentui/react-icons/svg/rotate-left';
 import { RotateRight20Regular, RotateRight24Regular } from '@fluentui/react-icons/svg/rotate-right';
 import { Ruler20Filled, Ruler20Regular, Ruler32Filled, Ruler32Regular } from '@fluentui/react-icons/svg/ruler';
@@ -115,9 +125,12 @@ import { TableEdit20Regular, TableEdit28Regular } from '@fluentui/react-icons/sv
 import { TableLightning20Regular, TableLightning28Regular } from '@fluentui/react-icons/svg/table-lightning';
 import { TableSettings20Regular, TableSettings28Regular } from '@fluentui/react-icons/svg/table-settings';
 import { Target20Filled, Target20Regular } from '@fluentui/react-icons/svg/target';
+import { TargetArrow20Regular } from '@fluentui/react-icons/svg/target-arrow';
 import { TextAdd20Filled, TextAdd20Regular } from '@fluentui/react-icons/svg/text-add';
 import { TextBulletListSquare20Filled, TextBulletListSquare20Regular, TextBulletListSquare32Filled, TextBulletListSquare32Regular } from '@fluentui/react-icons/svg/text-bullet-list-square';
 import { TextEditStyle20Filled, TextEditStyle20Regular } from '@fluentui/react-icons/svg/text-edit-style';
+import { TextIndentDecrease20Regular } from '@fluentui/react-icons/svg/text-indent-decrease';
+import { TextIndentIncrease20Regular } from '@fluentui/react-icons/svg/text-indent-increase';
 import { TextStrikethrough20Filled, TextStrikethrough20Regular, TextStrikethrough24Filled, TextStrikethrough24Regular } from '@fluentui/react-icons/svg/text-strikethrough';
 import { TextT20Filled, TextT20Regular } from '@fluentui/react-icons/svg/text-t';
 import { TextUnderline20Filled, TextUnderline20Regular } from '@fluentui/react-icons/svg/text-underline';
@@ -282,6 +295,24 @@ export const FLUENT_GLYPHS: Record<string, FluentGlyphs> = {
   'comment.togglePrintable': { regular: { small: Print20Regular }, filled: { small: Print20Filled } },
   'comment.toggleMarked': { regular: { small: CheckmarkSquare20Regular }, filled: { small: CheckmarkSquare20Filled } },
   'comment.makeDefault': { regular: { small: PaintBrushArrowDown20Regular } },
+  'bookmark.goTo': { regular: { small: ArrowEnter20Regular } },
+  'bookmark.new': { regular: { small: BookmarkAdd20Regular } },
+  'bookmark.newChild': { regular: { small: BookmarkMultiple20Regular } },
+  'bookmark.cut': { regular: { small: Cut20Regular } },
+  'bookmark.copy': { regular: { small: Copy20Regular } },
+  'bookmark.paste': { regular: { small: ClipboardPaste20Regular } },
+  'bookmark.delete': { regular: { small: Delete20Regular } },
+  'bookmark.deleteKeepChildren': { regular: { small: DeleteArrowBack20Regular } },
+  'bookmark.deleteChildren': { regular: { small: DeleteLines20Regular } },
+  'bookmark.expandAll': { regular: { small: ArrowExpandAll20Regular } },
+  'bookmark.collapseAll': { regular: { small: ArrowCollapseAll20Regular } },
+  'bookmark.rename': { regular: { small: Rename20Regular } },
+  'bookmark.setDestination': { regular: { small: TargetArrow20Regular } },
+  'bookmark.moveUp': { regular: { small: ArrowUp20Regular } },
+  'bookmark.moveDown': { regular: { small: ArrowDown20Regular } },
+  'bookmark.promote': { regular: { small: TextIndentDecrease20Regular } },
+  'bookmark.demote': { regular: { small: TextIndentIncrease20Regular } },
+  'bookmark.properties': { regular: { small: Info20Regular } },
   'status.readyOffline': { regular: { small: CloudCheckmark20Regular } },
   'status.preparingOffline': { regular: { small: ArrowDownload20Regular } },
   'status.updateReady': { regular: { small: ArrowSync20Regular } },

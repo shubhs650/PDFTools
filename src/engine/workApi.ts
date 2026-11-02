@@ -32,6 +32,13 @@ import type {
   TransferSpec,
 } from '../workers/work/transferJobs';
 import type { TableData, TableGrid } from '../model/tableGrid';
+import type {
+  ClipItem,
+  OutlineEdit,
+  OutlineExpect,
+  OutlineItem,
+  OutlinePath,
+} from '../model/outline';
 import type { PageOcr } from '../model/ocr/types';
 import type { LayerResult } from '../workers/work/ocrLayer';
 import type { RedactProgress, SkipStep } from '../workers/work/redact/apply';
@@ -114,6 +121,25 @@ export interface WorkApi {
    * `pagesApply` (ADR-020 d4), built on the document's current state.
    */
   ocrLayer: MethodSpec<{ docId: string; pages: PageOcr[] }, LayerResult>;
+  /**
+   * Bookmarks (M6-11, §7.15): the outline as the Bookmarks pane shows it, read
+   * by our object layer from the current state (live section synced first).
+   */
+  readOutline: MethodSpec<{ docId: string }, { items: OutlineItem[] }>;
+  /** Copy / Cut of bookmarks: the items with every key (`bookmark-stale` if moved since). */
+  copyOutline: MethodSpec<
+    { docId: string; paths: OutlinePath[]; expect: OutlineExpect[] },
+    { items: ClipItem[] }
+  >;
+  /**
+   * A bookmark edit (ADR-022 decision 5, route B): the outline objects to write
+   * for the Render worker's `pagesApply` (capability modify). `bookmark-stale`:
+   * the outline changed since it was shown; `bookmark-invalid`: a bad edit.
+   */
+  editOutline: MethodSpec<
+    { docId: string; edit: OutlineEdit; expect: OutlineExpect[] },
+    { objects: TransferObject[]; firstNew: number }
+  >;
   /** The in-app clipboard (M4-21): the chosen comments as a small PDF. Needs copy. */
   copyComments: MethodSpec<
     { docId: string; ids: string[]; withReplies: boolean },

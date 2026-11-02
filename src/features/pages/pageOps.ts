@@ -37,6 +37,8 @@ export type Change =
       firstNew: number;
       /** What the objects need (rule 9): annotate (comments) or modify (OCR, M5). */
       capability?: Capability;
+      /** What they are, for the undo step (default: by capability). */
+      tag?: 'bookmarks';
     };
 
 export interface Busy {
@@ -159,6 +161,10 @@ interface Applied {
   flattened?: FlattenCounts;
 }
 
+/** A change that leaves the pages and the view alone (bookmark edits, M6-11). */
+const keepsView = (change: Change): boolean =>
+  change.kind === 'objects' && change.tag === 'bookmarks';
+
 /** Pages whose content a change rewrites without changing their identity (a flatten). */
 const contentPages = (change: Change): number[] =>
   change.kind === 'op' && change.op.kind === 'flatten' ? change.op.pages.map((p) => p.page) : [];
@@ -254,10 +260,10 @@ async function applyAsStep(
   }
   if (!applied) {
     // Cancelled or failed part-way: back to the snapshot.
-    await restore(docId, snap.token, contentPages(change));
+    await restore(docId, snap.token, contentPages(change), keepsView(change));
     return null;
   }
-  await afterChange(docId, applied.pages, contentPages(change));
+  await afterChange(docId, applied.pages, contentPages(change), keepsView(change));
   registerStep(docId, change, label, snap.token);
   documentStore.getState().markDirty(docId);
   return applied;
@@ -307,7 +313,7 @@ export async function runTransfer(
     progress: (p: { done: number; total: number }) => void,
     onCancel: (cancel: () => void) => void,
   ) => Promise<TransferProduct | null>,
-  need: { capability: Capability; restricted: MessageKey } = {
+  need: { capability: Capability; restricted: MessageKey; tag?: 'bookmarks' } = {
     capability: 'annotate',
     restricted: msg('transfer.restricted'),
   },
@@ -332,7 +338,12 @@ export async function runTransfer(
         return (
           (await applyAsStep(
             docId,
-            { kind: 'objects', ...product, capability: need.capability },
+            {
+              kind: 'objects',
+              ...product,
+              capability: need.capability,
+              ...(need.tag ? { tag: need.tag } : {}),
+            },
             label,
           )) !== null
         );
@@ -387,9 +398,14 @@ async function apply(docId: string, change: Change, label: MessageKey): Promise<
   }
 }
 
-async function restore(docId: string, token: number, content: readonly number[]): Promise<void> {
+async function restore(
+  docId: string,
+  token: number,
+  content: readonly number[],
+  keepView = false,
+): Promise<void> {
   const { pages } = await renderEngine().rpc.call('pagesRestore', { docId, token }).promise;
-  await afterChange(docId, pages, content);
+  await afterChange(docId, pages, content, keepView);
 }
 
 /**
@@ -398,11 +414,13 @@ async function restore(docId: string, token: number, content: readonly number[])
  * annotation store first, then the new document object), the per-page caches,
  * the tab's page count, the selection and the current page. `content`: pages
  * whose drawing changed in place (a flatten), redrawn like changed pages.
+ * `keepView`: the view stays where it is (a bookmark edit changes no page).
  */
 async function afterChange(
   docId: string,
   pages: readonly PageInfo[],
   content: readonly number[] = [],
+  keepView = false,
 ): Promise<void> {
   await syncLive(docId);
   const store = coreStore();
@@ -458,7 +476,7 @@ async function afterChange(
   pagesStore.setState((s) => ({
     version: { ...s.version, [docId]: (s.version[docId] ?? 0) + 1 },
   }));
-  if (docs.activeId === docId) {
+  if (docs.activeId === docId && !keepView) {
     // After the viewer laid the new page list out.
     await new Promise((r) => requestAnimationFrame(r));
     goToPage(page);
@@ -480,22 +498,25 @@ function registerStep(docId: string, change: Change, label: MessageKey, token: n
         void redo(docId, change, label);
       },
       undo: () => {
-        void undo(docId, token, contentPages(change));
+        void undo(docId, token, contentPages(change), keepsView(change));
       },
       metadata: {
         pageOp:
           change.kind === 'op'
             ? change.op.kind
-            : change.capability === 'modify'
-              ? 'ocr'
-              : 'transfer',
+            : (change.tag ?? (change.capability === 'modify' ? 'ocr' : 'transfer')),
       },
     },
     'pages',
   );
 }
 
-async function undo(docId: string, token: number, content: readonly number[]): Promise<void> {
+async function undo(
+  docId: string,
+  token: number,
+  content: readonly number[],
+  keepView: boolean,
+): Promise<void> {
   if (evicted.has(token)) {
     pagesStore.setState({ error: msg('pages.undoGone') });
     return;
@@ -503,7 +524,7 @@ async function undo(docId: string, token: number, content: readonly number[]): P
   setBusy({ docId, label: msg('pages.undoing'), done: 0, total: 0, started: performance.now() });
   try {
     await settleEdits(docId);
-    await restore(docId, token, content);
+    await restore(docId, token, content, keepView);
     documentStore.getState().markDirty(docId);
   } catch (err) {
     recordError('pages.undo', err);
@@ -519,7 +540,7 @@ async function redo(docId: string, change: Change, label: MessageKey): Promise<v
     await settleEdits(docId);
     const applied = await apply(docId, change, label);
     if (!applied) return;
-    await afterChange(docId, applied.pages, contentPages(change));
+    await afterChange(docId, applied.pages, contentPages(change), keepsView(change));
     documentStore.getState().markDirty(docId);
   } catch (err) {
     recordError('pages.redo', err);
