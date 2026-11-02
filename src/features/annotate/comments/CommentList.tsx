@@ -523,6 +523,8 @@ export function CommentList({
             ? { 'aria-activedescendant': `${listId}-${activeRow.key}` }
             : {})}
           data-testid="comments-list"
+          // A rail button opens the pane with focus here (LeftRail).
+          data-pane-focus
           onScroll={(e) => {
             const top = e.currentTarget.scrollTop;
             if (layer.current) layer.current.style.transform = `translateY(${String(-top)}px)`;

@@ -123,7 +123,7 @@ export function CommentsPane() {
         onNext={step(1)}
         page={page}
       />
-      <FindBox docId={docId} filter={view.filter} />
+      <FindBox docId={docId} filter={view.filter} paneFocus={layout.rows.length === 0} />
       {isFiltered(view.filter) ? <FilterChips docId={docId} view={view} /> : null}
       {layout.rows.length > 0 ? (
         <CommentList
@@ -156,7 +156,16 @@ export function CommentsPane() {
 }
 
 /** Find (M6-05): filters the cards by their text; runs on Enter or the button (rule 3). */
-function FindBox({ docId, filter }: { docId: string; filter: CommentFilter }) {
+function FindBox({
+  docId,
+  filter,
+  paneFocus,
+}: {
+  docId: string;
+  filter: CommentFilter;
+  /** No list to focus: a rail button opens the pane with focus here (LeftRail). */
+  paneFocus: boolean;
+}) {
   const { t } = useTranslation();
   const id = useId();
   const input = useRef<HTMLInputElement>(null);
@@ -190,6 +199,7 @@ function FindBox({ docId, filter }: { docId: string; filter: CommentFilter }) {
         placeholder={t('comments.findPlaceholder')}
         value={text}
         enterKeyHint="search"
+        data-pane-focus={paneFocus || undefined}
         onChange={(e) => {
           setText(e.currentTarget.value);
         }}
