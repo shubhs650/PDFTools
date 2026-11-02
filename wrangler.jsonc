@@ -6,8 +6,8 @@
 // not a dependency of this repository (ADR-003).
 //
 // Workers Builds settings: build command `npm run build`, deploy command
-// `npx wrangler deploy` (the default), non-production branches
-// `npx wrangler versions upload` (the default), Node 22 from `.nvmrc`.
+// `npx wrangler deploy` (the default), preview command (Previews Base tab)
+// `npx wrangler preview` (the default), Node 22 from `.nvmrc`.
 // See docs/deploy/cloudflare-pages.md → "Deploying as a Worker instead".
 {
   "$schema": "node_modules/wrangler/config-schema.json",
@@ -22,6 +22,11 @@
     "html_handling": "auto-trailing-slash",
   },
   "workers_dev": true,
+  // Worker Previews (one per PR branch, built by `npx wrangler preview`). The
+  // command refuses to run without this block; empty means previews inherit
+  // the settings above. `npx wrangler versions upload` does not work there:
+  // Workers Builds rejects it on preview branches with a Worker-name mismatch.
+  "previews": {},
   "observability": {
     "enabled": false,
   },
