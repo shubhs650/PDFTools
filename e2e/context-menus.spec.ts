@@ -115,6 +115,7 @@ test('the comment menu: right click selects the comment; Copy, then Paste from t
     /^Set Status$/,
     /^Copy Style$/,
     /^Apply Style$/,
+    /^Make Current Properties Default$/,
     /^Properties$/,
   ]);
   // Nothing copied yet: Paste says why, and stays in the menu, focusable.

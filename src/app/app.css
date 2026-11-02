@@ -1738,21 +1738,34 @@ textarea.form-field {
   align-items: center;
 }
 
-/* ------------------------------------------------------------ annotation properties (M3-10) */
+/* ------------------------------------------------------------ annotation properties (M3-10, grid M6-06) */
 .annot-props,
 .prop-empty {
   display: grid;
-  gap: var(--space-3);
+  gap: var(--space-2);
   margin: var(--space-0);
+  padding: var(--space-3) var(--space-0);
+}
+
+.annot-props > p,
+.prop-actions {
+  padding: var(--space-0) var(--space-3);
+}
+
+.prop-empty {
   padding: var(--space-3);
 }
 
 .prop-empty,
 .prop-readonly,
-.prop-author,
+.prop-empty-hint,
 .prop-mixed {
   margin: var(--space-0);
   color: var(--color-text-muted);
+}
+
+.prop-empty-hint {
+  font-size: var(--font-size-s);
 }
 
 .prop-summary {
@@ -1760,23 +1773,78 @@ textarea.form-field {
   font-weight: var(--font-weight-semibold);
 }
 
-.prop-fields {
-  display: grid;
-  gap: var(--space-3);
-  margin: var(--space-0);
-  padding: var(--space-0);
-  border: none;
+/* A section: a heading button over a two-column grid (property | value). */
+.prop-section {
+  border-top: var(--border-width) solid var(--color-border);
 }
 
+.prop-section-title {
+  margin: var(--space-0);
+  font-size: var(--font-size-m);
+}
+
+.prop-section-toggle {
+  display: flex;
+  gap: var(--space-2);
+  align-items: center;
+  width: 100%;
+  padding: var(--space-2) var(--space-3);
+  border: none;
+  background: var(--color-surface-sunken);
+  color: var(--color-text);
+  font: inherit;
+  font-weight: var(--font-weight-semibold);
+  text-align: start;
+  cursor: pointer;
+}
+
+.prop-section-toggle:hover {
+  background: var(--color-hover);
+}
+
+.prop-section-chevron {
+  display: inline-flex;
+}
+
+.prop-grid {
+  display: grid;
+  grid-template-columns: minmax(5.5em, 42%) minmax(0, 1fr);
+  column-gap: var(--space-2);
+  padding: var(--space-1) var(--space-3) var(--space-2);
+}
+
+.prop-grid[hidden] {
+  display: none;
+}
+
+/* Each row spans both columns and lines up with the others (subgrid). */
 .prop-field {
   display: grid;
-  gap: var(--space-1);
+  grid-column: 1 / -1;
+  grid-template-columns: subgrid;
+  align-items: center;
+  min-height: var(--control-height-m);
+  padding: var(--space-1) var(--space-0);
+  border-bottom: var(--border-width) solid var(--color-surface-sunken);
+}
+
+.prop-field > label,
+.prop-label {
+  overflow: hidden;
+  color: var(--color-text-muted);
+  text-overflow: ellipsis;
+}
+
+.prop-field > .ui-field-error {
+  grid-column: 2;
+  margin: var(--space-0);
 }
 
 .prop-row {
   display: flex;
   gap: var(--space-2);
   align-items: center;
+  min-width: 0;
 }
 
 .prop-swatch {
@@ -1789,7 +1857,8 @@ textarea.form-field {
 }
 
 .prop-number {
-  width: 6em;
+  width: 5em;
+  min-width: 0;
 }
 
 .prop-check {
@@ -1798,9 +1867,46 @@ textarea.form-field {
   align-items: center;
 }
 
-.prop-text {
+.prop-text,
+.prop-select {
   width: 100%;
+  min-width: 0;
   box-sizing: border-box;
+}
+
+.prop-checkbox {
+  margin: var(--space-0);
+}
+
+.prop-info {
+  width: 100%;
+  min-width: 0;
+  box-sizing: border-box;
+  padding: var(--space-0);
+  overflow: hidden;
+  border: none;
+  background: transparent;
+  color: var(--color-text);
+  font: inherit;
+  text-overflow: ellipsis;
+}
+
+.prop-info:focus-visible {
+  outline: 2px solid var(--color-focus);
+  outline-offset: 1px;
+}
+
+.prop-history {
+  grid-column: 1 / -1;
+  margin: var(--space-1) var(--space-0) var(--space-0);
+  padding: var(--space-2) var(--space-2) var(--space-2) var(--space-5);
+  background: var(--color-surface-sunken);
+  font-size: var(--font-size-s);
+}
+
+.prop-actions {
+  display: flex;
+  justify-content: flex-end;
 }
 
 .properties-pane {

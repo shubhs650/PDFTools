@@ -13,12 +13,14 @@ export function ColorField({
   label,
   value,
   allowNone,
+  disabled,
   onCommit,
 }: {
   label: string;
   value: Value;
   /** A "No fill" checkbox (fill colours may be transparent). */
   allowNone?: boolean;
+  disabled?: boolean;
   onCommit: (v: string) => void;
 }) {
   const { t } = useTranslation();
@@ -41,7 +43,8 @@ export function ColorField({
     return () => {
       el.removeEventListener('change', on);
     };
-  }, []);
+    // The input is remade (key) when the value changes: listen on the new one.
+  }, [hex, none]);
   return (
     <div className="prop-field prop-color">
       <label htmlFor={id}>{label}</label>
@@ -53,7 +56,7 @@ export function ColorField({
           className="prop-swatch ui-focusable"
           defaultValue={hex}
           key={hex}
-          disabled={none}
+          disabled={(disabled ?? false) || none}
           aria-describedby={value === MIXED ? `${id}-mixed` : undefined}
         />
         {value === MIXED ? (
@@ -66,6 +69,7 @@ export function ColorField({
             <input
               type="checkbox"
               checked={none}
+              disabled={disabled}
               onChange={(e) => {
                 onCommit(e.currentTarget.checked ? 'transparent' : '#ffffff');
               }}
@@ -85,6 +89,7 @@ interface NumberProps {
   min: number;
   max: number;
   digits?: number;
+  disabled?: boolean;
   onCommit: (v: number) => void;
 }
 
@@ -103,6 +108,7 @@ function NumberInput({
   min,
   max,
   digits = 0,
+  disabled,
   onCommit,
   shown,
 }: NumberProps & { shown: string }) {
@@ -128,6 +134,7 @@ function NumberInput({
           id={id}
           className="ui-field-input prop-number"
           inputMode="decimal"
+          disabled={disabled}
           value={text}
           placeholder={value === MIXED ? t('annotProps.mixed') : undefined}
           aria-invalid={error || undefined}
@@ -160,11 +167,13 @@ export function SelectField<T extends string | number>({
   label,
   value,
   options,
+  disabled,
   onCommit,
 }: {
   label: string;
   value: Value;
   options: readonly { value: T; label: string }[];
+  disabled?: boolean;
   onCommit: (v: T) => void;
 }) {
   const { t } = useTranslation();
@@ -174,7 +183,8 @@ export function SelectField<T extends string | number>({
       <label htmlFor={id}>{label}</label>
       <select
         id={id}
-        className="ui-field-input"
+        className="ui-field-input prop-select"
+        disabled={disabled}
         value={value === MIXED ? '' : String(value)}
         onChange={(e) => {
           const o = options.find((x) => String(x.value) === e.currentTarget.value);
@@ -200,6 +210,7 @@ interface TextPropProps {
   label: string;
   value: Value;
   multiline?: boolean;
+  disabled?: boolean;
   onCommit: (v: string) => void;
 }
 
@@ -213,6 +224,7 @@ function TextInput({
   label,
   value,
   multiline,
+  disabled,
   onCommit,
   shown,
 }: TextPropProps & { shown: string }) {
@@ -223,6 +235,7 @@ function TextInput({
     id,
     className: 'ui-field-input prop-text',
     value: text,
+    disabled,
     placeholder: value === MIXED ? t('annotProps.mixed') : undefined,
     onBlur: () => {
       if (text !== shown) onCommit(text);
@@ -247,6 +260,65 @@ function TextInput({
           }}
         />
       )}
+    </div>
+  );
+}
+
+/** A yes/no property (a flag, bold, italic); "Mixed" shows as the indeterminate state. */
+export function CheckField({
+  label,
+  value,
+  disabled,
+  describedBy,
+  onCommit,
+}: {
+  label: string;
+  value: Value;
+  disabled?: boolean;
+  describedBy?: string;
+  onCommit: (v: boolean) => void;
+}) {
+  const id = useId();
+  const ref = useRef<HTMLInputElement>(null);
+  useEffect(() => {
+    if (ref.current) ref.current.indeterminate = value === MIXED;
+  }, [value]);
+  return (
+    <div className="prop-field prop-flag">
+      <label htmlFor={id}>{label}</label>
+      <div className="prop-row">
+        <input
+          ref={ref}
+          id={id}
+          type="checkbox"
+          className="prop-checkbox"
+          checked={value === true}
+          disabled={disabled}
+          aria-describedby={describedBy}
+          onChange={(e) => {
+            // From Mixed, a click turns the property on for all.
+            onCommit(value === MIXED ? true : e.currentTarget.checked);
+          }}
+        />
+      </div>
+    </div>
+  );
+}
+
+/** A value the user reads but does not change here (name, dates, author). */
+export function InfoField({ label, value }: { label: string; value: string }) {
+  const id = useId();
+  return (
+    <div className="prop-field">
+      <label htmlFor={id}>{label}</label>
+      <input
+        id={id}
+        className="prop-info"
+        readOnly
+        value={value}
+        title={value}
+        aria-readonly="true"
+      />
     </div>
   );
 }

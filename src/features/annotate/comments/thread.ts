@@ -5,9 +5,9 @@ import {
   PdfAnnotationStateModel,
   PdfAnnotationSubtype as S,
   type PdfAnnotationObject,
-  type PdfAnnotationState,
+  PdfAnnotationState,
 } from '@embedpdf/models';
-import { isStateReply } from './commentsModel';
+import { isAnyState, isMarkReply, isStateReply } from './commentsModel';
 
 export interface ThreadEntry {
   annot: PdfAnnotationObject;
@@ -53,7 +53,7 @@ export function buildThread(
   const replies: ThreadEntry[] = [];
   const walk = (id: string, depth: number, seen: Set<string>): void => {
     const list = (kids.get(id) ?? [])
-      .filter((a) => a.type === S.TEXT && !isStateReply(a))
+      .filter((a) => a.type === S.TEXT && !isAnyState(a))
       .sort((x, y) => time(x) - time(y));
     for (const r of list) {
       if (seen.has(r.id)) continue; // a cycle in a damaged file
@@ -75,6 +75,44 @@ export function buildThread(
   }
   const states = [...latest.values()].sort((x, y) => x.author.localeCompare(y.author));
   return { replies, states, history };
+}
+
+/** One entry of a comment's review history (M6-06): a status or a mark. */
+export interface HistoryEntry {
+  id: string;
+  author: string;
+  state: PdfAnnotationState;
+  /** Review (status) or Marked (the reviewer's tick). */
+  model: PdfAnnotationStateModel;
+  date: Date | null;
+}
+
+/** Every status and mark set on `rootId`, oldest first. */
+export function reviewHistory(all: readonly PdfAnnotationObject[], rootId: string): HistoryEntry[] {
+  return all
+    .filter((a) => a.inReplyToId === rootId && isAnyState(a))
+    .sort((x, y) => time(x) - time(y))
+    .map((a) => ({
+      id: a.id,
+      author: a.author ?? '',
+      state: (a as { state: PdfAnnotationState }).state,
+      model: isMarkReply(a) ? PdfAnnotationStateModel.Marked : PdfAnnotationStateModel.Review,
+      date: a.created ?? a.modified ?? null,
+    }));
+}
+
+/** Whether `author`'s latest mark on `rootId` is Marked (Acrobat's per-reviewer tick). */
+export function isMarkedBy(
+  all: readonly PdfAnnotationObject[],
+  rootId: string,
+  author: string,
+): boolean {
+  let latest: PdfAnnotationObject | null = null;
+  for (const a of all) {
+    if (a.inReplyToId !== rootId || !isMarkReply(a) || (a.author ?? '') !== author) continue;
+    if (!latest || time(a) >= time(latest)) latest = a;
+  }
+  return (latest as { state?: string } | null)?.state === PdfAnnotationState.Marked;
 }
 
 /** Every reply and state under `id`, at any depth (deleted with it). */
@@ -136,6 +174,26 @@ export function makeState(
     contents,
     state,
     stateModel: PdfAnnotationStateModel.Review,
+    flags: ['hidden', 'print', 'noZoom', 'noRotate'],
+    strokeColor: '#FFE14D',
+    opacity: 1,
+  } as PdfAnnotationObject;
+}
+
+/** A review mark (M6-06): /StateModel /Marked, /State Marked or Unmarked, hidden like a status. */
+export function makeMark(
+  parent: PdfAnnotationObject,
+  marked: boolean,
+  author: string,
+  contents: string,
+  now: Date,
+  id: string,
+): PdfAnnotationObject {
+  return {
+    ...base(parent, author, now, id),
+    contents,
+    state: marked ? PdfAnnotationState.Marked : PdfAnnotationState.Unmarked,
+    stateModel: PdfAnnotationStateModel.Marked,
     flags: ['hidden', 'print', 'noZoom', 'noRotate'],
     strokeColor: '#FFE14D',
     opacity: 1,

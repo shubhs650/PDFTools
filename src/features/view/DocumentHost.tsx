@@ -3,6 +3,7 @@ import type { ReactNode } from 'react';
 import type { InteractionManagerCapability } from '@embedpdf/plugin-interaction-manager';
 import { HAND_MODE, PLUGINS } from './plugins';
 import { installAuthoring } from '../annotate/authoring';
+import { installFlagPolicy } from '../annotate/flagPolicy';
 import { installDrawTools } from '../annotate/tools/drawTools';
 import { installStampTools } from '../stamps/stampTools';
 import { installCalibrateTool } from '../measure/calibrate';
@@ -23,6 +24,7 @@ const onInitialized = (registry: Parameters<typeof setRegistry>[0]): Promise<voi
       exclusive: false,
     });
     installAuthoring(registry);
+    installFlagPolicy(registry);
     installHistoryJoin(registry);
     // Before installDrawTools rewraps the line/polyline/polygon tools they build on.
     installMeasureTools(registry);

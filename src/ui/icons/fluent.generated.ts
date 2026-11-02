@@ -24,6 +24,7 @@ import { BookOpen20Filled, BookOpen20Regular } from '@fluentui/react-icons/svg/b
 import { Bookmark20Filled, Bookmark20Regular } from '@fluentui/react-icons/svg/bookmark';
 import { Bug20Regular, Bug24Regular } from '@fluentui/react-icons/svg/bug';
 import { CheckmarkCircle20Regular, CheckmarkCircle32Regular } from '@fluentui/react-icons/svg/checkmark-circle';
+import { CheckmarkSquare20Filled, CheckmarkSquare20Regular } from '@fluentui/react-icons/svg/checkmark-square';
 import { ChevronLeft20Regular } from '@fluentui/react-icons/svg/chevron-left';
 import { ChevronRight20Regular } from '@fluentui/react-icons/svg/chevron-right';
 import { Circle20Filled, Circle20Regular } from '@fluentui/react-icons/svg/circle';
@@ -66,6 +67,7 @@ import { Layer20Filled, Layer20Regular } from '@fluentui/react-icons/svg/layer';
 import { Line20Filled, Line20Regular } from '@fluentui/react-icons/svg/line';
 import { LineFlowDiagonalUpRight20Filled, LineFlowDiagonalUpRight20Regular } from '@fluentui/react-icons/svg/line-flow-diagonal-up-right';
 import { Link20Filled, Link20Regular } from '@fluentui/react-icons/svg/link';
+import { LockClosed20Filled, LockClosed20Regular } from '@fluentui/react-icons/svg/lock-closed';
 import { LockOpen20Regular, LockOpen32Regular } from '@fluentui/react-icons/svg/lock-open';
 import { LockShield20Regular, LockShield32Regular } from '@fluentui/react-icons/svg/lock-shield';
 import { Markdown20Regular, Markdown28Regular } from '@fluentui/react-icons/svg/markdown';
@@ -82,7 +84,7 @@ import { PanelTopContract20Regular } from '@fluentui/react-icons/svg/panel-top-c
 import { Pen20Filled, Pen20Regular } from '@fluentui/react-icons/svg/pen';
 import { Pentagon20Filled, Pentagon20Regular, Pentagon32Filled, Pentagon32Regular } from '@fluentui/react-icons/svg/pentagon';
 import { PersonEdit20Regular } from '@fluentui/react-icons/svg/person-edit';
-import { Print20Regular, Print32Regular } from '@fluentui/react-icons/svg/print';
+import { Print20Filled, Print20Regular, Print32Regular } from '@fluentui/react-icons/svg/print';
 import { QuestionCircle20Regular, QuestionCircle32Regular } from '@fluentui/react-icons/svg/question-circle';
 import { RatioOneToOne20Filled, RatioOneToOne20Regular, RatioOneToOne24Filled, RatioOneToOne24Regular } from '@fluentui/react-icons/svg/ratio-one-to-one';
 import { ReOrder20Regular, ReOrder24Regular } from '@fluentui/react-icons/svg/re-order';
@@ -263,6 +265,10 @@ export const FLUENT_GLYPHS: Record<string, FluentGlyphs> = {
   'edit.paste': { regular: { small: ClipboardPaste20Regular } },
   'edit.selectAll': { regular: { small: SelectAllOn20Regular } },
   'edit.properties': { regular: { small: Info20Regular } },
+  'comment.toggleLocked': { regular: { small: LockClosed20Regular }, filled: { small: LockClosed20Filled } },
+  'comment.togglePrintable': { regular: { small: Print20Regular }, filled: { small: Print20Filled } },
+  'comment.toggleMarked': { regular: { small: CheckmarkSquare20Regular }, filled: { small: CheckmarkSquare20Filled } },
+  'comment.makeDefault': { regular: { small: PaintBrushArrowDown20Regular } },
   'status.readyOffline': { regular: { small: CloudCheckmark20Regular } },
   'status.preparingOffline': { regular: { small: ArrowDownload20Regular } },
   'status.updateReady': { regular: { small: ArrowSync20Regular } },

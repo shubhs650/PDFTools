@@ -40,6 +40,19 @@ export interface StyleProps {
   strokeWidth?: number;
   /** 0 … 1. */
   opacity?: number;
+  /** Border style (M6-06): PdfAnnotationBorderStyle (1 solid, 2 dashed) and its dashes. */
+  strokeStyle?: number;
+  strokeDashArray?: number[];
+  /** Cloudy border (/BE /I) for rectangles, ovals and polygons; 0 is none. */
+  cloudyBorderIntensity?: number;
+  /** Line endings (PdfAnnotationLineEnding) of lines and polylines. */
+  lineEndings?: { start: number; end: number };
+  /** One of the standard 12 text fonts (PdfStandardFont 0 … 11). */
+  fontFamily?: number;
+  /** 0 left, 1 centre, 2 right. */
+  textAlign?: number;
+  /** 0 top, 1 middle, 2 bottom. */
+  verticalAlign?: number;
 }
 
 export const DEFAULT_RED = '#FF0000';
@@ -97,6 +110,9 @@ const isColor = (v: unknown, transparent: boolean): v is string =>
 const inRange = (v: unknown, min: number, max: number): v is number =>
   typeof v === 'number' && Number.isFinite(v) && v >= min && v <= max;
 
+const isInt = (v: unknown, min: number, max: number): v is number =>
+  Number.isInteger(v) && inRange(v, min, max);
+
 /** The well-formed properties of `raw` (anything else is dropped). */
 export function cleanProps(raw: unknown): StyleProps {
   if (typeof raw !== 'object' || raw === null) return {};
@@ -108,6 +124,20 @@ export function cleanProps(raw: unknown): StyleProps {
   if (inRange(r['fontSize'], 1, 144)) out.fontSize = r['fontSize'];
   if (inRange(r['strokeWidth'], 0, 72)) out.strokeWidth = r['strokeWidth'];
   if (inRange(r['opacity'], 0, 1)) out.opacity = r['opacity'];
+  if (isInt(r['strokeStyle'], 0, 6)) out.strokeStyle = r['strokeStyle'];
+  const dash = r['strokeDashArray'];
+  if (Array.isArray(dash) && dash.length <= 8 && dash.every((d) => inRange(d, 0, 100)))
+    out.strokeDashArray = dash;
+  if (inRange(r['cloudyBorderIntensity'], 0, 2))
+    out.cloudyBorderIntensity = r['cloudyBorderIntensity'];
+  const ends: unknown = r['lineEndings'];
+  if (typeof ends === 'object' && ends !== null) {
+    const { start, end } = ends as { start?: unknown; end?: unknown };
+    if (isInt(start, 0, 10) && isInt(end, 0, 10)) out.lineEndings = { start, end };
+  }
+  if (isInt(r['fontFamily'], 0, 11)) out.fontFamily = r['fontFamily'];
+  if (isInt(r['textAlign'], 0, 2)) out.textAlign = r['textAlign'];
+  if (isInt(r['verticalAlign'], 0, 2)) out.verticalAlign = r['verticalAlign'];
   return out;
 }
 

@@ -9,8 +9,11 @@ import { commentsOf } from '../../src/features/annotate/comments/commentsModel';
 import {
   buildThread,
   descendants,
+  isMarkedBy,
+  makeMark,
   makeReply,
   makeState,
+  reviewHistory,
 } from '../../src/features/annotate/comments/thread';
 
 const rect = { origin: { x: 10, y: 20 }, size: { width: 30, height: 40 } };
@@ -98,6 +101,74 @@ describe('reply threads (M3-12)', () => {
       stateModel: PdfAnnotationStateModel.Review,
       contents: 'Accepted set by Ana',
       flags: ['hidden', 'print', 'noZoom', 'noRotate'],
+    });
+  });
+});
+
+describe('review marks and history (M6-06)', () => {
+  const mark = (id: string, author: string, s: St, at: string) =>
+    a({
+      id,
+      inReplyToId: 'root',
+      author,
+      created: d(at),
+      state: s,
+      stateModel: PdfAnnotationStateModel.Marked,
+    });
+  const withMarks = [
+    ...doc,
+    mark('m1', 'Ana', St.Marked, '2026-01-06'),
+    mark('m2', 'Bo', St.Marked, '2026-01-06'),
+    mark('m3', 'Bo', St.Unmarked, '2026-01-07'),
+  ];
+
+  it('a mark is the reviewer’s own: the latest one per author counts', () => {
+    expect(isMarkedBy(withMarks, 'root', 'Ana')).toBe(true);
+    expect(isMarkedBy(withMarks, 'root', 'Bo')).toBe(false);
+    expect(isMarkedBy(withMarks, 'root', 'Cy')).toBe(false);
+  });
+
+  it('marks are neither replies nor the review status', () => {
+    const t = buildThread(withMarks, 'root');
+    expect(t.replies.map((e) => e.annot.id)).toEqual(['r1', 'r1a', 'r2']);
+    expect(t.history.map((h) => h.id)).toEqual(['s1', 's3', 's2']);
+    const root = commentsOf(withMarks).find((c) => c.id === 'root');
+    expect(root?.replies).toBe(2);
+    expect(root?.status).toBe(St.Accepted);
+  });
+
+  it('the review history lists statuses and marks, oldest first', () => {
+    expect(reviewHistory(withMarks, 'root').map((h) => [h.id, h.author, h.state, h.model])).toEqual(
+      [
+        ['s1', 'Bo', St.Rejected, PdfAnnotationStateModel.Review],
+        ['s3', 'Cy', St.Completed, PdfAnnotationStateModel.Review],
+        ['s2', 'Bo', St.Accepted, PdfAnnotationStateModel.Review],
+        ['m1', 'Ana', St.Marked, PdfAnnotationStateModel.Marked],
+        ['m2', 'Bo', St.Marked, PdfAnnotationStateModel.Marked],
+        ['m3', 'Bo', St.Unmarked, PdfAnnotationStateModel.Marked],
+      ],
+    );
+    expect(reviewHistory(withMarks, 'r1')).toEqual([]);
+  });
+
+  it('makes a mark as Acrobat writes it: hidden, /StateModel /Marked', () => {
+    const parent = a({ id: 'root', type: S.SQUARE, pageIndex: 2 });
+    const m = makeMark(parent, true, 'Ana', 'Marked set by Ana', d('2026-02-01'), 'id-1') as {
+      state?: string;
+      stateModel?: string;
+    } & PdfAnnotationObject;
+    expect(m).toMatchObject({
+      id: 'id-1',
+      type: S.TEXT,
+      pageIndex: 2,
+      inReplyToId: 'root',
+      author: 'Ana',
+      state: St.Marked,
+      stateModel: PdfAnnotationStateModel.Marked,
+      flags: ['hidden', 'print', 'noZoom', 'noRotate'],
+    });
+    expect(makeMark(parent, false, 'Ana', '', d('2026-02-01'), 'id-2')).toMatchObject({
+      state: St.Unmarked,
     });
   });
 });

@@ -98,6 +98,39 @@ describe('stored overrides and their migration', () => {
     expect(cleanProps('x')).toEqual({});
   });
 
+  it('keeps the Tool Properties fields too (M6-06), well-formed only', () => {
+    expect(
+      cleanProps({
+        strokeStyle: 2,
+        strokeDashArray: [3, 3],
+        cloudyBorderIntensity: 2,
+        lineEndings: { start: 0, end: 5 },
+        fontFamily: 9,
+        textAlign: 1,
+        verticalAlign: 2,
+      }),
+    ).toEqual({
+      strokeStyle: 2,
+      strokeDashArray: [3, 3],
+      cloudyBorderIntensity: 2,
+      lineEndings: { start: 0, end: 5 },
+      fontFamily: 9,
+      textAlign: 1,
+      verticalAlign: 2,
+    });
+    expect(
+      cleanProps({
+        strokeStyle: 1.5,
+        strokeDashArray: [3, -1],
+        cloudyBorderIntensity: 9,
+        lineEndings: { start: 0 },
+        fontFamily: 12, // Symbol is not a text font
+        textAlign: 3,
+        verticalAlign: '1',
+      }),
+    ).toEqual({});
+  });
+
   it('migrates v1 records; drops damaged, empty and newer ones', () => {
     expect(migrateStored({ v: 1, props: { fontSize: 12 } })).toEqual({
       v: TOOL_DEFAULTS_VERSION,
