@@ -177,4 +177,13 @@ item 3.
 
 ## Evidence
 
-To be filled by task M6-04 (spikes S18 – S22): commands, numbers, files (self-made only, rule 13).
+Task M6-04 ran spikes S18 – S22 (`spikes/s18-s22-m6/`, 2026-11-01). Commands, numbers and the
+decisions that follow are in [ADR-022](022-m6-spikes-s18-s22.md) (Proposed). Summary:
+
+| Spike | Feature     | Verdict               | What changes                                                                                        |
+| ----- | ----------- | --------------------- | --------------------------------------------------------------------------------------------------- |
+| S18   | Passwords   | Works with workaround | AES-256 (`/V 5 /R 6`) confirmed; run on a copy of the document, owner rights to remove, ≤ 127 bytes |
+| S19   | Form fields | Works with workaround | Five types save narrow; license exception, readable radio ids, `/TU` via our layer, modify gate     |
+| S20   | Signatures  | Works                 | As planned; a bundled handwriting font passed to the type pad                                       |
+| S21   | Bookmarks   | Works with workaround | `setBookmarks` loses styles and drops unsupported actions; route A or B (owner's choice)            |
+| S22   | Attach File | Works with workaround | Direct PDFium calls instead of our object layer; own move / resize call                             |
