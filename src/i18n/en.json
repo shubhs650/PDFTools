@@ -518,10 +518,10 @@
       "snapshots": "Recovery snapshots",
       "used": "Storage used by PDFTools",
       "unknown": "Not reported by this browser",
-      "note": "Your PDF files stay where they are. PDFTools keeps only settings, your reviewer profile, custom status schemes, table templates, the recent files list and recovery snapshots of unsaved changes. Storage used includes the offline copy of the app.",
+      "note": "Your PDF files stay where they are. PDFTools keeps only settings, your reviewer profile, comment tool defaults and saved comment styles, saved visual signatures, custom status schemes, table templates, the recent files list and recovery snapshots of unsaved changes. Storage used includes the offline copy of the app.",
       "clear": "Clear all local data…",
       "confirmTitle": "Clear all local data?",
-      "confirmDescription": "This deletes your settings, reviewer profile, custom status schemes, table templates, the recent files list and all recovery snapshots on this device. Your PDF files are not changed. The offline copy of the app is kept, so PDFTools keeps working offline.",
+      "confirmDescription": "This deletes your settings, reviewer profile, comment tool defaults and saved comment styles, saved visual signatures, custom status schemes, table templates, the recent files list and all recovery snapshots on this device. Your PDF files are not changed. The offline copy of the app is kept, so PDFTools keeps working offline.",
       "warnOpen_one": "{{count}} document is open. It stays open.",
       "warnOpen_other": "{{count}} documents are open. They stay open.",
       "warnUnsaved_one": "{{count}} open document has unsaved changes. Its recovery snapshot is deleted too, so those changes could not be recovered after a crash until you change the document again.",
@@ -1097,11 +1097,23 @@
       },
       "panes": {
         "title": "Side panes",
-        "body": "The rail on the left opens Thumbnails, Bookmarks, Attachments, Layers, Signatures and Search. Esc returns to the rail."
+        "body": "The rail on the left opens Thumbnails, Bookmarks, Attachments, Layers, Signatures, Comments and Search. Esc returns to the rail. The Properties pane on the right (Home → Properties, or View → Properties Pane) shows the selected comment, form field or tool."
+      },
+      "bookmarks": {
+        "title": "Bookmarks",
+        "body": "The Bookmarks pane edits the document's bookmarks. New Bookmark (Insert) adds one after the focused bookmark that opens the current page and zoom; F2 renames, {{delete}} deletes, and the right-click menu (or {{menu}}) has New Child Bookmark, Cut, Copy and Paste, Set Destination, Expand and Collapse All and Bookmark Properties (Alt+Enter: title, colour, bold, italic, page and zoom). Drag a bookmark to move it, or use Alt+Shift with the arrow keys. Each change is one undo step, and {{save}} saves them. A file that forbids changes keeps its bookmarks as they are."
       },
       "review": {
         "title": "Reviewing comments",
-        "body": "The Comment tab has the markup, note, text and drawing tools; single letters such as N (note) or B (rectangle) turn them on while the document has focus. Select a comment with Home → Select Comments or from the Comments pane; then edit it in the Properties pane, reply or set its status in the Comments pane, and remove it with Comment → Delete or the {{delete}} key ({{undo}} brings it back). In the Comments pane, Options sorts, groups and filters the cards and Find (Enter) looks through their text and replies; a card's Reply opens a reply box (Enter posts, Esc cancels), F2 edits its text, and a right click gives the same menu as on the page. {{save}} keeps your comments in the file. On a file that forbids changes, comments are read-only."
+        "body": "The Comment tab has the markup, note, text and drawing tools; single letters such as N (note) or B (rectangle) turn them on while the document has focus. New comments are red with 1 pt lines and 10 pt text (highlights and notes stay yellow). Select a comment with Home → Select Comments or from the Comments pane; then edit it in the Properties pane, reply or set its status in the Comments pane, and remove it with Comment → Delete or the {{delete}} key ({{undo}} brings it back). In the Comments pane, Options sorts, groups and filters the cards and Find (Enter) looks through their text and replies; a card's Reply opens a reply box (Enter posts, Esc cancels), F2 edits its text, and a right click gives the same menu as on the page. Attach File puts a file on the page as a paperclip comment (up to 25 MB); double-click it to save the file. {{save}} keeps your comments in the file. On a file that forbids changes, comments are read-only."
+      },
+      "styles": {
+        "title": "Comment styles and properties",
+        "body": "Each drawing and text tool has a style palette next to its button: pick a preset colour or one of your own styles, or open Comment Styles Palette… to add, rename, export and import them. Make Current Properties Default (in the comment's right-click menu) makes the selected comment's look the tool's default. The Properties pane lists every property of the selected comment: General (subject, author, dates, Printable, Read only, Locked, Marked and the review history), Style (fill, stroke, line style and width, opacity, blend mode, rotation) and Text (font, size, bold, italic, alignment). A locked comment can't be moved or changed until you clear Locked."
+      },
+      "flatten": {
+        "title": "Flattening and snapshots",
+        "body": "Comment → Flatten Comments makes comments part of the page, so they print and show everywhere but can no longer be edited; choose all comments or the selected ones and which pages. Locked and hidden comments, links and redaction marks are left as they are. {{undo}} brings the comments back. Home → Snapshot copies a rectangle you drag on the page to the clipboard as a picture; from the keyboard, the arrow keys move and resize the rectangle and Enter copies it. A document that forbids copying refuses snapshots."
       },
       "transfer": {
         "title": "Comment transfer",
@@ -1121,7 +1133,7 @@
       },
       "forms": {
         "title": "Forms",
-        "body": "Click a form field or press Tab to move through the fields. {{save}} saves the values. Home → Reset Form restores the defaults."
+        "body": "Click a form field or press Tab to move through the fields. {{save}} saves the values. Home → Reset Form restores the defaults. To make a form, open the Form tab: choose Text Field, Check Box, Radio Button, List Box or Dropdown and drag a box on the page (or click for the default size, or press Enter for one in the middle of the page). Radio buttons drawn one after another form one group. The Properties pane sets the field's name, tooltip, default value, items, flags and look; with no field selected it shows the page's tab order. Select Fields moves, resizes and deletes fields, and Highlight Fields shows or hides their tint. PDFTools never adds scripts to a form."
       },
       "save": {
         "title": "Saving",

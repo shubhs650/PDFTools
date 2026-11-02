@@ -13,8 +13,12 @@ test.describe.configure({ mode: 'parallel' });
 const THEMES = ['light', 'dark'] as const;
 const tabs = (page: Page) => page.getByRole('tablist', { name: 'Open documents' }).getByRole('tab');
 
-async function axe(page: Page, where: string): Promise<void> {
-  const { violations } = await new AxeBuilder({ page }).analyze();
+async function axe(page: Page, where: string, include?: string): Promise<void> {
+  const builder = new AxeBuilder({ page });
+  // An open menu hides the rest of the app from assistive technology (it is
+  // modal), so a menu is checked on its own, as the feature specs do.
+  if (include) builder.include(include);
+  const { violations } = await builder.analyze();
   expect(
     violations.map((v) => `${v.id}: ${v.nodes.map((n) => n.target.join(' ')).join(', ')}`),
     where,
@@ -438,5 +442,117 @@ for (const [variant, url] of [
     await expect(dialog.getByTestId('redact-result')).toBeVisible({ timeout: 60_000 });
     await axe(page, 'Apply Redactions result');
     await closeDialog();
+  });
+}
+
+// M6-15: the beta-review UI — Comments pane cards, the property grid, the
+// comment and bookmark menus, Flatten Comments, Comment Styles Palette,
+// Password Security, Sign Document, Bookmark Properties, the Form tab's
+// Field Properties and tab order panel, and Snapshot's keyboard rectangle —
+// in light, dark and the pseudo-locale, reached by command id and keys so
+// the steps work in any language.
+for (const [variant, url] of [
+  ['light', '/'],
+  ['dark', '/?theme=dark'],
+  ['pseudo-locale', '/?locale=pseudo'],
+] as const) {
+  test(`M6 panes, dialogs and menus (${variant})`, { tag: '@a11y' }, async ({ page }) => {
+    test.setTimeout(120_000);
+    const { richOutlinePdf } = await import('./fixtures/generate.ts');
+    await page.goto(url);
+    await cap(page, 'annotate', 'setProfile', 'Ana de Vries');
+    await drop(page, [{ name: 'm6.pdf', b64: Buffer.from(richOutlinePdf()).toString('base64') }]);
+    await expect(page.locator('[data-page="0"] img.page-preview')).toBeVisible();
+    const id = (await cap(page, 'view', 'activeDocId')) as string;
+    await expect.poll(() => cap(page, 'annotate', 'list', id)).not.toBeNull();
+    const run = (cmd: string) =>
+      page.evaluate(
+        (c) =>
+          (
+            window as unknown as {
+              __pdftoolsTest: { capabilities: { commands: { run(id: string): Promise<boolean> } } };
+            }
+          ).__pdftoolsTest.capabilities.commands.run(c),
+        cmd,
+      );
+    const dialog = page.getByRole('dialog');
+    const view = page.getByTestId('document-view');
+    const sq = (await cap(page, 'annotate', 'createSquare', id, 0, 60, 60)) as string;
+    await cap(page, 'annotate', 'create', id, 0, {
+      type: 3,
+      rect: { origin: { x: 260, y: 60 }, size: { width: 160, height: 40 } },
+      contents: 'Check the weld',
+      fontFamily: 4,
+      fontSize: 10,
+      fontColor: '#FF0000',
+      color: 'transparent',
+    });
+
+    // Comments pane cards (M6-05).
+    expect(await run('rail.comments')).toBe(true);
+    await expect(page.getByTestId('comments-list')).toBeVisible();
+    await axe(page, 'Comments pane');
+
+    // The property grid of a selected comment (M6-06) and its menu (M6-02).
+    await cap(page, 'annotate', 'select', id, 0, sq);
+    if (!(await page.getByTestId('properties-pane').isVisible()))
+      expect(await run('view.propertiesPane')).toBe(true);
+    await expect(page.getByTestId('properties-pane')).toBeVisible();
+    await axe(page, 'Properties pane (comment)');
+    await view.focus();
+    await page.keyboard.press('Shift+F10');
+    await expect(page.getByRole('menu')).toBeVisible();
+    await axe(page, 'comment menu', '[role="menu"]');
+    await page.keyboard.press('Escape');
+    await expect(page.getByRole('menu')).toHaveCount(0);
+
+    // Dialogs (M6-07, M6-09, M6-12, M6-13).
+    for (const cmd of [
+      'comment.flatten',
+      'comment.stylesPalette',
+      'protect.passwordSecurity',
+      'protect.signDocument',
+    ]) {
+      expect(await run(cmd)).toBe(true);
+      await expect(dialog).toBeVisible();
+      await axe(page, `dialog ${cmd}`);
+      await page.keyboard.press('Escape');
+      await expect(dialog).toHaveCount(0);
+    }
+
+    // The Bookmarks pane, its menu and Bookmark Properties (M6-11).
+    expect(await run('rail.bookmarks')).toBe(true);
+    const tree = page.getByRole('tree');
+    await expect(tree).toBeVisible();
+    await tree.getByRole('treeitem').first().focus();
+    await page.keyboard.press('Shift+F10');
+    await expect(page.getByRole('menu')).toBeVisible();
+    await axe(page, 'bookmark menu', '[role="menu"]');
+    await page.keyboard.press('Escape');
+    await page.keyboard.press('Alt+Enter');
+    await expect(dialog).toBeVisible();
+    await axe(page, 'Bookmark Properties');
+    await page.keyboard.press('Escape');
+    await expect(dialog).toHaveCount(0);
+
+    // Snapshot's keyboard rectangle (M6-09).
+    await view.focus();
+    expect(await run('home.snapshot')).toBe(true);
+    await view.focus();
+    await page.keyboard.press('Enter');
+    await axe(page, 'Snapshot rectangle');
+    await page.keyboard.press('Escape');
+    await page.keyboard.press('Escape');
+
+    // The Form tab: a text field from the keyboard, Field Properties, the tab order panel (M6-14).
+    expect(await run('form.textField')).toBe(true);
+    await view.focus();
+    await page.keyboard.press('Enter');
+    await expect(page.getByTestId('field-properties')).toBeVisible();
+    await axe(page, 'Field Properties');
+    await page.keyboard.press('Escape');
+    await page.keyboard.press('Escape');
+    await expect(page.getByTestId('tab-order-panel')).toBeVisible();
+    await axe(page, 'tab order panel');
   });
 }

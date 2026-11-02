@@ -1,6 +1,12 @@
 import type { Page } from '@playwright/test';
 import { hasQpdf, qpdfEncrypt } from './fixtures/encrypted.ts';
-import { NEEDLE, fullFormPdf, outlinedPdf, snapSheet } from './fixtures/generate.ts';
+import {
+  NEEDLE,
+  fullFormPdf,
+  outlinedPdf,
+  richOutlinePdf,
+  snapSheet,
+} from './fixtures/generate.ts';
 import { reviewSourcePdf } from './fixtures/comments.ts';
 import { tablesPdf } from './fixtures/tables.ts';
 import { cap, drop } from './support/app.ts';
@@ -377,6 +383,145 @@ test(
       expect((await savedFiles(page)).map((f) => f.name)).toEqual(
         expect.arrayContaining(['tables tables.xlsx', 'tables-redacted.pdf']),
       );
+      expect(outbound).toEqual([]);
+    } finally {
+      await context.setOffline(false);
+    }
+  },
+);
+
+// M6-15: the beta-review features with the network off — Sign Document (the
+// bundled handwriting fonts from the cache), Attach File, a form field, a
+// bookmark, Flatten Comments, Password Security (made and checked in the
+// workers) and a verified save — with zero outbound requests.
+test(
+  'M6 offline: sign, attach a file, a form field, a bookmark, flatten, password security; zero outbound requests',
+  { tag: '@offline' },
+  async ({ page, context }) => {
+    test.setTimeout(120_000);
+    await page.goto('/?sw');
+    await expect(status(page).getByText('✓ Ready offline')).toBeVisible({ timeout: 60_000 });
+
+    await context.setOffline(true);
+    const outbound: string[] = [];
+    page.on('requestfailed', (r) => {
+      if (/^https?:/.test(r.url())) outbound.push(`failed ${r.url()}`);
+    });
+    page.on('response', (r) => {
+      if (/^https?:/.test(r.url()) && !r.fromServiceWorker()) outbound.push(r.url());
+    });
+    try {
+      await page.reload();
+      await expect(page.getByTestId('start-screen')).toBeVisible();
+      await stubSavePicker(page);
+      await cap(page, 'annotate', 'setProfile', 'Offline Reviewer');
+      await drop(page, [
+        { name: 'outline.pdf', b64: Buffer.from(richOutlinePdf()).toString('base64') },
+      ]);
+      await expect(page.locator('[data-page="0"] img.page-preview')).toBeVisible();
+      const id = (await cap(page, 'view', 'activeDocId')) as string;
+      await expect.poll(() => cap(page, 'annotate', 'list', id)).not.toBeNull();
+      await page.getByTestId('document-view').focus();
+      await page.keyboard.press('ControlOrMeta+0');
+      const at = async (x: number, y: number) => {
+        const box = await page.locator('[data-page="0"] .page-content').boundingBox();
+        if (!box) throw new Error('page not laid out');
+        const k = box.width / 595;
+        return { x: box.x + x * k, y: box.y + y * k };
+      };
+      const objects = async () =>
+        ((await cap(page, 'annotate', 'objects', id)) as
+          { type: number; subject?: string }[] | null) ?? [];
+
+      // Sign Document (M6-13): a typed signature in a bundled font, placed with a click.
+      await page.getByRole('tab', { name: 'Protect', exact: true }).click();
+      const protect = page.getByRole('toolbar', { name: 'Protect commands' });
+      await protect.getByRole('button', { name: 'Sign Document…' }).click();
+      const sign = page.getByRole('dialog', { name: 'Sign Document' });
+      await expect(sign.getByRole('radio', { name: 'Type' })).toBeChecked();
+      await sign.getByRole('checkbox', { name: 'Save on this device for next time' }).uncheck();
+      await sign.getByRole('button', { name: 'Place Signature' }).click();
+      await expect(sign).toBeHidden();
+      const s = await at(400, 700);
+      await page.mouse.move(s.x, s.y);
+      await page.mouse.click(s.x, s.y);
+      await expect
+        .poll(async () => (await objects()).filter((o) => o.subject === 'Signature').length)
+        .toBe(1);
+
+      // Attach File (M6-10).
+      await page.evaluate(() => {
+        const w = window as unknown as { showOpenFilePicker: () => Promise<unknown[]> };
+        w.showOpenFilePicker = () => {
+          const file = new File([new TextEncoder().encode('a,b\n1,2\n')], 'calc.csv');
+          return Promise.resolve([
+            { kind: 'file', name: 'calc.csv', getFile: () => Promise.resolve(file) },
+          ]);
+        };
+      });
+      await page.getByRole('tab', { name: 'Comment', exact: true }).click();
+      const comment = page.getByRole('toolbar', { name: 'Comment commands' });
+      await comment.getByRole('button', { name: 'Attach File', exact: true }).click();
+      const a = await at(480, 300);
+      await page.mouse.click(a.x, a.y);
+      await expect.poll(async () => (await objects()).filter((o) => o.type === 17).length).toBe(1);
+      await page.getByTestId('document-view').focus();
+      await page.keyboard.press('Escape');
+
+      // A text field (M6-14): Enter on the page puts one in the middle.
+      await page.getByRole('tab', { name: 'Form', exact: true }).click();
+      await page
+        .getByRole('toolbar', { name: 'Form commands' })
+        .getByRole('button', { name: 'Text Field', exact: true })
+        .click();
+      await page.getByTestId('document-view').focus();
+      await page.keyboard.press('Enter');
+      await expect
+        .poll(async () => ((await cap(page, 'save', 'widgets', id, 0)) as unknown[]).length)
+        .toBe(1);
+      await page.keyboard.press('Escape');
+      await page.keyboard.press('Escape');
+      await page.keyboard.press('Escape');
+
+      // A bookmark (M6-11): written by the Work worker's outline writer.
+      const rail = page
+        .getByRole('complementary', { name: 'Navigation panes' })
+        .getByRole('button', { name: 'Bookmarks' });
+      if ((await rail.getAttribute('aria-pressed')) !== 'true') await rail.click();
+      const tree = page.getByRole('tree', { name: 'Bookmarks' });
+      await tree.getByRole('treeitem', { name: 'Last', exact: true }).focus();
+      await page.keyboard.press('Insert');
+      const title = tree.getByRole('textbox', { name: 'Bookmark title' });
+      await expect(title).toBeFocused();
+      await title.fill('Offline bookmark');
+      await title.press('Enter');
+      await expect(tree.getByRole('treeitem', { name: 'Offline bookmark' })).toBeFocused();
+
+      // Flatten Comments (M6-09): the signature and the attachment become page content.
+      await page.getByRole('tab', { name: 'Comment', exact: true }).click();
+      await comment.getByRole('button', { name: 'Flatten Comments' }).click();
+      const flatten = page.getByRole('dialog', { name: 'Flatten Comments' });
+      await flatten.getByRole('button', { name: 'Flatten', exact: true }).click();
+      await expect(flatten).toHaveCount(0);
+      await expect
+        .poll(async () => (await objects()).filter((o) => o.subject === 'Signature').length)
+        .toBe(0);
+
+      // A verified save of everything (the same route as Ctrl+S).
+      expect(await cap(page, 'save', 'verifiedSave', id)).toMatchObject({ fellBack: false });
+
+      // Password Security (M6-12): made on a copy, checked in the Work worker, written.
+      await page.getByRole('tab', { name: 'Protect', exact: true }).click();
+      await protect.getByRole('button', { name: 'Password Security…' }).click();
+      const pw = page.getByRole('dialog', { name: 'Password Security' });
+      await pw.getByLabel('Open password', { exact: true }).fill('offline-pw');
+      await pw.getByLabel('Confirm open password').fill('offline-pw');
+      await pw.getByRole('button', { name: 'Apply and Save As…' }).click();
+      await expect(pw.getByTestId('security-result')).toContainText('Every check passed.', {
+        timeout: 30_000,
+      });
+      expect((await savedFiles(page)).map((f) => f.name)).toContain('outline-protected.pdf');
+      expect(await cap(page, 'annotate', 'errors', '')).toEqual([]);
       expect(outbound).toEqual([]);
     } finally {
       await context.setOffline(false);

@@ -2816,7 +2816,8 @@ textarea.form-field {
 }
 
 .sign-font-name {
-  color: var(--color-text-muted);
+  /* On the white paper of the row in every theme (the sample's ink shows true there). */
+  color: var(--color-form-text);
   font-size: var(--font-size-s);
 }
 

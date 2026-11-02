@@ -67,9 +67,10 @@ test('Bookmarks: new from the current view, rename, delete, the menu, undo; save
   // The file's closed parent stays closed; colour and style are shown.
   expect(await titles(page)).toEqual(RICH);
   await expect(item(page, 'Red bold, closed')).toHaveAttribute('aria-expanded', 'false');
+  // The file's red, darkened just enough for 4.5:1 on the pane (M6-15, rule 12).
   await expect(item(page, 'Red bold, closed').locator('.bookmark-title')).toHaveCSS(
     'color',
-    'rgb(255, 0, 0)',
+    /^rgb\((2[0-4]\d|1\d\d), (\d|[1-3]\d), (\d|[1-3]\d)\)$/u,
   );
   await expect(item(page, 'Last').locator('.bookmark-title')).toHaveCSS('font-style', 'italic');
 
