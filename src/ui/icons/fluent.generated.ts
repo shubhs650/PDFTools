@@ -58,6 +58,7 @@ import { DocumentMultiple20Regular, DocumentMultiple24Regular } from '@fluentui/
 import { DocumentOnePage20Filled, DocumentOnePage20Regular } from '@fluentui/react-icons/svg/document-one-page';
 import { DocumentOnePageAdd20Regular, DocumentOnePageAdd24Regular } from '@fluentui/react-icons/svg/document-one-page-add';
 import { DocumentSearch20Regular } from '@fluentui/react-icons/svg/document-search';
+import { DocumentSignature20Regular, DocumentSignature32Regular } from '@fluentui/react-icons/svg/document-signature';
 import { DocumentTableArrowRight20Regular } from '@fluentui/react-icons/svg/document-table-arrow-right';
 import { DocumentText20Regular, DocumentText32Regular } from '@fluentui/react-icons/svg/document-text';
 import { DrawText20Filled, DrawText20Regular } from '@fluentui/react-icons/svg/draw-text';
@@ -274,6 +275,7 @@ export const FLUENT_GLYPHS: Record<string, FluentGlyphs> = {
   'protect.passwordSecurity': { regular: { small: Password20Regular, large: Password32Regular, largeNative: 32 } },
   'protect.removeSecurity': { regular: { small: ShieldDismiss20Regular, large: ShieldDismiss24Regular, largeNative: 24 } },
   'protect.signatures': { regular: { small: Signature20Regular, large: Signature32Regular, largeNative: 32 } },
+  'protect.signDocument': { regular: { small: DocumentSignature20Regular, large: DocumentSignature32Regular, largeNative: 32 } },
   'help.help': { regular: { small: QuestionCircle20Regular, large: QuestionCircle32Regular, largeNative: 32 } },
   'help.shortcuts': { regular: { small: Keyboard20Regular, large: Keyboard24Regular, largeNative: 24 } },
   'help.errorReport': { regular: { small: Bug20Regular, large: Bug24Regular, largeNative: 24 } },

@@ -21,6 +21,8 @@ const BACKGROUND = [
   // The Word builder (M4-07): docx and the Markdown parser, only for To Word.
   /(^|\/)assets\/docxBuild[\w.-]*\.js$/,
   /(^|\/)fonts\/(sc|tc|jp|kr)\//,
+  // Typed signatures' handwriting fonts (M6-13, ADR-022 d3): only for Sign Document.
+  /(^|\/)fonts\/sig-[\w-]+\//,
   // OCR (M5, ADR-020 d2): the worker, Tesseract's WASM and the English data, only for OCR.
   /(^|\/)assets\/ocr\.worker-[\w-]+\.js$/,
   /(^|\/)assets\/tesseract-core[\w.-]*\.wasm$/,

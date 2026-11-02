@@ -48,6 +48,7 @@ describe('bundle report (M1-27)', () => {
     expect(moduleOf('assets/docxBuild-Ab12.js')).toBe('docx');
     expect(moduleOf('fonts/hebrew/NotoSansHebrew-Regular.ttf')).toBe('coreFonts');
     expect(moduleOf('fonts/kr/NotoSansKR-Regular.otf')).toBe('cjkFonts');
+    expect(moduleOf('fonts/sig-allura/Allura-Regular.ttf')).toBe('signatureFonts');
     expect(moduleOf('assets/index-abc.js')).toBe('app');
     expect(moduleOf('icons/icon-192.png')).toBe('shell');
   });

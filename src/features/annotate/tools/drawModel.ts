@@ -31,6 +31,9 @@ export const DRAW_TOOLS = [
   'measureArea',
   // Scale viewport (M3-17): a rectangle, then the dialog (measure/viewports.ts).
   'scaleViewport',
+  // Visual signatures (M6-13): @embedpdf/plugin-signature's placement tools (sign/signDocument.ts).
+  'signatureStamp',
+  'signatureInk',
 ] as const;
 
 /** A drawing tool; the id is also the plugin's tool id and interaction mode. */
@@ -64,6 +67,8 @@ export const KEYBOARD_PLACED: ReadonlySet<DrawTool> = new Set([
   'freeText',
   'dynamicStamp',
   'imageStamp',
+  'signatureStamp',
+  'signatureInk',
 ]);
 
 /** Tools whose drawing is a chain of clicks, finished by Enter or double-click. */

@@ -1,13 +1,46 @@
 # PDFTools — Progress
 
-_Last updated: 2026-11-02 (session 34: M6-12 Password security)_
+_Last updated: 2026-11-02 (session 35: M6-13 Sign Document)_
 
 **Current milestone:** M6 — Beta review (plan in [docs/plan/M6.md](plan/M6.md), scope changes in
-[ADR-021](adr/021-m6-beta-review.md), **Accepted** 2026-11-01; ARCHITECTURE.md Rev 0.10; M6-01 … M6-12 done; spike results in
-[ADR-022](adr/022-m6-spikes-s18-s22.md), **Accepted** 2026-11-02 (bookmark route B); next task M6-13). M5 — OCR: M5-01 … M5-04 done under [ADR-020](adr/020-m5-ocr.md); M5-05 (owner
+[ADR-021](adr/021-m6-beta-review.md), **Accepted** 2026-11-01; ARCHITECTURE.md Rev 0.10; M6-01 … M6-13 done; spike results in
+[ADR-022](adr/022-m6-spikes-s18-s22.md), **Accepted** 2026-11-02 (bookmark route B); next task M6-14). M5 — OCR: M5-01 … M5-04 done under [ADR-020](adr/020-m5-ocr.md); M5-05 (owner
 interop) folds into M6-15. Rev 0 (M0–M4) is complete on the agent side.
 
 ## Done
+
+- **Session 35 — M6-13 Sign Document, visual signatures (ADR-021 D-40 b, ADR-022 decision 3,
+  §7.11; beta review C1).** Protect → **Sign Document…** (`protect.signDocument`, Fluent
+  `DocumentSignature`, its own **Sign** group; needs the annotate permission, rule 9). **Dialog**
+  (`features/sign/SignDocumentDialog.tsx`, native radios and inputs, rule 12): a note that this
+  is a visual signature, not a certificate-based digital signature; source **Saved (n)** (shown
+  first when there are any) / **Draw** / **Type** (default otherwise) / **Image**. Draw uses
+  `@embedpdf/plugin-signature`'s draw pad (signature and optional initials; ink colour black or
+  blue, pen width thin / medium / thick); Type takes the name and initials from the reviewer
+  profile and shows them in the three handwriting fonts of `@embedpdf/default-signature-fonts`
+  1.0.0-next.1 (exact pin; Allura, Great Vibes, Caveat, self-hosted under `fonts/sig-*/` with
+  their OFL texts, background-precached); Image takes a PNG/JPG up to 10 MB with "Make a white
+  background transparent" (on by default). Typed text and uploaded images are drawn, scaled to at
+  most 1200 px, cleared of white, cropped and encoded as PNG in the encoder worker (new
+  `signatureText` / `signatureImage`; rule 1). Options: "Save on this device for next time" and
+  "Flatten after placing" (only with modify + annotate). **Placement:** the plugin's
+  `signatureStamp` / `signatureInk` tools (new app tools, `DRAW_TOOLS`): the picture follows the
+  pointer and a click places it, fitted in 150 × 50 pt, aspect locked, then selected and
+  resizable; from the keyboard (Place pressed with Enter, or Enter on the page) it goes to the
+  middle of the current page; Esc cancels. Drawn → Ink, typed and uploaded → Stamp with the PNG
+  and soft mask, `/Subj (Signature)`, print flag, `/AP`, the reviewer as author; Ctrl+S narrow.
+  Flatten after placing flattens the new signature with M6-09's flatten once its commit lands.
+  **Saved signatures** (`signStore.ts`): IndexedDB v7 store `visualSignatures` (entry id →
+  `{ v: 1, entry }`, base64 PNGs, checked by `parseSignatureRecord` on the way in), at most 8
+  (oldest dropped), deletable in the dialog, listed on the Privacy page and removed by "Clear all
+  local data". Third-party notices: the fonts package keeps its licences in `licenses/`, so its
+  texts are vendored (`scripts/notices-vendored/@embedpdf/default-signature-fonts`). Bundle
+  report: new "Signature fonts" row (0.36 MB, background). Tests: unit
+  `tests/sign/visualSignature.test.ts` (record checks, white removal, crop, fit, ink path),
+  `tests/storage/idb.test.ts` v7; e2e `e2e/sign-document.spec.ts` (@smoke type → click place →
+  saved → initials from the keyboard at the page centre → drawn Ink → Ctrl+S narrow → reopened;
+  upload with a bad file refused, flatten after placing, Clear all local data; restricted file
+  disables the command; axe). Screenshots: project files `m6-13/`.
 
 - **Session 34 — M6-12 Password security (ADR-021 D-40 a, ADR-022 decision 2, §7.12; beta
   review C2).** Protect → **Password Security…** (`protect.passwordSecurity`, Fluent `Password`)
@@ -1584,7 +1617,9 @@ rel="noopener noreferrer">`; the commands `app.home` / `app.reportIssue` open th
 
 ## Next
 
-- **Agent:** M6-13 (Sign Document, visual signatures; ADR-022 decision 3).
+- **Agent:** M6-14 (Form tab and form field creation; ADR-022 decision 4).
+- **Owner (M6-15 interop):** open a file signed here (typed, drawn and image signatures, one
+  flattened) in Acrobat Reader and PDF-XChange: the signatures show, move and resize as comments.
 - **Owner (M6-15 interop):** open a file protected here in Acrobat Reader and PDF-XChange with
   each password and check the restrictions.
 

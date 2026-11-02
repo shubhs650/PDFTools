@@ -22,6 +22,7 @@ import { capability, hostStore } from '../view/host';
 import { annotationCapability, annotationState } from './selection';
 import { cycleTarget, pageAnnotations } from './model';
 import { DRAW_COMMANDS, isDrawTool, KEYBOARD_PLACED, VERTEX_TOOLS } from './tools/drawModel';
+import { isSignatureTool, placeAtCentre as placeSignatureAtCentre } from '../sign/signDocument';
 import { finishDrawing, placeAtCentre } from './tools/drawTools';
 import { copiedStyle, copyStyle, pasteStyle } from './properties/style';
 import {
@@ -275,7 +276,11 @@ export function registerAnnotateCommands(): () => void {
           return;
         }
         const page = documentStore.getState().docs[id]?.view.page ?? 0;
-        // Stamps (M3-14) at the page centre too.
+        // Visual signatures (M6-13) and stamps (M3-14) at the page centre too.
+        if (isSignatureTool(t)) {
+          placeSignatureAtCentre(id);
+          return;
+        }
         if (t === 'dynamicStamp') {
           await placeDynamicStamp(id, page);
           return;

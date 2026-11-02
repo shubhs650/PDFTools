@@ -29,4 +29,29 @@ export interface EncoderApi {
     },
     ArrayBuffer
   >;
+  /**
+   * A typed signature or initials (M6-13, ADR-022 decision 3): `text` in the
+   * self-hosted handwriting font at `px`, cropped to the ink, as a PNG with a
+   * transparent background. Null when nothing visible was drawn.
+   */
+  signatureText: MethodSpec<
+    {
+      text: string;
+      /** Absolute same-origin URL of the font (signatureFonts.ts) and its family name. */
+      fontUrl: string;
+      family: string;
+      color: string;
+      px: number;
+    },
+    { png: ArrayBuffer; width: number; height: number } | null
+  >;
+  /**
+   * An uploaded signature image (M6-13): PNG or JPG decoded here, scaled down
+   * to at most 1200 px, a white background made transparent if asked, cropped
+   * to the ink and encoded as PNG. Null when nothing is left visible.
+   */
+  signatureImage: MethodSpec<
+    { data: ArrayBuffer; transparent: boolean },
+    { png: ArrayBuffer; width: number; height: number } | null
+  >;
 }

@@ -13,6 +13,8 @@ import { registerTableCommands } from '../features/tables/commands';
 import { registerRedactCommands } from '../features/redact/commands';
 import { registerSnapshotCommands } from '../features/snapshot/snapshot';
 import { registerAttachFileCommands } from '../features/attachments/attachFile';
+import { registerSignCommands } from '../features/sign/signDocument';
+import { SignDocumentDialog } from '../features/sign/SignDocumentDialog';
 import { SnapshotToast } from '../features/snapshot/SnapshotLayer';
 import { registerOcrCommands } from '../features/ocr/commands';
 import { OcrDialog } from '../features/ocr/OcrDialog';
@@ -107,6 +109,7 @@ export function App() {
   useEffect(() => registerRedactCommands(), []);
   useEffect(() => registerSnapshotCommands(), []);
   useEffect(() => registerAttachFileCommands(), []);
+  useEffect(() => registerSignCommands(), []);
   useEffect(() => registerBookmarkCommands(), []);
   useEffect(() => registerOcrCommands(), []);
   useEffect(() => registerPageCommands(), []);
@@ -175,6 +178,7 @@ export function App() {
         <PasswordDialog />
         <UnlockDialog />
         <PasswordSecurityDialog />
+        <SignDocumentDialog />
         <SecurityInfoDialog />
         <ResetFormDialog />
         <PrintDialog />

@@ -2691,6 +2691,154 @@ textarea.form-field {
   gap: var(--space-2) var(--space-4);
 }
 
+/* Sign Document (M6-13): sources, pads, previews and the saved list. */
+.sign-form {
+  width: min(40rem, 100%);
+  gap: var(--space-3);
+}
+
+/* A short choice on one line: its legend, then the options. */
+.print-dialog-form .sign-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-1) var(--space-4);
+  align-items: center;
+}
+
+.print-dialog-form .sign-row > legend {
+  float: left;
+  margin: var(--space-0) var(--space-2) var(--space-0) var(--space-0);
+}
+
+.sign-note {
+  margin: var(--space-0);
+  padding: var(--space-2) var(--space-3);
+  border-left: 3px solid var(--color-accent);
+  border-radius: var(--radius-s);
+  background: var(--color-surface-sunken);
+}
+
+.sign-inline {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2) var(--space-4);
+  align-items: center;
+}
+
+.sign-pads {
+  display: grid;
+  grid-template-columns: 2fr 1fr;
+  gap: var(--space-4);
+  align-items: start;
+}
+
+.sign-pad {
+  height: 7.5rem;
+  border: 1px solid var(--color-border-strong);
+  border-radius: var(--radius-m);
+  background: var(--color-page);
+  cursor: crosshair;
+}
+
+.sign-options {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-4);
+}
+
+.sign-swatch {
+  display: inline-block;
+  width: 0.875rem;
+  height: 0.875rem;
+  border: 1px solid var(--color-border-strong);
+  border-radius: var(--radius-round);
+}
+
+.sign-fonts {
+  display: grid;
+  gap: var(--space-1);
+}
+
+.sign-font {
+  display: grid;
+  grid-template-columns: auto 7rem 1fr;
+  gap: var(--space-3);
+  align-items: center;
+  padding: var(--space-0) var(--space-2);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-m);
+  background: var(--color-page);
+}
+
+.sign-font-name {
+  color: var(--color-text-muted);
+  font-size: var(--font-size-s);
+}
+
+.sign-font-sample {
+  overflow: hidden;
+  font-size: 1.5rem;
+  line-height: 1.5;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+.sign-saved {
+  display: grid;
+  gap: var(--space-2);
+  max-height: 16rem;
+  margin: var(--space-0);
+  padding: var(--space-0);
+  overflow-y: auto;
+  list-style: none;
+}
+
+.sign-saved-item {
+  display: flex;
+  gap: var(--space-2);
+  align-items: center;
+}
+
+.sign-saved-choice {
+  display: flex;
+  flex: 1;
+  gap: var(--space-3);
+  align-items: center;
+  padding: var(--space-1) var(--space-2);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-m);
+  background: var(--color-page);
+}
+
+.sign-saved-choice:has(input:checked) {
+  border-color: var(--color-accent);
+  box-shadow: inset 0 0 0 1px var(--color-accent);
+}
+
+.sign-preview {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  width: 12rem;
+  height: 3.5rem;
+}
+
+.sign-preview--small {
+  width: 5rem;
+}
+
+.sign-upload .sign-preview {
+  width: 100%;
+  border: 1px dashed var(--color-border);
+  border-radius: var(--radius-m);
+  background: var(--color-page);
+}
+
+.sign-preview-image {
+  max-width: 100%;
+  max-height: 100%;
+}
+
 .redact-panel {
   display: flex;
   flex-direction: column;
