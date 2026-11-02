@@ -287,8 +287,9 @@ test('Comment keeps the selection actions together, with a visible Delete (OBS01
   await expect(page.getByRole('tooltip')).toHaveText(/Export Comments \(CSV \/ XLSX \/ JSON\)/);
   // Icon-only tool grids keep their names.
   const drawing = page.getByRole('group', { name: 'Drawing' });
-  await expect(drawing.getByRole('button', { name: 'Polyline' })).toBeVisible();
-  await expect(
-    drawing.getByRole('button', { name: 'Polyline' }).locator('.ribbon-label'),
-  ).toHaveCount(0);
+  const polyline = drawing.getByRole('button', { name: 'Polyline', exact: true });
+  await expect(polyline).toBeVisible();
+  await expect(polyline.locator('.ribbon-label')).toHaveCount(0);
+  // M6-07: each drawing tool is a split button; its arrow is named after it.
+  await expect(drawing.getByRole('button', { name: 'Polyline styles', exact: true })).toBeVisible();
 });

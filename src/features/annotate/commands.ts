@@ -33,6 +33,8 @@ import {
   setMarked,
 } from './properties/flagActions';
 import { defaultToolOf, makeCurrentDefault } from './properties/toolProperties';
+import { openStylesDialog } from './tools/commentStylesStore';
+import { isStyleTool } from './tools/toolDefaults';
 import type { Flag } from './properties/model';
 import { commentsStore } from './comments/commentsStore';
 import { deleteComments, startReply } from './comments/threadActions';
@@ -312,6 +314,13 @@ export function registerAnnotateCommands(): () => void {
             id,
             selectedOf(id).map((t) => t.object),
           );
+      },
+    }),
+    // Comment Styles Palette (M6-07): the user's own styles, for the active tool if it has any.
+    registerCommand('comment.stylesPalette', {
+      run: () => {
+        const tool = appStore.getState().tool;
+        openStylesDialog(isStyleTool(tool) ? tool : undefined);
       },
     }),
     // Comments pane (M3-11): open it; Filter opens it with focus on the filters.

@@ -23,6 +23,7 @@ export const TOOL_NAME_KEYS: Record<StyleTool, MessageKey> = {
   circle: msg('annotProps.toolName.circle'),
   cloud: msg('annotProps.toolName.cloud'),
   ink: msg('annotProps.toolName.ink'),
+  highlight: msg('annotProps.toolName.highlight'),
 };
 
 /**

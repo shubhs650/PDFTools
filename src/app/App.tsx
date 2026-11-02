@@ -41,6 +41,7 @@ import { ContentsDialog } from '../features/annotate/tools/ContentsDialog';
 import { LinkEditDialog } from '../features/annotate/tools/LinkEditDialog';
 import { DeleteThreadDialog } from '../features/annotate/comments/DeleteThreadDialog';
 import { SchemesDialog } from '../features/stamps/schemes/SchemesDialog';
+import { CommentStylesDialog } from '../features/annotate/palette/CommentStylesDialog';
 import { ImageStampDialog, StampDialog } from '../features/stamps/StampDialogs';
 import { CalibrateDialog, SetScaleDialog } from '../features/measure/ScaleDialogs';
 import { ViewportDialog } from '../features/measure/ViewportDialog';
@@ -177,6 +178,7 @@ export function App() {
         <LinkEditDialog />
         <DeleteThreadDialog />
         <SchemesDialog />
+        <CommentStylesDialog />
         <StampDialog />
         <ImageStampDialog />
         <SetScaleDialog />

@@ -32,6 +32,7 @@ import { ClipboardArrowRight20Regular } from '@fluentui/react-icons/svg/clipboar
 import { ClipboardPaste20Regular } from '@fluentui/react-icons/svg/clipboard-paste';
 import { Cloud20Filled, Cloud20Regular } from '@fluentui/react-icons/svg/cloud';
 import { CloudCheckmark20Regular } from '@fluentui/react-icons/svg/cloud-checkmark';
+import { Color20Regular } from '@fluentui/react-icons/svg/color';
 import { CommentMultiple20Filled, CommentMultiple20Regular } from '@fluentui/react-icons/svg/comment-multiple';
 import { Copy20Regular } from '@fluentui/react-icons/svg/copy';
 import { Cursor20Filled, Cursor20Regular, Cursor32Filled, Cursor32Regular } from '@fluentui/react-icons/svg/cursor';
@@ -195,6 +196,7 @@ export const FLUENT_GLYPHS: Record<string, FluentGlyphs> = {
   'comment.commentsPane': { regular: { small: CommentMultiple20Regular } },
   'comment.reviewerProfile': { regular: { small: PersonEdit20Regular } },
   'comment.statusSchemes': { regular: { small: Status20Regular } },
+  'comment.stylesPalette': { regular: { small: Color20Regular } },
   'comment.filter': { regular: { small: Filter20Regular } },
   'comment.autoNumber': { regular: { small: NumberSymbolSquare20Regular }, filled: { small: NumberSymbolSquare20Filled } },
   'comment.reply': { regular: { small: ArrowReply20Regular } },

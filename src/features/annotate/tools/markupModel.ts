@@ -73,6 +73,8 @@ export interface BuildOptions {
    * document denies copying (rule 9): the markups are made without it.
    */
   texts: readonly string[] | null;
+  /** The tool's current style (the highlight's palette, M6-07); else MARKUP_DEFAULTS. */
+  style?: { color: string; opacity: number } | undefined;
 }
 
 /**
@@ -85,7 +87,7 @@ export function buildMarkups(
   selections: readonly PageSelection[],
   opts: BuildOptions,
 ): PdfAnnotationObject[] {
-  const { color, opacity } = MARKUP_DEFAULTS[tool];
+  const { color, opacity } = opts.style ?? MARKUP_DEFAULTS[tool];
   const out: PdfAnnotationObject[] = [];
   selections.forEach((sel, i) => {
     const last = sel.segmentRects.at(-1);

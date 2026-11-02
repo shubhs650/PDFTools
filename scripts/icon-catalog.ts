@@ -19,6 +19,11 @@ export interface IconEntry {
 const EXPORT =
   /export declare const ([A-Za-z0-9]+?)(10|12|16|20|24|28|32|48)?(Color|Regular|Filled|Light)\b/g;
 
+// Some icons also ship one atom per glyph (color-16-filled, …) next to the base
+// atom (color) that exports them all, and per-style ones (color-filled); the
+// base atom is the import path.
+const PER_GLYPH = /(-\d+-(regular|filled|light|color)|-(regular|filled))$/;
+
 export function parseAtom(atom: string, dts: string, into: Map<string, IconEntry>): void {
   for (const m of dts.matchAll(EXPORT)) {
     const [, base = '', size = '', style = ''] = m;
@@ -27,7 +32,7 @@ export function parseAtom(atom: string, dts: string, into: Map<string, IconEntry
     if (!e) {
       e = { atom, sizes: { Regular: new Set(), Filled: new Set() } };
       into.set(base, e);
-    }
+    } else if (PER_GLYPH.test(e.atom) && !PER_GLYPH.test(atom)) e.atom = atom;
     if (size) e.sizes[style].add(Number(size));
   }
 }

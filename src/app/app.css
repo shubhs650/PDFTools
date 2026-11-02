@@ -541,6 +541,107 @@ body {
   color: var(--color-text-disabled);
 }
 
+/* The Comment tab's groups sit a little closer (M6-07): with the split buttons it is
+   the widest tab and must not scroll at 1280 px (§8) until the adaptive ribbon (M6-08). */
+.ribbon-group[data-group^='comment.'] {
+  padding-inline: var(--space-1);
+}
+
+/* Split buttons (M6-07): a comment tool and the arrow of its style palette, one unit.
+   The arrow is narrow and borderless so the Comment tab stays inside 1280 px (§8). */
+.ribbon-split {
+  display: inline-flex;
+  align-items: stretch;
+  border-radius: var(--radius-m);
+}
+
+.ribbon-split:hover {
+  box-shadow: inset 0 0 0 var(--border-width) var(--color-border);
+}
+
+.ribbon-split > .ribbon-button {
+  padding-inline-end: var(--space-0);
+  border-right-width: var(--space-0);
+  border-top-right-radius: var(--space-0);
+  border-bottom-right-radius: var(--space-0);
+}
+
+.ribbon-split-arrow {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: var(--split-arrow-width);
+  padding: var(--space-0);
+  border: none;
+  border-radius: var(--radius-s) var(--radius-m) var(--radius-m) var(--radius-s);
+  background: transparent;
+  color: var(--color-icon);
+  cursor: pointer;
+}
+
+.ribbon-split-arrow:hover:not([aria-disabled='true']),
+.ribbon-split-arrow[data-state='open'] {
+  background: var(--color-hover);
+}
+
+.ribbon-split-arrow[aria-disabled='true'] {
+  color: var(--color-text-disabled);
+  cursor: default;
+}
+
+.ribbon-split-chevron {
+  flex: none;
+  width: var(--split-arrow-width);
+  height: var(--split-arrow-width);
+}
+
+/* The style palette (M6-07): swatches drawn on paper white, seven to a row. */
+.style-palette {
+  max-width: calc(7 * (var(--control-height-m) + var(--space-2)) + 2 * var(--space-2));
+}
+
+.style-palette-hint,
+.style-palette-label {
+  padding: var(--space-1) var(--space-2);
+  color: var(--color-text-muted);
+  font-size: var(--font-size-s);
+}
+
+.style-palette-grid {
+  display: grid;
+  grid-template-columns: repeat(7, var(--control-height-m));
+  gap: var(--space-2);
+  padding: var(--space-1) var(--space-0);
+}
+
+.style-swatch {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: var(--control-height-m);
+  height: var(--control-height-m);
+  border: var(--border-width) solid var(--color-border);
+  border-radius: var(--radius-m);
+  background: var(--color-page);
+  cursor: pointer;
+  outline: none;
+}
+
+.style-swatch[data-highlighted],
+.style-swatch:focus-visible {
+  outline: var(--focus-width) solid var(--color-focus);
+  outline-offset: var(--space-0);
+}
+
+.style-swatch[data-current] {
+  border-color: var(--color-accent);
+  box-shadow: inset 0 0 0 var(--border-width) var(--color-accent);
+}
+
+.style-swatch-art {
+  flex: none;
+}
+
 /* ------------------------------------------------------------ backstage */
 
 .backstage {
@@ -3017,4 +3118,62 @@ textarea.form-field {
 .pages-merge-controls {
   display: flex;
   flex-direction: column;
+}
+
+/* ------------------------------------------------------------ comment styles palette (M6-07) */
+.comment-styles {
+  display: grid;
+  gap: var(--space-3);
+  max-height: 60vh;
+  overflow-y: auto;
+}
+
+.comment-styles-list {
+  display: grid;
+  gap: var(--space-2);
+  margin: var(--space-0);
+  padding: var(--space-0);
+  list-style: none;
+}
+
+.comment-styles-item {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-3);
+  align-items: center;
+  padding: var(--space-2) var(--space-3);
+  border: var(--border-width) solid var(--color-border);
+  border-radius: var(--radius-m);
+}
+
+.comment-styles-item .style-swatch-art {
+  padding: var(--space-1);
+  border-radius: var(--radius-s);
+  background: var(--color-page);
+}
+
+.comment-styles-name {
+  flex: 1 1 auto;
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+
+.comment-styles-buttons,
+.comment-styles-actions,
+.comment-styles-rename {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+  align-items: end;
+}
+
+.comment-styles-rename {
+  flex: 1 1 auto;
+}
+
+.comment-styles-empty,
+.comment-styles-note,
+.comment-styles-message {
+  margin: var(--space-0);
+  color: var(--color-text-muted);
 }

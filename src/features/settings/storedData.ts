@@ -67,6 +67,13 @@ export const LOCAL_DATA: readonly LocalDataItem[] = [
     cleared: true,
   },
   {
+    kind: 'indexedDB',
+    location: `${DB_NAME} › commentStyles`,
+    store: 'commentStyles',
+    what: msg('privacy.data.commentStyles'),
+    cleared: true,
+  },
+  {
     kind: 'opfs',
     location: `${RECOVERY_DIR}/`,
     store: RECOVERY_DIR,
