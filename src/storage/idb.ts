@@ -54,6 +54,11 @@ export const MIGRATIONS: readonly Migration[] = [
   (db) => {
     db.createObjectStore('commentStyles');
   },
+  // v7 (M6-13): saved visual signatures (D-40 b), entry id → record (validate
+  // it: model/visualSignature.ts). They never leave this device.
+  (db) => {
+    db.createObjectStore('visualSignatures');
+  },
 ];
 
 const PROFILE_KEY = 'reviewer';
@@ -219,6 +224,24 @@ export class AppDb {
   async deleteCommentStyles(tool: string): Promise<void> {
     const tx = this.db.transaction('commentStyles', 'readwrite');
     tx.objectStore('commentStyles').delete(tool);
+    await done(tx);
+  }
+
+  /** Saved visual signatures, as stored (validate them: model/visualSignature.ts). */
+  async listSignatures(): Promise<unknown[]> {
+    const tx = this.db.transaction('visualSignatures', 'readonly');
+    return request(tx.objectStore('visualSignatures').getAll());
+  }
+
+  async putSignature(id: string, value: unknown): Promise<void> {
+    const tx = this.db.transaction('visualSignatures', 'readwrite');
+    tx.objectStore('visualSignatures').put(value, id);
+    await done(tx);
+  }
+
+  async deleteSignature(id: string): Promise<void> {
+    const tx = this.db.transaction('visualSignatures', 'readwrite');
+    tx.objectStore('visualSignatures').delete(id);
     await done(tx);
   }
 

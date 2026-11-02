@@ -42,3 +42,36 @@ export function localFontConfig(origin: string): FontFallbackConfig {
     },
   };
 }
+
+/**
+ * Handwriting fonts for typed signatures (M6-13, ADR-022 decision 3): from
+ * `@embedpdf/default-signature-fonts` (OFL-1.1), self-hosted under
+ * /fonts/<id>/<file> with their licence (scripts/vite-assets.ts) and
+ * background-precached (src/sw/precacheSplit.ts). Read by the dialog (to show
+ * the name in the font) and the encoder worker (to draw it).
+ */
+export const SIGNATURE_FONTS = [
+  {
+    id: 'sig-allura',
+    family: 'PDFTools Allura',
+    file: 'Allura-Regular.ttf',
+    license: 'Allura-OFL.txt',
+  },
+  {
+    id: 'sig-great-vibes',
+    family: 'PDFTools Great Vibes',
+    file: 'GreatVibes-Regular.ttf',
+    license: 'GreatVibes-OFL.txt',
+  },
+  {
+    id: 'sig-caveat',
+    family: 'PDFTools Caveat',
+    file: 'Caveat-Regular.ttf',
+    license: 'Caveat-OFL.txt',
+  },
+] as const;
+
+export type SignatureFont = (typeof SIGNATURE_FONTS)[number];
+export type SignatureFontId = SignatureFont['id'];
+
+export const signatureFontPath = (f: SignatureFont): string => `fonts/${f.id}/${f.file}`;

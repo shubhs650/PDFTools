@@ -8,6 +8,7 @@ import { resetSchemes } from '../stamps/schemes/schemeStore';
 import { resetTemplates } from '../tables/templateStore';
 import { resetAllToolDefaults } from '../annotate/tools/toolDefaultsStore';
 import { resetAllCommentStyles } from '../annotate/tools/commentStylesStore';
+import { resetSignatures } from '../sign/signStore';
 import type { ClearDeps } from './clearAll';
 
 const hasCaches = (): boolean => typeof caches !== 'undefined';
@@ -28,5 +29,6 @@ export const appClearDeps: ClearDeps = {
     resetTemplates();
     resetAllToolDefaults();
     resetAllCommentStyles();
+    resetSignatures();
   },
 };

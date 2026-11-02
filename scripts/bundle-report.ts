@@ -38,6 +38,7 @@ export type ModuleId =
   | 'pdfium'
   | 'coreFonts'
   | 'cjkFonts'
+  | 'signatureFonts'
   | 'shell';
 
 export const MODULES: readonly { id: ModuleId; label: string; test: RegExp }[] = [
@@ -67,6 +68,8 @@ export const MODULES: readonly { id: ModuleId; label: string; test: RegExp }[] =
     test: /^fonts\/(latin|arabic|hebrew)\//,
   },
   { id: 'cjkFonts', label: 'CJK fonts (SC, TC, JP, KR)', test: /^fonts\/(sc|tc|jp|kr)\// },
+  // Typed signatures (M6-13, ADR-022 d3): three handwriting fonts, background.
+  { id: 'signatureFonts', label: 'Signature fonts (handwriting)', test: /^fonts\/sig-[\w-]+\// },
   { id: 'app', label: 'App JS and CSS', test: /^assets\/[^/]+\.(js|css)$/ },
   { id: 'shell', label: 'Shell (HTML, manifest, icons, notices)', test: /.*/ },
 ];

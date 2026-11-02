@@ -1381,6 +1381,16 @@ export const COMMANDS: readonly CommandDef[] = [
     shipped: true, // M2-13
   },
   {
+    // Sign Document (M6-13, D-40 b): visual signatures and initials, not certificate signing.
+    id: 'protect.signDocument',
+    tab: 'protect',
+    group: 'sign',
+    size: 'large',
+    fluent: 'DocumentSignature',
+    milestone: 'M6',
+    shipped: true,
+  },
+  {
     id: 'help.help',
     tab: 'help',
     group: 'help',

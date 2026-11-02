@@ -51,7 +51,7 @@ describe('ribbon layout from the command table (§8, ADR-001 B6, M1-Q2)', () => 
     expect(shown).toContain('comment.exportAnnotations'); // M4-08
     const protect = m1.tabs.find((t) => t.tab === 'protect');
     // Redaction (M4-16 … M4-18), Security Info (M2-12), Unlock (M2-03), Password
-    // Security and Remove Security (M6-12), Signatures (M2-13).
+    // Security and Remove Security (M6-12), Signatures (M2-13), Sign Document (M6-13).
     expect(protect?.groups.flatMap((g) => g.commands.map((c) => c.id))).toEqual([
       'protect.markRedaction',
       'protect.markRedactionArea',
@@ -62,6 +62,7 @@ describe('ribbon layout from the command table (§8, ADR-001 B6, M1-Q2)', () => 
       'protect.passwordSecurity',
       'protect.removeSecurity',
       'protect.signatures',
+      'protect.signDocument',
     ]);
   });
 

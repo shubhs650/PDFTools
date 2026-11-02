@@ -167,7 +167,8 @@
       "unlock": "Unlock with Owner Password",
       "passwordSecurity": "Password Security…",
       "removeSecurity": "Remove Security",
-      "signatures": "Signatures"
+      "signatures": "Signatures",
+      "signDocument": "Sign Document…"
     },
     "help": {
       "help": "Help",
@@ -282,7 +283,8 @@
       },
       "protect": {
         "redact": "Redact",
-        "security": "Security"
+        "security": "Security",
+        "sign": "Sign"
       },
       "help": {
         "help": "Help"
@@ -550,7 +552,8 @@
       "schemes": "Status schemes you made or imported (codes, labels, colours) and which one is active",
       "tableTemplates": "Table templates you saved (column and row dividers, header rows, merged cells, page size)",
       "toolDefaults": "Comment tool defaults you set (colours, line widths, font sizes); the shipped defaults are used until you change one",
-      "commentStyles": "Comment styles you saved in the style palette (names, colours, line widths, font sizes)"
+      "commentStyles": "Comment styles you saved in the style palette (names, colours, line widths, font sizes)",
+      "visualSignatures": "Visual signatures and initials you saved in Sign Document (drawn strokes or pictures)"
     },
     "clearHint": "To delete this data, use File → Settings → Clear all local data."
   },
@@ -1053,7 +1056,7 @@
       },
       "protect": {
         "title": "Protected and signed files",
-        "body": "Protect → Security Info shows what a file allows; PDFTools honours those restrictions. Password Security saves a copy with an open password, a permissions password or both (AES-256); Remove Security saves a copy without them. Both need the owner password of an already protected file. Signatures are checked on this device; the Signatures pane shows whether each signed part is unchanged."
+        "body": "Protect → Security Info shows what a file allows; PDFTools honours those restrictions. Password Security saves a copy with an open password, a permissions password or both (AES-256); Remove Security saves a copy without them. Both need the owner password of an already protected file. Sign Document places a signature or initials you draw, type or upload as a picture (a standard comment, or page content if you flatten it); it is not a certificate-based digital signature. Saved signatures stay on this device. Signatures are checked on this device; the Signatures pane shows whether each signed part is unchanged."
       },
       "privacy": {
         "title": "Privacy",
@@ -2202,6 +2205,75 @@
       "style": "A style in the file has no name or a property PDFTools cannot use.",
       "empty": "The file has no styles.",
       "tooMany": "A tool would have more styles than it can hold."
+    }
+  },
+  "sign": {
+    "title": "Sign Document",
+    "description": "Place a signature or initials on {{name}}: choose Place, then click on the page (Enter puts it in the middle of the page, Esc cancels).",
+    "visualOnly": "This is a visual signature, not a certificate-based digital signature: it shows your signature on the page but does not prove who signed or that the file is unchanged.",
+    "source": {
+      "legend": "Signature",
+      "saved": "Saved ({{n}})",
+      "draw": "Draw",
+      "type": "Type",
+      "upload": "Image"
+    },
+    "saved": {
+      "legend": "Saved on this device",
+      "item": "Saved signature {{n}}: {{kind}}, {{when}}",
+      "withInitials": "with initials",
+      "delete": "Delete saved signature {{n}}"
+    },
+    "draw": {
+      "hint": "Draw with a mouse, pen or finger. From the keyboard, use Type or Image.",
+      "signature": "Signature",
+      "initials": "Initials (optional)",
+      "clearSignature": "Clear Signature",
+      "clearInitials": "Clear Initials"
+    },
+    "type": {
+      "name": "Name",
+      "initials": "Initials (optional)",
+      "sample": "Your name"
+    },
+    "font": {
+      "legend": "Handwriting",
+      "allura": "Allura",
+      "greatVibes": "Great Vibes",
+      "caveat": "Caveat"
+    },
+    "color": {
+      "legend": "Ink colour",
+      "black": "Black",
+      "blue": "Blue"
+    },
+    "width": {
+      "legend": "Pen width",
+      "thin": "Thin",
+      "medium": "Medium",
+      "thick": "Thick"
+    },
+    "upload": {
+      "signature": "Signature image (PNG or JPG)",
+      "initials": "Initials image (optional)",
+      "transparent": "Make a white background transparent",
+      "tooLarge": "The image is larger than {{max}}.",
+      "unsupported": "This file is not a PNG or JPG image PDFTools can read.",
+      "empty": "Nothing is left to place: the image is blank (or all white)."
+    },
+    "options": {
+      "legend": "Options",
+      "save": "Save on this device for next time",
+      "flatten": "Flatten after placing",
+      "flattenNote": "Flattened, it becomes part of the page and can no longer be moved, resized or deleted.",
+      "flattenRestricted": "This document does not allow changes, so signatures stay comments."
+    },
+    "placeSignature": "Place Signature",
+    "placeInitials": "Place Initials",
+    "cancel": "Cancel",
+    "error": {
+      "notReady": "Make or choose a signature first.",
+      "place": "The signature could not be placed. This document may not allow comments."
     }
   }
 }

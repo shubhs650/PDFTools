@@ -3,6 +3,12 @@
 import type { EncoderApi } from '../engine/encoderApi';
 import { Transfer } from '../engine/protocol';
 import { serve } from './rpc-host';
+import {
+  clearWhiteBackground,
+  fitEdge,
+  inkBounds,
+  SIGNATURE_MAX_EDGE,
+} from '../model/visualSignature';
 
 type Fonts = FontFaceSet & { add(face: FontFace): void };
 const faces = new Map<string, Promise<void>>();
@@ -20,6 +26,23 @@ function loadFace(name: string, url: string): Promise<void> {
     faces.set(name, p);
   }
   return p;
+}
+
+/** `canvas` cropped to its ink, as a PNG (null: nothing visible). */
+async function croppedPng(
+  canvas: OffscreenCanvas,
+  ctx: OffscreenCanvasRenderingContext2D,
+  pad: number,
+): Promise<Transfer<{ png: ArrayBuffer; width: number; height: number }> | null> {
+  const px = ctx.getImageData(0, 0, canvas.width, canvas.height);
+  const box = inkBounds(px.data, canvas.width, canvas.height, pad);
+  if (!box) return null;
+  const out = new OffscreenCanvas(box.width, box.height);
+  const octx = out.getContext('2d');
+  if (!octx) throw new Error('2d context unavailable');
+  octx.putImageData(px, -box.x, -box.y);
+  const png = await (await out.convertToBlob({ type: 'image/png' })).arrayBuffer();
+  return new Transfer({ png, width: box.width, height: box.height }, [png]);
 }
 
 serve<EncoderApi>(self, {
@@ -58,5 +81,43 @@ serve<EncoderApi>(self, {
     });
     const png = await (await canvas.convertToBlob({ type: 'image/png' })).arrayBuffer();
     return new Transfer(png, [png]);
+  },
+  // M6-13 (ADR-022 d3): typed signatures and initials in a bundled handwriting font.
+  signatureText: async ({ text, fontUrl, family, color, px }) => {
+    await loadFace(family, fontUrl);
+    const probe = new OffscreenCanvas(1, 1).getContext('2d');
+    if (!probe) throw new Error('2d context unavailable');
+    const font = `${String(px)}px "${family}"`;
+    probe.font = font;
+    // Script fonts reach far left and right of their advance: room on both sides.
+    const w = Math.min(SIGNATURE_MAX_EDGE * 2, Math.ceil(probe.measureText(text).width + px));
+    const h = Math.ceil(px * 1.8);
+    const canvas = new OffscreenCanvas(w, h);
+    const ctx = canvas.getContext('2d', { willReadFrequently: true });
+    if (!ctx) throw new Error('2d context unavailable');
+    ctx.font = font;
+    ctx.fillStyle = color;
+    ctx.textBaseline = 'middle';
+    ctx.fillText(text, px / 2, h / 2, w - px);
+    return croppedPng(canvas, ctx, 4);
+  },
+  // M6-13: an uploaded PNG/JPG, decoded here (never on the main thread, rule 1).
+  signatureImage: async ({ data, transparent }) => {
+    const bitmap = await createImageBitmap(new Blob([data]));
+    try {
+      const size = fitEdge({ width: bitmap.width, height: bitmap.height });
+      const canvas = new OffscreenCanvas(size.width, size.height);
+      const ctx = canvas.getContext('2d', { willReadFrequently: true });
+      if (!ctx) throw new Error('2d context unavailable');
+      ctx.drawImage(bitmap, 0, 0, size.width, size.height);
+      if (transparent) {
+        const px = ctx.getImageData(0, 0, size.width, size.height);
+        clearWhiteBackground(px.data);
+        ctx.putImageData(px, 0, 0);
+      }
+      return await croppedPng(canvas, ctx, 2);
+    } finally {
+      bitmap.close();
+    }
   },
 });

@@ -16,6 +16,8 @@ import { TilingPluginPackage } from '@embedpdf/plugin-tiling';
 import { ViewportPluginPackage } from '@embedpdf/plugin-viewport';
 import { ZoomMode, ZoomPluginPackage } from '@embedpdf/plugin-zoom';
 import { PdfAnnotationSubtype } from '@embedpdf/models';
+import { SignatureMode, SignaturePluginPackage } from '@embedpdf/plugin-signature';
+import { SIGNATURE_PLACE_SIZE } from '../../model/visualSignature';
 import { MARKUP_TOOLS } from '../annotate/tools/markupModel';
 import { markupSelectionHandler } from '../annotate/tools/textMarkup';
 import { redactSelectionHandler, REDACT_TEXT_TOOL } from '../redact/markTools';
@@ -97,5 +99,12 @@ export const PLUGINS = [
         selectionHandler: redactSelectionHandler,
       },
     ],
+  }),
+  // Visual signatures (M6-13, ADR-021 D-40 b, ADR-022 d3): signature and
+  // initials entries, placed by the plugin's Ink and Stamp tools. Entries come
+  // from our dialog and IndexedDB store (sign/), never from the plugin's own UI.
+  createPluginRegistration(SignaturePluginPackage, {
+    mode: SignatureMode.SignatureAndInitials,
+    defaultSize: { ...SIGNATURE_PLACE_SIZE },
   }),
 ];

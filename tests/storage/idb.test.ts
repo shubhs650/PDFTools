@@ -27,6 +27,7 @@ describe('AppDb (M1-12)', () => {
       'settings',
       'tableTemplates',
       'toolDefaults',
+      'visualSignatures',
     ]);
     db.close();
   });
@@ -183,7 +184,7 @@ describe('AppDb v6 (M6-07)', () => {
     const v5 = await AppDb.open({ factory, migrations: MIGRATIONS.slice(0, 5) });
     await v5.putToolDefaults('square', { v: 1, props: { strokeWidth: 2 } });
     v5.close();
-    const db = await AppDb.open({ factory });
+    const db = await AppDb.open({ factory, migrations: MIGRATIONS.slice(0, 6) });
     expect(db.db.version).toBe(6);
     expect(await db.listToolDefaults()).toEqual([['square', { v: 1, props: { strokeWidth: 2 } }]]);
     expect(await db.listCommentStyles()).toEqual([]);
@@ -194,6 +195,28 @@ describe('AppDb v6 (M6-07)', () => {
     expect(await db.listCommentStyles()).toEqual([['square', rec]]);
     await db.clearAll();
     expect(await db.listCommentStyles()).toEqual([]);
+    db.close();
+  });
+});
+
+describe('AppDb v7 (M6-13)', () => {
+  it('stores saved visual signatures by entry id, keeping the comment styles of v6', async () => {
+    const factory = new IDBFactory();
+    const v6 = await AppDb.open({ factory, migrations: MIGRATIONS.slice(0, 6) });
+    const styles = { v: 1, styles: [] };
+    await v6.putCommentStyles('square', styles);
+    v6.close();
+    const db = await AppDb.open({ factory });
+    expect(db.db.version).toBe(7);
+    expect(await db.listCommentStyles()).toEqual([['square', styles]]);
+    expect(await db.listSignatures()).toEqual([]);
+    const rec = (id: string) => ({ v: 1, entry: { id, createdAt: 1 } });
+    await db.putSignature('a', rec('a'));
+    await db.putSignature('b', rec('b'));
+    await db.deleteSignature('a');
+    expect(await db.listSignatures()).toEqual([rec('b')]);
+    await db.clearAll();
+    expect(await db.listSignatures()).toEqual([]);
     db.close();
   });
 });

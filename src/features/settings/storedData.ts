@@ -74,6 +74,13 @@ export const LOCAL_DATA: readonly LocalDataItem[] = [
     cleared: true,
   },
   {
+    kind: 'indexedDB',
+    location: `${DB_NAME} › visualSignatures`,
+    store: 'visualSignatures',
+    what: msg('privacy.data.visualSignatures'),
+    cleared: true,
+  },
+  {
     kind: 'opfs',
     location: `${RECOVERY_DIR}/`,
     store: RECOVERY_DIR,
