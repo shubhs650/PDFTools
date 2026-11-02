@@ -541,6 +541,12 @@ body {
   color: var(--color-text-disabled);
 }
 
+/* The Comment tab's groups sit a little closer (M6-07): with the split buttons it is
+   the widest tab and must not scroll at 1280 px (§8) until the adaptive ribbon (M6-08). */
+.ribbon-group[data-group^='comment.'] {
+  padding-inline: var(--space-1);
+}
+
 /* Split buttons (M6-07): a comment tool and the arrow of its style palette, one unit.
    The arrow is narrow and borderless so the Comment tab stays inside 1280 px (§8). */
 .ribbon-split {
