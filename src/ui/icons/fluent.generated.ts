@@ -93,6 +93,7 @@ import { PaintBrushArrowDown20Regular } from '@fluentui/react-icons/svg/paint-br
 import { PanelLeft20Filled, PanelLeft20Regular } from '@fluentui/react-icons/svg/panel-left';
 import { PanelRight20Filled, PanelRight20Regular } from '@fluentui/react-icons/svg/panel-right';
 import { PanelTopContract20Regular } from '@fluentui/react-icons/svg/panel-top-contract';
+import { Password20Regular, Password32Regular } from '@fluentui/react-icons/svg/password';
 import { Pen20Filled, Pen20Regular } from '@fluentui/react-icons/svg/pen';
 import { Pentagon20Filled, Pentagon20Regular, Pentagon32Filled, Pentagon32Regular } from '@fluentui/react-icons/svg/pentagon';
 import { PersonEdit20Regular } from '@fluentui/react-icons/svg/person-edit';
@@ -115,6 +116,7 @@ import { SelectAllOn20Regular } from '@fluentui/react-icons/svg/select-all-on';
 import { SelectObject20Filled, SelectObject20Regular, SelectObject24Filled, SelectObject24Regular } from '@fluentui/react-icons/svg/select-object';
 import { Settings20Regular, Settings32Regular } from '@fluentui/react-icons/svg/settings';
 import { ShieldCheckmark20Regular, ShieldCheckmark32Regular } from '@fluentui/react-icons/svg/shield-checkmark';
+import { ShieldDismiss20Regular, ShieldDismiss24Regular } from '@fluentui/react-icons/svg/shield-dismiss';
 import { Signature20Filled, Signature20Regular, Signature32Regular } from '@fluentui/react-icons/svg/signature';
 import { SlideMultiple20Filled, SlideMultiple20Regular } from '@fluentui/react-icons/svg/slide-multiple';
 import { Square20Filled, Square20Regular } from '@fluentui/react-icons/svg/square';
@@ -269,6 +271,8 @@ export const FLUENT_GLYPHS: Record<string, FluentGlyphs> = {
   'protect.redactionList': { regular: { small: TextBulletListSquare20Regular, large: TextBulletListSquare32Regular, largeNative: 32 }, filled: { small: TextBulletListSquare20Filled, large: TextBulletListSquare32Filled, largeNative: 32 } },
   'protect.securityInfo': { regular: { small: LockShield20Regular, large: LockShield32Regular, largeNative: 32 } },
   'protect.unlock': { regular: { small: LockOpen20Regular, large: LockOpen32Regular, largeNative: 32 } },
+  'protect.passwordSecurity': { regular: { small: Password20Regular, large: Password32Regular, largeNative: 32 } },
+  'protect.removeSecurity': { regular: { small: ShieldDismiss20Regular, large: ShieldDismiss24Regular, largeNative: 24 } },
   'protect.signatures': { regular: { small: Signature20Regular, large: Signature32Regular, largeNative: 32 } },
   'help.help': { regular: { small: QuestionCircle20Regular, large: QuestionCircle32Regular, largeNative: 32 } },
   'help.shortcuts': { regular: { small: Keyboard20Regular, large: Keyboard24Regular, largeNative: 24 } },

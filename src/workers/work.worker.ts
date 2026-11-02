@@ -13,6 +13,7 @@ import { docPtrOf, wasmMemory } from './render/pdfium';
 import { digestDocument } from './render/save/digest';
 import { WorkDocs } from './work/docs';
 import { verifyCandidate } from './work/verify';
+import { verifySecured } from './work/verifySecurity';
 import { Scheduler, type JobSlice } from './work/scheduler';
 import { buildTextLayer } from './work/ocrLayer';
 import { pageMapper, rasterForOcr } from './work/ocrRaster';
@@ -400,6 +401,18 @@ serve<WorkApi>(self, {
       if (!mod) throw new RpcError('not-initialized', 'The work worker is not initialized');
       try {
         return await verifyCandidate(mod, need(), docs, docId, piece, expected);
+      } finally {
+        wasmBytes();
+      }
+    }),
+
+  verifySecurity: ({ bytes, check, expected }, ctx) =>
+    scheduler.run('interactive', ctx.signal, async (slice) => {
+      if (!mod) throw new RpcError('not-initialized', 'The work worker is not initialized');
+      try {
+        return await verifySecured(mod, need(), bytes, check, expected, slice, (done, total) => {
+          ctx.progress({ done, total });
+        });
       } finally {
         wasmBytes();
       }

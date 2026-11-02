@@ -1353,6 +1353,25 @@ export const COMMANDS: readonly CommandDef[] = [
     shipped: true, // M2-03
   },
   {
+    // Password Security (M6-12, D-40 a): open and permissions passwords, AES-256.
+    id: 'protect.passwordSecurity',
+    tab: 'protect',
+    group: 'security',
+    size: 'large',
+    fluent: 'Password',
+    milestone: 'M6',
+    shipped: true,
+  },
+  {
+    id: 'protect.removeSecurity',
+    tab: 'protect',
+    group: 'security',
+    size: 'large',
+    fluent: 'ShieldDismiss',
+    milestone: 'M6',
+    shipped: true,
+  },
+  {
     id: 'protect.signatures',
     tab: 'protect',
     group: 'security',

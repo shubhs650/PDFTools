@@ -602,9 +602,7 @@ export class SaveTracker {
    */
   saveRewrite(docId: string): Uint8Array<ArrayBuffer> {
     const s = this.need(docId);
-    const resolved = this.resolvePatches(docId, s);
-    let bytes = saveWithFlags(this.mod, docPtrOf(this.native, docId), FPDF_NO_INCREMENTAL);
-    if (resolved.length > 0) bytes = withPatches(bytes, resolved, s.crypt);
+    const bytes = this.rewriteBytes(docId, s);
     const base = saveBaseOf(bytes);
     // Objects PDFium allocated before the rewrite are not new afterwards.
     const newFrom = Math.max(base.size, s.base?.newFrom ?? s.base?.size ?? 0);
@@ -616,6 +614,31 @@ export class SaveTracker {
       spans: rewriteSpans(bytes),
     };
     return bytes;
+  }
+
+  /**
+   * The current state as a full rewrite (our staged keys under the file's own
+   * key), leaving any pending save alone: the source of Password Security's
+   * copy (M6-12, ADR-022 decision 2). The document itself is not changed.
+   */
+  rewriteCopy(docId: string): Uint8Array<ArrayBuffer> {
+    return this.rewriteBytes(docId, this.need(docId));
+  }
+
+  /**
+   * The password that opens a copy of the document with the same rights:
+   * the owner password once unlocked, else the one it was opened with
+   * (memory only, M2-Q7).
+   */
+  copyPassword(docId: string): string | undefined {
+    const s = this.need(docId);
+    return s.ownerPassword ?? s.password;
+  }
+
+  private rewriteBytes(docId: string, s: DocState): Uint8Array<ArrayBuffer> {
+    const resolved = this.resolvePatches(docId, s);
+    const bytes = saveWithFlags(this.mod, docPtrOf(this.native, docId), FPDF_NO_INCREMENTAL);
+    return resolved.length > 0 ? withPatches(bytes, resolved, s.crypt) : bytes;
   }
 
   /**

@@ -47,6 +47,9 @@ export function installTestHook(): TestHook {
   void import('./redactProbe').then((m) => {
     m.registerRedactProbe(hook);
   });
+  void import('./securityProbe').then((m) => {
+    m.registerSecurityProbe(hook);
+  });
   void import('./ocrProbe').then((m) => {
     m.registerOcrProbe(hook);
   });

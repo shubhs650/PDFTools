@@ -128,6 +128,7 @@ function fakeSpawn(world: FakeWorld) {
       readOutline: () => ({ items: [] }),
       copyOutline: () => ({ items: [] }),
       editOutline: () => ({ objects: [], firstNew: 0 }),
+      verifySecurity: () => ({ ok: true }),
       detectTables: () => ({ pages: [] }),
       tableCells: () => ({ tables: [] }),
       exportTables: () => ({ tables: 0, ocrPages: [] }),

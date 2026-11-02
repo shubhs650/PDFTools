@@ -1,13 +1,57 @@
 # PDFTools — Progress
 
-_Last updated: 2026-11-02 (session 33: M6-11 Bookmark editing)_
+_Last updated: 2026-11-02 (session 34: M6-12 Password security)_
 
 **Current milestone:** M6 — Beta review (plan in [docs/plan/M6.md](plan/M6.md), scope changes in
-[ADR-021](adr/021-m6-beta-review.md), **Accepted** 2026-11-01; ARCHITECTURE.md Rev 0.10; M6-01 … M6-11 done; spike results in
-[ADR-022](adr/022-m6-spikes-s18-s22.md), **Accepted** 2026-11-02 (bookmark route B); next task M6-12). M5 — OCR: M5-01 … M5-04 done under [ADR-020](adr/020-m5-ocr.md); M5-05 (owner
+[ADR-021](adr/021-m6-beta-review.md), **Accepted** 2026-11-01; ARCHITECTURE.md Rev 0.10; M6-01 … M6-12 done; spike results in
+[ADR-022](adr/022-m6-spikes-s18-s22.md), **Accepted** 2026-11-02 (bookmark route B); next task M6-13). M5 — OCR: M5-01 … M5-04 done under [ADR-020](adr/020-m5-ocr.md); M5-05 (owner
 interop) folds into M6-15. Rev 0 (M0–M4) is complete on the agent side.
 
 ## Done
+
+- **Session 34 — M6-12 Password security (ADR-021 D-40 a, ADR-022 decision 2, §7.12; beta
+  review C2).** Protect → **Password Security…** (`protect.passwordSecurity`, Fluent `Password`)
+  and **Remove Security** (`protect.removeSecurity`, Fluent `ShieldDismiss`), one dialog in two
+  modes. **Form:** "Require a password to open the document" (open password + confirm) and
+  "Restrict printing, changes and copying with a permissions password" (permissions password +
+  confirm, and the eight permissions as tick boxes: Comments implies Filling in forms and
+  Changing the document implies Page changes, shown ticked and disabled; High-quality printing
+  needs Printing); encryption shown as AES-256; at most 127 UTF-8 bytes per password (S18),
+  confirmations must match, the two passwords must differ; fields are
+  `autocomplete="new-password"`; a signed document warns that its signatures will not be valid.
+  With an open password only, it is the owner password too (PDFium checks the owner password
+  first, so whoever opens the file can later change or remove its security). **Route** (S18):
+  the save picker first (suggested `<name>-protected.pdf` / `<name>-unprotected.pdf`), then the
+  Render worker's new `secureCopy` RPC (`render/security.ts`): owner-rights gate (unencrypted,
+  or opened with / unlocked by the owner password — `modify` is not enough), the current state
+  as a full rewrite through the tracker's new side-effect-free `rewriteCopy` (our staged keys
+  under the file's own key; a pending Ctrl+S is left alone), that copy opened as a second
+  document with the same password (`copyPassword`), its digest taken, `setDocumentEncryption` /
+  `removeEncryption`, `FPDF_SaveAsCopy` without the incremental flag, the copy closed. The open
+  document, its file and its Ctrl+S are never touched. **Check** (Work worker, new
+  `verifySecurity` job, `work/verifySecurity.ts`): with an open password the file must refuse to
+  open without one (PDFium error 4); with the open password it must be R6 (AES-256) with exactly
+  the permissions asked for (our `allows()`) and no owner rights when a separate permissions
+  password was set; with the permissions password it must give owner rights and the same pages,
+  comments and form fields (the save digest, chunked with checkpoints); after a removal it must
+  open without a password, unencrypted, same digest. Only then is the file written; a failure
+  writes nothing and logs the failed check's name only (rule 10). Progress and Cancel
+  throughout; **Open Protected File** / **Open Unprotected File** opens the new file in a new
+  tab. Passwords are never stored or logged. Both commands are disabled with a reason without
+  owner rights ("Needs the owner password: use Unlock with Owner Password first") and Remove
+  Security on an unencrypted file. Help's "Protected and signed files" mentions both. Tests:
+  unit `tests/protect/password-security.test.ts` (real PDFium and qpdf: both passwords,
+  permissions only, open only with a Unicode password, change passwords, remove after an owner
+  unlock and when opened with the owner password, the user-password gate, a pending Ctrl+S
+  kept, a staged `/Measure` intact under the new key, the open document still plain, the check
+  failing on wrong permissions / passwords / a lost comment / a non-removal) and
+  `tests/protect/passwordSecurityModel.test.ts` (every subset of the eight permissions read back
+  by `allows()`, validation incl. 127/128 bytes); e2e `e2e/password-security.spec.ts` (@smoke
+  set both passwords → qpdf refuses without and opens with either → reopen with the open
+  password restricted, commands disabled → unlock → remove → reopen without a prompt; axe;
+  new passwords on a file opened with its owner password; the signed-file warning). The e2e
+  save-picker stub's handle gained `isSameEntry` (opening a written file compares handles).
+  Screenshots: project files `m6-12/`.
 
 - **Session 33 — M6-11 Bookmark editing (ADR-021 D-38, ADR-022 decision 5 route B, §7.15;
   beta review B3c).** The Bookmarks pane edits the outline. **Pane toolbar** (one tab stop,
@@ -1540,7 +1584,9 @@ rel="noopener noreferrer">`; the commands `app.home` / `app.reportIssue` open th
 
 ## Next
 
-- **Agent:** M6-12 (Password security: apply and remove; ADR-022).
+- **Agent:** M6-13 (Sign Document, visual signatures; ADR-022 decision 3).
+- **Owner (M6-15 interop):** open a file protected here in Acrobat Reader and PDF-XChange with
+  each password and check the restrictions.
 
 0. **Owner:** try Convert → Recognize Text (OCR) on real scans — an English one, a Hindi one
    and a Chinese one — and check the result in Acrobat Reader / PDF-XChange (search and select
