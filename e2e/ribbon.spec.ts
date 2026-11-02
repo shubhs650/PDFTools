@@ -265,23 +265,28 @@ test('no ribbon tab needs horizontal scrolling at 1280 … 1920 px', async ({ pa
   expect(await overflowingTabs(page), '1280 px, document open').toEqual([]);
 });
 
-test('Comment keeps the selection actions together, with a visible Delete (OBS01)', async ({
+test('Comment: Manage Comments with short labels and full names; the tool grid keeps its names (B7a)', async ({
   page,
 }) => {
+  await page.setViewportSize({ width: 1920, height: 1080 });
   await page.goto('/');
   await page.getByRole('tab', { name: 'Comment', exact: true }).click();
-  const review = page.getByRole('group', { name: 'Review' });
-  await expect(review.locator('.ribbon-label')).toHaveText([
-    'Reply',
-    'Delete',
-    'Set Status',
-    'Copy Style',
-    'Apply Style',
+  // Reply, Delete, Set Status, Copy/Apply Style and the transfers moved to the
+  // comment menus and the Comments pane in M6-08 (still commands with keys).
+  const manage = page.getByRole('group', { name: 'Manage Comments' });
+  await expect(manage.locator('.ribbon-label')).toHaveText([
+    'Comments',
+    'Import',
+    'Export',
+    'Export CRS',
+    'Comment Styles',
+    'Filter',
+    'Status Schemes',
+    'Reviewer Profile',
+    'Numbers',
   ]);
   // Short visible text, full accessible name (label in name), tooltip on hover.
-  const exp = page
-    .getByRole('group', { name: 'Transfer' })
-    .getByRole('button', { name: 'Export Comments (CSV / XLSX / JSON)' });
+  const exp = manage.getByRole('button', { name: 'Export Comments (CSV / XLSX / JSON)' });
   await expect(exp.locator('.ribbon-label')).toHaveText('Export');
   await exp.hover();
   await expect(page.getByRole('tooltip')).toHaveText(/Export Comments \(CSV \/ XLSX \/ JSON\)/);

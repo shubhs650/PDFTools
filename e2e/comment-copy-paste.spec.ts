@@ -30,8 +30,6 @@ async function open(page: Page, bytes: Uint8Array, name: string): Promise<string
   return (await cap(page, 'view', 'activeDocId')) as string;
 }
 
-const commentBar = (page: Page) => page.getByRole('toolbar', { name: 'Comment commands' });
-
 test('three comments with a reply from tab A’s Comments pane into tab B, by keyboard; undo; saved and reopened', async ({
   page,
 }) => {
@@ -55,11 +53,14 @@ test('three comments with a reply from tab A’s Comments pane into tab B, by ke
   await expect(page.getByRole('status').filter({ hasText: '3 comments copied.' })).toBeVisible();
 
   const b = await open(page, simplePdf(3), 'rev-b.pdf');
-  await page.getByRole('tab', { name: 'Comment' }).click();
-  const toOriginal = commentBar(page).getByRole('button', { name: 'Paste to Original Pages' });
-  await expect(toOriginal).toBeEnabled();
-  await toOriginal.focus();
-  await page.keyboard.press('Enter');
+  // Paste to Original Pages: the page menu (out of the ribbon since M6-08, B7a).
+  await page.getByTestId('document-view').focus();
+  await page.keyboard.press('Shift+F10');
+  const toOriginal = page
+    .getByRole('menu', { name: 'Page' })
+    .getByRole('menuitem', { name: 'Paste to Original Pages' });
+  await expect(toOriginal).not.toHaveAttribute('aria-disabled', 'true');
+  await toOriginal.click();
   await expect.poll(async () => (await objects(page, b)).length).toBe(5);
   const pasted = await objects(page, b);
   // New /NMs; each comment on the page it came from; the reply and the state follow the copy.
@@ -94,9 +95,16 @@ test('within one document: copied on the page, pasted 10 pt right and down; past
   await page.goto('/');
   const id = await open(page, reviewSourcePdf(), 'rev-a.pdf');
   await expect.poll(async () => (await objects(page, id)).length).toBe(5);
-  await page.getByRole('tab', { name: 'Comment' }).click();
-  await expect(commentBar(page).getByRole('button', { name: 'Paste Comments' })).toBeDisabled();
-  await expect(commentBar(page).getByRole('button', { name: 'Copy Comments' })).toBeDisabled();
+  // Nothing copied yet: the page menu's pastes say so.
+  await page.getByTestId('document-view').focus();
+  await page.keyboard.press('Shift+F10');
+  const pageMenu = page.getByRole('menu', { name: 'Page' });
+  for (const name of ['Paste', 'Paste to Original Pages'])
+    await expect(pageMenu.getByRole('menuitem', { name, exact: true })).toHaveAttribute(
+      'aria-disabled',
+      'true',
+    );
+  await page.keyboard.press('Escape');
 
   await cap(page, 'annotate', 'select', id, 0, 'src-square');
   await page.getByTestId('document-view').focus();

@@ -276,11 +276,13 @@ test('a Locked comment is not moved, resized or deleted; Read only stays selecta
   await page.keyboard.press('ArrowRight');
   await page.keyboard.press('Delete');
   expect((await byId(page, id, sq))?.rect).toEqual(before);
-  await page.getByRole('tab', { name: 'Comment' }).click();
+  await page.getByTestId('document-view').focus();
+  await page.keyboard.press('Shift+F10');
   const del = page
-    .getByRole('toolbar', { name: 'Comment commands' })
-    .getByRole('button', { name: 'Delete Selected Comments' });
+    .getByRole('menu', { name: 'Comment' })
+    .getByRole('menuitem', { name: 'Delete Selected Comments' });
   await expect(del).toHaveAccessibleDescription('The comment is locked');
+  await page.keyboard.press('Escape');
 
   // Unlocked, it moves again.
   await field(page, 'Locked').uncheck();

@@ -541,10 +541,59 @@ body {
   color: var(--color-text-disabled);
 }
 
-/* The Comment tab's groups sit a little closer (M6-07): with the split buttons it is
-   the widest tab and must not scroll at 1280 px (§8) until the adaptive ribbon (M6-08). */
-.ribbon-group[data-group^='comment.'] {
-  padding-inline: var(--space-1);
+/* A group folded into one button (adaptive ribbon, M6-08, D-36): its icon, its
+   name (on two lines if need be) and an arrow; the menu lists the group's commands. */
+.ribbon-group-menu {
+  flex-direction: column;
+  justify-content: flex-start;
+  gap: var(--space-1);
+  min-width: var(--button-large-width);
+  max-width: calc(1.5 * var(--button-large-width));
+  min-height: var(--button-large-height);
+  padding: var(--space-2) var(--space-2) var(--space-1);
+  text-align: center;
+  white-space: normal;
+}
+
+.ribbon-group-menu:hover,
+.ribbon-group-menu[data-state='open'] {
+  background: var(--color-hover);
+}
+
+.ribbon-group-menu .ribbon-icon {
+  width: var(--icon-size-m);
+  height: var(--icon-size-m);
+}
+
+.ribbon-group-menu-chevron {
+  flex: none;
+  width: var(--icon-size-xs);
+  height: var(--icon-size-xs);
+  color: var(--color-icon);
+}
+
+/* The folded group's button already shows its name. */
+.ribbon-group--menu .ribbon-group-label {
+  position: absolute;
+  width: var(--border-width);
+  height: var(--border-width);
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+
+/* The adaptive ribbon's measuring copy of a tab's groups at every step (M6-08):
+   laid out like the toolbar, never seen, gone after the first measurement. */
+.ribbon-measure {
+  position: fixed;
+  top: var(--space-0);
+  left: var(--space-0);
+  display: flex;
+  align-items: stretch;
+  width: max-content;
+  min-height: var(--ribbon-height);
+  visibility: hidden;
+  pointer-events: none;
 }
 
 /* Split buttons (M6-07): a comment tool and the arrow of its style palette, one unit.

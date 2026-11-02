@@ -3,12 +3,13 @@ import { ChevronUp20Regular } from '@fluentui/react-icons/svg/chevron-up';
 import { useEffect, useMemo, useRef, useState, type KeyboardEvent } from 'react';
 import { useTranslation } from 'react-i18next';
 import { IconButton } from '../../ui/components';
-import { groupLabelKey, tabLabelKey } from '../commandLabels';
+import { tabLabelKey } from '../commandLabels';
 import { TopBarActions } from '../TopBar';
 import { appStore, useApp } from '../store/appStore';
 import { PALETTE_COMMANDS } from '../../features/annotate/tools/stylePalette';
-import { RibbonButton, RibbonSplitButton } from './RibbonButton';
-import { groupCells, ribbonLayout, type RibbonTabLayout } from './layout';
+import { RibbonGroup, type Stop } from './RibbonGroup';
+import { ribbonLayout, STEP_MENU, type RibbonTabLayout } from './layout';
+import { useAdaptiveSteps } from './useAdaptiveSteps';
 import { useRovingToolbar } from './useRovingToolbar';
 
 const PANEL_ID = 'ribbon-panel';
@@ -118,13 +119,23 @@ export function Ribbon({ onOpenBackstage, focusDocument }: RibbonProps) {
 
 function RibbonPanel({ tab, onEscape }: { tab: RibbonTabLayout; onEscape: () => void }) {
   const { t } = useTranslation();
-  const flat = tab.groups.flatMap((g) => g.commands);
-  // A split button (a comment tool and its style palette, M6-07) is two stops.
-  const stops = flat.length + flat.filter((c) => PALETTE_COMMANDS[c.id]).length;
+  // Adaptive steps (D-36): each group's size for the panel's width.
+  const { panelRef, steps, measuring } = useAdaptiveSteps(tab);
+  // A split button (a comment tool and its style palette, M6-07) is two stops;
+  // a group folded into its menu button is one.
+  const stops = tab.groups.reduce((sum, g, i) => {
+    if (steps[i] === STEP_MENU) return sum + 1;
+    return sum + g.commands.length + g.commands.filter((c) => PALETTE_COMMANDS[c.id]).length;
+  }, 0);
   const roving = useRovingToolbar(stops);
   let n = 0;
+  const stop = (): Stop => {
+    const i = n++;
+    return { bind: roving.register(i), tabIndex: i === roving.index ? 0 : -1 };
+  };
   return (
     <div
+      ref={panelRef}
       id={PANEL_ID}
       role="tabpanel"
       aria-labelledby={`ribbon-tab-${tab.tab}`}
@@ -143,62 +154,17 @@ function RibbonPanel({ tab, onEscape }: { tab: RibbonTabLayout; onEscape: () => 
           roving.onKeyDown(e);
         }}
       >
-        {tab.groups.map((g) => (
-          <div
+        {tab.groups.map((g, i) => (
+          <RibbonGroup
             key={`${g.tab}.${g.group}`}
-            role="group"
-            aria-labelledby={`grp-${tab.tab}-${g.tab}-${g.group}`}
-            className="ribbon-group"
-            data-group={`${g.tab}.${g.group}`}
-          >
-            <div className="ribbon-group-body">
-              {groupCells(g.commands).map((cell) => {
-                const buttons = cell.map((c) => {
-                  const i = n++;
-                  const tool = PALETTE_COMMANDS[c.id];
-                  if (tool) {
-                    const j = n++;
-                    return (
-                      <RibbonSplitButton
-                        key={c.id}
-                        command={c}
-                        tool={tool}
-                        large={c.size === 'large'}
-                        mainRef={roving.register(i)}
-                        arrowRef={roving.register(j)}
-                        mainTabIndex={i === roving.index ? 0 : -1}
-                        arrowTabIndex={j === roving.index ? 0 : -1}
-                      />
-                    );
-                  }
-                  return (
-                    <RibbonButton
-                      key={c.id}
-                      ref={roving.register(i)}
-                      command={c}
-                      large={c.size === 'large'}
-                      tabIndex={i === roving.index ? 0 : -1}
-                    />
-                  );
-                });
-                const first = cell[0];
-                if (!first || first.size === 'large') return buttons;
-                return (
-                  <div
-                    key={first.id}
-                    className={`ribbon-cell${cell.every((c) => c.compact) ? ' ribbon-cell--compact' : ''}`}
-                  >
-                    {buttons}
-                  </div>
-                );
-              })}
-            </div>
-            <div id={`grp-${tab.tab}-${g.tab}-${g.group}`} className="ribbon-group-label">
-              {t(groupLabelKey(g))}
-            </div>
-          </div>
+            tab={tab.tab}
+            group={g}
+            step={steps[i] ?? 0}
+            stop={stop}
+          />
         ))}
       </div>
+      {measuring}
     </div>
   );
 }

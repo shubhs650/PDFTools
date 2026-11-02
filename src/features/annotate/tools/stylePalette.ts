@@ -28,8 +28,7 @@ export const PALETTE_COMMANDS: Readonly<Record<string, StyleTool>> = {
   'comment.cloud': 'cloud',
   'comment.pencil': 'ink',
   'comment.highlight': 'highlight',
-  // The typewriter's own button arrives with the Comment ribbon (M6-08); its
-  // styles are already managed in the Comment Styles Palette dialog.
+  'comment.typewriter': 'typewriter', // its button arrived with the Comment ribbon (M6-08)
 };
 
 /** Every tool with a palette, in the dialog's order. */

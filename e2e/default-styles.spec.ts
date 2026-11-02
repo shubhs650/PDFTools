@@ -133,7 +133,7 @@ test('each tool makes red comments: 1 pt lines and borders, 10 pt text; saved an
   }
   // Kept above y = 350 pt: at fit width the rest of page 1 is below the 800 px window.
   // Text box: a click on the page. Callout: arrow tip, knee, then the box.
-  await tool(page, 'Text Box / Typewriter');
+  await tool(page, 'Text Box');
   const tb = await at(page, 40, 280);
   await page.mouse.click(tb.x, tb.y);
   await expect.poll(async () => (await objects(page, id)).length).toBe(SHAPES.length + 1);
@@ -150,8 +150,8 @@ test('each tool makes red comments: 1 pt lines and borders, 10 pt text; saved an
   }
   await expect.poll(async () => (await objects(page, id)).length).toBe(SHAPES.length + 2);
   await done(page);
-  // Typewriter: no ribbon button until the Comment tab is redone (M6-08).
-  await cap(page, 'annotate', 'setTool', id, 'typewriter');
+  // Typewriter: its own button since M6-08.
+  await tool(page, 'Typewriter');
   const tw = await at(page, 40, 330);
   await page.mouse.click(tw.x, tw.y);
   await expect.poll(async () => (await objects(page, id)).length).toBe(SHAPES.length + 3);

@@ -134,17 +134,15 @@ test('deleting a comment with replies asks first; undo brings the thread back', 
   await expect.poll(async () => (await list(page, id))?.length).toBe(3);
 });
 
-// Preview review USR01/OBS01: deleting is reachable from the ribbon, from the
-// Comments pane (Delete key and the thread's button), not only from the page.
+// Preview review USR01/OBS01: deleting is reachable from the Comments pane
+// (Delete key and its toolbar's button) and the comment menu, not only from the
+// page's Delete key (the ribbon's button moved to the menus in M6-08, B7a).
 
-test('Comment → Delete removes the selected comment; disabled without a selection', async ({
+test('the pane’s Delete removes the selected comment; disabled without a selection', async ({
   page,
 }) => {
   const id = await open(page);
-  await page.getByRole('tab', { name: 'Comment' }).click();
-  const del = page
-    .getByRole('toolbar', { name: 'Comment commands' })
-    .getByRole('button', { name: 'Delete Selected Comments' });
+  const del = pane(page).getByRole('button', { name: 'Delete Selected Comments' });
   await expect(del).not.toHaveAttribute('aria-disabled', 'true');
   await del.click();
   const dialog = page.getByRole('dialog', { name: 'Delete comments and their replies?' });

@@ -6,8 +6,7 @@ import { describe, expect, it } from 'vitest';
 import {
   AVAILABLE_MILESTONES,
   COMMANDS,
-  HOME_REUSE_GROUPS,
-  HOME_REUSES,
+  REUSE_GROUPS,
   RIBBON_TABS,
   isAvailable,
 } from '../src/app/commands';
@@ -34,10 +33,10 @@ function files(dir: string): string[] {
 }
 
 describe('command table (M1-06)', () => {
-  it('has unique ids; Home reuses point at real commands', () => {
+  it('has unique ids; reused commands point at real commands', () => {
     const ids = COMMANDS.map((c) => c.id);
     expect(new Set(ids).size).toBe(ids.length);
-    for (const r of HOME_REUSES) expect(ids).toContain(r);
+    for (const r of REUSE_GROUPS.flatMap((g) => g.ids)) expect(ids).toContain(r);
   });
 
   it('has an en.json label for every command, ribbon tab and ribbon group (rule 11)', () => {
@@ -48,8 +47,8 @@ describe('command table (M1-06)', () => {
         if (typeof lookup(groupLabelKey(c)) !== 'string') missing.push(groupLabelKey(c));
       }
     }
-    for (const g of HOME_REUSE_GROUPS) {
-      const key = groupLabelKey({ tab: 'home', group: g.group });
+    for (const g of REUSE_GROUPS) {
+      const key = groupLabelKey(g);
       if (typeof lookup(key) !== 'string') missing.push(key);
     }
     for (const t of RIBBON_TABS)

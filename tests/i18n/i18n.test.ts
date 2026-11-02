@@ -1,7 +1,7 @@
 import { readdirSync, readFileSync, statSync } from 'node:fs';
 import { join } from 'node:path';
 import { describe, expect, it } from 'vitest';
-import { COMMANDS, HOME_REUSE_GROUPS, RIBBON_TABS } from '../../src/app/commands';
+import { COMMANDS, REUSE_GROUPS, RIBBON_TABS } from '../../src/app/commands';
 import {
   commandLabelKey,
   commandShortKey,
@@ -41,7 +41,7 @@ function referencedKeys(): Set<string> {
     if (c.short) found.add(commandShortKey(c.id));
     if ((RIBBON_TABS as readonly string[]).includes(c.tab)) found.add(groupLabelKey(c));
   }
-  for (const g of HOME_REUSE_GROUPS) found.add(groupLabelKey({ tab: 'home', group: g.group }));
+  for (const g of REUSE_GROUPS) found.add(groupLabelKey(g));
   for (const t of RIBBON_TABS) found.add(tabLabelKey(t));
   return found;
 }

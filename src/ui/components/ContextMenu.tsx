@@ -1,5 +1,6 @@
 import { ChevronRight16Regular } from '@fluentui/react-icons/svg/chevron-right';
 import * as CM from '@radix-ui/react-context-menu';
+import * as DM from '@radix-ui/react-dropdown-menu';
 import { useId, type ReactElement } from 'react';
 import { useTranslation } from 'react-i18next';
 import { runCommand, type CommandArgs } from '../../app/commands/dispatch';
@@ -25,6 +26,14 @@ export interface ContextMenuProps {
 }
 
 const NOT_READY = { enabled: false, pressed: false, reason: msg('ribbon.notReady') } as const;
+
+/** The Radix parts a command menu is drawn with: a context menu's or a dropdown's (same API). */
+type MenuKit = Pick<
+  typeof CM,
+  'Item' | 'CheckboxItem' | 'Sub' | 'SubTrigger' | 'SubContent' | 'Portal' | 'Separator'
+>;
+const CONTEXT_KIT: MenuKit = CM;
+const DROPDOWN_KIT: MenuKit = DM;
 
 /**
  * A right-click menu of commands (M6-02, ADR-021 D-38 a): label, icon,
@@ -52,17 +61,56 @@ export function ContextMenu({
           loop
           {...(onCloseAutoFocus ? { onCloseAutoFocus } : {})}
         >
-          <Body entries={entries} args={args} />
+          <Body kit={CONTEXT_KIT} entries={entries} args={args} />
         </CM.Content>
       </CM.Portal>
     </CM.Root>
   );
 }
 
+export interface CommandDropdownProps {
+  /** The button that opens it (Radix `asChild`): it carries the accessible name. */
+  trigger: ReactElement;
+  /** The open menu's accessible name (translated, rule 11). */
+  label: string;
+  entries: readonly ContextMenuEntry[];
+}
+
+/**
+ * A dropdown of commands, drawn like the context menus (label, icon, shortcut,
+ * ticks for toggles, disabled items focusable with their reason): a ribbon
+ * group folded into one button (M6-08, D-36). Keys inside it stay inside it.
+ */
+export function CommandDropdown({ trigger, label, entries }: CommandDropdownProps) {
+  return (
+    <DM.Root>
+      <DM.Trigger asChild>{trigger}</DM.Trigger>
+      <DM.Portal>
+        <DM.Content
+          className="ui-menu ui-context-menu"
+          aria-label={label}
+          align="start"
+          sideOffset={2}
+          collisionPadding={8}
+          loop
+          onKeyDown={(e) => {
+            // Not to the ribbon's toolbar (its arrows and Esc), through the portal.
+            e.stopPropagation();
+          }}
+        >
+          <Body kit={DROPDOWN_KIT} entries={entries} args={undefined} />
+        </DM.Content>
+      </DM.Portal>
+    </DM.Root>
+  );
+}
+
 function Body({
+  kit,
   entries,
   args,
 }: {
+  kit: MenuKit;
   entries: readonly ContextMenuEntry[];
   args: CommandArgs | undefined;
 }) {
@@ -75,17 +123,19 @@ function Body({
   );
   return items.map((item) =>
     item.kind === 'separator' ? (
-      <CM.Separator key={item.key} className="ui-menu-separator" />
+      <kit.Separator key={item.key} className="ui-menu-separator" />
     ) : (
-      <Item key={item.id} item={item} args={args} />
+      <Item key={item.id} kit={kit} item={item} args={args} />
     ),
   );
 }
 
 function Item({
+  kit: M,
   item,
   args,
 }: {
+  kit: MenuKit;
   item: Exclude<MenuItemView, { kind: 'separator' }>;
   args: CommandArgs | undefined;
 }) {
@@ -133,34 +183,34 @@ function Item({
 
   if (item.kind === 'submenu')
     return (
-      <CM.Sub>
-        <CM.SubTrigger {...props} disabled={!item.enabled}>
+      <M.Sub>
+        <M.SubTrigger {...props} disabled={!item.enabled}>
           {content}
           <ChevronRight16Regular aria-hidden className="ui-menu-chevron" />
-        </CM.SubTrigger>
+        </M.SubTrigger>
         {why}
-        <CM.Portal>
-          <CM.SubContent className="ui-menu ui-context-menu" collisionPadding={8} loop>
+        <M.Portal>
+          <M.SubContent className="ui-menu ui-context-menu" collisionPadding={8} loop>
             {item.choices.map((c) => (
-              <CM.Item key={c.key} className="ui-menu-item" onSelect={c.onSelect}>
+              <M.Item key={c.key} className="ui-menu-item" onSelect={c.onSelect}>
                 <span className="ui-menu-icon" />
                 <span className="ui-menu-label">{t(c.label)}</span>
-              </CM.Item>
+              </M.Item>
             ))}
-          </CM.SubContent>
-        </CM.Portal>
-      </CM.Sub>
+          </M.SubContent>
+        </M.Portal>
+      </M.Sub>
     );
   return (
     <>
       {item.toggle ? (
-        <CM.CheckboxItem {...props} checked={item.pressed} onSelect={onSelect}>
+        <M.CheckboxItem {...props} checked={item.pressed} onSelect={onSelect}>
           {content}
-        </CM.CheckboxItem>
+        </M.CheckboxItem>
       ) : (
-        <CM.Item {...props} onSelect={onSelect}>
+        <M.Item {...props} onSelect={onSelect}>
           {content}
-        </CM.Item>
+        </M.Item>
       )}
       {why}
     </>

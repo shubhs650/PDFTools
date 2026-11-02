@@ -110,6 +110,7 @@ test('the comment menu: right click selects the comment; Copy, then Paste from t
     /^Cut\s*Ctrl\+X$/,
     /^Copy\s*Ctrl\+C$/,
     /^Paste\s*Ctrl\+V$/,
+    /^Paste to Original Pages\s*Ctrl\+Shift\+V$/, // M6-08: out of the ribbon
     /^Delete Selected Comments\s*Delete$/,
     /^Reply$/,
     /^Set Status$/,
@@ -214,7 +215,7 @@ test('from the keyboard: Shift+F10 and the Menu key open the menus; Esc closes t
   await expect(menu(page)).toHaveCount(1);
   // Set Status ▸ Accepted, by keyboard.
   const setStatus = menu(page).getByRole('menuitem', { name: 'Set Status' });
-  for (let i = 0; i < 5; i++) await page.keyboard.press('ArrowDown');
+  for (let i = 0; i < 6; i++) await page.keyboard.press('ArrowDown');
   await expect(setStatus).toBeFocused();
   await page.keyboard.press('ArrowRight');
   await expect(page.getByRole('menuitem', { name: 'No status' })).toBeFocused();
