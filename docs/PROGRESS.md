@@ -39,6 +39,7 @@ interop) folds into M6-15. Rev 0 (M0–M4) is complete on the agent side.
   synced first, so unsaved ones are listed) and waits for a just-opened document's Work copy —
   with the pane already open, a newly opened document's list failed with `unknown-document`
   (a race that predates M6-10). Tests: unit `tests/attachments/attach-file-render.test.ts`
+  and `tests/attachments/attachFileModel.test.ts` (placement, appearance stream)
   (real PDFium: keys, EmbedPDF and the Attachments pane read it back, byte-identical file, move,
   narrow verified Ctrl+S after create and after a move, the limit), `tests/ribbon/layout.test.ts`
   (Note can now fold); e2e `e2e/attach-file.spec.ts` (@smoke click → both panes → Save
