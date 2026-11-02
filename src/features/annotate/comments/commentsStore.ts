@@ -1,6 +1,7 @@
-// Comments pane state (M3-11): filter and sort per document, the on-page
-// number overlay switch, and the comments derived from the plugin's store
-// (cached per state, so selection changes don't recompute 10,000 comments).
+// Comments pane state (M3-11, M6-05): filter, sort, grouping and collapsed
+// groups per document, the card being edited, the on-page number overlay
+// switch, and the comments derived from the plugin's store (cached per state,
+// so selection changes don't recompute 10,000 comments).
 import type { PdfAnnotationObject } from '@embedpdf/models';
 import type { AnnotationDocumentState } from '@embedpdf/plugin-annotation';
 import { useEffect, useState } from 'react';
@@ -12,25 +13,44 @@ import {
   numberComments,
   type Comment,
   type CommentFilter,
+  type CommentGroup,
   type CommentSort,
 } from './commentsModel';
 
+export interface CommentsView {
+  filter: CommentFilter;
+  sort: CommentSort;
+  group: CommentGroup;
+  /** Collapsed group keys. */
+  collapsed: readonly string[];
+  /** "Current page only": the page filter follows the current page. */
+  currentPageOnly: boolean;
+}
+
+/**
+ * The inline editor of a card (M6-05): a new reply to a comment, or the text
+ * of a comment or of one of its replies (`target`).
+ */
+export type CommentEdit =
+  | { docId: string; kind: 'reply'; root: string }
+  | { docId: string; kind: 'text'; root: string; target: string };
+
 interface CommentsState {
-  byDoc: Record<string, { filter: CommentFilter; sort: CommentSort }>;
+  byDoc: Record<string, CommentsView>;
+  editing: CommentEdit | null;
   /** Show each comment's number on the page (comment.autoNumber). */
   numbersOnPage: boolean;
-  /** Bumped to move focus to the filters (comment.filter). */
+  /** Bumped to move focus to Find (comment.filter). */
   focusFilters: number;
-  /** Bumped to move focus to the reply box / status of the selected comment (M3-12). */
-  focusReply: number;
+  /** Bumped to open Set status on the pane's toolbar (comment.setStatus, M3-12). */
   focusStatus: number;
 }
 
 export const commentsStore = createStore<CommentsState>()(() => ({
   byDoc: {},
+  editing: null,
   numbersOnPage: false,
   focusFilters: 0,
-  focusReply: 0,
   focusStatus: 0,
 }));
 
@@ -38,17 +58,24 @@ export function useComments<T>(selector: (s: CommentsState) => T): T {
   return useStore(commentsStore, selector);
 }
 
-const DEFAULT: { filter: CommentFilter; sort: CommentSort } = { filter: {}, sort: 'page' };
+const DEFAULT: CommentsView = {
+  filter: {},
+  sort: 'page',
+  group: 'page',
+  collapsed: [],
+  currentPageOnly: false,
+};
 
-export const viewOf = (s: CommentsState, docId: string) => s.byDoc[docId] ?? DEFAULT;
+export const viewOf = (s: CommentsState, docId: string): CommentsView => s.byDoc[docId] ?? DEFAULT;
 
-export function setView(
-  docId: string,
-  patch: Partial<{ filter: CommentFilter; sort: CommentSort }>,
-): void {
+export function setView(docId: string, patch: Partial<CommentsView>): void {
   commentsStore.setState((s) => ({
     byDoc: { ...s.byDoc, [docId]: { ...viewOf(s, docId), ...patch } },
   }));
+}
+
+export function setEditing(edit: CommentEdit | null): void {
+  commentsStore.setState({ editing: edit });
 }
 
 type ByUid = AnnotationDocumentState['byUid'];

@@ -1,13 +1,56 @@
 # PDFTools — Progress
 
-_Last updated: 2026-11-02 (session 26: M6-04 spikes S18 – S22; ADR-022 accepted, ARCHITECTURE.md Rev 0.10)_
+_Last updated: 2026-11-02 (session 27: M6-05 Comments pane redesign)_
 
 **Current milestone:** M6 — Beta review (plan in [docs/plan/M6.md](plan/M6.md), scope changes in
-[ADR-021](adr/021-m6-beta-review.md), **Accepted** 2026-11-01; ARCHITECTURE.md Rev 0.10; M6-01 … M6-04 done; spike results in
-[ADR-022](adr/022-m6-spikes-s18-s22.md), **Accepted** 2026-11-02 (bookmark route B); next task M6-05). M5 — OCR: M5-01 … M5-04 done under [ADR-020](adr/020-m5-ocr.md); M5-05 (owner
+[ADR-021](adr/021-m6-beta-review.md), **Accepted** 2026-11-01; ARCHITECTURE.md Rev 0.10; M6-01 … M6-05 done; spike results in
+[ADR-022](adr/022-m6-spikes-s18-s22.md), **Accepted** 2026-11-02 (bookmark route B); next task M6-06). M5 — OCR: M5-01 … M5-04 done under [ADR-020](adr/020-m5-ocr.md); M5-05 (owner
 interop) folds into M6-15. Rev 0 (M0–M4) is complete on the agent side.
 
 ## Done
+
+- **Session 27 — M6-05 Comments pane redesign (ADR-021 D-38 a; beta review B1, B2, B3b).** The
+  five stacked filter fields and the thread panel under the list are gone. **Toolbar** (one row,
+  one tab stop, arrows move): **Options** (gear) — Sort by ▸ (page, date, author, type), Group by
+  ▸ (page, author, type, status, none), Show ▸ Author ▸ / Type ▸ / Status ▸ (tick boxes, several
+  at once) and Current page only (now follows the current page), Expand all, Collapse all, Show
+  Numbers on Page, Import Comments, Export Comments — then Reply, Set Status (a menu; the ribbon's
+  Set Status opens it), Previous / Next comment (through every comment shown, opening a
+  collapsed group) and Delete. Disabled buttons stay focusable and say why. **Find** filters on
+  Enter or the button only (rule 3): every word must be in the text, author, subject or a reply;
+  Esc clears it. **Chips** list the filters that are set, each removable, and Clear all; the
+  filtered export and CRS see the same filter (Find included). **Cards** under collapsible group
+  headers ("Page 3 · 4 comments"): type icon in the comment's colour, number, type, lock for
+  /F Locked, author, date (Intl), the text (4 lines, all of it when selected), the review state
+  per reviewer, then the replies indented inside the card; footer "n of m comments · k selected".
+  **Selection both ways:** a card click selects the comment on its page and scrolls there,
+  Ctrl/Shift-click and Ctrl+Space / Shift+arrows multi-select, the selected card is outlined in
+  the accent colour, a selection on the page selects and scrolls to its card. **Inline editor**
+  (a new reply, or the text of the comment or of your own reply): the Reply mark on the card, the
+  toolbar or the ribbon's Reply, F2 or a double click; Enter / Ctrl+Enter posts, Shift+Enter is a
+  new line, Esc cancels; your own reply's editor has Delete reply. **Right-click** on a card (or
+  Shift+F10 / Menu key in the list) opens M6-02's comment menu, same commands; headers have no
+  menu. **Accessibility:** the list stays a listbox with `aria-activedescendant`; reply rows are
+  options too (the card is drawn across them); nothing inside an option is focusable, so the
+  card's Reply / Edit / Delete marks are pointer shortcuts (`aria-hidden`) for keys and buttons
+  that do the same, and the editor is drawn over a gap in the card **outside** the listbox (a
+  text box may not sit inside an option; axe clean). **Virtualization:** rows are measured once
+  drawn (one ResizeObserver; estimates before), row tops are prefix sums and the rows in view are
+  found by binary search; rows above the view that change height shift the scroll so what is in
+  view stays put (`virtualRows.ts`, pure). The 10,000-comment perf scenario now also scrolls
+  mid-list, regroups, collapses, expands and finds: no long task. `DropdownMenu` gained
+  submenus, tick boxes and radio groups (Radix, same package). New:
+  `src/features/annotate/comments/{CommentList,CommentCard,CommentEditor,CommentsToolbar}.tsx`,
+  `cardLabels.ts`, `typeIcons.ts`, `virtualRows.ts`; `ThreadView.tsx` removed (the review
+  history moves to the Properties pane with M6-06). Tests: unit `tests/annotate/comments.test.ts`
+  (grouping by page / author / type / status, sorting inside groups, replies after their card
+  with depth, collapsed groups, Previous / Next order, Find over text / author / subject /
+  replies, locked), `tests/annotate/virtualRows.test.ts`; e2e `e2e/comments-pane.spec.ts` (cards,
+  one toolbar row and axe; ≥ 4 cards at 1366 × 768; every old filter / sort in Options with
+  chips; Find on Enter only; selection both ways; keyboard and collapse, Previous / Next; the card
+  menu by mouse and Shift+F10; inline reply, Esc, F2), `e2e/replies.spec.ts` (thread in the
+  card: reply, status, save and reopen; own replies edited and deleted), perf
+  `e2e/perf/comments-pane.spec.ts`. Screenshots for the owner: project files `m6-05/`.
 
 - **Session 26 — M6-04 spikes S18 – S22 (ADR-021 Evidence → [ADR-022](adr/022-m6-spikes-s18-s22.md),
   Proposed).** `spikes/s18-s22-m6/`: a Node stand-in for the Render worker (every executor call
@@ -1258,8 +1301,8 @@ rel="noopener noreferrer">`; the commands `app.home` / `app.reportIssue` open th
 
 ## Next
 
-- **Agent:** M6-05 (Comments pane redesign). ADR-022 is accepted and applied (ARCHITECTURE.md
-  Rev 0.10).
+- **Agent:** M6-06 (Properties pane as a property grid; flags and review marks). ADR-022 is
+  accepted and applied (ARCHITECTURE.md Rev 0.10).
 
 0. **Owner:** try Convert → Recognize Text (OCR) on real scans — an English one, a Hindi one
    and a Chinese one — and check the result in Acrobat Reader / PDF-XChange (search and select
