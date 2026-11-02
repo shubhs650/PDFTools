@@ -18,6 +18,7 @@ const BY_TYPE: Partial<Record<S, string>> = {
   [S.STAMP]: 'comment.stamp',
   [S.CARET]: 'comment.insertText',
   [S.INK]: 'comment.pencil',
+  [S.FILEATTACHMENT]: 'comment.attachFile',
 };
 
 /** The command whose icon stands for the annotation's type (a comment bubble otherwise). */

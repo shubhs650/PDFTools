@@ -18,6 +18,12 @@ import { renderSnapshot } from './render/snapshot';
 import { dropCustom, keepAuthor, nameTargets, writeMarkupIntent } from './render/annotIds';
 import { installFontReadback } from './render/freeTextFonts';
 import { SaveTracker, isMutation } from './render/save/tracker';
+import {
+  createFileAttachment,
+  isFileAttachmentCall,
+  readFileAttachment,
+  updateFileAttachment,
+} from './render/fileAttach';
 
 const FPDF_PAGEOBJ_PATH = 2;
 /** `FPDF_GetFormType` for a dynamic (full) XFA form: nothing to fill (M2-14). */
@@ -107,18 +113,26 @@ serve<RenderApi>(self, {
     // An edit keeps the annotation's own author (D-03); no private keys (rule 6).
     const callArgs =
       typeof docId === 'string' ? keepAuthor(m, n, method, dropCustom(method, args)) : args;
-    const task = fn.apply(n, callArgs);
-    task.onProgress((p) => {
-      ctx.progress(p);
-    });
-    ctx.signal.addEventListener('abort', () => {
-      task.abort({ code: PdfErrorCode.Cancelled, message: 'cancelled' });
-    });
     let value: unknown;
-    try {
-      value = await task.toPromise();
-    } catch (err) {
-      throw toRpcError(err);
+    if (typeof docId === 'string' && isFileAttachmentCall(method, callArgs)) {
+      // Attach File (M6-10, ADR-022 d1): EmbedPDF can't create or update this subtype.
+      value =
+        method === 'createPageAnnotation'
+          ? createFileAttachment(m, n, callArgs)
+          : updateFileAttachment(m, n, callArgs);
+    } else {
+      const task = fn.apply(n, callArgs);
+      task.onProgress((p) => {
+        ctx.progress(p);
+      });
+      ctx.signal.addEventListener('abort', () => {
+        task.abort({ code: PdfErrorCode.Cancelled, message: 'cancelled' });
+      });
+      try {
+        value = await task.toPromise();
+      } catch (err) {
+        throw toRpcError(err);
+      }
     }
     if (typeof docId === 'string') writeMarkupIntent(m, n, method, callArgs);
     // A reopen (page-operation undo) re-applies the owner unlock (ADR-016 d5).
@@ -257,6 +271,12 @@ serve<RenderApi>(self, {
     t.requireCapability(docId, 'copy');
     const out = renderSnapshot(m, n, docId, req);
     return new Transfer(out, [out.data.buffer]);
+  },
+
+  fileAttachment: ({ docId, pageIndex, id }) => {
+    const { mod: m, native: n } = ready();
+    const out = readFileAttachment(m, n, docId, pageIndex, id);
+    return new Transfer(out, [out.data]);
   },
 
   pageCost: ({ docId, pageIndex }) => {

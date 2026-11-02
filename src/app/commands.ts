@@ -604,6 +604,17 @@ export const COMMANDS: readonly CommandDef[] = [
     shipped: true, // M3-09
   },
   {
+    // Attach File (M6-10, beta review B7c, D-38 d): click on a page, choose a file.
+    id: 'comment.attachFile',
+    tab: 'comment',
+    group: 'note',
+    size: 'large',
+    fluent: 'Attach',
+    milestone: 'M6',
+    toggle: true,
+    shipped: true,
+  },
+  {
     id: 'comment.highlight',
     tab: 'comment',
     group: 'textMarkup',
@@ -923,6 +934,16 @@ export const COMMANDS: readonly CommandDef[] = [
     size: 'small',
     fluent: 'Delete',
     milestone: 'M3',
+    shipped: true,
+  },
+  {
+    // A file attachment's menu (M6-10): its file, where the user chooses.
+    id: 'comment.saveAttachment',
+    tab: 'menu',
+    group: 'menu',
+    size: 'small',
+    fluent: 'ArrowDownload',
+    milestone: 'M6',
     shipped: true,
   },
   {

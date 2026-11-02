@@ -12,6 +12,7 @@ import { registerExtractCommands } from '../features/extract/commands';
 import { registerTableCommands } from '../features/tables/commands';
 import { registerRedactCommands } from '../features/redact/commands';
 import { registerSnapshotCommands } from '../features/snapshot/snapshot';
+import { registerAttachFileCommands } from '../features/attachments/attachFile';
 import { SnapshotToast } from '../features/snapshot/SnapshotLayer';
 import { registerOcrCommands } from '../features/ocr/commands';
 import { OcrDialog } from '../features/ocr/OcrDialog';
@@ -102,6 +103,7 @@ export function App() {
   useEffect(() => registerTableCommands(), []);
   useEffect(() => registerRedactCommands(), []);
   useEffect(() => registerSnapshotCommands(), []);
+  useEffect(() => registerAttachFileCommands(), []);
   useEffect(() => registerOcrCommands(), []);
   useEffect(() => registerPageCommands(), []);
   useEffect(() => registerReportCommands(), []);

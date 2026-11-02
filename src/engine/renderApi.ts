@@ -149,6 +149,14 @@ export interface RenderApi {
    * Needs the copy permission.
    */
   snapshot: MethodSpec<{ docId: string } & SnapshotRequest, SnapshotPixels>;
+  /**
+   * The embedded file of a FileAttachment comment, by its /NM (M6-10: Save
+   * Attachment… from the page or the Comments pane). Transferred.
+   */
+  fileAttachment: MethodSpec<
+    { docId: string; pageIndex: number; id: string },
+    { name: string; data: ArrayBuffer }
+  >;
   /** What a render of this page costs (M1-17 cost model): objects and path segments. */
   pageCost: MethodSpec<{ docId: string; pageIndex: number }, { objects: number; segments: number }>;
   /**

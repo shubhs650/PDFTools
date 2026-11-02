@@ -1,13 +1,51 @@
 # PDFTools — Progress
 
-_Last updated: 2026-11-02 (session 31: M6-09 Flatten and Snapshot)_
+_Last updated: 2026-11-02 (session 32: M6-10 Attach File)_
 
 **Current milestone:** M6 — Beta review (plan in [docs/plan/M6.md](plan/M6.md), scope changes in
-[ADR-021](adr/021-m6-beta-review.md), **Accepted** 2026-11-01; ARCHITECTURE.md Rev 0.10; M6-01 … M6-09 done; spike results in
-[ADR-022](adr/022-m6-spikes-s18-s22.md), **Accepted** 2026-11-02 (bookmark route B); next task M6-10). M5 — OCR: M5-01 … M5-04 done under [ADR-020](adr/020-m5-ocr.md); M5-05 (owner
+[ADR-021](adr/021-m6-beta-review.md), **Accepted** 2026-11-01; ARCHITECTURE.md Rev 0.10; M6-01 … M6-10 done; spike results in
+[ADR-022](adr/022-m6-spikes-s18-s22.md), **Accepted** 2026-11-02 (bookmark route B); next task M6-11). M5 — OCR: M5-01 … M5-04 done under [ADR-020](adr/020-m5-ocr.md); M5-05 (owner
 interop) folds into M6-15. Rev 0 (M0–M4) is complete on the agent side.
 
 ## Done
+
+- **Session 32 — M6-10 Attach File (ADR-021 D-38 d, ADR-022 decision 1; beta review B7c).**
+  Comment → Note → **Attach File** (`comment.attachFile`, Fluent `Attach`, a toggle tool like
+  the note tool: on until Esc or the command again; needs annotate and asks for the reviewer
+  profile first). A click on a page opens the file picker in the click itself (user
+  activation); from the keyboard the file is picked at once and goes to the middle of the
+  current page (rule 12). Files over **25 MB** (decimal, as sizes are shown) are refused with a
+  message in the status toast (Snapshot's toast, now `showStatusToast`). The comment is created
+  through the annotation plugin, so it is one undo step, listed and moved like any comment; the
+  file travels as the create call's context (kept by the undo step, so redo writes it again,
+  never in the annotation's state). **Render worker** (`render/fileAttach.ts`): EmbedPDF can
+  neither create nor update a `/FileAttachment`, so `exec` answers `createPageAnnotation` /
+  `updatePageAnnotation` for that subtype with direct PDFium calls — `EPDFPage_CreateAnnot`
+  (an indirect object: `FPDFPage_CreateAnnot`, as in the S22 spike, made a direct dictionary in
+  /Annots, so a later move had no object number and the save fell back to keep-all),
+  `FPDFAnnot_AddFileAttachment` + `FPDFAttachment_SetFile`, `/Name /Paperclip`, `/C`, the base
+  keys through EmbedPDF's own private writers (`annotWriter` in `pdfium.ts`, the one file that
+  reaches into its internals), and our paperclip appearance (`paperclipAppearance`, a white
+  under-stroke for contrast; the one exception to "no custom appearance streams"). A move or
+  resize rewrites /Rect and the appearance; delete stays EmbedPDF's. Ctrl+S is the narrow tail,
+  verified. The Work worker's listing adds the colour (EmbedPDF reads none for this subtype).
+  **Viewer:** an annotation renderer for the subtype (`annotationRenderers` on the plugin's
+  layer) gives the paperclip a hit area, drag and aspect-locked resize; double-click is **Save
+  Attachment…** (`comment.saveAttachment`, also first in the comment menu for a single selected
+  attachment): the Render worker's `fileAttachment` RPC reads the file by /NM, then the save
+  picker (or a download). The Comments pane shows "File attachment" with the paperclip icon; the
+  Properties pane edits colour, subject and description (contents, the file name at first).
+  **Attachments pane:** lists again after any committed change to a file attachment (Work copy
+  synced first, so unsaved ones are listed) and waits for a just-opened document's Work copy —
+  with the pane already open, a newly opened document's list failed with `unknown-document`
+  (a race that predates M6-10). Tests: unit `tests/attachments/attach-file-render.test.ts`
+  and `tests/attachments/attachFileModel.test.ts` (placement, appearance stream)
+  (real PDFium: keys, EmbedPDF and the Attachments pane read it back, byte-identical file, move,
+  narrow verified Ctrl+S after create and after a move, the limit), `tests/ribbon/layout.test.ts`
+  (Note can now fold); e2e `e2e/attach-file.spec.ts` (@smoke click → both panes → Save
+  Attachment… → move → narrow verified save → reopen → undo/redo; keyboard placement and the
+  25 MB message; a document forbidding comments disables it). Screenshots: project files
+  `m6-10/`.
 
 - **Session 31 — M6-09 Flatten Comments and Snapshot (ADR-021 D-38 c, D-38 e; beta review
   B7d, A2a).** **Flatten** (Comment → Manage Comments "Flatten", `comment.flatten`; the comment
@@ -1464,7 +1502,7 @@ rel="noopener noreferrer">`; the commands `app.home` / `app.reportIssue` open th
 
 ## Next
 
-- **Agent:** M6-10 (Attach File, beta review B7c).
+- **Agent:** M6-11 (Bookmark editing, beta review B3c; route B per ADR-022).
 
 0. **Owner:** try Convert → Recognize Text (OCR) on real scans — an English one, a Hindi one
    and a Chinese one — and check the result in Acrobat Reader / PDF-XChange (search and select
@@ -1493,6 +1531,14 @@ rel="noopener noreferrer">`; the commands `app.home` / `app.reportIssue` open th
    and A0 through the S3 harness; S8 Firefox check and Pages preview.
 
 ## Open issues
+
+- **Rapid moves can lose the last one (seen 2026-11-02, M6-10).** Five quick arrow-key nudges
+  on one comment sometimes saved 4 pt instead of 5: EmbedPDF's commit marks the annotation
+  synced by uid after a batch, so a move made while that batch was in flight looks committed
+  but never reaches PDFium. Suspected for every type, not only attachments; the M6-10 e2e uses
+  one Shift+Arrow nudge. To confirm and work around (re-commit when the object changed during
+  the batch) in M6-15. Also flaky on `main`: `e2e/context-menus.spec.ts:193` (about 1 run in 5
+  locally; not @smoke).
 
 - **CI pinned to `ubuntu-24.04` (2026-11-01).** `ubuntu-latest` became 26.04 (apt qpdf 12.3.2) and
   7 unit tests failed. Both were test-side, not output problems: qpdf 12's `--check` warns on a

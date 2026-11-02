@@ -20,10 +20,11 @@ export function AttachmentsPane() {
   const list = useAttachments((s) => (docId ? s.lists[docId] : undefined));
   const busy = useAttachments((s) => s.busy);
   const error = useAttachments((s) => s.error);
+  const version = useAttachments((s) => (docId ? (s.versions[docId] ?? 0) : 0));
 
   useEffect(() => {
     if (docId) loadAttachments(docId);
-  }, [docId]);
+  }, [docId, version]);
 
   if (!docId) return <p className="pane-empty">{t('attachments.noDocument')}</p>;
   if (!list || list.state === 'loading')

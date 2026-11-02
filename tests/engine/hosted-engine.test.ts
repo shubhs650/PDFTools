@@ -56,6 +56,9 @@ function executorWith(
     snapshot: () => {
       throw new Error('not used');
     },
+    fileAttachment: () => {
+      throw new Error('not used');
+    },
     renderProgressive: () => {
       throw new Error('not used');
     },

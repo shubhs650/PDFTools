@@ -32,6 +32,7 @@ import { SnapMarker } from '../measure/SnapMarker';
 import { isMarkupTool } from '../annotate/tools/markupModel';
 import { LinkLayer } from './LinkLayer';
 import { SnapshotLayer } from '../snapshot/SnapshotLayer';
+import { AttachFileLayer } from '../attachments/AttachFileLayer';
 import { DocumentMenu } from './DocumentMenu';
 import { notePointerDown } from './pagePoint';
 import { capability, useHost } from './host';
@@ -141,6 +142,8 @@ function Page({
               <FormLayer documentId={documentId} pageIndex={layout.pageIndex} scale={scale} />
               {/* The Snapshot tool (M6-09) takes the pointer over everything while it is on. */}
               <SnapshotLayer documentId={documentId} pageIndex={layout.pageIndex} scale={scale} />
+              {/* The Attach File tool (M6-10): a click picks the file to attach there. */}
+              <AttachFileLayer documentId={documentId} pageIndex={layout.pageIndex} scale={scale} />
             </div>
           </PagePointerProvider>
         </Rotate>

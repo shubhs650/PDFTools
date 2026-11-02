@@ -65,9 +65,11 @@ const TEXT_MARKUP = [S.HIGHLIGHT, S.UNDERLINE, S.STRIKEOUT, S.SQUIGGLY];
 const SHAPES = [S.SQUARE, S.CIRCLE, S.POLYGON];
 const LINES = [S.LINE, S.POLYLINE];
 const MARKUPS = [...SHAPES, ...LINES, ...TEXT_MARKUP, S.INK, S.CARET, S.TEXT, S.FREETEXT, S.STAMP];
+/** Attach File (M6-10): its paperclip's colour and its description (contents). */
+const ATTACHMENT = [S.FILEATTACHMENT];
 
 const TYPES: Record<Prop, ReadonlySet<S>> = {
-  stroke: new Set([...SHAPES, ...LINES, ...TEXT_MARKUP, S.INK, S.CARET, S.TEXT]),
+  stroke: new Set([...SHAPES, ...LINES, ...TEXT_MARKUP, S.INK, S.CARET, S.TEXT, ...ATTACHMENT]),
   fill: new Set([...SHAPES, ...LINES, S.FREETEXT]),
   opacity: new Set(MARKUPS),
   // Written into the regenerated appearance (/ExtGState /BM); not for icons and images.
@@ -85,8 +87,8 @@ const TYPES: Record<Prop, ReadonlySet<S>> = {
   fontColor: new Set([S.FREETEXT]),
   textAlign: new Set([S.FREETEXT]),
   verticalAlign: new Set([S.FREETEXT]),
-  subject: new Set(MARKUPS),
-  contents: new Set(MARKUPS),
+  subject: new Set([...MARKUPS, ...ATTACHMENT]),
+  contents: new Set([...MARKUPS, ...ATTACHMENT]),
 };
 
 type Loose = Record<string, unknown>;

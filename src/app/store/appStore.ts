@@ -26,6 +26,8 @@ export type Tool =
   | 'redactArea'
   // Snapshot (M6-09): a rectangle whose picture goes to the clipboard.
   | 'snapshot'
+  // Attach File (M6-10): a click on a page picks the file to attach there.
+  | 'attachFile'
   // Note, text and drawing tools (M3-09): EmbedPDF tool ids.
   | DrawTool;
 
