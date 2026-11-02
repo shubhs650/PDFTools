@@ -26,4 +26,16 @@ describe('growth prompt rule (D-06, §4.2)', () => {
     m.forget('a');
     expect(m.isDismissed('a')).toBe(false);
   });
+
+  it('optimize recommended (a flatten rewrote page content, M6-09): offered whatever the growth, still never when signed or dismissed', () => {
+    expect(shouldOfferOptimize({ ...base, recommended: true })).toBe(true);
+    expect(shouldOfferOptimize({ ...base, recommended: true, signatureCount: 1 })).toBe(false);
+    expect(shouldOfferOptimize({ ...base, recommended: true, dismissed: true })).toBe(false);
+    const m = new GrowthMemory();
+    m.recommend('a');
+    expect(m.isRecommended('a')).toBe(true);
+    expect(m.isRecommended('b')).toBe(false);
+    m.forget('a'); // an optimized save (or closing the document)
+    expect(m.isRecommended('a')).toBe(false);
+  });
 });

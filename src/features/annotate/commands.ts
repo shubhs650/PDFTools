@@ -50,7 +50,8 @@ import {
   pasteBlocked,
   pasteComments,
 } from './transfer/copyPaste';
-import { transferBlocked } from '../pages/pageOps';
+import { flattenBlocked, transferBlocked } from '../pages/pageOps';
+import { flattenSelected, flattenSelectedBlocked, openFlatten } from './flatten/flatten';
 
 const activeId = (): string | null => selectActive(documentStore.getState())?.meta.id ?? null;
 
@@ -314,6 +315,31 @@ export function registerAnnotateCommands(): () => void {
             id,
             selectedOf(id).map((t) => t.object),
           );
+      },
+    }),
+    // Flatten Comments (M6-09, D-38 c): the dialog; the comment menus flatten the selection.
+    registerCommand('comment.flatten', {
+      requiresDocument: true,
+      requires: 'modify',
+      disabledReason: () => {
+        const id = activeId();
+        return id ? flattenBlocked(id) : null;
+      },
+      run: () => {
+        const id = activeId();
+        if (id) openFlatten(id);
+      },
+    }),
+    registerCommand('comment.flattenSelected', {
+      requiresDocument: true,
+      requires: 'modify',
+      disabledReason: () => {
+        const id = activeId();
+        return id ? flattenSelectedBlocked(id) : null;
+      },
+      run: async () => {
+        const id = activeId();
+        if (id) await flattenSelected(id);
       },
     }),
     // Comment Styles Palette (M6-07): the user's own styles, for the active tool if it has any.

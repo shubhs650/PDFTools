@@ -201,12 +201,10 @@ test('every command M1 … M4 show has a handler: none says "Not available yet" 
     'measure.scaleViewport',
     'measure.snapping',
     'measure.snapNearest',
-    // M4: every M4 command is on a ribbon tab.
+    // M4: every M4 command is on a ribbon tab, except Copy/Paste Comments and
+    // Paste to Original Pages, which M6-08 moved to the context menus (D-36).
     'comment.exportAnnotations',
     'comment.importComments',
-    'comment.copyComments',
-    'comment.pasteComments',
-    'comment.pasteToOriginal',
     'organize.insertBlank',
     'organize.insertFromFile',
     'organize.delete',
@@ -279,6 +277,7 @@ test('Comment: Manage Comments with short labels and full names; the tool grid k
     'Import',
     'Export',
     'Export CRS',
+    'Flatten',
     'Comment Styles',
     'Filter',
     'Status Schemes',

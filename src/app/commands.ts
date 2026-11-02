@@ -130,6 +130,7 @@ export const REUSE_GROUPS: readonly ReuseGroup[] = [
  * keep the command table's order, reused groups last.
  */
 export const GROUP_ORDER: Partial<Record<CommandTab, readonly string[]>> = {
+  home: ['tools', 'find', 'forms', 'zoom', 'comment', 'measure', 'rotation', 'view', 'protect'],
   comment: ['tools', 'text', 'note', 'textMarkup', 'drawing', 'stamp', 'measure', 'manage'],
 };
 
@@ -350,6 +351,18 @@ export const COMMANDS: readonly CommandDef[] = [
     fluent: 'ArrowReset',
     milestone: 'M2',
     shipped: true, // M2-14
+  },
+  {
+    // Home → View (M6-09, beta review A2a, D-38 e): drag a rectangle, its picture
+    // goes to the system clipboard. Listed before the reused Properties Pane.
+    id: 'home.snapshot',
+    tab: 'home',
+    group: 'view',
+    size: 'small',
+    fluent: 'Screenshot',
+    milestone: 'M6',
+    toggle: true,
+    shipped: true,
   },
   {
     id: 'view.firstPage',
@@ -834,6 +847,16 @@ export const COMMANDS: readonly CommandDef[] = [
     custom: 'comment.exportCrs', // M3-06
   },
   {
+    id: 'comment.flatten',
+    tab: 'comment',
+    group: 'manage',
+    size: 'small',
+    fluent: 'LayerDiagonal',
+    milestone: 'M6',
+    short: true,
+    shipped: true, // M6-09: Flatten Comments dialog (D-38 c)
+  },
+  {
     id: 'comment.stylesPalette',
     tab: 'comment',
     group: 'manage',
@@ -900,6 +923,16 @@ export const COMMANDS: readonly CommandDef[] = [
     size: 'small',
     fluent: 'Delete',
     milestone: 'M3',
+    shipped: true,
+  },
+  {
+    // The comment menus' Flatten (M6-09): the selected comments, no dialog.
+    id: 'comment.flattenSelected',
+    tab: 'menu',
+    group: 'menu',
+    size: 'small',
+    fluent: 'LayerDiagonal',
+    milestone: 'M6',
     shipped: true,
   },
   {

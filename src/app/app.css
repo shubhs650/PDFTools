@@ -3226,3 +3226,57 @@ textarea.form-field {
   margin: var(--space-0);
   color: var(--color-text-muted);
 }
+
+/* Snapshot (M6-09): the tool takes the page's pointer; the rectangle being drawn. */
+.snapshot-layer {
+  position: absolute;
+  inset: var(--space-0);
+  pointer-events: none;
+}
+
+.snapshot-layer--draw {
+  pointer-events: auto;
+  cursor: crosshair;
+}
+
+.snapshot-rect {
+  position: absolute;
+  box-sizing: border-box;
+  border: 1px dashed var(--color-accent);
+  background: color-mix(in srgb, var(--color-accent) 8%, transparent);
+  pointer-events: none;
+}
+
+.snapshot-rect--key {
+  border-width: 2px;
+  pointer-events: auto;
+}
+
+.snapshot-rect--key:focus-visible {
+  outline: 2px solid var(--color-focus);
+  outline-offset: 2px;
+}
+
+/* What the last snapshot did, at the bottom of the window for a few seconds. */
+.snapshot-toast-region {
+  position: fixed;
+  bottom: var(--space-7);
+  left: 50%;
+  z-index: var(--z-tooltip);
+  transform: translateX(-50%);
+  pointer-events: none;
+}
+
+.snapshot-toast {
+  margin: var(--space-0);
+  padding: var(--space-3) var(--space-5);
+  border-radius: var(--radius-m);
+  background: var(--color-surface-raised);
+  box-shadow: var(--elevation-2);
+  color: var(--color-text);
+  font-size: var(--font-size-m);
+}
+
+.snapshot-toast--error {
+  color: var(--color-danger);
+}

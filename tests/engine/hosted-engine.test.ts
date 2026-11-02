@@ -53,6 +53,9 @@ function executorWith(
     },
     pagesDrop: () => null,
     annotationTile: () => null,
+    snapshot: () => {
+      throw new Error('not used');
+    },
     renderProgressive: () => {
       throw new Error('not used');
     },

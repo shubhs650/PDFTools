@@ -2,6 +2,7 @@
 // for Redaction and Pending Redactions. Marks are annotations, so they need
 // the annotate permission (M4-Q2, rule 9); Apply Redactions needs modify.
 import { registerCommand } from '../../app/commands/dispatch';
+import { fromKeyboard } from '../../app/commands/inputSource';
 import { appStore } from '../../app/store/appStore';
 import { documentStore, selectActive } from '../../app/store/documentStore';
 import { requestProfile } from '../settings/profile/profileStore';
@@ -10,18 +11,6 @@ import { redactPanelStore, setRedactPanel } from './redactStore';
 import { openApply } from './applyFlow';
 
 const activeId = (): string | null => selectActive(documentStore.getState())?.meta.id ?? null;
-
-/** Was the command run from the keyboard (no pointer press just before)? */
-let pointerAt = 0;
-if (typeof window !== 'undefined')
-  window.addEventListener(
-    'pointerdown',
-    () => {
-      pointerAt = performance.now();
-    },
-    true,
-  );
-const fromKeyboard = (): boolean => performance.now() - pointerAt > 500;
 
 export function registerRedactCommands(): () => void {
   const offs = [

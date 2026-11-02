@@ -23,7 +23,7 @@ const STATUSES = [
 const sep = (key: string): ContextMenuEntry => ({ kind: 'separator', key });
 const cmd = (id: string): ContextMenuEntry => ({ kind: 'command', id });
 
-/** A comment on the page (and its card). Later tasks add their items here (Flatten: D-38 c). */
+/** A comment on the page (and its card). */
 export function commentMenu(docId: string): ContextMenuEntry[] {
   return [
     cmd('edit.cut'),
@@ -42,6 +42,9 @@ export function commentMenu(docId: string): ContextMenuEntry[] {
     cmd('comment.copyStyle'),
     cmd('comment.applyStyle'),
     cmd('comment.makeDefault'),
+    // Flatten (M6-09, D-38 c): the selected comments into the page content.
+    sep('flatten'),
+    cmd('comment.flattenSelected'),
     sep('properties'),
     cmd('edit.properties'),
   ];

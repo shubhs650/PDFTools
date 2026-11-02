@@ -66,6 +66,7 @@ import { Info20Regular, Info32Regular } from '@fluentui/react-icons/svg/info';
 import { InkingTool20Filled, InkingTool20Regular } from '@fluentui/react-icons/svg/inking-tool';
 import { Keyboard20Regular, Keyboard24Regular } from '@fluentui/react-icons/svg/keyboard';
 import { Layer20Filled, Layer20Regular } from '@fluentui/react-icons/svg/layer';
+import { LayerDiagonal20Regular } from '@fluentui/react-icons/svg/layer-diagonal';
 import { Line20Filled, Line20Regular } from '@fluentui/react-icons/svg/line';
 import { LineFlowDiagonalUpRight20Filled, LineFlowDiagonalUpRight20Regular } from '@fluentui/react-icons/svg/line-flow-diagonal-up-right';
 import { Link20Filled, Link20Regular } from '@fluentui/react-icons/svg/link';
@@ -97,6 +98,7 @@ import { Ruler20Filled, Ruler20Regular, Ruler32Filled, Ruler32Regular } from '@f
 import { Save20Regular, Save32Regular } from '@fluentui/react-icons/svg/save';
 import { SaveCopy20Regular, SaveCopy24Regular } from '@fluentui/react-icons/svg/save-copy';
 import { ScanText20Regular, ScanText32Regular } from '@fluentui/react-icons/svg/scan-text';
+import { Screenshot20Filled, Screenshot20Regular } from '@fluentui/react-icons/svg/screenshot';
 import { Search20Filled, Search20Regular } from '@fluentui/react-icons/svg/search';
 import { SearchSquare20Filled, SearchSquare20Regular } from '@fluentui/react-icons/svg/search-square';
 import { SelectAllOn20Regular } from '@fluentui/react-icons/svg/select-all-on';
@@ -151,6 +153,7 @@ export const FLUENT_GLYPHS: Record<string, FluentGlyphs> = {
   'home.find': { regular: { small: Search20Regular } },
   'home.advancedSearch': { regular: { small: DocumentSearch20Regular } },
   'home.resetForm': { regular: { small: ArrowReset20Regular } },
+  'home.snapshot': { regular: { small: Screenshot20Regular }, filled: { small: Screenshot20Filled } },
   'view.firstPage': { regular: { small: ArrowPrevious20Regular } },
   'view.prevPage': { regular: { small: ChevronLeft20Regular } },
   'view.nextPage': { regular: { small: ChevronRight20Regular } },
@@ -201,6 +204,7 @@ export const FLUENT_GLYPHS: Record<string, FluentGlyphs> = {
   'comment.importComments': { regular: { small: ArrowImport20Regular } },
   'comment.exportAnnotations': { regular: { small: ArrowExport20Regular } },
   'comment.exportCrs': { regular: { small: DocumentTableArrowRight20Regular } },
+  'comment.flatten': { regular: { small: LayerDiagonal20Regular } },
   'comment.stylesPalette': { regular: { small: Color20Regular } },
   'comment.filter': { regular: { small: Filter20Regular } },
   'comment.statusSchemes': { regular: { small: Status20Regular } },
@@ -208,6 +212,7 @@ export const FLUENT_GLYPHS: Record<string, FluentGlyphs> = {
   'comment.autoNumber': { regular: { small: NumberSymbolSquare20Regular }, filled: { small: NumberSymbolSquare20Filled } },
   'comment.reply': { regular: { small: ArrowReply20Regular } },
   'comment.delete': { regular: { small: Delete20Regular } },
+  'comment.flattenSelected': { regular: { small: LayerDiagonal20Regular } },
   'comment.setStatus': { regular: { small: CheckmarkCircle20Regular } },
   'comment.copyStyle': { regular: { small: PaintBrush20Regular } },
   'comment.applyStyle': { regular: { small: PaintBrushArrowDown20Regular } },

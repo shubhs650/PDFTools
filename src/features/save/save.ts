@@ -198,6 +198,7 @@ export async function save(docId: string, skipGrowthCheck = false): Promise<Save
       originalSize: src.size,
       appendedBytes: doc.appendedBytes,
       dismissed: growth.isDismissed(docId),
+      recommended: growth.isRecommended(docId),
     })
   ) {
     saveStore.setState({ growthPrompt: docId });
@@ -324,6 +325,14 @@ export async function saveOptimized(docId: string, target: OptimizeTarget): Prom
     return { type: 'written', appended: 0 };
   });
 }
+
+/** A change rewrote page content (a flatten, M6-09): the next Ctrl+S offers Save Optimized. */
+export function recommendOptimize(docId: string): void {
+  growth.recommend(docId);
+}
+
+/** Why the growth prompt is shown: the file grew, or Save Optimized is recommended. */
+export const optimizeRecommended = (docId: string): boolean => growth.isRecommended(docId);
 
 /** Growth prompt answers. */
 export function answerGrowthPrompt(choice: 'optimize' | 'save' | 'cancel'): void {

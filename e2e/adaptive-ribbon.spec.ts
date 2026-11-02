@@ -148,6 +148,7 @@ test('a narrow ribbon folds groups into menus: keyboard, names, the command runs
     'Import Comments',
     'Export Comments (CSV / XLSX / JSON)',
     'Export CRS (Excel)',
+    'Flatten Comments',
     'Comment Styles',
     'Filter Comments',
     'Status Schemes',

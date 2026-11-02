@@ -1,13 +1,44 @@
 # PDFTools — Progress
 
-_Last updated: 2026-11-02 (session 30: M6-08 adaptive ribbon)_
+_Last updated: 2026-11-02 (session 31: M6-09 Flatten and Snapshot)_
 
 **Current milestone:** M6 — Beta review (plan in [docs/plan/M6.md](plan/M6.md), scope changes in
-[ADR-021](adr/021-m6-beta-review.md), **Accepted** 2026-11-01; ARCHITECTURE.md Rev 0.10; M6-01 … M6-08 done; spike results in
-[ADR-022](adr/022-m6-spikes-s18-s22.md), **Accepted** 2026-11-02 (bookmark route B); next task M6-09). M5 — OCR: M5-01 … M5-04 done under [ADR-020](adr/020-m5-ocr.md); M5-05 (owner
+[ADR-021](adr/021-m6-beta-review.md), **Accepted** 2026-11-01; ARCHITECTURE.md Rev 0.10; M6-01 … M6-09 done; spike results in
+[ADR-022](adr/022-m6-spikes-s18-s22.md), **Accepted** 2026-11-02 (bookmark route B); next task M6-10). M5 — OCR: M5-01 … M5-04 done under [ADR-020](adr/020-m5-ocr.md); M5-05 (owner
 interop) folds into M6-15. Rev 0 (M0–M4) is complete on the agent side.
 
 ## Done
+
+- **Session 31 — M6-09 Flatten Comments and Snapshot (ADR-021 D-38 c, D-38 e; beta review
+  B7d, A2a).** **Flatten** (Comment → Manage Comments "Flatten", `comment.flatten`; the comment
+  menu's "Flatten Selected Comments", `comment.flattenSelected`, no dialog): the dialog flattens
+  the selected comments or every comment on all pages, the current page or a range, and can
+  keep replies as separate notes (they lose /IRT). `planFlatten` (pure) picks thread roots in
+  scope: links, form fields, pop-ups and redaction marks are never flattened; locked and
+  hidden comments are skipped and counted; grouped parts are drawn with their comment; review
+  states, and replies unless kept, are removed. The Render worker runs it as a page operation
+  (`pagesOp` kind `flatten`, ADR-016 snapshot undo, so **one undo step**; needs modify and
+  annotate): per page, in /Annots order (drawing order kept), `EPDFAnnot_Flatten` (an
+  appearance is generated first for a note without one), removal of the comment's pop-up, one
+  `FPDFPage_GenerateContent`. Ctrl+S stays incremental (semantic tail); the document is marked
+  **optimize recommended**, so the Save Optimized prompt offers itself after the next save.
+  **Snapshot** (Home → View, `home.snapshot`, a toggle tool; needs copy): drag a rectangle on
+  a page; from the keyboard a rectangle appears in the middle of the current page (arrows move
+  it, Shift+arrows size it, Ctrl for 1 pt steps, Enter copies, Esc ends). The Render worker's
+  `snapshot` draws the region as the view shows it: the content without PDFium's annotation
+  flag, then the markups and form fields the annotation tiles draw (no reply note icons,
+  pop-ups or hidden markups) from their own appearances, at the view's rotation, at zoom ×
+  device pixel ratio × 2 with the longer side capped at 4,096 px; the Encoder worker makes the
+  PNG; the main thread passes it to `navigator.clipboard.write` as a promise inside the
+  pointer or key event, and says "Snapshot copied" (a status toast). `fromKeyboard()` moved to
+  `src/app/commands/inputSource.ts`. Tests: unit `tests/annotate/flattenModel.test.ts`,
+  `tests/annotate/flatten-render.test.ts` (real PDFium: order and pixels, kept replies, never
+  flattened types, a verified incremental save, undo), `tests/snapshot/snapshotModel.test.ts`,
+  `tests/snapshot/snapshot-render.test.ts`, `tests/save/growth.test.ts`; e2e
+  `e2e/flatten-snapshot.spec.ts` (@smoke dialog flatten, saved and reopened; the menu; @smoke
+  drag snapshot read back from the clipboard; keyboard rectangle and a whole page at high zoom
+  with no long task; a restricted file disables both with the reason). Screenshots: project
+  files `m6-09/`.
 
 - **Session 30 — M6-08 Adaptive ribbon; new Comment and Home ribbons (ADR-021 D-36; beta
   review A2b–A2d, B7a, B7b).** **Adaptive steps:** every group has steps — 0 as designed, 1
@@ -1433,8 +1464,7 @@ rel="noopener noreferrer">`; the commands `app.home` / `app.reportIssue` open th
 
 ## Next
 
-- **Agent:** M6-09 (Flatten in Comment → Manage Comments and the comment menu; Snapshot in
-  Home → View: both are new entries in the command table and `REUSE_GROUPS`).
+- **Agent:** M6-10 (Attach File, beta review B7c).
 
 0. **Owner:** try Convert → Recognize Text (OCR) on real scans — an English one, a Hindi one
    and a Chinese one — and check the result in Acrobat Reader / PDF-XChange (search and select

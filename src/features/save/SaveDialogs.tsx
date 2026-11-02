@@ -1,10 +1,17 @@
 import { Dismiss20Regular } from '@fluentui/react-icons/svg/dismiss';
 import { useTranslation } from 'react-i18next';
 import { useDocuments } from '../../app/store/documentStore';
+import { msg } from '../../i18n';
 import { accessStrategy } from '../../storage/fileAccess';
 import { Button, Dialog } from '../../ui/components';
 import { sources } from '../open/sources';
-import { answerGrowthPrompt, closeOptimizeDialog, saveOptimized, useSave } from './save';
+import {
+  answerGrowthPrompt,
+  closeOptimizeDialog,
+  optimizeRecommended,
+  saveOptimized,
+  useSave,
+} from './save';
 
 /**
  * Save Optimized (§4.2, M1-23): a full rewrite, as a new file by default or
@@ -58,7 +65,10 @@ export function SaveOptimizedDialog() {
   );
 }
 
-/** "Save Optimized instead?" when Ctrl+S would grow the file past 30 % (D-06). */
+/**
+ * "Save Optimized instead?" when Ctrl+S would grow the file past 30 % (D-06),
+ * or after a flatten rewrote page content (M6-09).
+ */
 export function GrowthPrompt() {
   const { t } = useTranslation();
   const docId = useSave((s) => s.growthPrompt);
@@ -70,7 +80,12 @@ export function GrowthPrompt() {
         if (!open) answerGrowthPrompt('cancel');
       }}
       title={t('save.growth.title')}
-      description={t('save.growth.description', { name: name ?? '' })}
+      description={t(
+        docId && optimizeRecommended(docId)
+          ? msg('save.growth.recommended')
+          : msg('save.growth.description'),
+        { name: name ?? '' },
+      )}
       closeIcon={<Dismiss20Regular />}
       footer={
         <>

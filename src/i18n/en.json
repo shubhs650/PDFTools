@@ -43,7 +43,8 @@
       "selectAnnotations": "Select Comments",
       "find": "Find",
       "advancedSearch": "Advanced Search",
-      "resetForm": "Reset Form"
+      "resetForm": "Reset Form",
+      "snapshot": "Snapshot"
     },
     "view": {
       "firstPage": "First Page",
@@ -116,7 +117,9 @@
       "togglePrintable": "Printable",
       "toggleMarked": "Marked",
       "makeDefault": "Make Current Properties Default",
-      "stylesPalette": "Comment Styles"
+      "stylesPalette": "Comment Styles",
+      "flatten": "Flatten Comments",
+      "flattenSelected": "Flatten Selected Comments"
     },
     "measure": {
       "distance": "Distance",
@@ -430,6 +433,7 @@
     "growth": {
       "title": "Save optimized instead?",
       "description": "{{name}} has grown by more than 30 % since it was opened. Saving it optimized rewrites it compactly.",
+      "recommended": "Flattening comments rewrote page content in {{name}}. Saving it optimized writes the file compactly, without the replaced content.",
       "optimize": "Save optimized…",
       "save": "Just save"
     }
@@ -1526,6 +1530,50 @@
       "modified": "Modified"
     }
   },
+  "flatten": {
+    "title": "Flatten Comments",
+    "description": "Draws comments of {{name}} into the page content. They can't be edited, moved or deleted as comments any more; Undo brings them back.",
+    "which": {
+      "legend": "Flatten",
+      "selected_one": "The selected comment ({{n}})",
+      "selected_other": "The selected comments ({{n}})",
+      "pages": "All comments on these pages"
+    },
+    "pages": {
+      "legend": "Pages",
+      "all": "All pages",
+      "current": "Current page ({{page}})",
+      "range": "Pages",
+      "rangeLabel": "Page range"
+    },
+    "replies": {
+      "legend": "Replies",
+      "keep": "Keep replies as separate notes"
+    },
+    "summary_one": "{{n}} comment will be flattened on {{pages}} page.",
+    "summary_other": "{{n}} comments will be flattened on {{pages}} pages.",
+    "nothing": "There are no comments to flatten here.",
+    "locked_one": "{{n}} locked comment is left as it is.",
+    "locked_other": "{{n}} locked comments are left as they are.",
+    "hidden_one": "{{n}} hidden comment is left as it is.",
+    "hidden_other": "{{n}} hidden comments are left as they are.",
+    "note": "Review states go with their comments. After flattening, Save Optimized is recommended: it writes the file without the replaced content.",
+    "confirm": "Flatten",
+    "cancel": "Cancel",
+    "running": "Flattening comments…",
+    "restricted": "This document's security settings don't allow changing its content.",
+    "done_one": "{{count}} comment flattened.",
+    "done_other": "{{count}} comments flattened.",
+    "failedSome_one": "{{count}} comment could not be drawn and is left as it is.",
+    "failedSome_other": "{{count}} comments could not be drawn and are left as they are."
+  },
+  "snapshot": {
+    "copied": "Snapshot copied",
+    "failed": "The snapshot could not be copied to the clipboard.",
+    "restricted": "This document's security settings don't allow copying its content.",
+    "keyRect": "Area to copy as a picture",
+    "keyRectHelp": "Arrow keys move it (Ctrl: 1 point), Shift+arrow keys resize it, Enter copies the area, Esc ends."
+  },
   "transfer": {
     "restricted": "This document's security settings don't allow adding comments.",
     "failed": "The comments could not be imported.",
@@ -1941,7 +1989,8 @@
       "autoNumber": "Numbers",
       "exportAnnotations": "Export",
       "importComments": "Import",
-      "exportCrs": "Export CRS"
+      "exportCrs": "Export CRS",
+      "flatten": "Flatten"
     }
   },
   "topBar": {

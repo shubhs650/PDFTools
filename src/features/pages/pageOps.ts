@@ -14,6 +14,7 @@ import { recordError } from '../../app/diagnostics';
 import { documentStore, securityOf } from '../../app/store/documentStore';
 import { isAbortError } from '../../engine/errors';
 import type { PageInfo, PageOp } from '../../engine/renderApi';
+import type { FlattenCounts, FlattenPage } from '../../workers/render/flatten';
 import type { TransferObject } from '../../workers/work/transferJobs';
 import { msg, type MessageKey } from '../../i18n';
 import { allows, type Capability } from '../../model/permissions';
@@ -135,6 +136,33 @@ export function pageOpBlocked(docId: string): MessageKey | null {
   return null;
 }
 
+/**
+ * Why comments can't be flattened now (null: they can; M6-09): the page
+ * content changes (modify) and comments go (annotate), rule 9.
+ */
+export function flattenBlocked(docId: string): MessageKey | null {
+  const d = documentStore.getState().docs[docId];
+  if (!d) return msg('pages.noDocument');
+  const sec = securityOf(d.meta);
+  if (!allows(sec, 'modify') || !allows(sec, 'annotate')) return msg('flatten.restricted');
+  if (pagesBusy()) return msg('pages.busy');
+  if (isActive(phaseOf(docId))) return msg('pages.saving');
+  return null;
+}
+
+const blockedFor = (docId: string, op: PageOp): MessageKey | null =>
+  op.kind === 'flatten' ? flattenBlocked(docId) : pageOpBlocked(docId);
+
+/** What a change did in the Render worker. */
+interface Applied {
+  pages: PageInfo[];
+  flattened?: FlattenCounts;
+}
+
+/** Pages whose content a change rewrites without changing their identity (a flatten). */
+const contentPages = (change: Change): number[] =>
+  change.kind === 'op' && change.op.kind === 'flatten' ? change.op.pages.map((p) => p.page) : [];
+
 function historyOf(docId: string) {
   const registry = hostStore.getState().registry;
   return registry ? capability<HistoryCapability>(registry, 'history').forDocument(docId) : null;
@@ -172,10 +200,27 @@ async function settleEdits(docId: string): Promise<void> {
  * applied (false: blocked, declined, cancelled or failed with a message).
  */
 export async function runPageOp(docId: string, op: PageOp, label: MessageKey): Promise<boolean> {
-  if (pageOpBlocked(docId)) return false;
+  return (await runOp(docId, op, label)) !== null;
+}
+
+/**
+ * Flatten Comments as one undo step (M6-09): resolves with what was done, or
+ * null when blocked, declined, cancelled or failed with a message.
+ */
+export async function runFlatten(
+  docId: string,
+  pages: FlattenPage[],
+  label: MessageKey,
+): Promise<FlattenCounts | null> {
+  const r = await runOp(docId, { kind: 'flatten', pages }, label);
+  return r ? (r.flattened ?? { flattened: 0, removed: 0, failed: 0 }) : null;
+}
+
+async function runOp(docId: string, op: PageOp, label: MessageKey): Promise<Applied | null> {
+  if (blockedFor(docId, op)) return null;
   const meta = documentStore.getState().docs[docId]?.meta;
-  if (meta && meta.signatureCount > 0 && !(await confirmSigned(docId))) return false;
-  if (pageOpBlocked(docId)) return false;
+  if (meta && meta.signatureCount > 0 && !(await confirmSigned(docId))) return null;
+  if (blockedFor(docId, op)) return null;
   setBusy({ docId, label, done: 0, total: 0, started: performance.now() });
   try {
     await settleEdits(docId);
@@ -183,7 +228,7 @@ export async function runPageOp(docId: string, op: PageOp, label: MessageKey): P
   } catch (err) {
     recordError('pages.op', err);
     pagesStore.setState({ error: msg('pages.failed') });
-    return false;
+    return null;
   } finally {
     cancelRunning = null;
     setBusy(null);
@@ -191,11 +236,15 @@ export async function runPageOp(docId: string, op: PageOp, label: MessageKey): P
 }
 
 /** Snapshot, the change, everything following it, and one undo step. */
-async function applyAsStep(docId: string, change: Change, label: MessageKey): Promise<boolean> {
+async function applyAsStep(
+  docId: string,
+  change: Change,
+  label: MessageKey,
+): Promise<Applied | null> {
   const rpc = renderEngine().rpc;
   const snap = await rpc.call('pagesSnapshot', { docId }).promise;
   for (const t of snap.dropped) evicted.add(t);
-  let applied: PageInfo[] | null;
+  let applied: Applied | null;
   try {
     applied = await apply(docId, change, label);
   } catch (err) {
@@ -205,13 +254,13 @@ async function applyAsStep(docId: string, change: Change, label: MessageKey): Pr
   }
   if (!applied) {
     // Cancelled or failed part-way: back to the snapshot.
-    await restore(docId, snap.token);
-    return false;
+    await restore(docId, snap.token, contentPages(change));
+    return null;
   }
-  await afterChange(docId, applied);
+  await afterChange(docId, applied.pages, contentPages(change));
   registerStep(docId, change, label, snap.token);
   documentStore.getState().markDirty(docId);
-  return true;
+  return applied;
 }
 
 /**
@@ -280,10 +329,12 @@ export async function runTransfer(
       cancelRunning = null;
       if (!product || product.objects.length === 0) return false;
       try {
-        return await applyAsStep(
-          docId,
-          { kind: 'objects', ...product, capability: need.capability },
-          label,
+        return (
+          (await applyAsStep(
+            docId,
+            { kind: 'objects', ...product, capability: need.capability },
+            label,
+          )) !== null
         );
       } catch (err) {
         if ((err as { code?: string }).code !== 'transfer-stale' || attempt > 0) throw err;
@@ -299,18 +350,17 @@ export async function runTransfer(
 }
 
 /** The change in the Render worker; null when cancelled or failed. */
-async function apply(docId: string, change: Change, label: MessageKey): Promise<PageInfo[] | null> {
+async function apply(docId: string, change: Change, label: MessageKey): Promise<Applied | null> {
   if (change.kind === 'objects') {
     const { objects, firstNew, capability } = change;
     // A structured copy (nothing transferred): a redo sends the same objects again.
-    return (
-      await renderEngine().rpc.call('pagesApply', {
-        docId,
-        objects,
-        firstNew,
-        ...(capability === undefined ? {} : { capability }),
-      }).promise
-    ).pages;
+    const { pages } = await renderEngine().rpc.call('pagesApply', {
+      docId,
+      objects,
+      firstNew,
+      ...(capability === undefined ? {} : { capability }),
+    }).promise;
+    return { pages };
   }
   const job = renderEngine().rpc.call(
     'pagesOp',
@@ -326,7 +376,8 @@ async function apply(docId: string, change: Change, label: MessageKey): Promise<
     job.cancel();
   };
   try {
-    return (await job.promise).pages;
+    const r = await job.promise;
+    return r.flattened ? { pages: r.pages, flattened: r.flattened } : { pages: r.pages };
   } catch (err) {
     if (!isAbortError(err) && !(err as { code?: string }).code?.startsWith('cancelled')) {
       recordError('pages.op', err);
@@ -336,18 +387,23 @@ async function apply(docId: string, change: Change, label: MessageKey): Promise<
   }
 }
 
-async function restore(docId: string, token: number): Promise<void> {
+async function restore(docId: string, token: number, content: readonly number[]): Promise<void> {
   const { pages } = await renderEngine().rpc.call('pagesRestore', { docId, token }).promise;
-  await afterChange(docId, pages);
+  await afterChange(docId, pages, content);
 }
 
 /**
  * Everything follows the new page list: the Work worker's copy (unsaved
  * changes as its live section), the viewer (ADR-016 finding 4: empty the
  * annotation store first, then the new document object), the per-page caches,
- * the tab's page count, the selection and the current page.
+ * the tab's page count, the selection and the current page. `content`: pages
+ * whose drawing changed in place (a flatten), redrawn like changed pages.
  */
-async function afterChange(docId: string, pages: readonly PageInfo[]): Promise<void> {
+async function afterChange(
+  docId: string,
+  pages: readonly PageInfo[],
+  content: readonly number[] = [],
+): Promise<void> {
   await syncLive(docId);
   const store = coreStore();
   const old = store.getState().core.documents[docId]?.document as PdfDocumentObject | undefined;
@@ -384,7 +440,9 @@ async function afterChange(docId: string, pages: readonly PageInfo[]): Promise<v
   // Work-worker job each, minutes for a 2,000-page reorder — while tiling only
   // redraws visible pages: so pages near the one shown are refreshed, and the
   // rest only lose their cached geometry (reloaded when text is selected there).
-  const changed = changedPages(old.pages, pages);
+  const changed = [
+    ...new Set([...changedPages(old.pages, pages), ...content.filter((i) => i < pages.length)]),
+  ].sort((a, b) => a - b);
   const near = changed.filter((i) => Math.abs(i - page) <= REFRESH_WINDOW);
   if (changed.length) {
     const evict: { type: string; payload: unknown } = {
@@ -422,7 +480,7 @@ function registerStep(docId: string, change: Change, label: MessageKey, token: n
         void redo(docId, change, label);
       },
       undo: () => {
-        void undo(docId, token);
+        void undo(docId, token, contentPages(change));
       },
       metadata: {
         pageOp:
@@ -437,7 +495,7 @@ function registerStep(docId: string, change: Change, label: MessageKey, token: n
   );
 }
 
-async function undo(docId: string, token: number): Promise<void> {
+async function undo(docId: string, token: number, content: readonly number[]): Promise<void> {
   if (evicted.has(token)) {
     pagesStore.setState({ error: msg('pages.undoGone') });
     return;
@@ -445,7 +503,7 @@ async function undo(docId: string, token: number): Promise<void> {
   setBusy({ docId, label: msg('pages.undoing'), done: 0, total: 0, started: performance.now() });
   try {
     await settleEdits(docId);
-    await restore(docId, token);
+    await restore(docId, token, content);
     documentStore.getState().markDirty(docId);
   } catch (err) {
     recordError('pages.undo', err);
@@ -459,9 +517,9 @@ async function redo(docId: string, change: Change, label: MessageKey): Promise<v
   setBusy({ docId, label, done: 0, total: 0, started: performance.now() });
   try {
     await settleEdits(docId);
-    const pages = await apply(docId, change, label);
-    if (!pages) return;
-    await afterChange(docId, pages);
+    const applied = await apply(docId, change, label);
+    if (!applied) return;
+    await afterChange(docId, applied.pages, contentPages(change));
     documentStore.getState().markDirty(docId);
   } catch (err) {
     recordError('pages.redo', err);
