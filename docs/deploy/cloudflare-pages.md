@@ -75,17 +75,18 @@ answers `POST /api/report` with the same handler as the Pages Function and hands
 request to the assets. Without that file a non-production branch build fails as soon as wrangler
 runs (`npx wrangler versions upload` has no assets directory or entry point to upload).
 
-Settings for the Worker (Settings → Build):
+Settings for the Worker (Settings → Builds; the **Production** tab holds the deploy command and the
+**Previews Base** tab the preview command):
 
-| Setting                              | Value                                                                                          |
-| ------------------------------------ | ---------------------------------------------------------------------------------------------- |
-| Production branch                    | `main`                                                                                         |
-| Build command                        | `npm run build`                                                                                |
-| Deploy command                       | `npx wrangler deploy` (the default)                                                            |
-| Non-production branch deploy command | `npx wrangler versions upload` (the default; gives each branch a preview version)              |
-| Root directory                       | empty                                                                                          |
-| Node version                         | 22.x ≥ 22.18 — `.nvmrc` says `22`; set `NODE_VERSION` only if the build log shows another Node |
-| Build watch paths                    | leave empty                                                                                    |
+| Setting           | Value                                                                                          |
+| ----------------- | ---------------------------------------------------------------------------------------------- |
+| Production branch | `main`                                                                                         |
+| Build command     | `npm run build`                                                                                |
+| Deploy command    | `npx wrangler deploy` (the default)                                                            |
+| Preview command   | `npx wrangler versions upload`: Builds → **Previews Base** tab (not `npx wrangler preview`)    |
+| Root directory    | `/`                                                                                            |
+| Node version      | 22.x ≥ 22.18 — `.nvmrc` says `22`; set `NODE_VERSION` only if the build log shows another Node |
+| Build watch paths | leave empty                                                                                    |
 
 `wrangler` runs in Cloudflare's build container only; it is still not a dependency of this
 repository (ADR-003). The pre-deploy checks (`npm run check:pages`: file sizes, `_headers`, no
