@@ -35,6 +35,7 @@ import { registerProtectCommands } from '../features/protect/commands';
 import { PasswordDialog } from '../features/protect/PasswordDialog';
 import { SecurityInfoDialog } from '../features/protect/SecurityInfo';
 import { UnlockDialog } from '../features/protect/UnlockDialog';
+import { PasswordSecurityDialog } from '../features/protect/PasswordSecurityDialog';
 import { ExternalLinkDialog } from '../features/view/ExternalLinkDialog';
 import { RecoveryDialog } from '../features/recovery/RecoveryDialog';
 import { registerSaveCommands } from '../features/save/commands';
@@ -173,6 +174,7 @@ export function App() {
         <OpenErrorDialog />
         <PasswordDialog />
         <UnlockDialog />
+        <PasswordSecurityDialog />
         <SecurityInfoDialog />
         <ResetFormDialog />
         <PrintDialog />

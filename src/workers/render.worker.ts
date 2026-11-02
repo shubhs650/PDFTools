@@ -24,6 +24,7 @@ import {
   readFileAttachment,
   updateFileAttachment,
 } from './render/fileAttach';
+import { secureCopy } from './render/security';
 
 const FPDF_PAGEOBJ_PATH = 2;
 /** `FPDF_GetFormType` for a dynamic (full) XFA form: nothing to fill (M2-14). */
@@ -180,6 +181,16 @@ serve<RenderApi>(self, {
   saveRewrite: ({ docId }) => {
     const bytes = ready().tracker.saveRewrite(docId).buffer;
     return new Transfer({ bytes }, [bytes]);
+  },
+
+  secureCopy: async ({ docId, action }, ctx) => {
+    const { mod: m, native: n, tracker: t } = ready();
+    const total = 2;
+    const r = await secureCopy(m, n, t, docId, action, ctx.signal, (done) => {
+      ctx.progress({ done, total });
+    });
+    const bytes = r.bytes.buffer;
+    return new Transfer({ bytes, expected: r.expected }, [bytes]);
   },
 
   saveState: ({ docId }) => ready().tracker.dirtyState(docId),

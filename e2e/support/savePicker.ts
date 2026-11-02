@@ -15,8 +15,10 @@ export async function stubSavePicker(page: Page): Promise<void> {
     w.showSaveFilePicker = (o) => {
       const name = o.suggestedName ?? '';
       let bytes = 0;
-      return Promise.resolve({
+      const handle = {
         name,
+        // Opening the written file in a new tab compares it with the open ones' handles.
+        isSameEntry: (other: unknown) => Promise.resolve(other === handle),
         createWritable: () =>
           Promise.resolve({
             write: (chunk: Blob | BufferSource) => {
@@ -29,7 +31,8 @@ export async function stubSavePicker(page: Page): Promise<void> {
             },
             abort: () => Promise.resolve(),
           }),
-      });
+      };
+      return Promise.resolve(handle);
     };
   });
 }

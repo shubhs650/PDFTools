@@ -36,6 +36,7 @@ type JobMethod =
   | 'docState'
   | 'textStats'
   | 'verify'
+  | 'verifySecurity'
   | 'digest'
   | 'pageGeometry'
   | 'textSlices'

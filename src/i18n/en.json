@@ -165,6 +165,8 @@
       "redactionList": "Pending Redactions",
       "securityInfo": "Security Info",
       "unlock": "Unlock with Owner Password",
+      "passwordSecurity": "Password Security…",
+      "removeSecurity": "Remove Security",
       "signatures": "Signatures"
     },
     "help": {
@@ -782,6 +784,72 @@
       "assemble": "Page changes (assembly)"
     }
   },
+  "passwordSecurity": {
+    "title": "Password Security",
+    "description": "Sets an open password, a permissions password, or both, for “{{name}}”, in a new file.",
+    "encryption": "Encryption",
+    "aes256": "AES-256 (PDF 2.0; opens in Acrobat Reader X and later)",
+    "open": {
+      "legend": "Open password",
+      "require": "Require a password to open the document",
+      "password": "Open password",
+      "confirm": "Confirm open password"
+    },
+    "restrict": {
+      "legend": "Permissions password",
+      "require": "Restrict printing, changes and copying with a permissions password",
+      "password": "Permissions password",
+      "confirm": "Confirm permissions password",
+      "allowed": "Allowed without the permissions password"
+    },
+    "nothing": "Tick at least one of the two options.",
+    "replaces": "The new file's passwords and restrictions replace the current ones.",
+    "newFile": "A new file is created ({{name}}). The open document and the original file stay as they are.",
+    "notStored": "Passwords are not stored anywhere. Without the open password the new file cannot be opened, so keep it safe.",
+    "signed_one": "This document has {{n}} digital signature. It will not be valid in the new file.",
+    "signed_other": "This document has {{n}} digital signatures. They will not be valid in the new file.",
+    "apply": "Apply and Save As…",
+    "close": "Close",
+    "cancel": "Cancel",
+    "progressName": "Progress",
+    "making": "Making the new file: step {{done}} of {{total}}",
+    "verifying": "Checking the new file…",
+    "verifyingPages": "Checking the new file: page {{done}} of {{total}}",
+    "writing": "Saving…",
+    "success": "Saved {{name}}. Every check passed.",
+    "check": {
+      "openPassword": "It opens only with the open password.",
+      "noOpenPassword": "It opens without a password.",
+      "restricted": "Without the permissions password only what you allowed is possible; with it, everything is.",
+      "aes": "It is encrypted with AES-256.",
+      "same": "Its pages, comments and form fields are the same as in the open document."
+    },
+    "openDocUnchanged": "The open document keeps its current security. Open the new file to work on it.",
+    "openNew": "Open Protected File",
+    "needsOwner": "Needs the owner password: use Unlock with Owner Password first",
+    "fileName": "{{base}}-protected.pdf",
+    "error": {
+      "empty": "Enter a password.",
+      "tooLong": "The password is too long: at most {{max}} bytes (fewer characters in some scripts).",
+      "mismatch": "The passwords don't match.",
+      "same": "The permissions password must differ from the open password.",
+      "denied": "Changing security needs the owner password. Use Unlock with Owner Password first. Nothing was saved.",
+      "verify": "The new file could not be verified, so nothing was saved.",
+      "failed": "The security could not be changed. Nothing was saved."
+    }
+  },
+  "removeSecurity": {
+    "description": "Removes the passwords and restrictions of “{{name}}”, in a new file.",
+    "none": "None in the new file",
+    "newFile": "A new file without passwords or restrictions is created ({{name}}). The open document and the original file stay as they are.",
+    "apply": "Remove and Save As…",
+    "check": {
+      "open": "It opens without a password and has no restrictions."
+    },
+    "openNew": "Open Unprotected File",
+    "notSecured": "This document has no passwords or restrictions to remove",
+    "fileName": "{{base}}-unprotected.pdf"
+  },
   "signatures": {
     "list": "Signatures",
     "noDocument": "Open a document to see its signatures.",
@@ -985,7 +1053,7 @@
       },
       "protect": {
         "title": "Protected and signed files",
-        "body": "Protect → Security Info shows what a file allows; PDFTools honours those restrictions. Signatures are checked on this device; the Signatures pane shows whether each signed part is unchanged."
+        "body": "Protect → Security Info shows what a file allows; PDFTools honours those restrictions. Password Security saves a copy with an open password, a permissions password or both (AES-256); Remove Security saves a copy without them. Both need the owner password of an already protected file. Signatures are checked on this device; the Signatures pane shows whether each signed part is unchanged."
       },
       "privacy": {
         "title": "Privacy",

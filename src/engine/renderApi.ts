@@ -10,6 +10,7 @@ import type { SnapshotPixels, SnapshotRequest } from '../workers/render/snapshot
 import type { PageOp } from '../workers/render/pages';
 import type { PageInfo } from '../workers/render/pdfium';
 import type { DocDigest } from '../workers/render/save/digest';
+import type { SecureAction } from '../workers/render/security';
 import type { MethodSpec } from './protocol';
 
 export interface DocumentInfo {
@@ -111,6 +112,19 @@ export interface RenderApi {
   snapshotTail: MethodSpec<{ docId: string }, { tail: ArrayBuffer; baseLength: number }>;
   /** Save Optimized core (ADR-005 decision 3): the whole file rewritten. */
   saveRewrite: MethodSpec<{ docId: string }, { bytes: ArrayBuffer }>;
+  /**
+   * Password Security (M6-12, ADR-022 decision 2): the current state as a new
+   * file with AES-256 encryption set, or with it removed — made on a copy, the
+   * open document is not changed. Needs owner rights (rule 9): an unencrypted
+   * document, or one opened with or unlocked by its owner password.
+   * `expected`: the copy's digest before, for the Work worker's check.
+   * Progress: steps done of 2.
+   */
+  secureCopy: MethodSpec<
+    { docId: string; action: SecureAction },
+    { bytes: ArrayBuffer; expected: DocDigest },
+    { done: number; total: number }
+  >;
   /** Existing objects changed since the last save (tests and diagnostics; no content). */
   saveState: MethodSpec<
     { docId: string },
@@ -177,7 +191,7 @@ export interface RenderApi {
   >;
 }
 
-export type { PageOp, PageInfo };
+export type { PageOp, PageInfo, SecureAction };
 
 /** RpcError code for a failed PDFium/EmbedPDF task: `pdfium:<PdfErrorCode>`. */
 export const PDFIUM_ERROR_PREFIX = 'pdfium:';

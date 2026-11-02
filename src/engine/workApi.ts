@@ -20,6 +20,7 @@ import type {
 } from '../workers/work/search';
 import type { Hit, SearchOptions } from '../workers/work/searchCore';
 import type { VerifyResult } from '../workers/work/verifySave';
+import type { SecurityCheck, SecurityVerifyResult } from '../workers/work/verifySecurity';
 import type { GridIndex } from '../model/snapIndex';
 import type { SnapshotRegion } from '../workers/work/crs';
 import type { WorkbookSpec } from '../workers/work/crsWorkbook';
@@ -205,6 +206,17 @@ export interface WorkApi {
    * `piece` and compares it with the Render worker's `expected` digest.
    */
   verify: MethodSpec<{ docId: string; piece: ArrayBuffer; expected: DocDigest }, VerifyResult>;
+  /**
+   * Password Security's check (M6-12, §7.12): the new file reopened with no
+   * password, the open password and the permissions password (or, after a
+   * removal, without one) and compared with the Render worker's digest.
+   * Progress: pages digested.
+   */
+  verifySecurity: MethodSpec<
+    { bytes: ArrayBuffer; check: SecurityCheck; expected: DocDigest },
+    SecurityVerifyResult,
+    { done: number; total: number }
+  >;
   /** Digest of pages of the kept copy (hashes and counts only; tests and diagnostics). */
   digest: MethodSpec<{ docId: string; pages: number[]; priority?: WorkPriority }, DocDigest>;
   close: MethodSpec<{ docId: string }, { wasmBytes: number }>;

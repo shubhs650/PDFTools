@@ -34,6 +34,9 @@ function executorWith(
       throw new Error('not used');
     },
     commitSave: () => ({ baseLength: 0 }),
+    secureCopy: () => {
+      throw new Error('not used');
+    },
     saveRewrite: () => {
       throw new Error('not used');
     },
