@@ -1,0 +1,42 @@
+// Cloudflare Worker configuration for a Git-connected Worker (Workers Builds).
+// The app itself is a static site: `npm run build` writes `dist/`, which the
+// Worker serves as static assets (with `dist/_headers`: the §10.1 CSP, COOP/COEP).
+// The Worker script only answers `POST /api/report` (D-22), the same handler as
+// the Pages Function. Cloudflare's build runs wrangler on its side; wrangler is
+// not a dependency of this repository (ADR-003).
+//
+// Workers Builds settings: build command `npm run build`, deploy command
+// `npx wrangler deploy` (the default), preview command (Previews Base tab)
+// `npx wrangler preview` (the default), Node 22 from `.nvmrc`.
+// See docs/deploy/cloudflare-pages.md → "Deploying as a Worker instead".
+{
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "name": "pdftools",
+  "compatibility_date": "2026-09-01",
+  "main": "functions/worker.ts",
+  "assets": {
+    "directory": "./dist",
+    "binding": "ASSETS",
+    // No 404.html: unknown paths get index.html, as on Pages (SPA fallback).
+    "not_found_handling": "single-page-application",
+    "html_handling": "auto-trailing-slash",
+  },
+  "workers_dev": true,
+  // Worker Previews (one per PR branch, built by `npx wrangler preview`). The
+  // command refuses to run without this block; empty means previews inherit
+  // the settings above. `npx wrangler versions upload` does not work there:
+  // Workers Builds rejects it on preview branches with a Worker-name mismatch.
+  "previews": {},
+  "observability": {
+    "enabled": false,
+  },
+  // Error reports (docs/deploy/error-report.md). Bindings of a Worker live here,
+  // not in the dashboard (a deploy replaces dashboard bindings). Uncomment and
+  // fill in once the D1 database exists; `REPORT_SALT` is a secret
+  // (`npx wrangler secret put REPORT_SALT`, or the dashboard → Secrets).
+  // "d1_databases": [
+  //   { "binding": "REPORT_DB", "database_name": "pdftools-reports", "database_id": "<id>" }
+  // ],
+  // "send_email": [{ "name": "REPORT_MAIL" }],
+  // "vars": { "REPORT_MAIL_FROM": "reports@example.com", "REPORT_MAIL_TO": "you@example.com" }
+}
