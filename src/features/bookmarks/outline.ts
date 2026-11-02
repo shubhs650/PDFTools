@@ -1,7 +1,14 @@
 // The document outline as the rows of an ARIA tree (§5, M2-10). Only the
 // rows of expanded branches exist, so a deep outline costs what is open.
 // Row ids are index paths ("0", "0.3", "0.3.1"). Pure.
-import type { PdfBookmarkObject, PdfLinkTarget } from '@embedpdf/models';
+import type { PdfLinkTarget } from '@embedpdf/models';
+
+/** A bookmark as the tree needs it (EmbedPDF's OutlineNode and our OutlineItem both fit). */
+export interface OutlineNode {
+  title: string;
+  target?: PdfLinkTarget | undefined;
+  children?: readonly OutlineNode[] | undefined;
+}
 
 export interface OutlineRow {
   id: string;
@@ -17,11 +24,11 @@ export interface OutlineRow {
 }
 
 export function visibleRows(
-  bookmarks: readonly PdfBookmarkObject[],
+  bookmarks: readonly OutlineNode[],
   expanded: ReadonlySet<string>,
 ): OutlineRow[] {
   const out: OutlineRow[] = [];
-  const walk = (list: readonly PdfBookmarkObject[], parentId: string | null, level: number) => {
+  const walk = (list: readonly OutlineNode[], parentId: string | null, level: number) => {
     list.forEach((b, i) => {
       const id = parentId === null ? String(i) : `${parentId}.${String(i)}`;
       const hasChildren = (b.children?.length ?? 0) > 0;
@@ -45,9 +52,9 @@ export function visibleRows(
 }
 
 /** Every branch id (Expand All). */
-export function allBranchIds(bookmarks: readonly PdfBookmarkObject[]): string[] {
+export function allBranchIds(bookmarks: readonly OutlineNode[]): string[] {
   const out: string[] = [];
-  const walk = (list: readonly PdfBookmarkObject[], parentId: string | null) => {
+  const walk = (list: readonly OutlineNode[], parentId: string | null) => {
     list.forEach((b, i) => {
       const id = parentId === null ? String(i) : `${parentId}.${String(i)}`;
       if (b.children?.length) {

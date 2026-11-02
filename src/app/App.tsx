@@ -22,6 +22,8 @@ import { ExpressExtractDialog } from '../features/tables/ExpressExtractDialog';
 import { TemplatesDialog } from '../features/tables/TemplatesDialog';
 import { registerPageCommands } from '../features/pages/commands';
 import { PageDialogs } from '../features/pages/PageDialogs';
+import { registerBookmarkCommands } from '../features/bookmarks/commands';
+import { BookmarkPropertiesDialog } from '../features/bookmarks/BookmarkPropertiesDialog';
 import { FileDialogs } from '../features/pages/FileDialogs';
 import { PrintDialog } from '../features/print/PrintDialog';
 import { PrintReadyDialog } from '../features/print/PrintReadyDialog';
@@ -104,6 +106,7 @@ export function App() {
   useEffect(() => registerRedactCommands(), []);
   useEffect(() => registerSnapshotCommands(), []);
   useEffect(() => registerAttachFileCommands(), []);
+  useEffect(() => registerBookmarkCommands(), []);
   useEffect(() => registerOcrCommands(), []);
   useEffect(() => registerPageCommands(), []);
   useEffect(() => registerReportCommands(), []);
@@ -201,6 +204,7 @@ export function App() {
         <ApplyDialog />
         <OcrDialog />
         <PageDialogs />
+        <BookmarkPropertiesDialog />
         <FileDialogs />
         <UpdateWaitDialog />
         <DropZone />

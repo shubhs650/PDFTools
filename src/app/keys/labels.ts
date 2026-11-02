@@ -15,6 +15,8 @@ const NAMED: Record<string, MessageKey> = {
   ArrowUp: msg('shortcuts.key.arrowUp'),
   ArrowDown: msg('shortcuts.key.arrowDown'),
   Delete: msg('shortcuts.key.delete'),
+  Insert: msg('shortcuts.key.insert'),
+  Enter: msg('shortcuts.key.enter'),
   Tab: msg('shortcuts.key.tab'),
   ContextMenu: msg('shortcuts.key.menu'),
   // Punctuation reads better by name ("Ctrl+Plus", not "Ctrl++").

@@ -75,7 +75,11 @@ export function ShortcutSheet() {
         <tbody>
           {KEYMAP.map((bnd) => (
             <tr key={bnd.target}>
-              <th scope="row">{label(bnd.target)}</th>
+              <th scope="row">
+                {bnd.scope === 'bookmarks'
+                  ? t('shortcuts.inBookmarks', { command: label(bnd.target) })
+                  : label(bnd.target)}
+              </th>
               <td>
                 {bnd.chords.map((c, i) => (
                   <span key={i}>

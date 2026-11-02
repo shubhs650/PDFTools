@@ -42,6 +42,7 @@ import { detectTables, exportTables, tableCells, type TableSources } from './wor
 import { applyRedactions } from './work/redact/apply';
 import type { PdfDocumentObject } from '@embedpdf/models';
 import { installFontReadback } from './render/freeTextFonts';
+import { copyItems, editObjects, OutlineError, readOutline } from './work/outline';
 
 let mod: WrappedPdfiumModule | undefined;
 let native: PdfiumNative | undefined;
@@ -107,6 +108,29 @@ async function inflate(bytes: Uint8Array): Promise<Uint8Array> {
   const stream = new Blob([bytes.slice()]).stream().pipeThrough(new DecompressionStream('deflate'));
   return new Uint8Array(await new Response(stream).arrayBuffer());
 }
+/** The document's current state (original + tail + live section) read by our object layer. */
+async function liveReader(docId: string): Promise<PdfReader> {
+  await docs.get(docId);
+  const password = docs.passwordOf(docId);
+  const reader = await PdfReader.open(
+    docs.liveBytes(docId),
+    inflate,
+    password === undefined ? {} : { password },
+  );
+  if (!reader.readable) throw new RpcError('pdfium:4', 'The file could not be decrypted');
+  return reader;
+}
+
+/** Bookmark editing's own errors cross the boundary with their codes (M6-11). */
+async function outlineCall<T>(fn: () => Promise<T>): Promise<T> {
+  try {
+    return await fn();
+  } catch (err) {
+    if (err instanceof OutlineError) throw new RpcError(err.code, err.message);
+    throw err;
+  }
+}
+
 /** Snap geometry per document and page (M3-18): extracted once, reused at every zoom. */
 const geometry = new Map<string, Map<number, Float32Array>>();
 
@@ -721,6 +745,32 @@ serve<WorkApi>(self, {
         wasmBytes(); // decoded images grow the heap (ADR-004 respawn policy)
       }
     }),
+
+  // Bookmarks (M6-11, §7.15, ADR-022 decision 5): our own outline reader and writer.
+  readOutline: ({ docId }, ctx) =>
+    scheduler.run('interactive', ctx.signal, async () => {
+      const reader = await liveReader(docId);
+      const items = await readOutline(reader);
+      return { items };
+    }),
+
+  copyOutline: ({ docId, paths, expect }, ctx) =>
+    scheduler.run('interactive', ctx.signal, () =>
+      outlineCall(async () => {
+        return { items: await copyItems(await liveReader(docId), paths, expect) };
+      }),
+    ),
+
+  editOutline: ({ docId, edit, expect }, ctx) =>
+    scheduler.run('interactive', ctx.signal, () =>
+      outlineCall(async () => {
+        if (!mod) throw new RpcError('not-initialized', 'The work worker is not initialized');
+        const { doc } = await docs.get(docId);
+        requireCapability(securityOf(mod, docPtrOf(need(), doc.id)), 'modify'); // rule 9
+        const r = await editObjects(await liveReader(docId), edit, expect);
+        return new Transfer(r, [...new Set(r.objects.map((o) => o.bytes.buffer as ArrayBuffer))]);
+      }),
+    ),
 
   activity: ({ quietMs }) => {
     activity.poke(quietMs);

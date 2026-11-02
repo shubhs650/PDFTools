@@ -55,9 +55,14 @@ describe('chords', () => {
 });
 
 describe('keymap (D-29, §8.1, M1-Q1)', () => {
-  it('has no conflicting bindings', () => {
-    const all = KEYMAP.flatMap((b) => b.chords.map(chordId));
+  it('has no conflicting bindings (a chord once per scope; a global one nowhere else)', () => {
+    const all = KEYMAP.flatMap((b) => b.chords.map((c) => `${b.scope}:${chordId(c)}`));
     expect(new Set(all).size).toBe(all.length);
+    const global = new Set(
+      KEYMAP.filter((b) => b.scope === 'global').flatMap((b) => b.chords.map(chordId)),
+    );
+    for (const b of KEYMAP.filter((x) => x.scope !== 'global'))
+      for (const c of b.chords) expect(global.has(chordId(c)), chordId(c)).toBe(false);
   });
 
   it('targets only known commands or internal actions', () => {
@@ -118,6 +123,18 @@ describe('resolveBinding: scopes and text fields', () => {
     expect(resolveBinding(ev('h'), { ...focus, inDocument: true }, false)?.target).toBe(
       'home.hand',
     );
+  });
+  it('gives the bookmark tree its own Delete, Ctrl+C and F2 (M6-11)', () => {
+    const tree = { ...focus, inBookmarks: true };
+    expect(resolveBinding(ev('Delete'), tree, false)?.target).toBe('bookmark.delete');
+    expect(resolveBinding(ev('Delete'), { ...focus, inDocument: true }, false)?.target).toBe(
+      'comment.delete',
+    );
+    expect(resolveBinding(ev('c', { ctrlKey: true }), tree, false)?.target).toBe('bookmark.copy');
+    expect(resolveBinding(ev('F2'), tree, false)?.target).toBe('bookmark.rename');
+    expect(resolveBinding(ev('F2'), focus, false)).toBeUndefined();
+    // Global keys still work there.
+    expect(resolveBinding(ev('z', { ctrlKey: true }), tree, false)?.target).toBe('qat.undo');
   });
   it('fires global keys anywhere', () => {
     expect(resolveBinding(ev('o', { ctrlKey: true }), focus, false)?.target).toBe('file.open');

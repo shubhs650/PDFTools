@@ -333,7 +333,7 @@ interface ToolButtonProps {
 }
 
 /** An icon button that stays focusable when disabled and says why (as the ribbon's). */
-const ToolButton = forwardRef<HTMLButtonElement, ToolButtonProps>(function ToolButton(
+export const ToolButton = forwardRef<HTMLButtonElement, ToolButtonProps>(function ToolButton(
   { label, icon, tabIndex, reason = null, onClick, onFocus, ...rest },
   ref,
 ) {
@@ -367,7 +367,7 @@ const ToolButton = forwardRef<HTMLButtonElement, ToolButtonProps>(function ToolB
   );
 });
 
-const CommandToolButton = forwardRef<
+export const CommandToolButton = forwardRef<
   HTMLButtonElement,
   { command: string; icon: ReactNode; tabIndex: number; onFocus: () => void }
 >(function CommandToolButton({ command, icon, tabIndex, onFocus }, ref) {

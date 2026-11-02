@@ -12,7 +12,9 @@ export type KeyScope =
   /** Anywhere except while typing in a text field (Esc works there too). */
   | 'global'
   /** Only when focus is inside the document area (single-letter keys). */
-  | 'document';
+  | 'document'
+  /** Only when focus is in the Bookmarks pane's tree (M6-11): its own Delete, Ctrl+C, F2… */
+  | 'bookmarks';
 
 export interface Binding {
   /** A command id from src/app/commands.ts or an internal action. */
@@ -129,6 +131,20 @@ export const KEYMAP: readonly Binding[] = [
   b('comment.cloud', ['C'], 'document'),
   b('comment.pencil', ['D'], 'document'),
   { ...b('tool.enter', ['Enter'], 'document'), preventWhenDisabled: false },
+  // The Bookmarks pane's tree (M6-11, §7.15): the same keys as in the document
+  // act on the focused bookmark there (Enter, Space and the arrows are the tree's).
+  b('bookmark.goTo', ['Enter'], 'bookmarks'),
+  b('bookmark.new', ['Insert'], 'bookmarks'),
+  b('bookmark.delete', ['Delete'], 'bookmarks'),
+  b('bookmark.rename', ['F2'], 'bookmarks'),
+  b('bookmark.cut', ['Ctrl+X'], 'bookmarks'),
+  b('bookmark.copy', ['Ctrl+C'], 'bookmarks'),
+  b('bookmark.paste', ['Ctrl+V'], 'bookmarks'),
+  b('bookmark.properties', ['Alt+Enter'], 'bookmarks'),
+  b('bookmark.moveUp', ['Alt+Shift+ArrowUp'], 'bookmarks'),
+  b('bookmark.moveDown', ['Alt+Shift+ArrowDown'], 'bookmarks'),
+  b('bookmark.promote', ['Alt+Shift+ArrowLeft'], 'bookmarks'),
+  b('bookmark.demote', ['Alt+Shift+ArrowRight'], 'bookmarks'),
   // Browser-reserved first, alternates after (M1-Q1).
   b('tab.close', ['Ctrl+F4', 'Ctrl+Alt+W', 'Ctrl+Alt+F4'], 'global', true),
   b('tab.next', ['Ctrl+PageDown', 'Ctrl+Alt+PageDown'], 'global', true),
