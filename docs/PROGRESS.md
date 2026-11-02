@@ -4,7 +4,7 @@ _Last updated: 2026-11-01 (session 26: M6-04 spikes S18 – S22)_
 
 **Current milestone:** M6 — Beta review (plan in [docs/plan/M6.md](plan/M6.md), scope changes in
 [ADR-021](adr/021-m6-beta-review.md), **Accepted** 2026-11-01; ARCHITECTURE.md Rev 0.9; M6-01 … M6-04 done; spike results in
-[ADR-022](adr/022-m6-spikes-s18-s22.md), **Proposed** — the owner picks the bookmark route; next task M6-05). M5 — OCR: M5-01 … M5-04 done under [ADR-020](adr/020-m5-ocr.md); M5-05 (owner
+[ADR-022](adr/022-m6-spikes-s18-s22.md), **Proposed**, bookmark route B chosen 2026-11-02; next task M6-05). M5 — OCR: M5-01 … M5-04 done under [ADR-020](adr/020-m5-ocr.md); M5-05 (owner
 interop) folds into M6-15. Rev 0 (M0–M4) is complete on the agent side.
 
 ## Done
@@ -1258,8 +1258,8 @@ rel="noopener noreferrer">`; the commands `app.home` / `app.reportIssue` open th
 
 ## Next
 
-- **Owner:** accept [ADR-022](adr/022-m6-spikes-s18-s22.md) and pick the bookmark route
-  (decision 5: A `setBookmarks` with a guard, or B our own outline writer — recommended). Then
+- **Owner:** accept [ADR-022](adr/022-m6-spikes-s18-s22.md) (bookmark route B, our own outline
+  writer, chosen 2026-11-02). Then
   ARCHITECTURE.md §3.2, §7.1, §7.10 – §7.12, §7.16 get the wording listed in its Consequences.
   **Agent:** M6-05 (Comments pane redesign).
 
@@ -1443,6 +1443,7 @@ rel="noopener noreferrer">`; the commands `app.home` / `app.reportIssue` open th
 
 | Date       | Ref              | Decision                                                                                                                                                                                                                                                                                                                                                                                                                                                  |
 | ---------- | ---------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| 2026-11-02 | ADR-022 d5       | Owner picked bookmark route B for M6-11: our own outline writer (Work worker) applied with `applyObjects`, every outline key kept. Rest of ADR-022 still Proposed.                                                                                                                                                                                                                                                                                        |
 | 2026-11-01 | ADR-021          | Owner accepted the M6 plan (beta review) and ADR-021: shell (D-35), adaptive ribbon with a Form tab (D-36), comment styles (D-37), comment workflow incl. page copy/paste, flatten, attach file, snapshot, bookmark editing (D-38), basic form fields (D-39), password security and visual signatures (D-40). Home rotates the view, Organize the pages. ARCHITECTURE.md Rev 0.9.                                                                         |
 | 2026-10-03 | ADR-020          | Owner accepted ADR-020 (OCR) with amendments: the five most spoken languages including Hindi (English precached, the others on first use), and a tick box to recognize pages that already have text. The text layer uses Tesseract's glyphless font so every script round-trips. ARCHITECTURE.md Rev 0.8 (§1.5, §2 D-34, §3.1, §3.2, §7.14, §9, §13 M5, §14).                                                                                             |
 | 2026-10-01 | ADR-019          | Owner accepted Express Extract in two steps (Find Tables, then Save…): the save picker needs a fresh click and nothing is created when no table is found. ARCHITECTURE.md Rev 0.7 (§7.7).                                                                                                                                                                                                                                                                 |

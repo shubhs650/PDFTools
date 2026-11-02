@@ -1,6 +1,6 @@
 # ADR-022: M6 spikes S18 – S22 — passwords, forms, signatures, bookmarks, attach file
 
-- **Status:** Proposed (2026-11-01; decision 5 needs the owner's choice of route)
+- **Status:** Proposed (2026-11-01; decision 5 route B chosen by the owner 2026-11-02)
 - **Date:** 2026-11-01
 - **Deciders:** owner (Shubham); recorded by the coding agent (task M6-04)
 - **Related decisions:** D-03, D-19, D-26, D-38 (d)(g), D-39, D-40 (ARCHITECTURE.md §2); ADR-005
@@ -81,7 +81,7 @@ by reopening in PDFium and with `qpdf --check` / `qpdf --json`.
      **modify + annotate** (ISO 32000-1 table 22, bits 4 and 6). Today the tracker lets
      `createPageAnnotation` through with annotate and `renameWidgetField` / `shareWidgetField`
      with fill-forms only.
-5. **Bookmark editing (D-38 g, changes the mechanism — owner's choice).** `setBookmarks`
+5. **Bookmark editing (D-38 g, changes the mechanism — owner chose route B, 2026-11-02).** `setBookmarks`
    rebuilds the whole outline and **loses** every item's colour (`/C`), bold/italic (`/F`) and
    open/closed state (`/Count`, also missing on the root), and turns named destinations into
    explicit ones. Worse, it **fails mid-way on any action it can't write** (GoToR, JavaScript,
@@ -89,7 +89,7 @@ by reopening in PDFium and with `qpdf --check` / `qpdf --json`.
    outline that Ctrl+S then saves. Two routes:
    - **A — `setBookmarks` with a guard:** refuse edits (with a reason) when the outline has
      actions it cannot write; accept the loss of colour, style and open state.
-   - **B — our own outline writer (recommended):** the Work worker reads the outline with our
+   - **B — our own outline writer (chosen):** the Work worker reads the outline with our
      reader, applies the edit and writes a fresh set of outline objects keeping **every key** of
      every item; the Render worker applies them with the existing reopen route (`applyObjects`,
      ADR-016 / ADR-018) and Ctrl+S saves them in the semantic narrow tail. Prototyped in the
@@ -103,7 +103,7 @@ by reopening in PDFium and with `qpdf --check` / `qpdf --json`.
 ## Consequences
 
 - Plan changes (M6.md, this commit): M6-10 uses direct PDFium calls plus its own move/resize
-  call; M6-11 follows decision 5's route; M6-12 uses the copy route, the owner-rights gate and
+  call; M6-11 uses route B (our own outline writer); M6-12 uses the copy route, the owner-rights gate and
   the 127-byte limit; M6-13 bundles a font and passes it to the type pad; M6-14 adds the license
   exception, readable radio ids, `/TU` via the object layer and the modify + annotate gate.
 - ARCHITECTURE.md changes **after this ADR is accepted** (not in this commit): §3.2 add
@@ -111,7 +111,7 @@ by reopening in PDFium and with `qpdf --check` / `qpdf --json`.
   plugin-form license exception; §7.1 Attach File "created by direct PDFium calls in the Render
   worker" instead of "written by our object layer"; §7.10 the modify + annotate gate and `/TU`;
   §7.11 the bundled handwriting font; §7.12 the copy route, the owner-rights gate and the
-  127-byte limit; §7.16 the chosen bookmark route.
+  127-byte limit; §7.16 the bookmark route B (our own outline writer).
 - Risks: all three EmbedPDF additions are on the pinned 2.15.1; an upgrade must re-run these
   spikes. The fonts package is a prerelease (pinned). Interop with Acrobat / PDF-XChange
   (forms, signatures, attach file, edited outlines) joins the owner's M6-15 checklist.
