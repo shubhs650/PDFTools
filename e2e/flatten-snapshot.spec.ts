@@ -197,6 +197,12 @@ test('Snapshot: a dragged rectangle goes to the clipboard as a PNG at twice the 
   await expect(page.getByTestId('snapshot-draft')).toBeVisible();
   await page.mouse.up();
   await expect(page.getByTestId('snapshot-toast')).toHaveText('Snapshot copied');
+  // Said by the document's one live region (rule 12), not a second status region.
+  await expect(page.getByRole('status').filter({ hasText: 'Snapshot copied' })).toBeVisible();
+  await expect(page.getByTestId('snapshot-toast').locator('xpath=..')).toHaveAttribute(
+    'aria-hidden',
+    'true',
+  );
   const img = await clipboardImage(context, page);
   const dpr = await page.evaluate(() => window.devicePixelRatio);
   // The dragged CSS pixels × device pixel ratio × 2.

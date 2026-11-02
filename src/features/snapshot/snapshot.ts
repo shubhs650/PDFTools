@@ -14,13 +14,14 @@ import { appStore } from '../../app/store/appStore';
 import { documentStore, securityOf, selectActive } from '../../app/store/documentStore';
 import { t } from '../../i18n';
 import { allows } from '../../model/permissions';
+import { announceTransfer } from '../annotate/transfer/transferAnnounce';
 import { hostStore, renderEngine } from '../view/host';
 import { nudgeRect, snapshotScale, startRect } from './snapshotModel';
 
 interface SnapshotState {
   /** The keyboard rectangle (rule 12): a page and a rect in page points. */
   key: { docId: string; page: number; rect: Rect } | null;
-  /** What the last snapshot did, shown briefly (and said by screen readers). */
+  /** What the last snapshot did, shown briefly (screen readers hear it from the live region). */
   message: { text: string; ok: boolean; seq: number } | null;
 }
 
@@ -33,7 +34,9 @@ export function useSnapshot<T>(selector: (s: SnapshotState) => T): T {
 let messageTimer: ReturnType<typeof setTimeout> | undefined;
 let seq = 0;
 
-function say(text: string, ok: boolean): void {
+/** Shown in the toast and said by the document's annotation live region (rule 12). */
+function say(docId: string, text: string, ok: boolean): void {
+  announceTransfer(docId, text);
   clearTimeout(messageTimer);
   snapshotStore.setState({ message: { text, ok, seq: ++seq } });
   messageTimer = setTimeout(() => {
@@ -95,7 +98,7 @@ export async function renderSnapshot(docId: string, page: number, rect: Rect): P
 export function copySnapshot(docId: string, page: number, rect: Rect): void {
   const blocked = snapshotBlocked(docId);
   if (blocked) {
-    say(blocked, false);
+    say(docId, blocked, false);
     return;
   }
   const png = renderSnapshot(docId, page, rect);
@@ -109,11 +112,11 @@ export function copySnapshot(docId: string, page: number, rect: Rect): void {
   png.catch(() => undefined);
   write.then(
     () => {
-      say(t('snapshot.copied'), true);
+      say(docId, t('snapshot.copied'), true);
     },
     (err: unknown) => {
       recordError('snapshot.copy', err);
-      say(t('snapshot.failed'), false);
+      say(docId, t('snapshot.failed'), false);
     },
   );
 }

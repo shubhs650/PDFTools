@@ -160,11 +160,15 @@ export function SnapshotLayer({
   );
 }
 
-/** What the last snapshot did: shown for a few seconds and said by screen readers. */
+/**
+ * What the last snapshot did, shown for a few seconds. Screen readers hear it
+ * from the document's annotation live region (say() in snapshot.ts), so this
+ * is not a second status region.
+ */
 export function SnapshotToast() {
   const message = useSnapshot((s) => s.message);
   return (
-    <div className="snapshot-toast-region" role="status" aria-live="polite">
+    <div className="snapshot-toast-region" aria-hidden="true">
       {message ? (
         <p
           key={message.seq}
