@@ -1,6 +1,7 @@
 // View commands (§5, §8.1, M1-15): zoom, page navigation, Hand and Select.
 import { cancelDrawing } from '../annotate/tools/drawTools';
 import { deselectAnnotations } from '../annotate/commands';
+import { isFieldTool } from '../forms/fieldModel';
 import { registerCommand } from '../../app/commands/dispatch';
 import { clearSelection } from '../select/commands';
 import { appStore } from '../../app/store/appStore';
@@ -125,8 +126,16 @@ export function registerViewCommands(): () => void {
       run: () => {
         // A polyline/polygon being drawn is dropped first; the tool stays on (M3-09).
         if (cancelDrawing()) return;
+        const tool = appStore.getState().tool;
+        // A field tool steps back to Select Fields, keeping the new field selected (M6-14).
+        if (isFieldTool(tool)) {
+          appStore.getState().setTool('selectFields');
+          return;
+        }
         clearSelection();
-        deselectAnnotations();
+        const hadSelection = deselectAnnotations();
+        // Select Fields: the first Esc drops the selection, the next leaves the tool.
+        if (tool === 'selectFields' && hadSelection) return;
         appStore.getState().setTool('select');
       },
     }),

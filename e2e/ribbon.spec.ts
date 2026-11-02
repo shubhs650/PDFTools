@@ -15,7 +15,7 @@ test('the ribbon, its tabs and the backstage pass axe', async ({ page }) => {
   expect((await new AxeBuilder({ page }).analyze()).violations.map((v) => v.id)).toEqual([]);
 });
 
-test('shows File, Home, View, Comment (from M3-07), Measure (from M3-15), Organize (from M4-09), Convert (from M4-05), Protect (from M2-03) and Help only (M1-Q2)', async ({
+test('shows File, Home, View, Comment (from M3-07), Form (from M6-14), Measure (from M3-15), Organize (from M4-09), Convert (from M4-05), Protect (from M2-03) and Help only (M1-Q2)', async ({
   page,
 }) => {
   await page.goto('/');
@@ -23,6 +23,7 @@ test('shows File, Home, View, Comment (from M3-07), Measure (from M3-15), Organi
     'Home',
     'View',
     'Comment',
+    'Form',
     'Measure',
     'Organize',
     'Convert',
@@ -156,7 +157,16 @@ test('every command M1 … M4 show has a handler: none says "Not available yet" 
     expect(await notReady()).toEqual([]);
   };
   await collect(); // quick access + Home
-  for (const tab of ['View', 'Comment', 'Organize', 'Convert', 'Measure', 'Protect', 'Help']) {
+  for (const tab of [
+    'View',
+    'Comment',
+    'Form',
+    'Organize',
+    'Convert',
+    'Measure',
+    'Protect',
+    'Help',
+  ]) {
     await page.getByRole('tab', { name: tab, exact: true }).click();
     await collect();
   }
@@ -225,6 +235,14 @@ test('every command M1 … M4 show has a handler: none says "Not available yet" 
     'protect.markRedactionArea',
     'protect.applyRedactions',
     'protect.redactionList',
+    // M6-14: the Form tab.
+    'form.selectFields',
+    'form.textField',
+    'form.checkBox',
+    'form.radioButton',
+    'form.listBox',
+    'form.dropdown',
+    'form.highlightFields',
   ])
     expect(seen).toContain(id);
 });
@@ -232,7 +250,17 @@ test('every command M1 … M4 show has a handler: none says "Not available yet" 
 // Preview review UI01: every tab fits the supported desktop widths without a
 // horizontal scrollbar, with and without a document open.
 const WIDTHS = [1280, 1366, 1440, 1920];
-const TABS = ['Home', 'View', 'Comment', 'Measure', 'Organize', 'Convert', 'Protect', 'Help'];
+const TABS = [
+  'Home',
+  'View',
+  'Comment',
+  'Form',
+  'Measure',
+  'Organize',
+  'Convert',
+  'Protect',
+  'Help',
+];
 
 async function overflowingTabs(page: Page): Promise<string[]> {
   const out: string[] = [];

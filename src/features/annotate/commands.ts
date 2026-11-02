@@ -24,6 +24,8 @@ import { cycleTarget, pageAnnotations } from './model';
 import { DRAW_COMMANDS, isDrawTool, KEYBOARD_PLACED, VERTEX_TOOLS } from './tools/drawModel';
 import { isSignatureTool, placeAtCentre as placeSignatureAtCentre } from '../sign/signDocument';
 import { finishDrawing, placeAtCentre } from './tools/drawTools';
+import { isFieldTool } from '../forms/fieldModel';
+import { placeFieldAtCentre } from '../forms/fieldTools';
 import { copiedStyle, copyStyle, pasteStyle } from './properties/style';
 import {
   allFlagged,
@@ -287,6 +289,11 @@ export function registerAnnotateCommands(): () => void {
         }
         if (t === 'imageStamp') {
           await placeImageStamp(id, page);
+          return;
+        }
+        // Form fields (M6-14): the tool's default size, mid-page, then selected.
+        if (isFieldTool(t)) {
+          placeFieldAtCentre(id, page, t);
           return;
         }
         if (t !== 'textComment' && t !== 'freeText') return;
@@ -687,7 +694,11 @@ export function registerAnnotateCommands(): () => void {
 }
 
 /** Esc (§8.1) also drops the annotation selection. */
-export function deselectAnnotations(): void {
+/** Clears the comment selection; true when something was selected. */
+export function deselectAnnotations(): boolean {
   const id = activeId();
-  if (id) scope(id)?.deselectAnnotation();
+  if (!id) return false;
+  const had = selectedOf(id).length > 0;
+  scope(id)?.deselectAnnotation();
+  return had;
 }

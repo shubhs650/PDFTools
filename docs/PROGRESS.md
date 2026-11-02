@@ -1,13 +1,57 @@
 # PDFTools — Progress
 
-_Last updated: 2026-11-02 (session 35: M6-13 Sign Document)_
+_Last updated: 2026-11-02 (session 36: M6-14 Form tab and form field creation)_
 
 **Current milestone:** M6 — Beta review (plan in [docs/plan/M6.md](plan/M6.md), scope changes in
-[ADR-021](adr/021-m6-beta-review.md), **Accepted** 2026-11-01; ARCHITECTURE.md Rev 0.10; M6-01 … M6-13 done; spike results in
-[ADR-022](adr/022-m6-spikes-s18-s22.md), **Accepted** 2026-11-02 (bookmark route B); next task M6-14). M5 — OCR: M5-01 … M5-04 done under [ADR-020](adr/020-m5-ocr.md); M5-05 (owner
+[ADR-021](adr/021-m6-beta-review.md), **Accepted** 2026-11-01; ARCHITECTURE.md Rev 0.10; M6-01 … M6-14 done; spike results in
+[ADR-022](adr/022-m6-spikes-s18-s22.md), **Accepted** 2026-11-02 (bookmark route B); next task M6-15). M5 — OCR: M5-01 … M5-04 done under [ADR-020](adr/020-m5-ocr.md); M5-05 (owner
 interop) folds into M6-15. Rev 0 (M0–M4) is complete on the agent side.
 
 ## Done
+
+- **Session 36 — M6-14 Form tab and form field creation (ADR-021 D-39, ADR-022 decision 4,
+  §7.10; beta review C3).** New **Form** ribbon tab after Comment: Tools (**Select Fields**,
+  large; Hand; Select Text), Form Fields (**Text Field**, **Check Box**, **Radio Button**,
+  **List Box**, **Dropdown**), View (**Highlight Fields**, large, on by default) and Manage
+  (**Reset Form**). Built on `@embedpdf/plugin-form` 2.15.1 (core entry only, so its own React
+  form renderers are not mounted; exact pin). That version declares no licence in
+  `package.json`, so it is in `scripts/license-exceptions.json` (its LICENSE file is MIT); the
+  license gate now matches an exception with `license: ""` to a package that declares none.
+  **Drawing** (`features/forms/fieldTools.ts`): the plugin's five tools are re-added with
+  `selectAfterCreate` and our commit hook. Drag a box, click for the default size, or Enter on
+  the page for a field in the middle of the page. Each field gets a readable unique name (Text1,
+  Check Box1, Dropdown1, …). Radio buttons drawn one after another join one group (Group1) via
+  the plugin's `shareField`; each radio's id is Choice1, Choice2, … which is also its export
+  value (S19). The field just drawn is selected and the Properties pane opens. Esc goes from a
+  field tool to Select Fields, keeping the selection; the next Esc clears it; the one after
+  goes back to Select. **Select Fields**: each field is a dashed box with its name on the
+  annotation layer (`fieldDesign.tsx`, `FieldBox.tsx`); click to select, drag to move, handles
+  to resize; Delete and Ctrl+Z. The fill controls step aside while designing.
+  **Field Properties** (`FieldProperties.tsx`): type, name (or group name for radios; a clash is
+  refused, except that a radio given another group's name joins it), tooltip, Required, Read
+  only, Multi-line, Maximum length, Allow several selections, default value, items (one per
+  line), export value (read-only), font, size, text, border and fill colours. Name, flags,
+  /MaxLen, options and the look go through EmbedPDF. The tooltip (/TU) and default (/DV), which
+  EmbedPDF does not write, are staged on our object layer on the widget's **field** (new patch
+  target `field: true`; keys TU and DV only), and the page's tab order (/Tabs) on the page; all
+  land in the narrow Ctrl+S tail. With nothing selected, the pane shows the **tab order panel**:
+  the page's tab order (Row / Column / Structure / order of creation) and its fields in that
+  order, each a button that selects it. **Rule 9**: field design needs modify + annotate. The
+  commands are disabled otherwise, and the Render worker refuses independently: widget
+  create/update/delete, `renameWidgetField` and `shareWidgetField` need both bits
+  (`isFieldDesign`), as does staging field keys or /Tabs. **Fill**: the existing form layer
+  fills created fields (labels use the staged tooltip), Reset Form uses staged defaults, and
+  Highlight Fields toggles the field tint (off: a hairline outline only). No JavaScript is
+  written. Also fixed on the way: widget bodies were dropped by the annotation layer's custom
+  renderer. Tests: unit `tests/forms/field-model.test.ts` (names, Choice ids, flags, rows,
+  options, /DV, `isFieldDesign`), `tests/save/field-patch.test.ts` (real PDFium: /TU, /DV and
+  /Tabs on a created field in one narrow verified revision, sticky across a later move,
+  removable; key rules; `mergePatches`; an annotate-only file refuses field design but allows
+  comments and filling), license-policy (empty-licence exception), ribbon layout; e2e
+  `e2e/form-fields.spec.ts` (@smoke: draw all five types, edit properties, radio group, tab
+  order, move, fill, Highlight Fields, Ctrl+S narrow with no /JavaScript, reopen; keyboard
+  creation, Delete and undo; an annotate-only file disables the commands; axe), and
+  `e2e/ribbon.spec.ts` updated for the Form tab. Screenshots: project files `m6-14/`.
 
 - **Session 35 — M6-13 Sign Document, visual signatures (ADR-021 D-40 b, ADR-022 decision 3,
   §7.11; beta review C1).** Protect → **Sign Document…** (`protect.signDocument`, Fluent
@@ -1617,7 +1661,10 @@ rel="noopener noreferrer">`; the commands `app.home` / `app.reportIssue` open th
 
 ## Next
 
-- **Agent:** M6-14 (Form tab and form field creation; ADR-022 decision 4).
+- **Agent:** M6-15 (M6 acceptance, Help, interop pack, release notes).
+- **Owner (M6-15 interop):** open a file with fields made here (all five types, a tooltip, a
+  default, Row tab order) in Acrobat Reader and PDF-XChange: the fields fill, tab in order, show
+  their tooltips, and Reset Form restores the defaults.
 - **Owner (M6-15 interop):** open a file signed here (typed, drawn and image signatures, one
   flattened) in Acrobat Reader and PDF-XChange: the signatures show, move and resize as comments.
 - **Owner (M6-15 interop):** open a file protected here in Acrobat Reader and PDF-XChange with
@@ -1650,6 +1697,17 @@ rel="noopener noreferrer">`; the commands `app.home` / `app.reportIssue` open th
    and A0 through the S3 harness; S8 Firefox check and Pages preview.
 
 ## Open issues
+
+- **Form field design limits (M6-14, for M6-15).** EmbedPDF's `shareField` (radio buttons
+  joining a group) leaves an empty field in /Fields, and deleting a widget leaves its field
+  there too; readers ignore both, but the M6-15 interop pass should confirm it. `shareField`
+  is not in the undo history, and staged /TU, /DV and /Tabs changes are not undoable (they
+  are applied on save). A radio button's export value is its id (Choice1, …), set when it is
+  drawn, so Field Properties shows it read-only.
+- **Local Chromium crash on `openHandles` (seen 2026-11-02).** In the cloud container, e2e
+  tests that open files through the `open.openHandles` probe crash the pre-installed Chromium
+  (SIGTRAP) on `main` too: `forms.spec.ts` (3 tests) and two `ribbon.spec.ts` tests. CI's
+  Playwright Chromium is not affected. Tests that drop files are fine.
 
 - **Rapid moves can lose the last one (seen 2026-11-02, M6-10).** Five quick arrow-key nudges
   on one comment sometimes saved 4 pt instead of 5: EmbedPDF's commit marks the annotation

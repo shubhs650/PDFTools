@@ -1,4 +1,9 @@
 {
   "$comment": "Reviewed license exceptions. Each entry must match the package's declared license string exactly and give a reason. Never add copyleft or non-commercial licenses here (CLAUDE.md rule 5).",
-  "packages": {}
+  "packages": {
+    "@embedpdf/plugin-form": {
+      "license": "",
+      "reason": "Reviewed 2026-11-02 (M6-14, ADR-022 decision 4): version 2.15.1 declares no license in package.json, but its LICENSE file is the MIT License (Copyright (c) 2025 CloudPDF), like every other @embedpdf package. Re-review on upgrade."
+    }
+  }
 }

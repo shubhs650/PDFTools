@@ -5,14 +5,33 @@
 import type { FormFieldValue, PdfWidgetAnnoObject } from '@embedpdf/models';
 import { createStore, useStore } from 'zustand';
 import { documentStore } from '../../app/store/documentStore';
-import type { FormFacts } from '../../model/formFacts';
+import type { FormFacts, TabOrder } from '../../model/formFacts';
 import { trackEdit } from '../save/pendingEdits';
 import { hostStore, renderEngine, workClient } from '../view/host';
 import { fieldKey, resetCalls } from './fields';
 
+/**
+ * Form design this session (M6-14) that the Work worker's facts (read from
+ * the file) don't show yet: pages that gained or lost fields, and the staged
+ * tooltips (/TU), defaults (/DV) and tab orders (/Tabs), until reopened.
+ */
+export interface DesignState {
+  pages: number[];
+  /** By field name. */
+  tooltips: Record<string, string>;
+  /** By field name; null: no default. */
+  defaults: Record<string, string | null>;
+  tabs: Record<number, TabOrder>;
+}
+
+export const EMPTY_DESIGN: DesignState = { pages: [], tooltips: {}, defaults: {}, tabs: {} };
+
 interface FormState {
   /** Bumped per document when values change outside a page's own controls. */
   version: Record<string, number>;
+  /** Highlight Fields (M6-14): fillable fields shown tinted, required ones outlined. */
+  highlight: boolean;
+  design: Record<string, DesignState>;
   /** The document whose Reset Form confirmation is open. */
   confirmReset: string | null;
   /** A Reset Form in progress: pages done / total. */
@@ -21,6 +40,8 @@ interface FormState {
 
 export const formStore = createStore<FormState>()(() => ({
   version: {},
+  highlight: true,
+  design: {},
   confirmReset: null,
   resetting: null,
 }));
@@ -42,6 +63,32 @@ export function dropFormCaches(docId: string): void {
   facts.delete(docId);
   for (const k of [...widgets.keys()]) if (k.startsWith(`${docId}|`)) widgets.delete(k);
   formStore.setState((s) => ({ version: { ...s.version, [docId]: (s.version[docId] ?? 0) + 1 } }));
+}
+
+export const designOf = (docId: string): DesignState =>
+  formStore.getState().design[docId] ?? EMPTY_DESIGN;
+
+export function updateDesign(docId: string, fn: (d: DesignState) => Partial<DesignState>): void {
+  formStore.setState((s) => {
+    const d = s.design[docId] ?? EMPTY_DESIGN;
+    return { design: { ...s.design, [docId]: { ...d, ...fn(d) } } };
+  });
+}
+
+/** `FPDF_GetFormType` of an AcroForm document (no XFA). */
+const ACRO_FORM = 1;
+
+/**
+ * Fields were created, changed or deleted (M6-14): the page shows its fields
+ * from now on, the document counts as having a form, and every page reloads
+ * its widgets.
+ */
+export function fieldsChanged(docId: string, pageIndex?: number): void {
+  if (pageIndex !== undefined && !designOf(docId).pages.includes(pageIndex))
+    updateDesign(docId, (d) => ({ pages: [...d.pages, pageIndex] }));
+  const meta = documentStore.getState().docs[docId]?.meta;
+  if (meta && !meta.formType) documentStore.getState().setFormType(docId, ACRO_FORM);
+  bump(docId);
 }
 
 /** /Tabs and /DV (read once per document in the Work worker). */
@@ -146,7 +193,8 @@ export async function resetForm(docId: string): Promise<void> {
   running = controller;
   const { signal } = controller;
   const f = await formFactsOf(docId);
-  const pages = f.annotated;
+  const design = designOf(docId);
+  const pages = [...new Set([...f.annotated, ...design.pages])].sort((a, b) => a - b);
   formStore.setState({ resetting: { docId, done: 0, total: pages.length } });
   try {
     for (const [i, pageIndex] of pages.entries()) {
@@ -156,7 +204,8 @@ export async function resetForm(docId: string): Promise<void> {
       // Radio buttons: the default one first on, so no other call turns the group off after.
       for (const w of list) {
         if (w.field.flag & 1) continue; // read-only (PDF_FORM_FIELD_FLAG.READONLY)
-        const dv = f.defaults[Number(fieldKey(w))] ?? null;
+        const staged = design.defaults[w.field.name];
+        const dv = staged !== undefined ? staged : (f.defaults[Number(fieldKey(w))] ?? null);
         for (const value of resetCalls(w, dv)) {
           // One field PDFium refuses doesn't stop the others.
           await setValue(docId, pageIndex, w, value).catch(() => undefined);
@@ -179,6 +228,9 @@ export function stopReset(): void {
 /** Forget a closed document's forms. */
 function drop(docId: string): void {
   facts.delete(docId);
+  formStore.setState((s) => {
+    return { design: Object.fromEntries(Object.entries(s.design).filter(([k]) => k !== docId)) };
+  });
   for (const key of widgets.keys()) if (key.startsWith(`${docId}|`)) widgets.delete(key);
 }
 

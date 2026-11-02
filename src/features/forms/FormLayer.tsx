@@ -1,6 +1,7 @@
 import type { FormFieldValue, PdfWidgetAnnoObject } from '@embedpdf/models';
 import { useEffect, useRef, useState, type KeyboardEvent } from 'react';
 import { useTranslation } from 'react-i18next';
+import { useApp } from '../../app/store/appStore';
 import { securityOf, useDocuments } from '../../app/store/documentStore';
 import type { TabOrder } from '../../model/formFacts';
 import { allows } from '../../model/permissions';
@@ -19,7 +20,8 @@ import {
   selectedIndexes,
   tabOrder,
 } from './fields';
-import { fill, formFactsOf, useForms, widgetsOf } from './formStore';
+import { isDesignTool } from './fieldModel';
+import { designOf, fill, formFactsOf, useForms, widgetsOf } from './formStore';
 
 /** `FPDF_GetFormType`: 0 no AcroForm; 2 a dynamic XFA form, which is not filled (§7.10). */
 const NO_FORM = 0;
@@ -67,6 +69,12 @@ export function FormLayer({
     return d ? allows(securityOf(d.meta), 'fillForms') : false;
   });
   const formType = useDocuments((s) => s.docs[documentId]?.meta.formType ?? 0);
+  // Fields designed this session (M6-14): shown before the file has them.
+  const designed = useForms((s) => s.design[documentId]?.pages.includes(pageIndex) ?? false);
+  const tooltips = useForms((s) => s.design[documentId]?.tooltips);
+  const highlight = useForms((s) => s.highlight);
+  // Select Fields and the field tools design fields: nothing is filled then.
+  const designing = useApp((s) => isDesignTool(s.tool));
   const [loaded, setLoaded] = useState<Loaded | null>(null);
   const settled = useRef(false);
 
@@ -78,9 +86,16 @@ export function FormLayer({
     const load = async (): Promise<void> => {
       const f = await formFactsOf(documentId);
       // Only pages with an /Annots array can hold widgets (when the facts could read the tree).
-      if (f.tabs.length > 0 && !f.annotated.includes(pageIndex)) return;
+      const design = designOf(documentId);
+      if (
+        f.tabs.length > 0 &&
+        !f.annotated.includes(pageIndex) &&
+        !design.pages.includes(pageIndex)
+      )
+        return;
       const w = await widgetsOf(documentId, pageIndex);
-      if (live) setLoaded({ version, widgets: w, tabs: f.tabs[pageIndex] ?? null });
+      const tabs = pageIndex in design.tabs ? (design.tabs[pageIndex] ?? null) : f.tabs[pageIndex];
+      if (live) setLoaded({ version, widgets: w, tabs: tabs ?? null });
     };
     // The first load waits for the page to settle (a fast scroll asks for none); reloads don't.
     const timer = setTimeout(
@@ -93,12 +108,12 @@ export function FormLayer({
       live = false;
       clearTimeout(timer);
     };
-  }, [documentId, pageIndex, version, hasForm]);
+  }, [documentId, pageIndex, version, hasForm, designed]);
   useEffect(() => {
     if (loaded) settled.current = true;
   }, [loaded]);
 
-  if (!hasForm || !loaded) return null;
+  if (!hasForm || !loaded || designing) return null;
   const fillable = loaded.widgets.filter((w) => kindOf(w) !== null);
   if (fillable.length === 0) return null;
   const order = tabOrder(fillable, loaded.tabs);
@@ -109,13 +124,13 @@ export function FormLayer({
   };
 
   return (
-    <div className="form-layer">
+    <div className="form-layer" data-highlight={highlight || undefined}>
       {order.map((i) => {
         const w = fillable[i];
         if (!w) return null;
         const locked = isReadOnly(w) || !canFill;
         const reason = isReadOnly(w) ? t('forms.readOnly') : denied;
-        const label = fieldLabel(w);
+        const label = fieldLabel(w, tooltips?.[w.field.name]);
         const common = {
           'aria-label': label,
           'aria-required': isRequired(w) || undefined,

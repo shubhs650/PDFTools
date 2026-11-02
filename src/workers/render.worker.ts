@@ -95,7 +95,7 @@ serve<RenderApi>(self, {
     const { mod: m, native: n, tracker: t } = ready();
     const docId = (args[0] as { id?: unknown } | undefined)?.id;
     // Rule 9: a mutation the document's permissions forbid never reaches PDFium.
-    if (isMutation(method) && typeof docId === 'string') t.checkAllowed(method, docId);
+    if (isMutation(method) && typeof docId === 'string') t.checkAllowed(method, docId, args);
     // M2-14 (ADR-013 decision 4): PDFium fills read-only fields and full XFA forms; we don't.
     if (FORM_VALUE_METHODS.has(method) && typeof docId === 'string') {
       const field = (args[2] as { field?: { flag?: unknown } } | undefined)?.field;
@@ -203,7 +203,9 @@ serve<RenderApi>(self, {
       docId,
       target.annot === undefined
         ? { page: target.page }
-        : { page: target.page, annot: target.annot },
+        : target.field
+          ? { page: target.page, annot: target.annot, field: true }
+          : { page: target.page, annot: target.annot },
       values,
       remove ?? [],
     );

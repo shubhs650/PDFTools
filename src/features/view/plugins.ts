@@ -17,6 +17,9 @@ import { ViewportPluginPackage } from '@embedpdf/plugin-viewport';
 import { ZoomMode, ZoomPluginPackage } from '@embedpdf/plugin-zoom';
 import { PdfAnnotationSubtype } from '@embedpdf/models';
 import { SignatureMode, SignaturePluginPackage } from '@embedpdf/plugin-signature';
+// The core entry, not /react: its React package mounts form renderers of its
+// own, and our FormLayer fills fields (M2-14) while forms/fieldDesign draws them.
+import { FormPluginPackage } from '@embedpdf/plugin-form';
 import { SIGNATURE_PLACE_SIZE } from '../../model/visualSignature';
 import { MARKUP_TOOLS } from '../annotate/tools/markupModel';
 import { markupSelectionHandler } from '../annotate/tools/textMarkup';
@@ -107,4 +110,8 @@ export const PLUGINS = [
     mode: SignatureMode.SignatureAndInitials,
     defaultSize: { ...SIGNATURE_PLACE_SIZE },
   }),
+  // Form field creation (M6-14, ADR-021 D-39, ADR-022 d4): the plugin's five
+  // field tools, renameField and shareField. Our tools wrap them
+  // (forms/fieldTools.ts): readable names and radio ids, radio groups.
+  createPluginRegistration(FormPluginPackage, {}),
 ];

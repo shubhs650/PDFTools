@@ -30,6 +30,7 @@ import { Bookmark20Filled, Bookmark20Regular } from '@fluentui/react-icons/svg/b
 import { BookmarkAdd20Regular } from '@fluentui/react-icons/svg/bookmark-add';
 import { BookmarkMultiple20Regular } from '@fluentui/react-icons/svg/bookmark-multiple';
 import { Bug20Regular, Bug24Regular } from '@fluentui/react-icons/svg/bug';
+import { CheckboxChecked20Filled, CheckboxChecked20Regular, CheckboxChecked24Filled, CheckboxChecked24Regular } from '@fluentui/react-icons/svg/checkbox-checked';
 import { CheckmarkCircle20Regular, CheckmarkCircle32Regular } from '@fluentui/react-icons/svg/checkmark-circle';
 import { CheckmarkSquare20Filled, CheckmarkSquare20Regular } from '@fluentui/react-icons/svg/checkmark-square';
 import { ChevronLeft20Regular } from '@fluentui/react-icons/svg/chevron-left';
@@ -64,10 +65,11 @@ import { DocumentText20Regular, DocumentText32Regular } from '@fluentui/react-ic
 import { DrawText20Filled, DrawText20Regular } from '@fluentui/react-icons/svg/draw-text';
 import { Filter20Regular } from '@fluentui/react-icons/svg/filter';
 import { FolderOpen20Regular, FolderOpen28Regular } from '@fluentui/react-icons/svg/folder-open';
+import { Form20Filled, Form20Regular, Form32Filled, Form32Regular } from '@fluentui/react-icons/svg/form';
 import { FullScreenMaximize20Regular } from '@fluentui/react-icons/svg/full-screen-maximize';
 import { FullScreenMinimize20Regular } from '@fluentui/react-icons/svg/full-screen-minimize';
 import { HandLeft20Filled, HandLeft20Regular, HandLeft28Filled, HandLeft28Regular } from '@fluentui/react-icons/svg/hand-left';
-import { Highlight20Filled, Highlight20Regular } from '@fluentui/react-icons/svg/highlight';
+import { Highlight20Filled, Highlight20Regular, Highlight24Filled, Highlight24Regular } from '@fluentui/react-icons/svg/highlight';
 import { History20Regular, History32Regular } from '@fluentui/react-icons/svg/history';
 import { Home20Regular } from '@fluentui/react-icons/svg/home';
 import { ImageAdd20Regular } from '@fluentui/react-icons/svg/image-add';
@@ -100,6 +102,7 @@ import { Pentagon20Filled, Pentagon20Regular, Pentagon32Filled, Pentagon32Regula
 import { PersonEdit20Regular } from '@fluentui/react-icons/svg/person-edit';
 import { Print20Filled, Print20Regular, Print32Regular } from '@fluentui/react-icons/svg/print';
 import { QuestionCircle20Regular, QuestionCircle32Regular } from '@fluentui/react-icons/svg/question-circle';
+import { RadioButton20Filled, RadioButton20Regular, RadioButton24Filled, RadioButton24Regular } from '@fluentui/react-icons/svg/radio-button';
 import { RatioOneToOne20Filled, RatioOneToOne20Regular, RatioOneToOne24Filled, RatioOneToOne24Regular } from '@fluentui/react-icons/svg/ratio-one-to-one';
 import { ReOrder20Regular, ReOrder24Regular } from '@fluentui/react-icons/svg/re-order';
 import { RectangleLandscape20Filled, RectangleLandscape20Regular, RectangleLandscape32Filled, RectangleLandscape32Regular } from '@fluentui/react-icons/svg/rectangle-landscape';
@@ -132,12 +135,14 @@ import { TargetArrow20Regular } from '@fluentui/react-icons/svg/target-arrow';
 import { TextAdd20Filled, TextAdd20Regular } from '@fluentui/react-icons/svg/text-add';
 import { TextBulletListSquare20Filled, TextBulletListSquare20Regular, TextBulletListSquare32Filled, TextBulletListSquare32Regular } from '@fluentui/react-icons/svg/text-bullet-list-square';
 import { TextEditStyle20Filled, TextEditStyle20Regular } from '@fluentui/react-icons/svg/text-edit-style';
+import { TextField20Filled, TextField20Regular, TextField24Filled, TextField24Regular } from '@fluentui/react-icons/svg/text-field';
 import { TextIndentDecrease20Regular } from '@fluentui/react-icons/svg/text-indent-decrease';
 import { TextIndentIncrease20Regular } from '@fluentui/react-icons/svg/text-indent-increase';
 import { TextStrikethrough20Filled, TextStrikethrough20Regular, TextStrikethrough24Filled, TextStrikethrough24Regular } from '@fluentui/react-icons/svg/text-strikethrough';
 import { TextT20Filled, TextT20Regular } from '@fluentui/react-icons/svg/text-t';
 import { TextUnderline20Filled, TextUnderline20Regular } from '@fluentui/react-icons/svg/text-underline';
 import { Textbox20Filled, Textbox20Regular } from '@fluentui/react-icons/svg/textbox';
+import { TextboxMore20Filled, TextboxMore20Regular, TextboxMore24Filled, TextboxMore24Regular } from '@fluentui/react-icons/svg/textbox-more';
 import { TooltipQuote20Filled, TooltipQuote20Regular } from '@fluentui/react-icons/svg/tooltip-quote';
 import { Triangle20Filled, Triangle20Regular } from '@fluentui/react-icons/svg/triangle';
 import { WebAsset20Regular, WebAsset24Regular } from '@fluentui/react-icons/svg/web-asset';
@@ -276,6 +281,13 @@ export const FLUENT_GLYPHS: Record<string, FluentGlyphs> = {
   'protect.removeSecurity': { regular: { small: ShieldDismiss20Regular, large: ShieldDismiss24Regular, largeNative: 24 } },
   'protect.signatures': { regular: { small: Signature20Regular, large: Signature32Regular, largeNative: 32 } },
   'protect.signDocument': { regular: { small: DocumentSignature20Regular, large: DocumentSignature32Regular, largeNative: 32 } },
+  'form.selectFields': { regular: { small: Form20Regular, large: Form32Regular, largeNative: 32 }, filled: { small: Form20Filled, large: Form32Filled, largeNative: 32 } },
+  'form.textField': { regular: { small: TextField20Regular, large: TextField24Regular, largeNative: 24 }, filled: { small: TextField20Filled, large: TextField24Filled, largeNative: 24 } },
+  'form.checkBox': { regular: { small: CheckboxChecked20Regular, large: CheckboxChecked24Regular, largeNative: 24 }, filled: { small: CheckboxChecked20Filled, large: CheckboxChecked24Filled, largeNative: 24 } },
+  'form.radioButton': { regular: { small: RadioButton20Regular, large: RadioButton24Regular, largeNative: 24 }, filled: { small: RadioButton20Filled, large: RadioButton24Filled, largeNative: 24 } },
+  'form.listBox': { regular: { small: TextBulletListSquare20Regular, large: TextBulletListSquare32Regular, largeNative: 32 }, filled: { small: TextBulletListSquare20Filled, large: TextBulletListSquare32Filled, largeNative: 32 } },
+  'form.dropdown': { regular: { small: TextboxMore20Regular, large: TextboxMore24Regular, largeNative: 24 }, filled: { small: TextboxMore20Filled, large: TextboxMore24Filled, largeNative: 24 } },
+  'form.highlightFields': { regular: { small: Highlight20Regular, large: Highlight24Regular, largeNative: 24 }, filled: { small: Highlight20Filled, large: Highlight24Filled, largeNative: 24 } },
   'help.help': { regular: { small: QuestionCircle20Regular, large: QuestionCircle32Regular, largeNative: 32 } },
   'help.shortcuts': { regular: { small: Keyboard20Regular, large: Keyboard24Regular, largeNative: 24 } },
   'help.errorReport': { regular: { small: Bug20Regular, large: Bug24Regular, largeNative: 24 } },

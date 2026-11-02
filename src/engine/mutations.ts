@@ -32,5 +32,24 @@ export const OTHER_MUTATIONS = new Set([
   'removeEncryption',
 ]);
 
+/** `PdfAnnotationSubtype.WIDGET` (kept literal: this module has no imports). */
+const WIDGET = 20;
+
+/** Changes to a form's structure, not its values (M6-14, ADR-022 d4). */
+const FIELD_STRUCTURE_METHODS = new Set(['renameWidgetField', 'shareWidgetField']);
+
+/**
+ * Creating, renaming, sharing, changing and deleting form fields (M6-14,
+ * ADR-022 decision 4): ISO 32000-1 table 22 asks for bit 4 (modify) and bit 6
+ * (annotate), not only "fill in forms". `args` are the executor call's
+ * (document, page, annotation, …).
+ */
+export function isFieldDesign(method: string, args: readonly unknown[]): boolean {
+  if (FIELD_STRUCTURE_METHODS.has(method)) return true;
+  if (!ANNOTATION_METHODS.has(method)) return false;
+  const annot = args[2] as { type?: unknown } | undefined;
+  return annot?.type === WIDGET;
+}
+
 export const isMutation = (method: string): boolean =>
   ANNOTATION_METHODS.has(method) || FORM_METHODS.has(method) || OTHER_MUTATIONS.has(method);

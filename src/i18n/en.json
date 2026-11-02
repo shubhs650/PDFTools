@@ -221,6 +221,15 @@
       "promote": "Move Out of Parent",
       "demote": "Move Into Bookmark Above",
       "properties": "Bookmark Properties…"
+    },
+    "form": {
+      "selectFields": "Select Fields",
+      "textField": "Text Field",
+      "checkBox": "Check Box",
+      "radioButton": "Radio Button",
+      "listBox": "List Box",
+      "dropdown": "Dropdown",
+      "highlightFields": "Highlight Fields"
     }
   },
   "ribbon": {
@@ -229,6 +238,7 @@
       "home": "Home",
       "view": "View",
       "comment": "Comment",
+      "form": "Form",
       "measure": "Measure",
       "organize": "Organize",
       "convert": "Convert",
@@ -265,6 +275,12 @@
         "stamp": "Stamp",
         "measure": "Measure",
         "manage": "Manage Comments"
+      },
+      "form": {
+        "tools": "Tools",
+        "fields": "Form Fields",
+        "view": "View",
+        "manage": "Manage"
       },
       "measure": {
         "measure": "Measure",
@@ -899,6 +915,67 @@
       "progress": "Resetting form fields ({{done}} of {{total}} pages)",
       "noFields": "This document has no form fields.",
       "stop": "Stop"
+    },
+    "design": {
+      "prefix": {
+        "text": "Text",
+        "checkbox": "Check Box",
+        "radio": "Group",
+        "list": "List Box",
+        "combo": "Dropdown"
+      }
+    },
+    "props": {
+      "title": "Field Properties",
+      "section": {
+        "field": "Field",
+        "options": "Options",
+        "appearance": "Appearance"
+      },
+      "type": "Type",
+      "kind": {
+        "text": "Text field",
+        "checkbox": "Check box",
+        "radio": "Radio button",
+        "list": "List box",
+        "combo": "Dropdown"
+      },
+      "name": "Name",
+      "group": "Group name",
+      "nameTaken": "Another field already has this name.",
+      "nameInvalid": "A name can't be empty or contain a period.",
+      "tooltip": "Tooltip",
+      "required": "Required",
+      "readOnly": "Read only",
+      "multiline": "Multi-line",
+      "maxLength": "Maximum length",
+      "maxLengthHint": "0 means no limit",
+      "multiSelect": "Allow several selections",
+      "defaultValue": "Default value",
+      "defaultOn": "Checked by default",
+      "defaultNone": "(None)",
+      "optionsList": "Items (one per line)",
+      "exportValue": "Export value",
+      "exportValueHint": "Set when the button is created.",
+      "font": "Font",
+      "fontSize": "Font size",
+      "textColor": "Text color",
+      "borderColor": "Border color",
+      "fillColor": "Fill color",
+      "mixed": "Select one field to see its properties.",
+      "denied": "The document's security settings don't allow changing form fields."
+    },
+    "tabOrder": {
+      "title": "Tab order, page {{page}}",
+      "label": "Tab order",
+      "R": "Row order",
+      "C": "Column order",
+      "S": "Structure order",
+      "none": "Order of creation",
+      "fields": "Fields in tab order",
+      "noFields": "No form fields on this page.",
+      "hint": "Select a field to see its properties. Drag a field to move it; use its handles to resize it.",
+      "item": "{{n}}. {{name}}"
     }
   },
   "print": {

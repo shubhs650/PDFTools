@@ -37,6 +37,7 @@ import { DocumentMenu } from './DocumentMenu';
 import { notePointerDown } from './pagePoint';
 import { capability, useHost } from './host';
 import { HAND_MODE, PAGE_GAP, POINTER_MODE } from './plugins';
+import { isDesignTool } from '../forms/fieldModel';
 import { PreviewLayer } from './PreviewLayer';
 import { setViewFocus } from './tileScheduler';
 import {
@@ -260,14 +261,18 @@ export function DocumentView({ documentId }: { documentId: string }) {
           ? tool
           : POINTER_MODE,
     );
-    // Select Text and Hand never pick up annotations (M3-05); Select and Select Objects do.
+    // Select Text and Hand never pick up annotations (M3-05); Select and Select
+    // Objects do, except form fields, which only Select Fields picks up (M6-14).
     try {
       annotationCapability()
         ?.forDocument(documentId)
         .setLocked(
           tool === 'select' || tool === 'selectObjects'
-            ? { type: LockModeType.None }
-            : { type: LockModeType.All },
+            ? { type: LockModeType.Include, categories: ['form'] }
+            : // With a field tool on too: the field just drawn is selected (Field Properties).
+              isDesignTool(tool)
+              ? { type: LockModeType.Exclude, categories: ['form'] }
+              : { type: LockModeType.All },
         );
     } catch {
       // The plugin's document state comes with the document's load.

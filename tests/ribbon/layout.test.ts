@@ -14,11 +14,12 @@ import {
 describe('ribbon layout from the command table (§8, ADR-001 B6, M1-Q2)', () => {
   const m1 = ribbonLayout();
 
-  it('shows only tabs with an available command: Home, View, Help, Protect (M2-03), Comment (M3-07/08), Measure (M3-15), Convert (M4-05 … M4-07, M4-13 … M4-15, M5 OCR), M4-08 in Comment', () => {
+  it('shows only tabs with an available command: Home, View, Help, Protect (M2-03), Comment (M3-07/08), Form (M6-14), Measure (M3-15), Convert (M4-05 … M4-07, M4-13 … M4-15, M5 OCR), M4-08 in Comment', () => {
     expect(m1.tabs.map((t) => t.tab)).toEqual([
       'home',
       'view',
       'comment',
+      'form',
       'measure',
       'organize',
       'convert',
@@ -49,6 +50,14 @@ describe('ribbon layout from the command table (§8, ADR-001 B6, M1-Q2)', () => 
       expect(shown).toContain(id);
     expect(shown).toContain('comment.exportCrs'); // M3-19
     expect(shown).toContain('comment.exportAnnotations'); // M4-08
+    // Form (M6-14): tools, the five field types, Highlight Fields, Reset Form.
+    const form = m1.tabs.find((t) => t.tab === 'form');
+    expect(form?.groups.map((g) => g.commands.map((c) => c.id))).toEqual([
+      ['form.selectFields', 'home.hand', 'home.selectText'],
+      ['form.textField', 'form.checkBox', 'form.radioButton', 'form.listBox', 'form.dropdown'],
+      ['form.highlightFields'],
+      ['home.resetForm'],
+    ]);
     const protect = m1.tabs.find((t) => t.tab === 'protect');
     // Redaction (M4-16 … M4-18), Security Info (M2-12), Unlock (M2-03), Password
     // Security and Remove Security (M6-12), Signatures (M2-13), Sign Document (M6-13).

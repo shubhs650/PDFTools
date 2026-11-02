@@ -17,10 +17,15 @@ import {
 import type { StandardCrypt } from '../../../model/pdf/security/standard';
 import { ABSENT, hashText, type ObjectDigest } from '../save/digest';
 
-/** A page (its dictionary) or one annotation on it, by EmbedPDF id (/NM). */
+/**
+ * A page (its dictionary), one annotation on it by EmbedPDF id (/NM), or —
+ * with `field` — the form field that widget belongs to (its /Parent, or the
+ * widget itself when merged; M6-14).
+ */
 export interface PatchTarget {
   page: number;
   annot?: string;
+  field?: true;
 }
 
 export interface Patch {
@@ -34,7 +39,9 @@ export interface Patch {
 }
 
 export const targetKey = (t: PatchTarget): string =>
-  t.annot === undefined ? `p${String(t.page)}` : `p${String(t.page)}/${t.annot}`;
+  t.annot === undefined
+    ? `p${String(t.page)}`
+    : `p${String(t.page)}/${t.annot}${t.field ? '/field' : ''}`;
 
 /**
  * The only keys our layer writes (ADR-007): measurement keys on annotations and
@@ -43,7 +50,13 @@ export const targetKey = (t: PatchTarget): string =>
  * value goes to /Contents through EmbedPDF instead).
  */
 const ANNOT_KEYS = new Set(['Measure', 'IT', 'Cap', 'CP', 'LL', 'LLE', 'LLO', 'CO']);
-const PAGE_KEYS = new Set(['VP']);
+/** /Tabs: the page's form tab order (M6-14). */
+const PAGE_KEYS = new Set(['VP', 'Tabs']);
+/** A form field's tooltip and default value, which EmbedPDF doesn't write (M6-14, ADR-022 d4). */
+export const FIELD_KEYS = new Set(['TU', 'DV']);
+
+const keysFor = (t: PatchTarget): ReadonlySet<string> =>
+  t.annot === undefined ? PAGE_KEYS : t.field ? FIELD_KEYS : ANNOT_KEYS;
 
 export class PatchSet {
   private readonly byTarget = new Map<string, Patch>();
@@ -75,7 +88,7 @@ export class PatchSet {
     encrypted: boolean,
   ): void {
     for (const k of [...set.keys(), ...remove]) {
-      if (!(target.annot === undefined ? PAGE_KEYS : ANNOT_KEYS).has(k))
+      if (!keysFor(target).has(k))
         throw new PatchError('patch-key', `The key /${k} can't be patched`);
     }
     if (encrypted && [...set.values()].some(containsString))
@@ -141,6 +154,22 @@ export class PatchSet {
   committed(seq: number): void {
     for (const p of this.byTarget.values()) if (p.seq <= seq) p.clean = true;
   }
+}
+
+/** Two patches of one object (widgets of the same field): `b`'s keys win if it is newer. */
+export function mergePatches(a: Patch, b: Patch): Patch {
+  const [first, last] = a.seq <= b.seq ? [a, b] : [b, a];
+  const set = new Map(first.set);
+  const remove = new Set(first.remove);
+  for (const k of last.remove) {
+    set.delete(k);
+    remove.add(k);
+  }
+  for (const [k, v] of last.set) {
+    set.set(k, v);
+    remove.delete(k);
+  }
+  return { target: last.target, set, remove, seq: last.seq, clean: a.clean && b.clean };
 }
 
 export class PatchError extends Error {

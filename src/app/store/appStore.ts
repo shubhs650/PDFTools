@@ -28,6 +28,8 @@ export type Tool =
   | 'snapshot'
   // Attach File (M6-10): a click on a page picks the file to attach there.
   | 'attachFile'
+  // Select Fields (M6-14): form fields are selected, moved and resized; nothing is filled.
+  | 'selectFields'
   // Note, text and drawing tools (M3-09): EmbedPDF tool ids.
   | DrawTool;
 

@@ -19,6 +19,7 @@ export type CommandTab =
   | 'home'
   | 'view'
   | 'comment'
+  | 'form'
   | 'measure'
   | 'organize'
   | 'convert'
@@ -65,6 +66,8 @@ export const RIBBON_TABS = [
   'home',
   'view',
   'comment',
+  // Form (M6-14, ADR-021 D-36): field creation.
+  'form',
   'measure',
   'organize',
   'convert',
@@ -123,6 +126,9 @@ export const REUSE_GROUPS: readonly ReuseGroup[] = [
     group: 'measure',
     ids: ['measure.distance', 'measure.perimeter', 'measure.area'],
   },
+  // Form (M6-14): the pointer tools and Reset Form.
+  { tab: 'form', group: 'tools', ids: ['home.hand', 'home.selectText'] },
+  { tab: 'form', group: 'manage', ids: ['home.resetForm'], large: ['home.resetForm'] },
 ];
 
 /**
@@ -132,6 +138,7 @@ export const REUSE_GROUPS: readonly ReuseGroup[] = [
 export const GROUP_ORDER: Partial<Record<CommandTab, readonly string[]>> = {
   home: ['tools', 'find', 'forms', 'zoom', 'comment', 'measure', 'rotation', 'view', 'protect'],
   comment: ['tools', 'text', 'note', 'textMarkup', 'drawing', 'stamp', 'measure', 'manage'],
+  form: ['tools', 'fields', 'view', 'manage'],
 };
 
 /**
@@ -1389,6 +1396,78 @@ export const COMMANDS: readonly CommandDef[] = [
     fluent: 'DocumentSignature',
     milestone: 'M6',
     shipped: true,
+  },
+  // Form tab (M6-14, ADR-021 D-36 / D-39): Select Fields, the five field tools
+  // (@embedpdf/plugin-form) and Highlight Fields. Fields need modify + annotate.
+  {
+    id: 'form.selectFields',
+    tab: 'form',
+    group: 'tools',
+    size: 'large',
+    fluent: 'Form',
+    milestone: 'M6',
+    shipped: true,
+    toggle: true,
+  },
+  {
+    id: 'form.textField',
+    tab: 'form',
+    group: 'fields',
+    size: 'large',
+    fluent: 'TextField',
+    milestone: 'M6',
+    shipped: true,
+    toggle: true,
+  },
+  {
+    id: 'form.checkBox',
+    tab: 'form',
+    group: 'fields',
+    size: 'large',
+    fluent: 'CheckboxChecked',
+    milestone: 'M6',
+    shipped: true,
+    toggle: true,
+  },
+  {
+    id: 'form.radioButton',
+    tab: 'form',
+    group: 'fields',
+    size: 'large',
+    fluent: 'RadioButton',
+    milestone: 'M6',
+    shipped: true,
+    toggle: true,
+  },
+  {
+    id: 'form.listBox',
+    tab: 'form',
+    group: 'fields',
+    size: 'large',
+    fluent: 'TextBulletListSquare',
+    milestone: 'M6',
+    shipped: true,
+    toggle: true,
+  },
+  {
+    id: 'form.dropdown',
+    tab: 'form',
+    group: 'fields',
+    size: 'large',
+    fluent: 'TextboxMore',
+    milestone: 'M6',
+    shipped: true,
+    toggle: true,
+  },
+  {
+    id: 'form.highlightFields',
+    tab: 'form',
+    group: 'view',
+    size: 'large',
+    fluent: 'Highlight',
+    milestone: 'M6',
+    shipped: true,
+    toggle: true,
   },
   {
     id: 'help.help',

@@ -45,9 +45,12 @@ export const isPassword = (w: PdfWidgetAnnoObject): boolean => (w.field.flag & P
 export const isMultiSelect = (w: PdfWidgetAnnoObject): boolean =>
   (w.field.flag & MULTI_SELECT) !== 0;
 
-/** The accessible name: the tooltip (/TU), else the field name (/T). */
-export const fieldLabel = (w: PdfWidgetAnnoObject): string =>
-  w.field.alternateName.trim() || w.field.name;
+/**
+ * The accessible name: the tooltip (/TU), else the field name (/T).
+ * `staged`: a tooltip set this session, not yet in PDFium's copy (M6-14).
+ */
+export const fieldLabel = (w: PdfWidgetAnnoObject, staged?: string): string =>
+  (staged ?? w.field.alternateName).trim() || w.field.name;
 
 interface Placed {
   rect: { origin: { x: number; y: number }; size: { width: number; height: number } };

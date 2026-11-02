@@ -32,6 +32,8 @@ import {
   type Value,
 } from './model';
 import { applyProp } from './style';
+import { isDesignTool } from '../../forms/fieldModel';
+import { FieldDesignProperties } from '../../forms/FieldProperties';
 import { setToolProp, TOOL_NAME_KEYS, toolPropsOf, toolSample } from './toolProperties';
 import type { PdfAnnotationObject } from '@embedpdf/models';
 
@@ -95,6 +97,8 @@ export function AnnotationProperties() {
   const docId = useDocuments((s) => s.activeId);
   const tool = useApp((s) => s.tool);
   const sel = useSelectedAnnotations(docId);
+  // Form fields (M6-14): Field Properties, or the page's tab order.
+  if (docId && isDesignTool(tool)) return <FieldDesignProperties docId={docId} sel={sel} />;
   if (docId && isStyleTool(tool)) return <ToolProperties tool={tool} />;
   if (!docId || sel.length === 0) return <Empty />;
   return <SelectionProperties docId={docId} sel={sel} />;

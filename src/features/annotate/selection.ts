@@ -91,3 +91,24 @@ export function useSelectedAnnotations(documentId: string | null): PdfAnnotation
   }, [registry, documentId]);
   return state.doc === documentId ? state.objs : [];
 }
+
+/** A document's whole annotation state, live (Field Properties' tab order panel, M6-14). */
+export function useAnnotationState(documentId: string): AnnotationDocumentState | null {
+  const registry = useHost((s) => s.registry);
+  const [state, setState] = useState<{ doc: string; st: AnnotationDocumentState } | null>(null);
+  useEffect(() => {
+    if (!registry) return;
+    const scope = annotationCapability()?.forDocument(documentId);
+    if (!scope) return;
+    const update = (st: AnnotationDocumentState): void => {
+      setState({ doc: documentId, st });
+    };
+    try {
+      update(scope.getState());
+    } catch {
+      // The document's state appears with its first change.
+    }
+    return scope.onStateChange(update);
+  }, [registry, documentId]);
+  return state?.doc === documentId ? state.st : null;
+}

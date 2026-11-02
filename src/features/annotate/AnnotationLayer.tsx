@@ -11,18 +11,21 @@ import {
 } from '@embedpdf/plugin-annotation/react';
 import { ATTACH_DEFAULT_COLOR } from '../../model/attachFile';
 import { saveAttachmentById } from '../attachments/attachFile';
-
-/** Links and form fields have their own layers (M2-10, M2-14): no body or hit area here. */
-const OWN_LAYER = new Set([PdfAnnotationSubtype.LINK, PdfAnnotationSubtype.WIDGET]);
+import { FIELD_RENDERER } from '../forms/fieldDesign';
 
 const renderBody: CustomAnnotationRenderer<PdfAnnotationObject> = ({
   annotation,
   children,
   isSelected,
 }) =>
-  // Replies (/IRT notes, M3-12) are shown in the thread, never on the page.
-  OWN_LAYER.has(annotation.type) ||
-  (annotation.type === PdfAnnotationSubtype.TEXT && annotation.inReplyToId) ? (
+  // Form fields: the field box (fieldDesign.tsx), which is empty unless fields
+  // are designed; the form layer fills them (M2-14, M6-14).
+  annotation.type === PdfAnnotationSubtype.WIDGET ? (
+    <>{children}</>
+  ) : // Links have their own layer (M2-10); replies (/IRT notes, M3-12) are
+  // shown in the thread, never on the page.
+  annotation.type === PdfAnnotationSubtype.LINK ||
+    (annotation.type === PdfAnnotationSubtype.TEXT && annotation.inReplyToId) ? (
     <></>
   ) : (
     <div className="annotation-body" data-selected={isSelected || undefined}>
@@ -86,7 +89,8 @@ const FILE_ATTACHMENT = createRenderer({
   },
 });
 
-const RENDERERS = [FILE_ATTACHMENT];
+// Form fields (M6-14): boxes to select, move and resize with Select Fields.
+const RENDERERS = [FILE_ATTACHMENT, FIELD_RENDERER];
 
 /** The selection outline in the focus colour (a token, rules 11–12: no literal colours). */
 const OUTLINE = { color: 'var(--color-focus)', width: 2 };
