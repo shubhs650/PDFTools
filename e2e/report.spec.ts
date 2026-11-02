@@ -143,8 +143,22 @@ for (const [platform, mod] of [
     // The review workflow is documented, with the Delete key.
     await expect(d.getByRole('heading', { name: 'Reviewing comments' })).toBeVisible();
     await expect(d).toContainText('Comment → Delete or the Delete key');
-    for (const heading of ['Comment transfer', 'Measuring', 'Extracting tables', 'Redacting'])
-      await expect(d.getByRole('heading', { name: heading })).toBeVisible();
+    for (const heading of [
+      'Comment transfer',
+      'Measuring',
+      'Extracting tables',
+      'Redacting',
+      // M6-15: the beta-review features.
+      'Bookmarks',
+      'Comment styles and properties',
+      'Flattening and snapshots',
+      'Forms',
+      'Protected and signed files',
+    ])
+      await expect(d.getByRole('heading', { name: heading, exact: true })).toBeVisible();
+    // The new sections name the keys from the keymap too.
+    await expect(d).toContainText(`Each change is one undo step, and ${mod}+S saves them.`);
+    await expect(d).toContainText('open the Form tab');
     await d.getByRole('button', { name: 'Keyboard shortcuts' }).click();
     const sheet = page.getByRole('dialog', { name: 'Keyboard shortcuts' });
     await expect(sheet.getByRole('row', { name: /^Open/ })).toContainText(`${mod}+O`);

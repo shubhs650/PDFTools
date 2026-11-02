@@ -1,13 +1,41 @@
 # PDFTools — Progress
 
-_Last updated: 2026-11-02 (session 36: M6-14 Form tab and form field creation)_
+_Last updated: 2026-11-02 (session 37: M6-15 M6 acceptance, Help, interop pack, release notes)_
 
 **Current milestone:** M6 — Beta review (plan in [docs/plan/M6.md](plan/M6.md), scope changes in
-[ADR-021](adr/021-m6-beta-review.md), **Accepted** 2026-11-01; ARCHITECTURE.md Rev 0.10; M6-01 … M6-14 done; spike results in
-[ADR-022](adr/022-m6-spikes-s18-s22.md), **Accepted** 2026-11-02 (bookmark route B); next task M6-15). M5 — OCR: M5-01 … M5-04 done under [ADR-020](adr/020-m5-ocr.md); M5-05 (owner
-interop) folds into M6-15. Rev 0 (M0–M4) is complete on the agent side.
+[ADR-021](adr/021-m6-beta-review.md), **Accepted** 2026-11-01; ARCHITECTURE.md Rev 0.10; M6-01 … M6-15 done, **M6 complete on the agent side** ([acceptance](acceptance/M6.md)); spike results in
+[ADR-022](adr/022-m6-spikes-s18-s22.md), **Accepted** 2026-11-02 (bookmark route B)). M5 — OCR: M5-01 … M5-04 done under [ADR-020](adr/020-m5-ocr.md); M5-05's owner
+interop is in the M6 pack (CHECKLIST §M6 R1–R4). Rev 0 (M0–M4) is complete on the agent side.
 
 ## Done
+
+- **Session 37 — M6-15 M6 acceptance, Help, interop pack, release notes (ADR-021; M5-05).**
+  [docs/acceptance/M6.md](acceptance/M6.md): every beta-review observation (A1a … C3) → task →
+  tests, the M6-15 checks and the owner pack. **Interop pack §M6** (`e2e/interop-m6.spec.ts`,
+  `npm run owner:interop:m6`): 11 files made by the real app and `qpdf --check`ed in
+  `e2e/fixtures/self-made/m6-interop/` — comments with M6's defaults and property-grid keys
+  (rotation, vertical alignment, locked, marked, not printable) and a file attachment; a
+  flattened copy; an edited outline; the five field types blank and filled (tooltips, a default,
+  Row tab order, a deleted radio button); typed, drawn and flattened image signatures; three
+  password-protected copies and a Remove Security copy; an English OCR layer (M5-05).
+  [CHECKLIST §M6](../e2e/interop/CHECKLIST.md): P1–P19 ours → theirs, Q1–Q4 theirs → ours, R1–R4
+  OCR on the owner's real English / Hindi / Chinese scans. **Help**: new Bookmarks, Comment
+  styles and properties, Flattening and snapshots sections; Forms (field creation), Reviewing
+  comments (defaults, Attach File) and Side panes (Comments rail, Properties pane) updated.
+  **Keyboard sheet**: unit test `tests/keys/shortcutSheet.test.tsx` (one labelled row per binding,
+  M6 keys present). **Offline**: `e2e/offline.spec.ts` "M6 offline" (sign with the cached
+  handwriting fonts, attach, a field, a bookmark, flatten, a verified save, Password Security;
+  zero outbound requests). **Accessibility**: `e2e/a11y.spec.ts` "M6 panes, dialogs and menus"
+  in light, dark and the pseudo-locale; it found two contrast failures, fixed: bookmark colours
+  from the file are now shown readably (`features/bookmarks/readableColor.ts`, mixed toward the
+  text colour only when under 4.5:1 on a row background; the file's `/C` is unchanged), and
+  Sign Document's font names on the white rows in dark. **Also fixed:** Settings → Data on this
+  device and the Clear all local data confirmation now name comment tool defaults, saved styles
+  and saved signatures; the keyboard-menu test flake (`e2e/context-menus.spec.ts:193`, failed on
+  `main` after M6-14) waits for the menu's first item. **Install budget**: core 7.70 MB of 9 MB,
+  install 57.49 MB of 60 MB (2.5 MB headroom). **Release notes** for beta users:
+  [docs/release-notes/beta-m6.md](release-notes/beta-m6.md). Screenshots: project files
+  `m6-15/`, with the interop PDFs and a §M6 checklist copy under `m6-15/interop/`.
 
 - **Session 36 — M6-14 Form tab and form field creation (ADR-021 D-39, ADR-022 decision 4,
   §7.10; beta review C3).** New **Form** ribbon tab after Comment: Tools (**Select Fields**,
@@ -1661,21 +1689,18 @@ rel="noopener noreferrer">`; the commands `app.home` / `app.reportIssue` open th
 
 ## Next
 
-- **Agent:** M6-15 (M6 acceptance, Help, interop pack, release notes).
-- **Owner (M6-15 interop):** open a file with fields made here (all five types, a tooltip, a
-  default, Row tab order) in Acrobat Reader and PDF-XChange: the fields fill, tab in order, show
-  their tooltips, and Reset Form restores the defaults.
-- **Owner (M6-15 interop):** open a file signed here (typed, drawn and image signatures, one
-  flattened) in Acrobat Reader and PDF-XChange: the signatures show, move and resize as comments.
-- **Owner (M6-15 interop):** open a file protected here in Acrobat Reader and PDF-XChange with
-  each password and check the restrictions.
+- **Agent:** M6 is complete on the agent side. Next is the owner's choice of what follows the
+  beta review (a fix task for "Rapid moves can lose the last one" is the obvious candidate).
+- **Owner (M6 interop pack):** [docs/acceptance/M6.md](acceptance/M6.md) §4 — CHECKLIST §M6
+  P1–P19 and Q1–Q4 in Acrobat Reader and PDF-XChange with the files in
+  `e2e/fixtures/self-made/m6-interop/` (forms with tooltips, defaults and Row tab order;
+  typed, drawn and flattened signatures; the protected copies with each password; comments with
+  rotation, vertical alignment, locked, marked; the edited outline), and R1–R4 (OCR on real
+  English, Hindi and Chinese scans; M5-05).
 
-0. **Owner:** try Convert → Recognize Text (OCR) on real scans — an English one, a Hindi one
-   and a Chinese one — and check the result in Acrobat Reader / PDF-XChange (search and select
-   the text; it must be invisible; the Hindi words must copy out as Devanagari). The Hindi and
-   Chinese recognition quality could not be checked in the container (no Devanagari font to
-   make a fixture). **Agent:** M5-05 (acceptance table, interop pack §M5,
-   `npm run owner:interop:m5`).
+0. **Owner:** OCR on real scans is now CHECKLIST §M6 R1–R4 (above); the Hindi and Chinese
+   recognition quality could not be checked in the container (no Devanagari font to make a
+   fixture). M5-05's agent side (interop file `ocr-english__ctrl-s.pdf`) is done in M6-15.
 1. **Owner:** the M3 owner pack in [docs/acceptance/M3.md](acceptance/M3.md) §4 — interop §M3
    (L/M) and the still-open §D/§F in Acrobat Reader and PDF-XChange (they decide ADR-007
    decisions 2 and 3: the grouped measurement label and viewport semantics), snapping on the local
@@ -1698,9 +1723,9 @@ rel="noopener noreferrer">`; the commands `app.home` / `app.reportIssue` open th
 
 ## Open issues
 
-- **Form field design limits (M6-14, for M6-15).** EmbedPDF's `shareField` (radio buttons
+- **Form field design limits (M6-14; in the M6 interop pack, CHECKLIST P12).** EmbedPDF's `shareField` (radio buttons
   joining a group) leaves an empty field in /Fields, and deleting a widget leaves its field
-  there too; readers ignore both, but the M6-15 interop pass should confirm it. `shareField`
+  there too; readers should ignore both, which the owner's run of CHECKLIST P12 confirms. `shareField`
   is not in the undo history, and staged /TU, /DV and /Tabs changes are not undoable (they
   are applied on save). A radio button's export value is its id (Choice1, …), set when it is
   drawn, so Field Properties shows it read-only.
@@ -1713,9 +1738,9 @@ rel="noopener noreferrer">`; the commands `app.home` / `app.reportIssue` open th
   on one comment sometimes saved 4 pt instead of 5: EmbedPDF's commit marks the annotation
   synced by uid after a batch, so a move made while that batch was in flight looks committed
   but never reaches PDFium. Suspected for every type, not only attachments; the M6-10 e2e uses
-  one Shift+Arrow nudge. To confirm and work around (re-commit when the object changed during
-  the batch) in M6-15. Also flaky on `main`: `e2e/context-menus.spec.ts:193` (about 1 run in 5
-  locally; not @smoke).
+  one Shift+Arrow nudge. Not taken on in M6-15 (acceptance only); to confirm and work around
+  (re-commit when the object changed during the batch) in its own task. The
+  `e2e/context-menus.spec.ts:193` flake is fixed (M6-15: the arrows waited for the menu's focus).
 
 - **CI pinned to `ubuntu-24.04` (2026-11-01).** `ubuntu-latest` became 26.04 (apt qpdf 12.3.2) and
   7 unit tests failed. Both were test-side, not output problems: qpdf 12's `--check` warns on a

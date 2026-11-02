@@ -216,6 +216,9 @@ test('from the keyboard: Shift+F10 and the Menu key open the menus; Esc closes t
   await expect(menu(page)).toHaveCount(1);
   // Set Status ▸ Accepted, by keyboard.
   const setStatus = menu(page).getByRole('menuitem', { name: 'Set Status' });
+  // The menu focuses its first item once it is open; arrows pressed before
+  // that are lost (the flake seen on main, M6-15).
+  await expect(menu(page).getByRole('menuitem', { name: 'Cut', exact: true })).toBeFocused();
   for (let i = 0; i < 6; i++) await page.keyboard.press('ArrowDown');
   await expect(setStatus).toBeFocused();
   await page.keyboard.press('ArrowRight');

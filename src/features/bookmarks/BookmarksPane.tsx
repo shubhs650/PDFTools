@@ -25,6 +25,7 @@ import { CommandDropdown, ContextMenu, type ContextMenuEntry } from '../../ui/co
 import { CommandToolButton, ToolButton } from '../annotate/comments/CommentsToolbar';
 import { usePages } from '../pages/pageOps';
 import { followTarget } from '../view/links';
+import { parseHex, readableOn, type Rgb } from './readableColor';
 import {
   clearError,
   editBlocked,
@@ -103,8 +104,31 @@ const whereOn = (el: HTMLElement, clientY: number): Where => {
   return f < 0.25 ? 'before' : f > 0.75 ? 'after' : 'inside';
 };
 
-const rgbCss = (c: [number, number, number]): string =>
-  `rgb(${c.map((v) => String(Math.round(v * 255))).join(' ')})`;
+const rgbCss = (c: Rgb): string => `rgb(${c.map((v) => String(Math.round(v * 255))).join(' ')})`;
+
+/** The theme's row backgrounds and text colour, read once per theme (M6-15). */
+let themeColors: { theme: string; bgs: Rgb[]; text: Rgb } | null = null;
+function rowTheme(): { bgs: Rgb[]; text: Rgb } | null {
+  const root = document.documentElement;
+  const theme = root.dataset['theme'] ?? '';
+  if (themeColors?.theme !== theme) {
+    const css = getComputedStyle(root);
+    const read = (name: string) => parseHex(css.getPropertyValue(name));
+    const surface = read('--color-surface');
+    const selected = read('--color-selected');
+    const text = read('--color-text');
+    // Forced colours (system colour names): the browser picks the colours anyway.
+    themeColors = text && surface && selected ? { theme, bgs: [surface, selected], text } : null;
+    if (!themeColors) return null;
+  }
+  return themeColors;
+}
+
+/** The bookmark's own colour, made readable on the pane if it is not (rule 12). */
+function shownColor(c: Rgb): string {
+  const theme = rowTheme();
+  return rgbCss(theme ? readableOn(c, theme.bgs, theme.text) : c);
+}
 
 /**
  * Bookmarks pane (§5, M2-10; editing M6-11, §7.15): the outline as an ARIA
@@ -407,7 +431,7 @@ function Row({
     paddingInlineStart: `calc(var(--space-4) * ${String(row.level - 1)})`,
   };
   const titleStyle: CSSProperties = {
-    ...(item?.color ? { color: rgbCss(item.color) } : {}),
+    ...(item?.color ? { color: shownColor(item.color) } : {}),
     ...(item?.bold ? { fontWeight: 600 } : {}),
     ...(item?.italic ? { fontStyle: 'italic' } : {}),
   };
