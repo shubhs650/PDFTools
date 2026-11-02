@@ -149,10 +149,15 @@ function qpdfEncryption(bytes: Uint8Array): string {
 }
 
 function qpdfDecrypt(bytes: Uint8Array, password: string): Uint8Array {
-  const src = join(tmp, `dec-${String(++seq)}.pdf`);
+  const n = String(++seq);
+  const src = join(tmp, `dec-${n}.pdf`);
+  // The output ends in .pdf: Ubuntu 26.04's AppArmor profile for qpdf only lets it write PDFs.
+  const out = join(tmp, `dec-${n}-plain.pdf`);
   writeFileSync(src, bytes);
-  spawnSync('qpdf', ['--decrypt', `--password=${password}`, src, `${src}.out`]);
-  return new Uint8Array(readFileSync(`${src}.out`));
+  const r = spawnSync('qpdf', ['--decrypt', `--password=${password}`, src, out]);
+  if (r.status !== 0 && r.status !== 3)
+    throw new Error(`qpdf --decrypt exited ${String(r.status)}: ${r.stderr.toString()}`);
+  return new Uint8Array(readFileSync(out));
 }
 
 describe.each(PLAIN)('staged keys: %s', (name) => {

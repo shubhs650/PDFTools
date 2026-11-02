@@ -16,7 +16,7 @@ import { isAbortError } from '../../engine/errors';
 import type { PageInfo, PageOp } from '../../engine/renderApi';
 import type { TransferObject } from '../../workers/work/transferJobs';
 import { msg, type MessageKey } from '../../i18n';
-import { allows } from '../../model/permissions';
+import { allows, type Capability } from '../../model/permissions';
 import { annotationCapability } from '../annotate/selection';
 import { phaseOf } from '../save/save';
 import { isActive } from '../save/saveMachine';
@@ -29,7 +29,14 @@ import { remapPageSelection } from './selection';
 
 /** What one undo step does again on redo: a page operation, or copied objects (M4-20/21). */
 export type Change =
-  { kind: 'op'; op: PageOp } | { kind: 'objects'; objects: TransferObject[]; firstNew: number };
+  | { kind: 'op'; op: PageOp }
+  | {
+      kind: 'objects';
+      objects: TransferObject[];
+      firstNew: number;
+      /** What the objects need (rule 9): annotate (comments) or modify (OCR, M5). */
+      capability?: Capability;
+    };
 
 export interface Busy {
   docId: string;
@@ -207,11 +214,18 @@ async function applyAsStep(docId: string, change: Change, label: MessageKey): Pr
   return true;
 }
 
-/** Why comments can't be added to the document now (null: they can; rule 9). */
-export function transferBlocked(docId: string): MessageKey | null {
+/**
+ * Why objects can't be added to the document now (null: they can; rule 9):
+ * comments need annotate, an OCR text layer modify (M5, ADR-020 d7).
+ */
+export function transferBlocked(
+  docId: string,
+  capability: Capability = 'annotate',
+  restricted: MessageKey = msg('transfer.restricted'),
+): MessageKey | null {
   const d = documentStore.getState().docs[docId];
   if (!d) return msg('pages.noDocument');
-  if (!allows(securityOf(d.meta), 'annotate')) return msg('transfer.restricted');
+  if (!allows(securityOf(d.meta), capability)) return restricted;
   if (pagesBusy()) return msg('pages.busy');
   if (isActive(phaseOf(docId))) return msg('pages.saving');
   return null;
@@ -244,8 +258,12 @@ export async function runTransfer(
     progress: (p: { done: number; total: number }) => void,
     onCancel: (cancel: () => void) => void,
   ) => Promise<TransferProduct | null>,
+  need: { capability: Capability; restricted: MessageKey } = {
+    capability: 'annotate',
+    restricted: msg('transfer.restricted'),
+  },
 ): Promise<boolean> {
-  if (transferBlocked(docId)) return false;
+  if (transferBlocked(docId, need.capability, need.restricted)) return false;
   setBusy({ docId, label, done: 0, total: 0, started: performance.now() });
   const progress = (p: { done: number; total: number }) => {
     const b = pagesStore.getState().busy;
@@ -262,7 +280,11 @@ export async function runTransfer(
       cancelRunning = null;
       if (!product || product.objects.length === 0) return false;
       try {
-        return await applyAsStep(docId, { kind: 'objects', ...product }, label);
+        return await applyAsStep(
+          docId,
+          { kind: 'objects', ...product, capability: need.capability },
+          label,
+        );
       } catch (err) {
         if ((err as { code?: string }).code !== 'transfer-stale' || attempt > 0) throw err;
       }
@@ -279,10 +301,16 @@ export async function runTransfer(
 /** The change in the Render worker; null when cancelled or failed. */
 async function apply(docId: string, change: Change, label: MessageKey): Promise<PageInfo[] | null> {
   if (change.kind === 'objects') {
-    const { objects, firstNew } = change;
+    const { objects, firstNew, capability } = change;
     // A structured copy (nothing transferred): a redo sends the same objects again.
-    return (await renderEngine().rpc.call('pagesApply', { docId, objects, firstNew }).promise)
-      .pages;
+    return (
+      await renderEngine().rpc.call('pagesApply', {
+        docId,
+        objects,
+        firstNew,
+        ...(capability === undefined ? {} : { capability }),
+      }).promise
+    ).pages;
   }
   const job = renderEngine().rpc.call(
     'pagesOp',
@@ -396,7 +424,14 @@ function registerStep(docId: string, change: Change, label: MessageKey, token: n
       undo: () => {
         void undo(docId, token);
       },
-      metadata: { pageOp: change.kind === 'op' ? change.op.kind : 'transfer' },
+      metadata: {
+        pageOp:
+          change.kind === 'op'
+            ? change.op.kind
+            : change.capability === 'modify'
+              ? 'ocr'
+              : 'transfer',
+      },
     },
     'pages',
   );

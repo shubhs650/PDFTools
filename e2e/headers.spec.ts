@@ -19,7 +19,9 @@ test('the built _headers carry the §10.1 CSP verbatim plus COOP/COEP', () => {
   expect(all['Cross-Origin-Embedder-Policy']).toBe('require-corp');
 });
 
-test('the document is served with the CSP and is cross-origin isolated', async ({ page }) => {
+test('the document is served with the CSP and is cross-origin isolated @smoke', async ({
+  page,
+}) => {
   const res = await page.goto('/');
   expect(res?.headers()['content-security-policy']).toBe(CSP);
   expect(await page.evaluate(() => crossOriginIsolated)).toBe(true);

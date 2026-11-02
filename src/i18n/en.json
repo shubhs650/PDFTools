@@ -68,7 +68,9 @@
       "rotateCcw": "Rotate View Counterclockwise",
       "leftPanes": "Panes",
       "propertiesPane": "Properties Pane",
-      "collapseRibbon": "Collapse Ribbon"
+      "collapseRibbon": "Collapse Ribbon",
+      "fullScreen": "Full Screen",
+      "exitFullScreen": "Exit Full Screen"
     },
     "comment": {
       "highlight": "Highlight",
@@ -141,7 +143,8 @@
       "images": "Export Images",
       "expressExtract": "Express Extract",
       "reviewExtract": "Review & Extract",
-      "tableTemplates": "Table Templates"
+      "tableTemplates": "Table Templates",
+      "ocr": "Recognize Text (OCR)"
     },
     "protect": {
       "markRedaction": "Mark for Redaction",
@@ -172,6 +175,17 @@
       "readyOffline": "Ready offline",
       "preparingOffline": "Preparing offline",
       "updateReady": "Update ready"
+    },
+    "app": {
+      "home": "OpenEngTools Home",
+      "reportIssue": "Report an Issue on GitHub"
+    },
+    "edit": {
+      "cut": "Cut",
+      "copy": "Copy",
+      "paste": "Paste",
+      "selectAll": "Select All",
+      "properties": "Properties"
     }
   },
   "ribbon": {
@@ -228,7 +242,8 @@
       },
       "convert": {
         "export": "Export",
-        "tablesBeta": "Tables (Beta)"
+        "tablesBeta": "Tables (Beta)",
+        "ocr": "OCR"
       },
       "protect": {
         "redact": "Redact",
@@ -307,7 +322,8 @@
       "annotationPrev": "Previous Comment on the Page",
       "annotationNudge": "Move Selected Comments (1 pt)",
       "annotationNudgeFar": "Move Selected Comments (10 pt)",
-      "toolEnter": "Place a note or text box, or finish a polyline"
+      "toolEnter": "Place a note or text box, or finish a polyline",
+      "menuContext": "Context Menu"
     },
     "key": {
       "ctrl": "Ctrl",
@@ -325,7 +341,8 @@
       "delete": "Delete",
       "tab": "Tab",
       "plus": "Plus",
-      "minus": "Minus"
+      "minus": "Minus",
+      "menu": "Menu key"
     }
   },
   "open": {
@@ -471,7 +488,8 @@
       "account": "No account, no login and no cookies.",
       "telemetry": "No analytics scripts, no tracking and no telemetry.",
       "network": "On its own, PDFTools only loads its program files and checks for app updates from its own website. Nothing about you or your documents is sent.",
-      "reports": "If you choose Help → Send Error Report, PDFTools sends the description you typed and the diagnostic details shown in the report dialog to its own website, and nothing else: no documents, file names or document text."
+      "reports": "If you choose Help → Send Error Report, PDFTools sends the description you typed and the diagnostic details shown in the report dialog to its own website, and nothing else: no documents, file names or document text.",
+      "links": "The OpenEngTools Home and Report an Issue on GitHub buttons at the top right open those websites in a new tab, and only when you click them. They send nothing by themselves; the GitHub issue page is prefilled only with the app version, browser and OS."
     },
     "kind": {
       "indexedDB": "IndexedDB",
@@ -491,7 +509,8 @@
       "appFiles": "The offline copy of the app (program files only, no documents)",
       "profile": "Reviewer profile: the name, initials, discipline and company you entered",
       "schemes": "Status schemes you made or imported (codes, labels, colours) and which one is active",
-      "tableTemplates": "Table templates you saved (column and row dividers, header rows, merged cells, page size)"
+      "tableTemplates": "Table templates you saved (column and row dividers, header rows, merged cells, page size)",
+      "toolDefaults": "Comment tool defaults you set (colours, line widths, font sizes); the shipped defaults are used until you change one"
     },
     "clearHint": "To delete this data, use File → Settings → Clear all local data."
   },
@@ -831,7 +850,9 @@
       "offline": "You're offline, so the report can't be sent now. Try again later, or copy it.",
       "rateLimited": "Too many reports were sent from here recently. Try again in an hour, or copy it.",
       "failed": "The report couldn't be sent. Try again later, or copy it."
-    }
+    },
+    "github": "You can also report a problem on GitHub. The issue page opens in a new tab with only the app version, browser and OS filled in.",
+    "githubLink": "Report an issue on GitHub"
   },
   "help": {
     "title": "PDFTools Help",
@@ -846,7 +867,7 @@
       },
       "view": {
         "title": "Viewing",
-        "body": "Zoom with {{zoomIn}} and {{zoomOut}} or {{mod}}+mouse wheel; {{fitPage}} fits the page and {{fitWidth}} the width. Hold Space or press H to pan. The View tab has page layouts and rotation."
+        "body": "Zoom with {{zoomIn}} and {{zoomOut}} or {{mod}}+mouse wheel; {{fitPage}} fits the page and {{fitWidth}} the width. Hold Space or press H to pan. The View tab has page layouts and rotation. {{fullScreen}} or the full-screen button at the top right shows the whole app full screen; Esc leaves."
       },
       "find": {
         "title": "Finding text",
@@ -858,11 +879,11 @@
       },
       "review": {
         "title": "Reviewing comments",
-        "body": "The Comment tab has the markup, note, text and drawing tools; single letters such as N (note) or B (rectangle) turn them on while the document has focus. Select a comment with Home → Select Comments or from the Comments pane; then edit it in the Properties pane, reply or set its status in the Comments pane, and remove it with Comment → Delete or the {{delete}} key ({{undo}} brings it back). {{save}} keeps your comments in the file. On a file that forbids changes, comments are read-only."
+        "body": "The Comment tab has the markup, note, text and drawing tools; single letters such as N (note) or B (rectangle) turn them on while the document has focus. Select a comment with Home → Select Comments or from the Comments pane; then edit it in the Properties pane, reply or set its status in the Comments pane, and remove it with Comment → Delete or the {{delete}} key ({{undo}} brings it back). In the Comments pane, Options sorts, groups and filters the cards and Find (Enter) looks through their text and replies; a card's Reply opens a reply box (Enter posts, Esc cancels), F2 edits its text, and a right click gives the same menu as on the page. {{save}} keeps your comments in the file. On a file that forbids changes, comments are read-only."
       },
       "transfer": {
         "title": "Comment transfer",
-        "body": "Comment → Import brings comments from another PDF or a PDFTools JSON export into the open file; Export writes them as CSV, Excel or JSON, and Export CRS builds a comment resolution sheet. Copy and Paste move the selected comments between open documents; Paste to Original Pages puts them on the pages they came from."
+        "body": "Comment → Import brings comments from another PDF or a PDFTools JSON export into the open file; Export writes them as CSV, Excel or JSON, and Export CRS builds a comment resolution sheet. Copy, Cut and Paste move the selected comments within a document and between open documents: {{copy}}, {{cut}} and {{paste}}, or right-click a comment ({{menu}} from the keyboard). {{paste}} puts them on the page you last clicked, at the same place; Paste from the right-click menu puts them where you clicked. Paste to Original Pages puts them on the pages they came from."
       },
       "measure": {
         "title": "Measuring",
@@ -894,7 +915,7 @@
       },
       "privacy": {
         "title": "Privacy",
-        "body": "PDFTools makes no network requests with your documents; on its own it only loads its program files and checks for updates from its website. Error reports are sent only when you choose to, and you see every word of them first."
+        "body": "PDFTools makes no network requests with your documents; on its own it only loads its program files and checks for updates from its website. Error reports are sent only when you choose to, and you see every word of them first. The OpenEngTools and GitHub buttons open those websites in a new tab and send nothing by themselves."
       }
     }
   },
@@ -1020,11 +1041,9 @@
   },
   "comments": {
     "noDocument": "Open a document to see its comments.",
-    "filters": "Filter comments",
     "author": "Author",
     "type": "Type",
     "statusLabel": "Status",
-    "all": "All",
     "thisPage": "Current page only",
     "sortLabel": "Sort by",
     "sort": {
@@ -1033,14 +1052,55 @@
       "author": "Author",
       "type": "Type"
     },
+    "groupLabel": "Group by",
+    "group": {
+      "page": "Page",
+      "author": "Author",
+      "type": "Type",
+      "status": "Status",
+      "none": "None"
+    },
+    "show": "Show",
+    "expandAll": "Expand all",
+    "collapseAll": "Collapse all",
+    "toolbar": "Comment tools",
+    "options": "Options",
+    "prev": "Previous comment",
+    "next": "Next comment",
+    "noPrev": "This is the first comment",
+    "noNext": "This is the last comment",
+    "find": "Find in comments",
+    "findPlaceholder": "Find… (Enter)",
+    "findButton": "Find",
+    "activeFilters": "Active filters",
+    "chip": {
+      "find": "“{{text}}”",
+      "author": "Author: {{name}}",
+      "type": "Type: {{name}}",
+      "status": "Status: {{name}}",
+      "pages": "Pages {{from}}–{{to}}",
+      "remove": "Remove filter {{filter}}"
+    },
+    "clearFilters": "Clear all",
+    "noMatch": "No comments match the filters.",
     "none": "No comments in this document.",
     "count_one": "{{shown}} of {{total}} comment",
     "count_other": "{{shown}} of {{total}} comments",
+    "selected": "{{n}} selected",
     "list": "Comments",
     "page_one": "Page {{page}} · {{count}} comment",
     "page_other": "Page {{page}} · {{count}} comments",
-    "replies_one": "{{count}} reply",
-    "replies_other": "{{count}} replies",
+    "groupCount_one": "{{name}} · {{count}} comment",
+    "groupCount_other": "{{name}} · {{count}} comments",
+    "collapsed": "collapsed",
+    "numberLabel": "Comment {{n}}",
+    "locked": "Locked",
+    "replyBy": "Reply by",
+    "replyMark": "Reply",
+    "noText": "No text",
+    "editText": "Edit text",
+    "editorHint": "Enter posts · Shift+Enter adds a line · Esc cancels",
+    "listHint": "Enter selects a comment or opens a group · F2 edits the text · Delete deletes · Shift+F10 opens the menu",
     "status": {
       "none": "No status",
       "accepted": "Accepted",
@@ -1052,17 +1112,9 @@
     },
     "stateSetBy": "{{state}} set by {{author}}",
     "stateBy": "{{state}} — {{author}}",
-    "thread": "Comment {{n}} · {{type}}",
-    "setStatus": "Set status",
-    "chooseStatus": "Choose a status…",
-    "statuses": "Status by reviewer",
-    "history": "Status history",
-    "repliesLabel": "Replies",
-    "editReply": "Edit reply",
     "save": "Save",
     "edit": "Edit reply",
     "delete": "Delete reply",
-    "deleteComment": "Delete comment",
     "replyLabel": "Reply",
     "reply": "Post reply",
     "deleteTitle": "Delete comments and their replies?",
@@ -1391,6 +1443,8 @@
     "imported_other": "{{count}} comments imported.",
     "copied_one": "{{count}} comment copied.",
     "copied_other": "{{count}} comments copied.",
+    "cut_one": "{{count}} comment cut.",
+    "cut_other": "{{count}} comments cut.",
     "pasted_one": "{{count}} comment pasted.",
     "pasted_other": "{{count}} comments pasted.",
     "pasting": "Pasting comments…",
@@ -1748,6 +1802,46 @@
       "structure": "hidden document data or more than one revision"
     }
   },
+  "ocr": {
+    "title": "Recognize Text (OCR)",
+    "description": "Scanned pages get an invisible text layer, so their text can be searched, selected and copied. Recognition runs on this device; nothing is sent anywhere.",
+    "scope": {
+      "legend": "Pages",
+      "all": "All pages",
+      "current": "Current page ({{page}})",
+      "selected": "Selected pages ({{count}})",
+      "custom": "Pages:",
+      "customLabel": "Page range",
+      "customHint": "e.g. 1-3, 8"
+    },
+    "skipNote": "Pages that already have text are skipped unless the option below is on.",
+    "start": "Recognize",
+    "close": "Close",
+    "recognizing": "Recognizing text…",
+    "restricted": "This document's security settings don't allow changes.",
+    "done_one": "{{count}} page recognized ({{words}} words); {{skipped}} skipped.",
+    "done_other": "{{count}} pages recognized ({{words}} words); {{skipped}} skipped.",
+    "nothing": "No text was found on the selected pages; {{skipped}} already had text.",
+    "failed": "The text could not be recognized. The document is as it was before.",
+    "error": {
+      "empty": "Enter the pages to recognize.",
+      "syntax": "Use page numbers and ranges, e.g. 1-3, 8.",
+      "outOfRange": "Some pages are not in this document.",
+      "noSelection": "Select pages in the Thumbnails pane first.",
+      "noDocument": "The document is no longer open.",
+      "noLanguage": "Choose at least one language."
+    },
+    "languages": {
+      "legend": "Languages",
+      "downloadNote": "Languages other than English are downloaded when first used ({{size}}) and then kept for offline use.",
+      "eng": "English",
+      "chi_sim": "Chinese (Simplified)",
+      "hin": "Hindi",
+      "spa": "Spanish",
+      "fra": "French"
+    },
+    "reRecognize": "Also recognize pages that already have text (a text layer this app added before is replaced; other text stays)"
+  },
   "commandShort": {
     "comment": {
       "textBox": "Text Box",
@@ -1761,5 +1855,17 @@
       "pasteToOriginal": "Paste to Original",
       "exportCrs": "Export CRS"
     }
+  },
+  "topBar": {
+    "label": "App",
+    "fullScreenUnavailable": "This browser doesn't allow full screen here",
+    "issue": {
+      "title": "Problem: ",
+      "body": "What happened?\n\n\nWhat did you expect?\n\n\nSteps to reproduce:\n1. \n\nPlease don't attach or paste confidential documents or their text.\n\n---\nApp: {{app}}\nBrowser: {{browser}}\nOS: {{os}}"
+    }
+  },
+  "contextMenu": {
+    "comment": "Comment",
+    "page": "Page"
   }
 }

@@ -1,13 +1,15 @@
-// The Comments pane's model (M3-11, §7.1, M3-Q5): which annotations are
-// comments, their auto-numbers, replies and review status, and the rows the
-// pane shows after filtering and sorting. Pure; the CRS (M3-19) uses the same
-// numbers.
+// The Comments pane's model (M3-11, §7.1, M3-Q5; cards and groups M6-05):
+// which annotations are comments, their auto-numbers, replies and review
+// status, and the rows the pane shows after filtering, grouping and sorting.
+// Pure; the CRS (M3-19) uses the same numbers.
 import {
+  PdfAnnotationState,
   PdfAnnotationStateModel,
   PdfAnnotationSubtype as S,
   type PdfAnnotationObject,
-  type PdfAnnotationState,
 } from '@embedpdf/models';
+import type { MessageKey } from '../../../i18n';
+import { annotationTypeKey } from '../annotationTypes';
 
 /** Not comments: links (link layer), form fields, popups (a markup's window). */
 // Redaction marks are listed in Pending Redactions (M4-16), not as comments.
@@ -27,6 +29,10 @@ export interface Comment {
   replies: number;
   /** The latest review state (a /StateModel /Review reply), or null (M3-Q3). */
   status: PdfAnnotationState | null;
+  /** /F Locked (M6-05: the card shows a lock). */
+  locked: boolean;
+  /** What Find looks in (M6-05): contents, author, subject and every reply, lower case. */
+  search: string;
   annot: PdfAnnotationObject;
 }
 
@@ -64,10 +70,30 @@ export function numberComments(all: readonly PdfAnnotationObject[]): Map<string,
   return new Map(list.map((a, i) => [a.id, i + 1]));
 }
 
+const subjectOf = (a: PdfAnnotationObject): string => (a as { subject?: string }).subject ?? '';
+
+/** The thread root above a reply (itself for a comment; stops at a cycle or a missing parent). */
+export function rootOf(
+  a: Pick<PdfAnnotationObject, 'id' | 'inReplyToId'>,
+  byId: ReadonlyMap<string, Pick<PdfAnnotationObject, 'id' | 'inReplyToId'>>,
+): string {
+  let cur = a;
+  const seen = new Set<string>();
+  while (cur.inReplyToId && !seen.has(cur.id)) {
+    seen.add(cur.id);
+    const parent = byId.get(cur.inReplyToId);
+    if (!parent) break;
+    cur = parent;
+  }
+  return cur.id;
+}
+
 /** Comments with numbers, reply counts and status, in number order. */
 export function commentsOf(all: readonly PdfAnnotationObject[]): Comment[] {
   const nums = numberComments(all);
+  const byId = new Map(all.map((a) => [a.id, a]));
   const replies = new Map<string, number>();
+  const replyText = new Map<string, string[]>();
   const states = new Map<string, { at: number; state: PdfAnnotationState }>();
   for (const a of all) {
     if (!a.inReplyToId) continue;
@@ -78,6 +104,12 @@ export function commentsOf(all: readonly PdfAnnotationObject[]): Comment[] {
         states.set(a.inReplyToId, { at, state: (a as { state: PdfAnnotationState }).state });
     } else if (a.type === S.TEXT) {
       replies.set(a.inReplyToId, (replies.get(a.inReplyToId) ?? 0) + 1);
+      const root = rootOf(a, byId);
+      if (root !== a.id && a.contents) {
+        const texts = replyText.get(root) ?? [];
+        texts.push(a.contents);
+        replyText.set(root, texts);
+      }
     }
   }
   const out: Comment[] = [];
@@ -96,6 +128,10 @@ export function commentsOf(all: readonly PdfAnnotationObject[]): Comment[] {
       number,
       replies: replies.get(a.id) ?? 0,
       status: states.get(a.id)?.state ?? null,
+      locked: a.flags?.includes('locked') ?? false,
+      search: [contents, a.author ?? '', subjectOf(a), ...(replyText.get(a.id) ?? [])]
+        .join('\n')
+        .toLocaleLowerCase(),
       annot: a,
     });
   }
@@ -109,47 +145,219 @@ export interface CommentFilter {
   pages?: readonly [number, number];
   /** 'none' matches comments without a review state. */
   statuses?: readonly (PdfAnnotationState | 'none')[];
+  /** Find (M6-05, set on Enter only — rule 3): words in the text, author, subject or replies. */
+  text?: string;
 }
 
 export type CommentSort = 'page' | 'date' | 'author' | 'type';
 
+/** What the cards are grouped under (M6-05); 'none' lists them without headers. */
+export type CommentGroup = 'page' | 'author' | 'type' | 'status' | 'none';
+
+/** A group header's subject: what the comments under it share. */
+export type GroupValue =
+  | { by: 'page'; page: number }
+  | { by: 'author'; author: string }
+  | { by: 'type'; type: MessageKey }
+  | { by: 'status'; status: PdfAnnotationState | 'none' };
+
+/** A reply in a thread (depth 0: a reply to the comment). */
+export interface ReplyEntry {
+  annot: PdfAnnotationObject;
+  depth: number;
+}
+
 export type CommentRow =
-  { kind: 'page'; page: number; count: number } | { kind: 'comment'; comment: Comment };
+  | { kind: 'group'; key: string; value: GroupValue; count: number; collapsed: boolean }
+  | { kind: 'comment'; key: string; comment: Comment; group: string | null; replies: number }
+  | {
+      kind: 'reply';
+      key: string;
+      reply: PdfAnnotationObject;
+      depth: number;
+      root: Comment;
+      /** The thread's last row (the card ends here). */
+      last: boolean;
+    };
+
+export interface CommentLayout {
+  rows: CommentRow[];
+  /** Every comment shown, in list order, those in collapsed groups too (Previous / Next). */
+  order: Comment[];
+  /** Group key by comment id (empty when not grouped). */
+  groupOf: Map<string, string>;
+  /** Comments that pass the filter. */
+  shown: number;
+}
+
+export interface LayoutOptions {
+  group?: CommentGroup;
+  /** Group keys whose comments are hidden under their header. */
+  collapsed?: ReadonlySet<string>;
+  /** A comment's replies in thread order (nested ones after their parent). */
+  repliesOf?: (id: string) => readonly ReplyEntry[];
+}
+
+/** The find text as typed, normalized: trimmed, lower case; empty means no find. */
+export const findText = (s: string): string => s.trim().toLocaleLowerCase();
 
 export function matches(c: Comment, f: CommentFilter): boolean {
   if (f.authors?.length && !f.authors.includes(c.author)) return false;
   if (f.types?.length && !f.types.includes(c.type)) return false;
   if (f.pages && (c.page < f.pages[0] || c.page > f.pages[1])) return false;
   if (f.statuses?.length && !f.statuses.includes(c.status ?? 'none')) return false;
+  if (f.text) {
+    const words = findText(f.text).split(/\s+/u).filter(Boolean);
+    if (!words.every((w) => c.search.includes(w))) return false;
+  }
   return true;
+}
+
+/** Whether any filter is set (the chip row shows only then). */
+export function isFiltered(f: CommentFilter): boolean {
+  return (
+    (f.authors?.length ?? 0) > 0 ||
+    (f.types?.length ?? 0) > 0 ||
+    f.pages !== undefined ||
+    (f.statuses?.length ?? 0) > 0 ||
+    findText(f.text ?? '') !== ''
+  );
 }
 
 const collator = new Intl.Collator(undefined, { sensitivity: 'base' });
 
-/** The pane's rows: by page with page headers, or flat for the other sorts. */
-export function buildRows(
+const SORTS: Record<CommentSort, (a: Comment, b: Comment) => number> = {
+  page: (a, b) => a.number - b.number,
+  date: (a, b) => (b.date?.getTime() ?? 0) - (a.date?.getTime() ?? 0) || a.number - b.number,
+  author: (a, b) => collator.compare(a.author, b.author) || a.number - b.number,
+  type: (a, b) => a.type - b.type || a.number - b.number,
+};
+
+/** Status groups in the order the filter offers them; others after. */
+const STATUS_ORDER: readonly (PdfAnnotationState | 'none')[] = [
+  'none',
+  PdfAnnotationState.Accepted,
+  PdfAnnotationState.Rejected,
+  PdfAnnotationState.Cancelled,
+  PdfAnnotationState.Completed,
+  PdfAnnotationState.None,
+  PdfAnnotationState.Marked,
+  PdfAnnotationState.Unmarked,
+];
+
+interface GroupDef {
+  key: (c: Comment) => string;
+  value: (c: Comment) => GroupValue;
+  order: (a: GroupValue, b: GroupValue) => number;
+}
+
+const GROUPS: Record<Exclude<CommentGroup, 'none'>, GroupDef> = {
+  page: {
+    key: (c) => `page:${String(c.page)}`,
+    value: (c) => ({ by: 'page', page: c.page }),
+    order: (a, b) => (a.by === 'page' && b.by === 'page' ? a.page - b.page : 0),
+  },
+  author: {
+    key: (c) => `author:${c.author}`,
+    value: (c) => ({ by: 'author', author: c.author }),
+    order: (a, b) =>
+      a.by === 'author' && b.by === 'author' ? collator.compare(a.author, b.author) : 0,
+  },
+  type: {
+    key: (c) => `type:${annotationTypeKey(c.annot)}`,
+    value: (c) => ({ by: 'type', type: annotationTypeKey(c.annot) }),
+    order: (a, b) => (a.by === 'type' && b.by === 'type' ? collator.compare(a.type, b.type) : 0),
+  },
+  status: {
+    key: (c) => `status:${c.status ?? 'none'}`,
+    value: (c) => ({ by: 'status', status: c.status ?? 'none' }),
+    order: (a, b) =>
+      a.by === 'status' && b.by === 'status'
+        ? STATUS_ORDER.indexOf(a.status) - STATUS_ORDER.indexOf(b.status)
+        : 0,
+  },
+};
+
+/**
+ * The pane's rows (M6-05): the comments that pass the filter, under a header
+ * per group (unless 'none'), sorted inside each group; each comment followed
+ * by its replies (the card), except in a collapsed group. Pure.
+ */
+export function layoutComments(
   comments: readonly Comment[],
   filter: CommentFilter,
   sort: CommentSort,
-): CommentRow[] {
-  const shown = comments.filter((c) => matches(c, filter));
-  if (sort === 'page') {
-    const rows: CommentRow[] = [];
-    let i = 0;
-    while (i < shown.length) {
-      const page = shown[i]?.page ?? 0;
-      let j = i;
-      while (j < shown.length && shown[j]?.page === page) j++;
-      rows.push({ kind: 'page', page, count: j - i });
-      for (const c of shown.slice(i, j)) rows.push({ kind: 'comment', comment: c });
-      i = j;
-    }
-    return rows;
-  }
-  const by: Record<Exclude<CommentSort, 'page'>, (a: Comment, b: Comment) => number> = {
-    date: (a, b) => (b.date?.getTime() ?? 0) - (a.date?.getTime() ?? 0) || a.number - b.number,
-    author: (a, b) => collator.compare(a.author, b.author) || a.number - b.number,
-    type: (a, b) => a.type - b.type || a.number - b.number,
+  opts: LayoutOptions = {},
+): CommentLayout {
+  const group = opts.group ?? 'page';
+  const collapsed = opts.collapsed ?? new Set<string>();
+  const shown = comments.filter((c) => matches(c, filter)).sort(SORTS[sort]);
+  const rows: CommentRow[] = [];
+  const order: Comment[] = [];
+  const groupOf = new Map<string, string>();
+  const pushCard = (c: Comment, key: string | null): void => {
+    const replies = opts.repliesOf?.(c.id) ?? [];
+    rows.push({
+      kind: 'comment',
+      key: `c:${c.id}`,
+      comment: c,
+      group: key,
+      replies: replies.length,
+    });
+    replies.forEach((r, i) => {
+      rows.push({
+        kind: 'reply',
+        key: `r:${r.annot.id}`,
+        reply: r.annot,
+        depth: r.depth,
+        root: c,
+        last: i === replies.length - 1,
+      });
+    });
   };
-  return [...shown].sort(by[sort]).map((comment) => ({ kind: 'comment', comment }));
+  if (group === 'none') {
+    for (const c of shown) {
+      order.push(c);
+      pushCard(c, null);
+    }
+    return { rows, order, groupOf, shown: shown.length };
+  }
+  const def = GROUPS[group];
+  const buckets = new Map<string, { value: GroupValue; items: Comment[] }>();
+  for (const c of shown) {
+    const key = def.key(c);
+    let b = buckets.get(key);
+    if (!b) {
+      b = { value: def.value(c), items: [] };
+      buckets.set(key, b);
+    }
+    b.items.push(c);
+  }
+  const keys = [...buckets.keys()].sort((x, y) => {
+    const bx = buckets.get(x);
+    const by = buckets.get(y);
+    return bx && by ? def.order(bx.value, by.value) : 0;
+  });
+  for (const key of keys) {
+    const b = buckets.get(key);
+    if (!b) continue;
+    const isCollapsed = collapsed.has(key);
+    rows.push({
+      kind: 'group',
+      key: `g:${key}`,
+      value: b.value,
+      count: b.items.length,
+      collapsed: isCollapsed,
+    });
+    for (const c of b.items) {
+      order.push(c);
+      groupOf.set(c.id, key);
+      if (!isCollapsed) pushCard(c, key);
+    }
+  }
+  return { rows, order, groupOf, shown: shown.length };
 }
+
+/** The group keys of a layout (Collapse all). */
+export const groupKeys = (layout: CommentLayout): string[] =>
+  layout.rows.flatMap((r) => (r.kind === 'group' ? [r.key.slice(2)] : []));

@@ -53,7 +53,7 @@ test.beforeEach(({ page }) => {
   });
 });
 
-test('opening writes nothing; an edit is snapshotted ~5 s later; reload → Recover restores the edit and the page', async ({
+test('opening writes nothing; an edit is snapshotted ~5 s later; reload → Recover restores the edit and the page @smoke', async ({
   page,
   pdfs,
 }) => {

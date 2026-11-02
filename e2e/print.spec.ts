@@ -58,7 +58,7 @@ async function openPrintFixture(page: Page, bytes = printPdf(), name = 'print.pd
   await page.locator('[data-page="0"] img.page-preview').waitFor();
 }
 
-test('Ctrl+P: all pages at standard quality, orientation per page, then print()', async ({
+test('Ctrl+P: all pages at standard quality, orientation per page, then print() @smoke', async ({
   page,
 }) => {
   await openPrintFixture(page);

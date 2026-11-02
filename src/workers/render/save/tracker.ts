@@ -791,9 +791,10 @@ export class SaveTracker {
     docId: string,
     objects: readonly Span[],
     firstNew: number,
+    capability: Capability = 'annotate',
   ): Promise<PdfDocumentObject> {
     const s = this.need(docId);
-    this.requireCapability(docId, 'annotate');
+    this.requireCapability(docId, capability);
     const { state } = await this.currentState(docId, s);
     for (const num of state.keys())
       if (num >= firstNew)

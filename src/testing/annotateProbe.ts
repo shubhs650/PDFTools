@@ -21,6 +21,8 @@ import { lastCrs } from '../features/crs/crsExport';
 import { lastAnnotationExport } from '../features/annotate/export/annotationExport';
 import { placeDynamicStamp } from '../features/stamps/stampTools';
 import { MEASURE_INTENT, type MeasureKind } from '../model/measurement';
+import { isStyleTool, type StyleProps } from '../features/annotate/tools/toolDefaults';
+import { setToolDefaults, toolDefaultsStore } from '../features/annotate/tools/toolDefaultsStore';
 import type { TestHook } from './hook';
 
 function history(): HistoryCapability | null {
@@ -184,6 +186,17 @@ export function registerAnnotateProbe(hook: TestHook): void {
     /** A dynamic stamp (M3-14) with the active scheme's first code, at a point. */
     stamp: (docId: string, page: number, x: number, y: number) =>
       placeDynamicStamp(docId, page, { x, y }),
+    /** Turns a plugin tool on (tools without a ribbon button yet, e.g. the typewriter). */
+    setTool: (docId: string, toolId: string) => {
+      annotationCapability()?.forDocument(docId).setActiveTool(toolId);
+    },
+    /** A tool's defaults as the plugin will apply them to the next comment. */
+    toolDefaults: (toolId: string) => annotationCapability()?.getTool(toolId)?.defaults ?? null,
+    /** The user's own default style for a tool (M6-03; the Properties pane sets it in M6-06). */
+    setToolDefaults: async (toolId: string, props: StyleProps) => {
+      if (isStyleTool(toolId)) await setToolDefaults(toolId, props);
+    },
+    toolDefaultsLoaded: () => toolDefaultsStore.getState().loaded,
     setProfile: (name: string) => saveProfile({ name, initials: '', discipline: '', company: '' }),
     profile: () => {
       const s = profileStore.getState();

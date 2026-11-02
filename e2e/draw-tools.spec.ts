@@ -211,7 +211,9 @@ test('polyline: Enter finishes, Esc drops the one in progress and keeps the tool
   await expect(page.locator('.document-host')).toHaveAttribute('data-tool', 'select');
 });
 
-test('keyboard: N then Enter places a note, T then Enter a text box (M3-Q6)', async ({ page }) => {
+test('keyboard: N then Enter places a note, T then Enter a text box (M3-Q6) @smoke', async ({
+  page,
+}) => {
   const id = await open(page);
   await view(page).focus();
   await page.keyboard.press('n');

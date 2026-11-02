@@ -43,11 +43,16 @@ function helpKeys(t: TFunction) {
     zoomOut: k('view.zoomOut'),
     fitPage: k('view.fitPage'),
     fitWidth: k('view.fitWidth'),
+    fullScreen: k('view.fullScreen'),
     find: k('home.find'),
     findNext: k('find.next'),
     advancedSearch: k('home.advancedSearch'),
     undo: k('qat.undo'),
     delete: k('comment.delete'),
+    copy: k('edit.copy'),
+    cut: k('edit.cut'),
+    paste: k('edit.paste'),
+    menu: k('menu.context'),
   };
 }
 

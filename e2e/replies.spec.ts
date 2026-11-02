@@ -5,7 +5,8 @@ import { expect, test } from './support/fixtures.ts';
 
 // M3-12 (§7.1, M3-Q3): replies (/IRT) and review states (/StateModel /Review)
 // as standard Text annotations; viewer-made ones are read; a comment with
-// replies asks before deleting them.
+// replies asks before deleting them. Since M6-05 the thread is the comment's
+// card in the Comments pane: replies inside it, an inline reply editor.
 
 /** A note by Ana with a reply by Cy and a Rejected state set by Bo in another viewer. */
 function threadPdf(): Buffer {
@@ -21,7 +22,10 @@ function threadPdf(): Buffer {
   );
 }
 
-const thread = (page: Page) => page.getByTestId('comment-thread');
+const pane = (page: Page) => page.getByTestId('comments-pane');
+const rows = (page: Page) => page.getByTestId('comments-list').getByRole('option');
+const card = (page: Page) => page.getByTestId('comments-list').locator('[data-comment="note"]');
+const editor = (page: Page) => pane(page).getByTestId('comment-editor');
 const list = (page: Page, id: string) =>
   cap(page, 'annotate', 'list', id) as Promise<{ id: string; contents: string | null }[] | null>;
 
@@ -36,11 +40,8 @@ async function open(page: Page, bytes: Buffer = threadPdf()): Promise<string> {
     .getByRole('complementary', { name: 'Navigation panes' })
     .getByRole('button', { name: 'Comments' })
     .click();
-  await page
-    .getByTestId('comments-list')
-    .getByRole('option', { name: /See detail 4/ })
-    .click();
-  await expect(thread(page)).toBeVisible();
+  await card(page).click();
+  await expect(card(page)).toHaveAttribute('aria-selected', 'true');
   return id;
 }
 
@@ -55,21 +56,16 @@ test('viewer-made reply and state are shown; reply and status are added and save
   page,
 }) => {
   const id = await open(page);
-  await expect(thread(page)).toContainText('Agreed');
-  await expect(thread(page).getByRole('list', { name: 'Status by reviewer' })).toContainText(
-    'Rejected — Bo',
-  );
+  await expect(rows(page)).toContainText([/See detail 4.*Rejected — Bo/, /Reply by.*Cy.*Agreed/]);
 
-  await thread(page).getByLabel('Reply', { exact: true }).fill('Detail 4 is superseded');
-  await thread(page).getByRole('button', { name: 'Post reply' }).click();
-  await expect(thread(page).getByRole('list', { name: 'Replies' })).toContainText(
-    'Detail 4 is superseded',
-  );
-  await thread(page).getByLabel('Set status').selectOption({ label: 'Accepted' });
-  await expect(thread(page).getByRole('list', { name: 'Status by reviewer' })).toContainText(
-    'Accepted — Ana',
-  );
-  await expect(page.getByTestId('comments-list')).toContainText('Accepted');
+  await pane(page).getByRole('button', { name: 'Reply', exact: true }).click();
+  await editor(page).getByRole('textbox', { name: 'Reply' }).fill('Detail 4 is superseded');
+  await editor(page).getByRole('button', { name: 'Post reply' }).click();
+  await expect(rows(page)).toContainText([/See detail 4/, /Agreed/, /Detail 4 is superseded/]);
+  await pane(page).getByRole('button', { name: 'Set Status' }).click();
+  await page.getByRole('menuitem', { name: 'Accepted' }).click();
+  await expect(card(page)).toContainText('Accepted — Ana');
+  await expect(card(page)).toContainText('Rejected — Bo');
 
   const { file, tail } = await saved(page, id);
   expect(tail).toMatch(/\/Contents\s*\(Detail 4 is superseded\)/);
@@ -85,37 +81,41 @@ test('viewer-made reply and state are shown; reply and status are added and save
     .getByRole('complementary', { name: 'Navigation panes' })
     .getByRole('button', { name: 'Comments' })
     .click();
-  await page
-    .getByTestId('comments-list')
-    .getByRole('option', { name: /See detail 4/ })
-    .click();
-  await expect(thread(page)).toContainText('Detail 4 is superseded');
-  await expect(thread(page).getByRole('list', { name: 'Status by reviewer' })).toContainText(
-    'Accepted — Ana',
-  );
+  await expect(rows(page)).toContainText([/Detail 4 is superseded/]);
+  await expect(card(page)).toContainText('Accepted — Ana');
 });
 
 test('own replies can be edited and deleted, others’ cannot', async ({ page }) => {
   const id = await open(page);
-  const replies = thread(page).getByRole('list', { name: 'Replies' });
-  await expect(
-    replies.getByRole('listitem').filter({ hasText: 'Agreed' }).getByRole('button'),
-  ).toHaveCount(0);
-  await thread(page).getByLabel('Reply', { exact: true }).fill('Typo here');
-  await thread(page).getByRole('button', { name: 'Post reply' }).click();
-  // Its text changes while editing, so address it by position (the newest reply).
-  const mine = replies.getByRole('listitem').last();
-  await expect(mine).toContainText('Typo here');
-  await mine.getByRole('button', { name: 'Edit reply' }).click();
-  await mine.getByLabel('Edit reply').fill('Fixed text');
-  await mine.getByRole('button', { name: 'Save' }).click();
-  await expect(replies).toContainText('Fixed text');
-  await replies
-    .getByRole('listitem')
-    .filter({ hasText: 'Fixed text' })
-    .getByRole('button', { name: 'Delete reply' })
-    .click();
-  await expect(replies).not.toContainText('Fixed text');
+  const reply = (text: string) => rows(page).filter({ hasText: text });
+  await expect(reply('Agreed').locator('[data-action]')).toHaveCount(0);
+  // F2 on someone else's reply edits nothing.
+  await reply('Agreed').click();
+  await page.getByTestId('comments-list').press('F2');
+  await expect(editor(page)).toHaveCount(0);
+
+  await pane(page).getByRole('button', { name: 'Reply', exact: true }).click();
+  await editor(page).getByRole('textbox', { name: 'Reply' }).fill('Typo here');
+  await editor(page).getByRole('textbox', { name: 'Reply' }).press('Enter');
+  await expect(reply('Typo here')).toHaveCount(1);
+  await reply('Typo here').locator('[data-action="edit"]').click();
+  const box = editor(page).getByRole('textbox', { name: 'Edit text' });
+  await expect(box).toHaveValue('Typo here');
+  await box.fill('Fixed text');
+  await editor(page).getByRole('button', { name: 'Save' }).click();
+  await expect(reply('Fixed text')).toHaveCount(1);
+  // Delete on your own reply (keyboard) deletes that reply only.
+  await reply('Fixed text').click();
+  await page.getByTestId('comments-list').press('Delete');
+  await expect(reply('Fixed text')).toHaveCount(0);
+  await expect.poll(async () => (await list(page, id))?.length).toBe(3);
+  // And from its editor.
+  await pane(page).getByRole('button', { name: 'Reply', exact: true }).click();
+  await editor(page).getByRole('textbox', { name: 'Reply' }).fill('Second try');
+  await editor(page).getByRole('textbox', { name: 'Reply' }).press('Enter');
+  await reply('Second try').dblclick();
+  await editor(page).getByRole('button', { name: 'Delete reply' }).click();
+  await expect(reply('Second try')).toHaveCount(0);
   await expect.poll(async () => (await list(page, id))?.length).toBe(3);
 });
 
@@ -161,11 +161,9 @@ test('Comment → Delete removes the selected comment; disabled without a select
   await expect(del).toHaveAccessibleDescription(/Select a comment first/);
 });
 
-test('Delete in the Comments pane list and the thread’s Delete comment button', async ({
-  page,
-}) => {
+test('Delete in the Comments pane list and the pane’s Delete button', async ({ page }) => {
   const id = await open(page);
-  // The row is selected (open() clicked it): Delete in the list deletes it.
+  // The card is selected (open() clicked it): Delete in the list deletes it.
   await page.getByTestId('comments-list').focus();
   await page.keyboard.press('Delete');
   const dialog = page.getByRole('dialog', { name: 'Delete comments and their replies?' });
@@ -175,13 +173,9 @@ test('Delete in the Comments pane list and the thread’s Delete comment button'
   await page.keyboard.press('Control+z');
   await expect.poll(async () => (await list(page, id))?.length).toBe(3);
 
-  await page
-    .getByTestId('comments-list')
-    .getByRole('option', { name: /See detail 4/ })
-    .click();
-  await expect(thread(page)).toBeVisible();
-  await thread(page).getByRole('button', { name: 'Delete comment' }).click();
+  await card(page).click();
+  await pane(page).getByRole('button', { name: 'Delete Selected Comments' }).click();
   await dialog.getByRole('button', { name: 'Delete' }).click();
   await expect.poll(async () => (await list(page, id))?.length).toBe(0);
-  await expect(thread(page)).toHaveCount(0);
+  await expect(card(page)).toHaveCount(0);
 });

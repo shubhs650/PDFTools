@@ -71,8 +71,8 @@ describe('command table (M1-06)', () => {
     expect(problems).toEqual([]);
   });
 
-  it('shows M1 … M4 commands (M4 complete, M4-22); the rest are omitted (M1-Q2)', () => {
-    expect(AVAILABLE_MILESTONES).toEqual(['M1', 'M2', 'M3', 'M4']);
+  it('shows M1 … M5 commands (M4 complete, M4-22; M5 OCR, ADR-020); the rest are omitted (M1-Q2)', () => {
+    expect(AVAILABLE_MILESTONES).toEqual(['M1', 'M2', 'M3', 'M4', 'M5']);
     // Every M2 … M4 command works: none is left for the milestone flag alone to show.
     expect(
       COMMANDS.filter(

@@ -305,10 +305,39 @@ body {
 
 /* ------------------------------------------------------------ ribbon */
 
+/* Title row (M6-01, D-35): product mark and name, then the quick access toolbar. */
+.app-title-row {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  padding-left: var(--space-3);
+}
+
+.app-brand {
+  display: inline-flex;
+  flex: none;
+  align-items: center;
+  gap: var(--space-2);
+}
+
+.app-brand-mark {
+  width: var(--icon-size-m);
+  height: var(--icon-size-m);
+}
+
+.app-brand-name {
+  margin: var(--space-0);
+  font-size: var(--font-size-m);
+  font-weight: var(--font-weight-semibold);
+  line-height: var(--line-height);
+  white-space: nowrap;
+}
+
 .quick-access {
   display: flex;
   gap: var(--space-1);
   padding: var(--space-1) var(--space-3);
+  border-left: var(--border-width) solid var(--color-border);
 }
 
 .ribbon {
@@ -354,9 +383,48 @@ body {
 }
 
 .ribbon-tabs-end {
+  display: flex;
+  align-items: center;
+  gap: var(--space-1);
   margin-left: auto;
-  align-self: center;
+  padding-left: var(--space-2);
   padding-right: var(--space-2);
+}
+
+/* OpenEngTools home, report an issue, full screen (M6-01, D-35). */
+.top-bar-actions {
+  display: flex;
+  align-items: center;
+  gap: var(--space-1);
+  padding-right: var(--space-1);
+  border-right: var(--border-width) solid var(--color-border);
+}
+
+.top-bar-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: var(--control-height-s);
+  height: var(--control-height-s);
+  border: none;
+  border-radius: var(--radius-m);
+  background: transparent;
+  color: var(--color-icon);
+  cursor: pointer;
+}
+
+.top-bar-button:hover {
+  background: var(--color-hover);
+}
+
+.top-bar-button[aria-disabled='true'] {
+  color: var(--color-text-disabled);
+  cursor: default;
+}
+
+.top-bar-icon {
+  width: var(--icon-size-m);
+  height: var(--icon-size-m);
 }
 
 .ribbon-panel {
@@ -753,6 +821,11 @@ body {
 
 .document-host {
   height: 100%;
+}
+
+/* The document's context menu area (M6-02): no box of its own. */
+.document-menu-area {
+  display: contents;
 }
 
 /* Quick Find (M2-07) */
@@ -1734,7 +1807,7 @@ textarea.form-field {
   overflow-y: auto;
 }
 
-/* ------------------------------------------------------------ comments pane (M3-11) */
+/* ------------------------------------------------------------ comments pane (M3-11, cards M6-05) */
 .comments-pane {
   /* Fills the pane body without its (virtual) content sizing it, as .search-pane. */
   position: absolute;
@@ -1743,33 +1816,99 @@ textarea.form-field {
   flex-direction: column;
 }
 
-.comments-filters {
-  display: grid;
-  grid-template-columns: max-content 1fr;
-  gap: var(--space-2) var(--space-3);
+.comments-toolbar {
+  display: flex;
+  gap: var(--space-1);
   align-items: center;
-  padding: var(--space-3);
+  padding: var(--space-2) var(--space-3);
   border-bottom: var(--border-width) solid var(--color-border);
 }
 
-.comments-check {
+.comments-tool[aria-disabled='true'] {
+  color: var(--color-text-disabled);
+  cursor: default;
+}
+
+.comments-find {
   display: flex;
-  grid-column: 1 / -1;
+  gap: var(--space-1);
+  align-items: center;
+  padding: var(--space-2) var(--space-3);
+}
+
+.comments-find-input {
+  flex: 1;
+  min-width: var(--space-0);
+}
+
+.comments-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+  padding: var(--space-0) var(--space-3) var(--space-2);
+}
+
+.comments-chip {
+  display: inline-flex;
   gap: var(--space-2);
   align-items: center;
+  max-width: 100%;
+  min-height: var(--control-height-s);
+  padding: var(--space-0) var(--space-3);
+  border: var(--border-width) solid var(--color-border);
+  border-radius: var(--radius-round);
+  background: var(--color-surface-sunken);
+  color: var(--color-text);
+  font: inherit;
+  font-size: var(--font-size-s);
+  cursor: pointer;
+}
+
+.comments-chip:hover {
+  background: var(--color-hover);
+}
+
+.comments-chip:focus-visible {
+  outline: var(--focus-width) solid var(--color-focus);
+  outline-offset: var(--focus-offset);
+}
+
+.comments-chip-label {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.comments-chip--clear {
+  border-color: transparent;
+  background: transparent;
+  color: var(--color-accent);
+}
+
+.comments-empty {
+  flex: 1;
+  margin: var(--space-0);
+  padding: var(--space-4) var(--space-3);
+  color: var(--color-text-muted);
 }
 
 .comments-count {
   margin: var(--space-0);
   padding: var(--space-2) var(--space-3);
+  border-top: var(--border-width) solid var(--color-border);
   color: var(--color-text-muted);
   font-size: var(--font-size-s);
 }
 
-.comments-list {
+.comments-list-wrap {
   position: relative;
   flex: 1;
   min-height: var(--space-0);
+}
+
+.comments-list {
+  position: absolute;
+  inset: var(--space-0);
   overflow-y: auto;
   overscroll-behavior: contain;
 }
@@ -1783,50 +1922,304 @@ textarea.form-field {
   position: relative;
 }
 
-.comment-row {
+/* Rows: measured (variable height), placed by the virtualizer. Spacing is
+   padding of the option (part of its measured height), never margin. */
+.comment-group,
+.comment-option,
+.comment-editor-gap {
   position: absolute;
   right: var(--space-0);
   left: var(--space-0);
-  display: flex;
-  gap: var(--space-3);
-  align-items: center;
-  padding: var(--space-0) var(--space-3);
   box-sizing: border-box;
-  cursor: pointer;
 }
 
-.comment-row--page {
-  background: var(--color-surface-sunken);
+.comment-group {
+  display: flex;
+  gap: var(--space-2);
+  align-items: center;
+  min-height: var(--control-height-m);
+  padding: var(--space-2) var(--space-3);
   color: var(--color-text-muted);
   font-size: var(--font-size-s);
   font-weight: var(--font-weight-semibold);
+  cursor: pointer;
+  user-select: none;
 }
 
-.comment-row--active {
+.comment-group:hover {
+  color: var(--color-text);
+}
+
+.comment-group-chevron {
+  flex: none;
+}
+
+.comment-option {
+  --card-color: var(--color-border-strong);
+  padding: var(--space-0) var(--space-3);
+  cursor: pointer;
+}
+
+.comment-option.is-first {
+  padding-top: var(--space-2);
+}
+
+.comment-option.is-last {
+  padding-bottom: var(--space-2);
+}
+
+/* A card: its comment row and its reply rows share the frame. */
+.comment-row {
+  padding: var(--space-2) var(--space-3);
+  border: var(--border-width) solid var(--color-border);
+  border-block: none;
+  border-inline-start: 3px solid var(--card-color);
+  background: var(--color-surface);
+}
+
+.is-first > .comment-row {
+  border-top: var(--border-width) solid var(--color-border);
+  border-top-left-radius: var(--radius-m);
+  border-top-right-radius: var(--radius-m);
+}
+
+.is-last > .comment-row {
+  border-bottom: var(--border-width) solid var(--color-border);
+  border-bottom-left-radius: var(--radius-m);
+  border-bottom-right-radius: var(--radius-m);
+}
+
+.comment-option:hover > .comment-row {
+  background: var(--color-hover);
+}
+
+.comment-option.is-selected > .comment-row {
+  border-color: var(--color-accent);
+  border-inline-start-color: var(--card-color);
   background: var(--color-selected);
+  box-shadow:
+    inset 1px 0 0 var(--color-accent),
+    inset -1px 0 0 var(--color-accent);
 }
 
-.comment-number {
-  min-width: 2.5em;
+/* The active row while the list has focus (aria-activedescendant). */
+.comments-list:focus-visible .comment-group.is-active,
+.comments-list:focus-visible .is-active > .comment-row {
+  outline: var(--focus-width) solid var(--color-focus);
+  outline-offset: calc(-1 * var(--focus-width));
+}
+
+.comment-card-head {
+  display: flex;
+  gap: var(--space-2);
+  align-items: center;
+  min-height: var(--icon-size-m);
+}
+
+.comment-card-icon {
+  display: inline-flex;
+  flex: none;
+  color: var(--card-color);
+}
+
+.comment-card-icon svg {
+  width: var(--icon-size-m);
+  height: var(--icon-size-m);
+}
+
+.comment-card-type {
+  overflow: hidden;
+  font-weight: var(--font-weight-semibold);
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.comment-card-number {
+  flex: none;
+  min-width: 1.5em;
+  padding: var(--space-0) var(--space-2);
+  border-radius: var(--radius-round);
+  background: var(--color-surface-sunken);
+  color: var(--color-text-muted);
+  font-size: var(--font-size-xs);
   font-variant-numeric: tabular-nums;
-  text-align: right;
+  text-align: center;
 }
 
-.comment-body {
-  display: grid;
+.comment-card-lock {
+  display: inline-flex;
+  flex: none;
+  color: var(--color-text-muted);
+}
+
+.comment-marks {
+  display: inline-flex;
+  gap: var(--space-1);
+  margin-inline-start: auto;
+}
+
+.comment-mark {
+  display: inline-flex;
+  padding: var(--space-1);
+  border-radius: var(--radius-s);
+  color: var(--color-text-muted);
+  opacity: 0;
+}
+
+.comment-option:hover .comment-mark,
+.comment-option.is-selected .comment-mark,
+.comment-option.is-active .comment-mark {
+  opacity: 1;
+}
+
+.comment-mark:hover {
+  background: var(--color-pressed);
+  color: var(--color-text);
+}
+
+.comment-card-meta,
+.comment-reply-meta {
+  display: flex;
   min-width: var(--space-0);
+  color: var(--color-text-muted);
+  font-size: var(--font-size-s);
 }
 
-.comment-meta,
-.comment-text {
+.comment-card-author,
+.comment-reply-author {
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
 }
 
-.comment-meta {
+.comment-card-date {
+  flex: none;
+  white-space: pre;
+}
+
+.comment-card-text,
+.comment-reply-text {
+  display: -webkit-box;
+  margin: var(--space-1) var(--space-0) var(--space-0);
+  overflow: hidden;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 4;
+  overflow-wrap: anywhere;
+  white-space: pre-wrap;
+}
+
+.is-selected .comment-card-text,
+.is-selected .comment-reply-text {
+  -webkit-line-clamp: unset;
+}
+
+.comment-card-text.is-empty {
   color: var(--color-text-muted);
+  font-style: italic;
+}
+
+.comment-card-states {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-1) var(--space-3);
+  margin: var(--space-2) var(--space-0) var(--space-0);
+  padding: var(--space-0);
+  list-style: none;
   font-size: var(--font-size-s);
+}
+
+.comment-state {
+  display: inline-flex;
+  gap: var(--space-1);
+  align-items: center;
+}
+
+.comment-status-icon {
+  flex: none;
+  color: var(--color-text-muted);
+}
+
+/* Replies: inside the card, indented by depth. */
+.comment-reply {
+  padding-top: var(--space-1);
+  padding-inline-start: calc(var(--space-5) + var(--reply-depth, 0) * var(--space-4));
+}
+
+.comment-editor-gap + .comment-option .comment-row {
+  border-top: none;
+}
+
+.comment-reply-body {
+  padding-top: var(--space-2);
+  padding-inline-start: var(--space-3);
+  border-top: var(--border-width) solid var(--color-border);
+  border-inline-start: 2px solid var(--color-border);
+}
+
+.comment-reply-text {
+  -webkit-line-clamp: 3;
+}
+
+/* The inline editor: over the gap left in the card, outside the listbox (M6-05). */
+.comment-editor-layer {
+  position: absolute;
+  inset: var(--space-0);
+  overflow: hidden;
+  pointer-events: none;
+}
+
+.comment-editor-layer-inner {
+  position: relative;
+}
+
+.comment-editor-place {
+  position: absolute;
+  right: var(--space-3);
+  left: var(--space-3);
+  pointer-events: auto;
+}
+
+.comment-editor-place:last-child {
+  padding-bottom: var(--space-2);
+}
+
+.comment-editor {
+  display: grid;
+  gap: var(--space-2);
+  padding: var(--space-2) var(--space-3) var(--space-3);
+  border: var(--border-width) solid var(--color-accent);
+  border-top: none;
+  border-bottom-left-radius: var(--radius-m);
+  border-bottom-right-radius: var(--radius-m);
+  background: var(--color-surface);
+}
+
+.comment-editor-box {
+  width: 100%;
+  box-sizing: border-box;
+  resize: vertical;
+}
+
+.comment-editor-hint {
+  margin: var(--space-0);
+  color: var(--color-text-muted);
+  font-size: var(--font-size-xs);
+}
+
+.comment-editor-actions {
+  display: flex;
+  gap: var(--space-2);
+  justify-content: flex-end;
+}
+
+.comment-editor-delete {
+  margin-inline-end: auto;
+}
+
+.ui-menu-radio-dot {
+  width: 8px;
+  height: 8px;
+  margin: auto;
 }
 
 .measure-overlay {
@@ -1909,18 +2302,33 @@ textarea.form-field {
 }
 
 .snap-toggle {
-  padding: var(--space-0) var(--space-2);
-  border: 1px solid var(--color-border);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: var(--control-height-s);
+  min-height: var(--control-height-s);
+  padding: var(--space-0);
+  border: var(--border-width) solid transparent;
   border-radius: var(--radius-m);
   background: transparent;
-  color: var(--color-text);
-  font: inherit;
+  color: var(--color-icon);
+  cursor: pointer;
 }
 
+.snap-toggle:hover {
+  background: var(--color-hover);
+}
+
+/* Pressed: the Filled magnet on the selection colour, outlined in the accent. */
 .snap-toggle[aria-pressed='true'] {
-  background: var(--color-accent);
+  background: var(--color-selected);
   border-color: var(--color-accent);
-  color: var(--color-text-on-accent);
+  color: var(--color-accent);
+}
+
+.snap-toggle-icon {
+  width: var(--icon-size-m);
+  height: var(--icon-size-m);
 }
 
 .snap-preparing:empty {
@@ -2317,69 +2725,6 @@ textarea.form-field {
   color: var(--color-text-on-accent);
   font-size: var(--font-size-xs);
   text-align: center;
-}
-
-/* ------------------------------------------------------------ comment threads (M3-12) */
-.thread {
-  display: grid;
-  gap: var(--space-2);
-  max-height: 55%;
-  padding: var(--space-3);
-  overflow-y: auto;
-  border-top: var(--border-width) solid var(--color-border);
-}
-
-.thread-title {
-  margin: var(--space-0);
-  font-size: var(--font-size-m);
-  font-weight: var(--font-weight-semibold);
-}
-
-.thread-root,
-.thread-text {
-  margin: var(--space-0);
-  white-space: pre-wrap;
-  overflow-wrap: anywhere;
-}
-
-.thread-fields {
-  display: grid;
-  gap: var(--space-3);
-  margin: var(--space-0);
-  padding: var(--space-0);
-  border: none;
-}
-
-.thread-status,
-.thread-reply-box,
-.thread-edit {
-  display: grid;
-  gap: var(--space-1);
-}
-
-.thread-states,
-.thread-replies {
-  display: grid;
-  gap: var(--space-2);
-  margin: var(--space-0);
-  padding: var(--space-0);
-  list-style: none;
-}
-
-.thread-meta,
-.thread-date {
-  color: var(--color-text-muted);
-  font-size: var(--font-size-s);
-}
-
-.thread-actions {
-  display: flex;
-  gap: var(--space-1);
-}
-
-.thread-reply-box > .ui-button,
-.thread-edit > .ui-button {
-  justify-self: start;
 }
 
 /* ------------------------------------------------------------ status schemes (M3-13) */

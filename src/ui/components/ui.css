@@ -136,6 +136,34 @@
   cursor: default;
 }
 
+/* Context menus (M6-02): icon, label, shortcut at the end; checked toggles get the Filled icon. */
+.ui-context-menu .ui-menu-item {
+  gap: var(--space-3);
+  padding-inline-end: var(--space-4);
+}
+
+.ui-menu-icon {
+  display: inline-flex;
+  flex: none;
+  width: var(--icon-size-m);
+  height: var(--icon-size-m);
+}
+
+.ui-menu-label {
+  flex: 1 1 auto;
+}
+
+.ui-menu-shortcut,
+.ui-menu-chevron {
+  flex: none;
+  margin-inline-start: var(--space-6);
+  color: var(--color-text-muted);
+}
+
+.ui-menu-item[data-disabled] .ui-menu-shortcut {
+  color: var(--color-text-disabled);
+}
+
 .ui-menu-separator {
   height: var(--border-width);
   margin: var(--space-2) var(--space-0);

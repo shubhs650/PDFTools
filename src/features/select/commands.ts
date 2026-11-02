@@ -15,6 +15,8 @@ function selection(): SelectionCapability | null {
 import {
   copyRoute,
   copySelectedComments,
+  cutBlocked,
+  cutSelectedComments,
   pasteBlocked,
   pasteComments,
   selectedCount,
@@ -22,8 +24,28 @@ import {
 
 const activeId = (): string | null => selectActive(documentStore.getState())?.meta.id ?? null;
 
+// The Select All in flight: it reads the page's text in the Render worker
+// before it sets the selection, so a markup key pressed right after Ctrl+A
+// waits for it (M3-08) instead of finding no selection and arming the tool.
+let pending: Promise<void> | null = null;
+
+/** Resolves once any Select All in flight has set its selection (or failed). */
+export async function selectionSettled(): Promise<void> {
+  while (pending) {
+    const p = pending;
+    await p.catch(() => undefined);
+    if (pending === p) pending = null;
+  }
+}
+
 /** Selects all text on the active document's current page. */
-export async function selectPageText(): Promise<void> {
+export function selectPageText(): Promise<void> {
+  const p = readAndSelectPageText();
+  pending = p;
+  return p;
+}
+
+async function readAndSelectPageText(): Promise<void> {
   const sel = selection();
   const registry = hostStore.getState().registry;
   const id = activeId();
@@ -63,12 +85,24 @@ export function registerSelectionCommands(): () => void {
         else selection()?.forDocument(id).copyToClipboard();
       },
     }),
-    // Ctrl+V (M4-21): the copied comments onto the current page; the browser keeps it otherwise.
-    registerCommand('edit.paste', {
-      disabledReason: () => pasteBlocked(activeId()),
+    // Ctrl+X and the comment menu (M6-02): the selected comments to the
+    // in-app clipboard, then deleted with their replies (one undo step).
+    registerCommand('edit.cut', {
+      requires: 'annotate',
+      disabledReason: () => cutBlocked(activeId()),
       run: async () => {
         const id = activeId();
-        if (id) await pasteComments(id, 'current');
+        if (id) await cutSelectedComments(id);
+      },
+    }),
+    // Ctrl+V (M4-21): the copied comments onto the page last clicked (in view)
+    // or the current page; from a context menu (M6-02), at the pointer. The
+    // browser keeps Ctrl+V when there is nothing to paste.
+    registerCommand('edit.paste', {
+      disabledReason: () => pasteBlocked(activeId()),
+      run: async (_ctx, args) => {
+        const id = activeId();
+        if (id) await pasteComments(id, 'current', args?.at);
       },
     }),
     registerCommand('edit.selectAll', {

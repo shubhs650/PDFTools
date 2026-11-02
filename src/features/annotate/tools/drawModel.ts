@@ -5,6 +5,8 @@
 export const DRAW_TOOLS = [
   'textComment',
   'freeText',
+  // A text box without a box (/IT /FreeTextTypeWriter, M6-03): a tool of ours on the plugin's free text.
+  'typewriter',
   'freeTextCallout',
   'line',
   'lineArrow',

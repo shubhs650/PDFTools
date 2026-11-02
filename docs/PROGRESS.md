@@ -1,13 +1,236 @@
 # PDFTools — Progress
 
-_Last updated: 2026-10-02 (session 20: preview review fixes — ribbon, deletion, dialogs, Help)_
+_Last updated: 2026-11-02 (session 27: M6-05 Comments pane redesign)_
 
-**Current milestone:** M4 — Extract, **complete on the agent side** (all 22 tasks; acceptance in
-[docs/acceptance/M4.md](acceptance/M4.md)). With M4 the Rev 0 feature set is complete; the public
-beta (D-32) waits on the owner items in the readiness list (M4.md §5). M0–M3 are merged into
-`main`; the M0–M4 owner runs are open.
+**Current milestone:** M6 — Beta review (plan in [docs/plan/M6.md](plan/M6.md), scope changes in
+[ADR-021](adr/021-m6-beta-review.md), **Accepted** 2026-11-01; ARCHITECTURE.md Rev 0.10; M6-01 … M6-05 done; spike results in
+[ADR-022](adr/022-m6-spikes-s18-s22.md), **Accepted** 2026-11-02 (bookmark route B); next task M6-06). M5 — OCR: M5-01 … M5-04 done under [ADR-020](adr/020-m5-ocr.md); M5-05 (owner
+interop) folds into M6-15. Rev 0 (M0–M4) is complete on the agent side.
 
 ## Done
+
+- **Session 27 — M6-05 Comments pane redesign (ADR-021 D-38 a; beta review B1, B2, B3b).** The
+  five stacked filter fields and the thread panel under the list are gone. **Toolbar** (one row,
+  one tab stop, arrows move): **Options** (gear) — Sort by ▸ (page, date, author, type), Group by
+  ▸ (page, author, type, status, none), Show ▸ Author ▸ / Type ▸ / Status ▸ (tick boxes, several
+  at once) and Current page only (now follows the current page), Expand all, Collapse all, Show
+  Numbers on Page, Import Comments, Export Comments — then Reply, Set Status (a menu; the ribbon's
+  Set Status opens it), Previous / Next comment (through every comment shown, opening a
+  collapsed group) and Delete. Disabled buttons stay focusable and say why. **Find** filters on
+  Enter or the button only (rule 3): every word must be in the text, author, subject or a reply;
+  Esc clears it. **Chips** list the filters that are set, each removable, and Clear all; the
+  filtered export and CRS see the same filter (Find included). **Cards** under collapsible group
+  headers ("Page 3 · 4 comments"): type icon in the comment's colour, number, type, lock for
+  /F Locked, author, date (Intl), the text (4 lines, all of it when selected), the review state
+  per reviewer, then the replies indented inside the card; footer "n of m comments · k selected".
+  **Selection both ways:** a card click selects the comment on its page and scrolls there,
+  Ctrl/Shift-click and Ctrl+Space / Shift+arrows multi-select, the selected card is outlined in
+  the accent colour, a selection on the page selects and scrolls to its card. **Inline editor**
+  (a new reply, or the text of the comment or of your own reply): the Reply mark on the card, the
+  toolbar or the ribbon's Reply, F2 or a double click; Enter / Ctrl+Enter posts, Shift+Enter is a
+  new line, Esc cancels; your own reply's editor has Delete reply. **Right-click** on a card (or
+  Shift+F10 / Menu key in the list) opens M6-02's comment menu, same commands; headers have no
+  menu. **Accessibility:** the list stays a listbox with `aria-activedescendant`; reply rows are
+  options too (the card is drawn across them); nothing inside an option is focusable, so the
+  card's Reply / Edit / Delete marks are pointer shortcuts (`aria-hidden`) for keys and buttons
+  that do the same, and the editor is drawn over a gap in the card **outside** the listbox (a
+  text box may not sit inside an option; axe clean). **Virtualization:** rows are measured once
+  drawn (one ResizeObserver; estimates before), row tops are prefix sums and the rows in view are
+  found by binary search; rows above the view that change height shift the scroll so what is in
+  view stays put (`virtualRows.ts`, pure). The 10,000-comment perf scenario now also scrolls
+  mid-list, regroups, collapses, expands and finds: no long task. `DropdownMenu` gained
+  submenus, tick boxes and radio groups (Radix, same package). New:
+  `src/features/annotate/comments/{CommentList,CommentCard,CommentEditor,CommentsToolbar}.tsx`,
+  `cardLabels.ts`, `typeIcons.ts`, `virtualRows.ts`; `ThreadView.tsx` removed (the review
+  history moves to the Properties pane with M6-06). Tests: unit `tests/annotate/comments.test.ts`
+  (grouping by page / author / type / status, sorting inside groups, replies after their card
+  with depth, collapsed groups, Previous / Next order, Find over text / author / subject /
+  replies, locked), `tests/annotate/virtualRows.test.ts`; e2e `e2e/comments-pane.spec.ts` (cards,
+  one toolbar row and axe; ≥ 4 cards at 1366 × 768; every old filter / sort in Options with
+  chips; Find on Enter only; selection both ways; keyboard and collapse, Previous / Next; the card
+  menu by mouse and Shift+F10; inline reply, Esc, F2), `e2e/replies.spec.ts` (thread in the
+  card: reply, status, save and reopen; own replies edited and deleted), perf
+  `e2e/perf/comments-pane.spec.ts`. Screenshots for the owner: project files `m6-05/`.
+
+- **Session 26 — M6-04 spikes S18 – S22 (ADR-021 Evidence → [ADR-022](adr/022-m6-spikes-s18-s22.md),
+  Proposed).** `spikes/s18-s22-m6/`: a Node stand-in for the Render worker (every executor call
+  made as `render.worker.ts` `exec` makes it; EmbedPDF's `PdfEngine` and the real plugins on top;
+  saves through `prepareSave` → Work-worker verification), on the shipped PDFium WASM, checked
+  with qpdf. **S18 passwords:** AES-256 (`/V 5 /R 6 /AESV3`) and `/P` as asked; but the engine
+  call must run on a **copy** (a Ctrl+S after it writes an unencrypted file; our object layer's
+  strings come out garbled under the new key), Remove Security needs **owner rights** (PDFium
+  strips encryption opened with the user password), passwords ≤ 127 UTF-8 bytes (qpdf can't open
+  longer ones). **S19 forms:** the five `plugin-form` tools (driven through their own pointer
+  handlers) create fields that save **narrow**, verify, fill and reopen; workarounds: the package
+  has no `license` field (exception needed), `/TU` and radio export values aren't written (export
+  value = widget id), and the gate must be modify + annotate. **S20 signatures:** draw → Ink,
+  type / upload → Stamp with a soft-masked image, narrow save; `@embedpdf/default-signature-fonts`
+  passes the license gate; the type pad needs our font passed in. **S21 bookmarks:**
+  `setBookmarks` loses `/C`, `/F`, `/Count` and, on a GoToR / JavaScript item, fails after
+  clearing the tree (the truncated outline is then saved); narrow saves work when the catalog and
+  outline root are marked dirty; a prototype of our own outline writer (reopen route) keeps every
+  key. **S22 attach file:** direct PDFium calls (`FPDFAnnot_AddFileAttachment`,
+  `FPDFAttachment_SetFile`, `FPDFAnnot_SetAP` with our paperclip) — narrow save, encrypted files,
+  byte-identical extraction; moving needs our own call. Plan M6-10 … M6-14 adjusted.
+
+- **Session 25 — M6-03 default comment styles (ADR-021 D-37, beta review B6).** New comments
+  are **red (#FF0000) with 1 pt lines and borders, no fill**, and text is **red at 10 pt**:
+  text box (red 1 pt border), callout, line, arrow, polyline, polygon, rectangle, oval, cloud
+  and pencil. Highlight and the sticky note stay yellow (owner, 2026-11-01); the measurement
+  tools keep their own style; underline / strikeout / squiggly / insert / replace are unchanged.
+  **Typewriter:** a new plugin tool id `typewriter` (the free text tool with
+  `/IT /FreeTextTypeWriter`, red 10 pt text, no border), registered and saved like the others;
+  its ribbon button comes with the Comment tab redesign (M6-08) — today's "Text Box /
+  Typewriter" button stays the text box. **Defaults store:** `src/features/annotate/tools/
+toolDefaults.ts` (pure: the shipped table, validation, versioned record `{ v: 1, props }`,
+  migration) and `toolDefaultsStore.ts` (zustand; IndexedDB **v5** object store `toolDefaults`,
+  tool id → the user's overrides only, so later changes to a shipped default still reach
+  everyone; damaged / unknown / newer records are skipped). Nothing was stored before, so every
+  existing user gets the new defaults. `drawTools.ts` applies shipped ⊕ user defaults when it
+  rewraps the plugin's tools and re-applies on every store change (`setToolDefaults`, clearing
+  keys that are gone); M6-06 / M6-07 write through `setToolDefaults` / `resetToolDefaults`.
+  Privacy lists the store; Clear all local data empties it and resets the open document's tools
+  at once. Tests: unit `tests/annotate/toolDefaults.test.ts` (shipped values, yellow kept,
+  validation, migration, v4 → v5 upgrade, persistence across a restart, damaged records, Clear
+  data), `tests/storage/idb.test.ts` (v5); e2e `e2e/default-styles.spec.ts` (@smoke: draw all
+  eleven tools, save narrow, `/C [1 0 0]`, `/BS /W 1`, `/DA … 10 Tf … 1 0 0 rg`, `/IT` for
+  callout and typewriter, reopened and read back by PDFium; the sticky note stays yellow; a user
+  default applies after a reload, is listed on the Privacy page and is reset by Clear data).
+  Note for e2e authors: at the default fit-width zoom only page points above y ≈ 350 are inside
+  the 1280 × 800 window.
+
+- **Session 24 — M6-02 context menus; cut / copy / paste of comments on the page (ADR-021
+  D-38 a, b).** _Reproduced on the deployed beta first_ (Playwright, real mouse): selecting a
+  comment and Ctrl+C worked, but Ctrl+V after clicking another page pasted onto the page the view
+  had scrolled to (page 1 while page 2 was clicked, often out of sight), and a right click showed
+  only the browser's menu, whose Copy and Paste do nothing for comments. The failing e2e was
+  committed before the fix. **Ctrl+V** now pastes onto the page last clicked while any of it is in
+  view (else the current page), at the same place (+10 pt on the page they came from, ADR-018).
+  **Right-click menus** (`@radix-ui/react-context-menu` 2.3.7, MIT, on the same `react-menu`
+  2.1.24 as the dropdowns; licenses 770 OK): a shared `src/ui/components/ContextMenu.tsx` whose
+  items are command ids — label, icon, shortcut text (keymap) and disabled reason come from the
+  command table (`contextMenuModel.ts`, pure); disabled items stay focusable and are described by
+  their reason (as in the ribbon); toggles are `menuitemcheckbox`. On a comment (the annotation
+  plugin selects it on pointerdown; the menu is the comment one when the pointer is on a selected
+  comment): Cut, Copy, Paste, Delete · Reply · Set Status ▸ (No status, Accepted, Rejected,
+  Cancelled, Completed) · Copy Style, Apply Style · Properties. On the page background: Paste,
+  Select All · Hand, Select Text, Select Comments · Zoom In/Out, Fit Page, Fit Width · Rotate View
+  Clockwise · Properties. **Paste from a menu** puts the comments' top-left corner at the pointer
+  (kept on the page), on that page (`CommandArgs.at`, a page point; the Work worker's shift in
+  displayed space). New commands (tab `menu`, never in the ribbon): `edit.cut` (**Ctrl+X**: copy,
+  then the threads deleted without asking, one undo step via `joinStep`; a cut pastes back in
+  place, no offset), `edit.copy`, `edit.paste`, `edit.selectAll` (moved from internal actions),
+  `edit.properties` (opens the Properties pane). **Keyboard:** Shift+F10 and the Menu key
+  (`menu.context`, document scope) open the menu on the selected comment or mid-view; Esc closes
+  and focus returns to the document; form fields and text being edited keep the browser's menu.
+  Help → Comment transfer names the keys. New: `src/features/view/{DocumentMenu.tsx,
+documentMenus.ts,pagePoint.ts}`. Tests: unit `tests/app/contextMenu.test.tsx` (menu model,
+  rendered items and disabled reasons, pointer → page point on all four rotations, paste at the
+  pointer, cut without offset, hit test); e2e `e2e/context-menus.spec.ts` (the beta repro; menu
+  Copy → page-menu Paste at the pointer on another page, one undo step, axe clean; Ctrl+X with
+  replies, undo/redo, paste back; Shift+F10 / Menu key, Set Status by keyboard, keyboard paste;
+  page-menu tools/zoom/rotate/properties; a form field keeps the browser menu; a restricted file
+  shows the reasons and runs nothing); `keys.spec` (58 bindings).
+
+- **Session 23 — M6-01 top bar, full screen, magnet toggle (ADR-021 D-35).** The banner's first
+  row starts with the app icon (drawn inline from `public/icons/icon.svg`, so no request; a unit
+  test keeps the two equal) and **PDFTools**, which is now the page's visible `h1`, then the quick
+  access toolbar. The right end of the ribbon's tab row has **OpenEngTools Home** (Fluent `Home`,
+  `https://www.openengtools.com`), **Report an Issue on GitHub** (Fluent `Bug`, the repository's
+  new-issue page prefilled with the app version + commit, browser family and OS family only:
+  `src/app/links.ts` `issueUrl`, which takes no document state) and **Full Screen** /
+  **Exit Full Screen** (Fluent `FullScreenMaximize` / `FullScreenMinimize`; the Fullscreen API on
+  the document element, so the ribbon, panes and status bar stay; `Ctrl+Shift+F11` in the keymap,
+  named in Help → Viewing; Esc is the browser's own exit). Both links are `<a target="_blank"
+rel="noopener noreferrer">`; the commands `app.home` / `app.reportIssue` open the same URLs with
+  `window.open(…, 'noopener,noreferrer')` for later menus. The status bar's "Enable Snapping"
+  text button is now an icon toggle with the **Measure tab's magnet** (`measure.snapping`, drawn
+  in M3-06, Filled while pressed) instead of a new drawing, so the two snapping controls match;
+  name and tooltip "Enable Snapping". The error report dialog has a line and link to the GitHub
+  option; File → Privacy and Help → Privacy say both links open a new tab and send nothing by
+  themselves. New: `src/app/TopBar.tsx`, `src/app/fullScreen.ts`, `src/app/links.ts`; commands
+  `app.home`, `app.reportIssue`, `view.fullScreen`, `view.exitFullScreen` (tab `topBar`,
+  milestone `M6`). Tests: unit `tests/app/topBar.test.tsx` (URL builder, nothing from an open
+  document, icon equality, link attributes, key), e2e `e2e/top-bar.spec.ts` (brand left of the
+  quick access toolbar and the tab row not scrolling at 1280 px; both links open new tabs with no
+  opener, the app page itself requests nothing; full screen by button and key with the frame
+  filling the screen; magnet pressed/unpressed by keyboard, axe clean); `keys.spec` (56
+  bindings) and `ribbon.spec` (Tab order through the top bar) updated.
+
+- **Session 22 — M6 plan (beta review).** The owner collated beta users' feedback
+  (`PDF_Tools_review.docx`, 17 screenshots, not in the repository): A — top bar (brand, OpenEngTools
+  home link, GitHub issue link, full screen), Home additions (snapshot, properties, rotate pair,
+  more comment tools), magnet snapping toggle; B — Comments pane (filters crowd out comments; card
+  list with selection sync), right-click menus everywhere with **copy/paste of comments from the
+  page (non-negotiable)**, a property grid, a style palette, red/10 pt/1 pt defaults, a
+  PDF-XChange-like Comment ribbon with Select Comments, Attach File and Flatten; C — sign document,
+  password protection, form field creation. Checked against EmbedPDF 2.15.1 (the pinned stable):
+  `plugin-form` (five field types), `plugin-signature` (visual), engine
+  `setDocumentEncryption`/`removeEncryption`, `flattenAnnotation`, `setBookmarks` — no 3.0 upgrade
+  needed; no FileAttachment creation (object layer, spike S22). Fluent has no magnet (custom icon).
+  [docs/plan/M6.md](plan/M6.md): observation → task map, 15 serial tasks (one thread and one PR
+  each), spikes S18–S22 in M6-04. [ADR-021](adr/021-m6-beta-review.md) (Accepted by the owner the same day): D-35 … D-40,
+  applied as ARCHITECTURE.md Rev 0.9. The owner answered the ten
+  planning questions the same day (recorded at the end of the plan; one change from the draft:
+  Home's rotate buttons rotate the view, Organize rotates pages).
+
+- **Session 21 — merge repair (PR #53 ↔ PR #54).** The merge of `main` into `m5/ocr` resolved
+  its three conflicts (`en.json`, `tests/icons.test.ts`, this file) by keeping the OCR side only,
+  so `main` lost PR #54's `commandShort` strings, the WCAG 2.5.3 label-in-name test and the
+  session-20 preview-review entry: typecheck and lint failed on the unused import, and the two
+  ribbon e2e tests failed because the short buttons rendered raw i18n keys. Both sides are now
+  kept (verified against `git merge-tree` of the two parents: no other file differed). No code
+  change.
+
+- **Session 20 (later) — ADR-020 amendments (owner answers).** Five languages — English, Chinese
+  (Simplified), Hindi, Spanish, French (`@tesseract.js-data/*`, MIT; data Apache-2.0) — as tick
+  boxes in the dialog (several at once, `eng+hin`), remembered for the session; English stays
+  in the background precache, the other four (5.9 MB) are a new **on-demand** class: never
+  precached (the install would reach 62.7 MB of 60), fetched on first use and then kept by the
+  service worker (`precacheSplit.ts` `onDemand`, `sw.ts`), said in the dialog. The text layer
+  switched from Helvetica/WinAnsi (Latin only) to Tesseract's **GlyphLessFont** (the 572-byte
+  `pdf.ttf`, embedded once: CIDFontType2, Identity-H with UTF-16 codes, identity ToUnicode), so
+  Devanagari and Chinese words round-trip; checked with PDFium (seven words in three scripts
+  extracted as written, 0 ink pixels, qpdf ok, `spikes/s17-ocr/glyphless.ts`); the Helvetica
+  width table and WinAnsi map are gone. **"Also recognize pages that already have text"**: the
+  raster is rendered anyway and a layer this app wrote before is replaced (its `q` and `Q`+text
+  streams recognized and dropped from `/Contents`); foreign text stays. ARCHITECTURE.md
+  **Rev 0.8** (§1.5, §2 D-34, §3.1, §3.2, §7.14, §9, §13 M5, §14). Tests: layer (hex text, six
+  font objects, replacement, a foreign three-stream page not mistaken), client (languages →
+  fresh worker), precache (on-demand set), e2e (English + French with the French data fetched
+  on first use; re-recognize keeps one hit; skipped without the option).
+
+- **Session 20 — M5 OCR (M5-01 … M5-04, ADR-020).** A user asked for OCR; the owner found that
+  Tesseract runs as WASM. **Spike S17** (`spikes/s17-ocr/`, Node + browser): `tesseract.js-core`
+  7.0.0 (Apache-2.0; Tesseract 5.1) used directly — not tesseract.js's worker layer, which
+  defaults to jsDelivr for its worker, core and data — recognizes a 300 dpi A4 page in ~0.9 s
+  (Node) / 0.7–1.0 s (Chromium worker, SIMD), 89/89 words on the self-made datasheet, under the
+  verbatim CSP with zero outbound requests, cancel by `terminate()` in 0 ms. **Text layer**: PDFium's
+  text objects + `FPDFPage_GenerateContent` were rejected (it regenerates every content stream of
+  the page, one font name per word, 187 KB tail); our own object layer writes one invisible text
+  stream per page (`3 Tr`, Helvetica/WinAnsi, per-word matrices on Tesseract's baselines in any
+  direction) behind a `q`/`Q` wrap, originals byte for byte, 13 KB for three pages, qpdf clean,
+  FPDFText finds every word with ≥ 50 % box overlap. **Shipped:** Convert → **Recognize Text
+  (OCR)** (`convert.ocr`, milestone M5): dialog (all / current / selected / custom pages; pages
+  with text are skipped), the page-operation busy dialog's progress and Cancel, one undo step
+  through the comment-transfer route (`pagesApply` now takes the capability: **modify**, rule 9),
+  Ctrl+S one narrow verified revision, announcement "n pages recognized (w words); m skipped".
+  New: OCR worker (`src/workers/ocr.worker.ts`, own typed RPC, `OcrClient` starts it on first use
+  and terminates it when the job ends), Work worker `ocrRaster` (gray raster of the displayed
+  page, live document) and `ocrLayer` (`ocrLayer.ts`, pure, from the spike), `src/model/ocr/`
+  (types, WinAnsi, a Helvetica width table generated from PDFium and tested against it), the
+  English data self-hosted at `/ocr/eng.traineddata.gz` (`@tesseract.js-data/eng` 1.0.0, MIT;
+  data Apache-2.0) and precached in the background with the worker and its WASM (`gz` joins the
+  precache extensions). Search in scans, selection, copy, exports and table detection follow
+  with no new code (the layer is real page text for PDFium). Tests: unit 20 new (WinAnsi,
+  iterator parsing, widths vs PDFium, layer geometry incl. sideways lines and resources
+  handling, client lifecycle, raster + layer + reopen on real PDFium), e2e `e2e/ocr.spec.ts`
+  (recognize all, find, undo/redo, save verified, range and cancel, denied without modify,
+  offline), perf `e2e/perf/ocr.spec.ts` (20 scanned pages recognized in 20.6 s — 1.03 s per
+  page — while scrolling, 0 blank frames, no main-thread long task). Build: install
+  56.76 MB of 60 (OCR module 5.90 MB raw / 3.91 MB brotli, background); licenses 765 OK;
+  dist and Pages checks clean. Limits (ADR-020 consequences): English, Latin characters in the
+  layer, no orientation detection or deskew, pages with text are never re-recognized.
 
 - **Session 20 — preview review fixes (owner's Codex audit of the deployed preview, D-01, D-29,
   D-30).** _Ribbon (UI01):_ a group mixing one large button with small ones no longer renders as
@@ -890,6 +1113,11 @@ beta (D-32) waits on the owner items in the readiness list (M4.md §5). M0–M3 
 
 ## In progress
 
+- **M5 OCR (session 20):** M5-01 … M5-04 done on the agent side on branch `m5/ocr`, for the
+  next PR. [ADR-020](adr/020-m5-ocr.md) accepted with amendments; ARCHITECTURE.md Rev 0.8
+  applied. Open: M5-05 (acceptance table, interop pack §M5 — a file recognized here searchable
+  and selectable in Acrobat Reader and PDF-XChange, a Hindi and a Chinese scan among them; their
+  OCR output searchable here).
 - **M3 done on the agent side (session 17):** M3-16 … M3-20 as one commit each on
   `claude/m3-tasks-16-20-vdqo8q`, merged into `main` as PR #47. Waiting on the owner pack
   ([docs/acceptance/M3.md](acceptance/M3.md) §4).
@@ -1073,6 +1301,15 @@ beta (D-32) waits on the owner items in the readiness list (M4.md §5). M0–M3 
 
 ## Next
 
+- **Agent:** M6-06 (Properties pane as a property grid; flags and review marks). ADR-022 is
+  accepted and applied (ARCHITECTURE.md Rev 0.10).
+
+0. **Owner:** try Convert → Recognize Text (OCR) on real scans — an English one, a Hindi one
+   and a Chinese one — and check the result in Acrobat Reader / PDF-XChange (search and select
+   the text; it must be invisible; the Hindi words must copy out as Devanagari). The Hindi and
+   Chinese recognition quality could not be checked in the container (no Devanagari font to
+   make a fixture). **Agent:** M5-05 (acceptance table, interop pack §M5,
+   `npm run owner:interop:m5`).
 1. **Owner:** the M3 owner pack in [docs/acceptance/M3.md](acceptance/M3.md) §4 — interop §M3
    (L/M) and the still-open §D/§F in Acrobat Reader and PDF-XChange (they decide ADR-007
    decisions 2 and 3: the grouped measurement label and viewport semantics), snapping on the local
@@ -1094,6 +1331,24 @@ beta (D-32) waits on the owner items in the readiness list (M4.md §5). M0–M3 
    and A0 through the S3 harness; S8 Firefox check and Pages preview.
 
 ## Open issues
+
+- **CI pinned to `ubuntu-24.04` (2026-11-01).** `ubuntu-latest` became 26.04 (apt qpdf 12.3.2) and
+  7 unit tests failed. Both were test-side, not output problems: qpdf 12's `--check` warns on a
+  page with no `/Resources`, which `printPdf()` and a `prunePrintReady` fixture lacked (now added,
+  and `print-ready.test.ts` asserts it on any qpdf); and 26.04's AppArmor profile for qpdf only
+  lets it write `*.pdf`/`*.json`/`*.qdf` under `/tmp`, so `qpdfDecrypt` now writes `-plain.pdf`.
+  All 1089 unit tests passed on 26.04. Also fixed: Ctrl+A then a markup key could arrive before
+  Select All set its selection (the page text is read in the Render worker), arming the tool
+  instead (`e2e/text-markup.spec.ts:136` on 26.04); markup commands now wait for it
+  (`selectionSettled`, M3-08). Left before moving to 26.04: the tile p95 budget in
+  `e2e/perf/annotation-load.spec.ts:37` (56.7 vs 48.25 once on 26.04).
+
+- **Perf gate on `main` after PR #53 (CI run 381, 2026-10-04):** three scenarios failed on the
+  GitHub runner — `perf/annotation-load.spec.ts` (one 157 ms task), `perf/scroll.spec.ts` (one
+  104 ms task) and `perf/thumbnails.spec.ts` (30 s timeout waiting for the test capability).
+  None of the three specs or the code they exercise changed in PR #53 or PR #54; not yet
+  reproduced or profiled. To watch on the next `main` runs; if it repeats, profile like the
+  first-open task below.
 
 - **Ribbon width in long locales (session 20):** English fits every tab at 1280 px, but the
   pseudo-locale (+40 % labels) still overflows Home, Comment, View, Measure, Organize and Protect
@@ -1229,6 +1484,10 @@ beta (D-32) waits on the owner items in the readiness list (M4.md §5). M0–M3 
 
 | Date       | Ref              | Decision                                                                                                                                                                                                                                                                                                                                                                                                                                                  |
 | ---------- | ---------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| 2026-11-02 | ADR-022          | Owner accepted ADR-022 (M6 spikes S18 – S22). ARCHITECTURE.md Rev 0.10: §3.2 signature fonts and the plugin-form license exception, §7.1 Attach File by direct PDFium calls, §7.10 modify + annotate gate and `/TU`, §7.11 handwriting font, §7.12 copy route, owner-rights gate, 127-byte limit, §7.15 our own outline writer.                                                                                                                           |
+| 2026-11-02 | ADR-022 d5       | Owner picked bookmark route B for M6-11: our own outline writer (Work worker) applied with `applyObjects`, every outline key kept.                                                                                                                                                                                                                                                                                                                        |
+| 2026-11-01 | ADR-021          | Owner accepted the M6 plan (beta review) and ADR-021: shell (D-35), adaptive ribbon with a Form tab (D-36), comment styles (D-37), comment workflow incl. page copy/paste, flatten, attach file, snapshot, bookmark editing (D-38), basic form fields (D-39), password security and visual signatures (D-40). Home rotates the view, Organize the pages. ARCHITECTURE.md Rev 0.9.                                                                         |
+| 2026-10-03 | ADR-020          | Owner accepted ADR-020 (OCR) with amendments: the five most spoken languages including Hindi (English precached, the others on first use), and a tick box to recognize pages that already have text. The text layer uses Tesseract's glyphless font so every script round-trips. ARCHITECTURE.md Rev 0.8 (§1.5, §2 D-34, §3.1, §3.2, §7.14, §9, §13 M5, §14).                                                                                             |
 | 2026-10-01 | ADR-019          | Owner accepted Express Extract in two steps (Find Tables, then Save…): the save picker needs a fresh click and nothing is created when no table is found. ARCHITECTURE.md Rev 0.7 (§7.7).                                                                                                                                                                                                                                                                 |
 | 2026-09-29 | ADR-018          | Owner accepted ADR-018 decisions 2–3 after the M4-19 spike: hybrid route — object copy in the Work worker for Import from PDF and copy/paste (pending import section folded into the next Ctrl+S), re-creation + object-layer patches for JSON import. ARCHITECTURE.md Rev 0.6 (§7.1 comment transfer, §7.6 JSON imports, §13 M4).                                                                                                                        |
 | 2026-09-29 | ADR-016, ADR-017 | Owner accepted ADR-016 (page operations: semantic dirty set, digest with page identity, page-cache purge, reopen-based undo, dangling references) and ADR-017 (redaction on a Work copy, crossing paths re-cut via PDFium's page-object API, wider sanitize list, location verification). ARCHITECTURE.md Rev 0.5 (§7.9 steps 0 and 3), ADR-001 B8 wording amended.                                                                                       |
@@ -1255,3 +1514,4 @@ beta (D-32) waits on the owner items in the readiness list (M4.md §5). M0–M3 
 | 2026-09-25 | M1 plan          | M1 plan approved. M1-Q1: Ctrl+Alt+W / Ctrl+Alt+F4 close tab and Ctrl+Alt+PageUp/PageDown switch tab, alongside the §8.1 keys (ADR-001 B5). Q2: ribbon tabs hidden until they have a working command. Q3: test hook only in the `e2e` build mode. Q4: dependency list accepted. Q5: Select without text selection until M2. Q6: File → Properties in M2. Q7: CI uses generated self-made fixtures only. Q8: merge PR #1 and M0, then `m1/<task>` branches. |
 | 2026-09-26 | M2 plan          | M2 plan approved. M2-Q1: no Oxide in M2 (M4). Q2: signature pane in M2. Q3: search reads existing annotation text and bookmark titles. Q4: internal links navigate; external links confirm first. Q5: agent writes the Pages Function, owner provisions Cloudflare. Q6: `frame-src blob:` only after ADR-013 approval. Q7: passwords in worker memory only. Q8: layers per M2-01. Q9: `m2/<task>` branches.                                               |
 | 2026-09-25 | ADR-011          | M1-01: adopt the EmbedPDF plugin stack (pinned 2.15.1, one registry + document manager, no per-document permission overrides); own bounded PreviewLayer, own encoder worker, own paged mode for single/facing. **Accepted**; no ARCHITECTURE.md change.                                                                                                                                                                                                   |
+| 2026-11-01 | CI cadence       | Owner approved. CI runs once per PR commit (`push` only on `main`). PRs: checks, e2e tagged `@smoke` (22 critical flows) plus `@offline` and `@a11y`, and `@smoke` perf. Docs-only PRs skip e2e. `main`, nightly, Run workflow and the `full-e2e` PR label: full e2e in 3 shards plus offline, perf and acceptance. No test removed. Tag new critical flows `@smoke`; run the e2e specs a change touches locally.                                         |

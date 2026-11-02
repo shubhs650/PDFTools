@@ -34,6 +34,7 @@ import { CloudCheckmark20Regular } from '@fluentui/react-icons/svg/cloud-checkma
 import { CommentMultiple20Filled, CommentMultiple20Regular } from '@fluentui/react-icons/svg/comment-multiple';
 import { Copy20Regular } from '@fluentui/react-icons/svg/copy';
 import { Cursor20Filled, Cursor20Regular, Cursor32Filled, Cursor32Regular } from '@fluentui/react-icons/svg/cursor';
+import { Cut20Regular } from '@fluentui/react-icons/svg/cut';
 import { Delete20Regular, Delete32Regular } from '@fluentui/react-icons/svg/delete';
 import { Dismiss20Filled, Dismiss20Regular } from '@fluentui/react-icons/svg/dismiss';
 import { DocumentAdd20Regular, DocumentAdd28Regular } from '@fluentui/react-icons/svg/document-add';
@@ -50,9 +51,12 @@ import { DocumentTableArrowRight20Regular, DocumentTableArrowRight24Regular } fr
 import { DocumentText20Regular, DocumentText32Regular } from '@fluentui/react-icons/svg/document-text';
 import { Filter20Regular } from '@fluentui/react-icons/svg/filter';
 import { FolderOpen20Regular, FolderOpen28Regular } from '@fluentui/react-icons/svg/folder-open';
+import { FullScreenMaximize20Regular } from '@fluentui/react-icons/svg/full-screen-maximize';
+import { FullScreenMinimize20Regular } from '@fluentui/react-icons/svg/full-screen-minimize';
 import { HandLeft20Filled, HandLeft20Regular, HandLeft28Filled, HandLeft28Regular } from '@fluentui/react-icons/svg/hand-left';
 import { Highlight20Filled, Highlight20Regular } from '@fluentui/react-icons/svg/highlight';
 import { History20Regular, History32Regular } from '@fluentui/react-icons/svg/history';
+import { Home20Regular } from '@fluentui/react-icons/svg/home';
 import { ImageAdd20Regular } from '@fluentui/react-icons/svg/image-add';
 import { ImageMultiple20Regular, ImageMultiple32Regular } from '@fluentui/react-icons/svg/image-multiple';
 import { Info20Regular, Info32Regular } from '@fluentui/react-icons/svg/info';
@@ -88,8 +92,10 @@ import { RotateRight20Regular, RotateRight24Regular } from '@fluentui/react-icon
 import { Ruler20Filled, Ruler20Regular, Ruler32Filled, Ruler32Regular } from '@fluentui/react-icons/svg/ruler';
 import { Save20Regular, Save32Regular } from '@fluentui/react-icons/svg/save';
 import { SaveCopy20Regular, SaveCopy24Regular } from '@fluentui/react-icons/svg/save-copy';
+import { ScanText20Regular, ScanText32Regular } from '@fluentui/react-icons/svg/scan-text';
 import { Search20Filled, Search20Regular } from '@fluentui/react-icons/svg/search';
 import { SearchSquare20Filled, SearchSquare20Regular } from '@fluentui/react-icons/svg/search-square';
+import { SelectAllOn20Regular } from '@fluentui/react-icons/svg/select-all-on';
 import { SelectObject20Filled, SelectObject20Regular, SelectObject24Filled, SelectObject24Regular } from '@fluentui/react-icons/svg/select-object';
 import { Settings20Regular, Settings32Regular } from '@fluentui/react-icons/svg/settings';
 import { ShieldCheckmark20Regular, ShieldCheckmark32Regular } from '@fluentui/react-icons/svg/shield-checkmark';
@@ -228,6 +234,7 @@ export const FLUENT_GLYPHS: Record<string, FluentGlyphs> = {
   'convert.expressExtract': { regular: { small: TableLightning20Regular, large: TableLightning28Regular, largeNative: 28 } },
   'convert.reviewExtract': { regular: { small: TableEdit20Regular, large: TableEdit28Regular, largeNative: 28 } },
   'convert.tableTemplates': { regular: { small: TableSettings20Regular, large: TableSettings28Regular, largeNative: 28 } },
+  'convert.ocr': { regular: { small: ScanText20Regular, large: ScanText32Regular, largeNative: 32 } },
   'protect.markRedaction': { regular: { small: TextStrikethrough20Regular, large: TextStrikethrough24Regular, largeNative: 24 }, filled: { small: TextStrikethrough20Filled, large: TextStrikethrough24Filled, largeNative: 24 } },
   'protect.markRedactionArea': { regular: { small: RectangleLandscape20Regular, large: RectangleLandscape32Regular, largeNative: 32 }, filled: { small: RectangleLandscape20Filled, large: RectangleLandscape32Filled, largeNative: 32 } },
   'protect.applyRedactions': { regular: { small: CheckmarkCircle20Regular, large: CheckmarkCircle32Regular, largeNative: 32 } },
@@ -247,6 +254,15 @@ export const FLUENT_GLYPHS: Record<string, FluentGlyphs> = {
   'rail.signatures': { regular: { small: Signature20Regular }, filled: { small: Signature20Filled } },
   'rail.search': { regular: { small: Search20Regular }, filled: { small: Search20Filled } },
   'rail.layers': { regular: { small: Layer20Regular }, filled: { small: Layer20Filled } },
+  'app.home': { regular: { small: Home20Regular } },
+  'app.reportIssue': { regular: { small: Bug20Regular } },
+  'view.fullScreen': { regular: { small: FullScreenMaximize20Regular } },
+  'view.exitFullScreen': { regular: { small: FullScreenMinimize20Regular } },
+  'edit.cut': { regular: { small: Cut20Regular } },
+  'edit.copy': { regular: { small: Copy20Regular } },
+  'edit.paste': { regular: { small: ClipboardPaste20Regular } },
+  'edit.selectAll': { regular: { small: SelectAllOn20Regular } },
+  'edit.properties': { regular: { small: Info20Regular } },
   'status.readyOffline': { regular: { small: CloudCheckmark20Regular } },
   'status.preparingOffline': { regular: { small: ArrowDownload20Regular } },
   'status.updateReady': { regular: { small: ArrowSync20Regular } },

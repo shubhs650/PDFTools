@@ -12,7 +12,7 @@
 //   shown like an available milestone's commands.
 
 export type CommandSize = 'large' | 'small';
-export type Milestone = 'M1' | 'M2' | 'M3' | 'M4' | 'later';
+export type Milestone = 'M1' | 'M2' | 'M3' | 'M4' | 'M5' | 'M6' | 'later';
 export type CommandTab =
   | 'quickAccess'
   | 'file'
@@ -25,7 +25,11 @@ export type CommandTab =
   | 'protect'
   | 'help'
   | 'rail'
-  | 'status';
+  | 'status'
+  /** The right end of the ribbon's tab row (M6-01, ADR-021 D-35). */
+  | 'topBar'
+  /** Context menus only (M6-02, ADR-021 D-38): never a ribbon button. */
+  | 'menu';
 
 export interface CommandDef {
   id: string;
@@ -53,7 +57,7 @@ export interface CommandDef {
 }
 
 /** Milestones whose commands are shown. Extend as milestones land. */
-export const AVAILABLE_MILESTONES: readonly Milestone[] = ['M1', 'M2', 'M3', 'M4'];
+export const AVAILABLE_MILESTONES: readonly Milestone[] = ['M1', 'M2', 'M3', 'M4', 'M5'];
 
 /** Ribbon tabs in order (§8, authoritative). */
 export const RIBBON_TABS = [
@@ -1152,6 +1156,14 @@ export const COMMANDS: readonly CommandDef[] = [
     shipped: true, // M4-15
   },
   {
+    id: 'convert.ocr',
+    tab: 'convert',
+    group: 'ocr',
+    size: 'large',
+    fluent: 'ScanText',
+    milestone: 'M5', // ADR-020, M5-04
+  },
+  {
     id: 'protect.markRedaction',
     tab: 'protect',
     group: 'redact',
@@ -1331,6 +1343,92 @@ export const COMMANDS: readonly CommandDef[] = [
     milestone: 'M2',
     toggle: true,
     shipped: true, // M2-11 (list only, ADR-012 d5)
+  },
+  // Top bar (M6-01, ADR-021 D-35): the OpenEngTools home link, the GitHub
+  // issue link and full screen, at the right end of the ribbon's tab row.
+  {
+    id: 'app.home',
+    tab: 'topBar',
+    group: 'topBar',
+    size: 'small',
+    fluent: 'Home',
+    milestone: 'M6',
+    shipped: true, // M6-01
+  },
+  {
+    id: 'app.reportIssue',
+    tab: 'topBar',
+    group: 'topBar',
+    size: 'small',
+    fluent: 'Bug',
+    milestone: 'M6',
+    shipped: true, // M6-01
+  },
+  {
+    id: 'view.fullScreen',
+    tab: 'topBar',
+    group: 'topBar',
+    size: 'small',
+    fluent: 'FullScreenMaximize',
+    milestone: 'M6',
+    shipped: true, // M6-01
+  },
+  {
+    id: 'view.exitFullScreen',
+    tab: 'topBar',
+    group: 'topBar',
+    size: 'small',
+    fluent: 'FullScreenMinimize',
+    milestone: 'M6',
+    shipped: true, // M6-01: the full-screen button while full screen is on
+  },
+  // Context menus (M6-02, ADR-021 D-38): the edit commands behind Ctrl+X/C/V/A
+  // and the menus' Properties item; labels, icons, shortcuts and disabled
+  // reasons come from here like any ribbon command.
+  {
+    id: 'edit.cut',
+    tab: 'menu',
+    group: 'menu',
+    size: 'small',
+    fluent: 'Cut',
+    milestone: 'M6',
+    shipped: true, // M6-02: Ctrl+X, the comment menu
+  },
+  {
+    id: 'edit.copy',
+    tab: 'menu',
+    group: 'menu',
+    size: 'small',
+    fluent: 'Copy',
+    milestone: 'M6',
+    shipped: true, // M6-02: Ctrl+C (text or comments), the comment menu
+  },
+  {
+    id: 'edit.paste',
+    tab: 'menu',
+    group: 'menu',
+    size: 'small',
+    fluent: 'ClipboardPaste',
+    milestone: 'M6',
+    shipped: true, // M6-02: Ctrl+V, the menus (at the pointer)
+  },
+  {
+    id: 'edit.selectAll',
+    tab: 'menu',
+    group: 'menu',
+    size: 'small',
+    fluent: 'SelectAllOn',
+    milestone: 'M6',
+    shipped: true, // M6-02: Ctrl+A, the page menu
+  },
+  {
+    id: 'edit.properties',
+    tab: 'menu',
+    group: 'menu',
+    size: 'small',
+    fluent: 'Info',
+    milestone: 'M6',
+    shipped: true, // M6-02: opens the Properties pane
   },
   {
     id: 'status.readyOffline',

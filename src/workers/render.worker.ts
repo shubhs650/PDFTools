@@ -325,9 +325,9 @@ serve<RenderApi>(self, {
     return { pages: pageInfos(m, n, docId) };
   },
 
-  pagesApply: async ({ docId, objects, firstNew }) => {
+  pagesApply: async ({ docId, objects, firstNew, capability }) => {
     const { mod: m, native: n, tracker: t } = ready();
-    await t.applyObjects(docId, objects, firstNew);
+    await t.applyObjects(docId, objects, firstNew, capability ?? 'annotate');
     annotBoxCache.drop(docId);
     return { pages: pageInfos(m, n, docId) };
   },

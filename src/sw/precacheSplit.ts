@@ -2,7 +2,7 @@
 // worker caches at install (the core: shell, UI, Render worker, PDFium WASM,
 // Latin/Arabic/Hebrew fonts) and what it caches in the background after the
 // first render (Work and Snap workers, CJK fonts, ExcelJS, PDF Oxide, the Word
-// builder) and the third-party notices (File → About). Shared by the service worker and its unit test.
+// builder, the OCR worker with its WASM and data) and the third-party notices (File → About). Shared by the service worker and its unit test.
 
 export interface PrecacheEntry {
   url: string;
@@ -21,8 +21,19 @@ const BACKGROUND = [
   // The Word builder (M4-07): docx and the Markdown parser, only for To Word.
   /(^|\/)assets\/docxBuild[\w.-]*\.js$/,
   /(^|\/)fonts\/(sc|tc|jp|kr)\//,
+  // OCR (M5, ADR-020 d2): the worker, Tesseract's WASM and the English data, only for OCR.
+  /(^|\/)assets\/ocr\.worker-[\w-]+\.js$/,
+  /(^|\/)assets\/tesseract-core[\w.-]*\.wasm$/,
+  /(^|\/)ocr\/eng\.traineddata\.gz$/,
   /(^|\/)third-party-notices\.txt$/,
 ];
+
+/**
+ * Known but never precached (§9 install budget): fetched on first use and
+ * then kept by the service worker like a background module — the OCR data of
+ * the languages other than English (ADR-020 d2, amended).
+ */
+const ON_DEMAND = [/(^|\/)ocr\/(?!eng\.)[\w]+\.traineddata\.gz$/];
 
 /** Never precached: the service worker itself, and font license texts. */
 const SKIP = [/(^|\/)sw\.js$/, /(^|\/)workbox-[\w-]+\.js$/, /(^|\/)LICENSE$/, /(^|\/)_headers$/];
@@ -39,17 +50,22 @@ export const PRECACHE_EXTENSIONS = [
   'svg',
   'webmanifest',
   'txt',
+  // The OCR language data (M5), inflated by the OCR worker itself.
+  'gz',
 ] as const;
 
 export function splitPrecache(entries: readonly PrecacheEntry[]): {
   core: PrecacheEntry[];
   background: PrecacheEntry[];
+  onDemand: PrecacheEntry[];
 } {
   const core: PrecacheEntry[] = [];
   const background: PrecacheEntry[] = [];
+  const onDemand: PrecacheEntry[] = [];
   for (const e of entries) {
     if (SKIP.some((r) => r.test(e.url))) continue;
-    (BACKGROUND.some((r) => r.test(e.url)) ? background : core).push(e);
+    if (ON_DEMAND.some((r) => r.test(e.url))) onDemand.push(e);
+    else (BACKGROUND.some((r) => r.test(e.url)) ? background : core).push(e);
   }
-  return { core, background };
+  return { core, background, onDemand };
 }

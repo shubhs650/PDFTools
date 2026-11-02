@@ -8,3 +8,9 @@ export { TextField, type TextFieldProps } from './TextField';
 export { Tooltip, type TooltipProps } from './Tooltip';
 export { Spinner, ProgressBar, type SpinnerProps, type ProgressBarProps } from './Progress';
 export { UiProvider } from './UiProvider';
+export {
+  ContextMenu,
+  type ContextMenuProps,
+  type ContextMenuEntry,
+  type MenuChoice,
+} from './ContextMenu';
