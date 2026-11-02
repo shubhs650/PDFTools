@@ -14,6 +14,7 @@ import { installSnapping } from '../measure/snapping';
 import { installHistoryJoin } from '../annotate/historyJoin';
 import { installAttachmentRefresh } from '../attachments/attachments';
 import { installSignTools } from '../sign/signDocument';
+import { installFieldTools } from '../forms/fieldTools';
 import { capability, setRegistry, useHost } from './host';
 
 const onInitialized = (registry: Parameters<typeof setRegistry>[0]): Promise<void> => {
@@ -38,6 +39,7 @@ const onInitialized = (registry: Parameters<typeof setRegistry>[0]): Promise<voi
     installSnapping();
     installAttachmentRefresh(registry);
     installSignTools(registry);
+    installFieldTools(registry);
   }
   setRegistry(registry);
   return Promise.resolve();

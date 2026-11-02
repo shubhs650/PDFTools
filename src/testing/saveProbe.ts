@@ -95,6 +95,30 @@ export function registerSaveProbe(hook: TestHook): void {
       }
       return names;
     },
+    /** A page's widgets as PDFium has them (M6-14): field name, type, value, flags, /TU. */
+    async widgets(docId: string, pageIndex = 0) {
+      const doc = await docOf(docId);
+      const page = doc.pages[pageIndex];
+      if (!page) return [];
+      const list = await renderEngine().engine.getPageAnnoWidgets(doc, page).toPromise();
+      return list.map((w) => ({
+        id: w.id,
+        name: w.field.name,
+        type: w.field.type,
+        value: w.field.value,
+        flag: w.field.flag,
+        tooltip: w.field.alternateName,
+        // EmbedPDF reads an export value for every widget; only buttons have one.
+        exportValue:
+          w.field.type === PDF_FORM_FIELD_TYPE.CHECKBOX ||
+          w.field.type === PDF_FORM_FIELD_TYPE.RADIOBUTTON
+            ? w.exportValue
+            : undefined,
+        options: 'options' in w.field ? w.field.options.map((o) => o.label) : [],
+        maxLen: 'maxLen' in w.field ? w.field.maxLen : undefined,
+        rect: w.rect,
+      }));
+    },
     async saveIncremental(docId: string, keepAll = false) {
       const r = await rpc().call('saveIncremental', { docId, keepAll }).promise;
       return { ...r, tail: toB64(r.tail), tailLength: r.tail.byteLength };

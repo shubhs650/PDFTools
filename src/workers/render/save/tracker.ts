@@ -18,6 +18,7 @@ import {
   ANNOTATION_METHODS,
   FORM_METHODS,
   OTHER_MUTATIONS,
+  isFieldDesign,
   isMutation,
 } from '../../../engine/mutations';
 import { PDFIUM_ERROR_PREFIX } from '../../../engine/renderApi';
@@ -38,6 +39,7 @@ import {
   PatchError,
   PatchSet,
   applyPatch,
+  mergePatches,
   patchDigest,
   type Patch,
   type PatchTarget,
@@ -279,15 +281,23 @@ export class SaveTracker {
     };
   }
 
-  /** Throws before a mutation the document's permissions forbid (rule 9). */
-  checkAllowed(method: string, docId: string): void {
+  /**
+   * Throws before a mutation the document's permissions forbid (rule 9).
+   * `args`: the executor call's, so form field design (a widget created,
+   * changed or removed, a field renamed or shared) needs modify + annotate
+   * (M6-14, ADR-022 d4).
+   */
+  checkAllowed(method: string, docId: string, args: readonly unknown[] = []): void {
     if (!isMutation(method)) return;
-    const need: Capability = ANNOTATION_METHODS.has(method)
-      ? 'annotate'
-      : FORM_METHODS.has(method)
-        ? 'fillForms'
-        : 'modify';
-    const ok = allows(this.security(docId), need);
+    const need: Capability[] = isFieldDesign(method, args)
+      ? ['modify', 'annotate']
+      : ANNOTATION_METHODS.has(method)
+        ? ['annotate']
+        : FORM_METHODS.has(method)
+          ? ['fillForms']
+          : ['modify'];
+    const security = this.security(docId);
+    const ok = need.every((c) => allows(security, c));
     if (!ok) {
       throw new RpcError(
         `${PDFIUM_ERROR_PREFIX}${String(PdfErrorCode.Security)}`,
@@ -427,7 +437,9 @@ export class SaveTracker {
   ): void {
     const s = this.need(docId);
     const security = this.security(docId);
-    if (!allows(security, 'annotate')) {
+    // A field's tooltip / default and a page's tab order are form design (M6-14): modify too.
+    const design = target.field === true || set.has('Tabs') || remove.includes('Tabs');
+    if (!allows(security, 'annotate') || (design && !allows(security, 'modify'))) {
       throw new RpcError(
         `${PDFIUM_ERROR_PREFIX}${String(PdfErrorCode.Security)}`,
         'The document does not allow this change',
@@ -455,20 +467,26 @@ export class SaveTracker {
    * the annotation back under the same id.
    */
   private resolvePatches(docId: string, s: DocState): { num: number; patch: Patch }[] {
-    const out: { num: number; patch: Patch }[] = [];
+    const byNum = new Map<number, Patch>();
     for (const patch of s.patches.all()) {
-      const ref = acquirePage(this.native, docId, patch.target.page);
+      const { page, annot, field } = patch.target;
+      const ref = acquirePage(this.native, docId, page);
       try {
         const num =
-          patch.target.annot === undefined
+          annot === undefined
             ? rawCall(this.mod, 'EPDFPage_GetObjectNumber', ref.pagePtr)
-            : this.annotObjectNumber(ref.pagePtr, patch.target.annot);
-        if (num > 0) out.push({ num, patch });
+            : field
+              ? (this.fieldFamily(docId, ref, annot)[0] ?? 0)
+              : this.annotObjectNumber(ref.pagePtr, annot);
+        if (num <= 0) continue;
+        // Two widgets of one field (a radio group) patch the same object: merged, later wins.
+        const prev = byNum.get(num);
+        byNum.set(num, prev ? mergePatches(prev, patch) : patch);
       } finally {
         ref.release();
       }
     }
-    return out;
+    return [...byNum].map(([num, patch]) => ({ num, patch }));
   }
 
   dirtyState(docId: string): {

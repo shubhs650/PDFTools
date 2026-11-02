@@ -65,6 +65,8 @@ export interface DocumentsState {
   rename(id: string, name: string): void;
   /** After a page operation (M4-09). */
   setPageCount(id: string, pageCount: number): void;
+  /** The first form field was created (M6-14). */
+  setFormType(id: string, formType: number): void;
   setSaveState(id: string, save: SaveState): void;
   /** Permissions after an owner-password unlock (read back from the Render worker). */
   setSecurity(id: string, security: { permissions: number; ownerUnlocked: boolean }): void;
@@ -154,6 +156,9 @@ export const createDocumentStore = () =>
     },
     rename: (id, name) => {
       set((s) => update(s, id, (d) => ({ meta: { ...d.meta, name } })));
+    },
+    setFormType: (id, formType) => {
+      set((s) => update(s, id, (d) => ({ meta: { ...d.meta, formType } })));
     },
     setPageCount: (id, pageCount) => {
       set((s) =>

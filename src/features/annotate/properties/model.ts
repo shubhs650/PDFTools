@@ -125,6 +125,12 @@ const FONTS: Record<FontFamily, readonly [F, F, F, F]> = {
   courier: [F.Courier, F.Courier_Bold, F.Courier_Oblique, F.Courier_BoldOblique],
 };
 
+/** The standard font of a family with bold / italic (Field Properties, M6-14). */
+export const fontFor = (family: FontFamily, bold: boolean, italic: boolean): F => {
+  const [regular, b, i, bi] = FONTS[family];
+  return bold ? (italic ? bi : b) : italic ? i : regular;
+};
+
 export interface FontParts {
   family: FontFamily;
   bold: boolean;

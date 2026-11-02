@@ -232,8 +232,8 @@ export interface CheckResult {
 /**
  * Apply the policy (and reviewed exceptions) to a list of installed packages.
  * An exception applies only if it has a non-empty reason and its `license`
- * matches the installed package's declared license exactly, so a license
- * change upstream re-triggers review.
+ * matches the installed package's declared license exactly ("" for none
+ * declared), so a license change upstream re-triggers review.
  */
 export function checkPackages(
   packages: readonly PackageInfo[],
@@ -266,7 +266,9 @@ export function checkPackages(
       continue;
     }
     const ex = exceptions[pkg.name];
-    if (ex && hasReason(ex) && ex.license === pkg.license) {
+    // An empty `license` in an exception stands for "none declared" (the
+    // package ships a LICENSE file only, e.g. @embedpdf/plugin-form, ADR-022 d4).
+    if (ex && hasReason(ex) && ex.license === (pkg.license ?? '')) {
       used.add(pkg.name);
       result.excepted.push({ ...entry, reason: `exception: ${ex.reason}` });
     } else {

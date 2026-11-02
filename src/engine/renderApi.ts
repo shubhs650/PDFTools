@@ -139,7 +139,7 @@ export interface RenderApi {
   stageObjects: MethodSpec<
     {
       docId: string;
-      target: { page: number; annot?: string };
+      target: { page: number; annot?: string; field?: true };
       set: Record<string, PdfJson>;
       remove?: string[];
     },

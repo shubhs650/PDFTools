@@ -34,6 +34,12 @@ export const DRAW_TOOLS = [
   // Visual signatures (M6-13): @embedpdf/plugin-signature's placement tools (sign/signDocument.ts).
   'signatureStamp',
   'signatureInk',
+  // Form fields (M6-14): @embedpdf/plugin-form's tools, wrapped by forms/fieldTools.ts.
+  'formTextField',
+  'formCheckbox',
+  'formRadioButton',
+  'formListbox',
+  'formCombobox',
 ] as const;
 
 /** A drawing tool; the id is also the plugin's tool id and interaction mode. */
@@ -69,6 +75,11 @@ export const KEYBOARD_PLACED: ReadonlySet<DrawTool> = new Set([
   'imageStamp',
   'signatureStamp',
   'signatureInk',
+  'formTextField',
+  'formCheckbox',
+  'formRadioButton',
+  'formListbox',
+  'formCombobox',
 ]);
 
 /** Tools whose drawing is a chain of clicks, finished by Enter or double-click. */

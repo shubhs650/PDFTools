@@ -171,6 +171,25 @@ describe('checkPackages', () => {
     expect(result.configErrors).toHaveLength(1);
   });
 
+  it('an exception with an empty license covers a package that declares none (ADR-022 d4)', () => {
+    const none = {
+      name: 'nolicense',
+      version: '1.0.0',
+      license: undefined,
+      path: 'node_modules/nolicense',
+    };
+    const reason = 'Reviewed: the published LICENSE file is MIT';
+    expect(checkPackages([none], {}).failures.map((f) => f.name)).toEqual(['nolicense']);
+    const result = checkPackages([none], { nolicense: { license: '', reason } });
+    expect(result.failures).toEqual([]);
+    expect(result.excepted.map((f) => f.name)).toEqual(['nolicense']);
+    // It never covers a package that declares a license.
+    expect(
+      checkPackages([{ ...none, license: 'GPL-3.0' }], { nolicense: { license: '', reason } })
+        .failures,
+    ).toHaveLength(1);
+  });
+
   it('reports unused exceptions', () => {
     const result = checkPackages(pkgs, { ghost: { license: 'MIT', reason: 'x' } });
     expect(result.unusedExceptions).toEqual(['ghost']);
