@@ -9,8 +9,8 @@ import { expect, test } from './support/fixtures.ts';
 // the arrow opens a palette of preset swatches (Red … Black, Cloudy variants
 // for closed shapes) and the user's own styles. A swatch restyles the
 // selected comments of the tool's group in one undo step, or sets the tool's
-// style and turns it on. The Comment Styles Palette dialog adds, renames,
-// reorders, deletes, exports and imports styles; they persist across reloads.
+// style and turns it on. The Comment Styles Palette window (M6-17,
+// styles-window.spec.ts) manages them; here its export and import.
 
 interface Obj {
   id: string;
@@ -58,7 +58,7 @@ test('keyboard: open the Line palette, move in the grid, Enter sets the style an
   await expect(menu.locator('.style-palette-hint')).toHaveText('Sets the Line tool’s style');
   // Seven presets, no cloudy variant for a line; Red (the shipped default) is current.
   await expect(
-    menu.getByRole('group', { name: 'Preset styles' }).getByRole('menuitem'),
+    menu.getByRole('group', { name: 'Custom Styles' }).getByRole('menuitem'),
   ).toHaveCount(7);
   await expect(menu.locator('[data-current]')).toHaveAttribute('aria-label', 'Red');
   await axe(page, 'Line palette', '[role="menu"]');
@@ -115,7 +115,7 @@ test('with a rectangle selected a swatch restyles it in one undo step; Cloudy va
   const menu = palette(page);
   await expect(menu.locator('.style-palette-hint')).toHaveText('Applies to the selected comment');
   await expect(
-    menu.getByRole('group', { name: 'Preset styles' }).getByRole('menuitem'),
+    menu.getByRole('group', { name: 'Custom Styles' }).getByRole('menuitem'),
   ).toHaveCount(14);
   await menu.getByRole('menuitem', { name: 'Green cloudy', exact: true }).click();
   await expect
@@ -137,7 +137,7 @@ test('with a rectangle selected a swatch restyles it in one undo step; Cloudy va
   await page.keyboard.press('Escape');
 });
 
-test('Comment Styles Palette: add, rename, reorder, delete, export, import; styles persist', async ({
+test('Comment Styles Palette: export and import; imported styles are in the palette', async ({
   page,
 }) => {
   await openDoc(page);
@@ -149,25 +149,19 @@ test('Comment Styles Palette: add, rename, reorder, delete, export, import; styl
   await palette(page).getByRole('menuitem', { name: 'Comment Styles Palette…' }).click();
   const dialog = page.getByRole('dialog', { name: 'Comment Styles Palette' });
   await expect(dialog).toBeVisible();
-  await expect(dialog.getByLabel('Tool')).toHaveValue('square');
-  await dialog.getByRole('button', { name: 'Add from Current Properties' }).click();
-  await dialog.getByRole('button', { name: 'Add from Current Properties' }).click();
-  const list = dialog.getByRole('list', { name: 'Rectangle styles' });
-  await expect(list.locator('.comment-styles-name')).toHaveText(['Style 1', 'Style 2']);
-  await axe(page, 'Comment Styles Palette', '[role="dialog"]');
-
-  await dialog.getByRole('button', { name: 'Rename Style 1' }).click();
+  // Clone the Current Style (M6-17) under a name of its own.
+  await dialog.getByRole('button', { name: 'Clone', exact: true }).click();
   const name = dialog.getByLabel('Style name');
   await expect(name).toBeFocused();
   await name.fill('Steel 3 pt');
   await name.press('Enter');
-  await expect(list.locator('.comment-styles-name')).toHaveText(['Steel 3 pt', 'Style 2']);
-  await dialog.getByRole('button', { name: 'Move Style 2 up' }).click();
-  await expect(list.locator('.comment-styles-name')).toHaveText(['Style 2', 'Steel 3 pt']);
-  await dialog.getByRole('button', { name: 'Delete Style 2' }).click();
-  await expect(list.locator('.comment-styles-name')).toHaveText(['Steel 3 pt']);
+  const list = dialog
+    .getByRole('listbox', { name: 'Rectangle styles' })
+    .getByRole('group', { name: 'Custom Styles' })
+    .getByRole('option');
+  await expect(list.last()).toHaveAccessibleName('Steel 3 pt');
 
-  // Export every tool's styles.
+  // Export every tool's styles: presets as shipped stay out of the file.
   const [download] = await Promise.all([
     page.waitForEvent('download'),
     dialog.getByRole('button', { name: 'Export…' }).click(),
@@ -214,16 +208,17 @@ test('Comment Styles Palette: add, rename, reorder, delete, export, import; styl
     ),
   });
   await expect(dialog.getByTestId('comment-styles-message')).toHaveText('1 style imported');
-  await expect(list.locator('.comment-styles-name')).toHaveText(['Steel 3 pt', 'Blue 2 pt']);
+  await expect(list).toHaveCount(16);
+  await expect(list.last()).toHaveAccessibleName('Blue 2 pt');
   await page.keyboard.press('Escape');
   await expect(dialog).toHaveCount(0);
 
-  // They persist, and show under the presets in the palette.
+  // They persist, and show after the presets in the palette.
   await openDoc(page);
   await arrow(page, 'Rectangle').click();
-  const mine = palette(page).getByRole('group', { name: 'My styles' });
-  await expect(mine.getByRole('menuitem')).toHaveCount(2);
-  await mine.getByRole('menuitem', { name: 'Blue 2 pt' }).click();
+  const styles = palette(page).getByRole('group', { name: 'Custom Styles' });
+  await expect(styles.getByRole('menuitem')).toHaveCount(16);
+  await styles.getByRole('menuitem', { name: 'Blue 2 pt' }).click();
   await expect
     .poll(() => styleOf(page, 'square'))
     .toMatchObject({ strokeColor: '#0000FF', strokeWidth: 2 });
@@ -235,7 +230,7 @@ test('Highlight palette: a tint becomes the next highlight’s colour', async ({
   const menu = palette(page);
   // No black highlighter; yellow is current.
   await expect(
-    menu.getByRole('group', { name: 'Preset styles' }).getByRole('menuitem'),
+    menu.getByRole('group', { name: 'Custom Styles' }).getByRole('menuitem'),
   ).toHaveCount(6);
   await expect(menu.locator('[data-current]')).toHaveAttribute('aria-label', 'Yellow');
   await menu.getByRole('menuitem', { name: 'Green', exact: true }).click();

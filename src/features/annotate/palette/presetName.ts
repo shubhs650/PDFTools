@@ -1,6 +1,12 @@
 import type { TFunction } from 'i18next';
 import { msg, type MessageKey } from '../../../i18n';
-import type { PresetColor, PresetStyle } from '../tools/stylePalette';
+import {
+  presetOf,
+  type PresetColor,
+  type PresetStyle,
+  type UserStyle,
+} from '../tools/stylePalette';
+import type { StyleTool } from '../tools/toolDefaults';
 
 const COLOR_KEYS: Record<PresetColor, MessageKey> = {
   red: msg('stylePalette.color.red'),
@@ -16,4 +22,11 @@ const COLOR_KEYS: Record<PresetColor, MessageKey> = {
 export function presetName(p: PresetStyle, t: TFunction): string {
   const color = t(COLOR_KEYS[p.color]);
   return p.cloudy ? t('stylePalette.cloudyName', { color }) : color;
+}
+
+/** A style's shown name: its own, or its preset's (rule 11) — M6-17. */
+export function styleName(tool: StyleTool, style: UserStyle, t: TFunction): string {
+  if (style.name) return style.name;
+  const p = presetOf(tool, style);
+  return p ? presetName(p, t) : style.name;
 }

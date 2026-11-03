@@ -1,6 +1,6 @@
 // The arrow part of a comment tool's split button (M6-07, D-37, beta review
-// B5): a palette of swatches — the presets, then the user's own styles — and
-// the Comment Styles Palette… footer. Keyboard (APG grid inside a menu): the
+// B5): a palette of swatches — the tool's Custom Styles, the presets and the
+// user's own in one list since M6-17 — and the Comment Styles Palette… footer. Keyboard (APG grid inside a menu): the
 // arrow keys move in two dimensions, Home/End, Enter applies, Esc closes and
 // focus returns to the arrow (Radix). With comments of the tool's group
 // selected a swatch restyles them; otherwise it sets the tool's style.
@@ -17,11 +17,11 @@ import {
   useCommentStyles,
 } from '../tools/commentStylesStore';
 import { pickStyle, restyleTargets } from '../tools/paletteActions';
-import { gridMove, gridRows, isCurrent, presetsFor } from '../tools/stylePalette';
+import { gridMove, gridRows, isCurrent } from '../tools/stylePalette';
 import type { StyleProps, StyleTool } from '../tools/toolDefaults';
 import { defaultsFor, useToolDefaults } from '../tools/toolDefaultsStore';
 import { documentStore, selectActive } from '../../../app/store/documentStore';
-import { presetName } from './presetName';
+import { styleName } from './presetName';
 import { StyleSwatch } from './StyleSwatch';
 
 /** Swatches per row. */
@@ -101,8 +101,7 @@ function PaletteContent({
   label: string;
 }) {
   const { t } = useTranslation();
-  const presets = useMemo(() => presetsFor(tool), [tool]);
-  const own = useCommentStyles((s) => stylesOf(s, tool));
+  const list = useCommentStyles((s) => stylesOf(s, tool));
   useToolDefaults((s) => s.overrides[tool]);
   const current = defaultsFor(tool);
   // Read once when the palette opens: what a pick will do.
@@ -111,7 +110,7 @@ function PaletteContent({
     return docId ? restyleTargets(docId, tool).length : 0;
   });
   const toolName = t(TOOL_NAME_KEYS[tool]);
-  const rows = gridRows([presets.length, own.length], COLS, 1);
+  const rows = useMemo(() => gridRows([list.length], COLS, 1), [list.length]);
 
   const onKeyDownCapture = (e: KeyboardEvent<HTMLDivElement>): void => {
     const el = document.activeElement;
@@ -137,7 +136,7 @@ function PaletteContent({
         void pickStyle(tool, command, props, name);
       }}
     >
-      <StyleSwatch tool={tool} props={props} />
+      <StyleSwatch tool={tool} props={{ ...current, ...props }} />
     </Menu.Item>
   );
 
@@ -160,23 +159,15 @@ function PaletteContent({
           ? t('stylePalette.hintSelection', { count: targets })
           : t('stylePalette.hintTool', { tool: toolName })}
       </Menu.Label>
-      <Menu.Group className="style-palette-grid" aria-label={t('stylePalette.presets')}>
-        {presets.map((p, i) => item(i, presetName(p, t), p.props, `preset:${p.id}`))}
-      </Menu.Group>
-      {own.length > 0 ? (
-        <>
-          <Menu.Label className="style-palette-label" aria-hidden="true">
-            {t('stylePalette.mine')}
-          </Menu.Label>
-          <Menu.Group className="style-palette-grid" aria-label={t('stylePalette.mine')}>
-            {own.map((s, i) => item(presets.length + i, s.name, s.props, `user:${s.id}`))}
-          </Menu.Group>
-        </>
+      {list.length > 0 ? (
+        <Menu.Group className="style-palette-grid" aria-label={t('stylePalette.custom')}>
+          {list.map((s, i) => item(i, styleName(tool, s, t), s.props, s.id))}
+        </Menu.Group>
       ) : null}
       <Menu.Separator className="ui-menu-separator" />
       <Menu.Item
         className="ui-menu-item"
-        data-idx={presets.length + own.length}
+        data-idx={list.length}
         onSelect={() => {
           openStylesDialog(tool);
         }}

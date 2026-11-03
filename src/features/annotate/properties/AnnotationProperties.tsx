@@ -117,7 +117,7 @@ function useCanEdit(): boolean {
 }
 
 /** The Style and Text rows for `props` (a selection's or a tool's). */
-function StyleAndText({
+export function StyleAndText({
   props,
   cloudy,
   disabled,

@@ -1,21 +1,29 @@
 import { describe, expect, it } from 'vitest';
 import {
   CLOUDY,
+  cloneName,
   gridMove,
   gridRows,
+  insertAfter,
   isCurrent,
+  isPristine,
   MAX_FILE_BYTES,
   MAX_STYLES,
   mergeStyles,
   migrateStyles,
   moveStyle,
-  nextStyleNumber,
   PALETTE_COMMANDS,
   PALETTE_TOOLS,
   parseStyles,
+  presetOf,
   presetsFor,
+  resetStyle,
+  restorePresets,
   sameGroup,
+  seedStyles,
   serializeStyles,
+  TOOL_COMMANDS,
+  TOOL_GROUPS,
   type UserStyle,
 } from '../../src/features/annotate/tools/stylePalette';
 import { SHIPPED_DEFAULTS, STYLE_TOOLS } from '../../src/features/annotate/tools/toolDefaults';
@@ -29,7 +37,7 @@ describe('presets (M6-07, D-37, B5)', () => {
       const ids = presetsFor(tool)
         .filter((p) => !p.cloudy)
         .map((p) => p.id);
-      if (tool === 'highlight')
+      if (['highlight', 'highlightArea', 'inkHighlighter'].includes(tool))
         expect(ids).toEqual(['red', 'purple', 'indigo', 'blue', 'green', 'yellow']);
       else expect(ids).toEqual(['red', 'purple', 'indigo', 'blue', 'green', 'yellow', 'black']);
     }
@@ -72,10 +80,23 @@ describe('presets (M6-07, D-37, B5)', () => {
     expect(presetsFor('highlight')[5]?.props).toEqual({ strokeColor: '#FFE14D', color: '#FFE14D' });
   });
 
-  it('marks the shipped default as current: red, and yellow for the highlight', () => {
+  it('marks the shipped default as current: red, and yellow for the highlights', () => {
+    const expected: Partial<Record<string, string[]>> = {
+      highlight: ['yellow'],
+      highlightArea: ['yellow'],
+      // M6-17 tools keep their earlier colours, which are no preset.
+      underline: [],
+      strikeout: [],
+      squiggly: [],
+      inkHighlighter: [],
+      textComment: [],
+    };
     for (const tool of STYLE_TOOLS) {
       const current = presetsFor(tool).filter((p) => isCurrent(p.props, SHIPPED_DEFAULTS[tool]));
-      expect(current.map((p) => p.id)).toEqual([tool === 'highlight' ? 'yellow' : 'red']);
+      expect(
+        current.map((p) => p.id),
+        tool,
+      ).toEqual(expected[tool] ?? ['red']);
     }
     expect(isCurrent({ strokeColor: '#ff0000' }, { strokeColor: '#FF0000' })).toBe(true);
     expect(isCurrent({ strokeDashArray: [] }, {})).toBe(true);
@@ -90,6 +111,116 @@ describe('presets (M6-07, D-37, B5)', () => {
     expect(sameGroup('freeText', 'typewriter')).toBe(false);
     expect(sameGroup('line', 'square')).toBe(false);
     expect(sameGroup('ink', 'highlight')).toBe(false);
+    expect(sameGroup('underline', 'squiggly')).toBe(true);
+    expect(sameGroup('highlight', 'highlightArea')).toBe(false);
+  });
+
+  it('M6-17 tools: markup colours in full, highlighter tints, note colours', () => {
+    expect(presetsFor('underline')[3]?.props).toEqual({ strokeColor: '#0000FF', color: '#0000FF' });
+    expect(presetsFor('highlightArea')[3]?.props).toEqual({
+      color: '#9CCBFF',
+      strokeColor: '#9CCBFF',
+    });
+    expect(presetsFor('inkHighlighter')[0]?.props).toEqual({
+      strokeColor: '#FF9C9C',
+      color: '#FF9C9C',
+    });
+    expect(presetsFor('textComment')[5]?.props).toEqual({ strokeColor: '#FFFF00' });
+  });
+
+  it('the window lists every style tool once, each with its ribbon command', () => {
+    const listed = TOOL_GROUPS.flatMap((g) => g.tools);
+    expect([...listed].sort()).toEqual([...STYLE_TOOLS].sort());
+    expect(new Set(listed).size).toBe(listed.length);
+    for (const tool of STYLE_TOOLS) expect(TOOL_COMMANDS[tool]).toMatch(/^comment\./);
+  });
+});
+
+describe('presets as styles (M6-17)', () => {
+  it('a tool starts with its presets, unnamed (their names are translated)', () => {
+    const seed = seedStyles('square');
+    expect(seed).toHaveLength(14);
+    expect(seed[0]).toEqual({
+      id: 'preset:red',
+      name: '',
+      props: { strokeColor: '#FF0000', cloudyBorderIntensity: 0 },
+      preset: 'red',
+    });
+    expect(seed[7] && presetOf('square', seed[7])?.cloudy).toBe(true);
+    expect(seed.every((s) => isPristine('square', s))).toBe(true);
+  });
+
+  it('migrates: nothing stored or unreadable → presets; v1 → presets, then the own styles', () => {
+    const own = { id: 'a', name: 'Mine', props: { strokeWidth: 3 } };
+    expect(migrateStyles(undefined, 'line')).toEqual(seedStyles('line'));
+    expect(migrateStyles({ v: 9, styles: [] }, 'line')).toEqual(seedStyles('line'));
+    expect(
+      migrateStyles({ v: 1, styles: [own, { id: 'b', name: '', props: {} }] }, 'line'),
+    ).toEqual([...seedStyles('line'), own]);
+    // A v1 style cannot claim to be a preset.
+    expect(migrateStyles({ v: 1, styles: [{ ...own, preset: 'red' }] }, 'line').at(-1)).toEqual(
+      own,
+    );
+  });
+
+  it('v2 keeps edited, renamed, reordered and deleted presets as stored', () => {
+    const edited = {
+      id: 'preset:blue',
+      name: '',
+      props: { strokeColor: '#0000AA' },
+      preset: 'blue',
+    };
+    const renamed = {
+      id: 'preset:red',
+      name: 'Danger',
+      props: { strokeColor: '#FF0000' },
+      preset: 'red',
+    };
+    const own = { id: 'a', name: 'Mine', props: { strokeWidth: 3 } };
+    expect(migrateStyles({ v: 2, styles: [own, edited, renamed] }, 'line')).toEqual([
+      own,
+      edited,
+      renamed,
+    ]);
+    expect(migrateStyles({ v: 2, styles: [] }, 'line')).toEqual([]);
+    // An unknown preset, an unnamed own style and a duplicate id are dropped.
+    expect(
+      migrateStyles(
+        {
+          v: 2,
+          styles: [
+            { id: 'x', name: '', props: { strokeWidth: 1 }, preset: 'pink' },
+            { id: 'y', name: '', props: { strokeWidth: 1 } },
+            own,
+            { ...own, name: 'Again' },
+          ],
+        },
+        'line',
+      ),
+    ).toEqual([own]);
+  });
+
+  it('Reset brings a preset back; Reset All restores the presets and keeps the own styles', () => {
+    const [red, purple] = seedStyles('line') as [UserStyle, UserStyle];
+    const changed = { ...red, name: 'Danger', props: { strokeColor: '#AA0000', strokeWidth: 4 } };
+    expect(isPristine('line', changed)).toBe(false);
+    expect(resetStyle('line', changed)).toEqual(red);
+    const own = { id: 'a', name: 'Mine', props: { strokeWidth: 3 } };
+    expect(resetStyle('line', own)).toBe(own);
+    expect(restorePresets('line', [own, purple])).toEqual([...seedStyles('line'), own]);
+  });
+
+  it('clone names, inserted after the source', () => {
+    const nameOf = (b: string, n: number) => (n === 1 ? `${b} copy` : `${b} copy ${String(n)}`);
+    expect(cloneName([], 'Red', nameOf)).toBe('Red copy');
+    expect(cloneName(['Red copy', 'Red copy 2'], 'Red', nameOf)).toBe('Red copy 3');
+    expect(cloneName([], 'x'.repeat(80), nameOf)).toHaveLength(64);
+    const a = { id: 'a', name: 'A', props: { strokeWidth: 1 } };
+    const b = { id: 'b', name: 'B', props: { strokeWidth: 2 } };
+    const c = { id: 'c', name: 'C', props: { strokeWidth: 3 } };
+    expect(insertAfter([a, b], 'a', c).map((s) => s.id)).toEqual(['a', 'c', 'b']);
+    expect(insertAfter([a, b], null, c).map((s) => s.id)).toEqual(['a', 'b', 'c']);
+    expect(insertAfter([a, b], 'zz', c).map((s) => s.id)).toEqual(['a', 'b', 'c']);
   });
 });
 
@@ -98,21 +229,22 @@ describe('user styles', () => {
   const b: UserStyle = { id: 'b', name: 'B', props: { strokeWidth: 3 } };
   const c: UserStyle = { id: 'c', name: 'C', props: { strokeWidth: 4 } };
 
-  it('a stored record keeps its well-formed styles only', () => {
+  it('a stored v1 record keeps its well-formed styles only', () => {
     expect(
-      migrateStyles({
-        v: 1,
-        styles: [
-          a,
-          { id: 'x', name: '', props: { strokeWidth: 1 } },
-          { id: 'y', name: 'Y', props: { strokeColor: 'red' } },
-          { name: 'Z', props: { strokeWidth: 1 } },
-          { id: 'w', name: '  W  ', props: { strokeWidth: 1, bogus: 1 } },
-        ],
-      }),
+      migrateStyles(
+        {
+          v: 1,
+          styles: [
+            a,
+            { id: 'x', name: '', props: { strokeWidth: 1 } },
+            { id: 'y', name: 'Y', props: { strokeColor: 'red' } },
+            { name: 'Z', props: { strokeWidth: 1 } },
+            { id: 'w', name: '  W  ', props: { strokeWidth: 1, bogus: 1 } },
+          ],
+        },
+        'square',
+      ).filter((s) => !s.preset),
     ).toEqual([a, { id: 'w', name: 'W', props: { strokeWidth: 1 } }]);
-    expect(migrateStyles({ v: 2, styles: [a] })).toEqual([]);
-    expect(migrateStyles(null)).toEqual([]);
   });
 
   it('reorders by one place, clamped at the ends', () => {
@@ -122,41 +254,37 @@ describe('user styles', () => {
     expect(moveStyle([a, b, c], 'zz', 1).map((s) => s.id)).toEqual(['a', 'b', 'c']);
   });
 
-  it('names a new style with the next free number', () => {
-    const nameOf = (k: number) => `Style ${String(k)}`;
-    expect(nextStyleNumber([], nameOf)).toBe(1);
-    expect(
-      nextStyleNumber(
-        [
-          { ...a, name: 'Style 2' },
-          { ...b, name: 'Style 3' },
-        ],
-        nameOf,
-      ),
-    ).toBe(4);
-  });
-
   it('merges an import after the existing styles, up to the limit per tool', () => {
-    expect(mergeStyles({ square: [a] }, { square: [b], line: [c] })).toEqual({
+    const lists: Record<string, UserStyle[]> = { square: [a] };
+    const listOf = (tool: string) => lists[tool] ?? [];
+    expect(mergeStyles(listOf, { square: [b], line: [c] })).toEqual({
       square: [a, b],
       line: [c],
     });
-    const full = Array.from({ length: MAX_STYLES }, (_, i) => ({ ...a, id: String(i) }));
-    expect(mergeStyles({ square: full }, { square: [b] })).toBeNull();
+    lists.square = Array.from({ length: MAX_STYLES }, (_, i) => ({ ...a, id: String(i) }));
+    expect(mergeStyles(listOf, { square: [b] })).toBeNull();
   });
 });
 
 describe('.pdftools-styles.json', () => {
   it('round-trips names and properties with new ids', () => {
-    const text = serializeStyles({
-      square: [{ id: 'a', name: 'Blue cloud', props: { strokeColor: '#0000FF', strokeWidth: 2 } }],
-      highlight: [{ id: 'b', name: 'Pink', props: { strokeColor: '#FFC0CB', color: '#FFC0CB' } }],
-      line: [],
-    });
+    const [red, purple] = seedStyles('line') as [UserStyle, UserStyle];
+    const text = serializeStyles(
+      {
+        square: [
+          { id: 'a', name: 'Blue cloud', props: { strokeColor: '#0000FF', strokeWidth: 2 } },
+        ],
+        highlight: [{ id: 'b', name: 'Pink', props: { strokeColor: '#FFC0CB', color: '#FFC0CB' } }],
+        // Presets as shipped stay out; a changed one goes under its shown name.
+        line: [red, { ...purple, props: { strokeColor: '#800080', strokeWidth: 5 } }],
+      },
+      (_tool, s) => s.name || `Shown ${s.preset ?? ''}`,
+    );
     expect(JSON.parse(text)).toEqual({
       format: 'pdftools-styles',
       version: 1,
       tools: {
+        line: [{ name: 'Shown purple', props: { strokeColor: '#800080', strokeWidth: 5 } }],
         square: [{ name: 'Blue cloud', props: { strokeColor: '#0000FF', strokeWidth: 2 } }],
         highlight: [{ name: 'Pink', props: { strokeColor: '#FFC0CB', color: '#FFC0CB' } }],
       },
@@ -164,7 +292,7 @@ describe('.pdftools-styles.json', () => {
     const r = parseStyles(text, newId);
     expect(r.ok).toBe(true);
     if (!r.ok) return;
-    expect(r.value.count).toBe(2);
+    expect(r.value.count).toBe(3);
     expect(r.value.styles.square?.[0]).toMatchObject({ name: 'Blue cloud' });
     expect(r.value.styles.square?.[0]?.id).toMatch(/^id\d+$/);
   });

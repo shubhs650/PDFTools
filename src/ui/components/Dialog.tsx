@@ -20,6 +20,10 @@ export interface DialogProps {
    * right after opening never deletes anything (preview review UI02).
    */
   initialFocus?: RefObject<HTMLElement | null>;
+  /** An extra class on the dialog box (a wide window, M6-17). */
+  className?: string;
+  /** Esc pressed: preventDefault() keeps the dialog open (an inline edit cancels instead). */
+  onEscapeKeyDown?: (e: KeyboardEvent) => void;
 }
 
 /** Modal dialog: focus is trapped, Esc closes, focus returns to the opener (Radix). */
@@ -32,6 +36,8 @@ export function Dialog({
   footer,
   closeIcon,
   initialFocus,
+  className,
+  onEscapeKeyDown,
 }: DialogProps) {
   const { t } = useTranslation();
   // Give focus back to whatever opened the dialog (rule 12). Radix only does
@@ -43,7 +49,8 @@ export function Dialog({
       <RadixDialog.Portal>
         <RadixDialog.Overlay className="ui-dialog-backdrop" />
         <RadixDialog.Content
-          className="ui-dialog"
+          className={className ? `ui-dialog ${className}` : 'ui-dialog'}
+          {...(onEscapeKeyDown ? { onEscapeKeyDown } : {})}
           onOpenAutoFocus={(e) => {
             const active = document.activeElement;
             returnTo.current = active instanceof HTMLElement ? active : null;

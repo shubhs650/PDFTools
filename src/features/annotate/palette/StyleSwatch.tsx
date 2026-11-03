@@ -25,7 +25,16 @@ function cloudPath(m: number): string {
 
 const visible = (c: string | undefined): c is string => !!c && c !== 'transparent';
 
-export function StyleSwatch({ tool, props }: { tool: StyleTool; props: StyleProps }) {
+export function StyleSwatch({
+  tool,
+  props,
+  size = SIZE,
+}: {
+  tool: StyleTool;
+  props: StyleProps;
+  /** Drawn size in px (the window's tiles are larger, M6-17); the drawing scales. */
+  size?: number;
+}) {
   const kind = KIND[tool];
   const stroke = props.strokeColor ?? props.color ?? props.fontColor ?? 'currentColor';
   const width = Math.min(4, Math.max(1, props.strokeWidth ?? 1));
@@ -80,10 +89,68 @@ export function StyleSwatch({ tool, props }: { tool: StyleTool; props: StyleProp
       body = <path d="M3 16C6 6 9 6 10 12S15 20 17 11S20 7 21 9" {...common} fill="none" />;
       break;
     case 'highlight':
+      body =
+        tool === 'inkHighlighter' ? (
+          <path
+            d="M3 15C7 9 11 9 13 12S18 15 21 9"
+            stroke={stroke}
+            strokeWidth={5}
+            strokeLinecap="round"
+            fill="none"
+            opacity={props.opacity ?? 1}
+          />
+        ) : (
+          <>
+            <rect x={2} y={7} width={20} height={10} fill={stroke} opacity={props.opacity ?? 1} />
+            <path d="M5 12H19" stroke="var(--color-text-muted)" strokeWidth={1.5} />
+          </>
+        );
+      break;
+    case 'area': {
+      const area = visible(props.color) ? props.color : stroke;
       body = (
         <>
-          <rect x={2} y={7} width={20} height={10} fill={stroke} opacity={props.opacity ?? 1} />
-          <path d="M5 12H19" stroke="var(--color-text-muted)" strokeWidth={1.5} />
+          <rect x={3} y={5} width={18} height={14} fill={area} opacity={props.opacity ?? 1} />
+          <path d="M6 10H18M6 14H15" stroke="var(--color-text-muted)" strokeWidth={1.5} />
+        </>
+      );
+      break;
+    }
+    case 'markup': {
+      // Text lines, marked as the tool marks them.
+      const mark =
+        tool === 'strikeout' ? (
+          <path d="M3 12H21" stroke={stroke} strokeWidth={2} />
+        ) : tool === 'squiggly' ? (
+          <path
+            d="M3 18L5 16L7 18L9 16L11 18L13 16L15 18L17 16L19 18L21 16"
+            stroke={stroke}
+            strokeWidth={1.5}
+            fill="none"
+          />
+        ) : (
+          <path d="M3 17H21" stroke={stroke} strokeWidth={2} />
+        );
+      body = (
+        <>
+          <path d="M4 12H20" stroke="var(--color-text-muted)" strokeWidth={4} opacity={0.6} />
+          {mark}
+        </>
+      );
+      break;
+    }
+    case 'note':
+      // A note: a folded sheet with lines.
+      body = (
+        <>
+          <path
+            d="M4 4H20V15L15 20H4Z"
+            fill={stroke}
+            stroke="var(--color-text-muted)"
+            strokeWidth={1}
+            strokeLinejoin="round"
+          />
+          <path d="M7 9H17M7 12.5H14" stroke="var(--color-text-muted)" strokeWidth={1.2} />
         </>
       );
       break;
@@ -91,8 +158,8 @@ export function StyleSwatch({ tool, props }: { tool: StyleTool; props: StyleProp
   return (
     <svg
       className="style-swatch-art"
-      width={SIZE}
-      height={SIZE}
+      width={size}
+      height={size}
       viewBox={`0 0 ${String(SIZE)} ${String(SIZE)}`}
       aria-hidden="true"
       focusable="false"
