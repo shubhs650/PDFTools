@@ -1,6 +1,6 @@
 # PDFTools — Progress
 
-_Last updated: 2026-11-03 (session 38: M6-16 standard colours in every colour picker)_
+_Last updated: 2026-11-03 (session 39: M6-17 Comment Styles Palette window)_
 
 **Current milestone:** M6 — Beta review (plan in [docs/plan/M6.md](plan/M6.md), scope changes in
 [ADR-021](adr/021-m6-beta-review.md), **Accepted** 2026-11-01; ARCHITECTURE.md Rev 0.10; M6-01 … M6-15 done, **M6 complete on the agent side** ([acceptance](acceptance/M6.md)); spike results in
@@ -9,6 +9,25 @@ interop is in the M6 pack (CHECKLIST §M6 R1–R4). Rev 0 (M0–M4) is complete 
 
 ## Done
 
+- **Session 39 — M6-17 Comment Styles Palette window (D-37; owner request 2026-11-03; plan in
+  [M6.md](plan/M6.md#m6-17--comment-styles-palette-window-post-m6-owner-request-2026-11-03)).**
+  The dialog is now a PDF-XChange-style window (`palette/CommentStylesDialog.tsx`): grouped
+  tool list with Reset All; Current Style + Custom Styles tiles (previews drawn from the style
+  over the current one); the selected tile's properties in the Properties pane's
+  `StyleAndText` rows (`palette/styleSample.ts` builds the object they read, with a fallback
+  when no document is open); Clone, Rename, Reset, Delete, Properties, Set Current, Export…,
+  Import…; a tile menu with Move Earlier/Later. **Presets are stored styles** now
+  (`commentStyles` v2, `preset` id, empty name = the translated preset name; v1 and missing
+  records migrate to presets + own styles; export leaves unchanged presets out, so the file
+  format stays v1). **New styled tools:** underline, strikeout, squiggly (markupModel reads
+  their style), highlight area, free highlight, sticky note — shipped defaults equal their old
+  look. `MAX_STYLES` 48 → 64. The ribbon palette shows the one list ("Custom Styles"). Tests:
+  unit `tests/annotate/stylePalette.test.ts` (seed, v1/v2 migration, reset, Reset All, clone
+  names, export of changed presets), `tests/annotate/toolDefaults.test.ts`; e2e
+  `e2e/styles-window.spec.ts` (@smoke: window, edit/clone/set current/reset/delete/Reset All,
+  persistence; keyboard incl. Esc in the rename field and an underline in the set style; new
+  tools reach the plugin; no document open), `e2e/style-palette.spec.ts` updated. Screenshots:
+  project files `m6-17/`.
 - **Session 38 — M6-16 Standard colours in every colour picker (beta follow-up, owner request
   2026-11-03).** New shared `ColorPicker` (`src/ui/components/ColorPicker.tsx`, Radix Popover
   `@radix-ui/react-popover` 1.1.23, MIT, exact pin): a swatch button opens **Standard colors**,

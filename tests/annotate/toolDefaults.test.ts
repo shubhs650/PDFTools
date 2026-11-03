@@ -1,6 +1,6 @@
 import { IDBFactory } from 'fake-indexeddb';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
-import { MARKUP_DEFAULTS } from '../../src/features/annotate/tools/markupModel';
+import { MARKUP_DEFAULTS, MARKUP_TOOLS } from '../../src/features/annotate/tools/markupModel';
 import { DRAW_TOOLS } from '../../src/features/annotate/tools/drawModel';
 import {
   cleanProps,
@@ -64,15 +64,28 @@ describe('shipped comment styles (M6-03, D-37, B6)', () => {
       color: MARKUP_DEFAULTS.highlight.color,
       opacity: 1,
     });
-    expect(STYLE_TOOLS).not.toContain('textComment');
-    expect(STYLE_TOOLS).not.toContain('inkHighlighter');
+    // M6-17: the other markups, the free highlight and the sticky note joined
+    // the styled tools with the look they had before.
+    for (const m of ['underline', 'strikeout', 'squiggly'] as const)
+      expect(SHIPPED_DEFAULTS[m]).toEqual({
+        strokeColor: MARKUP_DEFAULTS[m].color,
+        color: MARKUP_DEFAULTS[m].color,
+        opacity: 1,
+      });
+    expect(SHIPPED_DEFAULTS.textComment).toEqual({ strokeColor: '#FFCD45', opacity: 1 });
+    expect(SHIPPED_DEFAULTS.inkHighlighter).toMatchObject({
+      strokeColor: '#FFCD45',
+      strokeWidth: 14,
+    });
+    expect(SHIPPED_DEFAULTS.highlightArea).toMatchObject({ color: '#FFE14D', strokeWidth: 0 });
     for (const m of ['measureDistance', 'measurePerimeter', 'measureArea'])
       expect(STYLE_TOOLS).not.toContain(m);
     expect(MARKUP_DEFAULTS.highlight.color).toBe('#FFE14D');
   });
 
-  it('every styled tool is a drawing tool, or the highlight', () => {
-    for (const tool of STYLE_TOOLS) if (tool !== 'highlight') expect(DRAW_TOOLS).toContain(tool);
+  it('every styled tool is a drawing tool or a text markup tool', () => {
+    for (const tool of STYLE_TOOLS)
+      expect([...DRAW_TOOLS, ...MARKUP_TOOLS] as string[]).toContain(tool);
   });
 });
 

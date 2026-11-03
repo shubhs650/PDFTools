@@ -18,6 +18,9 @@ import { setToolDefaults } from './toolDefaultsStore';
 const ALIASED: ReadonlySet<PdfAnnotationSubtype> = new Set([
   PdfAnnotationSubtype.INK,
   PdfAnnotationSubtype.HIGHLIGHT,
+  PdfAnnotationSubtype.UNDERLINE,
+  PdfAnnotationSubtype.STRIKEOUT,
+  PdfAnnotationSubtype.SQUIGGLY,
 ]);
 
 const activeId = (): string | null => selectActive(documentStore.getState())?.meta.id ?? null;

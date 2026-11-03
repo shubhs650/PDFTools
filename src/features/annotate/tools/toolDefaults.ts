@@ -23,6 +23,15 @@ export const STYLE_TOOLS = [
   'ink',
   // A text markup, not a drawing tool (markupModel.ts reads its style, M6-07).
   'highlight',
+  // M6-17: the rest of the Text Markups and Notes groups of the Comment Styles
+  // Palette. Their shipped defaults are what they drew before, so nothing
+  // looks different until the user sets a style.
+  'underline',
+  'strikeout',
+  'squiggly',
+  'highlightArea',
+  'inkHighlighter',
+  'textComment',
 ] as const;
 
 export type StyleTool = (typeof STYLE_TOOLS)[number];
@@ -62,6 +71,8 @@ export const DEFAULT_RED = '#FF0000';
 export const DEFAULT_FONT_SIZE = 10;
 export const DEFAULT_LINE_WIDTH = 1;
 export const HIGHLIGHT_YELLOW = '#FFE14D';
+/** The plugin's sticky note and free highlight yellow (EmbedPDF 2.15.1 tool defaults). */
+export const NOTE_YELLOW = '#FFCD45';
 
 const TEXT: StyleProps = {
   fontColor: DEFAULT_RED,
@@ -99,6 +110,20 @@ export const SHIPPED_DEFAULTS: Readonly<Record<StyleTool, Readonly<StyleProps>>>
   ink: { strokeColor: DEFAULT_RED, color: DEFAULT_RED, strokeWidth: DEFAULT_LINE_WIDTH },
   // Yellow, as before M6-03 (MARKUP_DEFAULTS); /C is kept in both fields.
   highlight: { strokeColor: HIGHLIGHT_YELLOW, color: HIGHLIGHT_YELLOW, opacity: 1 },
+  // M6-17: as markupModel.ts's MARKUP_DEFAULTS drew them.
+  underline: { strokeColor: '#1E6FD9', color: '#1E6FD9', opacity: 1 },
+  strikeout: { strokeColor: '#D93025', color: '#D93025', opacity: 1 },
+  squiggly: { strokeColor: '#1E8E3E', color: '#1E8E3E', opacity: 1 },
+  // As drawTools.ts's HIGHLIGHT_AREA_DEFAULTS (its /BM /Multiply stays the tool's own).
+  highlightArea: {
+    color: HIGHLIGHT_YELLOW,
+    strokeColor: HIGHLIGHT_YELLOW,
+    strokeWidth: 0,
+    opacity: 1,
+  },
+  // As the plugin's own tools drew them.
+  inkHighlighter: { strokeColor: NOTE_YELLOW, color: NOTE_YELLOW, strokeWidth: 14, opacity: 1 },
+  textComment: { strokeColor: NOTE_YELLOW, opacity: 1 },
 };
 
 /** The stored record's schema version (IndexedDB `toolDefaults`, keyed by tool id). */

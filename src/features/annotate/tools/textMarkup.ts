@@ -18,12 +18,16 @@ import { capability, hostStore } from '../../view/host';
 import { annotationCapability } from '../selection';
 import { openContentsPrompt } from './contentsPrompt';
 import { buildMarkups, textsPerPage, type MarkupTool, type PageSelection } from './markupModel';
+import { isStyleTool } from './toolDefaults';
 import { defaultsFor } from './toolDefaultsStore';
 
-/** The highlight's current style (its palette, M6-07); the other markups keep theirs. */
+/**
+ * A markup tool's current style (its palette: the highlight since M6-07,
+ * underline, strikeout and squiggly since M6-17); insert and replace text keep theirs.
+ */
 function styleOf(tool: MarkupTool): { color: string; opacity: number } | undefined {
-  if (tool !== 'highlight') return undefined;
-  const d = defaultsFor('highlight');
+  if (!isStyleTool(tool)) return undefined;
+  const d = defaultsFor(tool);
   const color = d.strokeColor ?? d.color;
   return color ? { color, opacity: d.opacity ?? 1 } : undefined;
 }

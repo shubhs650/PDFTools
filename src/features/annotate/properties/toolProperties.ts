@@ -2,7 +2,7 @@
 // Properties pane edits that tool's defaults (M6-03 store) instead of a
 // selection; "Make current properties default" copies a comment's style into
 // its tool's defaults.
-import type { PdfAnnotationObject } from '@embedpdf/models';
+import { PdfAnnotationSubtype, type PdfAnnotationObject } from '@embedpdf/models';
 import { msg, t, type MessageKey } from '../../../i18n';
 import { annotationCapability } from '../selection';
 import { isStyleTool, type StyleProps, type StyleTool } from '../tools/toolDefaults';
@@ -24,6 +24,12 @@ export const TOOL_NAME_KEYS: Record<StyleTool, MessageKey> = {
   cloud: msg('annotProps.toolName.cloud'),
   ink: msg('annotProps.toolName.ink'),
   highlight: msg('annotProps.toolName.highlight'),
+  underline: msg('annotProps.toolName.underline'),
+  strikeout: msg('annotProps.toolName.strikeout'),
+  squiggly: msg('annotProps.toolName.squiggly'),
+  highlightArea: msg('annotProps.toolName.highlightArea'),
+  inkHighlighter: msg('annotProps.toolName.inkHighlighter'),
+  textComment: msg('annotProps.toolName.textComment'),
 };
 
 /**
@@ -51,10 +57,11 @@ export const toolPropsOf = (sample: PdfAnnotationObject): Prop[] =>
 export function setToolProp(tool: StyleTool, p: Prop, v: Plain): Promise<void> {
   const sample = toolSample(tool);
   const patch = sample ? patchFor(sample, p, v) : null;
-  if (!patch) return Promise.resolve();
+  if (!sample || !patch) return Promise.resolve();
   const props = patch as StyleProps & Record<string, unknown>;
-  // The pencil's color is also its deprecated `color` alias (M6-03).
-  if (tool === 'ink' && typeof props.strokeColor === 'string') props.color = props.strokeColor;
+  // Ink (pencil, free highlight) keeps its deprecated `color` alias in step (M6-03).
+  if (sample.type === PdfAnnotationSubtype.INK && typeof props.strokeColor === 'string')
+    props.color = props.strokeColor;
   return setToolDefaults(tool, props);
 }
 
