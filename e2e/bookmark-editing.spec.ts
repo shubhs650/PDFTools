@@ -3,6 +3,7 @@ import type { Page } from '@playwright/test';
 import { OWNER_PW, USER_PW, hasQpdf, qpdfEncrypt } from './fixtures/encrypted.ts';
 import { bigOutlinePdf, richOutlinePdf } from './fixtures/generate.ts';
 import { cap, drop } from './support/app.ts';
+import { pickColor } from './support/colors.ts';
 import { expect, test } from './support/fixtures.ts';
 
 // M6-11 (§7.15, ADR-022 decision 5; beta review B3c; rules 7, 9, 12): the
@@ -189,6 +190,7 @@ test('drag and drop, Alt+Shift+arrows, cut and paste, Properties', async ({ page
   await expect(dialog.getByLabel('Page')).toHaveValue('2');
   await dialog.getByLabel('Title').fill('Appendix');
   await dialog.getByLabel('Bold').check();
+  await pickColor(dialog, 'Colour', 'Navy');
   await dialog.getByLabel('Page').fill('3');
   await dialog.getByLabel('Zoom', { exact: true }).selectOption({ label: 'Fit Page' });
   const { violations } = await new AxeBuilder({ page }).include('[role="dialog"]').analyze();
@@ -196,6 +198,10 @@ test('drag and drop, Alt+Shift+arrows, cut and paste, Properties', async ({ page
   await dialog.getByRole('button', { name: 'OK' }).click();
   await expect(item(page, 'Appendix')).toBeFocused();
   await expect(item(page, 'Appendix').locator('.bookmark-title')).toHaveCSS('font-weight', '600');
+  await expect(item(page, 'Appendix').locator('.bookmark-title')).toHaveCSS(
+    'color',
+    'rgb(0, 0, 128)',
+  );
   await page.keyboard.press('Enter');
   await expect(pageBox(page)).toHaveValue('3');
 

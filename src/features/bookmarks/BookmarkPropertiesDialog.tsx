@@ -12,7 +12,7 @@ import {
   type OutlineItem,
   type Rgb,
 } from '../../model/outline';
-import { Button, Dialog, TextField } from '../../ui/components';
+import { Button, ColorPicker, Dialog, TextField } from '../../ui/components';
 import { internalDestination } from '../view/links';
 import { pageSizeOf } from '../view/pagePoint';
 import { closeProperties, editBlocked, runEdit, useBookmarks } from './bookmarks';
@@ -194,18 +194,18 @@ function PropertiesForm({
           }}
         />
         <div className="bookmark-props-style">
-          <label className="ui-field bookmark-props-color">
-            <span className="ui-field-label">{t('bookmarks.props.color')}</span>
-            <input
-              type="color"
-              className="prop-swatch ui-focusable"
+          <div className="ui-field bookmark-props-color">
+            <label className="ui-field-label" htmlFor={`${ids}-color`}>
+              {t('bookmarks.props.color')}
+            </label>
+            <ColorPicker
+              id={`${ids}-color`}
+              label={t('bookmarks.props.color')}
               value={color}
               disabled={readOnly}
-              onChange={(e) => {
-                setColor(e.currentTarget.value);
-              }}
+              onChange={setColor}
             />
-          </label>
+          </div>
           <label className="scale-radio">
             <input
               type="checkbox"

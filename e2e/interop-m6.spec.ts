@@ -7,6 +7,7 @@ import { flattenSourcePdf } from './fixtures/comments.ts';
 import { hasQpdf } from './fixtures/encrypted.ts';
 import { annotatedPdf, richOutlinePdf, simplePdf } from './fixtures/generate.ts';
 import { cap, drop } from './support/app.ts';
+import { pickColor } from './support/colors.ts';
 import { expect, test } from './support/fixtures.ts';
 import { stubSavePicker } from './support/savePicker.ts';
 import { encodePng } from '../src/workers/work/png.ts';
@@ -311,7 +312,7 @@ test('M6 interop: an edited outline saved with Ctrl+S', async ({ page }) => {
   await page.keyboard.press('Alt+Enter');
   const props = page.getByRole('dialog', { name: 'Bookmark Properties' });
   await expect(props).toBeVisible();
-  await props.getByLabel('Colour').fill('#0000ff');
+  await pickColor(props, 'Colour', 'Blue');
   await props.getByLabel('Bold').check();
   await props.getByLabel('Zoom', { exact: true }).selectOption({ label: 'Fit Width' });
   await props.getByRole('button', { name: 'OK' }).click();

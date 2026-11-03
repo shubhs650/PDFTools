@@ -1,6 +1,7 @@
 import AxeBuilder from '@axe-core/playwright';
 import type { Page } from '@playwright/test';
 import { readFileSync } from 'node:fs';
+import { pickColor } from './support/colors.ts';
 import { expect, test } from './support/fixtures.ts';
 
 // M3-13 (D-23, §7.3): status schemes — presets, custom schemes, the active
@@ -36,7 +37,7 @@ test('presets, duplicate → edit → save, active scheme, kept after reload', a
   await editor.getByRole('button', { name: 'Add code' }).click();
   await editor.getByLabel('Code 5').fill('2');
   await editor.getByLabel('Label 5').fill('Duplicate code');
-  await editor.getByLabel('Colour 5').fill('#ffff00');
+  await pickColor(editor, 'Colour 5', 'Yellow');
   await expect(editor).toContainText('hard to read on a white page');
   await editor.getByRole('button', { name: 'Save' }).click();
   await expect(editor.getByRole('alert')).toHaveText('Two codes are the same.');

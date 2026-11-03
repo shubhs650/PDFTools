@@ -2042,24 +2042,9 @@ textarea.form-field {
   min-width: 0;
 }
 
-.prop-swatch {
-  width: var(--control-height-m);
-  height: var(--control-height-m);
-  padding: var(--space-1);
-  border: var(--border-width) solid var(--color-border-strong);
-  border-radius: var(--radius-m);
-  background: var(--color-surface);
-}
-
 .prop-number {
   width: 5em;
   min-width: 0;
-}
-
-.prop-check {
-  display: flex;
-  gap: var(--space-2);
-  align-items: center;
 }
 
 .prop-text,
