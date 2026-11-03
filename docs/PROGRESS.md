@@ -1,6 +1,6 @@
 # PDFTools — Progress
 
-_Last updated: 2026-11-02 (session 37: M6-15 M6 acceptance, Help, interop pack, release notes)_
+_Last updated: 2026-11-03 (session 38: M6-16 standard colours in every colour picker)_
 
 **Current milestone:** M6 — Beta review (plan in [docs/plan/M6.md](plan/M6.md), scope changes in
 [ADR-021](adr/021-m6-beta-review.md), **Accepted** 2026-11-01; ARCHITECTURE.md Rev 0.10; M6-01 … M6-15 done, **M6 complete on the agent side** ([acceptance](acceptance/M6.md)); spike results in
@@ -8,6 +8,23 @@ _Last updated: 2026-11-02 (session 37: M6-15 M6 acceptance, Help, interop pack, 
 interop is in the M6 pack (CHECKLIST §M6 R1–R4). Rev 0 (M0–M4) is complete on the agent side.
 
 ## Done
+
+- **Session 38 — M6-16 Standard colours in every colour picker (beta follow-up, owner request
+  2026-11-03).** New shared `ColorPicker` (`src/ui/components/ColorPicker.tsx`, Radix Popover
+  `@radix-ui/react-popover` 1.1.23, MIT, exact pin): a swatch button opens **Standard colors**,
+  our own 8 × 6 palette (`colorPalette.ts`; grays, pure, pale, light, dark, darkest; includes
+  #FF0000, the highlight yellow and the style presets), **More colors…** (the system picker,
+  anchored at the button) and **No fill** / **No border** for colours that may be transparent
+  (replaces the old checkbox). Wired into `ColorField` (Properties pane for comments and tool
+  defaults, form field properties), Bookmark Properties and the stamp status scheme editor. The
+  button describes its colour ("Red", "RGB: 18, 52, 86" or "Mixed"); swatches have translated
+  names; ArrowDown opens, arrows / Home / End move, Enter picks, Esc closes. New tokens
+  `--swatch-cell-size`, `--swatch-chip-width`, `--z-popover` (a picker above a dialog). Tests:
+  `tests/ui/colorPalette.test.ts`, `tests/ui/colorPicker.test.tsx`, `e2e/color-picker.spec.ts`
+  (@smoke; axe on the popup; dark; inside a dialog, Esc closes only the picker); the property
+  grid, bookmark, schemes and interop specs now pick colours through it. Help (Comment styles
+  and properties) updated. Screenshots: project files `color-swatches/`. The Comment Styles
+  Palette rebuild (M6-17, separate thread) reuses `ColorField`.
 
 - **Session 37 — M6-15 M6 acceptance, Help, interop pack, release notes (ADR-021; M5-05).**
   [docs/acceptance/M6.md](acceptance/M6.md): every beta-review observation (A1a … C3) → task →

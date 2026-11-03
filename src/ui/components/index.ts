@@ -1,4 +1,5 @@
 export { Button, type ButtonProps } from './Button';
+export { ColorPicker, NO_COLOR, type ColorPickerProps } from './ColorPicker';
 export { IconButton, type IconButtonProps } from './IconButton';
 export { ToggleButton, type ToggleButtonProps } from './ToggleButton';
 export { SplitButton, type SplitButtonProps } from './SplitButton';

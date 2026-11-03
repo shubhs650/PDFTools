@@ -329,6 +329,7 @@ function FieldProperties({ docId, widget: w }: { docId: string; widget: PdfWidge
           label={t('forms.props.borderColor')}
           value={w.strokeColor ?? NO_COLOR}
           allowNone
+          noneLabel={t('forms.props.noBorder')}
           disabled={disabled}
           onCommit={(c) => {
             if (live()) updateLook(docId, w, { strokeColor: c });

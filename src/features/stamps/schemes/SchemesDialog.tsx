@@ -16,7 +16,7 @@ import {
   type StatusScheme,
 } from '../../../model/statusScheme';
 import { downloadBytes } from '../../../storage/fileAccess';
-import { Button, Dialog, TextField } from '../../../ui/components';
+import { Button, ColorPicker, Dialog, TextField } from '../../../ui/components';
 import {
   allSchemes,
   closeSchemes,
@@ -313,13 +313,12 @@ function SchemeEditor({
                   <label className="ui-field-label" htmlFor={`${scheme.id}-color-${String(i)}`}>
                     {t('schemes.color', { n })}
                   </label>
-                  <input
+                  <ColorPicker
                     id={`${scheme.id}-color-${String(i)}`}
-                    type="color"
-                    className="prop-swatch"
+                    label={t('schemes.color', { n })}
                     value={c.color}
-                    onChange={(e) => {
-                      setCode(i, { color: e.currentTarget.value });
+                    onChange={(color) => {
+                      setCode(i, { color });
                     }}
                   />
                 </div>

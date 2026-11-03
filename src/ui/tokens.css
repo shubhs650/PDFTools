@@ -73,6 +73,8 @@
   --dialog-max-width: 560px;
   --menu-min-width: 160px;
   --split-arrow-width: 10px; /* a split button's arrow part (M6-07) */
+  --swatch-cell-size: 20px; /* a swatch of the colour picker's grid (M6-16) */
+  --swatch-chip-width: 28px; /* the colour shown on a colour picker's button (M6-16) */
   --tooltip-max-width: 280px;
   --app-min-width: 1280px; /* §8 */
   --pane-width: 260px;
@@ -109,6 +111,7 @@
   /* Layers */
   --z-menu: 100;
   --z-dialog: 200;
+  --z-popover: 250; /* above dialogs: a colour picker in a dialog (M6-16) */
   --z-tooltip: 300;
 }
 

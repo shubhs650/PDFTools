@@ -4,78 +4,47 @@
 import { useEffect, useId, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { format } from '../../../i18n';
+import { ColorPicker } from '../../../ui/components';
 import { parseLocaleNumber } from '../../../i18n/format';
 import { MIXED, type Value } from './model';
-
-const HEX = /^#[0-9a-f]{6}$/iu;
 
 export function ColorField({
   label,
   value,
   allowNone,
+  noneLabel,
   disabled,
   onCommit,
 }: {
   label: string;
   value: Value;
-  /** A "No fill" checkbox (fill colours may be transparent). */
+  /** A "No fill" entry in the picker (fill colours may be transparent). */
   allowNone?: boolean;
+  /** The entry's name when it is not "No fill" (e.g. "No border"). */
+  noneLabel?: string;
   disabled?: boolean;
   onCommit: (v: string) => void;
 }) {
   const { t } = useTranslation();
   const id = useId();
-  const ref = useRef<HTMLInputElement>(null);
-  const none = value === 'transparent';
-  const hex = typeof value === 'string' && HEX.test(value) ? value.toLowerCase() : '#000000';
-  // The native "change" fires once the picker closes: one commit, one undo step.
-  const commit = useRef(onCommit);
-  useEffect(() => {
-    commit.current = onCommit;
-  });
-  useEffect(() => {
-    const el = ref.current;
-    if (!el) return;
-    const on = (): void => {
-      commit.current(el.value);
-    };
-    el.addEventListener('change', on);
-    return () => {
-      el.removeEventListener('change', on);
-    };
-    // The input is remade (key) when the value changes: listen on the new one.
-  }, [hex, none]);
+  // The standard-colours picker (M6-16); "Mixed" is described on the button.
   return (
     <div className="prop-field prop-color">
       <label htmlFor={id}>{label}</label>
       <div className="prop-row">
-        <input
-          ref={ref}
+        <ColorPicker
           id={id}
-          type="color"
-          className="prop-swatch ui-focusable"
-          defaultValue={hex}
-          key={hex}
-          disabled={(disabled ?? false) || none}
-          aria-describedby={value === MIXED ? `${id}-mixed` : undefined}
+          label={label}
+          value={value === MIXED ? null : typeof value === 'string' ? value : null}
+          allowNone={allowNone ?? false}
+          noneLabel={noneLabel ?? t('annotProps.noFill')}
+          disabled={disabled ?? false}
+          onChange={onCommit}
         />
         {value === MIXED ? (
-          <span id={`${id}-mixed`} className="prop-mixed">
+          <span className="prop-mixed" aria-hidden="true">
             {t('annotProps.mixed')}
           </span>
-        ) : null}
-        {allowNone ? (
-          <label className="prop-check">
-            <input
-              type="checkbox"
-              checked={none}
-              disabled={disabled}
-              onChange={(e) => {
-                onCommit(e.currentTarget.checked ? 'transparent' : '#ffffff');
-              }}
-            />
-            {t('annotProps.noFill')}
-          </label>
         ) : null}
       </div>
     </div>

@@ -2,6 +2,7 @@ import AxeBuilder from '@axe-core/playwright';
 import type { Locator, Page } from '@playwright/test';
 import { simplePdf } from './fixtures/generate.ts';
 import { cap, drop } from './support/app.ts';
+import { customColor, pickColor } from './support/colors.ts';
 import { expect, test } from './support/fixtures.ts';
 
 // M6-06 (ADR-021 D-37, D-38 f; beta review B4): the Properties pane is a
@@ -105,10 +106,9 @@ test('General, Style and Text: every field round-trips through save and reopen @
   await field(page, 'Comment text').fill('Use 6 mm');
   await field(page, 'Comment text').blur();
   // Style.
-  await pane(page).getByLabel('No fill').uncheck();
   await expect(field(page, 'Fill color')).toBeEnabled();
-  await field(page, 'Fill color').fill('#00ff00');
-  await field(page, 'Stroke color').fill('#0000ff');
+  await pickColor(pane(page), 'Fill color', 'Lime');
+  await pickColor(pane(page), 'Stroke color', 'Blue');
   await field(page, 'Line style').selectOption({ label: 'Dashed' });
   await commit(field(page, 'Line width'), '3');
   await commit(field(page, 'Opacity'), '50');
@@ -141,7 +141,7 @@ test('General, Style and Text: every field round-trips through save and reopen @
   await field(page, 'Bold').check();
   await field(page, 'Italic').check();
   await commit(field(page, 'Font size'), '14');
-  await field(page, 'Text color').fill('#123456');
+  await customColor(pane(page), 'Text color', '#123456');
   await field(page, 'Alignment').selectOption({ label: 'Center' });
   await field(page, 'Vertical alignment').selectOption({ label: 'Middle' });
   await expect

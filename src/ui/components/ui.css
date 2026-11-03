@@ -339,3 +339,173 @@
     forced-color-adjust: none;
   }
 }
+
+/* ------------------------------------------------------------ colour picker (M6-16) */
+
+.ui-color-picker {
+  position: relative;
+  display: inline-flex;
+}
+
+.ui-color-button {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  height: var(--control-height-m);
+  padding: var(--space-0) var(--space-2);
+  border: var(--border-width) solid var(--color-border-strong);
+  border-radius: var(--radius-m);
+  background: var(--color-surface);
+  color: var(--color-icon);
+  cursor: pointer;
+}
+
+.ui-color-button:hover:not(:disabled) {
+  background: var(--color-hover);
+}
+
+.ui-color-button:disabled {
+  color: var(--color-text-disabled);
+  cursor: default;
+}
+
+.ui-color-button:disabled .ui-color-chip {
+  opacity: 0.4;
+}
+
+.ui-color-chip {
+  display: inline-block;
+  flex: none;
+  box-sizing: border-box;
+  width: var(--swatch-chip-width);
+  height: var(--icon-size-s);
+  border: var(--border-width) solid var(--color-border-strong);
+  border-radius: var(--radius-s);
+}
+
+/* No colour: white with a red diagonal, as in most editors. */
+.ui-color-chip--none {
+  width: var(--icon-size-s);
+  background: linear-gradient(
+    to top right,
+    var(--color-surface) calc(50% - var(--border-width)),
+    var(--color-danger) calc(50% - var(--border-width)),
+    var(--color-danger) calc(50% + var(--border-width)),
+    var(--color-surface) calc(50% + var(--border-width))
+  );
+}
+
+/* Mixed: the selection's colours differ. */
+.ui-color-chip--mixed {
+  background: repeating-linear-gradient(
+    45deg,
+    var(--color-surface) var(--space-0),
+    var(--color-surface) var(--space-1),
+    var(--color-border-strong) var(--space-1),
+    var(--color-border-strong) var(--space-2)
+  );
+}
+
+.ui-color-chevron {
+  flex: none;
+}
+
+.ui-color-native {
+  position: absolute;
+  inset: var(--space-0);
+  width: 100%;
+  height: 100%;
+  padding: var(--space-0);
+  border: var(--space-0);
+  opacity: 0;
+  pointer-events: none;
+}
+
+.ui-color-popup {
+  z-index: var(--z-popover);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  padding: var(--space-3);
+  border: var(--border-width) solid var(--color-border);
+  border-radius: var(--radius-l);
+  background: var(--color-surface-raised);
+  box-shadow: var(--elevation-2);
+  color: var(--color-text);
+  font-size: var(--font-size-m);
+}
+
+.ui-color-heading {
+  margin: var(--space-0);
+  color: var(--color-text-muted);
+  font-weight: var(--font-weight-semibold);
+}
+
+.ui-color-grid {
+  display: grid;
+  grid-template-columns: repeat(8, var(--swatch-cell-size));
+  gap: var(--space-2);
+}
+
+.ui-color-cell {
+  box-sizing: border-box;
+  width: var(--swatch-cell-size);
+  height: var(--swatch-cell-size);
+  padding: var(--space-0);
+  border: var(--border-width) solid var(--color-border-strong);
+  border-radius: var(--radius-s);
+  cursor: pointer;
+}
+
+.ui-color-cell:hover {
+  outline: var(--border-width) solid var(--color-text);
+  outline-offset: var(--border-width);
+}
+
+/* The current colour: a ring, as in PDF-XChange's grid. */
+.ui-color-cell[aria-pressed='true'] {
+  outline: var(--focus-width) solid var(--color-text);
+  outline-offset: var(--border-width);
+}
+
+.ui-color-cell:focus-visible {
+  outline: var(--focus-width) solid var(--color-focus);
+  outline-offset: var(--focus-offset);
+}
+
+.ui-color-action {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-3);
+  min-height: var(--control-height-m);
+  padding: var(--space-0) var(--space-3);
+  border: var(--space-0);
+  border-radius: var(--radius-m);
+  background: transparent;
+  color: var(--color-text);
+  font: inherit;
+  cursor: pointer;
+}
+
+.ui-color-action:hover,
+.ui-color-action[aria-pressed='true'] {
+  background: var(--color-hover);
+}
+
+.ui-color-more-icon {
+  flex: none;
+  color: var(--color-icon);
+}
+
+@media (forced-colors: active) {
+  /* The swatches are the colours themselves. */
+  .ui-color-cell,
+  .ui-color-chip {
+    forced-color-adjust: none;
+  }
+
+  .ui-color-popup {
+    border: var(--border-width) solid ButtonText;
+  }
+}
