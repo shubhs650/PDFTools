@@ -22,7 +22,7 @@ import { AnnotationLayer } from '../annotate/AnnotationLayer';
 import { AnnotationTileLayer } from '../annotate/AnnotationTileLayer';
 import { SelectionAnnouncer } from '../annotate/SelectionAnnouncer';
 import { annotationCapability } from '../annotate/selection';
-import { isDrawTool } from '../annotate/tools/drawModel';
+import { isDrawTool, isTextTool, TEXT_COMMENT_CATEGORY } from '../annotate/tools/drawModel';
 import { NumberOverlay } from '../annotate/comments/NumberOverlay';
 import { MeasureOverlay } from '../measure/MeasureOverlay';
 import { ViewportLayer } from '../measure/ViewportLayer';
@@ -272,7 +272,10 @@ export function DocumentView({ documentId }: { documentId: string }) {
             : // With a field tool on too: the field just drawn is selected (Field Properties).
               isDesignTool(tool)
               ? { type: LockModeType.Exclude, categories: ['form'] }
-              : { type: LockModeType.All },
+              : // A text tool: the text comment just made is selected and edited (M7-02).
+                isTextTool(tool)
+                ? { type: LockModeType.Exclude, categories: [TEXT_COMMENT_CATEGORY] }
+                : { type: LockModeType.All },
         );
     } catch {
       // The plugin's document state comes with the document's load.

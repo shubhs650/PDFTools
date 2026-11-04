@@ -36,6 +36,7 @@ import {
   type SavePhase,
 } from './saveMachine';
 import { editsSettled, pageOpRunning } from './pendingEdits';
+import { annotationsSettled } from '../annotate/selection';
 
 interface SaveStoreState {
   phases: Record<string, SavePhase>;
@@ -128,8 +129,10 @@ async function runJob(
   docId: string,
   job: (ctx: JobContext) => Promise<SaveEvent>,
 ): Promise<SavePhase> {
-  // A form value committed by the same key press (Ctrl+S in a field) goes first.
+  // A form value committed by the same key press (Ctrl+S in a field) goes first,
+  // and so do comment edits still on their way (a text comment's, M7-02).
   await editsSettled();
+  await annotationsSettled(docId);
   // A page operation in flight finishes first (its undo snapshot and reopen, M4-09).
   while (pageOpRunning(docId)) await new Promise((r) => setTimeout(r, 50));
   if (isActive(phaseOf(docId))) return phaseOf(docId);

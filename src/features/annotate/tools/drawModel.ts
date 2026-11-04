@@ -48,6 +48,21 @@ export type DrawTool = (typeof DRAW_TOOLS)[number];
 export const isDrawTool = (t: string): t is DrawTool =>
   (DRAW_TOOLS as readonly string[]).includes(t);
 
+/** The text comment tools (M7-02): their comment is edited in place right after it is made. */
+export const TEXT_TOOLS: ReadonlySet<DrawTool> = new Set([
+  'freeText',
+  'typewriter',
+  'freeTextCallout',
+]);
+
+export const isTextTool = (t: string): boolean => TEXT_TOOLS.has(t as DrawTool);
+
+/**
+ * The plugin category the text comment tools add (M7-02): while one of them is
+ * on, text comments stay selectable, so the new one is selected and edited.
+ */
+export const TEXT_COMMENT_CATEGORY = 'textComment';
+
 /** Comment tab command → plugin tool. */
 export const DRAW_COMMANDS: Record<string, DrawTool> = {
   'comment.stickyNote': 'textComment',
@@ -71,6 +86,7 @@ export const DRAW_COMMANDS: Record<string, DrawTool> = {
 export const KEYBOARD_PLACED: ReadonlySet<DrawTool> = new Set([
   'textComment',
   'freeText',
+  'typewriter',
   'dynamicStamp',
   'imageStamp',
   'signatureStamp',

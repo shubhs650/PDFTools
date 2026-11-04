@@ -112,3 +112,26 @@ export function useAnnotationState(documentId: string): AnnotationDocumentState 
   }, [registry, documentId]);
   return state?.doc === documentId ? state.st : null;
 }
+
+/**
+ * Resolves once a document's annotation edits have reached the Render worker
+ * (M7-02: Ctrl+S right after a text edit). The plugin commits on its own, but
+ * a change made while an earlier commit is still running waits for it, and a
+ * save sent meanwhile would go out without it. Gives up on a failed commit or
+ * after `timeoutMs`.
+ */
+export async function annotationsSettled(documentId: string, timeoutMs = 3000): Promise<void> {
+  const scope = annotationCapability()?.forDocument(documentId);
+  if (!scope) return;
+  const until = performance.now() + timeoutMs;
+  while (performance.now() < until) {
+    try {
+      if (!scope.getState().hasPendingChanges) return;
+      // Resolves at once while another commit runs; the loop then waits for it.
+      await scope.commit().toPromise();
+    } catch {
+      return;
+    }
+    await new Promise((r) => setTimeout(r, 20));
+  }
+}

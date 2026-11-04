@@ -1,6 +1,7 @@
 // E2E-only probe for the save core (M1-20). Never part of a production build.
 // Adds annotations and form values through the engine, so save and recovery
 // can be tested before M3's annotation UI, and exposes the save RPCs.
+import { annotationsSettled } from '../features/annotate/selection';
 import {
   PDF_FORM_FIELD_TYPE,
   PdfAnnotationBorderStyle,
@@ -149,6 +150,8 @@ export function registerSaveProbe(hook: TestHook): void {
      * commit as if written. `corrupt` blanks half of the first tail first.
      */
     async verifiedSave(docId: string, corrupt = false) {
+      // As a save does (runJob): comment edits on their way go first.
+      await annotationsSettled(docId);
       const deps = saveDeps();
       const p = await prepareSave(docId, deps, corrupt ? { tamper: blankHalf } : {});
       if (!p) return null;

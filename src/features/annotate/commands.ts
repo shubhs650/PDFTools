@@ -23,7 +23,7 @@ import { annotationCapability, annotationState } from './selection';
 import { cycleTarget, pageAnnotations } from './model';
 import { DRAW_COMMANDS, isDrawTool, KEYBOARD_PLACED, VERTEX_TOOLS } from './tools/drawModel';
 import { isSignatureTool, placeAtCentre as placeSignatureAtCentre } from '../sign/signDocument';
-import { finishDrawing, placeAtCentre } from './tools/drawTools';
+import { annotationLayerReady, finishDrawing, placeAtCentre } from './tools/drawTools';
 import { isFieldTool } from '../forms/fieldModel';
 import { placeFieldAtCentre } from '../forms/fieldTools';
 import { copiedStyle, copyStyle, pasteStyle } from './properties/style';
@@ -296,8 +296,10 @@ export function registerAnnotateCommands(): () => void {
           placeFieldAtCentre(id, page, t);
           return;
         }
-        if (t !== 'textComment' && t !== 'freeText') return;
+        if (t !== 'textComment' && t !== 'freeText' && t !== 'typewriter') return;
         await requestProfile();
+        // The page's annotation layer opens the editor: right after an open it may not be there yet.
+        if (t !== 'textComment') await annotationLayerReady(id, page);
         placeAtCentre(registry, id, page, t);
       },
     }),

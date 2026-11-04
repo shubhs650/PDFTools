@@ -19,7 +19,14 @@ import type {
 import { t } from '../../../i18n';
 import { capability } from '../../view/host';
 import { openContentsPrompt } from './contentsPrompt';
-import { centred, constrain, VERTEX_TOOLS, type DrawTool, type Pt } from './drawModel';
+import {
+  centred,
+  constrain,
+  TEXT_COMMENT_CATEGORY,
+  VERTEX_TOOLS,
+  type DrawTool,
+  type Pt,
+} from './drawModel';
 import { openLinkEdit } from './linkEdit';
 import { defaultsPatch, HIGHLIGHT_YELLOW, isStyleTool, type StyleTool } from './toolDefaults';
 import { defaultsFor, loadToolDefaults, toolDefaultsStore } from './toolDefaultsStore';
@@ -217,8 +224,13 @@ export function installDrawTools(registry: PluginRegistry): () => void {
   // typewriter and the highlight area.
   const freeTextBase = cap.getTool('freeText');
   const squareBase = cap.getTool('square');
+  // Text comments: "Type here" is the tool's default contents, so the plugin's
+  // editor selects it when it opens on a new one (typing replaces it, M7-02);
+  // the category keeps them selectable while a text tool is on (DocumentView).
   const textExtra = (base: AnnotationTool): Partial<AnnotationTool> => ({
     defaults: { ...base.defaults, ...textDefaults() },
+    categories: [...(base.categories ?? []), TEXT_COMMENT_CATEGORY],
+    behavior: { ...base.behavior, editAfterCreate: true, selectAfterCreate: true },
     ...(base.clickBehavior
       ? {
           clickBehavior: {
@@ -290,14 +302,47 @@ export function installDrawTools(registry: PluginRegistry): () => void {
 }
 
 /**
- * Keyboard creation (M3-Q6): a sticky note or text box at the centre of the
- * current page; its text is asked next (the note's by the create event above).
+ * Resolves once a page's annotation layer is in the document (or after
+ * `timeoutMs`): it is what starts editing a new text comment, and it mounts a
+ * moment after the page itself.
+ */
+export function annotationLayerReady(
+  docId: string,
+  pageIndex: number,
+  timeoutMs = 3000,
+): Promise<void> {
+  const selector = `[data-doc-id="${CSS.escape(docId)}"] [data-page="${String(pageIndex)}"] .annotation-layer`;
+  const until = performance.now() + timeoutMs;
+  return new Promise((resolve) => {
+    const check = (): void => {
+      if (document.querySelector(selector) || performance.now() > until) resolve();
+      else requestAnimationFrame(check);
+    };
+    check();
+  });
+}
+
+interface CreateInternals {
+  createAnnotation(
+    pageIndex: number,
+    annotation: PdfAnnotationObject,
+    ctx: undefined,
+    documentId: string,
+    options: { editAfterCreate: boolean },
+  ): void;
+}
+
+/**
+ * Keyboard creation (M3-Q6): a sticky note, text box or typewriter at the
+ * centre of the current page. The note's text is asked next (the create event
+ * above); a text box or typewriter opens its editor with "Type here" selected,
+ * as after a click (M7-02).
  */
 export function placeAtCentre(
   registry: PluginRegistry,
   docId: string,
   pageIndex: number,
-  tool: 'textComment' | 'freeText',
+  tool: 'textComment' | 'freeText' | 'typewriter',
 ): string | null {
   const cap = capability<AnnotationCapability>(registry, 'annotation');
   const page = registry.getStore().getState().core.documents[docId]?.document?.pages[pageIndex];
@@ -312,10 +357,11 @@ export function placeAtCentre(
     rect: centred(page.size, size),
     flags: ['print'],
     created: new Date(),
-    ...(tool === 'freeText' ? { contents: '' } : {}),
   } as PdfAnnotationObject;
-  cap.forDocument(docId).createAnnotation(pageIndex, annot);
+  const plugin = registry.getPlugin('annotation') as unknown as CreateInternals | null;
+  if (tool !== 'textComment' && plugin && typeof plugin.createAnnotation === 'function')
+    plugin.createAnnotation(pageIndex, annot, undefined, docId, { editAfterCreate: true });
+  else cap.forDocument(docId).createAnnotation(pageIndex, annot);
   cap.forDocument(docId).selectAnnotation(pageIndex, id);
-  if (tool === 'freeText') openContentsPrompt('freeText', docId, pageIndex, id);
   return id;
 }

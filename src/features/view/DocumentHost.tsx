@@ -12,10 +12,13 @@ import { installMeasureTools } from '../measure/measureTools';
 import { installViewportTool } from '../measure/viewports';
 import { installSnapping } from '../measure/snapping';
 import { installHistoryJoin } from '../annotate/historyJoin';
+import { installTextEdit } from '../annotate/textEdit';
 import { installAttachmentRefresh } from '../attachments/attachments';
 import { installSignTools } from '../sign/signDocument';
 import { installFieldTools } from '../forms/fieldTools';
 import { capability, setRegistry, useHost } from './host';
+
+let textEditInstalled = false;
 
 const onInitialized = (registry: Parameters<typeof setRegistry>[0]): Promise<void> => {
   // Hand (§8.1): our own panning on the viewport; pages get no pointer
@@ -40,6 +43,9 @@ const onInitialized = (registry: Parameters<typeof setRegistry>[0]): Promise<voi
     installAttachmentRefresh(registry);
     installSignTools(registry);
     installFieldTools(registry);
+    // Text comment edits are written on every way out of the editor (M7-02).
+    if (!textEditInstalled) installTextEdit();
+    textEditInstalled = true;
   }
   setRegistry(registry);
   return Promise.resolve();

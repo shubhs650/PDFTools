@@ -110,10 +110,24 @@ export function commandState(id: string, ctx: CommandContext = commandContext())
   return { enabled: true, pressed };
 }
 
+const beforeRun = new Set<(id: string) => void>();
+
+/**
+ * Runs `fn` before every enabled command (M7-02: a text comment being edited
+ * is written first, so Ctrl+S or Close never miss it); returns the remover.
+ */
+export function onBeforeCommand(fn: (id: string) => void): () => void {
+  beforeRun.add(fn);
+  return () => {
+    beforeRun.delete(fn);
+  };
+}
+
 /** Runs a command if it is enabled; returns whether it ran. */
 export async function runCommand(id: string, args?: CommandArgs): Promise<boolean> {
   const ctx = commandContext();
   if (!commandState(id, ctx).enabled) return false;
+  for (const fn of beforeRun) fn(id);
   await handlers.get(id)?.run(ctx, args);
   notify();
   return true;
