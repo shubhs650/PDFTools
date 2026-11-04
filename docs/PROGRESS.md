@@ -1,13 +1,26 @@
 # PDFTools — Progress
 
-_Last updated: 2026-11-03 (session 39: M6-17 Comment Styles Palette window)_
+_Last updated: 2026-11-04 (session 40: M7 plan from the second beta review)_
 
-**Current milestone:** M6 — Beta review (plan in [docs/plan/M6.md](plan/M6.md), scope changes in
+**Next milestone:** M7 — second beta review (plan in [docs/plan/M7.md](plan/M7.md), scope in
+[ADR-023](adr/023-m7-second-beta-review.md), **Proposed** 2026-11-04; waiting for the owner's
+review and answers Q1–Q7; no code before that). **Previous milestone:** M6 — Beta review (plan in [docs/plan/M6.md](plan/M6.md), scope changes in
 [ADR-021](adr/021-m6-beta-review.md), **Accepted** 2026-11-01; ARCHITECTURE.md Rev 0.10; M6-01 … M6-15 done, **M6 complete on the agent side** ([acceptance](acceptance/M6.md)); spike results in
 [ADR-022](adr/022-m6-spikes-s18-s22.md), **Accepted** 2026-11-02 (bookmark route B)). M5 — OCR: M5-01 … M5-04 done under [ADR-020](adr/020-m5-ocr.md); M5-05's owner
 interop is in the M6 pack (CHECKLIST §M6 R1–R4). Rev 0 (M0–M4) is complete on the agent side.
 
 ## Done
+
+- **Session 40 — M7 plan (second beta review, 2026-11-04).** The owner's
+  `PDF_Tools_Trita_PDF_feedback2.docx` (name, dark mode, Home tab 3a–3g, Comment tab 4a–4f, Form
+  highlight) mapped to 12 serial tasks in [docs/plan/M7.md](plan/M7.md); scope changes in
+  [ADR-023](adr/023-m7-second-beta-review.md) (D-41 name "Triya PDF", D-42 dark theme toggle,
+  D-43 text comment interaction and marquee selection, D-44 sticky note popup with spike S23,
+  D-45 paste image; D-36 and D-37 amendments), **Proposed**. The reported comment bugs were
+  reproduced on `main` (17db96f) with a throwaway Playwright script: 14 bugs B1–B14 with
+  severity and occurrence in the plan; two are Critical (Esc, and for callouts also a click
+  away, throw the text edit away: the plugin's editor commits only on blur). ARCHITECTURE.md
+  unchanged until ADR-023 is accepted (Rev 0.11 then).
 
 - **Session 39 — M6-17 Comment Styles Palette window (D-37; owner request 2026-11-03; plan in
   [M6.md](plan/M6.md#m6-17--comment-styles-palette-window-post-m6-owner-request-2026-11-03)).**
@@ -1725,8 +1738,10 @@ rel="noopener noreferrer">`; the commands `app.home` / `app.reportIssue` open th
 
 ## Next
 
-- **Agent:** M6 is complete on the agent side. Next is the owner's choice of what follows the
-  beta review (a fix task for "Rapid moves can lose the last one" is the obvious candidate).
+- **Owner:** review [docs/plan/M7.md](plan/M7.md) and [ADR-023](adr/023-m7-second-beta-review.md)
+  and answer the planning questions Q1–Q7 (end of the plan). **Agent:** after acceptance, apply
+  ARCHITECTURE.md Rev 0.11 and start M7-01 in its own thread; "Rapid moves can lose the last
+  one" is folded into M7-04 (B13).
 - **Owner (M6 interop pack):** [docs/acceptance/M6.md](acceptance/M6.md) §4 — CHECKLIST §M6
   P1–P19 and Q1–Q4 in Acrobat Reader and PDF-XChange with the files in
   `e2e/fixtures/self-made/m6-interop/` (forms with tooltips, defaults and Row tab order;
