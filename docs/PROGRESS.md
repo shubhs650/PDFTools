@@ -1,15 +1,54 @@
 # Triya PDF — Progress
 
-_Last updated: 2026-11-04 (session 43: M7-03 text comment select and move)_
+_Last updated: 2026-11-04 (session 44: M7-04 comment selection)_
 
 **Current milestone:** M7 — second beta review (plan in [docs/plan/M7.md](plan/M7.md), scope in
 [ADR-023](adr/023-m7-second-beta-review.md), **Accepted** 2026-11-04 with the recommended
-answers Q1–Q7; ARCHITECTURE.md Rev 0.11). M7-01 … M7-03 done; next: M7-04. **Previous milestone:** M6 — Beta review (plan in [docs/plan/M6.md](plan/M6.md), scope changes in
+answers Q1–Q7; ARCHITECTURE.md Rev 0.11). M7-01 … M7-04 done; next: M7-05. **Previous milestone:** M6 — Beta review (plan in [docs/plan/M6.md](plan/M6.md), scope changes in
 [ADR-021](adr/021-m6-beta-review.md), **Accepted** 2026-11-01; ARCHITECTURE.md Rev 0.10; M6-01 … M6-15 done, **M6 complete on the agent side** ([acceptance](acceptance/M6.md)); spike results in
 [ADR-022](adr/022-m6-spikes-s18-s22.md), **Accepted** 2026-11-02 (bookmark route B)). M5 — OCR: M5-01 … M5-04 done under [ADR-020](adr/020-m5-ocr.md); M5-05's owner
 interop is in the M6 pack (CHECKLIST §M6 R1–R4). Rev 0 (M0–M4) is complete on the agent side.
 
 ## Done
+
+- **Session 44 — M7-04 comment selection: marquee, Shift+click, select after drawing, B13
+  (ADR-023 D-36 amendment, D-43; review 4a; bugs B7–B9, B13, B14).** Reproduced on `main`
+  (a7b69bc): a drag selected nothing (the selection plugin's marquee needs its per-page
+  `MarqueeSelection`, which was never mounted), Shift+click did nothing, a drawn comment stayed
+  unselected (the drawing tool's `LockModeType.All` refused the plugin's select-after-create),
+  and ten keys pressed in one go saved only the first move (B13). Now: **Select Comments** is its
+  own interaction mode (`SELECT_COMMENTS_MODE`: no text selection, marquee on); **Select** keeps
+  the pointer mode with the marquee switched on, so a drag that starts over text still selects
+  text (the text handler registers first and claims it); Select Text has none. The rectangle is
+  the plugin's (`CommentMarquee`, focus-colour tokens); the pick is ours
+  (`commentSelection.ts`, `marqueeHits` in model.ts: every comment whose box it touches, the
+  set Tab reaches — never links, form fields, popups, replies or hidden comments; comment groups
+  expand in one pass, `withGroupMembers`, as the plugin's per-comment check is O(n²)), and Shift
+  or Ctrl held adds to the selection. The selection (and Esc's deselect) is set in a React
+  transition, so 1,000 comment boxes re-render in slices: without it a marquee over 600 of them
+  was one 180–220 ms task in the container. Shift+click toggles a comment, and
+  Shift/Ctrl+click on a selected one takes it out (the plugin's group box swallowed those):
+  `commentAt` finds the comment under the pointer (bodies now carry `data-annotation-id` and
+  `data-page-index`). Ctrl+A with Select Comments selects the page's comments; Esc there first
+  clears the selection, then leaves the tool (as Select Fields). Group: one box with handles
+  (plugin), each member outlined (app.css); nudges and Delete are now one undo step (`joinStep`;
+  Delete's `remove` in threadActions.ts joins like Cut). **B9** (`selectAfterDraw.ts`): the
+  comment the active drawing tool just made is exempt from the lock until deselected, so it is
+  selected with handles and the Properties pane; the next press on empty space starts the next
+  one; Ink, Free Highlight, Link, Calibrate and Scale Viewport are left out (a next stroke starts
+  inside the last one's box). **B13** (`commitGuard.ts`): the plugin's commit now remembers the
+  objects it sent; when it ends, a comment whose object changed meanwhile is marked changed again
+  (the plugin's own move/patch action), so its commit loop writes it and saves wait for it.
+  **B14:** a click inside a hollow rectangle selects nothing, its border does, a filled one
+  anywhere — as PDF-XChange (owner to confirm), so unchanged. Tests:
+  `e2e/comment-selection.spec.ts` (9: marquee touch rule and the group box, starting over text,
+  Select vs Select Text, form fields, Shift/Ctrl, Ctrl+A, Esc, group drag/nudge/delete undo and
+  saved /Rect, ten quick nudges saved, new rectangle selected and the tool on, rotated view,
+  hollow/filled), `e2e/perf/comment-marquee.spec.ts` (1,000 comments, no long task; trace off there, since
+  Playwright's trace snapshots walk that DOM on the page's main thread, ~110 ms each),
+  `tests/annotate/model.test.ts` (`touches`, `marqueeHits`, `addIds`),
+  `tests/annotate/commentSelection.test.ts` (`changedDuringCommit`, `selectsAfterDraw`). Help
+  (Reviewing comments) and the Ctrl+A shortcut label updated.
 
 - **Session 43 — M7-03 text comments: select, move, edit at the click, callout in one drag
   (ADR-023 D-43 b, c, f; B4–B6, B11).** Reproduced on `main` (9d4c8b0) first: a press on an
@@ -1812,9 +1851,8 @@ rel="noopener noreferrer">`; the commands `app.home` / `app.reportIssue` open th
 
 ## Next
 
-- **Agent:** M7-04 (marquee, Shift+click, select after drawing, B13) in its own thread, then
-  M7-05 … M7-12 serially. M7-04 also fixes B13's cause found in M7-02 (a change made while a commit runs is
-  marked written; see session 42).
+- **Agent:** M7-05 (right-click menu inside text comments, B10) in its own thread, then
+  M7-06 … M7-12 serially.
 - **Owner (M6 interop pack):** [docs/acceptance/M6.md](acceptance/M6.md) §4 — CHECKLIST §M6
   P1–P19 and Q1–Q4 in Acrobat Reader and PDF-XChange with the files in
   `e2e/fixtures/self-made/m6-interop/` (forms with tooltips, defaults and Row tab order;

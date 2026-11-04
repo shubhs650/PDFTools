@@ -46,6 +46,9 @@ export function RedactionLayer({
   const root = useRef<HTMLDivElement>(null);
   const keyEl = useRef<HTMLDivElement>(null);
   const [draft, setDraft] = useState<Rect | null>(null);
+  // The drag's start (points): outside the listeners, so a zoom while dragging
+  // (fit width catching up with a pane that opened) keeps the drag going.
+  const start = useRef<{ x: number; y: number } | null>(null);
   const onPage = marks.filter((m) => m.pageIndex === pageIndex);
 
   useEffect(() => {
@@ -56,8 +59,10 @@ export function RedactionLayer({
   // selection) further up, which a React handler could not stop.
   useEffect(() => {
     const el = root.current;
-    if (!el || !area) return;
-    let start: { x: number; y: number } | null = null;
+    if (!el || !area) {
+      start.current = null;
+      return;
+    }
     // offsetX/Y: the layer's own (unrotated) coordinates, in CSS pixels.
     const at = (e: PointerEvent) => ({ x: e.offsetX / scale, y: e.offsetY / scale });
     const down = (e: PointerEvent) => {
@@ -67,24 +72,24 @@ export function RedactionLayer({
       el.setPointerCapture(e.pointerId);
       // The default (focus) is prevented: the document takes focus, so Esc ends the tool.
       el.closest<HTMLElement>('#document-panel')?.focus({ preventScroll: true });
-      start = at(e);
+      start.current = at(e);
       setDraft(null);
     };
     const move = (e: PointerEvent) => {
-      if (!start) return;
+      if (!start.current) return;
       e.stopPropagation();
-      setDraft(rectFrom(start, at(e)));
+      setDraft(rectFrom(start.current, at(e)));
     };
     const up = (e: PointerEvent) => {
-      if (!start) return;
+      if (!start.current) return;
       e.stopPropagation();
-      const r = rectFrom(start, at(e));
-      start = null;
+      const r = rectFrom(start.current, at(e));
+      start.current = null;
       setDraft(null);
       markArea(documentId, pageIndex, r);
     };
     const cancel = () => {
-      start = null;
+      start.current = null;
       setDraft(null);
     };
     el.addEventListener('pointerdown', down);

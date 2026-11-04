@@ -4,7 +4,9 @@
 // refused when the document forbids it (rule 9).
 import type { SelectionCapability } from '@embedpdf/plugin-selection';
 import { registerCommand } from '../../app/commands/dispatch';
+import { appStore } from '../../app/store/appStore';
 import { documentStore, selectActive } from '../../app/store/documentStore';
+import { selectAllComments } from '../annotate/commentSelection';
 import { capability, hostStore, renderEngine } from '../view/host';
 
 function selection(): SelectionCapability | null {
@@ -105,9 +107,17 @@ export function registerSelectionCommands(): () => void {
         if (id) await pasteComments(id, 'current', args?.at);
       },
     }),
+    // With Select Comments, every comment on the page instead (M7-04).
     registerCommand('edit.selectAll', {
       requiresDocument: true,
-      run: selectPageText,
+      run: () => {
+        const id = activeId();
+        if (id && appStore.getState().tool === 'selectObjects') {
+          selectAllComments(id, documentStore.getState().docs[id]?.view.page ?? 0);
+          return Promise.resolve();
+        }
+        return selectPageText();
+      },
     }),
   ];
   return () => {

@@ -3692,3 +3692,9 @@ textarea.form-field {
   overflow: hidden;
   text-overflow: ellipsis;
 }
+
+/* A selected group (M7-04): each member outlined inside the plugin's group box. */
+.annotation-layer:has([data-group-selection-box]) .annotation-body[data-selected] {
+  outline: var(--border-width) solid var(--color-focus);
+  outline-offset: var(--border-width);
+}

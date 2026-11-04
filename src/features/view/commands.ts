@@ -142,8 +142,9 @@ export function registerViewCommands(): () => void {
         }
         clearSelection();
         const hadSelection = deselectAnnotations();
-        // Select Fields: the first Esc drops the selection, the next leaves the tool.
-        if (tool === 'selectFields' && hadSelection) return;
+        // Select Fields and Select Comments (M7-04): the first Esc drops the
+        // selection, the next leaves the tool.
+        if ((tool === 'selectFields' || tool === 'selectObjects') && hadSelection) return;
         appStore.getState().setTool('select');
       },
     }),

@@ -17,9 +17,9 @@ import { TEXT_BODY_ATTR, textBodyUnmounted, useEditEpoch } from './textEdit';
 import { pressTextComment, type PageGeometry } from './textPointer';
 
 /**
- * A comment's body. A text box, typewriter or callout is marked so its
- * editor is found (textEdit.ts, M7-02), and its text is written if the body
- * unmounts while it is being edited.
+ * A comment's body, marked with its id and page. A text box, typewriter or
+ * callout is marked so its editor is found (textEdit.ts, M7-02), and its text
+ * is written if the body unmounts while it is being edited.
  */
 function Body({
   annotation,
@@ -47,11 +47,12 @@ function Body({
     <div
       className="annotation-body"
       data-selected={isSelected || undefined}
+      // Which comment a Shift or Ctrl press is on (commentSelection.ts, M7-04).
+      data-annotation-id={id}
+      data-page-index={annotation.pageIndex}
       {...(text
         ? {
             [TEXT_BODY_ATTR]: '',
-            'data-annotation-id': id,
-            'data-page-index': annotation.pageIndex,
             // A press selects it and, dragged, moves it (M7-03, B5); once
             // selected, the plugin's frame over it takes the presses.
             ...(isSelected

@@ -1,7 +1,7 @@
 import { EmbedPDF } from '@embedpdf/core/react';
 import type { ReactNode } from 'react';
 import type { InteractionManagerCapability } from '@embedpdf/plugin-interaction-manager';
-import { HAND_MODE, PLUGINS } from './plugins';
+import { HAND_MODE, PLUGINS, SELECT_COMMENTS_MODE } from './plugins';
 import { installAuthoring } from '../annotate/authoring';
 import { installFlagPolicy } from '../annotate/flagPolicy';
 import { installDrawTools } from '../annotate/tools/drawTools';
@@ -14,6 +14,9 @@ import { installSnapping } from '../measure/snapping';
 import { installHistoryJoin } from '../annotate/historyJoin';
 import { installTextEdit } from '../annotate/textEdit';
 import { installTextPointer } from '../annotate/textPointer';
+import { installCommentSelection } from '../annotate/commentSelection';
+import { installSelectAfterDraw } from '../annotate/selectAfterDraw';
+import { installCommitGuard } from '../annotate/commitGuard';
 import { installAttachmentRefresh } from '../attachments/attachments';
 import { installSignTools } from '../sign/signDocument';
 import { installFieldTools } from '../forms/fieldTools';
@@ -25,11 +28,10 @@ const onInitialized = (registry: Parameters<typeof setRegistry>[0]): Promise<voi
   // Hand (§8.1): our own panning on the viewport; pages get no pointer
   // handlers in this mode, so it never starts a text selection (M2-04).
   if (registry) {
-    capability<InteractionManagerCapability>(registry, 'interaction-manager').registerMode({
-      id: HAND_MODE,
-      scope: 'page',
-      exclusive: false,
-    });
+    const im = capability<InteractionManagerCapability>(registry, 'interaction-manager');
+    im.registerMode({ id: HAND_MODE, scope: 'page', exclusive: false });
+    // Select Comments (M7-04): presses go to comments and the marquee, never to text.
+    im.registerMode({ id: SELECT_COMMENTS_MODE, scope: 'page', exclusive: false });
     installAuthoring(registry);
     installFlagPolicy(registry);
     installHistoryJoin(registry);
@@ -44,6 +46,11 @@ const onInitialized = (registry: Parameters<typeof setRegistry>[0]): Promise<voi
     installAttachmentRefresh(registry);
     installSignTools(registry);
     installFieldTools(registry);
+    // Marquee, Shift+click (M7-04), the comment just drawn stays selected (B9)
+    // and a change made during a commit is written too (B13).
+    installCommentSelection(registry);
+    installSelectAfterDraw(registry);
+    installCommitGuard(registry);
     // Text comment edits are written on every way out of the editor (M7-02).
     // … and pressed, dragged or double-clicked like PDF-XChange's (M7-03).
     if (!textEditInstalled) {

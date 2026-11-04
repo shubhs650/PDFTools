@@ -6,6 +6,7 @@ import { Rotate } from '@embedpdf/plugin-rotate/react';
 import { Scroller, type PageLayout } from '@embedpdf/plugin-scroll/react';
 import type { ScrollCapability } from '@embedpdf/plugin-scroll';
 import { TextSelection } from '@embedpdf/plugin-selection/react';
+import type { SelectionCapability } from '@embedpdf/plugin-selection';
 import { TilingLayer } from '@embedpdf/plugin-tiling/react';
 import { Viewport } from '@embedpdf/plugin-viewport/react';
 import { ZoomMode, type ZoomCapability, type ZoomDocumentState } from '@embedpdf/plugin-zoom';
@@ -21,6 +22,7 @@ import { LockModeType } from '@embedpdf/plugin-annotation';
 import { AnnotationLayer } from '../annotate/AnnotationLayer';
 import { AnnotationTileLayer } from '../annotate/AnnotationTileLayer';
 import { SelectionAnnouncer } from '../annotate/SelectionAnnouncer';
+import { CommentMarquee } from '../annotate/CommentMarquee';
 import { annotationCapability } from '../annotate/selection';
 import { isDrawTool, isTextTool, TEXT_COMMENT_CATEGORY } from '../annotate/tools/drawModel';
 import { NumberOverlay } from '../annotate/comments/NumberOverlay';
@@ -36,7 +38,7 @@ import { AttachFileLayer } from '../attachments/AttachFileLayer';
 import { DocumentMenu } from './DocumentMenu';
 import { notePointerDown } from './pagePoint';
 import { capability, useHost } from './host';
-import { HAND_MODE, PAGE_GAP, POINTER_MODE } from './plugins';
+import { HAND_MODE, PAGE_GAP, POINTER_MODE, SELECT_COMMENTS_MODE } from './plugins';
 import { isDesignTool } from '../forms/fieldModel';
 import { PreviewLayer } from './PreviewLayer';
 import { setViewFocus } from './tileScheduler';
@@ -123,6 +125,9 @@ function Page({
                 pageIndex={layout.pageIndex}
                 background={SELECTION_COLOR}
               />
+              {/* The comment marquee (M7-04): after the text selection, which
+                  claims a drag that starts over text with Select. */}
+              <CommentMarquee documentId={documentId} pageIndex={layout.pageIndex} scale={scale} />
               {/* Annotation hit areas, selection and handles (M3-05) above the text layer. */}
               <AnnotationLayer documentId={documentId} pageIndex={layout.pageIndex} scale={scale} />
               {/* Comment numbers (M3-11), when switched on. */}
@@ -254,12 +259,40 @@ export function DocumentView({ documentId }: { documentId: string }) {
     if (!dm.isDocumentOpen(documentId)) return;
     const im = capability<InteractionManagerCapability>(registry, 'interaction-manager');
     // A text markup tool is the annotation plugin's interaction mode of the same id (M3-08).
+    // Marquee over comments (M7-04): Select Comments always, Select from a press off the text.
+    try {
+      const sel = capability<SelectionCapability>(registry, 'selection');
+      sel.enableForMode(
+        POINTER_MODE,
+        {
+          enableSelection: true,
+          showSelectionRects: true,
+          enableMarquee: tool === 'select',
+          showMarqueeRects: true,
+        },
+        documentId,
+      );
+      sel.enableForMode(
+        SELECT_COMMENTS_MODE,
+        {
+          enableSelection: false,
+          showSelectionRects: false,
+          enableMarquee: true,
+          showMarqueeRects: true,
+        },
+        documentId,
+      );
+    } catch {
+      // No selection plugin: no marquee.
+    }
     im.forDocument(documentId).activate(
       tool === 'hand'
         ? HAND_MODE
-        : isMarkupTool(tool) || isDrawTool(tool) || tool === 'redactText'
-          ? tool
-          : POINTER_MODE,
+        : tool === 'selectObjects'
+          ? SELECT_COMMENTS_MODE
+          : isMarkupTool(tool) || isDrawTool(tool) || tool === 'redactText'
+            ? tool
+            : POINTER_MODE,
     );
     // Select Text and Hand never pick up annotations (M3-05); Select and Select
     // Objects do, except form fields, which only Select Fields picks up (M6-14).
