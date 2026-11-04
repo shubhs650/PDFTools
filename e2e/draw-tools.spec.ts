@@ -230,9 +230,11 @@ test('keyboard: N then Enter places a note, T then Enter a text box (M3-Q6) @smo
   await page.keyboard.press('t');
   await expect(page.locator('.document-host')).toHaveAttribute('data-tool', 'freeText');
   await page.keyboard.press('Enter');
-  const box = page.getByRole('dialog', { name: 'Text box' });
-  await box.getByLabel('Text').fill('Revised per RFI 12');
-  await page.keyboard.press('Enter');
+  // The text box is edited in place, "Type here" selected (M7-02).
+  const editor = page.locator('[data-text-comment] [contenteditable="true"]');
+  await expect(editor).toBeFocused();
+  await page.keyboard.type('Revised per RFI 12');
+  await page.keyboard.press('Escape');
   await expect
     .poll(async () => (await list(page, id)).map((a) => [a.type, a.contents]).sort())
     .toEqual([

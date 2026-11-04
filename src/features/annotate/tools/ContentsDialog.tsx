@@ -16,14 +16,9 @@ const TEXT: Record<ContentsKind, { title: MessageKey; label: MessageKey; ok: Mes
     label: msg('annotate.note.label'),
     ok: msg('annotate.note.ok'),
   },
-  freeText: {
-    title: msg('annotate.freeText.title'),
-    label: msg('annotate.freeText.label'),
-    ok: msg('annotate.note.ok'),
-  },
 };
 
-/** The text of a new caret, note or text box (M3-08, M3-09). */
+/** The text of a new caret or note (M3-08, M3-09; text boxes are edited in place, M7-02). */
 export function ContentsDialog() {
   const target = useContentsPrompt((s) => s.target);
   if (!target) return null;

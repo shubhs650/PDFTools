@@ -9,9 +9,53 @@ import {
   createRenderer,
   type CustomAnnotationRenderer,
 } from '@embedpdf/plugin-annotation/react';
+import { useLayoutEffect, type ReactNode } from 'react';
 import { ATTACH_DEFAULT_COLOR } from '../../model/attachFile';
 import { saveAttachmentById } from '../attachments/attachFile';
 import { FIELD_RENDERER } from '../forms/fieldDesign';
+import { TEXT_BODY_ATTR, textBodyUnmounted, useEditEpoch } from './textEdit';
+
+/**
+ * A comment's body. A text box, typewriter or callout is marked so its
+ * editor is found (textEdit.ts, M7-02), and its text is written if the body
+ * unmounts while it is being edited.
+ */
+function Body({
+  annotation,
+  isSelected,
+  children,
+}: {
+  annotation: PdfAnnotationObject;
+  isSelected: boolean;
+  children: ReactNode;
+}) {
+  const text = annotation.type === PdfAnnotationSubtype.FREETEXT;
+  const { id } = annotation;
+  useLayoutEffect(
+    () =>
+      text
+        ? () => {
+            textBodyUnmounted(id);
+          }
+        : undefined,
+    [text, id],
+  );
+  return (
+    <div
+      className="annotation-body"
+      data-selected={isSelected || undefined}
+      {...(text
+        ? {
+            [TEXT_BODY_ATTR]: '',
+            'data-annotation-id': id,
+            'data-page-index': annotation.pageIndex,
+          }
+        : {})}
+    >
+      {children}
+    </div>
+  );
+}
 
 const renderBody: CustomAnnotationRenderer<PdfAnnotationObject> = ({
   annotation,
@@ -28,9 +72,9 @@ const renderBody: CustomAnnotationRenderer<PdfAnnotationObject> = ({
     (annotation.type === PdfAnnotationSubtype.TEXT && annotation.inReplyToId) ? (
     <></>
   ) : (
-    <div className="annotation-body" data-selected={isSelected || undefined}>
+    <Body annotation={annotation} isSelected={isSelected}>
       {children}
-    </div>
+    </Body>
   );
 
 /**
@@ -104,8 +148,11 @@ export function AnnotationLayer({
   pageIndex: number;
   scale: number;
 }) {
+  // Remounted when a text comment's editing has to end (textEdit.ts).
+  const epoch = useEditEpoch(documentId, pageIndex);
   return (
     <PluginLayer
+      key={epoch}
       documentId={documentId}
       pageIndex={pageIndex}
       scale={scale}

@@ -1,15 +1,42 @@
 # Triya PDF — Progress
 
-_Last updated: 2026-11-04 (session 41: M7-01 rename to Triya PDF)_
+_Last updated: 2026-11-04 (session 42: M7-02 text comment edits)_
 
 **Current milestone:** M7 — second beta review (plan in [docs/plan/M7.md](plan/M7.md), scope in
 [ADR-023](adr/023-m7-second-beta-review.md), **Accepted** 2026-11-04 with the recommended
-answers Q1–Q7; ARCHITECTURE.md Rev 0.11). M7-01 done; next: M7-02. **Previous milestone:** M6 — Beta review (plan in [docs/plan/M6.md](plan/M6.md), scope changes in
+answers Q1–Q7; ARCHITECTURE.md Rev 0.11). M7-01 and M7-02 done; next: M7-03. **Previous milestone:** M6 — Beta review (plan in [docs/plan/M6.md](plan/M6.md), scope changes in
 [ADR-021](adr/021-m6-beta-review.md), **Accepted** 2026-11-01; ARCHITECTURE.md Rev 0.10; M6-01 … M6-15 done, **M6 complete on the agent side** ([acceptance](acceptance/M6.md)); spike results in
 [ADR-022](adr/022-m6-spikes-s18-s22.md), **Accepted** 2026-11-02 (bookmark route B)). M5 — OCR: M5-01 … M5-04 done under [ADR-020](adr/020-m5-ocr.md); M5-05's owner
 interop is in the M6 pack (CHECKLIST §M6 R1–R4). Rev 0 (M0–M4) is complete on the agent side.
 
 ## Done
+
+- **Session 42 — M7-02 text comments keep their edits (ADR-023 D-43 a, d; B1–B3).** Root
+  causes: (1) with a drawing tool on, `DocumentView` locked every annotation (`LockModeType.All`),
+  so the plugin could not select the comment it had just made and never opened its editor (B3,
+  and B9 for text tools); (2) the plugin's editor writes its text only on `blur`, which Esc (it
+  deselects, hiding the editor by opacity), a click on the page while a callout is edited, a tool
+  change and Ctrl+S never cause (B1, B2). Now: the text tools carry a `textComment` plugin
+  category and, while one is on, the lock excludes it, so the new comment is selected and edits
+  with "Type here" selected (the tools set `editAfterCreate`); T/Enter (and the typewriter's
+  Enter) edits in place instead of the old "Text box" dialog (its keys and the dialog's
+  `freeText` kind are gone). `src/features/annotate/textEdit.ts` owns the commit: it finds the
+  editor by focus (and a MutationObserver for the double-click case), stops the plugin's blur
+  commit, and writes the text once (only when changed: one undo step) on focus leaving, Esc
+  (`tool.cancel`: first Esc writes and returns focus to the view, the comment stays selected;
+  the second deselects), deselection from anywhere, a tool or tab change, any command (new
+  `onBeforeCommand` in the dispatcher: Ctrl+S, Close…) and the body unmounting. The plugin keeps
+  its editing state in the page layer, so ending an edit it still holds remounts that layer
+  (`useEditEpoch`). An emptied comment keeps an empty `/Contents`. Saves (and the
+  `verifiedSave` probe) now wait for comment commits in flight (`annotationsSettled`). **Found
+  for M7-04 (B13):** the plugin marks a comment written when a commit ends even if it changed
+  during that commit, so a change made then (a quick nudge, undo then redo) never reaches the
+  file; the M7-02 spec waits for each commit (`written()`) and M7-04 fixes the plugin hook.
+  Tests: `e2e/text-comments.spec.ts` (each of the three tools: new comment edits with the
+  placeholder selected, Esc keeps it, second Esc deselects, one undo step, saved `/Contents`;
+  click-away, tool change and Ctrl+S; reopen shows the written text; T/Enter and an emptied
+  comment), `tests/annotate/textEdit.test.ts`; `draw-tools.spec.ts` keyboard test updated. Help
+  (Reviewing comments) and the Enter shortcut label updated.
 
 - **Session 41 — M7-01 rename to Triya PDF (ADR-023 D-41).** The name lives in one key,
   `app.name`; the 35 other messages that named the product say `{{app}}`, an i18next default
@@ -1755,8 +1782,9 @@ rel="noopener noreferrer">`; the commands `app.home` / `app.reportIssue` open th
 
 ## Next
 
-- **Agent:** M7-02 (text comment edit lifecycle, B1–B3) in its own thread, then M7-03 … M7-12 serially; "Rapid moves can lose the last
-  one" is folded into M7-04 (B13).
+- **Agent:** M7-03 (text select/move/callout box) in its own thread, then M7-04 … M7-12
+  serially. M7-04 also fixes B13's cause found in M7-02 (a change made while a commit runs is
+  marked written; see session 42).
 - **Owner (M6 interop pack):** [docs/acceptance/M6.md](acceptance/M6.md) §4 — CHECKLIST §M6
   P1–P19 and Q1–Q4 in Acrobat Reader and PDF-XChange with the files in
   `e2e/fixtures/self-made/m6-interop/` (forms with tooltips, defaults and Row tab order;

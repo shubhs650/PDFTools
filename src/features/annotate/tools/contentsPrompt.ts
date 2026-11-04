@@ -1,11 +1,11 @@
 // The text of a new annotation, asked right after it is made (M3-08, M3-09):
-// Insert/Replace Text (the caret's inserted text), a sticky note and a text
-// box made from the keyboard. Written to /Contents; Cancel leaves the
+// Insert/Replace Text (the caret's inserted text) and a sticky note (a text box
+// is edited in place, M7-02). Written to /Contents; Cancel leaves the
 // annotation as it is (it can still be edited or undone).
 import { createStore, useStore } from 'zustand';
 import { annotationCapability } from '../selection';
 
-export type ContentsKind = 'caret' | 'note' | 'freeText';
+export type ContentsKind = 'caret' | 'note';
 
 interface ContentsState {
   target: { kind: ContentsKind; docId: string; pageIndex: number; id: string } | null;

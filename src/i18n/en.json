@@ -376,7 +376,7 @@
       "annotationPrev": "Previous Comment on the Page",
       "annotationNudge": "Move Selected Comments (1 pt)",
       "annotationNudgeFar": "Move Selected Comments (10 pt)",
-      "toolEnter": "Place a note or text box, or finish a polyline",
+      "toolEnter": "Place a note, text box or typewriter, or finish a polyline",
       "menuContext": "Context Menu"
     },
     "key": {
@@ -1106,7 +1106,7 @@
       },
       "review": {
         "title": "Reviewing comments",
-        "body": "The Comment tab has the markup, note, text and drawing tools; single letters such as N (note) or B (rectangle) turn them on while the document has focus. New comments are red with 1 pt lines and 10 pt text (highlights and notes stay yellow). Select a comment with Home → Select Comments or from the Comments pane; then edit it in the Properties pane, reply or set its status in the Comments pane, and remove it with Comment → Delete or the {{delete}} key ({{undo}} brings it back). In the Comments pane, Options sorts, groups and filters the cards and Find (Enter) looks through their text and replies; a card's Reply opens a reply box (Enter posts, Esc cancels), F2 edits its text, and a right click gives the same menu as on the page. Attach File puts a file on the page as a paperclip comment (up to 25 MB); double-click it to save the file. {{save}} keeps your comments in the file. On a file that forbids changes, comments are read-only."
+        "body": "The Comment tab has the markup, note, text and drawing tools; single letters such as N (note) or B (rectangle) turn them on while the document has focus. New comments are red with 1 pt lines and 10 pt text (highlights and notes stay yellow). A new text box, typewriter or callout opens with “Type here” selected, so typing replaces it; Esc or a click elsewhere keeps your text (a second Esc deselects the comment), and a double-click edits it again. Select a comment with Home → Select Comments or from the Comments pane; then edit it in the Properties pane, reply or set its status in the Comments pane, and remove it with Comment → Delete or the {{delete}} key ({{undo}} brings it back). In the Comments pane, Options sorts, groups and filters the cards and Find (Enter) looks through their text and replies; a card's Reply opens a reply box (Enter posts, Esc cancels), F2 edits its text, and a right click gives the same menu as on the page. Attach File puts a file on the page as a paperclip comment (up to 25 MB); double-click it to save the file. {{save}} keeps your comments in the file. On a file that forbids changes, comments are read-only."
       },
       "styles": {
         "title": "Comment styles and properties",
@@ -1195,8 +1195,6 @@
       "ok": "OK"
     },
     "freeText": {
-      "title": "Text box",
-      "label": "Text",
       "placeholder": "Type here"
     },
     "link": {

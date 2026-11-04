@@ -1,6 +1,7 @@
 // View commands (§5, §8.1, M1-15): zoom, page navigation, Hand and Select.
 import { cancelDrawing } from '../annotate/tools/drawTools';
 import { deselectAnnotations } from '../annotate/commands';
+import { endTextEdit } from '../annotate/textEdit';
 import { isFieldTool } from '../forms/fieldModel';
 import { registerCommand } from '../../app/commands/dispatch';
 import { clearSelection } from '../select/commands';
@@ -23,6 +24,15 @@ export const VIEW_MODE_COMMANDS: readonly [string, ViewMode][] = [
 ];
 
 const zoomIs = (z: ZoomSetting): boolean => selectActive(documentStore.getState())?.view.zoom === z;
+
+/** The focus back on the active document's view, so Delete and the arrows act on its comments. */
+function focusDocumentView(): void {
+  const id = selectActive(documentStore.getState())?.meta.id;
+  if (!id) return;
+  document
+    .querySelector<HTMLElement>(`[data-testid="document-view"][data-doc-id="${CSS.escape(id)}"]`)
+    ?.focus({ preventScroll: true });
+}
 
 export function registerViewCommands(): () => void {
   const zoomCommand = (id: string, target: ZoomTarget, pressed: () => boolean) =>
@@ -124,6 +134,12 @@ export function registerViewCommands(): () => void {
     registerCommand('tool.cancel', {
       requiresDocument: true,
       run: () => {
+        // A text comment being edited: the first Esc keeps the text and leaves
+        // the editor, the comment stays selected (M7-02, D-43 d).
+        if (endTextEdit()) {
+          focusDocumentView();
+          return;
+        }
         // A polyline/polygon being drawn is dropped first; the tool stays on (M3-09).
         if (cancelDrawing()) return;
         const tool = appStore.getState().tool;
