@@ -52,7 +52,7 @@ test('brand at the left of the quick access row; the tab row is not pushed at 12
   await page.goto('/');
   const brand = page.getByTestId('app-brand');
   await expect(brand).toBeVisible();
-  await expect(page.getByRole('heading', { level: 1, name: 'PDFTools' })).toBeVisible();
+  await expect(page.getByRole('heading', { level: 1, name: 'Triya PDF' })).toBeVisible();
   const qat = page.getByRole('toolbar', { name: 'Quick access toolbar' });
   const [b, q] = await Promise.all([brand.boundingBox(), qat.boundingBox()]);
   expect(b && q && b.x + b.width <= q.x).toBe(true);
@@ -97,7 +97,7 @@ test('the two links open new tabs; the issue page has version, browser and OS on
   const url = new URL(issue.url());
   expect(`${url.origin}${url.pathname}`).toBe('https://github.com/shubhs650/PDFTools/issues/new');
   const body = url.searchParams.get('body') ?? '';
-  expect(body).toMatch(/App: \S+/);
+  expect(body).toMatch(/Triya PDF version: \S+/);
   expect(body).toMatch(/Browser: Chrom(e|ium) \d+/);
   expect(body).toMatch(/OS: (Linux|Windows|macOS)/);
   expect(decodeURIComponent(issue.url())).not.toMatch(/ZEBRA|budget|\.pdf/i);

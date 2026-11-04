@@ -120,9 +120,11 @@ test('Privacy lists every local store; About shows the version and serves the no
   await page.goto('/');
   await section(page, 'Privacy');
   const privacy = backstage(page).getByTestId('privacy');
-  await expect(privacy).toContainText('Your documents never leave this device');
+  await expect(privacy).toContainText(
+    'Your documents never leave this device. Triya PDF opens, renders and saves them',
+  );
   await expect(privacy).toContainText('No analytics scripts');
-  const table = privacy.getByRole('table', { name: 'Data PDFTools keeps on this device' });
+  const table = privacy.getByRole('table', { name: 'Data Triya PDF keeps on this device' });
   for (const where of ['pdftools › settings', 'pdftools › recent', 'recovery/', 'pdftools-…']) {
     await expect(table.getByRole('cell', { name: new RegExp(where) })).toBeVisible();
   }
@@ -131,12 +133,16 @@ test('Privacy lists every local store; About shows the version and serves the no
   await section(page, 'About');
   const about = backstage(page).getByTestId('about');
   await expect(about.getByTestId('app-version')).toHaveText(/^\d+\.\d+\.\d+/);
+  // M7-01 (D-41): the product's name, not the old one, anywhere in About.
+  await expect(about).toContainText('Triya PDF is free software under the MIT License.');
+  await expect(about).not.toContainText('PDFTools');
   const link = about.getByRole('link', { name: /Third-party notices/ });
   await expect(link).toHaveAttribute('target', '_blank');
   expect(await axe(page)).toEqual([]);
   const res = await request.get(new URL((await link.getAttribute('href')) ?? '', page.url()).href);
   expect(res.status()).toBe(200);
   const notices = await res.text();
+  expect(notices.startsWith('Triya PDF — third-party notices')).toBe(true);
   for (const needle of [
     '@embedpdf/pdfium',
     'LICENSE.pdfium:',

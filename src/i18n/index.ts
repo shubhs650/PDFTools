@@ -11,6 +11,7 @@ import en from './en.json';
 import type {} from './i18next-types';
 import { createFormatters, type Formatters } from './format';
 import { PSEUDO_LOCALE, pseudoResources } from './pseudo';
+import { APP_NAME } from './appName';
 
 export type { MessageKey } from './keys';
 export { msg } from './keys';
@@ -31,7 +32,8 @@ void i18n.use(initReactI18next).init({
   lng: pseudo ? PSEUDO_LOCALE : 'en',
   fallbackLng: 'en',
   initAsync: false,
-  interpolation: { escapeValue: false }, // React escapes
+  // React escapes. {{app}} is the product name in every string (ADR-023 D-41).
+  interpolation: { escapeValue: false, defaultVariables: { app: APP_NAME } },
   returnNull: false,
 });
 

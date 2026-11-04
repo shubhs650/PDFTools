@@ -10,6 +10,7 @@ import {
   importScheme,
   LIMITS,
   MAX_CODES,
+  SCHEME_FILE_SUFFIX,
   validateScheme,
   type SchemeError,
   type StatusCode,
@@ -158,7 +159,7 @@ function SchemesContent() {
                           nameOf(s)
                             .replace(/[^\p{L}\p{N} _-]+/gu, '')
                             .trim() || FALLBACK_FILE;
-                        downloadBytes(blob, `${safe}.pdftools-scheme.json`);
+                        downloadBytes(blob, `${safe}${SCHEME_FILE_SUFFIX}`);
                       }}
                     />
                     <Button

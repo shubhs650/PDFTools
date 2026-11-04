@@ -2,7 +2,7 @@ import { expect, test } from './support/fixtures.ts';
 
 test('strings come from en.json, including the document title', async ({ page }) => {
   await page.goto('/');
-  await expect(page).toHaveTitle('PDFTools');
+  await expect(page).toHaveTitle('Triya PDF');
   await expect(page.getByRole('main', { name: 'Document area' })).toBeVisible();
 });
 

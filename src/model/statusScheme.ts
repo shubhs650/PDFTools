@@ -1,7 +1,7 @@
 // Status schemes (D-23, §7.3, M3-13): the review codes a stamp and the CRS
 // header use (1/2/3/4, A/B/C/D, Approved / … / For Information, or the user's
 // own). Presets are read-only data with i18n labels; custom schemes are
-// stored on this device and move between devices as `.pdftools-scheme.json`,
+// stored on this device and move between devices as `.triyapdf-scheme.json`,
 // validated strictly on import (never executed). Pure.
 import { msg } from '../i18n/keys';
 
@@ -24,6 +24,11 @@ export interface StatusScheme {
 }
 
 export const FORMAT = 'pdftools-scheme';
+/**
+ * The suggested export name's suffix (ADR-023 D-41). FORMAT stays as it was, so
+ * `.pdftools-scheme.json` files saved before the rename still import.
+ */
+export const SCHEME_FILE_SUFFIX = '.triyapdf-scheme.json';
 export const VERSION = 1;
 export const MAX_FILE_BYTES = 64 * 1024;
 export const MAX_CODES = 20;
@@ -169,7 +174,7 @@ const onlyKeys = (o: object, allowed: readonly string[]): boolean =>
 const isObject = (v: unknown): v is Record<string, unknown> =>
   typeof v === 'object' && v !== null && !Array.isArray(v);
 
-/** A `.pdftools-scheme.json` file's text → a custom scheme, or why not. */
+/** A `.triyapdf-scheme.json` (or older `.pdftools-scheme.json`) file's text → a custom scheme, or why not. */
 export function importScheme(
   text: string,
   id: string,

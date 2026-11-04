@@ -5,7 +5,7 @@ import { pickColor } from './support/colors.ts';
 import { expect, test } from './support/fixtures.ts';
 
 // M3-13 (D-23, §7.3): status schemes — presets, custom schemes, the active
-// one, export and strict import of .pdftools-scheme.json, stored on this device.
+// one, export (.triyapdf-scheme.json) and strict import (old .pdftools-scheme.json too), stored on this device.
 
 const dialog = (page: Page) => page.getByRole('dialog', { name: 'Status schemes' });
 
@@ -70,7 +70,7 @@ test('export downloads the scheme; import accepts it and refuses hostile files',
     page.waitForEvent('download'),
     dialog(page).getByRole('button', { name: 'Export Shop drawings' }).click(),
   ]);
-  expect(download.suggestedFilename()).toBe('Shop drawings.pdftools-scheme.json');
+  expect(download.suggestedFilename()).toBe('Shop drawings.triyapdf-scheme.json');
   const file = info.outputPath('scheme.json');
   await download.saveAs(file);
   const json = JSON.parse(readFileSync(file, 'utf8')) as {

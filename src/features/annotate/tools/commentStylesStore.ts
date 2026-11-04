@@ -188,7 +188,7 @@ export const exportStylesFile = (nameOf: (tool: StyleTool, style: UserStyle) => 
 
 export type ImportResult = { ok: true; count: number } | { ok: false; errors: StyleFileError[] };
 
-/** Imports a `.pdftools-styles.json` file: appended to each tool's styles, or refused whole. */
+/** Imports a `.triyapdf-styles.json` (or older `.pdftools-styles.json`) file: appended to each tool's styles, or refused whole. */
 export async function importStylesFile(text: string, newId: () => string): Promise<ImportResult> {
   const parsed = parseStyles(text, newId);
   if (!parsed.ok) return parsed;

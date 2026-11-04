@@ -4,7 +4,7 @@
     "preparing": "Preparing snapping…"
   },
   "app": {
-    "name": "PDFTools",
+    "name": "Triya PDF",
     "description": "A free, offline, private PDF editor for engineers."
   },
   "ui": {
@@ -331,7 +331,7 @@
   },
   "error": {
     "title": "Something went wrong",
-    "body": "This part of PDFTools stopped working. Your open files are not changed. Reload it to continue.",
+    "body": "This part of {{app}} stopped working. Your open files are not changed. Reload it to continue.",
     "reload": "Reload",
     "report": "Send Error Report…"
   },
@@ -345,9 +345,9 @@
       "save": "Save changes to the original file (incremental save).",
       "saveAs": "Save a copy of the document to a new location.",
       "saveOptimized": "Rewrite the file compactly. Digital signatures would be invalidated.",
-      "settings": "Settings and the data PDFTools keeps on this device.",
-      "about": "About PDFTools: version and third-party notices.",
-      "privacy": "PDFTools works offline. Your documents are never uploaded.",
+      "settings": "Settings and the data {{app}} keeps on this device.",
+      "about": "About {{app}}: version and third-party notices.",
+      "privacy": "{{app}} works offline. Your documents are never uploaded.",
       "properties": "Facts about the open document: its description, file and structure.",
       "print": "Print the document with your printer's dialog: choose pages, size, markups and quality first.",
       "exportPrintReady": "Save a copy with comments, markups and form fields burned into the pages, to print or share elsewhere."
@@ -456,7 +456,7 @@
     "cancel": "Cancel",
     "error": {
       "title": "Couldn't save {{name}}",
-      "permissionDenied": "PDFTools doesn't have permission to change this file. Save a copy with Save As instead.",
+      "permissionDenied": "{{app}} doesn't have permission to change this file. Save a copy with Save As instead.",
       "missing": "The file can't be found. It may have been moved or deleted. Save a copy with Save As instead.",
       "fileChanged": "The file was changed by another program since it was opened, so it wasn't overwritten. Save a copy with Save As instead.",
       "verifyFailed": "The saved file could not be checked, so nothing was written. Your changes are still open.",
@@ -485,7 +485,7 @@
   },
   "recovery": {
     "title": "Recover unsaved changes?",
-    "description": "PDFTools closed while these documents had unsaved changes. Recover them to continue where you left off, or discard the changes.",
+    "description": "{{app}} closed while these documents had unsaved changes. Recover them to continue where you left off, or discard the changes.",
     "item": "{{name}} — changes from {{when}}",
     "recover": "Recover",
     "discard": "Discard",
@@ -500,12 +500,12 @@
     "downloading": "Downloading a component…",
     "updateReady": "Update ready",
     "waitTitle": "Close your documents to update",
-    "waitDescription": "The update restarts PDFTools, so it waits until every document is closed. It applies as soon as you close the last one, or the next time you start PDFTools.",
+    "waitDescription": "The update restarts {{app}}, so it waits until every document is closed. It applies as soon as you close the last one, or the next time you start {{app}}.",
     "waitOk": "OK",
     "notNow": "Not now",
     "check": {
       "checking": "Checking for updates…",
-      "current": "PDFTools is up to date.",
+      "current": "{{app}} is up to date.",
       "found": "An update is ready. It applies when you choose Update ready.",
       "failed": "Couldn't check for updates. Check your connection and try again.",
       "unavailable": "Updates aren't available in this browser."
@@ -516,12 +516,12 @@
       "title": "Data on this device",
       "recent": "Recent files",
       "snapshots": "Recovery snapshots",
-      "used": "Storage used by PDFTools",
+      "used": "Storage used by {{app}}",
       "unknown": "Not reported by this browser",
-      "note": "Your PDF files stay where they are. PDFTools keeps only settings, your reviewer profile, comment tool defaults and saved comment styles, saved visual signatures, custom status schemes, table templates, the recent files list and recovery snapshots of unsaved changes. Storage used includes the offline copy of the app.",
+      "note": "Your PDF files stay where they are. {{app}} keeps only settings, your reviewer profile, comment tool defaults and saved comment styles, saved visual signatures, custom status schemes, table templates, the recent files list and recovery snapshots of unsaved changes. Storage used includes the offline copy of the app.",
       "clear": "Clear all local data…",
       "confirmTitle": "Clear all local data?",
-      "confirmDescription": "This deletes your settings, reviewer profile, comment tool defaults and saved comment styles, saved visual signatures, custom status schemes, table templates, the recent files list and all recovery snapshots on this device. Your PDF files are not changed. The offline copy of the app is kept, so PDFTools keeps working offline.",
+      "confirmDescription": "This deletes your settings, reviewer profile, comment tool defaults and saved comment styles, saved visual signatures, custom status schemes, table templates, the recent files list and all recovery snapshots on this device. Your PDF files are not changed. The offline copy of the app is kept, so {{app}} keeps working offline.",
       "warnOpen_one": "{{count}} document is open. It stays open.",
       "warnOpen_other": "{{count}} documents are open. They stay open.",
       "warnUnsaved_one": "{{count}} open document has unsaved changes. Its recovery snapshot is deleted too, so those changes could not be recovered after a crash until you change the document again.",
@@ -536,16 +536,16 @@
   },
   "about": {
     "version": "Version",
-    "license": "PDFTools is free software under the MIT License. It includes open-source components under their own permissive licenses.",
+    "license": "{{app}} is free software under the MIT License. It includes open-source components under their own permissive licenses.",
     "notices": "Third-party notices (opens in a new tab)"
   },
   "privacy": {
     "promise": {
-      "documents": "Your documents never leave this device. PDFTools opens, renders and saves them in your browser.",
+      "documents": "Your documents never leave this device. {{app}} opens, renders and saves them in your browser.",
       "account": "No account, no login and no cookies.",
       "telemetry": "No analytics scripts, no tracking and no telemetry.",
-      "network": "On its own, PDFTools only loads its program files and checks for app updates from its own website. Nothing about you or your documents is sent.",
-      "reports": "If you choose Help → Send Error Report, PDFTools sends the description you typed and the diagnostic details shown in the report dialog to its own website, and nothing else: no documents, file names or document text.",
+      "network": "On its own, {{app}} only loads its program files and checks for app updates from its own website. Nothing about you or your documents is sent.",
+      "reports": "If you choose Help → Send Error Report, {{app}} sends the description you typed and the diagnostic details shown in the report dialog to its own website, and nothing else: no documents, file names or document text.",
       "links": "The OpenEngTools Home and Report an Issue on GitHub buttons at the top right open those websites in a new tab, and only when you click them. They send nothing by themselves; the GitHub issue page is prefilled only with the app version, browser and OS."
     },
     "kind": {
@@ -554,7 +554,7 @@
       "cache": "Cache Storage"
     },
     "data": {
-      "caption": "Data PDFTools keeps on this device",
+      "caption": "Data {{app}} keeps on this device",
       "what": "What",
       "where": "Where",
       "cleared": "Deleted by “Clear all local data”",
@@ -717,7 +717,7 @@
     "external": "Link to {{url}}",
     "otherFile": "Link to another file",
     "dialogTitle": "Open this link in your browser?",
-    "dialogBody": "This document links to the address below. PDFTools does not open it itself: your browser does, in a new tab.",
+    "dialogBody": "This document links to the address below. {{app}} does not open it itself: your browser does, in a new tab.",
     "open": "Open in Browser",
     "cancel": "Cancel",
     "blocked": "Only web (http, https) and email (mailto) links can be opened."
@@ -1078,7 +1078,7 @@
     "githubLink": "Report an issue on GitHub"
   },
   "help": {
-    "title": "PDFTools Help",
+    "title": "{{app}} Help",
     "description": "A free PDF viewer and editor that works offline. Your documents never leave this device.",
     "close": "Close",
     "shortcuts": "Keyboard shortcuts",
@@ -1118,7 +1118,7 @@
       },
       "transfer": {
         "title": "Comment transfer",
-        "body": "Comment → Import brings comments from another PDF or a PDFTools JSON export into the open file; Export writes them as CSV, Excel or JSON, and Export CRS builds a comment resolution sheet. Copy, Cut and Paste move the selected comments within a document and between open documents: {{copy}}, {{cut}} and {{paste}}, or right-click a comment ({{menu}} from the keyboard). {{paste}} puts them on the page you last clicked, at the same place; Paste from the right-click menu puts them where you clicked. Paste to Original Pages puts them on the pages they came from."
+        "body": "Comment → Import brings comments from another PDF or a {{app}} JSON export into the open file; Export writes them as CSV, Excel or JSON, and Export CRS builds a comment resolution sheet. Copy, Cut and Paste move the selected comments within a document and between open documents: {{copy}}, {{cut}} and {{paste}}, or right-click a comment ({{menu}} from the keyboard). {{paste}} puts them on the page you last clicked, at the same place; Paste from the right-click menu puts them where you clicked. Paste to Original Pages puts them on the pages they came from."
       },
       "measure": {
         "title": "Measuring",
@@ -1126,7 +1126,7 @@
       },
       "tables": {
         "title": "Extracting tables",
-        "body": "Convert → Express Extract (Beta) saves the tables PDFTools finds on the chosen pages as an Excel workbook or CSV files. Review & Extract shows the detected grids on the page so you can add, move or delete dividers, mark header rows and merged cells, and save the grid as a template for similar pages. Scanned pages have no text to extract."
+        "body": "Convert → Express Extract (Beta) saves the tables {{app}} finds on the chosen pages as an Excel workbook or CSV files. Review & Extract shows the detected grids on the page so you can add, move or delete dividers, mark header rows and merged cells, and save the grid as a template for similar pages. Scanned pages have no text to extract."
       },
       "redact": {
         "title": "Redacting",
@@ -1134,7 +1134,7 @@
       },
       "forms": {
         "title": "Forms",
-        "body": "Click a form field or press Tab to move through the fields. {{save}} saves the values. Home → Reset Form restores the defaults. To make a form, open the Form tab: choose Text Field, Check Box, Radio Button, List Box or Dropdown and drag a box on the page (or click for the default size, or press Enter for one in the middle of the page). Radio buttons drawn one after another form one group. The Properties pane sets the field's name, tooltip, default value, items, flags and look; with no field selected it shows the page's tab order. Select Fields moves, resizes and deletes fields, and Highlight Fields shows or hides their tint. PDFTools never adds scripts to a form."
+        "body": "Click a form field or press Tab to move through the fields. {{save}} saves the values. Home → Reset Form restores the defaults. To make a form, open the Form tab: choose Text Field, Check Box, Radio Button, List Box or Dropdown and drag a box on the page (or click for the default size, or press Enter for one in the middle of the page). Radio buttons drawn one after another form one group. The Properties pane sets the field's name, tooltip, default value, items, flags and look; with no field selected it shows the page's tab order. Select Fields moves, resizes and deletes fields, and Highlight Fields shows or hides their tint. {{app}} never adds scripts to a form."
       },
       "save": {
         "title": "Saving",
@@ -1146,11 +1146,11 @@
       },
       "protect": {
         "title": "Protected and signed files",
-        "body": "Protect → Security Info shows what a file allows; PDFTools honours those restrictions. Password Security saves a copy with an open password, a permissions password or both (AES-256); Remove Security saves a copy without them. Both need the owner password of an already protected file. Sign Document places a signature or initials you draw, type or upload as a picture (a standard comment, or page content if you flatten it); it is not a certificate-based digital signature. Saved signatures stay on this device. Signatures are checked on this device; the Signatures pane shows whether each signed part is unchanged."
+        "body": "Protect → Security Info shows what a file allows; {{app}} honours those restrictions. Password Security saves a copy with an open password, a permissions password or both (AES-256); Remove Security saves a copy without them. Both need the owner password of an already protected file. Sign Document places a signature or initials you draw, type or upload as a picture (a standard comment, or page content if you flatten it); it is not a certificate-based digital signature. Saved signatures stay on this device. Signatures are checked on this device; the Signatures pane shows whether each signed part is unchanged."
       },
       "privacy": {
         "title": "Privacy",
-        "body": "PDFTools makes no network requests with your documents; on its own it only loads its program files and checks for updates from its website. Error reports are sent only when you choose to, and you see every word of them first. The OpenEngTools and GitHub buttons open those websites in a new tab and send nothing by themselves."
+        "body": "{{app}} makes no network requests with your documents; on its own it only loads its program files and checks for updates from its website. Error reports are sent only when you choose to, and you see every word of them first. The OpenEngTools and GitHub buttons open those websites in a new tab and send nothing by themselves."
       }
     }
   },
@@ -1229,7 +1229,7 @@
     "save": "Save",
     "skip": "Skip for now",
     "cancel": "Cancel",
-    "saveFailed": "The profile couldn't be stored on this device. It is used until you close PDFTools.",
+    "saveFailed": "The profile couldn't be stored on this device. It is used until you close {{app}}.",
     "none": "No profile yet. You'll be asked for one before your first comment; until then, comments are made as “Anonymous”.",
     "notSet": "Not set",
     "note": "Your name becomes the author of new comments. Initials, discipline and company are used in stamps and comment review sheets.",
@@ -1571,8 +1571,8 @@
       "duplicate": "Two codes are the same.",
       "tooLarge": "The file is too large to be a scheme.",
       "json": "The file isn't a valid scheme file.",
-      "format": "The file isn't a PDFTools scheme.",
-      "version": "The scheme was made by a newer version of PDFTools.",
+      "format": "The file isn't a {{app}} scheme.",
+      "version": "The scheme was made by a newer version of {{app}}.",
       "unknownKey": "The file has entries a scheme doesn't have.",
       "codes": "The file's codes aren't valid."
     }
@@ -1892,14 +1892,14 @@
     },
     "json": {
       "syntax": "This file is not valid JSON.",
-      "format": "This is not a PDFTools comment export.",
-      "version": "This comment export was made by a newer version of PDFTools and can't be read here.",
+      "format": "This is not a {{app}} comment export.",
+      "version": "This comment export was made by a newer version of {{app}} and can't be read here.",
       "shape": "This comment export is damaged and can't be imported.",
       "tooLarge": "This file has too many comments to import."
     },
     "import": {
       "title": "Import Comments",
-      "description": "Bring comments from another PDF or from a PDFTools comment export (JSON) into {{name}}.",
+      "description": "Bring comments from another PDF or from a {{app}} comment export (JSON) into {{name}}.",
       "choose": "Choose PDF or JSON…",
       "reading": "Reading the file…",
       "none": "No file chosen.",
@@ -2291,7 +2291,7 @@
     "fullScreenUnavailable": "This browser doesn't allow full screen here",
     "issue": {
       "title": "Problem: ",
-      "body": "What happened?\n\n\nWhat did you expect?\n\n\nSteps to reproduce:\n1. \n\nPlease don't attach or paste confidential documents or their text.\n\n---\nApp: {{app}}\nBrowser: {{browser}}\nOS: {{os}}"
+      "body": "What happened?\n\n\nWhat did you expect?\n\n\nSteps to reproduce:\n1. \n\nPlease don't attach or paste confidential documents or their text.\n\n---\n{{app}} version: {{version}}\nBrowser: {{browser}}\nOS: {{os}}"
     }
   },
   "contextMenu": {
@@ -2370,10 +2370,10 @@
     "error": {
       "tooLarge": "The file is too large for a styles file.",
       "json": "The file is not valid JSON.",
-      "format": "The file is not a PDFTools comment styles file.",
-      "version": "The file was made by a newer version of PDFTools.",
-      "tool": "The file has styles for a tool PDFTools does not know.",
-      "style": "A style in the file has no name or a property PDFTools cannot use.",
+      "format": "The file is not a {{app}} comment styles file.",
+      "version": "The file was made by a newer version of {{app}}.",
+      "tool": "The file has styles for a tool {{app}} does not know.",
+      "style": "A style in the file has no name or a property {{app}} cannot use.",
       "empty": "The file has no styles.",
       "tooMany": "A tool would have more styles than it can hold."
     }
@@ -2429,7 +2429,7 @@
       "initials": "Initials image (optional)",
       "transparent": "Make a white background transparent",
       "tooLarge": "The image is larger than {{max}}.",
-      "unsupported": "This file is not a PNG or JPG image PDFTools can read.",
+      "unsupported": "This file is not a PNG or JPG image {{app}} can read.",
       "empty": "Nothing is left to place: the image is blank (or all white)."
     },
     "options": {

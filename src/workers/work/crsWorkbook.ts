@@ -5,6 +5,7 @@
 // checkpoint between rows makes it cancellable (rule 2). `writeBuffer` (the
 // zip) is one step at the end.
 import type ExcelJS from 'exceljs';
+import { APP_NAME } from '../../i18n/appName';
 
 export interface WorkbookSpec {
   sheetName: string;
@@ -37,7 +38,7 @@ export async function buildWorkbook(
   progress: (done: number) => void,
 ): Promise<ArrayBuffer> {
   const wb = new lib.Workbook();
-  wb.creator = 'PDFTools';
+  wb.creator = APP_NAME;
   const ws = wb.addWorksheet(spec.sheetName);
   const n = spec.columns.length;
   ws.columns = spec.columns.map((_, i) => ({ width: WIDTHS[i] ?? 16 }));

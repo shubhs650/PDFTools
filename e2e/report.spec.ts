@@ -113,7 +113,7 @@ test('a failing or rate-limited endpoint shows why, and Copy report', async ({ p
 test('Help → Help: bundled help with a way to the shortcut sheet', async ({ page }) => {
   await page.goto('/');
   await helpCommand(page, 'Help');
-  const d = page.getByRole('dialog', { name: 'PDFTools Help' });
+  const d = page.getByRole('dialog', { name: 'Triya PDF Help' });
   await expect(d).toBeVisible();
   await expect(d.getByRole('heading', { name: 'Printing' })).toBeVisible();
   const { violations } = await new AxeBuilder({ page }).include('[role="dialog"]').analyze();
@@ -135,7 +135,7 @@ for (const [platform, mod] of [
     }, platform);
     await page.goto('/');
     await helpCommand(page, 'Help');
-    const d = page.getByRole('dialog', { name: 'PDFTools Help' });
+    const d = page.getByRole('dialog', { name: 'Triya PDF Help' });
     await expect(d.getByRole('heading', { name: 'Opening files' })).toBeVisible();
     await expect(d).toContainText(`Press ${mod}+O`);
     await expect(d).toContainText(`${mod}+S adds your changes`);

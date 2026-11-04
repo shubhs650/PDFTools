@@ -1,7 +1,7 @@
 // The comment style palette (M6-07, ADR-021 D-37, beta review B5): preset
 // styles per tool (Red, Purple, Indigo, Blue, Green, Yellow, Black, and the
 // Cloudy variants for closed shapes), the user's own styles, which comments a
-// picked style restyles, the `.pdftools-styles.json` export/import format and
+// picked style restyles, the `.triyapdf-styles.json` export/import format and
 // the swatch grid's keyboard moves. A style is a plain property set (the
 // plugin's annotation fields, toolDefaults.ts) applied through the existing
 // annotation-property path, so appearances stay PDFium's (§7.1).
@@ -417,7 +417,12 @@ export function moveStyle(list: readonly UserStyle[], id: string, delta: number)
 
 export const STYLE_FILE_FORMAT = 'pdftools-styles';
 export const STYLE_FILE_VERSION = 1;
-export const STYLE_FILE_SUFFIX = '.pdftools-styles.json';
+/**
+ * The suggested export name's suffix (ADR-023 D-41). The format id above stays
+ * `pdftools-styles`, so files saved before the rename (`.pdftools-styles.json`)
+ * still import: the import reads the format id, never the file name.
+ */
+export const STYLE_FILE_SUFFIX = '.triyapdf-styles.json';
 
 export type StyleFileError =
   'tooLarge' | 'json' | 'format' | 'version' | 'tool' | 'style' | 'empty' | 'tooMany';
