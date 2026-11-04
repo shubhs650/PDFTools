@@ -137,6 +137,28 @@ test('tool first: Mark for Redaction on, each text selection becomes a mark unti
   await expect(mark).toHaveAttribute('aria-pressed', 'false');
 });
 
+// The zoom changing during an area drag (fit width catching up with a pane that
+// opened, as seen on CI) keeps the drag: the mark is still made.
+test('a zoom change in the middle of an area drag still makes the mark', async ({ page }) => {
+  await page.goto('/');
+  const id = await open(page, simplePdf(1));
+  await page.getByRole('tab', { name: 'Protect' }).click();
+  const area = bar(page).getByRole('button', { name: 'Mark Area for Redaction' });
+  await area.click();
+  await expect(area).toHaveAttribute('aria-pressed', 'true');
+  const content = page.locator('[data-page="0"] .page-content');
+  const box = await content.boundingBox();
+  if (!box) throw new Error('page not laid out');
+  await page.mouse.move(box.x + 60, box.y + 60);
+  await page.mouse.down();
+  await page.mouse.move(box.x + 100, box.y + 80, { steps: 3 });
+  await cap(page, 'view', 'zoom', 0.75);
+  await expect.poll(async () => (await content.boundingBox())?.width).not.toBe(box.width);
+  await page.mouse.move(box.x + 200, box.y + 160, { steps: 4 });
+  await page.mouse.up();
+  await expect.poll(() => list(page, id)).toHaveLength(1);
+});
+
 test('keyboard: Ctrl+A then Mark for Redaction; the area rectangle from the keyboard', async ({
   page,
 }) => {
