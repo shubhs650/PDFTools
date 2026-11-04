@@ -1,6 +1,7 @@
 # ADR-023: M7 — second beta review: name, dark theme, text comments, sticky note popups, image paste
 
-- **Status:** Proposed (waiting for the owner's review of [docs/plan/M7.md](../plan/M7.md))
+- **Status:** Accepted (owner, 2026-11-04, with the plan's recommended answers Q1–Q7;
+  ARCHITECTURE.md Rev 0.11 applied)
 - **Date:** 2026-11-04
 - **Deciders:** owner (Shubham) / agent planning session
 - **Related decisions:** D-03, D-20, D-23, D-35, D-36, D-37, D-38 (ARCHITECTURE.md §2); new
@@ -124,7 +125,7 @@ every width**; the tooltip and the accessible name give the full name. Protect s
 Document. Reset Form is on the Form tab only. The adaptive steps (D-36) still apply to the other
 groups and fold any group into a dropdown on a very narrow window.
 
-### ARCHITECTURE.md changes (to apply when this ADR is accepted, Rev 0.11)
+### ARCHITECTURE.md changes (Rev 0.11, applied 2026-11-04)
 
 - Title and header: "Triya PDF — Architecture & Product Specification"; **App:** Triya PDF; Rev
   0.11 amendment note citing this ADR.

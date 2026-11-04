@@ -2,9 +2,9 @@
 
 _Last updated: 2026-11-04 (session 40: M7 plan from the second beta review)_
 
-**Next milestone:** M7 — second beta review (plan in [docs/plan/M7.md](plan/M7.md), scope in
-[ADR-023](adr/023-m7-second-beta-review.md), **Proposed** 2026-11-04; waiting for the owner's
-review and answers Q1–Q7; no code before that). **Previous milestone:** M6 — Beta review (plan in [docs/plan/M6.md](plan/M6.md), scope changes in
+**Current milestone:** M7 — second beta review (plan in [docs/plan/M7.md](plan/M7.md), scope in
+[ADR-023](adr/023-m7-second-beta-review.md), **Accepted** 2026-11-04 with the recommended
+answers Q1–Q7; ARCHITECTURE.md Rev 0.11). Next: M7-01. **Previous milestone:** M6 — Beta review (plan in [docs/plan/M6.md](plan/M6.md), scope changes in
 [ADR-021](adr/021-m6-beta-review.md), **Accepted** 2026-11-01; ARCHITECTURE.md Rev 0.10; M6-01 … M6-15 done, **M6 complete on the agent side** ([acceptance](acceptance/M6.md)); spike results in
 [ADR-022](adr/022-m6-spikes-s18-s22.md), **Accepted** 2026-11-02 (bookmark route B)). M5 — OCR: M5-01 … M5-04 done under [ADR-020](adr/020-m5-ocr.md); M5-05's owner
 interop is in the M6 pack (CHECKLIST §M6 R1–R4). Rev 0 (M0–M4) is complete on the agent side.
@@ -16,11 +16,12 @@ interop is in the M6 pack (CHECKLIST §M6 R1–R4). Rev 0 (M0–M4) is complete 
   highlight) mapped to 12 serial tasks in [docs/plan/M7.md](plan/M7.md); scope changes in
   [ADR-023](adr/023-m7-second-beta-review.md) (D-41 name "Triya PDF", D-42 dark theme toggle,
   D-43 text comment interaction and marquee selection, D-44 sticky note popup with spike S23,
-  D-45 paste image; D-36 and D-37 amendments), **Proposed**. The reported comment bugs were
+  D-45 paste image; D-36 and D-37 amendments), **Accepted** by the owner the same day with the
+  recommended answers Q1–Q7. The reported comment bugs were
   reproduced on `main` (17db96f) with a throwaway Playwright script: 14 bugs B1–B14 with
   severity and occurrence in the plan; two are Critical (Esc, and for callouts also a click
   away, throw the text edit away: the plugin's editor commits only on blur). ARCHITECTURE.md
-  unchanged until ADR-023 is accepted (Rev 0.11 then).
+  Rev 0.11 applied; CLAUDE.md names the product Triya PDF.
 
 - **Session 39 — M6-17 Comment Styles Palette window (D-37; owner request 2026-11-03; plan in
   [M6.md](plan/M6.md#m6-17--comment-styles-palette-window-post-m6-owner-request-2026-11-03)).**
@@ -1738,9 +1739,7 @@ rel="noopener noreferrer">`; the commands `app.home` / `app.reportIssue` open th
 
 ## Next
 
-- **Owner:** review [docs/plan/M7.md](plan/M7.md) and [ADR-023](adr/023-m7-second-beta-review.md)
-  and answer the planning questions Q1–Q7 (end of the plan). **Agent:** after acceptance, apply
-  ARCHITECTURE.md Rev 0.11 and start M7-01 in its own thread; "Rapid moves can lose the last
+- **Agent:** M7-01 (rename to Triya PDF) in its own thread, then M7-02 … M7-12 serially; "Rapid moves can lose the last
   one" is folded into M7-04 (B13).
 - **Owner (M6 interop pack):** [docs/acceptance/M6.md](acceptance/M6.md) §4 — CHECKLIST §M6
   P1–P19 and Q1–Q4 in Acrobat Reader and PDF-XChange with the files in
@@ -1945,6 +1944,7 @@ rel="noopener noreferrer">`; the commands `app.home` / `app.reportIssue` open th
 
 | Date       | Ref              | Decision                                                                                                                                                                                                                                                                                                                                                                                                                                                  |
 | ---------- | ---------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| 2026-11-04 | ADR-023          | Owner accepted the M7 plan (second beta review) and ADR-023 with the recommended answers Q1–Q7: name Triya PDF (D-41), dark theme toggle (D-42), text comment interaction and marquee selection (D-43), sticky note popup (D-44), paste image (D-45), 50 % highlights and black Courier typewriter (D-37), Home tab icon-only groups (D-36). ARCHITECTURE.md Rev 0.11.                                                                                    |
 | 2026-11-02 | ADR-022          | Owner accepted ADR-022 (M6 spikes S18 – S22). ARCHITECTURE.md Rev 0.10: §3.2 signature fonts and the plugin-form license exception, §7.1 Attach File by direct PDFium calls, §7.10 modify + annotate gate and `/TU`, §7.11 handwriting font, §7.12 copy route, owner-rights gate, 127-byte limit, §7.15 our own outline writer.                                                                                                                           |
 | 2026-11-02 | ADR-022 d5       | Owner picked bookmark route B for M6-11: our own outline writer (Work worker) applied with `applyObjects`, every outline key kept.                                                                                                                                                                                                                                                                                                                        |
 | 2026-11-01 | ADR-021          | Owner accepted the M6 plan (beta review) and ADR-021: shell (D-35), adaptive ribbon with a Form tab (D-36), comment styles (D-37), comment workflow incl. page copy/paste, flatten, attach file, snapshot, bookmark editing (D-38), basic form fields (D-39), password security and visual signatures (D-40). Home rotates the view, Organize the pages. ARCHITECTURE.md Rev 0.9.                                                                         |

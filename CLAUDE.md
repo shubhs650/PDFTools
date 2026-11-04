@@ -1,6 +1,6 @@
-# CLAUDE.md — PDFTools
+# CLAUDE.md — Triya PDF
 
-You are building **PDFTools** (`pdf-tools.openengtools.com`): a free, offline, private, PDF-XChange-style PDF editor PWA for engineers. **`ARCHITECTURE.md` is the source of truth** — read the relevant section before starting any task, and reference decision IDs (D-xx) in commit messages.
+You are building **Triya PDF** (formerly PDFTools; `pdf-tools.openengtools.com`, D-41): a free, offline, private, PDF-XChange-style PDF editor PWA for engineers. **`ARCHITECTURE.md` is the source of truth** — read the relevant section before starting any task, and reference decision IDs (D-xx) in commit messages.
 
 ## Non-negotiable rules
 
