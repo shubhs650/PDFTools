@@ -9,11 +9,12 @@ import {
   createRenderer,
   type CustomAnnotationRenderer,
 } from '@embedpdf/plugin-annotation/react';
-import { useLayoutEffect, type ReactNode } from 'react';
+import { useLayoutEffect, type PointerEvent, type ReactNode } from 'react';
 import { ATTACH_DEFAULT_COLOR } from '../../model/attachFile';
 import { saveAttachmentById } from '../attachments/attachFile';
 import { FIELD_RENDERER } from '../forms/fieldDesign';
 import { TEXT_BODY_ATTR, textBodyUnmounted, useEditEpoch } from './textEdit';
+import { pressTextComment, type PageGeometry } from './textPointer';
 
 /**
  * A comment's body. A text box, typewriter or callout is marked so its
@@ -23,10 +24,12 @@ import { TEXT_BODY_ATTR, textBodyUnmounted, useEditEpoch } from './textEdit';
 function Body({
   annotation,
   isSelected,
+  geometry,
   children,
 }: {
   annotation: PdfAnnotationObject;
   isSelected: boolean;
+  geometry: PageGeometry;
   children: ReactNode;
 }) {
   const text = annotation.type === PdfAnnotationSubtype.FREETEXT;
@@ -49,6 +52,15 @@ function Body({
             [TEXT_BODY_ATTR]: '',
             'data-annotation-id': id,
             'data-page-index': annotation.pageIndex,
+            // A press selects it and, dragged, moves it (M7-03, B5); once
+            // selected, the plugin's frame over it takes the presses.
+            ...(isSelected
+              ? {}
+              : {
+                  onPointerDownCapture: (e: PointerEvent<HTMLDivElement>) => {
+                    pressTextComment(e, annotation, geometry);
+                  },
+                }),
           }
         : {})}
     >
@@ -61,6 +73,10 @@ const renderBody: CustomAnnotationRenderer<PdfAnnotationObject> = ({
   annotation,
   children,
   isSelected,
+  scale,
+  rotation,
+  pageWidth,
+  pageHeight,
 }) =>
   // Form fields: the field box (fieldDesign.tsx), which is empty unless fields
   // are designed; the form layer fills them (M2-14, M6-14).
@@ -72,7 +88,11 @@ const renderBody: CustomAnnotationRenderer<PdfAnnotationObject> = ({
     (annotation.type === PdfAnnotationSubtype.TEXT && annotation.inReplyToId) ? (
     <></>
   ) : (
-    <Body annotation={annotation} isSelected={isSelected}>
+    <Body
+      annotation={annotation}
+      isSelected={isSelected}
+      geometry={{ scale, rotation, pageWidth, pageHeight }}
+    >
       {children}
     </Body>
   );

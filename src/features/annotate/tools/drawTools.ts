@@ -20,6 +20,9 @@ import { t } from '../../../i18n';
 import { capability } from '../../view/host';
 import { openContentsPrompt } from './contentsPrompt';
 import {
+  calloutBounds,
+  calloutFromDrag,
+  calloutJoin,
   centred,
   constrain,
   TEXT_COMMENT_CATEGORY,
@@ -79,6 +82,7 @@ export function wrapFactory(
     annotationType: factory.annotationType,
     create(context) {
       const h = factory.create(adapt ? adapt(context) : context);
+      if (tool === 'freeTextCallout') return calloutHandlers(h, context);
       // Drag tools: where the drag started. Vertex tools: the last vertex placed.
       let anchor: Pt | null = null;
       const snaps = SNAPS.has(tool);
@@ -136,6 +140,93 @@ export function wrapFactory(
         };
       }
       return out;
+    },
+  };
+}
+
+/** The plugin's callout tool counts a press and release this close (page points) as a click. */
+const CALLOUT_CLICK = 5;
+
+/**
+ * The Callout tool (M7-03, ADR-023 D-43 f; B11). The plugin's callout takes
+ * three clicks (arrow tip, knee, then the box). A drag from the arrow tip to
+ * where the box goes makes one too (the PDF-XChange gesture): the knee is
+ * placed automatically (`calloutFromDrag`), and the plugin is handed the three
+ * clicks, so its own commit makes the callout (and opens its editor). The
+ * three-click route is unchanged. `phase` follows the plugin's own steps.
+ */
+function calloutHandlers(h: Handlers, context: HandlerContext): Handlers {
+  let phase: 'arrow' | 'knee' | 'textbox' = 'arrow';
+  let down: Pt | null = null;
+  let dragging = false;
+  const onPage = (p: Pt): Pt => ({
+    x: Math.min(Math.max(p.x, 0), context.pageSize.width),
+    y: Math.min(Math.max(p.y, 0), context.pageSize.height),
+  });
+  const isClick = (a: Pt, b: Pt): boolean =>
+    Math.abs(a.x - b.x) < CALLOUT_CLICK && Math.abs(a.y - b.y) < CALLOUT_CLICK;
+  const preview = (tip: Pt, end: Pt) => {
+    const defaults = context.getTool()?.defaults as Record<string, unknown> | undefined;
+    const placed = calloutFromDrag(tip, end, context.pageSize);
+    const strokeWidth = typeof defaults?.['strokeWidth'] === 'number' ? defaults['strokeWidth'] : 1;
+    const bounds = calloutBounds(tip, placed, strokeWidth);
+    context.onPreview({
+      type: PdfAnnotationSubtype.FREETEXT,
+      bounds,
+      data: {
+        ...defaults,
+        rect: bounds,
+        // Where the line meets the box: the plugin's own rule picks the same side.
+        calloutLine: [tip, placed.knee, calloutJoin(placed)],
+        textBox: placed.box,
+      },
+    });
+  };
+  return {
+    ...h,
+    onPointerDown: (pos, evt, mode) => {
+      const p = onPage(pos);
+      down = p;
+      dragging = false;
+      h.onPointerDown?.(p, evt, mode);
+    },
+    onPointerMove: (pos, evt, mode) => {
+      const p = onPage(pos);
+      if (phase === 'arrow' && down) {
+        if (!dragging && !isClick(down, p)) dragging = true;
+        if (dragging) preview(down, p);
+        return;
+      }
+      h.onPointerMove?.(p, evt, mode);
+    },
+    onPointerUp: (pos, evt, mode) => {
+      const p = onPage(pos);
+      const from = down;
+      down = null;
+      if (phase === 'arrow' && from && dragging) {
+        dragging = false;
+        // The plugin's three clicks: the tip (already pressed), the knee, the box.
+        const { knee, box } = calloutFromDrag(from, p, context.pageSize);
+        const far = { x: box.origin.x + box.size.width, y: box.origin.y + box.size.height };
+        h.onPointerUp?.(from, evt, mode);
+        h.onPointerDown?.(knee, evt, mode);
+        h.onPointerUp?.(knee, evt, mode);
+        h.onPointerDown?.(box.origin, evt, mode);
+        h.onPointerUp?.(far, evt, mode);
+        return;
+      }
+      h.onPointerUp?.(p, evt, mode);
+      if (phase === 'arrow') {
+        if (from && isClick(from, p)) phase = 'knee';
+      } else if (phase === 'knee') {
+        if (from && isClick(from, p)) phase = 'textbox';
+      } else phase = 'arrow';
+    },
+    onPointerCancel: (pos, evt, mode) => {
+      phase = 'arrow';
+      down = null;
+      dragging = false;
+      h.onPointerCancel?.(pos, evt, mode);
     },
   };
 }

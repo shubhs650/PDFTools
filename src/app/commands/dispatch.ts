@@ -74,6 +74,8 @@ export const INTERNAL_ACTIONS = [
   'annotation.nudgeDownFar',
   // Drawing tools (M3-09): Enter places a note/text box or finishes a polyline.
   'tool.enter',
+  // A selected text comment: F2 edits it (M7-03; Enter does too, via tool.enter).
+  'annotation.editText',
 ] as const;
 export type InternalAction = (typeof INTERNAL_ACTIONS)[number];
 

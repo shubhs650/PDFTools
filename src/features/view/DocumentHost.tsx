@@ -13,6 +13,7 @@ import { installViewportTool } from '../measure/viewports';
 import { installSnapping } from '../measure/snapping';
 import { installHistoryJoin } from '../annotate/historyJoin';
 import { installTextEdit } from '../annotate/textEdit';
+import { installTextPointer } from '../annotate/textPointer';
 import { installAttachmentRefresh } from '../attachments/attachments';
 import { installSignTools } from '../sign/signDocument';
 import { installFieldTools } from '../forms/fieldTools';
@@ -44,7 +45,11 @@ const onInitialized = (registry: Parameters<typeof setRegistry>[0]): Promise<voi
     installSignTools(registry);
     installFieldTools(registry);
     // Text comment edits are written on every way out of the editor (M7-02).
-    if (!textEditInstalled) installTextEdit();
+    // … and pressed, dragged or double-clicked like PDF-XChange's (M7-03).
+    if (!textEditInstalled) {
+      installTextEdit();
+      installTextPointer();
+    }
     textEditInstalled = true;
   }
   setRegistry(registry);

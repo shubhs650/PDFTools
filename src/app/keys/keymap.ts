@@ -131,6 +131,8 @@ export const KEYMAP: readonly Binding[] = [
   b('comment.cloud', ['C'], 'document'),
   b('comment.pencil', ['D'], 'document'),
   { ...b('tool.enter', ['Enter'], 'document'), preventWhenDisabled: false },
+  // A selected text comment: F2 (or Enter, above) edits it (M7-03).
+  b('annotation.editText', ['F2'], 'document'),
   // The Bookmarks pane's tree (M6-11, §7.15): the same keys as in the document
   // act on the focused bookmark there (Enter, Space and the arrows are the tree's).
   b('bookmark.goTo', ['Enter'], 'bookmarks'),

@@ -1,15 +1,45 @@
 # Triya PDF — Progress
 
-_Last updated: 2026-11-04 (session 42: M7-02 text comment edits)_
+_Last updated: 2026-11-04 (session 43: M7-03 text comment select and move)_
 
 **Current milestone:** M7 — second beta review (plan in [docs/plan/M7.md](plan/M7.md), scope in
 [ADR-023](adr/023-m7-second-beta-review.md), **Accepted** 2026-11-04 with the recommended
-answers Q1–Q7; ARCHITECTURE.md Rev 0.11). M7-01 and M7-02 done; next: M7-03. **Previous milestone:** M6 — Beta review (plan in [docs/plan/M6.md](plan/M6.md), scope changes in
+answers Q1–Q7; ARCHITECTURE.md Rev 0.11). M7-01 … M7-03 done; next: M7-04. **Previous milestone:** M6 — Beta review (plan in [docs/plan/M6.md](plan/M6.md), scope changes in
 [ADR-021](adr/021-m6-beta-review.md), **Accepted** 2026-11-01; ARCHITECTURE.md Rev 0.10; M6-01 … M6-15 done, **M6 complete on the agent side** ([acceptance](acceptance/M6.md)); spike results in
 [ADR-022](adr/022-m6-spikes-s18-s22.md), **Accepted** 2026-11-02 (bookmark route B)). M5 — OCR: M5-01 … M5-04 done under [ADR-020](adr/020-m5-ocr.md); M5-05's owner
 interop is in the M6 pack (CHECKLIST §M6 R1–R4). Rev 0 (M0–M4) is complete on the agent side.
 
 ## Done
+
+- **Session 43 — M7-03 text comments: select, move, edit at the click, callout in one drag
+  (ADR-023 D-43 b, c, f; B4–B6, B11).** Reproduced on `main` (9d4c8b0) first: a press on an
+  unselected text box, typewriter or callout selected it, but the drag of that same press left it
+  where it was (B5; the plugin attaches its drag only to an already selected comment's frame);
+  B4 (callout box) and B6 (Delete after an edit) no longer reproduced after M7-02 (the lock and
+  focus changes), so they are covered by tests. Now `src/features/annotate/textPointer.ts`: the
+  text comment's body takes the press in the capture phase (the plugin selects it next); past
+  3 px the plugin's own `startDrag`/`updateDrag`/`commitDrag` move it (one undo step, kept on the
+  page; the screen delta undoes zoom and page rotation, `pageDelta`); the press keeps the focus
+  on the document view, not on the hidden editor span, so Delete, the clipboard keys and the
+  arrows act on the comment. A double-click puts the caret at the clicked character
+  (`caretPositionFromPoint`, after the plugin's own end-of-text caret); Enter (`tool.enter`, when
+  one text comment is selected and no polyline is being drawn) and F2 (new
+  `annotation.editText`) edit the selected one by sending the plugin a double-click on its frame.
+  Locked comments (M6-06) and files without annotate permission (rule 9) neither move nor edit:
+  the plugin only stops a locked comment moving, so a document-level capture listener drops the
+  double-click on one. **Callout in one drag:** the callout tool's handler is wrapped
+  (`calloutHandlers` in drawTools.ts): a press that travels past 5 pt in the arrow phase shows a
+  preview and, on release, hands the plugin its three clicks (tip, knee, box), so its own commit
+  makes the callout and opens its editor; `calloutFromDrag` (drawModel.ts) puts the 150 × 40 box
+  beside the release point on the far side from the tip, its middle level with it, and the knee
+  up to 18 pt before it. The three-click route is unchanged. The status bar shows the active
+  tool's hint (`ToolHint`; "Drag from the point to the text box position" for Callout). Help
+  (Reviewing comments) and the shortcut sheet (F2) updated. Tests: `e2e/text-comments.spec.ts`
+  (each tool: press-and-drag moves it, `/Rect` and `/CL` saved moved, move pointer, Delete and
+  undo; a double-click edits between two characters and a drag in the editor selects text;
+  Enter/F2; the callout drag; locked; a restricted file via qpdf, CI only), unit tests for
+  `pageDelta` and the callout placement. Not changed: press-and-drag on other comment types
+  (shapes, stamps) still selects first; M7-04 (selection) can extend `pressTextComment` to them.
 
 - **Session 42 — M7-02 text comments keep their edits (ADR-023 D-43 a, d; B1–B3).** Root
   causes: (1) with a drawing tool on, `DocumentView` locked every annotation (`LockModeType.All`),
@@ -1782,8 +1812,8 @@ rel="noopener noreferrer">`; the commands `app.home` / `app.reportIssue` open th
 
 ## Next
 
-- **Agent:** M7-03 (text select/move/callout box) in its own thread, then M7-04 … M7-12
-  serially. M7-04 also fixes B13's cause found in M7-02 (a change made while a commit runs is
+- **Agent:** M7-04 (marquee, Shift+click, select after drawing, B13) in its own thread, then
+  M7-05 … M7-12 serially. M7-04 also fixes B13's cause found in M7-02 (a change made while a commit runs is
   marked written; see session 42).
 - **Owner (M6 interop pack):** [docs/acceptance/M6.md](acceptance/M6.md) §4 — CHECKLIST §M6
   P1–P19 and Q1–Q4 in Acrobat Reader and PDF-XChange with the files in

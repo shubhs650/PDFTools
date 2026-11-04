@@ -18,3 +18,32 @@ export function contentsPatch(
   const text = editorText(raw);
   return text === (current ?? '') ? null : { contents: text };
 }
+
+/** How far (screen px) a press on a text comment must travel to become a move (M7-03). */
+export const MOVE_THRESHOLD_PX = 3;
+
+/**
+ * A pointer movement on screen as a movement in page points (M7-03): the
+ * view's scale and the page's rotation (quarter turns) undone, as the
+ * annotation plugin's own drag does.
+ */
+export function pageDelta(
+  dx: number,
+  dy: number,
+  scale: number,
+  rotation: number,
+): { x: number; y: number } {
+  const turns = ((Math.round(rotation) % 4) + 4) % 4;
+  const x = dx / scale;
+  const y = dy / scale;
+  switch (turns) {
+    case 1:
+      return { x: y, y: -x };
+    case 2:
+      return { x: -x, y: -y };
+    case 3:
+      return { x: -y, y: x };
+    default:
+      return { x, y };
+  }
+}

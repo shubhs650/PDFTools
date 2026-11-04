@@ -1,5 +1,5 @@
 import { describe, expect, it, vi } from 'vitest';
-import { contentsPatch, editorText } from '../../src/features/annotate/textEditModel';
+import { contentsPatch, editorText, pageDelta } from '../../src/features/annotate/textEditModel';
 import { isTextTool, TEXT_TOOLS } from '../../src/features/annotate/tools/drawModel';
 import { onBeforeCommand, registerCommand, runCommand } from '../../src/app/commands/dispatch';
 
@@ -61,5 +61,18 @@ describe('onBeforeCommand', () => {
     stop();
     off();
     expect(fn).not.toHaveBeenCalled();
+  });
+});
+
+// M7-03: a press-and-drag moves a text comment; the pointer's way in page points.
+describe('pageDelta', () => {
+  it('undoes the zoom', () => {
+    expect(pageDelta(30, -15, 1.5, 0)).toEqual({ x: 20, y: -10 });
+  });
+  it('undoes the page rotation, as the plugin’s own drag does', () => {
+    expect(pageDelta(10, 20, 1, 1)).toEqual({ x: 20, y: -10 });
+    expect(pageDelta(10, 20, 1, 2)).toEqual({ x: -10, y: -20 });
+    expect(pageDelta(10, 20, 1, 3)).toEqual({ x: -20, y: 10 });
+    expect(pageDelta(10, 20, 2, 4)).toEqual({ x: 5, y: 10 });
   });
 });

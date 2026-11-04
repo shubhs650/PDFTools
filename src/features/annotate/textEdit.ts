@@ -21,6 +21,7 @@ import { onBeforeCommand } from '../../app/commands/dispatch';
 import { documentStore } from '../../app/store/documentStore';
 import { annotationCapability } from './selection';
 import { contentsPatch } from './textEditModel';
+import { editorOpened } from './textPointer';
 
 /** Marks an annotation body that holds a free text editor (AnnotationLayer). */
 export const TEXT_BODY_ATTR = 'data-text-comment';
@@ -87,6 +88,7 @@ function begin(el: HTMLElement): void {
     // No plugin state for the document: nothing to watch.
   }
   session = { docId, pageIndex, id, el, stop };
+  editorOpened(el);
 }
 
 function commit(s: Session): void {

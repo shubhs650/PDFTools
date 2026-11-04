@@ -24,6 +24,7 @@ import { cycleTarget, pageAnnotations } from './model';
 import { DRAW_COMMANDS, isDrawTool, KEYBOARD_PLACED, VERTEX_TOOLS } from './tools/drawModel';
 import { isSignatureTool, placeAtCentre as placeSignatureAtCentre } from '../sign/signDocument';
 import { annotationLayerReady, finishDrawing, placeAtCentre } from './tools/drawTools';
+import { editableTextComment, editSelectedText } from './textPointer';
 import { isFieldTool } from '../forms/fieldModel';
 import { placeFieldAtCentre } from '../forms/fieldTools';
 import { copiedStyle, copyStyle, pasteStyle } from './properties/style';
@@ -260,10 +261,13 @@ export function registerAnnotateCommands(): () => void {
     ),
     // Enter on the page: place a note or text box at its centre (M3-Q6), or
     // finish the polyline/polygon being drawn. Otherwise Enter keeps its job.
+    // A selected text comment: Enter edits it (M7-03, D-43 c), unless a polyline is being drawn.
     registerCommand('tool.enter', {
       requires: 'annotate',
       disabledReason: () => {
         const t = appStore.getState().tool;
+        const id = activeId();
+        if (id && !(isDrawTool(t) && VERTEX_TOOLS.has(t)) && editableTextComment(id)) return null;
         return isDrawTool(t) && (KEYBOARD_PLACED.has(t) || VERTEX_TOOLS.has(t))
           ? null
           : msg('annotate.noneSelected');
@@ -272,6 +276,7 @@ export function registerAnnotateCommands(): () => void {
         const t = appStore.getState().tool;
         const id = activeId();
         const registry = hostStore.getState().registry;
+        if (id && !(isDrawTool(t) && VERTEX_TOOLS.has(t)) && editSelectedText(id)) return;
         if (!isDrawTool(t) || !id || !registry) return;
         if (VERTEX_TOOLS.has(t)) {
           finishDrawing();
@@ -301,6 +306,18 @@ export function registerAnnotateCommands(): () => void {
         // The page's annotation layer opens the editor: right after an open it may not be there yet.
         if (t !== 'textComment') await annotationLayerReady(id, page);
         placeAtCentre(registry, id, page, t);
+      },
+    }),
+    // F2: edit the selected text comment (M7-03, D-43 c).
+    registerCommand('annotation.editText', {
+      requires: 'annotate',
+      disabledReason: () => {
+        const id = activeId();
+        return id && editableTextComment(id) ? null : msg('annotate.noneSelected');
+      },
+      run: () => {
+        const id = activeId();
+        if (id) editSelectedText(id);
       },
     }),
     // Copy/Apply Style (M3-10): the first selected annotation's style onto others.
