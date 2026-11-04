@@ -64,6 +64,7 @@ describe('third-party notices (M1-26)', () => {
       { name: 'b', version: '2.0.0', license: 'MIT', texts: [{ source: 'LICENSE', text: mit }] },
     ]);
     expect(out.split('Copyright (c) Someone')).toHaveLength(2);
+    expect(out.startsWith('Triya PDF — third-party notices\n')).toBe(true);
     expect(out).toContain('LICENSE: same text as a 1.0.0 (LICENSE).');
   });
 

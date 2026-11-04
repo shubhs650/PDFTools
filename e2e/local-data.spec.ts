@@ -122,7 +122,7 @@ test('Privacy lists every local store; About shows the version and serves the no
   const privacy = backstage(page).getByTestId('privacy');
   await expect(privacy).toContainText('Your documents never leave this device');
   await expect(privacy).toContainText('No analytics scripts');
-  const table = privacy.getByRole('table', { name: 'Data PDFTools keeps on this device' });
+  const table = privacy.getByRole('table', { name: 'Data Triya PDF keeps on this device' });
   for (const where of ['pdftools › settings', 'pdftools › recent', 'recovery/', 'pdftools-…']) {
     await expect(table.getByRole('cell', { name: new RegExp(where) })).toBeVisible();
   }

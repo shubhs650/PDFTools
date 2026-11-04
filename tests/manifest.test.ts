@@ -11,7 +11,7 @@ const pngSize = (path: string): [number, number] => {
 
 describe('web app manifest (M1-19, D-21)', () => {
   it('has the fields an installable PWA needs', () => {
-    expect(MANIFEST.name).toBe('PDFTools');
+    expect(MANIFEST.name).toBe('Triya PDF');
     expect(MANIFEST.short_name.length).toBeGreaterThan(0);
     expect(MANIFEST.start_url).toBe('/');
     expect(MANIFEST.display).toBe('standalone');

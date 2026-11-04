@@ -52,7 +52,7 @@ test('brand at the left of the quick access row; the tab row is not pushed at 12
   await page.goto('/');
   const brand = page.getByTestId('app-brand');
   await expect(brand).toBeVisible();
-  await expect(page.getByRole('heading', { level: 1, name: 'PDFTools' })).toBeVisible();
+  await expect(page.getByRole('heading', { level: 1, name: 'Triya PDF' })).toBeVisible();
   const qat = page.getByRole('toolbar', { name: 'Quick access toolbar' });
   const [b, q] = await Promise.all([brand.boundingBox(), qat.boundingBox()]);
   expect(b && q && b.x + b.width <= q.x).toBe(true);

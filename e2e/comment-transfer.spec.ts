@@ -175,7 +175,7 @@ test('from our JSON export, by keyboard: shifted a page; a newer version is refu
   await expect(dialog).toBeVisible();
   await dialog.getByRole('button', { name: 'Choose PDF or JSON…' }).focus();
   await page.keyboard.press('Enter');
-  await expect(dialog.getByRole('alert')).toContainText('made by a newer version of PDFTools');
+  await expect(dialog.getByRole('alert')).toContainText('made by a newer version of Triya PDF');
 
   await stubPicker(page, 'pump (annotations).json', json, 'application/json');
   await dialog.getByRole('button', { name: 'Choose PDF or JSON…' }).focus();

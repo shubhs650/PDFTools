@@ -275,7 +275,7 @@ test('the user’s own default applies to the next comment, survives a reload, a
   await section('Privacy');
   const table = backstage
     .getByTestId('privacy')
-    .getByRole('table', { name: 'Data PDFTools keeps on this device' });
+    .getByRole('table', { name: 'Data Triya PDF keeps on this device' });
   await expect(table.getByRole('cell', { name: /pdftools › toolDefaults/ })).toBeVisible();
   await section('Settings');
   await backstage.getByRole('button', { name: 'Clear all local data…' }).click();

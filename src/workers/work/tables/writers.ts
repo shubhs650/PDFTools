@@ -5,6 +5,7 @@
 // ExcelJS is passed in (lazy in the Work worker, the Node package in tests).
 import type ExcelJS from 'exceljs';
 import type { TableData } from '../../../model/tableGrid';
+import { APP_NAME } from '../../../i18n/appName';
 
 export interface NamedTable<T extends { page: number } = TableData> {
   /** Sheet / file name stem, e.g. "p3-t1". */
@@ -54,7 +55,7 @@ export async function buildTablesWorkbook(
   checkpoint: () => Promise<void>,
 ): Promise<ArrayBuffer> {
   const wb = new lib.Workbook();
-  wb.creator = 'PDFTools';
+  wb.creator = APP_NAME;
   for (const { name, data } of tables) {
     await checkpoint();
     const ws = wb.addWorksheet(name);

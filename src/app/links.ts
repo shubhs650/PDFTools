@@ -22,19 +22,19 @@ export const EXTERNAL_LINK = { target: '_blank', rel: 'noopener noreferrer' } as
 export interface IssueText {
   /** The issue title. */
   title: string;
-  /** The body, with {{app}}, {{browser}} and {{os}} already filled in by i18n. */
-  body: (env: { app: string; browser: string; os: string }) => string;
+  /** The body, with {{version}}, {{browser}} and {{os}} filled in by i18n ({{app}} is the name). */
+  body: (env: { version: string; browser: string; os: string }) => string;
 }
 
 export interface IssueEnv {
   /** APP_VERSION: package version + build commit. */
-  app: string;
+  version: string;
   nav: UaSource;
 }
 
 /** The new-issue URL: title and body with the app version, browser and OS only. */
 export function issueUrl(env: IssueEnv, text: IssueText): string {
-  const body = text.body({ app: env.app, browser: browserOf(env.nav), os: osOf(env.nav) });
+  const body = text.body({ version: env.version, browser: browserOf(env.nav), os: osOf(env.nav) });
   const q = new URLSearchParams({ title: text.title, body });
   return `${NEW_ISSUE_URL}?${q.toString()}`;
 }
@@ -42,7 +42,7 @@ export function issueUrl(env: IssueEnv, text: IssueText): string {
 /** The new-issue URL for this build and browser, in the UI language. */
 export function currentIssueUrl(t: TFunction): string {
   return issueUrl(
-    { app: APP_VERSION, nav: navigator },
+    { version: APP_VERSION, nav: navigator },
     { title: t('topBar.issue.title'), body: (env) => t('topBar.issue.body', env) },
   );
 }

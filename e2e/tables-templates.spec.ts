@@ -100,7 +100,7 @@ test('save a template, apply it to pages 1–5, export, add to the review; clear
   await section(page, 'Privacy');
   const table = backstage(page)
     .getByTestId('privacy')
-    .getByRole('table', { name: 'Data PDFTools keeps on this device' });
+    .getByRole('table', { name: 'Data Triya PDF keeps on this device' });
   await expect(table.getByRole('cell', { name: /pdftools › tableTemplates/ })).toBeVisible();
   await section(page, 'Settings');
   await backstage(page).getByRole('button', { name: 'Clear all local data…' }).click();

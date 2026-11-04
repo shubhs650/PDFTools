@@ -13,6 +13,7 @@
 import { existsSync, readFileSync, readdirSync } from 'node:fs';
 import { join } from 'node:path';
 import { licenseFromManifest, parseSpdx, type SpdxNode } from './license-policy.ts';
+import en from '../src/i18n/en.json' with { type: 'json' };
 
 export const NOTICES_FILE = 'third-party-notices.txt';
 
@@ -195,7 +196,10 @@ export function collectNotices(root: string): NoticePackage[] {
 const RULE = '-'.repeat(78);
 
 /** The notices file. Identical texts are printed once and referenced afterwards. */
-export function renderNotices(pkgs: readonly NoticePackage[], app = 'PDFTools'): string {
+export function renderNotices(
+  pkgs: readonly NoticePackage[],
+  app: string = en.app.name, // ADR-023 D-41: the product name from its one i18n key
+): string {
   const out: string[] = [
     `${app} — third-party notices`,
     '',

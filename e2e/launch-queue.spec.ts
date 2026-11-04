@@ -77,7 +77,7 @@ test('the manifest is linked, valid and points at our icons', async ({
     file_handlers: unknown[];
     launch_handler: unknown;
   };
-  expect(m.name).toBe('PDFTools');
+  expect(m.name).toBe('Triya PDF');
   expect(m.file_handlers).toHaveLength(1);
   expect(m.launch_handler).toEqual({ client_mode: 'focus-existing' });
   for (const icon of m.icons) {

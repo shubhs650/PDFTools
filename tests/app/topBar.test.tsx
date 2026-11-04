@@ -32,8 +32,8 @@ const params = (url: string) => new URL(url).searchParams;
 describe('issue URL builder (rule 10)', () => {
   it('opens the repository new-issue page with title and body', () => {
     const url = issueUrl(
-      { app: '0.9.0+abc1234', nav: CHROME },
-      { title: 'Problem: ', body: (e) => `App: ${e.app}\nBrowser: ${e.browser}\nOS: ${e.os}` },
+      { version: '0.9.0+abc1234', nav: CHROME },
+      { title: 'Problem: ', body: (e) => `App: ${e.version}\nBrowser: ${e.browser}\nOS: ${e.os}` },
     );
     expect(url.startsWith(`${NEW_ISSUE_URL}?`)).toBe(true);
     expect(params(url).get('title')).toBe('Problem: ');
@@ -42,9 +42,13 @@ describe('issue URL builder (rule 10)', () => {
 
   it('holds only the app version, browser and OS families — never the full user agent', () => {
     const body = params(
-      issueUrl({ app: 'dev', nav: CHROME }, { title: '', body: (e) => JSON.stringify(e) }),
+      issueUrl({ version: 'dev', nav: CHROME }, { title: '', body: (e) => JSON.stringify(e) }),
     ).get('body');
-    expect(JSON.parse(body ?? '')).toEqual({ app: 'dev', browser: 'Chrome 151', os: 'Windows' });
+    expect(JSON.parse(body ?? '')).toEqual({
+      version: 'dev',
+      browser: 'Chrome 151',
+      os: 'Windows',
+    });
     expect(body).not.toContain('Mozilla');
   });
 
@@ -62,7 +66,8 @@ describe('issue URL builder (rule 10)', () => {
       const url = decodeURIComponent(currentIssueUrl(t));
       expect(url).not.toMatch(/budget|ZEBRA|doc-7f3a|\.pdf/i);
       const body = params(currentIssueUrl(t)).get('body') ?? '';
-      expect(body).toContain('App: dev');
+      expect(body).toContain('Triya PDF version: dev');
+      expect(body).not.toContain('PDFTools');
       expect(body).toMatch(/Browser: /);
       expect(body).toMatch(/OS: /);
     } finally {
@@ -76,7 +81,7 @@ describe('issue URL builder (rule 10)', () => {
 describe('top bar', () => {
   it('shows the product name as the page heading next to the mark', () => {
     render(<Brand />);
-    expect(screen.getByRole('heading', { level: 1, name: 'PDFTools' })).toBeTruthy();
+    expect(screen.getByRole('heading', { level: 1, name: 'Triya PDF' })).toBeTruthy();
   });
 
   it('draws the app icon from public/icons/icon.svg (no request, same artwork)', () => {

@@ -166,7 +166,7 @@ test('Comment Styles Palette: export and import; imported styles are in the pale
     page.waitForEvent('download'),
     dialog.getByRole('button', { name: 'Export…' }).click(),
   ]);
-  expect(download.suggestedFilename()).toBe('comment-styles.pdftools-styles.json');
+  expect(download.suggestedFilename()).toBe('comment-styles.triyapdf-styles.json');
   const path = await download.path();
   const exported = JSON.parse(await readFile(path, 'utf8')) as Record<string, unknown>;
   expect(exported).toEqual({
@@ -192,7 +192,7 @@ test('Comment Styles Palette: export and import; imported styles are in the pale
     ),
   });
   await expect(dialog.getByTestId('comment-styles-message')).toHaveText(
-    'Nothing imported. A style in the file has no name or a property PDFTools cannot use.',
+    'Nothing imported. A style in the file has no name or a property Triya PDF cannot use.',
   );
   await input.setInputFiles({
     name: 'good.pdftools-styles.json',
