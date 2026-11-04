@@ -20,6 +20,7 @@ const ACTION_LABELS: Record<
   'tab.prev': msg('shortcuts.action.tabPrev'),
   'tool.cancel': msg('shortcuts.action.toolCancel'),
   'tool.enter': msg('shortcuts.action.toolEnter'),
+  'annotation.editText': msg('shortcuts.action.annotationEditText'),
   'menu.context': msg('shortcuts.action.menuContext'),
   'edit.copy': msg('shortcuts.action.editCopy'),
   'edit.paste': msg('shortcuts.action.editPaste'),

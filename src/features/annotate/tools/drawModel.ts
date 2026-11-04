@@ -165,3 +165,72 @@ export function centred(
     size,
   };
 }
+
+/** A callout's text box when one drag places it (the plugin's click-placed size, page points). */
+export const CALLOUT_BOX = { width: 150, height: 40 } as const;
+/** The callout's knee: this far (page points) before the box, at most half the way back. */
+export const CALLOUT_KNEE = 18;
+
+export interface CalloutPlacement {
+  knee: Pt;
+  box: { origin: Pt; size: { width: number; height: number } };
+}
+
+/**
+ * A callout drawn with one drag (M7-03, ADR-023 D-43 f; the PDF-XChange
+ * gesture): the arrow tip where the drag started, the text box beside where it
+ * ended (on the far side from the tip, its middle at the pointer's height),
+ * kept on the page, and the knee placed automatically a short way before the
+ * box, level with its middle.
+ */
+export function calloutFromDrag(
+  tip: Pt,
+  end: Pt,
+  page: { width: number; height: number },
+  size: { width: number; height: number } = CALLOUT_BOX,
+): CalloutPlacement {
+  const right = end.x >= tip.x;
+  const clamp = (v: number, max: number) => Math.min(Math.max(v, 0), Math.max(max, 0));
+  const origin = {
+    x: clamp(right ? end.x : end.x - size.width, page.width - size.width),
+    y: clamp(end.y - size.height / 2, page.height - size.height),
+  };
+  // The box's side that faces the tip, at its middle: where the line meets it.
+  const join = { x: right ? origin.x : origin.x + size.width, y: origin.y + size.height / 2 };
+  const back = Math.min(CALLOUT_KNEE, Math.abs(join.x - tip.x) / 2);
+  return {
+    knee: { x: right ? join.x - back : join.x + back, y: join.y },
+    box: { origin, size: { ...size } },
+  };
+}
+
+/** The rect around a callout's tip, knee and box, `pad` wider all round (its drag preview). */
+export function calloutBounds(
+  tip: Pt,
+  p: CalloutPlacement,
+  pad: number,
+): { origin: Pt; size: { width: number; height: number } } {
+  const { origin, size } = p.box;
+  const xs = [tip.x, p.knee.x, origin.x, origin.x + size.width];
+  const ys = [tip.y, p.knee.y, origin.y, origin.y + size.height];
+  const x = Math.min(...xs) - pad;
+  const y = Math.min(...ys) - pad;
+  return {
+    origin: { x, y },
+    size: { width: Math.max(...xs) + pad - x, height: Math.max(...ys) + pad - y },
+  };
+}
+
+/**
+ * Where a callout's line meets its box: the middle of the side facing the
+ * knee (the annotation plugin's rule, so a preview matches what it makes).
+ */
+export function calloutJoin({ knee, box }: CalloutPlacement): Pt {
+  const cx = box.origin.x + box.size.width / 2;
+  const cy = box.origin.y + box.size.height / 2;
+  const dx = knee.x - cx;
+  const dy = knee.y - cy;
+  if (Math.abs(dx) >= Math.abs(dy))
+    return { x: dx > 0 ? box.origin.x + box.size.width : box.origin.x, y: cy };
+  return { x: cx, y: dy > 0 ? box.origin.y + box.size.height : box.origin.y };
+}

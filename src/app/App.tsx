@@ -5,6 +5,7 @@ import { DropZone } from '../features/open/DropZone';
 import { installLaunchQueue } from '../features/open/launchQueue';
 import { startBackgroundPrecache, startOffline } from '../features/offline/offline';
 import { OfflineStatus, UpdateWaitDialog } from '../features/offline/OfflineStatus';
+import { ToolHint } from '../features/annotate/tools/ToolHint';
 import { installRecovery } from '../features/recovery/recovery';
 import { registerFormCommands } from '../features/forms/commands';
 import { registerPrintCommands } from '../features/print/commands';
@@ -141,6 +142,7 @@ export function App() {
                 <SaveStatus />
                 <RedactionStatus />
                 <OfflineStatus />
+                <ToolHint />
               </>
             ),
             pageNav: <PageNav />,

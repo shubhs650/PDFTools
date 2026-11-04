@@ -2,6 +2,7 @@
 import { cancelDrawing } from '../annotate/tools/drawTools';
 import { deselectAnnotations } from '../annotate/commands';
 import { endTextEdit } from '../annotate/textEdit';
+import { focusDocumentView } from './focus';
 import { isFieldTool } from '../forms/fieldModel';
 import { registerCommand } from '../../app/commands/dispatch';
 import { clearSelection } from '../select/commands';
@@ -24,15 +25,6 @@ export const VIEW_MODE_COMMANDS: readonly [string, ViewMode][] = [
 ];
 
 const zoomIs = (z: ZoomSetting): boolean => selectActive(documentStore.getState())?.view.zoom === z;
-
-/** The focus back on the active document's view, so Delete and the arrows act on its comments. */
-function focusDocumentView(): void {
-  const id = selectActive(documentStore.getState())?.meta.id;
-  if (!id) return;
-  document
-    .querySelector<HTMLElement>(`[data-testid="document-view"][data-doc-id="${CSS.escape(id)}"]`)
-    ?.focus({ preventScroll: true });
-}
 
 export function registerViewCommands(): () => void {
   const zoomCommand = (id: string, target: ZoomTarget, pressed: () => boolean) =>

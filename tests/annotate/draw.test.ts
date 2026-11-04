@@ -1,6 +1,11 @@
 import { PdfActionType } from '@embedpdf/models';
 import { describe, expect, it } from 'vitest';
 import {
+  CALLOUT_BOX,
+  CALLOUT_KNEE,
+  calloutBounds,
+  calloutFromDrag,
+  calloutJoin,
   centred,
   constrain,
   DRAW_COMMANDS,
@@ -79,5 +84,49 @@ describe('link targets (M3-09)', () => {
       action: { type: PdfActionType.URI, uri: 'https://example.com/' },
     });
     expect(linkTarget({ kind: 'url', url: 'javascript:x' }, 3).error).toBe('url');
+  });
+});
+
+describe('a callout in one drag (M7-03, D-43 f)', () => {
+  const page = { width: 595, height: 842 };
+
+  it('puts the box beside the release point, on the far side from the tip, its middle level with it', () => {
+    const { box } = calloutFromDrag({ x: 80, y: 300 }, { x: 220, y: 220 }, page);
+    expect(box).toEqual({
+      origin: { x: 220, y: 220 - CALLOUT_BOX.height / 2 },
+      size: { ...CALLOUT_BOX },
+    });
+    // Dragged to the left: the box ends at the release point.
+    const left = calloutFromDrag({ x: 400, y: 300 }, { x: 300, y: 250 }, page).box;
+    expect(left.origin.x + left.size.width).toBe(300);
+  });
+
+  it('places the knee a short way before the box, level with its middle', () => {
+    const p = calloutFromDrag({ x: 80, y: 300 }, { x: 220, y: 220 }, page);
+    expect(p.knee).toEqual({ x: 220 - CALLOUT_KNEE, y: 220 });
+    // Where the line meets the box (the plugin's rule): the side facing the knee.
+    expect(calloutJoin(p)).toEqual({ x: 220, y: 220 });
+    const left = calloutFromDrag({ x: 400, y: 300 }, { x: 300, y: 250 }, page);
+    expect(left.knee).toEqual({ x: 300 + CALLOUT_KNEE, y: 250 });
+    expect(calloutJoin(left)).toEqual({ x: 300, y: 250 });
+  });
+
+  it('keeps a short drag’s knee between the tip and the box', () => {
+    const p = calloutFromDrag({ x: 100, y: 100 }, { x: 110, y: 60 }, page);
+    expect(p.knee).toEqual({ x: 105, y: 60 });
+  });
+
+  it('keeps the box on the page', () => {
+    const { box } = calloutFromDrag({ x: 400, y: 20 }, { x: 560, y: 5 }, page);
+    expect(box.origin).toEqual({ x: page.width - CALLOUT_BOX.width, y: 0 });
+  });
+
+  it('bounds the tip, knee and box for the preview', () => {
+    const tip = { x: 80, y: 300 };
+    const p = calloutFromDrag(tip, { x: 220, y: 220 }, page);
+    expect(calloutBounds(tip, p, 1)).toEqual({
+      origin: { x: 79, y: 199 },
+      size: { width: 370 - 80 + 2, height: 300 - 200 + 2 },
+    });
   });
 });
