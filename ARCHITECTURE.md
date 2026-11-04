@@ -1,7 +1,7 @@
-# PDFTools — Architecture & Product Specification (Rev 0.10)
+# Triya PDF — Architecture & Product Specification (Rev 0.11)
 
-**App:** PDFTools · **URL:** `pdf-tools.openengtools.com` · **Platform:** Open Engineering Tools (OET)
-**Status:** Approved for implementation · **Last updated:** 02-Nov-2026 (Rev 0.10)
+**App:** Triya PDF (formerly PDFTools, D-41) · **URL:** `pdf-tools.openengtools.com` · **Platform:** Open Engineering Tools (OET)
+**Status:** Approved for implementation · **Last updated:** 04-Nov-2026 (Rev 0.11)
 **Companion file:** `CLAUDE.md` (standing rules for the coding agent — read it first)
 
 > This document is the single source of truth. Where code and this document disagree, this document wins until it is deliberately amended. Decisions are numbered (D-xx) so commits, issues and ADRs can reference them.
@@ -15,6 +15,8 @@
 > **Rev 0.4 amendment** — [ADR-010](docs/adr/010-s6-fluent-icons.md) (owner-approved): Fluent **Regular** icons (Filled for active states) replace the deprecated Color style (D-20, §8).
 
 > **Rev 0.5 amendment** — [ADR-017](docs/adr/017-m4-redaction.md) decisions 3 and 5 (owner-approved 2026-09-29): §7.9 steps 0 and 3 (crossing paths re-cut through PDFium's page-object API; wider sanitize list).
+
+> **Rev 0.11 amendment** — [ADR-023](docs/adr/023-m7-second-beta-review.md) (owner-approved 2026-11-04): **M7 — second beta review** — product name **Triya PDF** (D-41), dark theme with a top-bar toggle (D-42), text comment interaction and marquee selection (D-43), sticky note popup (D-44), pasting an image onto the page (D-45); 50 % highlights and a black Courier typewriter (D-37); Home tab layout with icon-only groups (D-36) (§2, §7.1, §7.3, §8, §10.3, §13 M7, §14).
 
 > **Rev 0.10 amendment** — [ADR-022](docs/adr/022-m6-spikes-s18-s22.md) (owner-approved 2026-11-02): M6 spike results S18 – S22 — the signature font package and the form plugin's license exception (§3.2); Attach File by direct PDFium calls (§7.1); the modify + annotate gate and `/TU` for form fields (§7.10); the bundled handwriting font (§7.11); the copy route, owner-rights gate and 127-byte limit for passwords (§7.12); our own outline writer for bookmark editing (§7.15).
 
@@ -77,7 +79,7 @@ Tablet/phone UI · Safari parity · PDF text/content editing · form design beyo
 | D-17 | Core-first loading, remaining modules background-precached, visible "✓ Ready offline" |
 | D-18 | Updates never reload while documents are open; "Update ready" applies on click / next launch |
 | D-19 | Protected PDFs behave like Adobe Reader: open password prompt, permission flags honored, owner password unlocks |
-| D-20 | Fluent UI System Icons (MIT), **Regular** style (Filled for active/toggled states; Color style is deprecated upstream — ADR-010); custom engineering icons drawn to match. Light theme default, token-based colors |
+| D-20 | Fluent UI System Icons (MIT), **Regular** style (Filled for active/toggled states; Color style is deprecated upstream — ADR-010); custom engineering icons drawn to match. Light theme default, token-based colors; **dark theme** via the top-bar toggle (D-42, ADR-023) |
 | D-21 | Installable PWA, `.pdf` file handler, single window (new files → new tabs) |
 | D-22 | Network: zero from app except update checks + opt-in error report; strict CSP; analytics = Cloudflare **server-side** request counts only — no analytics script, no CSP exception (ADR-001 B1) |
 | D-23 | Status schemes (presets + custom, export/import) drive stamps and CRS status; image stamps |
@@ -93,10 +95,15 @@ Tablet/phone UI · Safari parity · PDF text/content editing · form design beyo
 | D-33 | Interop verified against **Acrobat Reader + PDF-XChange**. Bluebeam "expected, not verified" — never claimed publicly until confirmed |
 | D-35 | App shell (ADR-021): product mark and name in the banner; **OpenEngTools home** and **Report an issue on GitHub** open in a new tab (user navigations, no app request, no document content); **Full screen** of the whole app; status-bar snapping is a magnet toggle |
 | D-36 | **Adaptive ribbon** (ADR-021): groups step down from full labels to icons to a group dropdown so every tab fits 1280 px; ribbon tabs gain **Form** |
-| D-37 | **Comment styles** (ADR-021): per-tool defaults (red, 10 pt text, 1 pt lines; highlight and sticky note yellow) and style palettes, stored on the device |
+| D-37 | **Comment styles** (ADR-021): per-tool defaults (red, 10 pt text, 1 pt lines; highlight and sticky note yellow; highlights at 50 % opacity and the typewriter black Courier — ADR-023) and style palettes, stored on the device |
 | D-38 | **Comment workflow** (ADR-021): context menus; cut/copy/paste of comments on the page; flatten; Attach File; Snapshot; Locked/Printable/Marked flags and review history; bookmark editing |
 | D-39 | **Form field creation** (ADR-021): Text, Check Box, Radio, List, Dropdown via EmbedPDF's form plugin; no JavaScript |
 | D-40 | **Password security** (apply/remove, new file, full rewrite, verified, AES-256) and **visual signatures** (draw/type/image as standard annotations; not certificate signing) (ADR-021) |
+| D-41 | **Product name Triya PDF** (ADR-023): every user-visible place; the domain (D-28), repository, storage names, PWA `id` and internal ids are unchanged |
+| D-42 | **Dark theme** (ADR-023): light/dark toggle in the top bar, light default, stored on the device, pages stay white; tokens only |
+| D-43 | **Text comment interaction** (ADR-023): a new text comment starts editing with its placeholder selected; one click selects and drags; double-click edits; every exit commits the edit; our own text-editing menu; marquee, Ctrl+ and Shift+click selection; a new comment is selected |
+| D-44 | **Sticky note popup** (ADR-023): a multi-line popup window on the page (author, date, menu, status, lock, Reply); `/Popup` saved by our object layer if spike S23 passes |
+| D-45 | **Paste an image** (ADR-023): an image on the system clipboard becomes an Image Stamp scaled to fit the page; needs annotate |
 | D-34 | **OCR** (Rev 1 item 1, ADR-020): Tesseract WASM core in its own worker, five languages (English precached, the rest on first use), invisible text layer written by our object layer with a glyphless font, pages with text skipped unless asked; needs the modify permission |
 
 ---
@@ -274,7 +281,10 @@ Types: **every annotation type/tool supported by EmbedPDF** (ADR-001 B7). No cus
 - Undo/redo per document, unlimited within a session.
 - Comments pane: list, filter (author, status, type, page), sort, reply, set status, jump-to.
 - **Comment transfer:** import comments from another PDF (e.g. an earlier revision; page range, filters, page mapping, duplicates skipped by `/NM`) or from our JSON export, and copy/paste comments between documents; imported comments are standard annotation objects saved by the next Ctrl+S (ADR-018).
-- **Styles** (D-37, ADR-021): every tool has default properties (red `#FF0000`, 10 pt text, 1 pt lines and borders; highlight and sticky note yellow), editable in the Properties pane while the tool is active; a **style palette** per tool (presets incl. cloudy variants, the user's own styles, Comment Styles Palette manager, export/import `.pdftools-styles.json`). Styles are property sets applied through the normal property path; appearances stay PDFium's.
+- **Styles** (D-37, ADR-021): every tool has default properties (red `#FF0000`, 10 pt text, 1 pt lines and borders; highlight and sticky note yellow; Highlight, Highlight Area and Free Highlight at 50 % opacity; the typewriter black Courier — ADR-023), editable in the Properties pane while the tool is active; a **style palette** per tool (presets incl. cloudy variants, the user's own styles, Comment Styles Palette manager, export/import `.pdftools-styles.json`). Styles are property sets applied through the normal property path; appearances stay PDFium's.
+- **Text comments** (D-43, ADR-023): a new text box, typewriter or callout is selected and edits with "Type here" selected; one click selects it (box, text or callout line) and a drag moves it; double-click (Enter / F2) edits; Esc, a click elsewhere, a tool or tab change, Ctrl+S and closing all commit the edit as one undo step; right-click while editing opens our text menu (Undo, Redo, Cut, Copy, Paste, Delete, Select All, Text Style for the whole comment, Properties); a callout can be drawn with one drag. **Selection:** marquee with Select Comments (and Select on empty space), Ctrl+ / Shift+click toggle, a newly drawn comment is selected.
+- **Sticky note popup** (D-44, ADR-023): a popup window on the page for `/Text` notes — header (author, date), multi-line text, menu, status, lock, Reply; draggable and resizable; opened on creation and double-click. Its position and open state are saved as a standard `/Popup` by our object layer only if spike S23 passes.
+- **Paste an image** (D-45, ADR-023): Ctrl+V or the page menu's Paste with an image on the system clipboard places an Image Stamp, scaled to fit inside the page (90 %, aspect kept, never enlarged); one undo step; needs annotate.
 - **Context menus and clipboard** (D-38, ADR-021): right-click (or Shift+F10 / Menu key) on a comment on the page, a comment card, the page background, bookmarks and thumbnails; every item is a command-table command. Cut/Copy/Paste of comments on the page (Ctrl+X/C/V; Paste from the page menu lands at the pointer).
 - **Flatten** selected or all comments (page range) into page content in the Render worker; one undo step; capability **modify**; marks the document "optimize recommended".
 - **Attach File**: a standard `/FileAttachment` annotation with an embedded file and a paperclip appearance drawn by us — the one exception to "no custom appearance streams" — created by **direct PDFium calls in the Render worker** (`FPDFAnnot_AddFileAttachment`, `FPDFAttachment_SetFile`, `FPDFAnnot_SetAP`, …), not by our object layer; move / resize use their own Render call (`FPDFAnnot_SetRect`), delete uses the engine; saved in the narrow tail (spike S22, ADR-022 decision 1).
@@ -289,7 +299,7 @@ First markup triggers a dialog: name, initials, discipline, company (optional). 
 - `StatusScheme = { id, name, codes: [{ code, label, color }] }`. Presets (e.g. 1/2/3/4; A/B/C/D; Approved / Approved as Noted / Revise & Resubmit / Rejected / For Information).
 - Custom schemes; export/import as `.pdftools-scheme.json`.
 - Dynamic stamps generated from active scheme: code, label, reviewer, date, doc number/rev. Written as Stamp annotations with appearance streams.
-- Image stamps: import PNG/JPG/PDF page.
+- Image stamps: import PNG/JPG/PDF page, or paste an image from the clipboard (D-45).
 
 ### 7.4 Measurement (D-14)
 - Tools: distance, perimeter (polyline), area (polygon); calibration tool.
@@ -360,11 +370,11 @@ New (from the current view), rename (F2), delete / delete but keep children / de
 ## 8. UI specification
 
 - Ribbon tabs (Rev 0) — this list is authoritative; `docs/ui-reference/` images are layout-only, and out-of-scope commands are omitted rather than shown disabled (ADR-001 B6): **File** (backstage: open, recent, save, save as, save optimized, print, properties, settings, about/privacy), **Home**, **View**, **Comment**, **Form** (ADR-021), **Measure**, **Organize**, **Convert**, **Protect** (redact, security info, signatures), **Help**.
-- **Top bar** (D-35, ADR-021): product mark and "PDFTools" at the left; **OpenEngTools** (standard Home icon), **Report an issue** (GitHub, new tab, version/browser/OS only) and **Full screen** (the whole app; Esc leaves) at the right.
+- **Top bar** (D-35, ADR-021): product mark and "Triya PDF" at the left (D-41); a **light/dark theme** toggle (D-42), **OpenEngTools** (standard Home icon), **Report an issue** (GitHub, new tab, version/browser/OS only) and **Full screen** (the whole app; Esc leaves) at the right.
 - Large (32 px) and small (16/20 px) buttons, groups with labels, split buttons and dropdowns, collapsible ribbon, keyboard access (Alt key tips — nice-to-have).
 - **Adaptive ribbon** (D-36, ADR-021): when a tab does not fit, groups step down by priority — full labels → icons with short labels → icon-only grid → one group button opening a dropdown — so every tab fits 1280 px and every command keeps its accessible name and keyboard path. Home's rotate buttons rotate the **view**; Organize rotates pages.
 - Icons: Fluent System Icons **Regular** style (Filled for active/toggled states), colored via design tokens (`currentColor`); small buttons use 20 px glyphs, large (32 px) buttons use the native 32 px glyph or the 28/24 px glyph scaled up. The 23 missing icons listed in [ADR-010](docs/adr/010-s6-fluent-icons.md) and [S6-icon-map.md](docs/plan/S6-icon-map.md) (incl. cloud, calibrate, scale viewport, CRS export, stamp; express extract uses Fluent `TableLightning`) are drawn in the same grid/line style in `/src/ui/icons`. Fluent icons are imported per icon by path, via one registry (ADR-010).
-- Design tokens (color, spacing, type, radius, elevation) as CSS variables; light theme default; dark theme deferred but tokens must support it.
+- Design tokens (color, spacing, type, radius, elevation) as CSS variables; light theme default; **dark theme** through the top-bar toggle (D-42, ADR-023), stored on the device; PDF pages stay white in both; no literal colours outside the tokens.
 - Layout minimum 1280 px wide.
 - Start screen: open file, drop zone, recent files (clearable).
 - **Do not copy PDF-XChange artwork or proprietary visual assets.** Layout conventions only.
@@ -408,7 +418,7 @@ Analytics uses **Cloudflare's server-side request analytics only**. No beacon sc
 - The top bar's **Report an issue** opens the repository's GitHub new-issue page in a new tab, prefilled with app version, commit, browser and OS only; the app itself sends nothing (D-35, ADR-021).
 
 ### 10.3 Local data
-IndexedDB: profile, schemes, settings, recent-file handles, table templates, comment tool defaults and styles, saved visual signatures (ADR-021). OPFS: recovery snapshots. Privacy page lists all of it; Settings → "Clear all local data".
+IndexedDB: profile, schemes, settings, recent-file handles, table templates, comment tool defaults and styles, saved visual signatures (ADR-021); the theme choice (ADR-023, stored before first paint). OPFS: recovery snapshots. Privacy page lists all of it; Settings → "Clear all local data".
 
 ---
 
@@ -476,13 +486,16 @@ Convert → Recognize Text (OCR) per §7.14: spike S17 and ADR-020, the OCR work
 ### M6 — Beta review (ADR-021)
 The beta users' review (2026-11-01): top bar and full screen, context menus and page copy/paste, comment styles and defaults, Comments pane and property grid, adaptive ribbon with new Comment, Home and Form tabs, flatten, snapshot, attach file, bookmark editing, password security, visual signatures, form field creation; spikes S18–S22; acceptance (`docs/plan/M6.md`).
 
+### M7 — Second beta review (ADR-023)
+The second beta review (2026-11-04): the name Triya PDF, text comment editing and selection fixes (bugs B1–B14), right-click menu in text, sticky note popup (spike S23), 50 % highlights and a black Courier typewriter, pasting images, the Home tab layout, form highlight for check boxes and radio buttons, the dark theme; acceptance (`docs/plan/M7.md`).
+
 ---
 
 ## 14. Roadmap after Rev 0
 
 **Rev 1 (in order):** 1. OCR (scanned docs, search in scans, scanned tables) — **in progress as M5** (ADR-020) · 2. CRS round-trip import + custom column templates · 3. Protect: create certificate-based digital signatures from the user's certificate file (offline) (applying passwords and visual signatures moved to M6, ADR-021) · small items: stamp designer, shortcut remapping, poster tiling.
 
-**Rev 2+:** PDF text editing · form design beyond M6's basic fields · advanced page tools (headers/footers, watermarks, Bates) · tablet UI · local folder search · native wrapper (.exe/.msi) · dark theme.
+**Rev 2+:** PDF text editing · form design beyond M6's basic fields · advanced page tools (headers/footers, watermarks, Bates) · tablet UI · local folder search · native wrapper (.exe/.msi) (the dark theme moved to M7, ADR-023).
 
 **Parked:** Revision compare for drawings — **blocked pending the owner's employment-agreement / IP clearance.** Do not design or build until explicitly unblocked. If later cleared: clean-room implementation from public techniques only.
 
