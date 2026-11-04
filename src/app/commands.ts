@@ -1667,6 +1667,81 @@ export const COMMANDS: readonly CommandDef[] = [
     milestone: 'M6',
     shipped: true, // M6-02: opens the Properties pane
   },
+  // The text menu (M7-05, ADR-023 D-43 e): while a text comment is being edited,
+  // these act on its editor (its own undo history, the clipboard as plain text);
+  // Text Style changes the whole comment.
+  {
+    id: 'text.undo',
+    tab: 'menu',
+    group: 'menu',
+    size: 'small',
+    fluent: 'ArrowUndo',
+    milestone: 'M6',
+    shipped: true, // M7-05: the text menu
+  },
+  {
+    id: 'text.redo',
+    tab: 'menu',
+    group: 'menu',
+    size: 'small',
+    fluent: 'ArrowRedo',
+    milestone: 'M6',
+    shipped: true, // M7-05: the text menu
+  },
+  {
+    id: 'text.cut',
+    tab: 'menu',
+    group: 'menu',
+    size: 'small',
+    fluent: 'Cut',
+    milestone: 'M6',
+    shipped: true, // M7-05: the text menu
+  },
+  {
+    id: 'text.copy',
+    tab: 'menu',
+    group: 'menu',
+    size: 'small',
+    fluent: 'Copy',
+    milestone: 'M6',
+    shipped: true, // M7-05: the text menu
+  },
+  {
+    id: 'text.paste',
+    tab: 'menu',
+    group: 'menu',
+    size: 'small',
+    fluent: 'ClipboardPaste',
+    milestone: 'M6',
+    shipped: true, // M7-05: the text menu
+  },
+  {
+    id: 'text.delete',
+    tab: 'menu',
+    group: 'menu',
+    size: 'small',
+    fluent: 'Delete',
+    milestone: 'M6',
+    shipped: true, // M7-05: the text menu
+  },
+  {
+    id: 'text.selectAll',
+    tab: 'menu',
+    group: 'menu',
+    size: 'small',
+    fluent: 'SelectAllOn',
+    milestone: 'M6',
+    shipped: true, // M7-05: the text menu
+  },
+  {
+    id: 'text.style',
+    tab: 'menu',
+    group: 'menu',
+    size: 'small',
+    fluent: 'TextEditStyle',
+    milestone: 'M6',
+    shipped: true, // M7-05: the text menu
+  },
   // Comment flags, review mark and tool defaults in the comment menu (M6-06, D-37, D-38 f).
   {
     id: 'comment.toggleLocked',

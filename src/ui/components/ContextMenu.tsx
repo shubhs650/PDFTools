@@ -105,6 +105,20 @@ export function CommandDropdown({ trigger, label, entries }: CommandDropdownProp
   );
 }
 
+/**
+ * A context menu's command items, for a menu that adds its own parts around
+ * them (the text menu's Text Style, M7-05): inside a Radix context menu.
+ */
+export function ContextMenuItems({
+  entries,
+  args,
+}: {
+  entries: readonly ContextMenuEntry[];
+  args?: CommandArgs;
+}) {
+  return <Body kit={CONTEXT_KIT} entries={entries} args={args} />;
+}
+
 function Body({
   kit,
   entries,

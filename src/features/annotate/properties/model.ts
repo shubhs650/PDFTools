@@ -279,7 +279,15 @@ export function patchFor(
       out = { fontSize: clamp(Number(v), 4, 144) };
       break;
     case 'fontColor':
-      out = { fontColor: v };
+      // PDFium draws a text comment's text in its /DA colour, and EmbedPDF puts
+      // the border colour there whenever the comment has one (the text colour
+      // goes to a key no other viewer reads). So the text colour sets the
+      // border's too: the page, Acrobat and PDF-XChange show the colour picked
+      // (M7-05). The border has no colour control of its own.
+      out =
+        a.type === S.FREETEXT && typeof o['strokeColor'] === 'string'
+          ? { fontColor: v, strokeColor: v }
+          : { fontColor: v };
       break;
     case 'textAlign':
       out = { textAlign: clamp(Math.round(Number(v)), 0, 2) };
