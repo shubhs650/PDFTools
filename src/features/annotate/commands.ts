@@ -3,6 +3,7 @@
 // keys and cycle with Tab. Every change needs the annotate permission (rule 9);
 // the Render worker refuses independently (M1-20).
 import type { AnnotationCapability } from '@embedpdf/plugin-annotation';
+import { startTransition } from 'react';
 import type { HistoryCapability } from '@embedpdf/plugin-history';
 import { pagesBusy } from '../pages/pageOps';
 import { notify, registerCommand, type CommandHandler } from '../../app/commands/dispatch';
@@ -20,6 +21,7 @@ import { setSnapping, snapStore, toggleKind } from '../measure/snapping';
 import { openCrs } from '../crs/crsExport';
 import { capability, hostStore } from '../view/host';
 import { annotationCapability, annotationState } from './selection';
+import { joinStep } from './historyJoin';
 import { cycleTarget, pageAnnotations } from './model';
 import { DRAW_COMMANDS, isDrawTool, KEYBOARD_PLACED, VERTEX_TOOLS } from './tools/drawModel';
 import { isSignatureTool, placeAtCentre as placeSignatureAtCentre } from '../sign/signDocument';
@@ -90,8 +92,13 @@ export function nudge(dx: number, dy: number): void {
   const id = activeId();
   if (!id) return;
   const s = scope(id);
-  for (const t of selectedOf(id))
-    s?.moveAnnotation(t.object.pageIndex, t.object.id, { x: dx, y: dy }, 'delta');
+  // The whole selection moves as one undo step (M7-04).
+  selectedOf(id).forEach((t, i) => {
+    const move = () =>
+      s?.moveAnnotation(t.object.pageIndex, t.object.id, { x: dx, y: dy }, 'delta');
+    if (i === 0) move();
+    else joinStep(move);
+  });
 }
 
 const withSelection: Pick<CommandHandler, 'requires' | 'disabledReason'> = {
@@ -718,6 +725,10 @@ export function deselectAnnotations(): boolean {
   const id = activeId();
   if (!id) return false;
   const had = selectedOf(id).length > 0;
-  scope(id)?.deselectAnnotation();
+  // The plugin's state changes at once; a large selection's boxes re-render
+  // in slices (M7-04, rule 1).
+  startTransition(() => {
+    scope(id)?.deselectAnnotation();
+  });
   return had;
 }

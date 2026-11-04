@@ -56,6 +56,7 @@ function helpKeys(t: TFunction) {
     copy: k('edit.copy'),
     cut: k('edit.cut'),
     paste: k('edit.paste'),
+    selectAll: k('edit.selectAll'),
     menu: k('menu.context'),
   };
 }

@@ -41,9 +41,17 @@ export const MAX_ZOOM = 64;
 /** Pages whose text geometry the selection plugin keeps (it loads visible pages only). */
 export const SELECTION_PAGES = 30;
 
-/** Interaction modes: Select (EmbedPDF's default, with text selection) and Hand. */
+/**
+ * Interaction modes: Select and Select Text (EmbedPDF's default, with text
+ * selection), Select Comments (no text selection: a drag on the page is a
+ * marquee over the comments, M7-04) and Hand.
+ */
 export const POINTER_MODE = 'pointerMode';
+export const SELECT_COMMENTS_MODE = 'selectCommentsMode';
 export const HAND_MODE = 'handMode';
+
+/** A drag shorter than this (CSS px) is a click, not a marquee. */
+export const MARQUEE_MIN_DRAG_PX = 5;
 
 export const PLUGINS = [
   createPluginRegistration(DocumentManagerPluginPackage, { maxDocuments: MAX_DOCUMENTS }),
@@ -67,7 +75,11 @@ export const PLUGINS = [
   // geometry from the Work worker (RoutedPdfEngine). The React package adds the
   // clipboard writer.
   createPluginRegistration(InteractionManagerPluginPackage, {}),
-  createPluginRegistration(SelectionPluginPackage, { maxCachedGeometries: SELECTION_PAGES }),
+  createPluginRegistration(SelectionPluginPackage, {
+    maxCachedGeometries: SELECTION_PAGES,
+    // Comment marquee (M7-04): switched on per tool by DocumentView.
+    marquee: { enabled: false, minDragPx: MARQUEE_MIN_DRAG_PX },
+  }),
   // Annotations (M3-05, ADR-014): the plugin's store, tools, selection and
   // handles, with per-document undo from plugin-history. Its annotations load
   // from the Work worker and are drawn by our annotation tiles (RoutedPdfEngine,
