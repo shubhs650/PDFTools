@@ -26,6 +26,9 @@ function leaves(tree: unknown, prefix = ''): [string, string][] {
   );
 }
 
+// Keys from the scan are plain strings, outside the typed key set.
+const untypedT = i18n.t.bind(i18n) as unknown as (key: string, o: object) => string;
+
 describe('product name (D-41)', () => {
   it('lives in one key, app.name', () => {
     expect(en.app.name).toBe('Triya PDF');
@@ -40,13 +43,7 @@ describe('product name (D-41)', () => {
     const withApp = all.filter(([, v]) => v.includes('{{app}}'));
     expect(withApp.length).toBeGreaterThanOrEqual(35);
     for (const [k] of withApp) {
-      const text = i18n.t(k, {
-        version: '1.0',
-        browser: 'B',
-        os: 'O',
-        name: 'n',
-        count: 1,
-      } as never) as string;
+      const text = untypedT(k, { version: '1.0', browser: 'B', os: 'O', name: 'n', count: 1 });
       expect(text, k).toContain('Triya PDF');
       expect(text, k).not.toContain('{{app}}');
     }

@@ -1,15 +1,31 @@
-# PDFTools — Progress
+# Triya PDF — Progress
 
-_Last updated: 2026-11-04 (session 40: M7 plan from the second beta review)_
+_Last updated: 2026-11-04 (session 41: M7-01 rename to Triya PDF)_
 
 **Current milestone:** M7 — second beta review (plan in [docs/plan/M7.md](plan/M7.md), scope in
 [ADR-023](adr/023-m7-second-beta-review.md), **Accepted** 2026-11-04 with the recommended
-answers Q1–Q7; ARCHITECTURE.md Rev 0.11). Next: M7-01. **Previous milestone:** M6 — Beta review (plan in [docs/plan/M6.md](plan/M6.md), scope changes in
+answers Q1–Q7; ARCHITECTURE.md Rev 0.11). M7-01 done; next: M7-02. **Previous milestone:** M6 — Beta review (plan in [docs/plan/M6.md](plan/M6.md), scope changes in
 [ADR-021](adr/021-m6-beta-review.md), **Accepted** 2026-11-01; ARCHITECTURE.md Rev 0.10; M6-01 … M6-15 done, **M6 complete on the agent side** ([acceptance](acceptance/M6.md)); spike results in
 [ADR-022](adr/022-m6-spikes-s18-s22.md), **Accepted** 2026-11-02 (bookmark route B)). M5 — OCR: M5-01 … M5-04 done under [ADR-020](adr/020-m5-ocr.md); M5-05's owner
 interop is in the M6 pack (CHECKLIST §M6 R1–R4). Rev 0 (M0–M4) is complete on the agent side.
 
 ## Done
+
+- **Session 41 — M7-01 rename to Triya PDF (ADR-023 D-41).** The name lives in one key,
+  `app.name`; the 35 other messages that named the product say `{{app}}`, an i18next default
+  variable (`src/i18n/index.ts`), and code outside i18n (the Excel exports' creator in the Work
+  worker) reads `APP_NAME` from `src/i18n/appName.ts` (Vite's JSON named export keeps only the
+  `app` entry in the worker bundle). The browser tab (`index.html` and `main.tsx`), the PWA
+  manifest name, the top bar, Help, About, Privacy, error texts, the third-party notices header
+  and the GitHub issue body (`Triya PDF version: …`; its version variable is now `{{version}}`)
+  say Triya PDF. Exports suggest `.triyapdf-styles.json` and `.triyapdf-scheme.json`; the format
+  ids stay `pdftools-styles` / `pdftools-scheme`, so older `.pdftools-*` files still import (unit
+  test). Unchanged on purpose: the domain, repository, IndexedDB / OPFS / cache names,
+  `localStorage` keys, the PWA `id` (installed apps update in place), the test hook, signature
+  font family names, the OCR font resource name and the developer-facing report e-mail. Tests:
+  `tests/app/appName.test.ts` (name scan of en.json, manifest and `index.html`, kept ids, old
+  files import) and the e2e for the top bar, title, About, Privacy, Help, the issue body and
+  both export names. Release notes under the new name come with M7-12.
 
 - **Session 40 — M7 plan (second beta review, 2026-11-04).** The owner's
   `PDF_Tools_Trita_PDF_feedback2.docx` (name, dark mode, Home tab 3a–3g, Comment tab 4a–4f, Form
@@ -1739,7 +1755,7 @@ rel="noopener noreferrer">`; the commands `app.home` / `app.reportIssue` open th
 
 ## Next
 
-- **Agent:** M7-01 (rename to Triya PDF) in its own thread, then M7-02 … M7-12 serially; "Rapid moves can lose the last
+- **Agent:** M7-02 (text comment edit lifecycle, B1–B3) in its own thread, then M7-03 … M7-12 serially; "Rapid moves can lose the last
   one" is folded into M7-04 (B13).
 - **Owner (M6 interop pack):** [docs/acceptance/M6.md](acceptance/M6.md) §4 — CHECKLIST §M6
   P1–P19 and Q1–Q4 in Acrobat Reader and PDF-XChange with the files in

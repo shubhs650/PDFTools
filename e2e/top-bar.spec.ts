@@ -97,7 +97,7 @@ test('the two links open new tabs; the issue page has version, browser and OS on
   const url = new URL(issue.url());
   expect(`${url.origin}${url.pathname}`).toBe('https://github.com/shubhs650/PDFTools/issues/new');
   const body = url.searchParams.get('body') ?? '';
-  expect(body).toMatch(/App: \S+/);
+  expect(body).toMatch(/Triya PDF version: \S+/);
   expect(body).toMatch(/Browser: Chrom(e|ium) \d+/);
   expect(body).toMatch(/OS: (Linux|Windows|macOS)/);
   expect(decodeURIComponent(issue.url())).not.toMatch(/ZEBRA|budget|\.pdf/i);
