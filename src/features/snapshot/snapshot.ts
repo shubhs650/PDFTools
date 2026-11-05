@@ -14,6 +14,7 @@ import { appStore } from '../../app/store/appStore';
 import { documentStore, securityOf, selectActive } from '../../app/store/documentStore';
 import { t } from '../../i18n';
 import { allows } from '../../model/permissions';
+import { noteOutsideCopy } from '../annotate/transfer/clipboardClock';
 import { announceTransfer } from '../annotate/transfer/transferAnnounce';
 import { hostStore, renderEngine } from '../view/host';
 import { nudgeRect, snapshotScale, startRect } from './snapshotModel';
@@ -106,6 +107,8 @@ export function copySnapshot(docId: string, page: number, rect: Rect): void {
   }
   const png = renderSnapshot(docId, page, rect);
   let write: Promise<void>;
+  // A paste after this takes the snapshot, not comments copied before (M7-08).
+  noteOutsideCopy();
   try {
     write = navigator.clipboard.write([new ClipboardItem({ 'image/png': png })]);
   } catch (err) {

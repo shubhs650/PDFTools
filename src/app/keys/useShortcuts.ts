@@ -15,6 +15,15 @@ export function isEditable(el: Element | null): boolean {
   return el instanceof HTMLElement && el.isContentEditable;
 }
 
+/**
+ * Focus is in the document area for its keys: a sticky note's window (M7-06)
+ * is on the page but keeps its own keys (Tab walks its controls, the arrows
+ * move it, Delete is text).
+ */
+export function inDocumentScope(active: Element | null): boolean {
+  return Boolean(active?.closest('#document-panel') && !active.closest('[data-note-popup]'));
+}
+
 export interface FocusContext {
   editable: boolean;
   /** Focus is inside the document area. */
@@ -62,16 +71,12 @@ export function useShortcuts(): void {
         e,
         {
           editable: isEditable(active),
-          // A sticky note's window (M7-06) is on the page but keeps its own
-          // keys: Tab walks its controls, the arrows move it, Delete is text.
-          inDocument: Boolean(
-            active?.closest('#document-panel') && !active.closest('[data-note-popup]'),
-          ),
+          inDocument: inDocumentScope(active),
           inBookmarks: Boolean(active?.closest('[data-key-scope="bookmarks"]')),
         },
         mac,
       );
-      if (!binding) return;
+      if (!binding || binding.browserEvent) return;
       if (binding.preventWhenDisabled === false && !commandState(binding.target).enabled) return;
       e.preventDefault();
       void runCommand(binding.target);

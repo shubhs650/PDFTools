@@ -34,6 +34,13 @@ export interface Binding {
    * saves instead of reaching the browser's "Save page".
    */
   inText?: boolean;
+  /**
+   * The browser's own event does the work (M7-08: Ctrl+V fires `paste`, the
+   * only way to read the clipboard without a prompt): the key is never
+   * swallowed, and its listener runs the command. Listed for the shortcut
+   * sheet and the menus' key hints.
+   */
+  browserEvent?: boolean;
 }
 
 const b = (
@@ -78,7 +85,7 @@ export const KEYMAP: readonly Binding[] = [
   // Comments (M6-02): Ctrl+X copies the selected comments and deletes them (one undo step).
   b('edit.cut', ['Ctrl+X'], 'document'),
   // Comments (M4-21): Ctrl+V pastes copied comments; Ctrl+Shift+V onto their own pages.
-  { ...b('edit.paste', ['Ctrl+V'], 'document'), preventWhenDisabled: false },
+  { ...b('edit.paste', ['Ctrl+V'], 'document'), browserEvent: true },
   { ...b('comment.pasteToOriginal', ['Ctrl+Shift+V'], 'document'), preventWhenDisabled: false },
   b('edit.selectAll', ['Ctrl+A'], 'document'),
   { ...b('tool.cancel', ['Escape']), preventWhenDisabled: false },

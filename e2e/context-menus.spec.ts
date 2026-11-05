@@ -120,10 +120,10 @@ test('the comment menu: right click selects the comment; Copy, then Paste from t
     /^Flatten Selected Comments$/, // M6-09
     /^Properties$/,
   ]);
-  // Nothing copied yet: Paste says why, and stays in the menu, focusable.
+  // Nothing copied yet, but Paste stays available: the system clipboard may
+  // hold an image (M7-08, D-45), which only the click may read.
   const paste = m.getByRole('menuitem', { name: 'Paste', exact: true });
-  await expect(paste).toHaveAttribute('aria-disabled', 'true');
-  await expect(paste).toHaveAccessibleDescription('Copy one or more comments first.');
+  await expect(paste).not.toHaveAttribute('aria-disabled', 'true');
   const { violations } = await new AxeBuilder({ page }).include('[role="menu"]').analyze();
   expect(violations).toEqual([]);
   await m.getByRole('menuitem', { name: 'Copy', exact: true }).click();

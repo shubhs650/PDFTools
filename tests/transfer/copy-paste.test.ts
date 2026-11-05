@@ -32,8 +32,8 @@ describe('Ctrl+C / Ctrl+V routing', () => {
     );
     expect(resolveBinding(key('v'), { editable: true, inDocument: true }, false)).toBeUndefined();
     expect(resolveBinding(key('v'), { editable: false, inDocument: false }, false)).toBeUndefined();
-    // Nothing to paste: the browser keeps the key.
-    expect(resolveBinding(key('v'), doc, false)?.preventWhenDisabled).toBe(false);
+    // The browser keeps the key: its paste event carries the clipboard (M7-08).
+    expect(resolveBinding(key('v'), doc, false)?.browserEvent).toBe(true);
     expect(resolveBinding(key('c'), doc, false)?.target).toBe('edit.copy');
   });
 });

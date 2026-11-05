@@ -1,15 +1,48 @@
 # Triya PDF — Progress
 
-_Last updated: 2026-11-05 (session 48: M7-07 default styles, 50 % highlights and black Courier typewriter)_
+_Last updated: 2026-11-05 (session 49: M7-08 paste an image onto the page)_
 
 **Current milestone:** M7 — second beta review (plan in [docs/plan/M7.md](plan/M7.md), scope in
 [ADR-023](adr/023-m7-second-beta-review.md), **Accepted** 2026-11-04 with the recommended
-answers Q1–Q7; ARCHITECTURE.md Rev 0.12 after [ADR-024](adr/024-freetext-text-and-border-colours.md)). M7-01 … M7-07 done, plus separate text and border colours (ADR-024); next: M7-08. **Previous milestone:** M6 — Beta review (plan in [docs/plan/M6.md](plan/M6.md), scope changes in
+answers Q1–Q7; ARCHITECTURE.md Rev 0.12 after [ADR-024](adr/024-freetext-text-and-border-colours.md)). M7-01 … M7-08 done, plus separate text and border colours (ADR-024); next: M7-09. **Previous milestone:** M6 — Beta review (plan in [docs/plan/M6.md](plan/M6.md), scope changes in
 [ADR-021](adr/021-m6-beta-review.md), **Accepted** 2026-11-01; ARCHITECTURE.md Rev 0.10; M6-01 … M6-15 done, **M6 complete on the agent side** ([acceptance](acceptance/M6.md)); spike results in
 [ADR-022](adr/022-m6-spikes-s18-s22.md), **Accepted** 2026-11-02 (bookmark route B)). M5 — OCR: M5-01 … M5-04 done under [ADR-020](adr/020-m5-ocr.md); M5-05's owner
 interop is in the M6 pack (CHECKLIST §M6 R1–R4). Rev 0 (M0–M4) is complete on the agent side.
 
 ## Done
+
+- **Session 49 — M7-08 paste an image onto the page (ADR-023 D-45; review 4e).** Ctrl+V with
+  an image on the system clipboard (a screenshot, an image copied in another app) puts it on the
+  page as an **Image Stamp** (M3-14's path: PDFium writes a `/Stamp` with an image XObject in
+  the Render worker), in the middle of the visible part of the page last clicked (or the current
+  page; `visiblePageMiddle`); **Paste** in the page and comment menus puts it at the pointer.
+  Size (`fitToPage`, unit-tested): the image at 96 dpi, scaled down, aspect kept, never
+  enlarged, to fit 90 % of the page's width and height; moved in from the edges. Selected after
+  pasting, one undo step, `/Subj` "Pasted image". PNG and JPEG go as they are; GIF, WebP, BMP…
+  become PNG in the Encoder worker (`toPng`); the main thread reads only the header (a 4000 ×
+  3000 PNG pastes with no task over 100 ms). Over 20 MB, an unreadable image, a refused clipboard
+  read and a file without the annotate permission (rule 9) each get a message in the status
+  toast; the menu item shows the permission reason. **Ctrl+V is the browser's** (keymap
+  `browserEvent`): useShortcuts no longer swallows it, and a document `paste` listener reads the
+  event's image (no permission prompt) and runs `edit.paste` with it; text fields, the text
+  editor and a sticky note's window keep their own paste. The menu reads
+  `navigator.clipboard.read()` on the click only when it has to. **Which copy wins**
+  (`clipboardClock.ts`, unit-tested): our comment clipboard gets a tick when copied; the system
+  clipboard "may have changed" on window blur, the browser's `clipboardchange` (where it exists)
+  and our own Snapshot copy; an image wins when it may be newer than the comments, unless it is
+  an image already seen in a paste before the comments were copied (a fingerprint), which
+  covers a file picker taking the focus. `edit.paste` is no longer disabled with an empty
+  comment clipboard (the system clipboard may hold an image); Paste to Original Pages still is.
+  Help (Comment transfer) explains it. Found on the way and fixed: an image stamp's `rect.size`
+  carried the image's bytes and name (`rectAt` spread its argument). Tests: unit
+  `tests/stamps/stamp.test.ts` (fit), `tests/annotate/pasteImage.test.ts` (newest copy, visible
+  middle); e2e `paste-image.spec.ts` (6: Ctrl+V 4000 × 3000 on A4 with undo, readback and
+  reopen; menu at the pointer at its own size; Ctrl+V at 200 % in the visible part of page 2;
+  newest copy both ways; WebP converted, 20 MB and unreadable refused; refused clipboard read and
+  the zoom box's own paste; a no-annotate file); `context-menus` and `comment-copy-paste` updated
+  for the enabled Paste. Interop: CHECKLIST §M7 V1–V2 with
+  `e2e/fixtures/self-made/m7-interop/paste-image__ctrl-s.pdf`. Screenshots: project files
+  `m7-08/`.
 
 - **Session 48 — M7-07 default styles (ADR-023 D-37 amendment; review 4d and 4b-ii; Q4).**
   `SHIPPED_DEFAULTS`: Highlight, Highlight Area and Free Highlight at **50 % opacity**
@@ -1962,9 +1995,12 @@ rel="noopener noreferrer">`; the commands `app.home` / `app.reportIssue` open th
 
 ## Next
 
-- **Agent:** M7-08 … M7-12 serially, each in its own thread; then the queued task (owner,
+- **Agent:** M7-09 … M7-12 serially, each in its own thread; then the queued task (owner,
   2026-11-05) to make comment export and import round-trip every property as XFDF does — pop-ups
   (`/Rect`, `/Open`) included.
+- **Owner (M7-08):** CHECKLIST §M7 V1–V2 (a pasted image in their viewers; a real screenshot
+  pasted here) with `e2e/fixtures/self-made/m7-interop/paste-image__ctrl-s.pdf`; also in the
+  M7-12 pack.
 - **Owner (M7-07):** CHECKLIST §M7 U1–U3 (50 % highlights, black Courier typewriter) with
   `e2e/fixtures/self-made/m7-interop/default-styles__ctrl-s.pdf`; also in the M7-12 pack.
 - **Owner (M7-06):** CHECKLIST §M7 T1–T4 (sticky note pop-ups both ways) in Acrobat Reader and

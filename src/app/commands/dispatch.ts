@@ -24,6 +24,8 @@ export interface PagePoint {
 export interface CommandArgs {
   /** The page point under the pointer (or the keyboard's anchor) when the menu opened. */
   at?: PagePoint;
+  /** Ctrl+V (M7-08): what the browser's paste event carried, read while it ran. */
+  clipboard?: { image: Blob | null };
 }
 
 export interface CommandHandler {

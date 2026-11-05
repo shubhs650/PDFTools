@@ -95,15 +95,18 @@ test('within one document: copied on the page, pasted 10 pt right and down; past
   await page.goto('/');
   const id = await open(page, reviewSourcePdf(), 'rev-a.pdf');
   await expect.poll(async () => (await objects(page, id)).length).toBe(5);
-  // Nothing copied yet: the page menu's pastes say so.
+  // Nothing copied yet: Paste to Original Pages says so; Paste stays available,
+  // as the system clipboard may hold an image (M7-08, D-45).
   await page.getByTestId('document-view').focus();
   await page.keyboard.press('Shift+F10');
   const pageMenu = page.getByRole('menu', { name: 'Page' });
-  for (const name of ['Paste', 'Paste to Original Pages'])
-    await expect(pageMenu.getByRole('menuitem', { name, exact: true })).toHaveAttribute(
-      'aria-disabled',
-      'true',
-    );
+  await expect(
+    pageMenu.getByRole('menuitem', { name: 'Paste to Original Pages', exact: true }),
+  ).toHaveAttribute('aria-disabled', 'true');
+  await expect(pageMenu.getByRole('menuitem', { name: 'Paste', exact: true })).not.toHaveAttribute(
+    'aria-disabled',
+    'true',
+  );
   await page.keyboard.press('Escape');
 
   await cap(page, 'annotate', 'select', id, 0, 'src-square');

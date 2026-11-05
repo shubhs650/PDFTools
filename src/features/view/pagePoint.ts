@@ -136,3 +136,37 @@ export function pasteTargetPage(docId: string, current: number): number {
   const p = lastClicked.get(docId);
   return p !== undefined && pageInView(docId, p) ? p : current;
 }
+
+// ------------------------------------------- the visible part of a page
+
+export interface ClientBox {
+  left: number;
+  top: number;
+  right: number;
+  bottom: number;
+}
+
+/** The middle of the part of `box` inside `view` (client px; null: none of it is). Pure. */
+export function visibleMiddle(box: ClientBox, view: ClientBox): Point | null {
+  const left = Math.max(box.left, view.left);
+  const right = Math.min(box.right, view.right);
+  const top = Math.max(box.top, view.top);
+  const bottom = Math.min(box.bottom, view.bottom);
+  if (right <= left || bottom <= top) return null;
+  return { x: (left + right) / 2, y: (top + bottom) / 2 };
+}
+
+/**
+ * Ctrl+V's point for a pasted image (M7-08, D-45): the middle of the part of
+ * the page in view, in page points; the page's middle when it isn't laid out.
+ */
+export function visiblePageMiddle(docId: string, page: number): Point | null {
+  const g = geometry(docId, page);
+  if (!g) {
+    const size = pageSizeOf(docId, page);
+    return size ? { x: size.width / 2, y: size.height / 2 } : null;
+  }
+  const mid = visibleMiddle(g.box, g.view.getBoundingClientRect());
+  if (!mid) return { x: g.size.width / 2, y: g.size.height / 2 };
+  return toPagePoint({ x: mid.x - g.box.left, y: mid.y - g.box.top }, g.size, g.rotation, g.scale);
+}

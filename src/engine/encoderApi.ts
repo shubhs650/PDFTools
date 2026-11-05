@@ -54,4 +54,13 @@ export interface EncoderApi {
     { data: ArrayBuffer; transparent: boolean },
     { png: ArrayBuffer; width: number; height: number } | null
   >;
+  /**
+   * A pasted image in another raster format (M7-08, ADR-023 D-45: GIF, WebP,
+   * BMP…) decoded here and encoded as PNG, at its own size, for the Image
+   * Stamp path. Null when the browser can't decode it.
+   */
+  toPng: MethodSpec<
+    { data: ArrayBuffer },
+    { png: ArrayBuffer; width: number; height: number } | null
+  >;
 }

@@ -383,7 +383,7 @@ Ctrl+S, then open the file in each viewer.
 | R3  | Chinese (Simplified) scan: copied text pastes as Chinese characters; search finds a two-character word.                     |         |             |
 | R4  | In PDFTools after reopening: Quick Find finds the same words; a second OCR run skips the recognized pages ("already text"). |         |             |
 
-## M7 — sticky note pop-ups (D-44), text and border colours (ADR-024), default styles (M7-07)
+## M7 — sticky note pop-ups (D-44), text and border colours (ADR-024), default styles (M7-07), pasted images (D-45)
 
 ### S. Text colour apart from the border colour
 
@@ -421,3 +421,14 @@ Highlight stroke and a typewriter "Typewriter: black Courier".
 | U1  | Opened in their viewer: the three highlights are yellow and see-through (opacity 50 %, as their Properties show); "Page 1" is easy to read.       |         |             |
 | U2  | The typewriter text is black Courier, 10 pt; editing it there keeps Courier and black.                                                            |         |             |
 | U3  | A new Highlight, Highlight Area and Free Highlight in Triya PDF look the same as in the file; Reset All in the Comment Styles Palette keeps 50 %. |         |             |
+
+### V. A pasted image (M7-08, D-45)
+
+File: `e2e/fixtures/self-made/m7-interop/paste-image__ctrl-s.pdf` (made by the app and saved
+with Ctrl+S): a 4000 × 3000 picture (blue with a yellow block) pasted with Ctrl+V onto an A4
+page, scaled down to 90 % of the page's width.
+
+| #   | Check                                                                                                                                                                                                                        | Acrobat | PDF-XChange |
+| --- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------- | ----------- |
+| V1  | Opened in their viewer: the picture shows inside the page's margins, its proportions kept, and is listed as a stamp ("Pasted image") that can be moved and resized.                                                          |         |             |
+| V2  | In Triya PDF, a screenshot taken with the system's tool and pasted with Ctrl+V, and an image copied in a browser and pasted from the right-click menu, both land fitted on the page; after Ctrl+S both show in their viewer. |         |             |
