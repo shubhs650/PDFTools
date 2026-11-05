@@ -504,3 +504,102 @@ test('a file that denies annotating: a text comment neither moves nor edits (rul
   await expect(editor(page)).toHaveCount(0);
   expect(await contents(page, id)).toEqual(['Fixed']);
 });
+
+// --- M7-12: a text comment grows to show all of its text (B15) --------------
+
+/** The editor's text fits inside it: nothing is clipped. */
+async function editorFits(page: Page) {
+  return editor(page).evaluate((el) => ({
+    width: el.scrollWidth <= el.clientWidth + 1,
+    height: el.scrollHeight <= el.clientHeight + 1,
+  }));
+}
+
+test('a typewriter grows with its text instead of cutting it off; one undo step (B15) @smoke', async ({
+  page,
+}) => {
+  const id = await open(page);
+  await tool(page, 'Typewriter');
+  await click(page, 70, 200);
+  await expect(editor(page)).toBeFocused();
+  const [made] = await objects(page, id);
+  if (!made) throw new Error('no typewriter');
+  const long = 'Typewriter: black Courier, a longer line of text';
+  await page.keyboard.type(long);
+  await page.keyboard.press('Enter');
+  await page.keyboard.type('and a second line');
+  // While typing, all of it shows: one line, not wrapped, nothing clipped.
+  expect(await editorFits(page)).toEqual({ width: true, height: true });
+  const lines = await editor(page).evaluate((el) => {
+    const r = document.createRange();
+    r.selectNodeContents(el);
+    return new Set([...r.getClientRects()].map((b) => Math.round(b.top))).size;
+  });
+  expect(lines).toBe(2);
+  await page.keyboard.press('Escape');
+  await written(page, id, [`${long}\nand a second line`]);
+  // Written with a size that holds it: Courier is 0.6 em wide, 10 pt.
+  const [grown] = await objects(page, id);
+  expect(grown?.rect.origin).toEqual(made.rect.origin);
+  expect(grown?.rect.size.width).toBeGreaterThanOrEqual(long.length * 6);
+  expect(grown?.rect.size.height).toBeGreaterThan(made.rect.size.height);
+  // The text and the size are one undo step.
+  await page.keyboard.press('Control+z');
+  await written(page, id, ['Type here']);
+  expect((await objects(page, id))[0]?.rect.size).toEqual(made.rect.size);
+  await page.keyboard.press('Control+y');
+  await written(page, id, [`${long}\nand a second line`]);
+  const tail = await savedTail(page, id);
+  const r = numbersAfter(tail, 'Rect');
+  expect((r[2] ?? 0) - (r[0] ?? 0)).toBeCloseTo(grown?.rect.size.width ?? 0, 0);
+  // Edited again, a short text keeps the size (it only grows).
+  await dblclick(page, made.rect.origin.x + 12, made.rect.origin.y + 6);
+  await expect(editor(page)).toBeFocused();
+  await page.keyboard.press('Control+a');
+  await page.keyboard.type('Hi');
+  await page.keyboard.press('Escape');
+  await written(page, id, ['Hi']);
+  expect((await objects(page, id))[0]?.rect.size).toEqual(grown?.rect.size);
+});
+
+test('a text box and a callout get taller as lines are added; their width and the callout’s point stay (B15)', async ({
+  page,
+}) => {
+  const id = await open(page);
+  await tool(page, 'Text Box');
+  await drag(page, [100, 100], [300, 130]);
+  await expect(editor(page)).toBeFocused();
+  for (const line of ['One', 'Two', 'Three', 'Four'])
+    await page.keyboard.type(`${line} line of the text box\n`);
+  await page.keyboard.type('Five');
+  expect(await editorFits(page)).toEqual({ width: true, height: true });
+  await page.keyboard.press('Escape');
+  await page.keyboard.press('Escape');
+  await expect.poll(async () => (await objects(page, id))[0]?.rect.size.height).toBeGreaterThan(60);
+  const [box] = await objects(page, id);
+  expect(box?.rect.size.width).toBeCloseTo(200, 0);
+
+  await tool(page, 'Callout');
+  await drag(page, [80, 330], [260, 250]);
+  await expect(editor(page)).toBeFocused();
+  const callout = (await objects(page, id)).find((o) => o.calloutLine);
+  if (!callout) throw new Error('no callout');
+  const before = boxOf(callout);
+  for (const line of ['One', 'Two', 'Three', 'Four', 'Five']) await page.keyboard.type(`${line}\n`);
+  await page.keyboard.type('Six');
+  expect(await editorFits(page)).toEqual({ width: true, height: true });
+  await click(page, 520, 60);
+  await expect
+    .poll(async () => {
+      const o = (await objects(page, id)).find((x) => x.id === callout.id);
+      return o ? boxOf(o).h : 0;
+    })
+    .toBeGreaterThan(before.h + 30);
+  const after = (await objects(page, id)).find((x) => x.id === callout.id);
+  if (!after) throw new Error('lost');
+  const b = boxOf(after);
+  expect([b.x, b.y, b.w].map(Math.round)).toEqual([before.x, before.y, before.w].map(Math.round));
+  expect(after.calloutLine).toEqual(callout.calloutLine);
+  const tail = await savedTail(page, id);
+  expect(numbersAfter(tail, 'RD')).toHaveLength(4);
+});

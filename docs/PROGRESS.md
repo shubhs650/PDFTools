@@ -1,15 +1,44 @@
 # Triya PDF — Progress
 
-_Last updated: 2026-11-05 (session 52: M7-11 dark theme)_
+_Last updated: 2026-11-05 (session 53: M7-12 acceptance)_
 
 **Current milestone:** M7 — second beta review (plan in [docs/plan/M7.md](plan/M7.md), scope in
 [ADR-023](adr/023-m7-second-beta-review.md), **Accepted** 2026-11-04 with the recommended
-answers Q1–Q7; ARCHITECTURE.md Rev 0.12 after [ADR-024](adr/024-freetext-text-and-border-colours.md)). M7-01 … M7-11 done, plus separate text and border colours (ADR-024); next: M7-12. **Previous milestone:** M6 — Beta review (plan in [docs/plan/M6.md](plan/M6.md), scope changes in
+answers Q1–Q7; ARCHITECTURE.md Rev 0.12 after [ADR-024](adr/024-freetext-text-and-border-colours.md)). M7-01 … M7-12 done, plus separate text and border colours (ADR-024): **M7 complete on the agent side** ([acceptance](acceptance/M7.md)); next: the owner's interop §M7 run, then the queued comment export/import round-trip task. **Previous milestone:** M6 — Beta review (plan in [docs/plan/M6.md](plan/M6.md), scope changes in
 [ADR-021](adr/021-m6-beta-review.md), **Accepted** 2026-11-01; ARCHITECTURE.md Rev 0.10; M6-01 … M6-15 done, **M6 complete on the agent side** ([acceptance](acceptance/M6.md)); spike results in
 [ADR-022](adr/022-m6-spikes-s18-s22.md), **Accepted** 2026-11-02 (bookmark route B)). M5 — OCR: M5-01 … M5-04 done under [ADR-020](adr/020-m5-ocr.md); M5-05's owner
 interop is in the M6 pack (CHECKLIST §M6 R1–R4). Rev 0 (M0–M4) is complete on the agent side.
 
 ## Done
+
+- **Session 53 — M7-12 M7 acceptance (ADR-023, ADR-024).** [docs/acceptance/M7.md](acceptance/M7.md):
+  every review observation (1 … F1) and bug (B1 … B15) mapped to its task and tests.
+  **Interop pack §M7**: `e2e/interop-m7.spec.ts` makes `text-comments__ctrl-s.pdf` (a text box,
+  typewriter and callout made, edited, moved and edited again with the mouse) and
+  `text-colors__ctrl-s.pdf` (blue text on a red border, set in the Properties pane), each
+  `qpdf --check`ed and reopened; `npm run owner:interop:m7` also regenerates the M7-06/07/08 files;
+  CHECKLIST §M7 gains W1–W3 and S now has a file. **Found and fixed (1):** a text box with its
+  own text colour (ADR-024) had no text in strict readers: `EPDFAnnot_SetAppearanceFromPage`
+  copies the page's content into the appearance but gives it only `/XObject << /EPDFWRAP >>` as
+  resources, so the inline drawing named `/Helv` and `/GS` it didn't have (PDFium fell back to
+  its stock Helvetica, so the app looked right). `freeTextColors.ts` now has the page draw the
+  recoloured form under the name `/EPDFWRAP`, with the placement in the form's `/Matrix`; unit
+  check `missingResources` (every font, ExtGState and XObject an appearance uses is in its own
+  resources). **Found and fixed (2), B15 (owner chose to fix it here):** text longer than a text
+  comment's box was cut off (a typewriter at its 100 × 20 pt default showed two lines of it, the
+  editor too). While editing, the editor grows past its box (typewriter: no wrapping); the commit
+  grows the comment in the same undo step (`grownTextGeometry` in `textEditModel.ts`: text box
+  and callout taller, the callout's box down with the rect and `/RD` following, typewriter wider
+  and taller; +2 pt / +4 pt slack; never shrinks; stays on the page; turned comments unchanged).
+  **Help**: new sections The Home tab, Light and dark themes, Text boxes, typewriters and
+  callouts, Sticky notes, Pasting pictures (split out of Viewing, Reviewing comments, Comment
+  transfer). **Keyboard sheet**: the unit test checks M7's F2 and Ctrl+Shift+D rows.
+  **Offline**: "M7 offline" (theme toggle and boot script on an offline reload, a note window, a
+  text box with two colours, a typewriter, a pasted picture, a verified save; zero requests).
+  **Accessibility**: "M7 text editing, sticky note window and theme toggle" in light, dark and the
+  pseudo-locale, no violations. **Install budget**: core 7.81 of 9 MB, install 57.60 of 60 MB.
+  **Release notes** for beta users under the new name:
+  [docs/release-notes/beta-m7.md](release-notes/beta-m7.md).
 
 - **Session 52 — M7-11 dark theme (ADR-023 D-42; review item 2).** A **Dark Theme** toggle at
   the right end of the top bar (Fluent `WeatherMoon`; `WeatherSunny` while dark; pressed state,
@@ -2065,25 +2094,14 @@ rel="noopener noreferrer">`; the commands `app.home` / `app.reportIssue` open th
 
 ## Next
 
-- **Agent:** M7-12 (acceptance), in its own thread; then the queued task (owner,
-  2026-11-05) to make comment export and import round-trip every property as XFDF does — pop-ups
-  (`/Rect`, `/Open`) included.
-- **Owner (M7-08):** CHECKLIST §M7 V1–V2 (a pasted image in their viewers; a real screenshot
-  pasted here) with `e2e/fixtures/self-made/m7-interop/paste-image__ctrl-s.pdf`; also in the
-  M7-12 pack.
-- **Owner (M7-07):** CHECKLIST §M7 U1–U3 (50 % highlights, black Courier typewriter) with
-  `e2e/fixtures/self-made/m7-interop/default-styles__ctrl-s.pdf`; also in the M7-12 pack.
-- **Owner (M7-06):** CHECKLIST §M7 T1–T4 (sticky note pop-ups both ways) in Acrobat Reader and
-  PDF-XChange with `e2e/fixtures/self-made/m7-interop/sticky-note-popups__ctrl-s.pdf`; also in
-  the M7-12 interop pack.
-- **Owner (ADR-024):** CHECKLIST §M7 S1–S3 (blue text on a red border in a text box and a
-  callout, both ways) in Acrobat Reader and PDF-XChange; also in the M7-12 interop pack.
-- **Owner (M6 interop pack):** [docs/acceptance/M6.md](acceptance/M6.md) §4 — CHECKLIST §M6
-  P1–P19 and Q1–Q4 in Acrobat Reader and PDF-XChange with the files in
-  `e2e/fixtures/self-made/m6-interop/` (forms with tooltips, defaults and Row tab order;
-  typed, drawn and flattened signatures; the protected copies with each password; comments with
-  rotation, vertical alignment, locked, marked; the edited outline), and R1–R4 (OCR on real
-  English, Hindi and Chinese scans; M5-05).
+- **Agent:** the queued task (owner, 2026-11-05), in its own thread: make comment export and
+  import round-trip every property as XFDF does, pop-ups (`/Rect`, `/Open`) included.
+- **Owner (M7 interop pack):** [docs/acceptance/M7.md](acceptance/M7.md) §5 — CHECKLIST §M7
+  S1–S3, T1–T4, U1–U3, V1–V2 and W1–W3 in Acrobat Reader and PDF-XChange with the files in
+  `e2e/fixtures/self-made/m7-interop/`; spot-check the dark theme, a long typewriter line and
+  Help on the deployed beta.
+- **Owner (M6 interop pack):** done — the owner ran the M6 interop check on 2026-11-03 and
+  everything worked.
 
 0. **Owner:** OCR on real scans is now CHECKLIST §M6 R1–R4 (above); the Hindi and Chinese
    recognition quality could not be checked in the container (no Devanagari font to make a

@@ -16,6 +16,8 @@ import {
 import { init, type WrappedPdfiumModule } from '@embedpdf/pdfium';
 import { beforeAll, describe, expect, it } from 'vitest';
 import { simplePdf } from '../../e2e/fixtures/generate';
+import { isDict, PdfRef, PdfStream, type PdfValue } from '../../src/model/pdf/objects';
+import { PdfReader } from '../../src/model/pdf/reader';
 import { readAnnotString } from '../../src/workers/render/annotTiles';
 import { applyTextColors } from '../../src/workers/render/freeTextColors';
 import { installFontReadback } from '../../src/workers/render/freeTextFonts';
@@ -164,6 +166,49 @@ async function reopened(doc: PdfDocumentObject, original: Uint8Array) {
   return { back, saved, ft: anns[0] as Record<string, unknown> };
 }
 
+/**
+ * Every font, graphics state and XObject name an annotation's normal
+ * appearance (and any form it draws) uses, missing from that form's own
+ * /Resources. A strict reader (poppler, pdf.js, Acrobat) finds nothing else:
+ * PDFium falls back to its stock Helvetica, so its pixels alone don't show it.
+ */
+async function missingResources(saved: Uint8Array): Promise<string[]> {
+  const r = await PdfReader.open(saved);
+  const missing: string[] = [];
+  const check = async (v: PdfValue | undefined, where: string, depth: number): Promise<void> => {
+    const form = await r.resolve(v);
+    if (!(form instanceof PdfStream) || depth > 4) return;
+    const content = Buffer.from(await r.decode(form)).toString('latin1');
+    const res = await r.resolve(form.dict.get('Resources'));
+    const kinds: [string, RegExp][] = [
+      ['Font', /\/([^\s/()<>[\]]+)\s+[-\d.]+\s+Tf\b/gu],
+      ['ExtGState', /\/([^\s/()<>[\]]+)\s+gs\b/gu],
+      ['XObject', /\/([^\s/()<>[\]]+)\s+Do\b/gu],
+    ];
+    for (const [kind, re] of kinds) {
+      const group = isDict(res) ? await r.resolve(res.get(kind)) : undefined;
+      for (const m of content.matchAll(re)) {
+        const name = m[1] ?? '';
+        const entry = isDict(group) ? group.get(name) : undefined;
+        if (entry === undefined) missing.push(`${where}: ${kind} /${name}`);
+        else if (kind === 'XObject') await check(entry, `${where} > ${name}`, depth + 1);
+      }
+    }
+  };
+  for (const { dict } of await r.pages()) {
+    const annots = await r.resolve(dict.get('Annots'));
+    if (!Array.isArray(annots)) continue;
+    for (const ref of annots) {
+      const a = await r.resolve(ref);
+      if (!isDict(a)) continue;
+      const ap = await r.resolve(a.get('AP'));
+      const label = `annot ${ref instanceof PdfRef ? String(ref.num) : '?'}`;
+      if (isDict(ap)) await check(ap.get('N'), label, 0);
+    }
+  }
+  return missing;
+}
+
 const BORDER_Y = 101;
 const TEXT_Y = 112;
 
@@ -186,6 +231,8 @@ describe('text and border colours (ADR-024)', () => {
 
     const { back, saved, ft } = await reopened(doc, original);
     expect(Buffer.from(saved).toString('latin1')).toContain('color:#0000FF');
+    // M7-12: the appearance carries its own fonts and graphics states (strict readers).
+    expect(await missingResources(saved)).toEqual([]);
     expect(ft.fontColor).toBe(BLUE);
     expect(ft.strokeColor).toBe(RED);
     expect(ft.fontFamily).toBe(PdfStandardFont.Courier_Bold);
@@ -229,6 +276,8 @@ describe('text and border colours (ADR-024)', () => {
     ).toBe('recolored');
     expect(inks(doc.id, BORDER_Y, 150, 250)).toEqual({ red: true, blue: false });
     expect(inks(doc.id, TEXT_Y, 110, 330)).toEqual({ red: false, blue: true });
+    const { saved } = await reopened(doc, original);
+    expect(await missingResources(saved)).toEqual([]);
   });
 
   it('one colour: /DA has it and a stale /TextColor is cleared', async () => {
