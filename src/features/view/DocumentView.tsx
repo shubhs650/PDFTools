@@ -26,6 +26,7 @@ import { CommentMarquee } from '../annotate/CommentMarquee';
 import { annotationCapability } from '../annotate/selection';
 import { isDrawTool, isTextTool, TEXT_COMMENT_CATEGORY } from '../annotate/tools/drawModel';
 import { NumberOverlay } from '../annotate/comments/NumberOverlay';
+import { NotePopupLayer } from '../annotate/notes/NotePopupLayer';
 import { MeasureOverlay } from '../measure/MeasureOverlay';
 import { ViewportLayer } from '../measure/ViewportLayer';
 import { TableOverlay } from '../tables/TableOverlay';
@@ -87,8 +88,14 @@ function Page({
   hidden: boolean;
 }) {
   const doc = useDocumentState(documentId);
-  const size = doc?.document?.pages[layout.pageIndex]?.size;
+  const pageObj = doc?.document?.pages[layout.pageIndex];
+  const size = pageObj?.size;
   const scale = doc?.scale ?? 1;
+  const rotation = ((pageObj?.rotation ?? 0) + (doc?.rotation ?? 0)) % 4;
+  const frame = useMemo(
+    () => (size ? { width: size.width, height: size.height, rotation, scale } : null),
+    [size, rotation, scale],
+  );
   return (
     <div
       className="page"
@@ -153,6 +160,10 @@ function Page({
             </div>
           </PagePointerProvider>
         </Rotate>
+      )}
+      {/* Sticky note windows (M7-06): upright over the turned page, above its layers. */}
+      {hidden || !frame ? null : (
+        <NotePopupLayer documentId={documentId} pageIndex={layout.pageIndex} frame={frame} />
       )}
     </div>
   );

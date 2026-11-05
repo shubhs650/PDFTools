@@ -964,6 +964,16 @@ export const COMMANDS: readonly CommandDef[] = [
     shipped: true,
   },
   {
+    // A sticky note's window (M7-06): the comment menus and the Comments pane.
+    id: 'comment.openPopup',
+    tab: 'menu',
+    group: 'menu',
+    size: 'small',
+    fluent: 'Open',
+    milestone: 'M6',
+    shipped: true,
+  },
+  {
     id: 'comment.setStatus',
     tab: 'menu',
     group: 'menu',

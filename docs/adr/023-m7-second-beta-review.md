@@ -162,5 +162,22 @@ groups and fold any group into a dropdown on a very narrow window.
 Bug reproduction (2026-11-04, `main` 17db96f, Chromium 151, 1280 × 800, `simplePdf(2)`): a
 throwaway Playwright script drew each text tool, typed, pressed Esc, clicked away, double-clicked,
 dragged and right-clicked, and read the annotation objects through the e2e test hook. Results:
-plan §"Comment selection and editing bugs" (B1 – B14). Spike S23 adds its evidence here in
-M7-06.
+plan §"Comment selection and editing bugs" (B1 – B14).
+
+**Spike S23 (2026-11-05, M7-06): works.** `spikes/s23-popup/popup.test.ts` (real PDFium and our
+save tracker in Node, runs with the unit tests; qpdf checks every saved file):
+
+- Files laid out as Acrobat and PDF-XChange write them (a `/Text` note with `/Popup`, a `/Popup`
+  with `/Parent`, `/Rect`, `/Open true`) keep the pop-up, its rect and `/Open` when the note is
+  edited and moved and saved with Ctrl+S — also in an AES-256 copy.
+- PDFium creates a pop-up and links both ways (`EPDFPage_CreateAnnot` subtype 16,
+  `EPDFAnnot_SetLinkedAnnot` `/Parent` and `/Popup`), and writes `/Rect` and the flags (NoZoom,
+  NoRotate, not Print). `/Open` is a boolean PDFium can neither write nor read: our object layer
+  stages it (ADR-007, keyed by the pop-up's `/NM`) and the Work worker reads it from the file. One
+  narrow revision; moving and closing rewrite the same object; in AES-256 and RC4-128 files the
+  pop-up's `/NM` is encrypted like the rest.
+- PDFium draws no pop-up (on screen or for printing), so the page never shows the window twice.
+- EmbedPDF alone leaves an orphan pop-up when the note is deleted (also in files from Acrobat);
+  ours removes the note's pop-up first.
+
+So D-44's `/Popup` route stands: position and open state are saved as a standard pop-up.

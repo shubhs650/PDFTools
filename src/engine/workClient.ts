@@ -73,6 +73,7 @@ type JobMethod =
   | 'ocrRaster'
   | 'ocrLayer'
   | 'readOutline'
+  | 'popupStates'
   | 'copyOutline'
   | 'editOutline';
 

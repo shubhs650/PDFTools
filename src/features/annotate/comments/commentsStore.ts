@@ -78,7 +78,7 @@ export function setEditing(edit: CommentEdit | null): void {
   commentsStore.setState({ editing: edit });
 }
 
-type ByUid = AnnotationDocumentState['byUid'];
+export type ByUid = AnnotationDocumentState['byUid'];
 const objectsCache = new WeakMap<ByUid, PdfAnnotationObject[]>();
 const commentsCache = new WeakMap<ByUid, Comment[]>();
 const numbersCache = new WeakMap<ByUid, Map<string, number>>();

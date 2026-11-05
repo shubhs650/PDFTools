@@ -10,7 +10,15 @@ import { Transfer } from '../engine/protocol';
 import { PDFIUM_ERROR_PREFIX, type RenderApi } from '../engine/renderApi';
 import { fromJson } from '../model/pdf/wire';
 import { serve } from './rpc-host';
-import { acquirePage, docPtrOf, pageInfos, rawCall, wasmMemory } from './render/pdfium';
+import {
+  acquirePage,
+  docPtrOf,
+  isNormalized,
+  pageInfo,
+  pageInfos,
+  rawCall,
+  wasmMemory,
+} from './render/pdfium';
 import { applyPageOp, withSource } from './render/pages';
 import { renderProgressive } from './render/progressive';
 import { AnnotBoxCache, annotBoxes, renderAnnotTile } from './render/annotTiles';
@@ -26,6 +34,7 @@ import {
   updateFileAttachment,
 } from './render/fileAttach';
 import { secureCopy } from './render/security';
+import { listNotePopups, placeNotePopup, removePopupOf } from './render/notePopups';
 
 const FPDF_PAGEOBJ_PATH = 2;
 /** `FPDF_GetFormType` for a dynamic (full) XFA form: nothing to fill (M2-14). */
@@ -115,6 +124,12 @@ serve<RenderApi>(self, {
     // An edit keeps the annotation's own author (D-03); no private keys (rule 6).
     const callArgs =
       typeof docId === 'string' ? keepAuthor(m, n, method, dropCustom(method, args)) : args;
+    // A comment's pop-up goes with it (M7-06): EmbedPDF removes only the comment.
+    if (method === 'removePageAnnotation' && typeof docId === 'string') {
+      const page = (callArgs[1] as { index?: unknown } | undefined)?.index;
+      const id = (callArgs[2] as { id?: unknown } | undefined)?.id;
+      if (typeof page === 'number' && typeof id === 'string') removePopupOf(m, n, docId, page, id);
+    }
     let value: unknown;
     if (typeof docId === 'string' && isFileAttachmentCall(method, callArgs)) {
       // Attach File (M6-10, ADR-022 d1): EmbedPDF can't create or update this subtype.
@@ -297,6 +312,27 @@ serve<RenderApi>(self, {
     const { mod: m, native: n } = ready();
     const out = readFileAttachment(m, n, docId, pageIndex, id);
     return new Transfer(out, [out.data]);
+  },
+
+  notePopups: ({ docId, pageIndex }) => {
+    const { mod: m, native: n } = ready();
+    const doc = { id: docId, normalizedRotation: isNormalized(n, docId) };
+    return { popups: listNotePopups(m, n, doc, pageInfo(m, n, docId, pageIndex)) };
+  },
+
+  setNotePopup: async ({ docId, pageIndex, noteId, rect, open }) => {
+    const { mod: m, native: n, tracker: t } = ready();
+    // Rule 9: a pop-up is part of the comment.
+    t.checkAllowed('updatePageAnnotation', docId);
+    await t.securityReady(docId);
+    const doc = { id: docId, normalizedRotation: isNormalized(n, docId) };
+    const page = pageInfo(m, n, docId, pageIndex);
+    const r = placeNotePopup(m, n, doc, page, noteId, rect);
+    // The page's /Annots and the note's /Popup (a new pop-up), the pop-up itself.
+    t.recordMutation('updatePageAnnotation', [doc, page, { id: noteId }]);
+    t.recordMutation('updatePageAnnotation', [doc, page, { id: r.popupId }]);
+    t.stagePatch(docId, { page: pageIndex, annot: r.popupId }, new Map([['Open', open]]));
+    return r;
   },
 
   pageCost: ({ docId, pageIndex }) => {

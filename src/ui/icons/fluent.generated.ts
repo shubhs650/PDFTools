@@ -89,6 +89,7 @@ import { Markdown20Regular, Markdown28Regular } from '@fluentui/react-icons/svg/
 import { Note20Filled, Note20Regular, Note28Filled, Note28Regular } from '@fluentui/react-icons/svg/note';
 import { NumberSymbol20Regular } from '@fluentui/react-icons/svg/number-symbol';
 import { NumberSymbolSquare20Filled, NumberSymbolSquare20Regular } from '@fluentui/react-icons/svg/number-symbol-square';
+import { Open20Regular } from '@fluentui/react-icons/svg/open';
 import { Oval20Filled, Oval20Regular } from '@fluentui/react-icons/svg/oval';
 import { PageFit20Regular } from '@fluentui/react-icons/svg/page-fit';
 import { PaintBrush20Regular } from '@fluentui/react-icons/svg/paint-brush';
@@ -236,6 +237,7 @@ export const FLUENT_GLYPHS: Record<string, FluentGlyphs> = {
   'comment.delete': { regular: { small: Delete20Regular } },
   'comment.saveAttachment': { regular: { small: ArrowDownload20Regular } },
   'comment.flattenSelected': { regular: { small: LayerDiagonal20Regular } },
+  'comment.openPopup': { regular: { small: Open20Regular } },
   'comment.setStatus': { regular: { small: CheckmarkCircle20Regular } },
   'comment.copyStyle': { regular: { small: PaintBrush20Regular } },
   'comment.applyStyle': { regular: { small: PaintBrushArrowDown20Regular } },

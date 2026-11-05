@@ -11,14 +11,12 @@ const TEXT: Record<ContentsKind, { title: MessageKey; label: MessageKey; ok: Mes
     label: msg('annotate.caret.label'),
     ok: msg('annotate.caret.ok'),
   },
-  note: {
-    title: msg('annotate.note.title'),
-    label: msg('annotate.note.label'),
-    ok: msg('annotate.note.ok'),
-  },
 };
 
-/** The text of a new caret or note (M3-08, M3-09; text boxes are edited in place, M7-02). */
+/**
+ * The text of a new caret (M3-08; text boxes are edited in place, M7-02; a
+ * sticky note in its pop-up window, M7-06).
+ */
 export function ContentsDialog() {
   const target = useContentsPrompt((s) => s.target);
   if (!target) return null;

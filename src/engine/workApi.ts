@@ -127,6 +127,12 @@ export interface WorkApi {
    * by our object layer from the current state (live section synced first).
    */
   readOutline: MethodSpec<{ docId: string }, { items: OutlineItem[] }>;
+  /**
+   * Sticky note pop-ups (M7-06, spike S23): whether each pop-up object (by
+   * number, from the Render worker's list) is open — /Open is a boolean
+   * PDFium can't read.
+   */
+  popupStates: MethodSpec<{ docId: string; objs: number[] }, { open: boolean[] }>;
   /** Copy / Cut of bookmarks: the items with every key (`bookmark-stale` if moved since). */
   copyOutline: MethodSpec<
     { docId: string; paths: OutlinePath[]; expect: OutlineExpect[] },

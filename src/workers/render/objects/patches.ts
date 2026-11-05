@@ -44,12 +44,13 @@ export const targetKey = (t: PatchTarget): string =>
     : `p${String(t.page)}/${t.annot}${t.field ? '/field' : ''}`;
 
 /**
- * The only keys our layer writes (ADR-007): measurement keys on annotations and
- * viewports on pages. Everything else belongs to PDFium/EmbedPDF — a sticky
+ * The only keys our layer writes (ADR-007): measurement keys on annotations,
+ * a pop-up's /Open, and viewports on pages. Everything else belongs to PDFium/EmbedPDF — a sticky
  * copy of, say, /Contents would undo the user's later edits (the measured
  * value goes to /Contents through EmbedPDF instead).
  */
-const ANNOT_KEYS = new Set(['Measure', 'IT', 'Cap', 'CP', 'LL', 'LLE', 'LLO', 'CO']);
+// /Open: a sticky note pop-up's open state, a boolean PDFium can't write (M7-06, S23).
+const ANNOT_KEYS = new Set(['Measure', 'IT', 'Cap', 'CP', 'LL', 'LLE', 'LLO', 'CO', 'Open']);
 /** /Tabs: the page's form tab order (M6-14). */
 const PAGE_KEYS = new Set(['VP', 'Tabs']);
 /** A form field's tooltip and default value, which EmbedPDF doesn't write (M6-14, ADR-022 d4). */

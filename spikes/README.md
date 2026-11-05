@@ -21,6 +21,7 @@ Throwaway spike code for [docs/plan/M0.md](../docs/plan/M0.md) (S1–S8) and M1-
 | S16     | [`s16-comment-transfer/`](s16-comment-transfer/) (M4-19) | [ADR-018](../docs/adr/018-m4-comment-transfer.md)              | Works with workaround |
 | S17     | [`s17-ocr/`](s17-ocr/) (M5-01)                           | [ADR-020](../docs/adr/020-m5-ocr.md)                           | Works with workaround |
 | S18–S22 | [`s18-s22-m6/`](s18-s22-m6/) (M6-04)                     | [ADR-022](../docs/adr/022-m6-spikes-s18-s22.md)                | Works with workaround |
+| S23     | [`s23-popup/`](s23-popup/) (M7-06)                       | [ADR-023](../docs/adr/023-m7-second-beta-review.md)            | Works                 |
 | S25     | [`s25-freetext-colors/`](s25-freetext-colors/) (M7)      | [ADR-024](../docs/adr/024-freetext-text-and-border-colours.md) | Works with workaround |
 
 ## Shared pieces (`shared/`)
@@ -75,6 +76,10 @@ node spikes/s5-search/make-contract.ts && SPIKE=s5 npm run spikes -- --project=s
 
 # S16 comment transfer (M4-19, needs qpdf): object copy vs re-create, save, pixels, timings
 node --import ./spikes/shared/ts-ext.ts spikes/s16-comment-transfer/run-node.ts   # → out/s16-node.json, out/*.png
+
+# S23 (M7-06, ADR-023 D-44): sticky note /Popup objects, PDFium and our save path in Node (needs
+# qpdf; runs with the unit tests)
+npx vitest run spikes/s23-popup
 
 # S25 (M7, ADR-024): a text box's text and border colours, PDFium in Node (runs with the unit tests)
 npx vitest run spikes/s25-freetext-colors
