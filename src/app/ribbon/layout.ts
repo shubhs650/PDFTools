@@ -35,7 +35,8 @@ export interface RibbonLayout {
 
 /**
  * A tab's copies of other tabs' commands (REUSE_GROUPS): the icons, handlers
- * and ids are the originals'; small and labelled unless listed as large.
+ * and ids are the originals'; small and labelled unless listed as large, or
+ * icons only in a `compact` group (M7-09).
  */
 function reuses(tab: CommandTab, byId: Map<string, CommandDef>): CommandDef[] {
   const out: CommandDef[] = [];
@@ -46,7 +47,9 @@ function reuses(tab: CommandTab, byId: Map<string, CommandDef>): CommandDef[] {
       if (!c) continue;
       const size = g.large?.includes(id) ? 'large' : 'small';
       const copy: CommandDef = { ...c, tab, group: g.group, size };
-      delete copy.compact;
+      if (g.compact) copy.compact = true;
+      else delete copy.compact;
+      delete copy.reuseOnly;
       out.push(copy);
     }
   }
@@ -80,7 +83,7 @@ export function ribbonLayout(
   const tabs: RibbonTabLayout[] = [];
   for (const tab of RIBBON_TABS) {
     if (tab === 'file') continue;
-    const own = shown.filter((c) => c.tab === tab);
+    const own = shown.filter((c) => c.tab === tab && c.reuseOnly !== true);
     const groups = group([...own, ...reuses(tab, byId)], GROUP_ORDER[tab]);
     if (groups.length) tabs.push({ tab, groups });
   }

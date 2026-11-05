@@ -385,7 +385,8 @@ test('a file that denies copying: Cut and Copy are off and say why; the rest wor
   await expect(page.locator('[data-page="0"] img.page-preview')).toBeVisible();
   const id = (await cap(page, 'view', 'activeDocId')) as string;
   await expect.poll(async () => (await objects(page, id)).length).toBe(1);
-  await page.getByRole('tab', { name: 'Home' }).click();
+  // Select Comments and Select Text left Home in M7-09 (Comment tab).
+  await page.getByRole('tab', { name: 'Comment', exact: true }).click();
   await page.getByRole('button', { name: 'Select Comments', exact: true }).click();
   // Page y of the box's middle: 842 − 720.
   const p = await at(page, 150, 122);

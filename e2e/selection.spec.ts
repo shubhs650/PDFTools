@@ -46,10 +46,12 @@ test('dragging over text selects it; Ctrl+C copies it', async ({ page, context }
   await expect.poll(() => clipboard(context, page)).toBe('Page 1');
 });
 
-test('Home → Select Text selects text too; Esc returns to Select', async ({ page, context }) => {
+test('Comment → Select Text selects text too; Esc returns to Select', async ({ page, context }) => {
   await openDoc(page, 'simple.pdf', simplePdf(1));
   await clipboard(context, page, 'before');
-  const tools = page.getByRole('toolbar', { name: 'Home commands' });
+  // On the Comment and Form tabs since M7-09 (Q3: Home's Select selects text too).
+  await page.getByRole('tab', { name: 'Comment', exact: true }).click();
+  const tools = page.getByRole('toolbar', { name: 'Comment commands' });
   const selectText = tools.getByRole('button', { name: 'Select Text' });
   await selectText.click();
   await expect(selectText).toHaveAttribute('aria-pressed', 'true');

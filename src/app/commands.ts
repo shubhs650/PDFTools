@@ -55,6 +55,12 @@ export interface CommandDef {
    * (WCAG 2.5.3 label in name; checked by tests/icons.test.ts).
    */
   short?: true;
+  /**
+   * Not on its own tab's ribbon: shown only where a REUSE_GROUPS entry copies it
+   * (and in menus and the keymap). M7-09 (review 3b, 3c): Select Text, Select
+   * Comments and Reset Form left Home but kept their ids and handlers.
+   */
+  reuseOnly?: true;
 }
 
 /** Milestones whose commands are shown. Extend as milestones land. */
@@ -85,6 +91,8 @@ export interface ReuseGroup {
   group: string;
   ids: readonly string[];
   large?: readonly string[];
+  /** Icon only at every width (the label is the name and the tooltip; M7-09, D-36 amendment). */
+  compact?: true;
 }
 
 export const REUSE_GROUPS: readonly ReuseGroup[] = [
@@ -110,10 +118,25 @@ export const REUSE_GROUPS: readonly ReuseGroup[] = [
     ],
   },
   { tab: 'home', group: 'measure', ids: ['measure.distance'] },
-  // Home rotates the view; Organize rotates the pages (owner's answer 6, M6 plan).
-  { tab: 'home', group: 'rotation', ids: ['view.rotateCw', 'view.rotateCcw'] },
-  { tab: 'home', group: 'view', ids: ['view.propertiesPane'] },
-  { tab: 'home', group: 'protect', ids: ['protect.signatures'] },
+  // Home → View (M7-09, review 3d): icons only. Home rotates the view; Organize
+  // rotates the pages (owner's answer 6, M6 plan). The pane buttons are the
+  // rail's toggles (Bookmarks: Q2), pressed while their pane is open.
+  {
+    tab: 'home',
+    group: 'view',
+    ids: [
+      'view.rotateCw',
+      'view.rotateCcw',
+      'rail.comments',
+      'rail.thumbnails',
+      'rail.bookmarks',
+      'rail.attachments',
+      'view.propertiesPane',
+    ],
+    compact: true,
+  },
+  // Home → Protect (M7-09, review 3g): Sign Document instead of the Signatures pane.
+  { tab: 'home', group: 'protect', ids: ['protect.signDocument'] },
   // Comment (M6-08, beta review B7a, B7b): the pointer tools and the measurements.
   {
     tab: 'comment',
@@ -136,7 +159,8 @@ export const REUSE_GROUPS: readonly ReuseGroup[] = [
  * keep the command table's order, reused groups last.
  */
 export const GROUP_ORDER: Partial<Record<CommandTab, readonly string[]>> = {
-  home: ['tools', 'find', 'forms', 'zoom', 'comment', 'measure', 'rotation', 'view', 'protect'],
+  // M7-09 (review 3a): Find, Forms and Rotate View left Home.
+  home: ['tools', 'zoom', 'view', 'comment', 'measure', 'protect'],
   comment: ['tools', 'text', 'note', 'textMarkup', 'drawing', 'stamp', 'measure', 'manage'],
   form: ['tools', 'fields', 'view', 'manage'],
 };
@@ -155,7 +179,6 @@ export const GROUP_PRIORITY: Readonly<Record<string, number>> = {
   'home.tools': 4,
   'home.comment': 3,
   'home.zoom': 2,
-  'home.find': 1,
 };
 
 export const COMMANDS: readonly CommandDef[] = [
@@ -294,24 +317,64 @@ export const COMMANDS: readonly CommandDef[] = [
     fluent: 'ShieldCheckmark',
     milestone: 'M1',
   },
+  // Home → Tools (M7-09, review 3c, D-36 amendment): icons only at every width,
+  // in this order: Hand, Select, Snapshot, Find, Advanced Search. The Comment and
+  // Form tabs' copies get their labels back.
   {
     id: 'home.hand',
     tab: 'home',
     group: 'tools',
-    size: 'large',
+    size: 'small',
     fluent: 'HandLeft',
     milestone: 'M1',
     toggle: true,
+    compact: true,
   },
   {
     id: 'home.select',
     tab: 'home',
     group: 'tools',
-    size: 'large',
+    size: 'small',
     fluent: 'Cursor',
     milestone: 'M1',
     toggle: true,
+    compact: true,
   },
+  {
+    // M6-09 (beta review A2a, D-38 e): drag a rectangle, its picture goes to the
+    // system clipboard. In Home → Tools since M7-09.
+    id: 'home.snapshot',
+    tab: 'home',
+    group: 'tools',
+    size: 'small',
+    fluent: 'Screenshot',
+    milestone: 'M6',
+    toggle: true,
+    shipped: true,
+    compact: true,
+  },
+  {
+    id: 'home.find',
+    tab: 'home',
+    group: 'tools',
+    size: 'small',
+    fluent: 'Search',
+    milestone: 'M2',
+    shipped: true, // M2-07
+    compact: true,
+  },
+  {
+    id: 'home.advancedSearch',
+    tab: 'home',
+    group: 'tools',
+    size: 'small',
+    fluent: 'DocumentSearch',
+    milestone: 'M2',
+    shipped: true, // M2-09
+    compact: true,
+  },
+  // Not on Home since M7-09 (Q3: Select selects text and comments too): on the
+  // Comment and Form tabs only (REUSE_GROUPS).
   {
     id: 'home.selectText',
     tab: 'home',
@@ -321,6 +384,7 @@ export const COMMANDS: readonly CommandDef[] = [
     milestone: 'M2',
     shipped: true, // M2-19 (text selection itself: M2-04)
     toggle: true,
+    reuseOnly: true,
   },
   {
     id: 'home.selectAnnotations',
@@ -331,45 +395,18 @@ export const COMMANDS: readonly CommandDef[] = [
     milestone: 'M3',
     shipped: true, // M3-05
     toggle: true,
+    reuseOnly: true,
   },
   {
-    id: 'home.find',
-    tab: 'home',
-    group: 'find',
-    size: 'small',
-    fluent: 'Search',
-    milestone: 'M2',
-    shipped: true, // M2-07
-  },
-  {
-    id: 'home.advancedSearch',
-    tab: 'home',
-    group: 'find',
-    size: 'small',
-    fluent: 'DocumentSearch',
-    milestone: 'M2',
-    shipped: true, // M2-09
-  },
-  {
+    // Form → Manage only since M7-09 (review 3b).
     id: 'home.resetForm',
     tab: 'home',
-    group: 'forms',
+    group: 'tools',
     size: 'small',
     fluent: 'ArrowReset',
     milestone: 'M2',
     shipped: true, // M2-14
-  },
-  {
-    // Home → View (M6-09, beta review A2a, D-38 e): drag a rectangle, its picture
-    // goes to the system clipboard. Listed before the reused Properties Pane.
-    id: 'home.snapshot',
-    tab: 'home',
-    group: 'view',
-    size: 'small',
-    fluent: 'Screenshot',
-    milestone: 'M6',
-    toggle: true,
-    shipped: true,
+    reuseOnly: true,
   },
   {
     id: 'view.firstPage',

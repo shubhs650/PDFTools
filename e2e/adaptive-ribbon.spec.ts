@@ -245,14 +245,106 @@ test('Typewriter and Highlight Area: their own buttons make their comments; the 
   expect(tail).toMatch(/\/BM\s*\/Multiply/);
 });
 
-test('Home: comment tools, Rotate View both ways (the pages stay), Properties Pane', async ({
+// M7-09 (ADR-023 D-36 amendment; review 3a–3g): the Home tab.
+const HOME_GROUPS = [
+  'home.tools',
+  'home.zoom',
+  'home.view',
+  'home.comment',
+  'home.measure',
+  'home.protect',
+];
+const HOME_TOOLS = ['Hand', 'Select', 'Snapshot', 'Find', 'Advanced Search'];
+const HOME_VIEW = [
+  'Rotate View Clockwise',
+  'Rotate View Counterclockwise',
+  'Comments',
+  'Thumbnails',
+  'Bookmarks',
+  'Attachments',
+  'Properties Pane',
+];
+
+for (const width of WIDTHS) {
+  test(`Home at ${String(width)} px: six groups in order, Tools and View icons only, nothing clipped${width === 1280 ? ' @smoke' : ''}`, async ({
+    page,
+  }) => {
+    await page.setViewportSize({ width, height: 800 });
+    await openDoc(page);
+    await expect(toolbar(page, 'Home')).toBeVisible();
+    await expect.poll(async () => (await fit(page)).clipped).toEqual([]);
+    const f = await fit(page);
+    expect(Object.keys(f.steps)).toEqual(HOME_GROUPS);
+    expect(f.overflow).toBeLessThanOrEqual(0);
+    // Nothing folded into a group menu at the supported widths (§8).
+    for (const g of HOME_GROUPS) expect(f.steps[g], g).toBeLessThan(3);
+    for (const [group, names] of [
+      ['home.tools', HOME_TOOLS],
+      ['home.view', HOME_VIEW],
+    ] as const) {
+      const g = page.locator(`[data-group="${group}"]`);
+      // Icons only: no visible label; the full name is the accessible name.
+      await expect(g.locator('.ribbon-label')).toHaveCount(0);
+      await expect(g.getByRole('button')).toHaveCount(names.length);
+      for (const [i, name] of names.entries())
+        await expect(g.getByRole('button').nth(i)).toHaveAccessibleName(name);
+    }
+    await page.screenshot({ path: `test-results/m7-09/home-${String(width)}.png` });
+  });
+}
+
+test('Home (M7-09): names, tooltips with shortcuts, pane toggles, Rotate View, Sign Document; Reset Form only on Form @smoke', async ({
   page,
 }) => {
   await openDoc(page);
   const home = toolbar(page, 'Home');
-  for (const name of ['Callout', 'Line', 'Arrow', 'Rectangle', 'Properties Pane'])
-    await expect(home.getByRole('button', { name, exact: true }), name).toBeVisible();
+  // Gone from Home (3b, 3c, 3g): their commands stay on their own tabs.
+  for (const name of ['Select Text', 'Select Comments', 'Reset Form', 'Signatures'])
+    await expect(home.getByRole('button', { name, exact: true }), name).toHaveCount(0);
   await expect(home.getByRole('button', { name: 'Rotate Clockwise', exact: true })).toHaveCount(0);
+  for (const name of ['Callout', 'Line', 'Arrow', 'Rectangle', 'Distance', 'Sign Document…'])
+    await expect(home.getByRole('button', { name, exact: true }), name).toBeVisible();
+
+  // Every Home button has a tooltip naming it, with its shortcut when it has one.
+  for (const [name, tip] of [
+    ['Hand', 'Hand (H)'],
+    ['Find', 'Find (Ctrl+F)'],
+    ['Advanced Search', 'Advanced Search (Ctrl+Shift+F)'],
+    ['Bookmarks', 'Bookmarks'],
+  ] as const) {
+    await home.getByRole('button', { name, exact: true }).hover();
+    await expect(page.getByRole('tooltip')).toHaveText(tip);
+    await page.mouse.move(640, 560, { steps: 5 });
+    await expect(page.getByRole('tooltip')).toBeHidden();
+  }
+
+  // The pane buttons open their pane and show it pressed, like the rail's.
+  const rail = page.getByRole('complementary', { name: 'Navigation panes' });
+  for (const name of ['Comments', 'Thumbnails', 'Bookmarks', 'Attachments']) {
+    const button = home.getByRole('button', { name, exact: true });
+    if ((await button.getAttribute('aria-pressed')) !== 'true') await button.click();
+    await expect(button, name).toHaveAttribute('aria-pressed', 'true');
+    await expect(page.getByTestId('left-pane').getByRole('heading', { level: 2 })).toHaveText(name);
+    await expect(rail.getByRole('button', { name, exact: true })).toHaveAttribute(
+      'aria-pressed',
+      'true',
+    );
+    for (const other of ['Comments', 'Thumbnails', 'Bookmarks', 'Attachments'])
+      if (other !== name)
+        await expect(home.getByRole('button', { name: other, exact: true })).toHaveAttribute(
+          'aria-pressed',
+          'false',
+        );
+  }
+  await home.getByRole('button', { name: 'Attachments', exact: true }).click();
+  await expect(home.getByRole('button', { name: 'Attachments', exact: true })).toHaveAttribute(
+    'aria-pressed',
+    'false',
+  );
+  await expect(page.getByTestId('left-pane')).toBeHidden();
+  await home.getByRole('button', { name: 'Bookmarks', exact: true }).click();
+  await expect(page.getByTestId('left-pane')).toBeVisible();
+
   const landscape = async () => {
     const r = await page.locator('[data-page="0"]').boundingBox();
     return r ? r.width > r.height : false;
@@ -269,5 +361,34 @@ test('Home: comment tools, Rotate View both ways (the pages stay), Properties Pa
   const before = await pane.getAttribute('aria-pressed');
   await pane.click();
   await expect(pane).not.toHaveAttribute('aria-pressed', before ?? '');
-  await page.screenshot({ path: 'test-results/m6-08/home-1280.png' });
+  // A click closes the tooltip; pointing at the button again shows it.
+  await page.mouse.move(640, 560, { steps: 5 });
+  await home.getByRole('button', { name: 'Find', exact: true }).hover();
+  await expect(page.getByRole('tooltip')).toHaveText('Find (Ctrl+F)');
+  await page.screenshot({ path: 'test-results/m7-09/home-tooltip-1280.png' });
+  await page.mouse.move(640, 560, { steps: 5 });
+
+  // Sign Document opens its dialog from Home.
+  await home.getByRole('button', { name: 'Sign Document…', exact: true }).click();
+  const sign = page.getByRole('dialog', { name: 'Sign Document' });
+  await expect(sign).toBeVisible();
+  await page.keyboard.press('Escape');
+  await expect(sign).toBeHidden();
+
+  // Reset Form is on the Form tab only (3b); Select Text and Select Comments on Comment.
+  await page.getByRole('tab', { name: 'Form', exact: true }).click();
+  await expect(
+    toolbar(page, 'Form').getByRole('button', { name: 'Reset Form', exact: true }),
+  ).toBeVisible();
+  await page.getByRole('tab', { name: 'Comment', exact: true }).click();
+  for (const name of ['Select Text', 'Select Comments'])
+    await expect(
+      toolbar(page, 'Comment').getByRole('button', { name, exact: true }),
+      name,
+    ).toBeVisible();
+
+  // axe on the Home tab.
+  await page.getByRole('tab', { name: 'Home', exact: true }).click();
+  const r = await new AxeBuilder({ page }).include('.ribbon-panel').analyze();
+  expect(r.violations.map((v) => v.id)).toEqual([]);
 });

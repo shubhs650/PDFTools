@@ -23,7 +23,8 @@ test('marquee over 1,000 comments on a page: no long tasks', async ({ page, pdfs
   await expect
     .poll(async () => ((await cap(page, 'annotate', 'list', id)) as unknown[] | null)?.length)
     .toBe(1000);
-  await page.getByRole('tab', { name: 'Home' }).click();
+  // Select Comments and Select Text left Home in M7-09 (Comment tab).
+  await page.getByRole('tab', { name: 'Comment', exact: true }).click();
   await page.getByRole('button', { name: 'Select Comments', exact: true }).click();
   await cap(page, 'view', 'settle', 400);
   const box = await page.locator('[data-page="0"] .page-content').boundingBox();

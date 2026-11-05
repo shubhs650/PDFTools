@@ -82,27 +82,39 @@ describe('ribbon layout from the command table (§8, ADR-001 B6, M1-Q2)', () => 
     expect(ids).toContain('view.continuousFacing');
   });
 
-  it('Home repeats available commands from other tabs as small buttons in Home groups (UI01; M6-08 A2b–A2d)', () => {
+  it('Home is Tools › Zoom › View › Comment › Measure › Protect (M7-09, review 3a–3g)', () => {
     const home = m1.tabs.find((t) => t.tab === 'home');
     expect(home?.groups.map((g) => `${g.tab}.${g.group}`)).toEqual([
       'home.tools',
-      'home.find',
-      'home.forms',
       'home.zoom',
+      'home.view',
       'home.comment',
       'home.measure',
-      'home.rotation',
-      'home.view',
       'home.protect',
     ]);
-    // Copies keep the original's id, icon and short label; large tools become small
-    // and icon-only tool grids get their labels back.
-    const copies = home?.groups.slice(3).flatMap((g) => g.commands) ?? [];
-    expect(copies.map((c) => c.id)).toEqual([
-      'view.zoomIn',
-      'view.zoomOut',
-      'view.fitPage',
-      'view.fitWidth',
+    const ids = (group: string) =>
+      home?.groups.find((g) => g.group === group)?.commands.map((c) => c.id);
+    // Tools (3c): no Select Text or Select Comments (Q3); Find and Advanced Search moved in.
+    expect(ids('tools')).toEqual([
+      'home.hand',
+      'home.select',
+      'home.snapshot',
+      'home.find',
+      'home.advancedSearch',
+    ]);
+    expect(ids('zoom')).toEqual(['view.zoomIn', 'view.zoomOut', 'view.fitPage', 'view.fitWidth']);
+    // View (3d): the view turns both ways (the pages turn on Organize, owner's
+    // answer 6); the rail's pane toggles (Bookmarks: Q2) and the Properties pane.
+    expect(ids('view')).toEqual([
+      'view.rotateCw',
+      'view.rotateCcw',
+      'rail.comments',
+      'rail.thumbnails',
+      'rail.bookmarks',
+      'rail.attachments',
+      'view.propertiesPane',
+    ]);
+    expect(ids('comment')).toEqual([
       'comment.highlight',
       'comment.stickyNote',
       'comment.textBox',
@@ -112,18 +124,65 @@ describe('ribbon layout from the command table (§8, ADR-001 B6, M1-Q2)', () => 
       'comment.rectangle',
       'comment.cloud',
       'comment.stamp',
-      'measure.distance',
-      // The view turns both ways; the pages turn on Organize (owner's answer 6).
-      'view.rotateCw',
-      'view.rotateCcw',
-      // Home's own Snapshot (M6-09, A2a) leads the View group.
-      'home.snapshot',
-      'view.propertiesPane',
-      'protect.signatures',
     ]);
-    expect(copies.every((c) => c.size === 'small' && c.compact === undefined)).toBe(true);
-    expect(copies.every((c) => c.tab === 'home')).toBe(true);
-    expect(copies.map((c) => c.id)).not.toContain('organize.rotateCw');
+    expect(ids('measure')).toEqual(['measure.distance']);
+    // Protect (3g): Sign Document instead of the Signatures pane.
+    expect(ids('protect')).toEqual(['protect.signDocument']);
+    const all = home?.groups.flatMap((g) => g.commands) ?? [];
+    expect(all.every((c) => c.size === 'small' && c.tab === 'home')).toBe(true);
+    for (const id of [
+      'home.selectText',
+      'home.selectAnnotations',
+      'home.resetForm', // 3b: Form tab only
+      'protect.signatures',
+      'organize.rotateCw',
+    ])
+      expect(all.map((c) => c.id)).not.toContain(id);
+    // Tools and View are icons only at every width (D-36 amendment): no step
+    // brings their labels back, only the narrowest folds them into a menu.
+    for (const group of ['tools', 'view']) {
+      const g = home?.groups.find((x) => x.group === group);
+      expect(
+        g?.commands.every((c) => c.compact === true),
+        group,
+      ).toBe(true);
+      expect(groupSteps(g?.commands ?? []), group).toEqual([0, 3]);
+    }
+    // The other groups keep their labels (the comment tools are split buttons).
+    for (const group of ['zoom', 'comment', 'measure', 'protect'])
+      expect(
+        home?.groups.find((x) => x.group === group)?.commands.some((c) => c.compact),
+        group,
+      ).toBe(false);
+    // The pane buttons are toggles: pressed while their pane is open.
+    expect(
+      home?.groups
+        .find((g) => g.group === 'view')
+        ?.commands.filter((c) => c.toggle)
+        .map((c) => c.id),
+    ).toEqual([
+      'rail.comments',
+      'rail.thumbnails',
+      'rail.bookmarks',
+      'rail.attachments',
+      'view.propertiesPane',
+    ]);
+  });
+
+  it('copies on other tabs get their labels back; reuse-only commands stay off their own tab (M7-09)', () => {
+    const comment = m1.tabs.find((t) => t.tab === 'comment');
+    const tools = comment?.groups.find((g) => g.group === 'tools')?.commands ?? [];
+    expect(tools.map((c) => [c.id, c.compact, c.reuseOnly])).toEqual([
+      ['home.hand', undefined, undefined],
+      ['home.selectText', undefined, undefined],
+      ['home.selectAnnotations', undefined, undefined],
+    ]);
+    // A reuse-only command with no copy is not shown anywhere.
+    const lonely = { ...COMMANDS[0], id: 'x.lonely', tab: 'home', group: 'tools', reuseOnly: true };
+    const layout = ribbonLayout([...COMMANDS, lonely as (typeof COMMANDS)[number]]);
+    expect(
+      layout.tabs.flatMap((t) => t.groups.flatMap((g) => g.commands.map((c) => c.id))),
+    ).not.toContain('x.lonely');
   });
 
   it('Comment follows the review (B7a, B7b): Tools … Manage Comments; review and transfer live in the menus', () => {
