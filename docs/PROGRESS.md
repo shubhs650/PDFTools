@@ -1,10 +1,10 @@
 # Triya PDF — Progress
 
-_Last updated: 2026-11-05 (session 53: M7-12 acceptance)_
+_Last updated: 2026-11-05 (session 54: M8 plan proposed)_
 
 **Current milestone:** M7 — second beta review (plan in [docs/plan/M7.md](plan/M7.md), scope in
 [ADR-023](adr/023-m7-second-beta-review.md), **Accepted** 2026-11-04 with the recommended
-answers Q1–Q7; ARCHITECTURE.md Rev 0.12 after [ADR-024](adr/024-freetext-text-and-border-colours.md)). M7-01 … M7-12 done, plus separate text and border colours (ADR-024): **M7 complete on the agent side** ([acceptance](acceptance/M7.md)); next: the owner's interop §M7 run, then the queued comment export/import round-trip task. **Previous milestone:** M6 — Beta review (plan in [docs/plan/M6.md](plan/M6.md), scope changes in
+answers Q1–Q7; ARCHITECTURE.md Rev 0.12 after [ADR-024](adr/024-freetext-text-and-border-colours.md)). M7-01 … M7-12 done, plus separate text and border colours (ADR-024): **M7 complete on the agent side** ([acceptance](acceptance/M7.md)); next: the owner's interop §M7 run, and **M8 — lossless comment export and import (XFDF and FDF)**, plan [docs/plan/M8.md](plan/M8.md) and [ADR-025](adr/025-m8-comment-interchange-xfdf-fdf.md), **proposed** 2026-11-05, waiting for the owner's review. **Previous milestone:** M6 — Beta review (plan in [docs/plan/M6.md](plan/M6.md), scope changes in
 [ADR-021](adr/021-m6-beta-review.md), **Accepted** 2026-11-01; ARCHITECTURE.md Rev 0.10; M6-01 … M6-15 done, **M6 complete on the agent side** ([acceptance](acceptance/M6.md)); spike results in
 [ADR-022](adr/022-m6-spikes-s18-s22.md), **Accepted** 2026-11-02 (bookmark route B)). M5 — OCR: M5-01 … M5-04 done under [ADR-020](adr/020-m5-ocr.md); M5-05's owner
 interop is in the M6 pack (CHECKLIST §M6 R1–R4). Rev 0 (M0–M4) is complete on the agent side.
