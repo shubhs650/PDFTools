@@ -223,3 +223,93 @@ test('Ctrl+S from inside a text field saves the value being typed (no Enter, no 
   expect(bytes.subarray(original.length).toString('latin1')).toContain('(Typed then saved)');
   expect(qpdfCheck(bytes)).not.toBe(2);
 });
+
+test('Highlight Fields tints check boxes and radio buttons like every other field (M7-10) @smoke', async ({
+  page,
+}) => {
+  await page.goto('/');
+  await drop(page, [{ name: 'highlight.pdf', b64: Buffer.from(fullFormPdf()).toString('base64') }]);
+  await field(page, 'first').waitFor();
+  const agree = page.getByRole('checkbox', { name: 'Agree' });
+  const choices = page.getByRole('radio', { name: 'Choice' });
+  const kinds = ['first', 'required', 'agree', 'choice', 'size', 'material'];
+  const looks = () =>
+    page.evaluate((names) => {
+      const out: Record<string, { bg: string[]; shadow: string; mark: string[]; radius: string }> =
+        {};
+      for (const name of names) {
+        const els = [...document.querySelectorAll<HTMLElement>(`[data-field="${name}"]`)];
+        const first = els[0];
+        if (!first) continue;
+        out[name] = {
+          bg: els.map((e) => getComputedStyle(e).backgroundColor),
+          shadow: getComputedStyle(first).boxShadow,
+          mark: els.map((e) => getComputedStyle(e, '::after').content),
+          radius: getComputedStyle(first).borderTopLeftRadius,
+        };
+      }
+      return out;
+    }, kinds);
+  const TINT = 'rgb(227, 236, 250)'; // --color-form-field
+  const CLEAR = 'rgba(0, 0, 0, 0)';
+
+  // On (the default): every kind tinted, the required field outlined in red.
+  await expect(choices).toHaveCount(2);
+  let now = await looks();
+  for (const name of kinds)
+    expect(
+      now[name]?.bg.every((bg) => bg === TINT),
+      name,
+    ).toBe(true);
+  expect(now.required?.shadow).toContain('rgb(196, 43, 28)'); // --color-danger
+  expect(now.agree?.shadow).toBe('none');
+  // Our own check and dot, only when checked; radio buttons are round.
+  expect(now.agree?.mark).toEqual(['none']); // /V /Off in the fixture
+  expect(now.choice?.mark).toEqual(['""', 'none']); // /V /A
+  expect(now.choice?.radius).toBe('50%');
+  // A required check box gets the red outline too.
+  const requiredShadow = await agree.evaluate((el) => {
+    el.setAttribute('aria-required', 'true');
+    const s = getComputedStyle(el).boxShadow;
+    el.removeAttribute('aria-required');
+    return s;
+  });
+  expect(requiredShadow).toContain('rgb(196, 43, 28)');
+
+  // Keyboard: Tab reaches the check box with the focus ring; Space toggles it and the radio.
+  await page.getByRole('textbox', { name: 'required field' }).focus();
+  await page.keyboard.press('Tab');
+  await expect(agree).toBeFocused();
+  await expect(agree).toHaveCSS('outline-style', 'solid');
+  await page.keyboard.press('Space');
+  await expect(agree).toBeChecked();
+  await expect.poll(async () => (await looks()).agree?.mark).toEqual(['""']);
+  await choices.nth(1).focus();
+  await page.keyboard.press('Space');
+  await expect(choices.nth(1)).toBeChecked();
+  await expect.poll(async () => (await looks()).choice?.mark).toEqual(['none', '""']);
+  await choices.nth(0).click();
+  await expect(choices.nth(0)).toBeChecked();
+  await expect.poll(async () => (await looks()).choice?.mark).toEqual(['""', 'none']);
+  const { violations } = await new AxeBuilder({ page }).include('.form-layer').analyze();
+  expect(violations.map((v) => v.id)).toEqual([]);
+
+  // Off: no tint, a hairline round every kind; the marks stay.
+  await page.getByRole('tab', { name: 'Form', exact: true }).click();
+  const toggle = page
+    .getByRole('toolbar', { name: 'Form commands' })
+    .getByRole('button', { name: 'Highlight Fields', exact: true });
+  await toggle.click();
+  await expect(page.locator('.form-layer[data-highlight]')).toHaveCount(0);
+  now = await looks();
+  for (const name of kinds) {
+    expect(
+      now[name]?.bg.every((bg) => bg === CLEAR),
+      name,
+    ).toBe(true);
+    expect(now[name]?.shadow, name).toContain('inset');
+  }
+  expect(now.choice?.mark).toEqual(['""', 'none']);
+  await toggle.click();
+  await expect(page.locator('.form-layer[data-highlight]').first()).toBeVisible();
+});

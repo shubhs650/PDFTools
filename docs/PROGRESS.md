@@ -1,15 +1,28 @@
 # Triya PDF — Progress
 
-_Last updated: 2026-11-05 (session 50: M7-09 Home tab reorganisation)_
+_Last updated: 2026-11-05 (session 51: M7-10 form highlight on check boxes and radio buttons)_
 
 **Current milestone:** M7 — second beta review (plan in [docs/plan/M7.md](plan/M7.md), scope in
 [ADR-023](adr/023-m7-second-beta-review.md), **Accepted** 2026-11-04 with the recommended
-answers Q1–Q7; ARCHITECTURE.md Rev 0.12 after [ADR-024](adr/024-freetext-text-and-border-colours.md)). M7-01 … M7-09 done, plus separate text and border colours (ADR-024); next: M7-10. **Previous milestone:** M6 — Beta review (plan in [docs/plan/M6.md](plan/M6.md), scope changes in
+answers Q1–Q7; ARCHITECTURE.md Rev 0.12 after [ADR-024](adr/024-freetext-text-and-border-colours.md)). M7-01 … M7-10 done, plus separate text and border colours (ADR-024); next: M7-11. **Previous milestone:** M6 — Beta review (plan in [docs/plan/M6.md](plan/M6.md), scope changes in
 [ADR-021](adr/021-m6-beta-review.md), **Accepted** 2026-11-01; ARCHITECTURE.md Rev 0.10; M6-01 … M6-15 done, **M6 complete on the agent side** ([acceptance](acceptance/M6.md)); spike results in
 [ADR-022](adr/022-m6-spikes-s18-s22.md), **Accepted** 2026-11-02 (bookmark route B)). M5 — OCR: M5-01 … M5-04 done under [ADR-020](adr/020-m5-ocr.md); M5-05's owner
 interop is in the M6 pack (CHECKLIST §M6 R1–R4). Rev 0 (M0–M4) is complete on the agent side.
 
 ## Done
+
+- **Session 51 — M7-10 Highlight Fields on check boxes and radio buttons (review F1; D-26,
+  D-39).** Check boxes and radio buttons are no longer the browser's own controls (which ignore
+  `background`): `appearance: none`, and we draw them (`app.css`, `.form-checkbox` /
+  `.form-radio`). The box is the widget's rect (a radio button's is round); Highlight Fields on
+  tints it like every other field, a required one gets the red outline; off, the hairline as
+  for text fields. The check (an SVG mask) and the radio dot are `::after` in
+  `--color-form-text`, only when checked. Read-only, focus ring, Space and arrow keys unchanged
+  (still native inputs); forced-colors mode gets the browser's controls back in system colours.
+  No change to `FormLayer.tsx` or to what is saved. Tests: e2e `forms.spec.ts` "Highlight Fields
+  tints check boxes and radio buttons…" (@smoke: computed background of every kind on and off,
+  red outline, check and dot only when checked, round radios, Tab focus ring, Space, axe).
+  Screenshots: project files `m7-10/`.
 
 - **Session 50 — M7-09 Home tab reorganisation (ADR-023 D-36 amendment; review 3a–3g).** Home
   is **Tools › Zoom › View › Comment › Measure › Protect** (`GROUP_ORDER.home`); the Find, Forms
@@ -2017,7 +2030,7 @@ rel="noopener noreferrer">`; the commands `app.home` / `app.reportIssue` open th
 
 ## Next
 
-- **Agent:** M7-10 … M7-12 serially, each in its own thread; then the queued task (owner,
+- **Agent:** M7-11 … M7-12 serially, each in its own thread; then the queued task (owner,
   2026-11-05) to make comment export and import round-trip every property as XFDF does — pop-ups
   (`/Rect`, `/Open`) included.
 - **Owner (M7-08):** CHECKLIST §M7 V1–V2 (a pasted image in their viewers; a real screenshot
