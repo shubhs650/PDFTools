@@ -39,6 +39,12 @@ interop is in the M6 pack (CHECKLIST §M6 R1–R4). Rev 0 (M0–M4) is complete 
   visits all nine ribbon tabs. Screenshots: project files `m7-11/` (light and dark, 1280 and
   1920 px). Noticed, not changed: the Help tab's ribbon is 7 px lower than the other tabs' (both
   themes, since M2).
+  Also fixed the two keyboard-focus e2e failures that were red on `main` too
+  (`context-menus.spec.ts` "from the keyboard…", `text-menu.spec.ts` "keyboard: Shift+F10…"):
+  Radix's roving focus moves the focus in a `setTimeout` after an arrow keydown, so a second
+  arrow pressed before it fires starts from the old item and is lost (CI traces showed one step
+  missing each time). The tests now step with `menuKey()` (`e2e/support/app.ts`), which waits
+  for the focus to move after each key.
 
 - **Session 51 — M7-10 Highlight Fields on check boxes and radio buttons (review F1; D-26,
   D-39).** Check boxes and radio buttons are no longer the browser's own controls (which ignore

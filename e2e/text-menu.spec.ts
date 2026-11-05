@@ -3,7 +3,7 @@ import AxeBuilder from '@axe-core/playwright';
 import type { BrowserContext, Page } from '@playwright/test';
 import { hasQpdf, qpdfEncrypt } from './fixtures/encrypted.ts';
 import { buildPdf, simplePdf } from './fixtures/generate.ts';
-import { cap, drop } from './support/app.ts';
+import { cap, drop, menuKey } from './support/app.ts';
 import { expect, test } from './support/fixtures.ts';
 
 // M7-05 (ADR-023 D-43 e; review 4b-v; bug B10): while a text box, typewriter
@@ -319,8 +319,8 @@ test('keyboard: Shift+F10 and the Menu key open it at the caret; arrows, Enter a
   // The Menu key; down to Cut (Undo, Redo, Cut) and Enter.
   await page.keyboard.press('ContextMenu');
   await expect(menu(page)).toBeVisible();
-  await page.keyboard.press('ArrowDown');
-  await page.keyboard.press('ArrowDown');
+  await expect(item(page, 'Undo')).toBeFocused();
+  await menuKey(page, 'ArrowDown', 2);
   await expect(item(page, 'Cut')).toBeFocused();
   await page.keyboard.press('Enter');
   await expect(editor(page)).toBeFocused();
@@ -334,8 +334,7 @@ test('keyboard: Shift+F10 and the Menu key open it at the caret; arrows, Enter a
   const style = page.getByRole('menu', { name: 'Text Style' });
   await expect(style.getByRole('menuitem', { name: 'Font' })).toBeFocused();
   // Font, Size, Bold.
-  await page.keyboard.press('ArrowDown');
-  await page.keyboard.press('ArrowDown');
+  await menuKey(page, 'ArrowDown', 2);
   await expect(style.getByRole('menuitemcheckbox', { name: 'Bold' })).toBeFocused();
   await page.keyboard.press('Enter');
   await expect(editor(page)).toBeFocused();

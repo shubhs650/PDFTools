@@ -117,3 +117,22 @@ export async function darkTheme(page: Page): Promise<void> {
     localStorage.setItem(key, 'dark');
   }, THEME_KEY);
 }
+
+/**
+ * Presses an arrow key in a Radix menu and waits for the focus to move.
+ * Radix's roving focus moves it in a `setTimeout` after the keydown, so a
+ * second key pressed before that still starts from the old item and is lost
+ * (the keyboard-focus failures in context-menus and text-menu on CI).
+ */
+export async function menuKey(page: Page, key: string, times = 1): Promise<void> {
+  for (let i = 0; i < times; i += 1) {
+    await page.evaluate(() => {
+      (window as unknown as { __menuFrom: Element | null }).__menuFrom = document.activeElement;
+    });
+    await page.keyboard.press(key);
+    await page.waitForFunction(
+      () =>
+        document.activeElement !== (window as unknown as { __menuFrom: Element | null }).__menuFrom,
+    );
+  }
+}
