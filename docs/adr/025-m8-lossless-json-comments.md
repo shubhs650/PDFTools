@@ -1,6 +1,6 @@
 # ADR-025: M8 — Lossless JSON comment export and import (JSON v2)
 
-- **Status:** Proposed
+- **Status:** Accepted (owner, 2026-11-05). Decision 5 applied: ARCHITECTURE.md Rev 0.13.
 - **Date:** 2026-11-05
 - **Deciders:** owner (Shubham) / agent (M8 thread)
 - **Related decisions:** D-03 (standard annotations, rule 6), D-19 (permissions, rule 9),
@@ -36,7 +36,7 @@ already builds a small PDF of the chosen comments in the Work worker (`copyComme
    bigger (pictures and attached files are inside it); the records and the PDF could disagree if
    someone edits the JSON by hand (the PDF wins, documented).
 
-## Decision (proposed)
+## Decision
 
 1. **Option 2.** Export Annotations → JSON writes version 2: v1's fields plus `pdf` (base64 of
    the comments PDF built by `copyComments`) and `pdfPages` (its page i → the document's page).

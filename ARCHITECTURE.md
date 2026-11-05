@@ -1,7 +1,7 @@
-# Triya PDF — Architecture & Product Specification (Rev 0.12)
+# Triya PDF — Architecture & Product Specification (Rev 0.13)
 
 **App:** Triya PDF (formerly PDFTools, D-41) · **URL:** `pdf-tools.openengtools.com` · **Platform:** Open Engineering Tools (OET)
-**Status:** Approved for implementation · **Last updated:** 05-Nov-2026 (Rev 0.12)
+**Status:** Approved for implementation · **Last updated:** 05-Nov-2026 (Rev 0.13)
 **Companion file:** `CLAUDE.md` (standing rules for the coding agent — read it first)
 
 > This document is the single source of truth. Where code and this document disagree, this document wins until it is deliberately amended. Decisions are numbered (D-xx) so commits, issues and ADRs can reference them.
@@ -19,6 +19,8 @@
 > **Rev 0.11 amendment** — [ADR-023](docs/adr/023-m7-second-beta-review.md) (owner-approved 2026-11-04): **M7 — second beta review** — product name **Triya PDF** (D-41), dark theme with a top-bar toggle (D-42), text comment interaction and marquee selection (D-43), sticky note popup (D-44), pasting an image onto the page (D-45); 50 % highlights and a black Courier typewriter (D-37); Home tab layout with icon-only groups (D-36) (§2, §7.1, §7.3, §8, §10.3, §13 M7, §14).
 
 > **Rev 0.12 amendment** — [ADR-024](docs/adr/024-freetext-text-and-border-colours.md) (owner-approved 2026-11-05): separate **text and border colours** for text boxes and callouts, stored as Acrobat does (`/DA` border, `/DS` text) and drawn by recolouring the text in PDFium's own appearance — the second exception to "no custom appearance streams" (§7.1).
+
+> **Rev 0.13 amendment** — [ADR-025](docs/adr/025-m8-lossless-json-comments.md) (owner-approved 2026-11-05): **M8 — lossless JSON comment export and import** — JSON v2 carries the comments' own PDF objects and imports them by object copy; JSON v1 still imports; XFDF/FDF deferred (§7.1, §7.6, §13 M8).
 
 > **Rev 0.10 amendment** — [ADR-022](docs/adr/022-m6-spikes-s18-s22.md) (owner-approved 2026-11-02): M6 spike results S18 – S22 — the signature font package and the form plugin's license exception (§3.2); Attach File by direct PDFium calls (§7.1); the modify + annotate gate and `/TU` for form fields (§7.10); the bundled handwriting font (§7.11); the copy route, owner-rights gate and 127-byte limit for passwords (§7.12); our own outline writer for bookmark editing (§7.15).
 
@@ -282,7 +284,7 @@ Types: **every annotation type/tool supported by EmbedPDF** (ADR-001 B7). No cus
 - Properties pane edits the selected annotation(s); style copy/apply.
 - Undo/redo per document, unlimited within a session.
 - Comments pane: list, filter (author, status, type, page), sort, reply, set status, jump-to.
-- **Comment transfer:** import comments from another PDF (e.g. an earlier revision; page range, filters, page mapping, duplicates skipped by `/NM`) or from our JSON export, and copy/paste comments between documents; imported comments are standard annotation objects saved by the next Ctrl+S (ADR-018).
+- **Comment transfer:** import comments from another PDF (e.g. an earlier revision; page range, filters, page mapping, duplicates skipped by `/NM`) or from our JSON export (lossless from v2, which carries the comments' own PDF objects, ADR-025), and copy/paste comments between documents; imported comments are standard annotation objects saved by the next Ctrl+S (ADR-018).
 - **Styles** (D-37, ADR-021): every tool has default properties (red `#FF0000`, 10 pt text, 1 pt lines and borders; highlight and sticky note yellow; Highlight, Highlight Area and Free Highlight at 50 % opacity; the typewriter black Courier — ADR-023), editable in the Properties pane while the tool is active; a **style palette** per tool (presets incl. cloudy variants, the user's own styles, Comment Styles Palette manager, export/import `.pdftools-styles.json`). Styles are property sets applied through the normal property path; appearances stay PDFium's.
 - **Text comments** (D-43, ADR-023): a new text box, typewriter or callout is selected and edits with "Type here" selected; one click selects it (box, text or callout line) and a drag moves it; double-click (Enter / F2) edits; Esc, a click elsewhere, a tool or tab change, Ctrl+S and closing all commit the edit as one undo step; right-click while editing opens our text menu (Undo, Redo, Cut, Copy, Paste, Delete, Select All, Text Style for the whole comment, Properties); a callout can be drawn with one drag. **Selection:** marquee with Select Comments (and Select on empty space), Ctrl+ / Shift+click toggle, a newly drawn comment is selected.
 - **Sticky note popup** (D-44, ADR-023): a popup window on the page for `/Text` notes — header (author, date), multi-line text, menu, status, lock, Reply; draggable and resizable; opened on creation and double-click. Its position and open state are saved as a standard `/Popup` by our object layer only if spike S23 passes.
@@ -322,7 +324,7 @@ Excel (ExcelJS). Header block: document number, revision, title, reviewer, date,
 | Markdown | PDF Oxide | — |
 | HTML | PDF Oxide | — |
 | Word (.docx) | PDF → Markdown → mdast → `docx` | **Beta** |
-| Annotations | own serializer → CSV / XLSX / JSON (JSON also imports, §7.1) | — |
+| Annotations | own serializer → CSV / XLSX / JSON (JSON v2 carries the comments' PDF objects and imports losslessly, §7.1, ADR-025) | — |
 
 PDF Oxide runs in the Work worker, lazy-loaded (non-core) from a self-hosted WASM URL and warmed up in the background after init. **Every Oxide call is gated by PDFium's permission check** — Oxide itself ignores permission flags (D-19, ADR-009). Search keeps PDFium text extraction (§6).
 
@@ -491,6 +493,9 @@ The beta users' review (2026-11-01): top bar and full screen, context menus and 
 
 ### M7 — Second beta review (ADR-023)
 The second beta review (2026-11-04): the name Triya PDF, text comment editing and selection fixes (bugs B1–B14), right-click menu in text, sticky note popup (spike S23), 50 % highlights and a black Courier typewriter, pasting images, the Home tab layout, form highlight for check boxes and radio buttons, the dark theme; acceptance (`docs/plan/M7.md`).
+
+### M8 — Lossless JSON comments (ADR-025)
+Comment export and import keep every property: JSON v2 with the comments' own PDF objects, imported by object copy; a round-trip test of every interop file, key by key and pixel by pixel. XFDF/FDF deferred (`docs/plan/M8.md`).
 
 ---
 
