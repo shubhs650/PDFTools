@@ -34,8 +34,8 @@ interface PageArg {
 export interface NotePopupInfo {
   /** The note's /NM. */
   noteId: string;
-  /** The pop-up's /NM (our object layer's key for /Open). */
-  popupId: string;
+  /** The pop-up's /NM, if it has one (reading never writes one: the file stays as it was). */
+  popupId: string | null;
   /** The pop-up's object number (the Work worker reads /Open by it). */
   obj: number;
   rect: DeviceRect;
@@ -91,7 +91,7 @@ export function listNotePopups(
           if (rawCall(mod, 'FPDFAnnot_GetSubtype', popup) !== FPDF_ANNOT_POPUP) continue;
           out.push({
             noteId,
-            popupId: popupName(mod, popup),
+            popupId: readAnnotString(mod, popup, 'NM') || null,
             obj: rawCall(mod, 'EPDFAnnot_GetObjectNumber', popup),
             rect: w.toDeviceRect(doc, page, w.readRect(popup)),
           });

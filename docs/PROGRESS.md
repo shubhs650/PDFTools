@@ -36,7 +36,7 @@ interop is in the M6 pack (CHECKLIST §M6 R1–R4). Rev 0 (M0–M4) is complete 
   save; without the annotate permission the window still opens read-only and nothing is written.
   Pages with no notes never ask the Render worker. Keys inside a window are its own (document
   shortcuts such as Tab, the arrows and Delete are not run there). Help (Reviewing comments)
-  updated. Tests: S23 (10), `tests/annotate/popupGeometry.test.ts`, `e2e/sticky-note-popup.spec.ts`
+  updated. Tests: S23 (9), `tests/annotate/popupGeometry.test.ts`, `e2e/sticky-note-popup.spec.ts`
   (6: three lines saved and reopened open in place, click-away/Esc/double-click/Enter, Reply,
   Set Status, Lock, Delete, Open Popup from the Comments pane, move/resize/keyboard/zoom and the
   saved rect, an Acrobat-made pop-up read open in place with Tab order and axe, and the interop
