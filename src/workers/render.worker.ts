@@ -17,6 +17,7 @@ import { AnnotBoxCache, annotBoxes, renderAnnotTile } from './render/annotTiles'
 import { renderSnapshot } from './render/snapshot';
 import { dropCustom, keepAuthor, nameTargets, writeMarkupIntent } from './render/annotIds';
 import { installFontReadback } from './render/freeTextFonts';
+import { applyTextColors, takeTextColorFallbacks } from './render/freeTextColors';
 import { SaveTracker, isMutation } from './render/save/tracker';
 import {
   createFileAttachment,
@@ -135,7 +136,11 @@ serve<RenderApi>(self, {
         throw toRpcError(err);
       }
     }
-    if (typeof docId === 'string') writeMarkupIntent(m, n, method, callArgs);
+    if (typeof docId === 'string') {
+      writeMarkupIntent(m, n, method, callArgs);
+      // A text comment's own text colour, in /DS and its appearance (ADR-024).
+      applyTextColors(m, n, method, callArgs);
+    }
     // A reopen (page-operation undo) re-applies the owner unlock (ADR-016 d5).
     if (method === 'unlockOwnerPermissions' && value === true && typeof docId === 'string') {
       const pw = args[1];
@@ -165,7 +170,9 @@ serve<RenderApi>(self, {
   saveIncremental: async ({ docId, keepAll }) => {
     const r = await ready().tracker.save(docId, keepAll ? { keepAll } : {});
     const tail = r.tail.buffer;
-    return new Transfer({ ...r, tail }, [tail]);
+    // Text comments whose appearance kept PDFium's colours (ADR-024): a count for diagnostics.
+    const textColorFallbacks = takeTextColorFallbacks(docId);
+    return new Transfer({ ...r, tail, textColorFallbacks }, [tail]);
   },
 
   commitSave: ({ docId, tailLength, rewrite }) => ({

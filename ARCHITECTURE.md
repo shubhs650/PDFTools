@@ -1,7 +1,7 @@
-# Triya PDF — Architecture & Product Specification (Rev 0.11)
+# Triya PDF — Architecture & Product Specification (Rev 0.12)
 
 **App:** Triya PDF (formerly PDFTools, D-41) · **URL:** `pdf-tools.openengtools.com` · **Platform:** Open Engineering Tools (OET)
-**Status:** Approved for implementation · **Last updated:** 04-Nov-2026 (Rev 0.11)
+**Status:** Approved for implementation · **Last updated:** 05-Nov-2026 (Rev 0.12)
 **Companion file:** `CLAUDE.md` (standing rules for the coding agent — read it first)
 
 > This document is the single source of truth. Where code and this document disagree, this document wins until it is deliberately amended. Decisions are numbered (D-xx) so commits, issues and ADRs can reference them.
@@ -17,6 +17,8 @@
 > **Rev 0.5 amendment** — [ADR-017](docs/adr/017-m4-redaction.md) decisions 3 and 5 (owner-approved 2026-09-29): §7.9 steps 0 and 3 (crossing paths re-cut through PDFium's page-object API; wider sanitize list).
 
 > **Rev 0.11 amendment** — [ADR-023](docs/adr/023-m7-second-beta-review.md) (owner-approved 2026-11-04): **M7 — second beta review** — product name **Triya PDF** (D-41), dark theme with a top-bar toggle (D-42), text comment interaction and marquee selection (D-43), sticky note popup (D-44), pasting an image onto the page (D-45); 50 % highlights and a black Courier typewriter (D-37); Home tab layout with icon-only groups (D-36) (§2, §7.1, §7.3, §8, §10.3, §13 M7, §14).
+
+> **Rev 0.12 amendment** — [ADR-024](docs/adr/024-freetext-text-and-border-colours.md) (owner-approved 2026-11-05): separate **text and border colours** for text boxes and callouts, stored as Acrobat does (`/DA` border, `/DS` text) and drawn by recolouring the text in PDFium's own appearance — the second exception to "no custom appearance streams" (§7.1).
 
 > **Rev 0.10 amendment** — [ADR-022](docs/adr/022-m6-spikes-s18-s22.md) (owner-approved 2026-11-02): M6 spike results S18 – S22 — the signature font package and the form plugin's license exception (§3.2); Attach File by direct PDFium calls (§7.1); the modify + annotate gate and `/TU` for form fields (§7.10); the bundled handwriting font (§7.11); the copy route, owner-rights gate and 127-byte limit for passwords (§7.12); our own outline writer for bookmark editing (§7.15).
 
@@ -260,7 +262,7 @@ Ctrl+S calls PDFium `FPDF_SaveAsCopy(FPDF_INCREMENTAL)` in the Render worker, th
 ## 7. Features
 
 ### 7.1 Annotation (D-03)
-Types: **every annotation type/tool supported by EmbedPDF** (ADR-001 B7). No custom appearance-stream generation in Rev 0. Mapping from the required set (EmbedPDF v2.15.1 tool ids):
+Types: **every annotation type/tool supported by EmbedPDF** (ADR-001 B7). No custom appearance-stream generation in Rev 0, with two exceptions: Attach File's paperclip and the text colour of text boxes and callouts (both below). Mapping from the required set (EmbedPDF v2.15.1 tool ids):
 
 | Required | EmbedPDF |
 |---|---|
@@ -285,9 +287,10 @@ Types: **every annotation type/tool supported by EmbedPDF** (ADR-001 B7). No cus
 - **Text comments** (D-43, ADR-023): a new text box, typewriter or callout is selected and edits with "Type here" selected; one click selects it (box, text or callout line) and a drag moves it; double-click (Enter / F2) edits; Esc, a click elsewhere, a tool or tab change, Ctrl+S and closing all commit the edit as one undo step; right-click while editing opens our text menu (Undo, Redo, Cut, Copy, Paste, Delete, Select All, Text Style for the whole comment, Properties); a callout can be drawn with one drag. **Selection:** marquee with Select Comments (and Select on empty space), Ctrl+ / Shift+click toggle, a newly drawn comment is selected.
 - **Sticky note popup** (D-44, ADR-023): a popup window on the page for `/Text` notes — header (author, date), multi-line text, menu, status, lock, Reply; draggable and resizable; opened on creation and double-click. Its position and open state are saved as a standard `/Popup` by our object layer only if spike S23 passes.
 - **Paste an image** (D-45, ADR-023): Ctrl+V or the page menu's Paste with an image on the system clipboard places an Image Stamp, scaled to fit inside the page (90 %, aspect kept, never enlarged); one undo step; needs annotate.
+- **Text and border colours** (ADR-024): a text box and a callout have a Text color and a Border color (Properties pane, tool defaults, Comment Styles). The border colour is `/DA`'s `rg`, the text colour `/DS` `color:` (and EmbedPDF's `/TextColor`), as Acrobat and PDF-XChange store them; another viewer's `/DS` colour is read back. PDFium draws the text in `/DA`'s colour, so after each write the Render worker changes only the text colour operator of PDFium's own appearance and sets it back with `EPDFAnnot_SetAppearanceFromPage` — the second exception to "no custom appearance streams", after Attach File. If the appearance doesn't have the expected shape, PDFium's is kept and a diagnostics event is recorded (spike S25).
 - **Context menus and clipboard** (D-38, ADR-021): right-click (or Shift+F10 / Menu key) on a comment on the page, a comment card, the page background, bookmarks and thumbnails; every item is a command-table command. Cut/Copy/Paste of comments on the page (Ctrl+X/C/V; Paste from the page menu lands at the pointer).
 - **Flatten** selected or all comments (page range) into page content in the Render worker; one undo step; capability **modify**; marks the document "optimize recommended".
-- **Attach File**: a standard `/FileAttachment` annotation with an embedded file and a paperclip appearance drawn by us — the one exception to "no custom appearance streams" — created by **direct PDFium calls in the Render worker** (`FPDFAnnot_AddFileAttachment`, `FPDFAttachment_SetFile`, `FPDFAnnot_SetAP`, …), not by our object layer; move / resize use their own Render call (`FPDFAnnot_SetRect`), delete uses the engine; saved in the narrow tail (spike S22, ADR-022 decision 1).
+- **Attach File**: a standard `/FileAttachment` annotation with an embedded file and a paperclip appearance drawn by us — the first exception to "no custom appearance streams" (the second: text colours, ADR-024) — created by **direct PDFium calls in the Render worker** (`FPDFAnnot_AddFileAttachment`, `FPDFAttachment_SetFile`, `FPDFAnnot_SetAP`, …), not by our object layer; move / resize use their own Render call (`FPDFAnnot_SetRect`), delete uses the engine; saved in the narrow tail (spike S22, ADR-022 decision 1).
 - **Snapshot**: a rectangle rendered by the Render worker and written to the system clipboard as PNG; needs **copy**.
 - **Flags and marks**: Locked, Printable, Read only, Marked (review state model) and review history in the Properties pane (a property grid: General, Style, Text) and the context menu.
 - **Auto-numbering**: each markup gets a sequence number shown in the comments pane and optionally on-page; used by the CRS export.

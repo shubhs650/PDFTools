@@ -118,14 +118,10 @@ describe('Text Style', () => {
     expect(stylePatch(a, { prop: 'fontColor', value: '#0000ff' })).toEqual({
       fontColor: '#0000ff',
     });
-    // With a border (a text box, a callout), the border follows: PDFium draws
-    // the text in /DA's colour, which EmbedPDF fills from the border's.
+    // With a border (a text box, a callout), the border keeps its own colour (ADR-024).
     expect(
       stylePatch(box({ strokeColor: '#ff0000' }), { prop: 'fontColor', value: '#0000ff' }),
-    ).toEqual({
-      fontColor: '#0000ff',
-      strokeColor: '#0000ff',
-    });
+    ).toEqual({ fontColor: '#0000ff' });
     expect(stylePatch(a, { prop: 'textAlign', value: 1 })).toEqual({ textAlign: 1 });
   });
 

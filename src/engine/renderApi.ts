@@ -101,6 +101,8 @@ export interface RenderApi {
       baseLength: number;
       /** What the saved file must show (M1-21); null when the tail is empty. */
       expected: DocDigest | null;
+      /** Text comments since the last save whose text colour PDFium's appearance kept (ADR-024). */
+      textColorFallbacks?: number;
     }
   >;
   /** The tail of the last saveIncremental was written: it becomes the new base (M1-22). */

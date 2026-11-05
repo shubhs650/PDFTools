@@ -1,3 +1,4 @@
+import { inflateSync } from 'node:zlib';
 import AxeBuilder from '@axe-core/playwright';
 import type { Locator, Page } from '@playwright/test';
 import { simplePdf } from './fixtures/generate.ts';
@@ -374,4 +375,114 @@ test('the comment menu: Marked, Locked and Printable ticks; Make Current Propert
     .include('[data-testid="properties-pane"]')
     .analyze();
   expect(violations.map((v) => v.id)).toEqual([]);
+});
+
+/** The (inflated) content streams of a saved tail. */
+function streams(tail: Buffer): string[] {
+  const out: string[] = [];
+  for (const m of tail.toString('latin1').matchAll(/stream\r?\n([\s\S]*?)endstream/g)) {
+    const raw = Buffer.from(m[1] ?? '', 'latin1');
+    try {
+      out.push(inflateSync(raw).toString('latin1'));
+    } catch {
+      out.push(raw.toString('latin1'));
+    }
+  }
+  return out;
+}
+
+test('a text box has its own Text color and Border color, saved as Acrobat reads them (ADR-024) @smoke', async ({
+  page,
+}) => {
+  const bytes = simplePdf(1);
+  await page.goto('/');
+  await cap(page, 'annotate', 'setProfile', 'Ana de Vries');
+  const id = await open(page, bytes);
+  const make = (extra: Record<string, unknown>) =>
+    cap(page, 'annotate', 'create', id, 0, {
+      type: 3, // FreeText
+      contents: 'Check the weld',
+      fontFamily: 4,
+      fontSize: 12,
+      fontColor: '#FF0000',
+      color: 'transparent',
+      textAlign: 0,
+      verticalAlign: 0,
+      ...extra,
+    }) as Promise<string>;
+  const box = await make({
+    rect: { origin: { x: 60, y: 60 }, size: { width: 160, height: 40 } },
+    strokeColor: '#FF0000',
+    strokeWidth: 1,
+  });
+  const typewriter = await make({
+    rect: { origin: { x: 60, y: 200 }, size: { width: 160, height: 40 } },
+    strokeWidth: 0,
+    intent: 'FreeTextTypeWriter',
+  });
+  await expect.poll(async () => (await objects(page, id)).length).toBe(2);
+  await page.getByRole('tab', { name: 'View' }).click();
+  await page.getByRole('button', { name: 'Properties Pane' }).click();
+
+  await cap(page, 'annotate', 'selectMany', id, [typewriter]);
+  await expect(pane(page).getByRole('button', { name: 'Text color', exact: true })).toBeVisible();
+  await expect(pane(page).getByRole('button', { name: 'Border color', exact: true })).toHaveCount(
+    0,
+  );
+
+  await cap(page, 'annotate', 'selectMany', id, [box]);
+  await pickColor(pane(page), 'Text color', 'Blue');
+  await expect
+    .poll(async () => {
+      const o = await byId(page, id, box);
+      return [o?.fontColor?.toLowerCase(), o?.strokeColor?.toLowerCase()];
+    })
+    .toEqual(['#0000ff', '#ff0000']);
+  await pickColor(pane(page), 'Border color', 'Green');
+  await expect
+    .poll(async () => (await byId(page, id, box))?.strokeColor?.toLowerCase())
+    .toBe('#008000');
+  expect((await byId(page, id, box))?.fontColor?.toLowerCase()).toBe('#0000ff');
+
+  const saved = (await cap(page, 'save', 'verifiedSave', id)) as {
+    mode: string;
+    fellBack: boolean;
+    tail: string;
+  };
+  expect(saved).toMatchObject({ mode: 'narrow', fellBack: false });
+  const tailBytes = Buffer.from(saved.tail, 'base64');
+  const tail = tailBytes.toString('latin1');
+  // /DA: the border colour; /DS: the text colour (Acrobat, PDF-XChange).
+  expect(tail).toMatch(/\/DA\s*\(0\s+0?\.50\d*\s+0\s+rg[^)]*\)/); // Green #008000
+  expect(tail).toMatch(/\/DS\s*\([^)]*color:#0000FF[^)]*\)/);
+  // The appearance draws the text blue.
+  const drawn = streams(tailBytes).filter((t) => t.includes('(Check the weld) Tj'));
+  expect(drawn.some((t) => /BT\s+0\s+0\s+1\s+rg/.test(t))).toBe(true);
+
+  const file = Buffer.concat([Buffer.from(bytes), tailBytes]);
+  await drop(page, [{ name: 'saved.pdf', b64: file.toString('base64') }]);
+  await expect.poll(() => cap(page, 'view', 'activeDocId')).not.toBe(id);
+  const again = (await cap(page, 'view', 'activeDocId')) as string;
+  await expect.poll(async () => (await objects(page, again)).length).toBe(2);
+  const back = await byId(page, again, box);
+  expect([back?.fontColor?.toLowerCase(), back?.strokeColor?.toLowerCase()]).toEqual([
+    '#0000ff',
+    '#008000',
+  ]);
+
+  // The Text Box tool's defaults have both colours too (red on red, D-37).
+  await page.getByRole('tab', { name: 'Comment' }).click();
+  await page
+    .getByRole('toolbar', { name: 'Comment commands' })
+    .getByRole('button', { name: 'Text Box', exact: true })
+    .click();
+  const tool = page.getByTestId('tool-properties');
+  await expect(tool).toContainText('Text Box Tool Properties');
+  await pickColor(tool, 'Border color', 'Blue');
+  await expect
+    .poll(async () => {
+      const d = (await cap(page, 'annotate', 'toolDefaults', 'freeText')) as Obj;
+      return [d.fontColor?.toLowerCase(), d.strokeColor?.toLowerCase()];
+    })
+    .toEqual(['#ff0000', '#0000ff']);
 });

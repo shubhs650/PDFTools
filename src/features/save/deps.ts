@@ -16,8 +16,14 @@ async function ensureWorkCopy(docId: string): Promise<void> {
 export function saveDeps(): SaveFlowDeps {
   const rpc = renderEngine().rpc;
   return {
-    saveIncremental: (docId, keepAll) =>
-      rpc.call('saveIncremental', { docId, ...(keepAll ? { keepAll } : {}) }).promise,
+    saveIncremental: async (docId, keepAll) => {
+      const r = await rpc.call('saveIncremental', { docId, ...(keepAll ? { keepAll } : {}) })
+        .promise;
+      // ADR-024: a text comment kept PDFium's appearance (its text in the border colour).
+      if (r.textColorFallbacks)
+        recordEvent('annotate', 'freetext-text-color-kept', { count: r.textColorFallbacks });
+      return r;
+    },
     async verify(docId, piece, expected, signal) {
       await ensureWorkCopy(docId);
       return workClient().run('verify', { docId, piece, expected }, signal ? { signal } : {})
