@@ -347,7 +347,11 @@ test('Highlight, Highlight Area and Free Highlight are 50 % opaque: saved /CA 0.
   const again = (await cap(page, 'view', 'activeDocId')) as string;
   await expect.poll(async () => (await objects(page, again)).length).toBe(4);
   check(await objects(page, again));
-  if (SHOTS) await page.screenshot({ path: `${SHOTS}/05-page-highlights-typewriter-1280.png` });
+  if (SHOTS) {
+    await expect(page.locator('[data-page="0"] .annotation-tiles img').first()).toBeVisible();
+    await page.waitForTimeout(500);
+    await page.screenshot({ path: `${SHOTS}/05-page-highlights-typewriter-1280.png` });
+  }
   if (process.env.M7_INTEROP_OUT === '1') {
     const out = 'e2e/fixtures/self-made/m7-interop';
     mkdirSync(out, { recursive: true });
