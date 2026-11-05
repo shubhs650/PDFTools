@@ -7,6 +7,7 @@ import { CommandIcon } from '../../ui/icons/CommandIcon';
 import { commandLabelKey } from '../commandLabels';
 import { ribbonLayout } from '../ribbon/layout';
 import { RecentList } from '../../features/recent/RecentList';
+import { AppearanceSection } from '../../features/settings/AppearanceSection';
 import { LocalData } from '../../features/settings/LocalData';
 import { ProfileSection } from '../../features/settings/profile/ProfileSection';
 import { About, Privacy } from './AboutPrivacy';
@@ -150,6 +151,7 @@ export function Backstage({ open, section: initial, onOpenChange }: BackstagePro
                 <Properties />
               ) : section.id === 'file.settings' ? (
                 <div className="settings-sections">
+                  <AppearanceSection />
                   <ProfileSection />
                   <LocalData />
                 </div>

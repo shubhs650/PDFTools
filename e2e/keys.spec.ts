@@ -100,7 +100,7 @@ test('the shortcut sheet opens from Help and lists every binding', async ({ page
   const dialog = page.getByRole('dialog', { name: 'Keyboard shortcuts' });
   await expect(dialog).toBeVisible();
   const rows = dialog.getByTestId('shortcut-sheet').locator('tbody tr');
-  await expect(rows).toHaveCount(71); // + undo, redo, 11 annotation keys (M3-05), 6 text markup tools (M3-08), 9 tools and Enter (M3-09), paste and paste to original pages (M4-21), full screen (M6-01), cut and the context menu (M6-02), 12 Bookmarks pane keys (M6-11), F2 on a text comment (M7-03)
+  await expect(rows).toHaveCount(72); // + undo, redo, 11 annotation keys (M3-05), 6 text markup tools (M3-08), 9 tools and Enter (M3-09), paste and paste to original pages (M4-21), full screen (M6-01), cut and the context menu (M6-02), 12 Bookmarks pane keys (M6-11), F2 on a text comment (M7-03), Dark Theme (M7-11)
   // The Bookmarks pane's own keys say where they work (M6-11).
   await expect(dialog.getByRole('row', { name: /^Rename \(Bookmarks pane\)/ })).toContainText('F2');
   await expect(dialog.getByRole('row', { name: /^Edit the Selected Text Comment/ })).toContainText(

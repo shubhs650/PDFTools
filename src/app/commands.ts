@@ -605,6 +605,17 @@ export const COMMANDS: readonly CommandDef[] = [
     fluent: 'PanelTopContract',
     milestone: 'M1',
   },
+  // M7-11 (ADR-023 D-42): light / dark theme; also the top bar's moon / sun button.
+  {
+    id: 'view.darkTheme',
+    tab: 'view',
+    group: 'window',
+    size: 'small',
+    fluent: 'WeatherMoon',
+    milestone: 'M6',
+    shipped: true,
+    toggle: true,
+  },
   // Comment tab (M6-08, ADR-021 D-36, beta review B7a): Tools (reused from Home),
   // Text, Note, Text Markup, Drawing, Stamp, Measure (reused), Manage Comments.
   {

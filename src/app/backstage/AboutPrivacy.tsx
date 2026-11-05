@@ -27,6 +27,7 @@ export function About() {
 const KIND: Record<LocalDataKind, MessageKey> = {
   indexedDB: msg('privacy.kind.indexedDB'),
   opfs: msg('privacy.kind.opfs'),
+  localStorage: msg('privacy.kind.localStorage'),
   cache: msg('privacy.kind.cache'),
 };
 

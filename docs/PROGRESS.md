@@ -1,15 +1,44 @@
 # Triya PDF — Progress
 
-_Last updated: 2026-11-05 (session 51: M7-10 form highlight on check boxes and radio buttons)_
+_Last updated: 2026-11-05 (session 52: M7-11 dark theme)_
 
 **Current milestone:** M7 — second beta review (plan in [docs/plan/M7.md](plan/M7.md), scope in
 [ADR-023](adr/023-m7-second-beta-review.md), **Accepted** 2026-11-04 with the recommended
-answers Q1–Q7; ARCHITECTURE.md Rev 0.12 after [ADR-024](adr/024-freetext-text-and-border-colours.md)). M7-01 … M7-10 done, plus separate text and border colours (ADR-024); next: M7-11. **Previous milestone:** M6 — Beta review (plan in [docs/plan/M6.md](plan/M6.md), scope changes in
+answers Q1–Q7; ARCHITECTURE.md Rev 0.12 after [ADR-024](adr/024-freetext-text-and-border-colours.md)). M7-01 … M7-11 done, plus separate text and border colours (ADR-024); next: M7-12. **Previous milestone:** M6 — Beta review (plan in [docs/plan/M6.md](plan/M6.md), scope changes in
 [ADR-021](adr/021-m6-beta-review.md), **Accepted** 2026-11-01; ARCHITECTURE.md Rev 0.10; M6-01 … M6-15 done, **M6 complete on the agent side** ([acceptance](acceptance/M6.md)); spike results in
 [ADR-022](adr/022-m6-spikes-s18-s22.md), **Accepted** 2026-11-02 (bookmark route B)). M5 — OCR: M5-01 … M5-04 done under [ADR-020](adr/020-m5-ocr.md); M5-05's owner
 interop is in the M6 pack (CHECKLIST §M6 R1–R4). Rev 0 (M0–M4) is complete on the agent side.
 
 ## Done
+
+- **Session 52 — M7-11 dark theme (ADR-023 D-42; review item 2).** A **Dark Theme** toggle at
+  the right end of the top bar (Fluent `WeatherMoon`; `WeatherSunny` while dark; pressed state,
+  tooltip with the shortcut), also **View → Window → Dark Theme**, **Ctrl+Shift+D** (shortcut
+  sheet, Help → Viewing) and **File → Settings → Appearance** (Light / Dark radios). Light is the
+  default. The choice is kept in `localStorage` `pdftools.theme` (`src/app/theme.ts`), listed on
+  the Privacy page (new kind "Local storage"), reset by Clear all local data. **No light flash:**
+  `public/theme-boot.js`, a classic blocking script in `<head>` (the CSP allows no inline script;
+  a module script can run after the first paint), applies it before anything is painted;
+  `theme.ts` must use the same key and colours (unit test runs the script). The PWA
+  `theme-color` follows the theme (`#1f1f1f` in dark). The dev-only `?theme=dark` switch is gone;
+  e2e uses `darkTheme(page)` (`e2e/support/app.ts`). **Palette** (`tokens.css`): Fluent 2 dark
+  neutrals as before (`#1f1f1f` / `#292929` / `#333333` / `#141414`, canvas `#0f0f0f`, accent
+  `#479ef5`); new **brand** tokens for filled brand surfaces (File tab, backstage nav, primary
+  buttons, number badges: `#115ea3` with white text in dark instead of light blue with black
+  text) and a **link** token (`#62abf5` in dark); `--color-accent-hover` and
+  `--color-text-on-accent` are gone. **On the page** the light set applies in dark too
+  (`:root[data-theme='dark'] .page`, `color-scheme: light`, not in forced-colors): form fields,
+  their focus ring (a white ring would vanish on the white page), native list boxes and drop-downs,
+  the sticky note window, comment handles and badges look as in light. Tests:
+  `tests/ui/themeContrast.test.ts` (every text pair ≥ 4.5:1 and UI pair ≥ 3:1 in both themes; the
+  page copy equals the light set), `tests/ui/tokens.test.ts` (no literal colours in `app.css` or
+  any component except the app icon and stamp colours), `tests/app/theme.test.ts` (store, boot
+  script, command, Privacy entry); e2e `theme.spec.ts` (toggle and persistence @smoke, first
+  paint, View / Ctrl+Shift+D / Settings, Privacy and Clear data, white page, sticky note window
+  and page menu axe in dark; `M7_11_SHOTS` takes the review screenshots), `a11y.spec.ts` now
+  visits all nine ribbon tabs. Screenshots: project files `m7-11/` (light and dark, 1280 and
+  1920 px). Noticed, not changed: the Help tab's ribbon is 7 px lower than the other tabs' (both
+  themes, since M2).
 
 - **Session 51 — M7-10 Highlight Fields on check boxes and radio buttons (review F1; D-26,
   D-39).** Check boxes and radio buttons are no longer the browser's own controls (which ignore
@@ -2030,7 +2059,7 @@ rel="noopener noreferrer">`; the commands `app.home` / `app.reportIssue` open th
 
 ## Next
 
-- **Agent:** M7-11 … M7-12 serially, each in its own thread; then the queued task (owner,
+- **Agent:** M7-12 (acceptance), in its own thread; then the queued task (owner,
   2026-11-05) to make comment export and import round-trip every property as XFDF does — pop-ups
   (`/Rect`, `/Open`) included.
 - **Owner (M7-08):** CHECKLIST §M7 V1–V2 (a pasted image in their viewers; a real screenshot

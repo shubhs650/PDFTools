@@ -2,9 +2,11 @@
  * Design tokens (ARCHITECTURE §8, D-20). Every color, size, radius, shadow and
  * font in the UI comes from here; components use only these variables.
  *
- * Light theme is the default. The dark set exists to prove the tokens support
- * a dark theme (Rev 2+); it is reachable only through `?theme=dark` in dev and
- * e2e builds. Windows High Contrast (`forced-colors`) maps to system colors.
+ * Light theme is the default; the dark set (M7-11, ADR-023 D-42) is chosen
+ * with the top bar's toggle, View → Dark Theme or Settings → Appearance
+ * (src/app/theme.ts sets `data-theme='dark'` on <html>). Windows High Contrast
+ * (`forced-colors`) maps to system colors and overrides both. Every text and
+ * UI pair is checked against WCAG AA in tests/ui/themeContrast.test.ts.
  */
 
 :root {
@@ -30,7 +32,6 @@
   --color-text: #1f1f1f;
   --color-text-muted: #5c5c5c;
   --color-text-disabled: #9e9e9e;
-  --color-text-on-accent: #ffffff;
   --color-icon: #424242;
 
   /* Color — lines and states */
@@ -43,8 +44,11 @@
   --color-find-hit: #ffe27a; /* search hits, multiplied over the page */
   --color-find-hit-text: #1f1f1f;
   --color-find-current: #ffa040;
-  --color-accent: #0f6cbd;
-  --color-accent-hover: #115ea3;
+  --color-accent: #0f6cbd; /* lines, outlines, indicators and links */
+  --color-link: #0f6cbd;
+  --color-brand: #0f6cbd; /* filled brand surfaces: File tab, backstage, primary buttons */
+  --color-brand-hover: #115ea3;
+  --color-text-on-brand: #ffffff;
   --color-focus: #0f6cbd;
   --color-danger: #c42b1c;
   --color-backdrop: rgb(0 0 0 / 0.4);
@@ -122,6 +126,15 @@
 }
 
 /* Dark set: overrides every --color-* token (tests/ui/tokens.test.ts enforces it). */
+/*
+ * Dark set (M7-11, D-42): Fluent 2 dark neutrals. The app background is
+ * #1f1f1f, panes and the ribbon #292929, raised surfaces (dialogs, menus)
+ * #333333 and the document canvas the darkest (#0f0f0f), so white pages stand
+ * out without glare. Pages stay white and are never inverted; everything drawn
+ * on a page (form fields, the sticky note window, find hits, text selection)
+ * keeps its light colours. Overrides every --color-* token
+ * (tests/ui/tokens.test.ts enforces it).
+ */
 :root[data-theme='dark'] {
   color-scheme: dark;
   --color-bg: #1f1f1f;
@@ -140,7 +153,6 @@
   --color-text: #ffffff;
   --color-text-muted: #c7c7c7;
   --color-text-disabled: #6e6e6e;
-  --color-text-on-accent: #0a0a0a; /* dark text on the light accent: WCAG AA */
   --color-icon: #e0e0e0;
   --color-border: #474747;
   --color-border-strong: #8a8a8a;
@@ -151,13 +163,66 @@
   --color-find-hit: #ffe27a;
   --color-find-hit-text: #0a0a0a;
   --color-find-current: #ffa040;
-  --color-accent: #479ef5;
-  --color-accent-hover: #62abf5;
+  --color-accent: #479ef5; /* Fluent brand foreground on dark */
+  --color-link: #62abf5; /* 5.2:1 on --color-surface-raised (a dialog's link) */
+  --color-brand: #115ea3; /* Fluent brand background on dark: white text 6.4:1 */
+  --color-brand-hover: #0f6cbd;
+  --color-text-on-brand: #ffffff;
   --color-focus: #ffffff;
   --color-danger: #ff8a94; /* 5.6:1 on --color-surface-raised (M3-07) */
   --color-backdrop: rgb(0 0 0 / 0.6);
   --color-tooltip-bg: #e0e0e0;
   --color-tooltip-text: #1f1f1f;
+}
+
+/*
+ * On the page (M7-11, D-42): pages stay white in every theme, so what is
+ * drawn on them (form fields and their focus ring, the sticky note window,
+ * comment handles, number badges, find hits) keeps the light set's colours;
+ * a dark focus ring or border would vanish on white. A copy of the light
+ * set (tests/ui/themeContrast.test.ts keeps it equal); not in forced-colors
+ * mode, where the system colours apply everywhere.
+ */
+@media not (forced-colors: active) {
+  :root[data-theme='dark'] .page {
+    color-scheme: light;
+    --color-bg: #f3f3f3;
+    --color-surface: #ffffff;
+    --color-surface-raised: #ffffff;
+    --color-surface-sunken: #ebebeb;
+    --color-canvas: #8a8a8a;
+    --color-page: #ffffff;
+    --color-form-field: #e3ecfa;
+    --color-form-text: #000000;
+    --color-note-paper: #ffffff;
+    --color-note-text: #1f1f1f;
+    --color-note-ink-dark: #1f1f1f;
+    --color-note-ink-light: #ffffff;
+    --color-note-leader: rgb(0 0 0 / 0.35);
+    --color-text: #1f1f1f;
+    --color-text-muted: #5c5c5c;
+    --color-text-disabled: #9e9e9e;
+    --color-icon: #424242;
+    --color-border: #d1d1d1;
+    --color-border-strong: #8a8a8a;
+    --color-hover: #e8e8e8;
+    --color-pressed: #dcdcdc;
+    --color-selected: #d6e4f5;
+    --color-text-selection: #9fc6ec;
+    --color-find-hit: #ffe27a;
+    --color-find-hit-text: #1f1f1f;
+    --color-find-current: #ffa040;
+    --color-accent: #0f6cbd;
+    --color-link: #0f6cbd;
+    --color-brand: #0f6cbd;
+    --color-brand-hover: #115ea3;
+    --color-text-on-brand: #ffffff;
+    --color-focus: #0f6cbd;
+    --color-danger: #c42b1c;
+    --color-backdrop: rgb(0 0 0 / 0.4);
+    --color-tooltip-bg: #242424;
+    --color-tooltip-text: #ffffff;
+  }
 }
 
 /* Windows High Contrast: hand colors to the system (D-30 accessibility). */
@@ -179,7 +244,6 @@
     --color-text: CanvasText;
     --color-text-muted: CanvasText;
     --color-text-disabled: GrayText;
-    --color-text-on-accent: HighlightText;
     --color-icon: ButtonText;
     --color-border: ButtonText;
     --color-border-strong: ButtonText;
@@ -191,7 +255,10 @@
     --color-find-hit-text: MarkText;
     --color-find-current: Highlight;
     --color-accent: Highlight;
-    --color-accent-hover: Highlight;
+    --color-link: LinkText;
+    --color-brand: Highlight;
+    --color-brand-hover: Highlight;
+    --color-text-on-brand: HighlightText;
     --color-focus: Highlight;
     --color-danger: CanvasText;
     --color-backdrop: transparent;

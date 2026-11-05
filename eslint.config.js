@@ -21,6 +21,9 @@ export default defineConfig(
       'spikes/**/dist',
       'spikes/**/dist-frame',
       'spikes/**/out',
+      // Served as is (no build step): theme-boot.js is a plain classic script
+      // run before the first paint (M7-11); tests/app/theme.test.ts checks it.
+      'public',
     ],
   },
   js.configs.recommended,

@@ -8,6 +8,7 @@ import { canFullScreen, isFullScreen, subscribeFullScreen, toggleFullScreen } fr
 import { msg, t } from '../../i18n';
 import { currentIssueUrl, OPENENGTOOLS_URL } from '../links';
 import { appStore } from '../store/appStore';
+import { getTheme, subscribeTheme, toggleTheme } from '../theme';
 import { documentStore } from '../store/documentStore';
 import { notify, registerCommand } from './dispatch';
 
@@ -81,6 +82,12 @@ export function registerBuiltinCommands(): () => void {
       }),
     ),
     subscribeFullScreen(notify),
+    // Light / dark theme (M7-11, D-42): the top bar, View → Window, Ctrl+Shift+D.
+    registerCommand('view.darkTheme', {
+      run: toggleTheme,
+      isPressed: () => getTheme() === 'dark',
+    }),
+    subscribeTheme(notify),
     registerCommand('help.shortcuts', {
       run: () => {
         appStore.getState().setShortcutsOpen(true);

@@ -1,5 +1,6 @@
 import AxeBuilder from '@axe-core/playwright';
 import type { Page } from '@playwright/test';
+import { THEME_KEY } from './support/app.ts';
 import { expect, test } from './support/fixtures.ts';
 
 // M1-05: UI primitives on the e2e-only gallery page (src/testing/Gallery.tsx).
@@ -27,10 +28,26 @@ async function focusRing(page: Page) {
 }
 
 test('the gallery passes an axe scan in light, dark and pseudo-locale', async ({ page }) => {
-  for (const q of ['?gallery', '?gallery&theme=dark', '?gallery&locale=pseudo']) {
+  test.setTimeout(60_000); // three loads, each one reloaded for its theme
+  for (const [q, theme] of [
+    ['?gallery', 'light'],
+    ['?gallery', 'dark'],
+    ['?gallery&locale=pseudo', 'light'],
+  ] as const) {
     await page.goto(`/${q}`);
+    // The theme is the one stored on the device (M7-11): set it, then load again.
+    await page.evaluate(
+      ([key, t]) => {
+        if (t === 'dark') localStorage.setItem(key, t);
+        else localStorage.removeItem(key);
+      },
+      [THEME_KEY, theme] as const,
+    );
+    await page.reload();
     await expect(page.getByTestId('gallery')).toBeVisible();
-    expect(await axe(page), q).toEqual([]);
+    if (theme === 'dark') await expect(page.locator('html')).toHaveAttribute('data-theme', 'dark');
+    else await expect(page.locator('html')).not.toHaveAttribute('data-theme', 'dark');
+    expect(await axe(page), `${q} ${theme}`).toEqual([]);
   }
 });
 

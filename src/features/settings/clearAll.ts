@@ -1,6 +1,7 @@
 // Settings → "Clear all local data" (M1-26, §10.3). Deletes the IndexedDB
 // database (settings, recent files), the OPFS recovery snapshots (through the
-// storage worker, which owns OPFS) and any Cache Storage the app keeps apart
+// storage worker, which owns OPFS), the theme choice in localStorage (the
+// app's `reset`, M7-11) and any Cache Storage the app keeps apart
 // from the service worker's offline copy of the app itself, so PDFTools keeps
 // working (and working offline) afterwards. Never touches the user's files.
 // Pure over its dependencies (the app's are in appClearDeps.ts).

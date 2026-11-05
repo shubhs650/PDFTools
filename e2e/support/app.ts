@@ -104,3 +104,16 @@ export async function firstPreviewAt(page: Page): Promise<number> {
   if (at === null) throw new Error('no first preview');
   return at;
 }
+
+/** The theme's localStorage key (src/app/theme.ts, M7-11). */
+export const THEME_KEY = 'pdftools.theme';
+
+/**
+ * Starts every page load of this test in the dark theme, as the theme toggle
+ * leaves it stored on the device (M7-11, D-42). Call before `page.goto`.
+ */
+export async function darkTheme(page: Page): Promise<void> {
+  await page.addInitScript((key) => {
+    localStorage.setItem(key, 'dark');
+  }, THEME_KEY);
+}

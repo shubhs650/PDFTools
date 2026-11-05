@@ -48,6 +48,7 @@ function helpKeys(t: TFunction) {
     fitPage: k('view.fitPage'),
     fitWidth: k('view.fitWidth'),
     fullScreen: k('view.fullScreen'),
+    darkTheme: k('view.darkTheme'),
     find: k('home.find'),
     findNext: k('find.next'),
     advancedSearch: k('home.advancedSearch'),

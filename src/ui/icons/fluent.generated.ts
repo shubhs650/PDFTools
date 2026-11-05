@@ -146,6 +146,7 @@ import { Textbox20Filled, Textbox20Regular } from '@fluentui/react-icons/svg/tex
 import { TextboxMore20Filled, TextboxMore20Regular, TextboxMore24Filled, TextboxMore24Regular } from '@fluentui/react-icons/svg/textbox-more';
 import { TooltipQuote20Filled, TooltipQuote20Regular } from '@fluentui/react-icons/svg/tooltip-quote';
 import { Triangle20Filled, Triangle20Regular } from '@fluentui/react-icons/svg/triangle';
+import { WeatherMoon20Filled, WeatherMoon20Regular } from '@fluentui/react-icons/svg/weather-moon';
 import { WebAsset20Regular, WebAsset24Regular } from '@fluentui/react-icons/svg/web-asset';
 import { WindowLocationTarget20Filled, WindowLocationTarget20Regular } from '@fluentui/react-icons/svg/window-location-target';
 import { ZoomIn20Regular } from '@fluentui/react-icons/svg/zoom-in';
@@ -199,6 +200,7 @@ export const FLUENT_GLYPHS: Record<string, FluentGlyphs> = {
   'view.leftPanes': { regular: { small: PanelLeft20Regular }, filled: { small: PanelLeft20Filled } },
   'view.propertiesPane': { regular: { small: PanelRight20Regular }, filled: { small: PanelRight20Filled } },
   'view.collapseRibbon': { regular: { small: PanelTopContract20Regular } },
+  'view.darkTheme': { regular: { small: WeatherMoon20Regular }, filled: { small: WeatherMoon20Filled } },
   'comment.typewriter': { regular: { small: DrawText20Regular }, filled: { small: DrawText20Filled } },
   'comment.textBox': { regular: { small: Textbox20Regular }, filled: { small: Textbox20Filled } },
   'comment.callout': { regular: { small: TooltipQuote20Regular }, filled: { small: TooltipQuote20Filled } },

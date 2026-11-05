@@ -40,7 +40,10 @@ test('keyboard: arrows between tabs and controls, Tab into the toolbar, Esc to t
   await page.keyboard.press('ArrowRight');
   await expect(page.getByRole('tab', { name: 'View' })).toBeFocused();
   await expect(page.getByRole('tab', { name: 'View' })).toHaveAttribute('aria-selected', 'true');
-  // The top bar (M6-01): OpenEngTools Home, Report an Issue, Full Screen; then collapse.
+  // The top bar (M6-01, M7-11): Dark Theme, OpenEngTools Home, Report an Issue, Full Screen;
+  // then collapse.
+  await page.keyboard.press('Tab');
+  await expect(page.getByTestId('theme-toggle')).toBeFocused();
   for (const name of ['OpenEngTools Home', 'Report an Issue on GitHub']) {
     await page.keyboard.press('Tab');
     await expect(page.getByRole('link', { name })).toBeFocused();
@@ -54,7 +57,7 @@ test('keyboard: arrows between tabs and controls, Tab into the toolbar, Esc to t
   await page.keyboard.press('ArrowRight');
   await expect(toolbar.getByRole('button', { name: 'Previous Page' })).toBeFocused();
   await page.keyboard.press('End');
-  await expect(toolbar.getByRole('button', { name: 'Collapse Ribbon' })).toBeFocused();
+  await expect(toolbar.getByRole('button', { name: 'Dark Theme' })).toBeFocused();
   await page.keyboard.press('Escape');
   await expect(page.getByRole('main', { name: 'Document area' })).toBeFocused();
 });
