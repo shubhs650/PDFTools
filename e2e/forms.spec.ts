@@ -135,9 +135,10 @@ test('Reset Form asks first, then restores /DV defaults and leaves read-only fie
   await name.press('Enter');
   await expect(tabs(page).first()).toHaveAccessibleName(/unsaved/);
 
-  await page.getByRole('tab', { name: 'Home' }).click();
+  // Form → Manage only since M7-09 (review 3b).
+  await page.getByRole('tab', { name: 'Form', exact: true }).click();
   const reset = page
-    .getByRole('toolbar', { name: 'Home commands' })
+    .getByRole('toolbar', { name: 'Form commands' })
     .getByRole('button', { name: 'Reset Form' });
   await reset.click();
   const dialog = page.getByRole('dialog', { name: 'Reset Form' });
@@ -197,10 +198,10 @@ test('a document that forbids form filling shows fields read-only with the reaso
   await expect(page.getByRole('checkbox', { name: 'Agree' })).not.toBeChecked();
   await expect(tabs(page).first()).not.toHaveAccessibleName(/unsaved/);
 
-  await page.getByRole('tab', { name: 'Home' }).click();
+  await page.getByRole('tab', { name: 'Form', exact: true }).click();
   await expect(
     page
-      .getByRole('toolbar', { name: 'Home commands' })
+      .getByRole('toolbar', { name: 'Form commands' })
       .getByRole('button', { name: 'Reset Form' }),
   ).toHaveAttribute('aria-disabled', 'true');
 });

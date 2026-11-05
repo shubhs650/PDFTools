@@ -43,7 +43,7 @@ import { CloudCheckmark20Regular } from '@fluentui/react-icons/svg/cloud-checkma
 import { Color20Regular } from '@fluentui/react-icons/svg/color';
 import { CommentMultiple20Filled, CommentMultiple20Regular } from '@fluentui/react-icons/svg/comment-multiple';
 import { Copy20Regular } from '@fluentui/react-icons/svg/copy';
-import { Cursor20Filled, Cursor20Regular, Cursor32Filled, Cursor32Regular } from '@fluentui/react-icons/svg/cursor';
+import { Cursor20Filled, Cursor20Regular } from '@fluentui/react-icons/svg/cursor';
 import { Cut20Regular } from '@fluentui/react-icons/svg/cut';
 import { Delete20Regular, Delete32Regular } from '@fluentui/react-icons/svg/delete';
 import { DeleteArrowBack20Regular } from '@fluentui/react-icons/svg/delete-arrow-back';
@@ -68,7 +68,7 @@ import { FolderOpen20Regular, FolderOpen28Regular } from '@fluentui/react-icons/
 import { Form20Filled, Form20Regular, Form32Filled, Form32Regular } from '@fluentui/react-icons/svg/form';
 import { FullScreenMaximize20Regular } from '@fluentui/react-icons/svg/full-screen-maximize';
 import { FullScreenMinimize20Regular } from '@fluentui/react-icons/svg/full-screen-minimize';
-import { HandLeft20Filled, HandLeft20Regular, HandLeft28Filled, HandLeft28Regular } from '@fluentui/react-icons/svg/hand-left';
+import { HandLeft20Filled, HandLeft20Regular } from '@fluentui/react-icons/svg/hand-left';
 import { Highlight20Filled, Highlight20Regular, Highlight24Filled, Highlight24Regular } from '@fluentui/react-icons/svg/highlight';
 import { History20Regular, History32Regular } from '@fluentui/react-icons/svg/history';
 import { Home20Regular } from '@fluentui/react-icons/svg/home';
@@ -168,14 +168,14 @@ export const FLUENT_GLYPHS: Record<string, FluentGlyphs> = {
   'file.settings': { regular: { small: Settings20Regular, large: Settings32Regular, largeNative: 32 } },
   'file.about': { regular: { small: Info20Regular, large: Info32Regular, largeNative: 32 } },
   'file.privacy': { regular: { small: ShieldCheckmark20Regular, large: ShieldCheckmark32Regular, largeNative: 32 } },
-  'home.hand': { regular: { small: HandLeft20Regular, large: HandLeft28Regular, largeNative: 28 }, filled: { small: HandLeft20Filled, large: HandLeft28Filled, largeNative: 28 } },
-  'home.select': { regular: { small: Cursor20Regular, large: Cursor32Regular, largeNative: 32 }, filled: { small: Cursor20Filled, large: Cursor32Filled, largeNative: 32 } },
-  'home.selectText': { regular: { small: TextT20Regular }, filled: { small: TextT20Filled } },
-  'home.selectAnnotations': { regular: { small: Cursor20Regular }, filled: { small: Cursor20Filled } },
+  'home.hand': { regular: { small: HandLeft20Regular }, filled: { small: HandLeft20Filled } },
+  'home.select': { regular: { small: Cursor20Regular }, filled: { small: Cursor20Filled } },
+  'home.snapshot': { regular: { small: Screenshot20Regular }, filled: { small: Screenshot20Filled } },
   'home.find': { regular: { small: Search20Regular } },
   'home.advancedSearch': { regular: { small: DocumentSearch20Regular } },
+  'home.selectText': { regular: { small: TextT20Regular }, filled: { small: TextT20Filled } },
+  'home.selectAnnotations': { regular: { small: Cursor20Regular }, filled: { small: Cursor20Filled } },
   'home.resetForm': { regular: { small: ArrowReset20Regular } },
-  'home.snapshot': { regular: { small: Screenshot20Regular }, filled: { small: Screenshot20Filled } },
   'view.firstPage': { regular: { small: ArrowPrevious20Regular } },
   'view.prevPage': { regular: { small: ChevronLeft20Regular } },
   'view.nextPage': { regular: { small: ChevronRight20Regular } },

@@ -490,7 +490,8 @@ test('a file that denies annotating: a text comment neither moves nor edits (rul
   const id = (await cap(page, 'view', 'activeDocId')) as string;
   await expect.poll(async () => (await objects(page, id)).length).toBe(1);
   const [before] = await objects(page, id);
-  await page.getByRole('tab', { name: 'Home' }).click();
+  // Select Comments and Select Text left Home in M7-09 (Comment tab).
+  await page.getByRole('tab', { name: 'Comment', exact: true }).click();
   await page.getByRole('button', { name: 'Select Comments', exact: true }).click();
   // Page y of the box's middle: 842 − 720.
   await drag(page, [200, 122], [240, 152]);

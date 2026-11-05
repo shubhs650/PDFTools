@@ -43,7 +43,8 @@ describe('command table (M1-06)', () => {
     const missing: string[] = [];
     for (const c of COMMANDS) {
       if (typeof lookup(commandLabelKey(c.id)) !== 'string') missing.push(commandLabelKey(c.id));
-      if ((RIBBON_TABS as readonly string[]).includes(c.tab)) {
+      // A reuse-only command is shown only in other groups (M7-09): its own has no label.
+      if ((RIBBON_TABS as readonly string[]).includes(c.tab) && !c.reuseOnly) {
         if (typeof lookup(groupLabelKey(c)) !== 'string') missing.push(groupLabelKey(c));
       }
     }

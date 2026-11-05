@@ -39,7 +39,8 @@ function referencedKeys(): Set<string> {
   for (const c of COMMANDS) {
     found.add(commandLabelKey(c.id));
     if (c.short) found.add(commandShortKey(c.id));
-    if ((RIBBON_TABS as readonly string[]).includes(c.tab)) found.add(groupLabelKey(c));
+    if ((RIBBON_TABS as readonly string[]).includes(c.tab) && !c.reuseOnly)
+      found.add(groupLabelKey(c));
   }
   for (const g of REUSE_GROUPS) found.add(groupLabelKey(g));
   for (const t of RIBBON_TABS) found.add(tabLabelKey(t));

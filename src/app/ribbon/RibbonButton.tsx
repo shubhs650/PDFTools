@@ -4,6 +4,7 @@ import { Tooltip } from '../../ui/components';
 import { CommandIcon } from '../../ui/icons/CommandIcon';
 import type { CommandDef } from '../commands';
 import { commandLabelKey, commandShortKey } from '../commandLabels';
+import { shortcutText } from '../keys/labels';
 import { runCommand } from '../commands/dispatch';
 import { useCommandState } from '../commands/useCommandState';
 import { StylePaletteMenu } from '../../features/annotate/palette/StylePaletteMenu';
@@ -40,6 +41,9 @@ export const RibbonButton = forwardRef<HTMLButtonElement, RibbonButtonProps>(fun
   const visible = compact ? null : command.short ? t(commandShortKey(command.id)) : label;
   const disabled = !state.enabled;
   const reason = state.enabled ? null : t(state.reason);
+  // The tooltip names the shortcut too (M7-09: icon-only groups), "Hand (H)".
+  const keys = shortcutText(command.id, t);
+  const tip = keys ? t('ribbon.withShortcut', { label, keys }) : label;
   const button = (
     <button
       ref={ref}
@@ -70,7 +74,7 @@ export const RibbonButton = forwardRef<HTMLButtonElement, RibbonButtonProps>(fun
   ) : null;
   return visible !== label || reason ? (
     <>
-      <Tooltip content={reason ? `${label} — ${reason}` : label}>{button}</Tooltip>
+      <Tooltip content={reason ? `${tip} — ${reason}` : tip}>{button}</Tooltip>
       {why}
     </>
   ) : (

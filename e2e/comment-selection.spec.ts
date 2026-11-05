@@ -76,7 +76,8 @@ async function click(page: Page, x: number, y: number, modifiers: ('Shift' | 'Co
 }
 
 async function selectComments(page: Page) {
-  await page.getByRole('tab', { name: 'Home' }).click();
+  // Select Comments and Select Text left Home in M7-09 (Comment tab).
+  await page.getByRole('tab', { name: 'Comment', exact: true }).click();
   const b = page.getByRole('button', { name: 'Select Comments', exact: true });
   await b.click();
   await expect(b).toHaveAttribute('aria-pressed', 'true');
@@ -181,7 +182,8 @@ test('Select: a drag off the text marquee-selects comments; over the text it sel
     .not.toBeNull();
   expect(await selected(page, id)).not.toContain(b);
   // Select Text never marquee-selects.
-  await page.getByRole('tab', { name: 'Home' }).click();
+  // Select Comments and Select Text left Home in M7-09 (Comment tab).
+  await page.getByRole('tab', { name: 'Comment', exact: true }).click();
   await page.getByRole('button', { name: 'Select Text', exact: true }).click();
   await marquee(page, [280, 180], [330, 230]);
   expect(await selected(page, id)).toEqual([]);

@@ -262,12 +262,9 @@
       },
       "home": {
         "tools": "Tools",
-        "find": "Find",
-        "forms": "Forms",
         "zoom": "Zoom",
         "comment": "Comment",
         "measure": "Measure",
-        "rotation": "Rotate View",
         "view": "View",
         "protect": "Protect"
       },
@@ -320,6 +317,7 @@
     "label": "Ribbon",
     "tabs": "Ribbon tabs",
     "commands": "{{tab}} commands",
+    "withShortcut": "{{label}} ({{keys}})",
     "expand": "Expand Ribbon",
     "needsDocument": "Open a document to use this command",
     "notReady": "Not available yet",
@@ -1102,7 +1100,7 @@
       },
       "view": {
         "title": "Viewing",
-        "body": "Zoom with {{zoomIn}} and {{zoomOut}} or {{mod}}+mouse wheel; {{fitPage}} fits the page and {{fitWidth}} the width. Hold Space or press H to pan. The View tab has page layouts and rotation. {{fullScreen}} or the full-screen button at the top right shows the whole app full screen; Esc leaves."
+        "body": "Zoom with {{zoomIn}} and {{zoomOut}} or {{mod}}+mouse wheel; {{fitPage}} fits the page and {{fitWidth}} the width. Hold Space or press H to pan. The View tab has page layouts and rotation. On the Home tab, the Tools (Hand, Select, Snapshot, Find, Advanced Search) and View groups (Rotate View, the Comments, Thumbnails, Bookmarks and Attachments panes, the Properties pane) show icons only: point at one, or focus it, for its name and shortcut. {{fullScreen}} or the full-screen button at the top right shows the whole app full screen; Esc leaves."
       },
       "find": {
         "title": "Finding text",
@@ -1110,7 +1108,7 @@
       },
       "panes": {
         "title": "Side panes",
-        "body": "The rail on the left opens Thumbnails, Bookmarks, Attachments, Layers, Signatures, Comments and Search. Esc returns to the rail. The Properties pane on the right (Home → Properties, or View → Properties Pane) shows the selected comment, form field or tool."
+        "body": "The rail on the left opens Thumbnails, Bookmarks, Attachments, Layers, Signatures, Comments and Search. Esc returns to the rail. The Home tab's View group opens the same panes. The Properties pane on the right (Home → Properties Pane, or View → Properties Pane) shows the selected comment, form field or tool."
       },
       "bookmarks": {
         "title": "Bookmarks",
@@ -1118,7 +1116,7 @@
       },
       "review": {
         "title": "Reviewing comments",
-        "body": "The Comment tab has the markup, note, text and drawing tools; single letters such as N (note) or B (rectangle) turn them on while the document has focus. New comments are red with 1 pt lines and 10 pt text; the typewriter writes black Courier, and highlights (Highlight, Highlight Area and Free Highlight) are yellow at 50 % opacity, so the text shows through. Notes stay yellow. A new text box, typewriter or callout opens with “Type here” selected, so typing replaces it; Esc or a click elsewhere keeps your text (a second Esc deselects the comment). Press anywhere on a text comment to select it and drag to move it; a double-click edits it with the caret where you clicked, and Enter or F2 edits the selected one. While you edit, a right click in the text (or Shift+F10) gives Undo, Redo, Cut, Copy, Paste, Delete, Select All, Text Style (font, size, bold, italic, colour and alignment for the whole comment) and Properties. A text box and a callout have a Text color and a Border color of their own in the Properties pane; Text Style's colour changes the text only. Draw a callout with one drag from the point it marks to where its text box goes, or click the point, the knee and the box. Select a comment with Home → Select Comments or from the Comments pane; drag on the page to select every comment the rectangle touches (with Select, start the drag beside the text), Shift+click or {{mod}}+click adds a comment or takes it out, {{selectAll}} with Select Comments selects the page's comments, and the selection moves, nudges with the arrow keys and deletes as one undo step. A comment you have just drawn stays selected while its tool is on. A sticky note opens its window on the page: Enter starts a new line, {{mod}}+Enter or a click elsewhere keeps the text, and Esc keeps it and closes the window. Drag the window's title bar to move it and its corner to resize it; its ⋮ menu sets the status, deletes the note or opens Properties, and Lock and Reply sit beside it. Double-click a note, select it and press Enter, or choose Open Popup in its right-click menu to open the window again; several can be open at once, and {{save}} keeps where they are and which are open. Then edit it in the Properties pane, reply or set its status in the Comments pane, and remove it with Comment → Delete or the {{delete}} key ({{undo}} brings it back). In the Comments pane, Options sorts, groups and filters the cards and Find (Enter) looks through their text and replies; a card's Reply opens a reply box (Enter posts, Esc cancels), F2 edits its text, and a right click gives the same menu as on the page. Attach File puts a file on the page as a paperclip comment (up to 25 MB); double-click it to save the file. {{save}} keeps your comments in the file. On a file that forbids changes, comments are read-only."
+        "body": "The Comment tab has the markup, note, text and drawing tools; single letters such as N (note) or B (rectangle) turn them on while the document has focus. New comments are red with 1 pt lines and 10 pt text; the typewriter writes black Courier, and highlights (Highlight, Highlight Area and Free Highlight) are yellow at 50 % opacity, so the text shows through. Notes stay yellow. A new text box, typewriter or callout opens with “Type here” selected, so typing replaces it; Esc or a click elsewhere keeps your text (a second Esc deselects the comment). Press anywhere on a text comment to select it and drag to move it; a double-click edits it with the caret where you clicked, and Enter or F2 edits the selected one. While you edit, a right click in the text (or Shift+F10) gives Undo, Redo, Cut, Copy, Paste, Delete, Select All, Text Style (font, size, bold, italic, colour and alignment for the whole comment) and Properties. A text box and a callout have a Text color and a Border color of their own in the Properties pane; Text Style's colour changes the text only. Draw a callout with one drag from the point it marks to where its text box goes, or click the point, the knee and the box. Select a comment with Home → Select (or Comment → Select Comments) or from the Comments pane; drag on the page to select every comment the rectangle touches (with Select, start the drag beside the text), Shift+click or {{mod}}+click adds a comment or takes it out, {{selectAll}} with Select Comments selects the page's comments, and the selection moves, nudges with the arrow keys and deletes as one undo step. A comment you have just drawn stays selected while its tool is on. A sticky note opens its window on the page: Enter starts a new line, {{mod}}+Enter or a click elsewhere keeps the text, and Esc keeps it and closes the window. Drag the window's title bar to move it and its corner to resize it; its ⋮ menu sets the status, deletes the note or opens Properties, and Lock and Reply sit beside it. Double-click a note, select it and press Enter, or choose Open Popup in its right-click menu to open the window again; several can be open at once, and {{save}} keeps where they are and which are open. Then edit it in the Properties pane, reply or set its status in the Comments pane, and remove it with Comment → Delete or the {{delete}} key ({{undo}} brings it back). In the Comments pane, Options sorts, groups and filters the cards and Find (Enter) looks through their text and replies; a card's Reply opens a reply box (Enter posts, Esc cancels), F2 edits its text, and a right click gives the same menu as on the page. Attach File puts a file on the page as a paperclip comment (up to 25 MB); double-click it to save the file. {{save}} keeps your comments in the file. On a file that forbids changes, comments are read-only."
       },
       "styles": {
         "title": "Comment styles and properties",
@@ -1146,7 +1144,7 @@
       },
       "forms": {
         "title": "Forms",
-        "body": "Click a form field or press Tab to move through the fields. {{save}} saves the values. Home → Reset Form restores the defaults. To make a form, open the Form tab: choose Text Field, Check Box, Radio Button, List Box or Dropdown and drag a box on the page (or click for the default size, or press Enter for one in the middle of the page). Radio buttons drawn one after another form one group. The Properties pane sets the field's name, tooltip, default value, items, flags and look; with no field selected it shows the page's tab order. Select Fields moves, resizes and deletes fields, and Highlight Fields shows or hides their tint. {{app}} never adds scripts to a form."
+        "body": "Click a form field or press Tab to move through the fields. {{save}} saves the values. Form → Reset Form restores the defaults. To make a form, open the Form tab: choose Text Field, Check Box, Radio Button, List Box or Dropdown and drag a box on the page (or click for the default size, or press Enter for one in the middle of the page). Radio buttons drawn one after another form one group. The Properties pane sets the field's name, tooltip, default value, items, flags and look; with no field selected it shows the page's tab order. Select Fields moves, resizes and deletes fields, and Highlight Fields shows or hides their tint. {{app}} never adds scripts to a form."
       },
       "save": {
         "title": "Saving",
