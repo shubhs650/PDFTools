@@ -117,7 +117,7 @@ export function ReportDialog() {
           </p>
         ) : null}
         {/* The other way to report (M6-01, D-35): a GitHub issue in a new tab. */}
-        <p className="print-note">
+        <p className="print-note report-github">
           {t('report.github')}{' '}
           <a className="ui-focusable" href={currentIssueUrl(t)} {...EXTERNAL_LINK}>
             {t('report.githubLink')}

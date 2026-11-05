@@ -48,13 +48,13 @@
 }
 
 .ui-button--primary {
-  background: var(--color-accent);
-  border-color: var(--color-accent);
-  color: var(--color-text-on-accent);
+  background: var(--color-brand);
+  border-color: var(--color-brand);
+  color: var(--color-text-on-brand);
 }
 
 .ui-button--primary:hover:not(:disabled) {
-  background: var(--color-accent-hover);
+  background: var(--color-brand-hover);
 }
 
 .ui-button--subtle {

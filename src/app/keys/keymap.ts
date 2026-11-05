@@ -69,6 +69,7 @@ export const KEYMAP: readonly Binding[] = [
   b('view.collapseRibbon', ['Ctrl+F1']),
   // Full screen (M6-01, D-35): F11 is the browser's own (page only); Esc leaves.
   b('view.fullScreen', ['Ctrl+Shift+F11']),
+  b('view.darkTheme', ['Ctrl+Shift+D']), // M7-11 (D-42)
   // Quick Find (M2-07, §8.1): runs only on Enter in the bar; F3 walks the results.
   { ...b('home.find', ['Ctrl+F']), inText: true },
   b('find.next', ['F3']),

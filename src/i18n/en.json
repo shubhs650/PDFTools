@@ -71,7 +71,8 @@
       "propertiesPane": "Properties Pane",
       "collapseRibbon": "Collapse Ribbon",
       "fullScreen": "Full Screen",
-      "exitFullScreen": "Exit Full Screen"
+      "exitFullScreen": "Exit Full Screen",
+      "darkTheme": "Dark Theme"
     },
     "comment": {
       "highlight": "Highlight",
@@ -528,10 +529,10 @@
       "snapshots": "Recovery snapshots",
       "used": "Storage used by {{app}}",
       "unknown": "Not reported by this browser",
-      "note": "Your PDF files stay where they are. {{app}} keeps only settings, your reviewer profile, comment tool defaults and saved comment styles, saved visual signatures, custom status schemes, table templates, the recent files list and recovery snapshots of unsaved changes. Storage used includes the offline copy of the app.",
+      "note": "Your PDF files stay where they are. {{app}} keeps only settings, the light or dark theme, your reviewer profile, comment tool defaults and saved comment styles, saved visual signatures, custom status schemes, table templates, the recent files list and recovery snapshots of unsaved changes. Storage used includes the offline copy of the app.",
       "clear": "Clear all local data…",
       "confirmTitle": "Clear all local data?",
-      "confirmDescription": "This deletes your settings, reviewer profile, comment tool defaults and saved comment styles, saved visual signatures, custom status schemes, table templates, the recent files list and all recovery snapshots on this device. Your PDF files are not changed. The offline copy of the app is kept, so {{app}} keeps working offline.",
+      "confirmDescription": "This deletes your settings, theme choice (back to light), reviewer profile, comment tool defaults and saved comment styles, saved visual signatures, custom status schemes, table templates, the recent files list and all recovery snapshots on this device. Your PDF files are not changed. The offline copy of the app is kept, so {{app}} keeps working offline.",
       "warnOpen_one": "{{count}} document is open. It stays open.",
       "warnOpen_other": "{{count}} documents are open. They stay open.",
       "warnUnsaved_one": "{{count}} open document has unsaved changes. Its recovery snapshot is deleted too, so those changes could not be recovered after a crash until you change the document again.",
@@ -542,6 +543,13 @@
       "cancel": "Cancel",
       "cleared": "Local data cleared.",
       "failed": "Some local data could not be cleared. Try again, or clear this site's data in your browser settings."
+    },
+    "appearance": {
+      "title": "Appearance",
+      "theme": "Theme",
+      "light": "Light",
+      "dark": "Dark",
+      "note": "Light is the default. The choice is kept on this device only; PDF pages always stay white."
     }
   },
   "about": {
@@ -561,7 +569,8 @@
     "kind": {
       "indexedDB": "IndexedDB",
       "opfs": "Origin private file system",
-      "cache": "Cache Storage"
+      "cache": "Cache Storage",
+      "localStorage": "Local storage"
     },
     "data": {
       "caption": "Data {{app}} keeps on this device",
@@ -579,7 +588,8 @@
       "tableTemplates": "Table templates you saved (column and row dividers, header rows, merged cells, page size)",
       "toolDefaults": "Comment tool defaults you set (colours, line widths, font sizes); the shipped defaults are used until you change one",
       "commentStyles": "Comment styles you saved in the style palette (names, colours, line widths, font sizes)",
-      "visualSignatures": "Visual signatures and initials you saved in Sign Document (drawn strokes or pictures)"
+      "visualSignatures": "Visual signatures and initials you saved in Sign Document (drawn strokes or pictures)",
+      "theme": "Light or dark theme"
     },
     "clearHint": "To delete this data, use File → Settings → Clear all local data."
   },
@@ -1100,7 +1110,7 @@
       },
       "view": {
         "title": "Viewing",
-        "body": "Zoom with {{zoomIn}} and {{zoomOut}} or {{mod}}+mouse wheel; {{fitPage}} fits the page and {{fitWidth}} the width. Hold Space or press H to pan. The View tab has page layouts and rotation. On the Home tab, the Tools (Hand, Select, Snapshot, Find, Advanced Search) and View groups (Rotate View, the Comments, Thumbnails, Bookmarks and Attachments panes, the Properties pane) show icons only: point at one, or focus it, for its name and shortcut. {{fullScreen}} or the full-screen button at the top right shows the whole app full screen; Esc leaves."
+        "body": "Zoom with {{zoomIn}} and {{zoomOut}} or {{mod}}+mouse wheel; {{fitPage}} fits the page and {{fitWidth}} the width. Hold Space or press H to pan. The View tab has page layouts and rotation. On the Home tab, the Tools (Hand, Select, Snapshot, Find, Advanced Search) and View groups (Rotate View, the Comments, Thumbnails, Bookmarks and Attachments panes, the Properties pane) show icons only: point at one, or focus it, for its name and shortcut. {{fullScreen}} or the full-screen button at the top right shows the whole app full screen; Esc leaves. {{darkTheme}}, the moon button at the top right or View → Dark Theme switches between the light and dark themes (also File → Settings → Appearance); pages stay white."
       },
       "find": {
         "title": "Finding text",

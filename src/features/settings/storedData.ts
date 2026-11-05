@@ -3,15 +3,16 @@
 // migrations and the OPFS layout, so a new store cannot appear unlisted.
 // Documents themselves are never stored here: they stay in the user's files;
 // only crash-recovery snapshots of unsaved changes go to OPFS (§4.3).
+import { THEME_STORAGE_KEY } from '../../app/theme';
 import { msg, type MessageKey } from '../../i18n';
 import { DB_NAME } from '../../storage/idb';
 import { RECOVERY_DIR } from '../../storage/recoveryTypes';
 
-export type LocalDataKind = 'indexedDB' | 'opfs' | 'cache';
+export type LocalDataKind = 'indexedDB' | 'opfs' | 'localStorage' | 'cache';
 
 export interface LocalDataItem {
   kind: LocalDataKind;
-  /** The technical location: IndexedDB database/store, OPFS directory, cache name. */
+  /** The technical location: IndexedDB database/store, OPFS directory, localStorage key, cache name. */
   location: string;
   /** Store or directory name as the code sees it (for the unit test). */
   store: string;
@@ -85,6 +86,14 @@ export const LOCAL_DATA: readonly LocalDataItem[] = [
     location: `${RECOVERY_DIR}/`,
     store: RECOVERY_DIR,
     what: msg('privacy.data.recovery'),
+    cleared: true,
+  },
+  {
+    // Read before the first paint, so it cannot wait for IndexedDB (M7-11, D-42).
+    kind: 'localStorage',
+    location: THEME_STORAGE_KEY,
+    store: THEME_STORAGE_KEY,
+    what: msg('privacy.data.theme'),
     cleared: true,
   },
   {

@@ -1,7 +1,7 @@
 import AxeBuilder from '@axe-core/playwright';
 import type { Page } from '@playwright/test';
 import { simplePdf } from './fixtures/generate.ts';
-import { cap, drop } from './support/app.ts';
+import { cap, darkTheme, drop } from './support/app.ts';
 import { customColor, pickColor } from './support/colors.ts';
 import { expect, test } from './support/fixtures.ts';
 
@@ -107,7 +107,8 @@ test('Properties pane: standard colours, keyboard, No fill and More colors @smok
 test('the picker in dark theme and inside a dialog (stamp status schemes)', async ({
   page,
 }, info) => {
-  await page.goto('/?theme=dark');
+  await darkTheme(page);
+  await page.goto('/');
   await page.getByRole('tab', { name: 'Comment' }).click();
   await page
     .getByRole('toolbar', { name: 'Comment commands' })

@@ -57,3 +57,49 @@ describe('design tokens (§8)', () => {
     expect(colors.filter((c) => !forcedSet.has(c))).toEqual([]);
   });
 });
+
+// M7-11 (ADR-023 D-42): the app's own styles and components take every colour
+// from the tokens, so both themes (and forced-colors) reach every surface.
+function walk(dir: string, ext: string): string[] {
+  return readdirSync(dir, { withFileTypes: true }).flatMap((e) => {
+    const path = join(dir, e.name);
+    if (e.isDirectory()) return walk(path, ext);
+    return e.name.endsWith(ext) ? [path] : [];
+  });
+}
+
+/** Colours that are not UI: the app icon's artwork and colours written into the document. */
+const DOCUMENT_COLOURS = new Set([
+  'src/app/TopBar.tsx', // AppMark: public/icons/icon.svg drawn inline
+  'src/features/stamps/schemes/SchemesDialog.tsx', // a new status code's stamp colour
+]);
+const NAMED = /:\s*[^;{}]*\b(white|black|red|green|blue|yellow|orange|gray|grey|silver|navy)\b/g;
+
+describe('no hard-coded colours (M7-11)', () => {
+  it('app.css uses tokens only', () => {
+    const css = stripComments(readFileSync('src/app/app.css', 'utf8')).replace(
+      /white-space:[^;]*;/g,
+      '',
+    );
+    expect(css.match(/#[0-9a-f]{3,8}\b/gi), 'hex colors').toBeNull();
+    expect(css.match(/\b(rgb|rgba|hsl|hsla|oklch|lab|lch)\(/g), 'color functions').toBeNull();
+    expect(css.match(NAMED), 'named colors').toBeNull();
+  });
+
+  it('every token app.css uses is defined', () => {
+    const defined = new Set(declared(block(':root')));
+    const missing = [...readFileSync('src/app/app.css', 'utf8').matchAll(/var\((--[\w-]+)/g)]
+      .map((m) => m[1] ?? '')
+      .filter((t) => !defined.has(t));
+    // Custom properties a component sets itself (e.g. --note-color) are not tokens.
+    expect(missing.filter((t) => t.startsWith('--color-'))).toEqual([]);
+  });
+
+  it('components set no literal colours', () => {
+    const offenders = walk('src', '.tsx')
+      .filter((f) => !f.startsWith(join('src', 'testing')))
+      .filter((f) => !DOCUMENT_COLOURS.has(f.split('\\').join('/')))
+      .filter((f) => /['"`]#[0-9a-f]{3,8}\b/i.test(readFileSync(f, 'utf8')));
+    expect(offenders).toEqual([]);
+  });
+});

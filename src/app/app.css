@@ -363,8 +363,8 @@ body {
 }
 
 .ribbon-file {
-  background: var(--color-accent);
-  color: var(--color-text-on-accent);
+  background: var(--color-brand);
+  color: var(--color-text-on-brand);
 }
 
 .ribbon-tab[aria-selected='true'] {
@@ -708,8 +708,8 @@ body {
   flex-direction: column;
   gap: var(--space-2);
   padding: var(--space-4) var(--space-0);
-  background: var(--color-accent);
-  color: var(--color-text-on-accent);
+  background: var(--color-brand);
+  color: var(--color-text-on-brand);
 }
 
 .backstage-list {
@@ -737,12 +737,12 @@ body {
 .backstage-item[aria-current='page'],
 .backstage-back:hover,
 .backstage-item:hover {
-  background: var(--color-accent-hover);
+  background: var(--color-brand-hover);
 }
 
 .backstage-back:focus-visible,
 .backstage-item:focus-visible {
-  outline-color: var(--color-text-on-accent);
+  outline-color: var(--color-text-on-brand);
   outline-offset: calc(-1 * var(--focus-width));
 }
 
@@ -1253,6 +1253,21 @@ body {
   display: contents;
 }
 
+/* File → Settings → Appearance (M7-11): the two theme choices side by side. */
+.appearance-themes {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-5);
+  margin: var(--space-0);
+  padding: var(--space-0);
+  border: none;
+}
+
+.appearance-themes > legend {
+  padding: var(--space-0);
+  margin-bottom: var(--space-3);
+}
+
 .profile-form {
   display: grid;
   gap: var(--space-4);
@@ -1282,8 +1297,9 @@ body {
 }
 
 .about a,
-.privacy a {
-  color: var(--color-accent);
+.privacy a,
+.report-github a {
+  color: var(--color-link);
 }
 
 .privacy-promises {
@@ -2681,8 +2697,8 @@ textarea.form-field {
   bottom: 100%;
   left: var(--space-0);
   padding: var(--space-0) var(--space-1);
-  background: var(--color-accent);
-  color: var(--color-text-on-accent);
+  background: var(--color-brand);
+  color: var(--color-text-on-brand);
   font-size: var(--font-size-xs);
   white-space: nowrap;
 }
@@ -3208,8 +3224,8 @@ textarea.form-field {
   min-width: 1.5em;
   padding: var(--space-0) var(--space-1);
   border-radius: var(--radius-m);
-  background: var(--color-accent);
-  color: var(--color-text-on-accent);
+  background: var(--color-brand);
+  color: var(--color-text-on-brand);
   font-size: var(--font-size-xs);
   text-align: center;
 }

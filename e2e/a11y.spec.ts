@@ -1,6 +1,6 @@
 import AxeBuilder from '@axe-core/playwright';
 import type { Page } from '@playwright/test';
-import { cap, drop } from './support/app.ts';
+import { cap, darkTheme, drop } from './support/app.ts';
 import { expect, test } from './support/fixtures.ts';
 
 // M1-27: the accessibility gate (§8.2, D-30, rule 12). Axe must report no
@@ -37,16 +37,29 @@ async function openHandle(page: Page, name: string, bytes: Buffer): Promise<stri
 }
 
 for (const theme of THEMES) {
-  const url = theme === 'dark' ? '/?theme=dark' : '/';
+  const url = '/';
 
   test(
     `start screen, ribbon tabs and every backstage section (${theme})`,
     { tag: '@a11y' },
     async ({ page }) => {
+      test.setTimeout(90_000); // nine ribbon tabs and every backstage section
+      if (theme === 'dark') await darkTheme(page);
       await page.goto(url);
       await expect(page.getByTestId('start-screen')).toBeVisible();
       await axe(page, 'start screen');
-      for (const tab of ['Home', 'View', 'Comment', 'Measure', 'Help']) {
+      // Every ribbon tab (M7-11: Form, Organize, Convert and Protect too).
+      for (const tab of [
+        'Home',
+        'View',
+        'Comment',
+        'Form',
+        'Measure',
+        'Organize',
+        'Convert',
+        'Protect',
+        'Help',
+      ]) {
         await page.getByRole('tab', { name: tab }).click();
         await axe(page, `ribbon: ${tab}`);
       }
@@ -72,6 +85,7 @@ for (const theme of THEMES) {
       page.on('dialog', (d) => {
         void d.accept();
       });
+      if (theme === 'dark') await darkTheme(page);
       await page.goto(url);
       const id = await openHandle(page, 'report.pdf', pdfs.simple(3));
       await axe(page, 'frame with a document');
@@ -153,6 +167,7 @@ for (const theme of THEMES) {
     page.on('dialog', (d) => {
       void d.accept();
     });
+    if (theme === 'dark') await darkTheme(page);
     await page.goto(url);
     const id = await openHandle(page, 'draft.pdf', pdfs.simple(2));
     expect(await cap(page, 'save', 'addSquares', id, 1)).toBeNull();
@@ -173,11 +188,12 @@ for (const theme of THEMES) {
 // attributes, so the same steps work whatever the language.
 for (const [variant, url] of [
   ['light', '/'],
-  ['dark', '/?theme=dark'],
+  ['dark', '/'],
   ['pseudo-locale', '/?locale=pseudo'],
 ] as const) {
   test(`M2 panes, find bar and dialogs (${variant})`, { tag: '@a11y' }, async ({ page }) => {
     const { outlinedPdf } = await import('./fixtures/generate.ts');
+    if (variant === 'dark') await darkTheme(page);
     await page.goto(url);
     // Not openHandle(): its tab name differs in the pseudo-locale.
     await cap(page, 'open', 'openHandles', [
@@ -241,11 +257,12 @@ for (const [variant, url] of [
 // pseudo-locale, reached by command id so the steps work in any language.
 for (const [variant, url] of [
   ['light', '/'],
-  ['dark', '/?theme=dark'],
+  ['dark', '/'],
   ['pseudo-locale', '/?locale=pseudo'],
 ] as const) {
   test(`M3 panes and dialogs (${variant})`, { tag: '@a11y' }, async ({ page }) => {
     const { simplePdf } = await import('./fixtures/generate.ts');
+    if (variant === 'dark') await darkTheme(page);
     await page.goto(url);
     await cap(page, 'annotate', 'setProfile', 'Ana de Vries');
     const [id] = (await cap(page, 'open', 'openHandles', [
@@ -320,7 +337,7 @@ for (const [variant, url] of [
 // command id so the steps work in any language.
 for (const [variant, url] of [
   ['light', '/'],
-  ['dark', '/?theme=dark'],
+  ['dark', '/'],
   ['pseudo-locale', '/?locale=pseudo'],
 ] as const) {
   test(`M4 panes, dialogs and review mode (${variant})`, { tag: '@a11y' }, async ({ page }) => {
@@ -328,6 +345,7 @@ for (const [variant, url] of [
     const { tablesPdf } = await import('./fixtures/tables.ts');
     const { stubSavePicker } = await import('./support/savePicker.ts');
     const pdf = Buffer.from(tablesPdf()).toString('base64');
+    if (variant === 'dark') await darkTheme(page);
     await page.goto(url);
     await cap(page, 'annotate', 'setProfile', 'Ana de Vries');
     const [id] = (await cap(page, 'open', 'openHandles', [
@@ -453,12 +471,13 @@ for (const [variant, url] of [
 // the steps work in any language.
 for (const [variant, url] of [
   ['light', '/'],
-  ['dark', '/?theme=dark'],
+  ['dark', '/'],
   ['pseudo-locale', '/?locale=pseudo'],
 ] as const) {
   test(`M6 panes, dialogs and menus (${variant})`, { tag: '@a11y' }, async ({ page }) => {
     test.setTimeout(120_000);
     const { richOutlinePdf } = await import('./fixtures/generate.ts');
+    if (variant === 'dark') await darkTheme(page);
     await page.goto(url);
     await cap(page, 'annotate', 'setProfile', 'Ana de Vries');
     await drop(page, [{ name: 'm6.pdf', b64: Buffer.from(richOutlinePdf()).toString('base64') }]);

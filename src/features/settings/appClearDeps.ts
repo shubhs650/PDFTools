@@ -1,4 +1,5 @@
 // The app's side of "Clear all local data" (clearAll.ts, M1-26).
+import { resetTheme } from '../../app/theme';
 import { storageClient } from '../../engine/storageClient';
 import { deleteAppDb } from '../../storage/appDb';
 import { recentStore } from '../recent/recent';
@@ -30,5 +31,7 @@ export const appClearDeps: ClearDeps = {
     resetAllToolDefaults();
     resetAllCommentStyles();
     resetSignatures();
+    // The theme choice (localStorage, M7-11): back to the default light theme.
+    resetTheme();
   },
 };

@@ -2,6 +2,7 @@ import { StrictMode } from 'react';
 import { createRoot } from 'react-dom/client';
 import { t } from './i18n';
 import { App } from './app/App';
+import { initTheme } from './app/theme';
 
 document.title = t('app.name');
 
@@ -13,11 +14,9 @@ if (!rootElement) {
 const root = createRoot(rootElement);
 const params = new URLSearchParams(location.search);
 
-// Dev and e2e builds only: `?theme=dark` proves the tokens support a dark theme
-// (M1-05; dark theme is Rev 2+).
-if (import.meta.env.DEV || import.meta.env.MODE === 'e2e') {
-  if (params.get('theme') === 'dark') document.documentElement.setAttribute('data-theme', 'dark');
-}
+// The stored light/dark choice (M7-11, D-42); public/theme-boot.js already
+// applied it before the first paint.
+initTheme();
 
 // Test-only hook and component gallery (M1-Q3): statically false outside
 // `vite build --mode e2e`, so these imports are dropped from production builds.

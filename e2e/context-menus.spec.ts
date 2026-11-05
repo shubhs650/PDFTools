@@ -3,7 +3,7 @@ import type { Page } from '@playwright/test';
 import { reviewSourcePdf } from './fixtures/comments.ts';
 import { OWNER_PW, USER_PW, hasQpdf, qpdfEncrypt } from './fixtures/encrypted.ts';
 import { fullFormPdf, simplePdf } from './fixtures/generate.ts';
-import { cap, drop } from './support/app.ts';
+import { cap, drop, menuKey } from './support/app.ts';
 import { expect, test } from './support/fixtures.ts';
 
 // M6-02 (ADR-021 D-38 a, b; ADR-018 d5, d8; rules 9, 12): right-click menus on
@@ -219,7 +219,7 @@ test('from the keyboard: Shift+F10 and the Menu key open the menus; Esc closes t
   // The menu focuses its first item once it is open; arrows pressed before
   // that are lost (the flake seen on main, M6-15).
   await expect(menu(page).getByRole('menuitem', { name: 'Cut', exact: true })).toBeFocused();
-  for (let i = 0; i < 6; i++) await page.keyboard.press('ArrowDown');
+  await menuKey(page, 'ArrowDown', 6);
   await expect(setStatus).toBeFocused();
   await page.keyboard.press('ArrowRight');
   await expect(page.getByRole('menuitem', { name: 'No status' })).toBeFocused();
@@ -247,8 +247,8 @@ test('from the keyboard: Shift+F10 and the Menu key open the menus; Esc closes t
   await expect(status(page, '1 comment copied.')).toBeVisible();
   await expect(view).toBeFocused();
   await page.keyboard.press('Shift+F10');
-  await page.keyboard.press('ArrowDown');
-  await page.keyboard.press('ArrowDown');
+  await expect(menu(page).getByRole('menuitem', { name: 'Cut', exact: true })).toBeFocused();
+  await menuKey(page, 'ArrowDown', 2);
   await expect(menu(page).getByRole('menuitem', { name: 'Paste', exact: true })).toBeFocused();
   await page.keyboard.press('Enter');
   await expect(status(page, '1 comment pasted.')).toBeVisible();
