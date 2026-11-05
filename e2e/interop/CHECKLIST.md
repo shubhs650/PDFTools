@@ -382,3 +382,17 @@ Ctrl+S, then open the file in each viewer.
 | R2  | Hindi scan: copied words paste as Devanagari (not boxes or Latin letters); search finds a Hindi word.                       |         |             |
 | R3  | Chinese (Simplified) scan: copied text pastes as Chinese characters; search finds a two-character word.                     |         |             |
 | R4  | In PDFTools after reopening: Quick Find finds the same words; a second OCR run skips the recognized pages ("already text"). |         |             |
+
+## M7 — text and border colours (ADR-024)
+
+### S. Text colour apart from the border colour
+
+1. In Triya PDF, on a copy of any PDF: make a text box and a callout with some text, set each
+   one's **Text color** to Blue and **Border color** to Red (Properties pane), and Ctrl+S.
+2. In each viewer, make a text box of their own with blue text on a red border. Save.
+
+| #   | Check                                                                                                                                 | Acrobat | PDF-XChange |
+| --- | ------------------------------------------------------------------------------------------------------------------------------------- | ------- | ----------- |
+| S1  | Ours open in their viewer: the text is blue and the border (and the callout's line) red, in both comments.                            |         |             |
+| S2  | Edit our text box's text in their viewer and save: it is still blue on red there, and again after reopening in Triya PDF.             |         |             |
+| S3  | Their own text box opens in Triya PDF with blue text on a red border; its Properties pane shows Text color Blue and Border color Red. |         |             |

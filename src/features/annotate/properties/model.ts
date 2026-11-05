@@ -16,6 +16,7 @@ import {
 export const PROPS = [
   'fill',
   'stroke',
+  'border',
   'style',
   'width',
   'opacity',
@@ -41,6 +42,7 @@ export const SECTION_PROPS = {
   style: [
     'fill',
     'stroke',
+    'border',
     'style',
     'width',
     'opacity',
@@ -70,6 +72,8 @@ const ATTACHMENT = [S.FILEATTACHMENT];
 
 const TYPES: Record<Prop, ReadonlySet<S>> = {
   stroke: new Set([...SHAPES, ...LINES, ...TEXT_MARKUP, S.INK, S.CARET, S.TEXT, ...ATTACHMENT]),
+  // A text box's and a callout's border (/DA), apart from the text colour (ADR-024).
+  border: new Set([S.FREETEXT]),
   fill: new Set([...SHAPES, ...LINES, S.FREETEXT]),
   opacity: new Set(MARKUPS),
   // Written into the regenerated appearance (/ExtGState /BM); not for icons and images.
@@ -102,9 +106,18 @@ const isCallout = (a: PdfAnnotationObject): boolean => {
   );
 };
 
+/** A text box or callout that draws a border (a typewriter has none). */
+const hasBorder = (a: PdfAnnotationObject): boolean => {
+  const o = a as unknown as Loose;
+  return (
+    o['intent'] !== 'FreeTextTypeWriter' &&
+    (isCallout(a) || (typeof o['strokeColor'] === 'string' && o['strokeColor'] !== 'transparent'))
+  );
+};
+
 /** Whether `a` has property `p`. */
 export const has = (a: PdfAnnotationObject, p: Prop): boolean =>
-  TYPES[p].has(a.type) && !(p === 'rotation' && isCallout(a));
+  TYPES[p].has(a.type) && !(p === 'rotation' && isCallout(a)) && !(p === 'border' && !hasBorder(a));
 
 /** Properties that are style (Copy/Apply Style, tool defaults), not content or placement. */
 const STYLE: readonly Prop[] = PROPS.filter(
@@ -160,6 +173,8 @@ function valueOf(a: PdfAnnotationObject, p: Prop): Plain | undefined {
   switch (p) {
     case 'stroke':
       return str('strokeColor') ?? str('color');
+    case 'border':
+      return str('strokeColor');
     case 'fill':
       return str('color') ?? str('backgroundColor') ?? 'transparent';
     case 'opacity':
@@ -241,6 +256,9 @@ export function patchFor(
       // Text markups keep /C in both fields (EmbedPDF's `color` is a deprecated alias).
       out = TEXT_MARKUP.includes(a.type) ? { strokeColor: v, color: v } : { strokeColor: v };
       break;
+    case 'border':
+      out = { strokeColor: v };
+      break;
     case 'fill':
       out = { color: v };
       break;
@@ -279,15 +297,8 @@ export function patchFor(
       out = { fontSize: clamp(Number(v), 4, 144) };
       break;
     case 'fontColor':
-      // PDFium draws a text comment's text in its /DA colour, and EmbedPDF puts
-      // the border colour there whenever the comment has one (the text colour
-      // goes to a key no other viewer reads). So the text colour sets the
-      // border's too: the page, Acrobat and PDF-XChange show the colour picked
-      // (M7-05). The border has no colour control of its own.
-      out =
-        a.type === S.FREETEXT && typeof o['strokeColor'] === 'string'
-          ? { fontColor: v, strokeColor: v }
-          : { fontColor: v };
+      // The text only: the border keeps its own colour (ADR-024).
+      out = { fontColor: v };
       break;
     case 'textAlign':
       out = { textAlign: clamp(Math.round(Number(v)), 0, 2) };

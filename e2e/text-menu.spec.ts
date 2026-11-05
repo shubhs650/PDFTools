@@ -26,6 +26,7 @@ interface Obj {
   fontFamily?: number;
   fontSize?: number;
   fontColor?: string;
+  strokeColor?: string;
   textAlign?: number;
 }
 
@@ -259,16 +260,18 @@ test('Text Style: font, size, bold, italic, colour and alignment for the whole c
   await page.keyboard.press('Escape');
   await written(page, id, ['Revised per RFI 12']);
 
-  // Saved: /DA has the font, size and colour, /Q the alignment.
+  // Saved: /DA has the font, size and the border colour, /DS the text colour, /Q the alignment.
   const saved = (await cap(page, 'save', 'verifiedSave', id)) as { mode: string; tail: string };
   expect(saved.mode).toBe('narrow');
   const tailBytes = Buffer.from(saved.tail, 'base64');
   const tail = tailBytes.toString('latin1');
   expect(tail).toMatch(/\/DA\s*\([^)]*18(\.0+)?\s+Tf[^)]*\)/);
-  // The text colour is /DA's (the border follows it): the appearance draws it.
-  expect(tail).toMatch(/\/DA\s*\([^)]*0(\.0+)?\s+0(\.0+)?\s+1(\.0+)?\s+rg[^)]*\)/);
-  const drawn = streams(tailBytes).find((t) => t.includes('(Revised per RFI 12) Tj'));
-  expect(drawn).toMatch(/BT\s+0\s+0\s+1\s+rg/);
+  // The border keeps its red (/DA, as Acrobat reads it); the text colour is in /DS (ADR-024).
+  expect(tail).toMatch(/\/DA\s*\([^)]*1(\.0+)?\s+0(\.0+)?\s+0(\.0+)?\s+rg[^)]*\)/);
+  expect(tail).toMatch(/\/DS\s*\([^)]*color:#0000FF[^)]*\)/);
+  // The appearance draws the text blue (PDFium's own, its text colour changed).
+  const drawn = streams(tailBytes).filter((t) => t.includes('(Revised per RFI 12) Tj'));
+  expect(drawn.some((t) => /BT\s+0\s+0\s+1\s+rg/.test(t))).toBe(true);
   expect(tail).toMatch(/\/Q\s*1/);
 
   // Read back from the saved file.
@@ -284,6 +287,7 @@ test('Text Style: font, size, bold, italic, colour and alignment for the whole c
     textAlign: 1,
   });
   expect((await objects(page, again))[0]?.fontColor?.toLowerCase()).toBe('#0000ff');
+  expect((await objects(page, again))[0]?.strokeColor?.toLowerCase()).toBe('#ff0000');
 });
 
 test('keyboard: Shift+F10 and the Menu key open it at the caret; arrows, Enter and Esc; focus back in the editor; axe clean', async ({

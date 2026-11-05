@@ -5,6 +5,10 @@
 // the Properties pane, and the next edit rewrote it as Helvetica. Acrobat and
 // PDF-XChange write their own short names (`/TiBo`, `/Cour`). Here an Unknown
 // font is looked up by the name in /DA. The appearance stream is not touched.
+// The text colour (ADR-024): EmbedPDF reads it from its own /TextColor, else
+// from /DA, which Acrobat and PDF-XChange use for the border; their text
+// colour is in /DS (`color:#0000FF`), read here when there is no /TextColor.
+import { colorFromDefaultStyle } from '../../model/freeTextStyle';
 
 /** PdfStandardFont values by base font name and by the usual /DR resource names. */
 const FONTS: Readonly<Record<string, number>> = {
@@ -54,11 +58,26 @@ interface DaReader {
     annot: number,
   ): { fontFamily: number; fontSize: number; fontColor: string } | undefined;
   getAnnotString(annot: number, key: string): string | undefined;
+  getAnnotationColor(annot: number, colorType: number): string | undefined;
+  readPdfFreeTextAnno(doc: unknown, page: unknown, annot: number, index: number): unknown;
 }
 
-/** Hooks the engine instance's /DA reader (once, at init). */
+/** PdfAnnotationColorType.TextColor (EmbedPDF's private /TextColor). */
+const TEXT_COLOR = 3;
+
+/** Hooks the engine instance's /DA and FreeText readers (once, at init). */
 export function installFontReadback(native: unknown): void {
   const n = native as DaReader;
+  if (typeof n.readPdfFreeTextAnno === 'function') {
+    const readFreeText = n.readPdfFreeTextAnno.bind(n);
+    n.readPdfFreeTextAnno = (doc, page, annot, index) => {
+      const out = readFreeText(doc, page, annot, index);
+      if (typeof out !== 'object' || out === null) return out;
+      if (n.getAnnotationColor(annot, TEXT_COLOR) !== undefined) return out;
+      const color = colorFromDefaultStyle(n.getAnnotString(annot, 'DS'));
+      return color ? { ...out, fontColor: color.toLowerCase() } : out;
+    };
+  }
   if (typeof n.getAnnotationDefaultAppearance !== 'function') return;
   const read = n.getAnnotationDefaultAppearance.bind(n);
   n.getAnnotationDefaultAppearance = (annot) => {

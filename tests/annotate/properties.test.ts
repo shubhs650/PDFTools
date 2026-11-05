@@ -105,6 +105,16 @@ describe('annotation properties (M3-10)', () => {
     ]);
     // A callout is not turned (EmbedPDF has no rotate handle for it).
     expect(propsOf({ ...freeText, intent: 'FreeTextCallout' })).not.toContain('rotation');
+    // ADR-024: a text box with a border and a callout have a Border color; a typewriter has none.
+    const bordered = { ...freeText, strokeColor: '#ff0000' } as PdfAnnotationObject;
+    expect(propsOf(bordered).slice(0, 2)).toEqual(['fill', 'border']);
+    expect(propsOf({ ...freeText, intent: 'FreeTextCallout' })).toContain('border');
+    expect(propsOf({ ...bordered, intent: 'FreeTextTypeWriter' })).not.toContain('border');
+    expect(readProps([bordered]).border).toBe('#ff0000');
+    expect(patchFor(bordered, 'border', '#00ff00')).toEqual({ strokeColor: '#00ff00' });
+    // The text colour changes the text only.
+    expect(patchFor(bordered, 'fontColor', '#0000ff')).toEqual({ fontColor: '#0000ff' });
+    expect(patchFor(square(), 'border', '#00ff00')).toBeNull();
   });
 
   it('shows shared properties only, with mixed values', () => {

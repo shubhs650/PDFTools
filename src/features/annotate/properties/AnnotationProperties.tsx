@@ -154,6 +154,14 @@ export function StyleAndText({
         onCommit={set('stroke')}
       />
     ),
+    border: () => (
+      <ColorField
+        label={t('annotProps.borderColor')}
+        value={v('border')}
+        disabled={disabled}
+        onCommit={set('border')}
+      />
+    ),
     style: () => (
       <SelectField
         label={t('annotProps.lineStyle')}

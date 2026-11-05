@@ -1,15 +1,38 @@
 # Triya PDF — Progress
 
-_Last updated: 2026-11-04 (session 45: M7-05 text menu)_
+_Last updated: 2026-11-05 (session 46: separate text and border colours, ADR-024)_
 
 **Current milestone:** M7 — second beta review (plan in [docs/plan/M7.md](plan/M7.md), scope in
 [ADR-023](adr/023-m7-second-beta-review.md), **Accepted** 2026-11-04 with the recommended
-answers Q1–Q7; ARCHITECTURE.md Rev 0.11). M7-01 … M7-05 done; next: M7-06. **Previous milestone:** M6 — Beta review (plan in [docs/plan/M6.md](plan/M6.md), scope changes in
+answers Q1–Q7; ARCHITECTURE.md Rev 0.12 after [ADR-024](adr/024-freetext-text-and-border-colours.md)). M7-01 … M7-05 done, plus separate text and border colours (ADR-024); next: M7-06. **Previous milestone:** M6 — Beta review (plan in [docs/plan/M6.md](plan/M6.md), scope changes in
 [ADR-021](adr/021-m6-beta-review.md), **Accepted** 2026-11-01; ARCHITECTURE.md Rev 0.10; M6-01 … M6-15 done, **M6 complete on the agent side** ([acceptance](acceptance/M6.md)); spike results in
 [ADR-022](adr/022-m6-spikes-s18-s22.md), **Accepted** 2026-11-02 (bookmark route B)). M5 — OCR: M5-01 … M5-04 done under [ADR-020](adr/020-m5-ocr.md); M5-05's owner
 interop is in the M6 pack (CHECKLIST §M6 R1–R4). Rev 0 (M0–M4) is complete on the agent side.
 
 ## Done
+
+- **Session 46 — separate text and border colours (ADR-024, spike S25; owner's ask 2026-11-05).**
+  The owner asked for a text box's and a callout's text colour apart from the border colour,
+  keeping interop. Spike S25 (`spikes/s25-freetext-colors/`, runs with the unit tests) showed
+  PDFium draws the text in `/DA`'s colour (EmbedPDF's border colour) and ignores EmbedPDF's
+  `/TextColor`; ADR-024 accepted the same day, ARCHITECTURE.md Rev 0.12 (§7.1's second
+  exception to "no custom appearance streams"). Storage as Acrobat and PDF-XChange: `/DA` the
+  border, `/DS` `color:` the text. `freeTextColors.ts` (Render worker, after each FreeText create
+  and update): writes `/DS`; with two colours, exports PDFium's appearance as a one-page document,
+  changes only the fill colour operator inside each `BT … ET` (`recolorText` in
+  `src/model/freeTextStyle.ts`, a small content tokenizer), makes the page draw that content with
+  the form's resources (an incremental update), and sets it back with
+  `EPDFAnnot_SetAppearanceFromPage`; with one colour it clears a stale `/TextColor`. Unexpected
+  appearances keep PDFium's and are counted into a diagnostics event with the next Ctrl+S.
+  `freeTextFonts.ts` reads another viewer's `/DS` text colour when there is no `/TextColor`. UI:
+  a **Border color** row (Style section) for text boxes and callouts, not typewriters — Properties
+  pane, tool defaults and the Comment Styles window (they share the grid); M7-05's "the border
+  follows the text colour" removed, so Text Style ▸ Text Color changes the text only; Help
+  updated. Tests: `tests/annotate/freetext-colors.test.ts` (real PDFium: pixels, `/DS`, Ctrl+S
+  narrow tail verified and reopened, edit/resize, one colour, typewriter, move, callout, placement
+  turned or not, `/DS` readback), `tests/model/freeTextStyle.test.ts`, property model and text
+  menu tests, `e2e/property-grid.spec.ts` (both rows, saved `/DA`/`/DS`/appearance, reopen, tool
+  defaults) and `e2e/text-menu.spec.ts` updated. Interop rows S1–S3 added to CHECKLIST §M7.
 
 - **Session 45 — M7-05 text menu (ADR-023 D-43 e; review 4b-v; bug B10).** Reproduced on
   `main` (b4a9532): a right click in a text box, typewriter or callout being edited showed the
@@ -1883,6 +1906,8 @@ rel="noopener noreferrer">`; the commands `app.home` / `app.reportIssue` open th
 
 - **Agent:** M7-06 (sticky note popup, spike S23 first) in its own thread, then
   M7-07 … M7-12 serially.
+- **Owner (ADR-024):** CHECKLIST §M7 S1–S3 (blue text on a red border in a text box and a
+  callout, both ways) in Acrobat Reader and PDF-XChange; also in the M7-12 interop pack.
 - **Owner (M6 interop pack):** [docs/acceptance/M6.md](acceptance/M6.md) §4 — CHECKLIST §M6
   P1–P19 and Q1–Q4 in Acrobat Reader and PDF-XChange with the files in
   `e2e/fixtures/self-made/m6-interop/` (forms with tooltips, defaults and Row tab order;

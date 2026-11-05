@@ -1,6 +1,6 @@
 # ADR-024: Separate text and border colours for text comments (spike S25)
 
-- **Status:** Proposed (agent, 2026-11-05), for the owner's review
+- **Status:** Accepted (owner, 2026-11-05)
 - **Date:** 2026-11-05
 - **Deciders:** owner (Shubham) / agent (M7-05 thread)
 - **Related decisions:** D-03 (standard annotations, rule 6), D-37 (defaults), D-43 e (text
@@ -50,7 +50,7 @@ A text box with a 2 pt red border, blue Courier-Bold 18 pt text, centred:
 **Verdict: works with a workaround.** We post-process PDFium's own appearance and change only the
 text colour operator. Layout, wrapping, fonts, alignment and the border stay PDFium's.
 
-## Decision (proposed)
+## Decision
 
 1. **Storage, Acrobat's convention:**
    - `/DA` `rg` holds the border colour (EmbedPDF already writes it there).
@@ -85,6 +85,25 @@ text colour operator. Layout, wrapping, fonts, alignment and the border stay PDF
      readback (`freeTextFonts.ts`).
    - Opening an Acrobat or PDF-XChange file then shows its text colour.
 
+## Implementation notes (2026-11-05)
+
+- **`/DS` on every write.** The Render worker writes `/DS` (font, size, alignment, `color:` the
+  text colour) after every text comment create and update, not only when the two colours
+  differ, so it never goes stale. With one colour it also clears EmbedPDF's `/TextColor`, which
+  EmbedPDF leaves behind when the colours become equal again and which its reader would prefer.
+- **The page draws the content itself.** `EPDFAnnot_SetAppearanceFromPage` keeps a page's fonts
+  and graphics states but not a form XObject the page draws: the export's page (`/FXX1 Do`) set
+  back as is drew nothing. So the incremental update replaces the export's page, not its form:
+  the page's content is the recoloured appearance (with the form's matrix and clip) and its
+  `/Resources` are the form's. Placement matches PDFium's to 1 px, turned or not (unit test).
+- **Callouts.** PDFium's callout appearance already draws the text in `/TextColor`, so only text
+  boxes are recoloured; a callout's appearance is left alone when the text already has its colour.
+- **Diagnostics.** A comment that keeps PDFium's appearance is counted in the Render worker and
+  recorded as the event `freetext-text-color-kept` (a count only) with the next Ctrl+S.
+- **Cost.** About 2 ms per two-colour comment write in Node (median of 40), in the Render worker.
+- **Orphans.** The replaced appearance stays in the file as an unreferenced object until Save
+  Optimized, as PDFium's own regenerated appearances do.
+
 ## Alternatives
 
 - **A. The border follows the text colour** (M7-05 interim). Simple and interoperable, but only
@@ -107,4 +126,4 @@ text colour operator. Layout, wrapping, fonts, alignment and the border stay PDF
   - a text box and a callout with blue text on a red border display correctly;
   - editing their text there keeps both colours (`/DS`);
   - their own two-colour comments open here with both colours.
-- ARCHITECTURE.md §7.1 gains the exception sentence (Rev 0.12) once this ADR is accepted.
+- ARCHITECTURE.md §7.1 gains the exception (Rev 0.12).
