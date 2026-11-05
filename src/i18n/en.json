@@ -230,6 +230,16 @@
       "listBox": "List Box",
       "dropdown": "Dropdown",
       "highlightFields": "Highlight Fields"
+    },
+    "text": {
+      "undo": "Undo",
+      "redo": "Redo",
+      "cut": "Cut",
+      "copy": "Copy",
+      "paste": "Paste",
+      "delete": "Delete",
+      "selectAll": "Select All",
+      "style": "Text Style"
     }
   },
   "ribbon": {
@@ -1107,7 +1117,7 @@
       },
       "review": {
         "title": "Reviewing comments",
-        "body": "The Comment tab has the markup, note, text and drawing tools; single letters such as N (note) or B (rectangle) turn them on while the document has focus. New comments are red with 1 pt lines and 10 pt text (highlights and notes stay yellow). A new text box, typewriter or callout opens with “Type here” selected, so typing replaces it; Esc or a click elsewhere keeps your text (a second Esc deselects the comment). Press anywhere on a text comment to select it and drag to move it; a double-click edits it with the caret where you clicked, and Enter or F2 edits the selected one. Draw a callout with one drag from the point it marks to where its text box goes, or click the point, the knee and the box. Select a comment with Home → Select Comments or from the Comments pane; drag on the page to select every comment the rectangle touches (with Select, start the drag beside the text), Shift+click or {{mod}}+click adds a comment or takes it out, {{selectAll}} with Select Comments selects the page's comments, and the selection moves, nudges with the arrow keys and deletes as one undo step. A comment you have just drawn stays selected while its tool is on. Then edit it in the Properties pane, reply or set its status in the Comments pane, and remove it with Comment → Delete or the {{delete}} key ({{undo}} brings it back). In the Comments pane, Options sorts, groups and filters the cards and Find (Enter) looks through their text and replies; a card's Reply opens a reply box (Enter posts, Esc cancels), F2 edits its text, and a right click gives the same menu as on the page. Attach File puts a file on the page as a paperclip comment (up to 25 MB); double-click it to save the file. {{save}} keeps your comments in the file. On a file that forbids changes, comments are read-only."
+        "body": "The Comment tab has the markup, note, text and drawing tools; single letters such as N (note) or B (rectangle) turn them on while the document has focus. New comments are red with 1 pt lines and 10 pt text (highlights and notes stay yellow). A new text box, typewriter or callout opens with “Type here” selected, so typing replaces it; Esc or a click elsewhere keeps your text (a second Esc deselects the comment). Press anywhere on a text comment to select it and drag to move it; a double-click edits it with the caret where you clicked, and Enter or F2 edits the selected one. While you edit, a right click in the text (or Shift+F10) gives Undo, Redo, Cut, Copy, Paste, Delete, Select All, Text Style (font, size, bold, italic, colour and alignment for the whole comment) and Properties. Draw a callout with one drag from the point it marks to where its text box goes, or click the point, the knee and the box. Select a comment with Home → Select Comments or from the Comments pane; drag on the page to select every comment the rectangle touches (with Select, start the drag beside the text), Shift+click or {{mod}}+click adds a comment or takes it out, {{selectAll}} with Select Comments selects the page's comments, and the selection moves, nudges with the arrow keys and deletes as one undo step. A comment you have just drawn stays selected while its tool is on. Then edit it in the Properties pane, reply or set its status in the Comments pane, and remove it with Comment → Delete or the {{delete}} key ({{undo}} brings it back). In the Comments pane, Options sorts, groups and filters the cards and Find (Enter) looks through their text and replies; a card's Reply opens a reply box (Enter posts, Esc cancels), F2 edits its text, and a right click gives the same menu as on the page. Attach File puts a file on the page as a paperclip comment (up to 25 MB); double-click it to save the file. {{save}} keeps your comments in the file. On a file that forbids changes, comments are read-only."
       },
       "styles": {
         "title": "Comment styles and properties",
@@ -2299,6 +2309,24 @@
   "contextMenu": {
     "comment": "Comment",
     "page": "Page"
+  },
+  "textMenu": {
+    "label": "Text",
+    "notEditing": "No text is being edited",
+    "noSelection": "Select some text first",
+    "nothingToUndo": "Nothing to undo",
+    "nothingToRedo": "Nothing to redo",
+    "pasteBlocked": "The browser blocks reading the clipboard here: paste with the keyboard instead",
+    "clipboardRefused": "The browser did not allow using the clipboard",
+    "font": "Font",
+    "size": "Size",
+    "points": "{{size}} pt",
+    "bold": "Bold",
+    "italic": "Italic",
+    "color": "Text Color",
+    "alignLeft": "Align Left",
+    "alignCenter": "Align Center",
+    "alignRight": "Align Right"
   },
   "stylePalette": {
     "open": "{{tool}} styles",

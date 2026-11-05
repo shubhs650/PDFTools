@@ -3698,3 +3698,30 @@ textarea.form-field {
   outline: var(--border-width) solid var(--color-focus);
   outline-offset: var(--border-width);
 }
+
+/* The text menu (M7-05): opened at the pointer from a hidden anchor. */
+.text-menu-anchor {
+  position: fixed;
+  width: 0;
+  height: 0;
+  overflow: hidden;
+}
+
+.ui-context-menu .ui-color-heading {
+  padding: var(--space-2) var(--space-3);
+}
+
+.text-menu-colors {
+  padding: var(--space-0) var(--space-3) var(--space-3);
+}
+
+/* The comment's colour: the picker's ring (M6-16); the highlighted cell: the focus ring. */
+.text-menu-colors .ui-color-cell[data-state='checked'] {
+  outline: var(--focus-width) solid var(--color-text);
+  outline-offset: var(--border-width);
+}
+
+.text-menu-colors .ui-color-cell[data-highlighted] {
+  outline: var(--focus-width) solid var(--color-focus);
+  outline-offset: var(--focus-offset);
+}

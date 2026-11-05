@@ -14,7 +14,11 @@ export interface MenuChoice {
 }
 
 export type ContextMenuEntry =
-  | { kind: 'command'; id: string }
+  /**
+   * `keysOf`: the command whose keys are shown (M7-05: the text menu's Undo
+   * shows Undo's Ctrl+Z, which the editor itself handles).
+   */
+  | { kind: 'command'; id: string; keysOf?: string }
   | { kind: 'separator'; key: string }
   /** The command's label opens a submenu; its state enables or disables it. */
   | { kind: 'submenu'; id: string; choices: readonly MenuChoice[] };
@@ -58,7 +62,7 @@ export function menuItems(
       kind: e.kind,
       id: e.id,
       label: commandLabelKey(e.id),
-      shortcut: e.kind === 'command' ? shortcutOf(e.id) : '',
+      shortcut: e.kind === 'command' ? shortcutOf(e.keysOf ?? e.id) : '',
       enabled: st.enabled,
       toggle: e.kind === 'command' && TOGGLES.has(e.id),
       pressed: st.pressed,

@@ -36,6 +36,30 @@ interface Session {
 
 let session: Session | null = null;
 
+/**
+ * While the text menu is open (M7-05), the focus is in the menu, not in the
+ * editor: that is not a way out of the edit.
+ */
+let held = false;
+
+/** Keeps editing alive while focus is in the text menu; returns the release. */
+export function holdTextEdit(): () => void {
+  held = true;
+  return () => {
+    held = false;
+  };
+}
+
+/** The text comment being edited: its document, page, id and editor. */
+export function textEditSession(): Readonly<Omit<Session, 'stop'>> | null {
+  return session;
+}
+
+/** Whether `target` is (inside) the editor of the text comment being edited. */
+export function inTextEditor(target: EventTarget | null): boolean {
+  return !!session && target instanceof Node && session.el.contains(target);
+}
+
 // Per page, a counter the annotation layer uses as its key.
 const epochs = createStore<{ map: Readonly<Record<string, number>> }>()(() => ({ map: {} }));
 const pageKey = (docId: string, pageIndex: number): string => `${docId}:${String(pageIndex)}`;
@@ -103,6 +127,16 @@ function commit(s: Session): void {
   }
 }
 
+/**
+ * Types `text` at the editor's selection as the user would (one step of the
+ * editor's own undo history). The browser's editing commands are the only way
+ * to join that history, hence the deprecated call.
+ */
+export function insertPlainText(text: string): void {
+  // eslint-disable-next-line @typescript-eslint/no-deprecated -- no replacement joins the editor's undo history
+  document.execCommand('insertText', false, text);
+}
+
 /** Whether a text comment is being edited. */
 export function isEditingText(): boolean {
   return session !== null;
@@ -143,7 +177,7 @@ export function installTextEdit(): () => void {
     // The plugin's own blur commit would write a second, stale undo step.
     e.stopPropagation();
     // Another window took the focus: the editor gets it back on return.
-    if (session?.el === el && document.hasFocus()) endTextEdit();
+    if (session?.el === el && document.hasFocus() && !held) endTextEdit();
   };
   document.addEventListener('focusin', onFocusIn, true);
   document.addEventListener('focusout', onFocusOut, true);
@@ -160,9 +194,17 @@ export function installTextEdit(): () => void {
     attributes: true,
     attributeFilter: ['contenteditable'],
   });
+  // Pasted text arrives as plain text (M7-05): the editor holds what /Contents saves.
+  const onPaste = (e: ClipboardEvent): void => {
+    if (!inTextEditor(e.target)) return;
+    e.preventDefault();
+    insertPlainText(e.clipboardData?.getData('text/plain') ?? '');
+  };
+  document.addEventListener('paste', onPaste, true);
   const offCommand = onBeforeCommand((id) => {
-    // Esc (tool.cancel) ends editing itself and stops there.
-    if (id !== 'tool.cancel') endTextEdit();
+    // Esc (tool.cancel) ends editing itself and stops there; the text menu's
+    // commands (M7-05) act on the edit.
+    if (id !== 'tool.cancel' && !id.startsWith('text.')) endTextEdit();
   });
   const offTool = appStore.subscribe((s, prev) => {
     if (s.tool !== prev.tool) endTextEdit();
@@ -173,6 +215,7 @@ export function installTextEdit(): () => void {
   return () => {
     document.removeEventListener('focusin', onFocusIn, true);
     document.removeEventListener('focusout', onFocusOut, true);
+    document.removeEventListener('paste', onPaste, true);
     observer.disconnect();
     offCommand();
     offTool();

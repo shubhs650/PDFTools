@@ -27,6 +27,7 @@ import { DRAW_COMMANDS, isDrawTool, KEYBOARD_PLACED, VERTEX_TOOLS } from './tool
 import { isSignatureTool, placeAtCentre as placeSignatureAtCentre } from '../sign/signDocument';
 import { annotationLayerReady, finishDrawing, placeAtCentre } from './tools/drawTools';
 import { editableTextComment, editSelectedText } from './textPointer';
+import { registerTextMenuCommands } from './textMenu';
 import { isFieldTool } from '../forms/fieldModel';
 import { placeFieldAtCentre } from '../forms/fieldTools';
 import { copiedStyle, copyStyle, pasteStyle } from './properties/style';
@@ -710,7 +711,10 @@ export function registerAnnotateCommands(): () => void {
   });
   // Paste is enabled once something is copied (M4-21).
   const offClip = clipboardStore.subscribe(notify);
+  // The text menu's commands (M7-05).
+  const offText = registerTextMenuCommands();
   return () => {
+    offText();
     offRegistry();
     offPlugins();
     offSnap();

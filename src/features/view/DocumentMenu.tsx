@@ -9,6 +9,8 @@ import type { PagePoint } from '../../app/commands/dispatch';
 import { isEditable } from '../../app/keys/useShortcuts';
 import { msg } from '../../i18n';
 import { ContextMenu } from '../../ui/components';
+import { TextEditMenu } from '../annotate/TextEditMenu';
+import { textMenuFromEvent } from '../annotate/textMenu';
 import {
   commentMenu,
   keyboardAnchor,
@@ -66,7 +68,9 @@ export function DocumentMenu({
       e.stopPropagation();
       return;
     }
-    // A form field or a text box being edited keeps the browser's menu (cut/copy/paste text).
+    // A text comment being edited: the text menu (M7-05, B10).
+    if (textMenuFromEvent(e.nativeEvent)) return;
+    // A form field keeps the browser's menu (cut/copy/paste text).
     if (isEditable(e.target as Element)) {
       e.stopPropagation();
       return;
@@ -86,15 +90,18 @@ export function DocumentMenu({
   };
 
   return (
-    <ContextMenu
-      label={t(target.kind === 'comment' ? msg('contextMenu.comment') : msg('contextMenu.page'))}
-      entries={target.kind === 'comment' ? commentMenu(documentId) : PAGE_MENU}
-      {...(target.at ? { args: { at: target.at } } : {})}
-      onCloseAutoFocus={onCloseAutoFocus}
-    >
-      <div ref={area} className="document-menu-area" onContextMenuCapture={onContextMenuCapture}>
-        {children}
-      </div>
-    </ContextMenu>
+    <>
+      <ContextMenu
+        label={t(target.kind === 'comment' ? msg('contextMenu.comment') : msg('contextMenu.page'))}
+        entries={target.kind === 'comment' ? commentMenu(documentId) : PAGE_MENU}
+        {...(target.at ? { args: { at: target.at } } : {})}
+        onCloseAutoFocus={onCloseAutoFocus}
+      >
+        <div ref={area} className="document-menu-area" onContextMenuCapture={onContextMenuCapture}>
+          {children}
+        </div>
+      </ContextMenu>
+      <TextEditMenu documentId={documentId} />
+    </>
   );
 }

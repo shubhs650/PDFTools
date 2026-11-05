@@ -1,15 +1,45 @@
 # Triya PDF — Progress
 
-_Last updated: 2026-11-04 (session 44: M7-04 comment selection)_
+_Last updated: 2026-11-04 (session 45: M7-05 text menu)_
 
 **Current milestone:** M7 — second beta review (plan in [docs/plan/M7.md](plan/M7.md), scope in
 [ADR-023](adr/023-m7-second-beta-review.md), **Accepted** 2026-11-04 with the recommended
-answers Q1–Q7; ARCHITECTURE.md Rev 0.11). M7-01 … M7-04 done; next: M7-05. **Previous milestone:** M6 — Beta review (plan in [docs/plan/M6.md](plan/M6.md), scope changes in
+answers Q1–Q7; ARCHITECTURE.md Rev 0.11). M7-01 … M7-05 done; next: M7-06. **Previous milestone:** M6 — Beta review (plan in [docs/plan/M6.md](plan/M6.md), scope changes in
 [ADR-021](adr/021-m6-beta-review.md), **Accepted** 2026-11-01; ARCHITECTURE.md Rev 0.10; M6-01 … M6-15 done, **M6 complete on the agent side** ([acceptance](acceptance/M6.md)); spike results in
 [ADR-022](adr/022-m6-spikes-s18-s22.md), **Accepted** 2026-11-02 (bookmark route B)). M5 — OCR: M5-01 … M5-04 done under [ADR-020](adr/020-m5-ocr.md); M5-05's owner
 interop is in the M6 pack (CHECKLIST §M6 R1–R4). Rev 0 (M0–M4) is complete on the agent side.
 
 ## Done
+
+- **Session 45 — M7-05 text menu (ADR-023 D-43 e; review 4b-v; bug B10).** Reproduced on
+  `main` (b4a9532): a right click in a text box, typewriter or callout being edited showed the
+  browser's menu (DocumentMenu let it through for any editable target). Now our menu opens
+  (`TextEditMenu.tsx`, Radix context menu opened from a hidden anchor at the pointer; Shift+F10
+  and the Menu key at the caret, with the browser's echo ignored): **Undo, Redo, Cut, Copy,
+  Paste, Delete, Select All** are commands `text.*` (command table, labels, Fluent icons; the
+  keys shown are the document commands' chords via a new `keysOf` on menu entries, so the keymap
+  keeps one entry per chord and the editor's own keys keep working), then **Text Style ▸**
+  (Font ▸ Helvetica/Times/Courier, Size ▸ 8–72 pt, Bold, Italic, Text Color ▸ the M6-16
+  standard colours as a 2-D grid of menu items, Align Left/Center/Right — for the whole comment)
+  and **Properties** (writes the edit and opens the pane). The menu takes the focus, which used
+  to end the edit: `holdTextEdit` keeps it alive, the editor's selection is kept, and the chosen
+  item runs once the menu has closed and the editor has the focus and its selection back
+  (`textMenu.ts`). Undo/Redo/Delete use the browser's editing commands (the only way into the
+  editor's undo history; `execCommand`, lint exception with the reason); Cut/Copy/Paste use the
+  async clipboard as plain text (Paste reads it on the click; disabled with a reason when the
+  site permission is denied); Cut and Copy also need the copy permission (rule 9). Pasting with
+  Ctrl+V into the editor is plain text now too. `text.*` commands do not end the edit
+  (`onBeforeCommand`). **Text colour fix (also the Properties pane and tool defaults, since
+  M6-06):** PDFium draws a text comment's text in its /DA colour, and EmbedPDF puts the border
+  colour there whenever the comment has one (the text colour goes to a private `/TextColor`), so
+  a new text colour showed only while selected and reverted on the page and in other viewers;
+  `patchFor('fontColor')` now sets the border colour too (text comments have no separate border
+  colour control). Help (Reviewing comments) updated. Tests: `e2e/text-menu.spec.ts` (each tool's
+  edit items on the editor, Text Style saved — /DA font, size and colour, /Q, the appearance
+  stream's colour — and read back from the reopened file, keyboard opening and navigation, focus
+  back in the editor with its selection, axe, Properties, the comment menu outside an edit, a
+  copy-denied file via qpdf), `tests/annotate/textMenu.test.ts`. Container: `a11y.spec.ts` and the
+  two-tab comment-copy-paste test crash the pre-installed Chromium on unchanged `main` too.
 
 - **Session 44 — M7-04 comment selection: marquee, Shift+click, select after drawing, B13
   (ADR-023 D-36 amendment, D-43; review 4a; bugs B7–B9, B13, B14).** Reproduced on `main`
@@ -1851,8 +1881,8 @@ rel="noopener noreferrer">`; the commands `app.home` / `app.reportIssue` open th
 
 ## Next
 
-- **Agent:** M7-05 (right-click menu inside text comments, B10) in its own thread, then
-  M7-06 … M7-12 serially.
+- **Agent:** M7-06 (sticky note popup, spike S23 first) in its own thread, then
+  M7-07 … M7-12 serially.
 - **Owner (M6 interop pack):** [docs/acceptance/M6.md](acceptance/M6.md) §4 — CHECKLIST §M6
   P1–P19 and Q1–Q4 in Acrobat Reader and PDF-XChange with the files in
   `e2e/fixtures/self-made/m6-interop/` (forms with tooltips, defaults and Row tab order;

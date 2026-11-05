@@ -11,6 +11,7 @@ export { Spinner, ProgressBar, type SpinnerProps, type ProgressBarProps } from '
 export { UiProvider } from './UiProvider';
 export {
   ContextMenu,
+  ContextMenuItems,
   CommandDropdown,
   type CommandDropdownProps,
   type ContextMenuProps,
