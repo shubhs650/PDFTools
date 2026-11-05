@@ -14,7 +14,7 @@
 // (EPDFAnnot_ExportAppearanceAsDocument), its form XObject replaced by an
 // incremental update with the recoloured content, and set back through
 // EPDFAnnot_SetAppearanceFromPage, which carries the page's resources (the
-// fonts PDFium used). Layout, wrapping, fonts, alignment and the border stay
+// fonts PDFium used) when the page draws it as the form `/EPDFWRAP` (M7-12). Layout, wrapping, fonts, alignment and the border stay
 // PDFium's. If the appearance is not what we expect, PDFium's stays and a
 // count is kept for the next save's diagnostics event (never shown).
 import type { PdfiumNative } from '@embedpdf/engines/pdfium';
@@ -26,6 +26,7 @@ import {
   nameOf,
   numOf,
   Parser,
+  PdfName,
   PdfRef,
   serialize,
   type PdfDict,
@@ -275,38 +276,69 @@ function readExport(bytes: Uint8Array): Exported | null {
   };
 }
 
-const n = (v: number): string => String(Math.round(v * 10000) / 10000);
+/**
+ * What EPDFAnnot_SetAppearanceFromPage makes of a page (spike S25, M7-12):
+ * the appearance's content is a copy of the page's content, but its
+ * /Resources hold only `/XObject << /EPDFWRAP … >>`, a form copied from the
+ * page with the page's resources. So the page's content must use that one
+ * name and nothing else: it draws the recoloured appearance as a form XObject
+ * called EPDFWRAP. In the appearance that name finds the copied page, whose
+ * own EPDFWRAP is the recoloured form, with its fonts and graphics states.
+ * (A page that draws the content inline, M7's first version, rendered in
+ * PDFium only because it falls back to stock fonts; Acrobat, poppler and
+ * pdf.js found no /Helv or /GS. A form under another name drew nothing.)
+ */
+const WRAP_NAME = 'EPDFWRAP';
 
 /**
- * `bytes` with an incremental update: the page draws `content` itself (the
- * form's transformation and clip as `Do` applied them) with the form's own
- * resources. EPDFAnnot_SetAppearanceFromPage keeps a page's fonts and
- * graphics states, not a form XObject it draws (spike S25).
+ * `bytes` with an incremental update: the page draws `content` as the form
+ * XObject `/EPDFWRAP` (the appearance form's /BBox and /Resources), placed as
+ * the export placed PDFium's form. The page's content is the bare `Do` (the
+ * appearance runs it twice, once in its own content and once in the copied
+ * page), so the placement is all in the form's /Matrix: PDFium's matrix,
+ * then the move of the box's corner to the origin.
  */
 function pageDrawing(bytes: Uint8Array, ex: Exported, content: Uint8Array): Uint8Array {
   const [x0, y0, x1, y1] = ex.bbox;
-  const pre = encodeLatin1(
-    `q 1 0 0 1 ${n(-Math.min(x0, x1))} ${n(-Math.min(y0, y1))} cm ${ex.matrix.map(n).join(' ')} cm ` +
-      `${n(Math.min(x0, x1))} ${n(Math.min(y0, y1))} ${n(Math.abs(x1 - x0))} ${n(Math.abs(y1 - y0))} re W n\n`,
+  const [a = 1, b = 0, c = 0, d = 1, e = 0, f = 0] = ex.matrix;
+  const matrix = [a, b, c, d, e - Math.min(x0, x1), f - Math.min(y0, y1)].map(
+    (v) => Math.round(v * 10000) / 10000,
   );
-  const post = encodeLatin1('\nQ\n');
-  const data = concatBytes([pre, content, post]);
+  const pageContent = encodeLatin1(`/${WRAP_NAME} Do\n`);
   const size = trailerSize(bytes);
   const contentNum = size;
+  const formNum = size + 1;
   const page: PdfDict = new Map(ex.page.dict);
-  page.set('Resources', ex.resources);
+  page.set('Resources', new Map([['XObject', new Map([[WRAP_NAME, new PdfRef(formNum, 0)]])]]));
   page.set('Contents', new PdfRef(contentNum, 0));
+  const form: PdfDict = new Map<string, PdfValue>([
+    ['Type', new PdfName('XObject')],
+    ['Subtype', new PdfName('Form')],
+    ['BBox', [...ex.bbox]],
+    ['Matrix', matrix],
+    ['Resources', ex.resources],
+    ['Length', content.length],
+  ]);
   const eol = bytes[bytes.length - 1] === 0x0a || bytes[bytes.length - 1] === 0x0d ? '' : '\n';
   const pageObj = encodeLatin1(
     `${eol}${String(ex.page.num)} ${String(ex.page.gen)} obj\n${serialize(page)}\nendobj\n`,
   );
-  const streamHead = encodeLatin1(
-    `${String(contentNum)} 0 obj\n<< /Length ${String(data.length)} >>\nstream\n`,
-  );
-  const streamFoot = encodeLatin1('\nendstream\nendobj\n');
+  const contentObj = concatBytes([
+    encodeLatin1(
+      `${String(contentNum)} 0 obj\n<< /Length ${String(pageContent.length)} >>\nstream\n`,
+    ),
+    pageContent,
+    encodeLatin1('\nendstream\nendobj\n'),
+  ]);
+  const formObj = concatBytes([
+    encodeLatin1(`${String(formNum)} 0 obj\n${serialize(form)}\nstream\n`),
+    content,
+    encodeLatin1('\nendstream\nendobj\n'),
+  ]);
   const pageAt = bytes.length + eol.length;
-  const streamAt = bytes.length + pageObj.length;
-  const xrefStart = streamAt + streamHead.length + data.length + streamFoot.length;
+  const contentAt = bytes.length + pageObj.length;
+  const formAt = contentAt + contentObj.length;
+  const xrefStart = formAt + formObj.length;
   const root = trailerRef(newestTrailerDict(bytes), 'Root');
   if (!root) throw new Error('no /Root');
   const xref = writeXrefSection(
@@ -314,10 +346,11 @@ function pageDrawing(bytes: Uint8Array, ex: Exported, content: Uint8Array): Uint
     xrefStart,
     new Map<number, [number, number]>([
       [ex.page.num, [pageAt, ex.page.gen]],
-      [contentNum, [streamAt, 0]],
+      [contentNum, [contentAt, 0]],
+      [formNum, [formAt, 0]],
     ]),
-    size + 1,
+    size + 2,
     `/Root ${root} /Prev ${String(lastStartxref(bytes))}`,
   );
-  return concatBytes([bytes, pageObj, streamHead, data, streamFoot, xref.bytes]);
+  return concatBytes([bytes, pageObj, contentObj, formObj, xref.bytes]);
 }

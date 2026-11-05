@@ -575,3 +575,102 @@ for (const [variant, url] of [
     await axe(page, 'tab order panel');
   });
 }
+
+// M7-12: what M7 added (ADR-023 D-42 … D-45, ADR-024) in light, dark and the
+// pseudo-locale, reached by command id and keys so the steps work in any
+// language: a text comment being edited and its text menu with the Text
+// Style submenu, the Properties pane's Text color and Border color and the
+// colour picker, a sticky note window and its menu, and the top bar's theme
+// toggle.
+for (const [variant, url] of [
+  ['light', '/'],
+  ['dark', '/'],
+  ['pseudo-locale', '/?locale=pseudo'],
+] as const) {
+  test(
+    `M7 text editing, sticky note window and theme toggle (${variant})`,
+    { tag: '@a11y' },
+    async ({ page }) => {
+      test.setTimeout(120_000);
+      const { simplePdf } = await import('./fixtures/generate.ts');
+      if (variant === 'dark') await darkTheme(page);
+      await page.goto(url);
+      await cap(page, 'annotate', 'setProfile', 'Ana de Vries');
+      await drop(page, [{ name: 'm7.pdf', b64: Buffer.from(simplePdf(1)).toString('base64') }]);
+      await expect(page.locator('[data-page="0"] img.page-preview')).toBeVisible();
+      const id = (await cap(page, 'view', 'activeDocId')) as string;
+      await expect.poll(() => cap(page, 'annotate', 'list', id)).not.toBeNull();
+      const run = (cmd: string) =>
+        page.evaluate(
+          (c) =>
+            (
+              window as unknown as {
+                __pdftoolsTest: {
+                  capabilities: { commands: { run(id: string): Promise<boolean> } };
+                };
+              }
+            ).__pdftoolsTest.capabilities.commands.run(c),
+          cmd,
+        );
+      const view = page.getByTestId('document-view');
+      const menus = page.getByRole('menu');
+      const editor = page.locator('[data-text-comment] [contenteditable="true"]');
+
+      // The theme toggle in the top bar (M7-11).
+      await axe(page, 'top bar', '.top-bar-actions');
+
+      // A new text box edits at once (M7-02); its text menu and Text Style (M7-05).
+      expect(await run('comment.textBox')).toBe(true);
+      await view.focus();
+      await page.keyboard.press('Enter');
+      await expect(editor).toBeFocused();
+      await page.keyboard.type('Check the weld');
+      await axe(page, 'text comment being edited');
+      await page.keyboard.press('Shift+F10');
+      await expect(menus).toHaveCount(1);
+      await axe(page, 'text menu', '[role="menu"]');
+      await menus.locator('[aria-haspopup="menu"]').first().focus();
+      await page.keyboard.press('ArrowRight');
+      await expect(menus).toHaveCount(2);
+      await axe(page, 'Text Style submenu', '[role="menu"]');
+      await page.keyboard.press('Escape');
+      await page.keyboard.press('Escape');
+      await expect(menus).toHaveCount(0);
+      await page.keyboard.press('Escape');
+      await expect(editor).toHaveCount(0);
+      const [box] = ((await cap(page, 'annotate', 'list', id)) as { id: string }[] | null) ?? [];
+      await cap(page, 'annotate', 'selectMany', id, [box?.id]);
+
+      // The Properties pane of the selected text box: Text color and Border color (ADR-024).
+      if (!(await page.getByTestId('properties-pane').isVisible()))
+        expect(await run('view.propertiesPane')).toBe(true);
+      const pane = page.getByTestId('properties-pane');
+      await expect(pane).toBeVisible();
+      await axe(page, 'Properties pane (text box)');
+      await pane.locator('.ui-color-picker button').first().click();
+      const picker = page.getByRole('dialog');
+      await expect(picker).toBeVisible();
+      await axe(page, 'colour picker', '[role="dialog"]');
+      await page.keyboard.press('Escape');
+      await expect(picker).toHaveCount(0);
+
+      // A sticky note window (M7-06) and its menu.
+      await view.focus();
+      await page.keyboard.press('Escape');
+      expect(await run('comment.stickyNote')).toBe(true);
+      await view.focus();
+      await page.keyboard.press('Enter');
+      const note = page.locator('[data-note-popup]');
+      await expect(note).toBeVisible();
+      await page.keyboard.type('Two lines');
+      await page.keyboard.press('Enter');
+      await page.keyboard.type('in a note');
+      await axe(page, 'sticky note window');
+      await note.locator('[aria-haspopup="menu"]').first().click();
+      await expect(menus).toHaveCount(1);
+      await axe(page, 'sticky note menu', '[role="menu"]');
+      await page.keyboard.press('Escape');
+      await expect(menus).toHaveCount(0);
+    },
+  );
+}

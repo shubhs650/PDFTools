@@ -10,7 +10,8 @@ import { openReport } from '../report/reportStore';
 import { closeHelp as close, helpStore } from './helpStore';
 
 // Help → Help (M2-17; M6-15 adds bookmarks, comment styles, flattening and
-// form creation): bundled, offline help. Everything is in the app's own
+// form creation; M7-12 the Home tab, the themes, text comments, sticky notes
+// and pasting pictures): bundled, offline help. Everything is in the app's own
 // strings (rule 11); nothing is fetched.
 
 type HelpBody = Extract<MessageKey, `help.section.${string}.body`>;
@@ -18,13 +19,18 @@ type HelpBody = Extract<MessageKey, `help.section.${string}.body`>;
 const SECTIONS: [MessageKey, HelpBody][] = [
   [msg('help.section.start.title'), msg('help.section.start.body')],
   [msg('help.section.view.title'), msg('help.section.view.body')],
+  [msg('help.section.home.title'), msg('help.section.home.body')],
+  [msg('help.section.appearance.title'), msg('help.section.appearance.body')],
   [msg('help.section.find.title'), msg('help.section.find.body')],
   [msg('help.section.panes.title'), msg('help.section.panes.body')],
   [msg('help.section.bookmarks.title'), msg('help.section.bookmarks.body')],
   [msg('help.section.review.title'), msg('help.section.review.body')],
+  [msg('help.section.text.title'), msg('help.section.text.body')],
+  [msg('help.section.notes.title'), msg('help.section.notes.body')],
   [msg('help.section.styles.title'), msg('help.section.styles.body')],
   [msg('help.section.flatten.title'), msg('help.section.flatten.body')],
   [msg('help.section.transfer.title'), msg('help.section.transfer.body')],
+  [msg('help.section.paste.title'), msg('help.section.paste.body')],
   [msg('help.section.measure.title'), msg('help.section.measure.body')],
   [msg('help.section.tables.title'), msg('help.section.tables.body')],
   [msg('help.section.redact.title'), msg('help.section.redact.body')],

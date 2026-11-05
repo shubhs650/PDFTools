@@ -10,6 +10,11 @@
 // Close…), the editor unmounting — writes the typed text once (one undo step,
 // and only when it changed) and ends editing.
 //
+// While editing, the editor shows all of its text (M7-12, bug B15): it grows
+// past its box instead of clipping (a typewriter also stops wrapping), and
+// the commit grows the comment to fit in the same undo step
+// (`grownTextGeometry`), as PDF-XChange does while typing.
+//
 // The plugin keeps "which comment is being edited" in its page layer's React
 // state and has no call to clear it, so when editing has to end without the
 // plugin's help (Esc, a tool change…), the page's annotation layer is
@@ -20,11 +25,23 @@ import { appStore } from '../../app/store/appStore';
 import { onBeforeCommand } from '../../app/commands/dispatch';
 import { documentStore } from '../../app/store/documentStore';
 import { annotationCapability } from './selection';
-import { contentsPatch } from './textEditModel';
+import { contentsPatch, grownTextGeometry, type FitTarget } from './textEditModel';
 import { editorOpened } from './textPointer';
 
 /** Marks an annotation body that holds a free text editor (AnnotationLayer). */
 export const TEXT_BODY_ATTR = 'data-text-comment';
+
+interface Fit {
+  /** The editor's size (px) as the plugin laid it out, before it may grow. */
+  width: number;
+  height: number;
+  /** Screen px per page point. */
+  scale: number;
+  /** The page's size in points (the comment stays on it). */
+  page: { width: number; height: number };
+  /** Puts the plugin's editor style back. */
+  restore: () => void;
+}
 
 interface Session {
   docId: string;
@@ -32,6 +49,7 @@ interface Session {
   id: string;
   el: HTMLElement;
   stop: () => void;
+  fit: Fit | null;
 }
 
 let session: Session | null = null;
@@ -111,8 +129,65 @@ function begin(el: HTMLElement): void {
   } catch {
     // No plugin state for the document: nothing to watch.
   }
-  session = { docId, pageIndex, id, el, stop };
+  session = { docId, pageIndex, id, el, stop, fit: fitEditor(docId, id, el) };
   editorOpened(el);
+}
+
+/**
+ * Lets the editor grow with its text (B15): no clipping, at least its box's
+ * size; a typewriter's lines don't wrap. The plugin sets these as inline
+ * styles and React only rewrites a style whose value changes, so they hold
+ * until editing ends.
+ */
+function fitEditor(docId: string, id: string, el: HTMLElement): Fit | null {
+  try {
+    const obj = annotationCapability()?.forDocument(docId).getAnnotationById(id)?.object as
+      (FitTarget & { type?: number }) | undefined;
+    const frame = el.parentElement;
+    if (!obj || !frame || obj.rect.size.width <= 0) return null;
+    const scale = frame.offsetWidth / obj.rect.size.width;
+    if (!(scale > 0)) return null;
+    const content = el.closest<HTMLElement>('.page-content');
+    const page = content
+      ? { width: content.offsetWidth / scale, height: content.offsetHeight / scale }
+      : { width: Infinity, height: Infinity };
+    const fit: Fit = {
+      width: el.offsetWidth,
+      height: el.offsetHeight,
+      scale,
+      page,
+      restore: () => undefined,
+    };
+    const st = el.style;
+    const before = {
+      height: st.height,
+      minHeight: st.minHeight,
+      width: st.width,
+      minWidth: st.minWidth,
+      overflow: st.overflow,
+      whiteSpace: st.whiteSpace,
+    };
+    st.minHeight = st.height;
+    st.height = 'auto';
+    st.overflow = 'visible';
+    if (obj.intent === 'FreeTextTypeWriter') {
+      st.minWidth = st.width;
+      st.width = 'max-content';
+      st.whiteSpace = 'pre';
+    }
+    fit.restore = () => {
+      // A new size from the commit is the plugin's to set again.
+      if (st.height === 'auto') st.height = before.height;
+      if (st.width === 'max-content') st.width = before.width;
+      st.minHeight = before.minHeight;
+      st.minWidth = before.minWidth;
+      st.overflow = before.overflow;
+      st.whiteSpace = before.whiteSpace;
+    };
+    return fit;
+  } catch {
+    return null;
+  }
 }
 
 function commit(s: Session): void {
@@ -120,10 +195,24 @@ function commit(s: Session): void {
     const scope = annotationCapability()?.forDocument(s.docId);
     const obj = scope?.getAnnotationById(s.id)?.object;
     if (!scope || !obj) return;
-    const patch = contentsPatch(obj.contents, s.el.innerText);
-    if (patch) scope.updateAnnotation(s.pageIndex, s.id, patch);
+    const text = contentsPatch(obj.contents, s.el.innerText);
+    const f = s.fit;
+    const size = f
+      ? grownTextGeometry(
+          obj,
+          {
+            width: (s.el.offsetWidth - f.width) / f.scale,
+            height: (s.el.offsetHeight - f.height) / f.scale,
+          },
+          f.page,
+        )
+      : null;
+    // The text and the new size are one change (one undo step).
+    if (text || size) scope.updateAnnotation(s.pageIndex, s.id, { ...text, ...size });
   } catch {
     // The document closed meanwhile: nothing left to write to.
+  } finally {
+    s.fit?.restore();
   }
 }
 

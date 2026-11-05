@@ -383,12 +383,19 @@ Ctrl+S, then open the file in each viewer.
 | R3  | Chinese (Simplified) scan: copied text pastes as Chinese characters; search finds a two-character word.                     |         |             |
 | R4  | In PDFTools after reopening: Quick Find finds the same words; a second OCR run skips the recognized pages ("already text"). |         |             |
 
-## M7 — sticky note pop-ups (D-44), text and border colours (ADR-024), default styles (M7-07), pasted images (D-45)
+## M7 — sticky note pop-ups (D-44), text and border colours (ADR-024), default styles (M7-07), pasted images (D-45), text comment editing (D-43)
+
+All §M7 files are in `e2e/fixtures/self-made/m7-interop/`, made by the app and saved with Ctrl+S
+(regenerate them with `M7_INTEROP_OUT=1 npm run owner:interop:m7`; [M7 acceptance](../../docs/acceptance/M7.md)).
 
 ### S. Text colour apart from the border colour
 
-1. In Triya PDF, on a copy of any PDF: make a text box and a callout with some text, set each
-   one's **Text color** to Blue and **Border color** to Red (Properties pane), and Ctrl+S.
+File: `text-colors__ctrl-s.pdf`: a text box and a callout, each typed with the tool and given
+**Text color** Blue and **Border color** Red in the Properties pane. (Before M7-12 their text
+box drew its text with fonts named only in a resource it did not carry; strict readers showed
+no text. Fixed; please confirm S1 shows the text.)
+
+1. Open the file in each viewer for S1 and S2.
 2. In each viewer, make a text box of their own with blue text on a red border. Save.
 
 | #   | Check                                                                                                                                 | Acrobat | PDF-XChange |
@@ -432,3 +439,16 @@ page, scaled down to 90 % of the page's width.
 | --- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------- | ----------- |
 | V1  | Opened in their viewer: the picture shows inside the page's margins, its proportions kept, and is listed as a stamp ("Pasted image") that can be moved and resized.                                                          |         |             |
 | V2  | In Triya PDF, a screenshot taken with the system's tool and pasted with Ctrl+V, and an image copied in a browser and pasted from the right-click menu, both land fitted on the page; after Ctrl+S both show in their viewer. |         |             |
+
+### W. Text comments edited and moved (M7-02 … M7-04, D-43; B15)
+
+File: `text-comments__ctrl-s.pdf`: made with the mouse as a user does. A text box typed and left
+with Esc, a typewriter, and a callout drawn in one drag and left with a click elsewhere; each
+moved by a drag on its box, then edited again with a double-click (", moved" added). The
+typewriter grew to hold its one line (B15).
+
+| #   | Check                                                                                                                                                               | Acrobat | PDF-XChange |
+| --- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------- | ----------- |
+| W1  | Opened in their viewer: the three comments show their full, edited text ("…, moved") where they were moved to; the callout's arrow still points where it was drawn. |         |             |
+| W2  | The typewriter reads "Typewriter: black Courier, moved" on one line, black Courier, nothing cut off; the text box and callout are red, 10 pt.                       |         |             |
+| W3  | Edit each one's text there and save; reopened in Triya PDF, the new text shows, and a double-click edits it with the caret where you clicked.                       |         |             |

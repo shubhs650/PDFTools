@@ -1,5 +1,5 @@
 // @vitest-environment jsdom
-// M6-15: the keyboard sheet (Help → Keyboard Shortcuts) after M6. It is
+// M6-15: the keyboard sheet (Help → Keyboard Shortcuts) after M6 (M7-12: and M7). It is
 // generated from the keymap, so every binding — including M6's full screen,
 // cut, context menu and the Bookmarks pane's keys — must have a row with a
 // real label (not a raw i18n key) and its chords, and no two rows may read
@@ -15,7 +15,7 @@ import { UiProvider } from '../../src/ui/components';
 afterEach(cleanup);
 
 describe('keyboard sheet', () => {
-  it('has one labelled row per binding, M6 keys included', () => {
+  it('has one labelled row per binding, M6 and M7 keys included', () => {
     render(
       <UiProvider>
         <ShortcutSheet />
@@ -45,6 +45,9 @@ describe('keyboard sheet', () => {
       ['Rename (Bookmarks pane)', 'F2'],
       ['New Bookmark (Bookmarks pane)', 'Insert'],
       ['Bookmark Properties… (Bookmarks pane)', 'Alt+Enter'],
+      // M7's keys (M7-03 edit the selected text comment, M7-11 dark theme).
+      ['Edit the Selected Text Comment', 'F2'],
+      ['Dark Theme', 'Ctrl+Shift+D'],
     ] as const) {
       const row = rows.find((r) => within(r).getByRole('rowheader').textContent === label);
       expect(row, label).toBeDefined();

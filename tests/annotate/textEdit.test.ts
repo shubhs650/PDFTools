@@ -1,5 +1,11 @@
 import { describe, expect, it, vi } from 'vitest';
-import { contentsPatch, editorText, pageDelta } from '../../src/features/annotate/textEditModel';
+import {
+  contentsPatch,
+  editorText,
+  FIT_SLACK_PT,
+  grownTextGeometry,
+  pageDelta,
+} from '../../src/features/annotate/textEditModel';
 import { isTextTool, TEXT_TOOLS } from '../../src/features/annotate/tools/drawModel';
 import { onBeforeCommand, registerCommand, runCommand } from '../../src/app/commands/dispatch';
 
@@ -74,5 +80,79 @@ describe('pageDelta', () => {
     expect(pageDelta(10, 20, 1, 2)).toEqual({ x: -10, y: -20 });
     expect(pageDelta(10, 20, 1, 3)).toEqual({ x: -20, y: 10 });
     expect(pageDelta(10, 20, 2, 4)).toEqual({ x: 5, y: 10 });
+  });
+});
+
+// M7-12 (B15): a text comment grows to show all of its text.
+describe('grownTextGeometry', () => {
+  const page = { width: 595, height: 842 };
+  const rect = (x: number, y: number, w: number, h: number) => ({
+    origin: { x, y },
+    size: { width: w, height: h },
+  });
+
+  it('a text box gets taller (slack below the last line); its width stays', () => {
+    expect(
+      grownTextGeometry({ rect: rect(60, 100, 200, 40) }, { width: 0, height: 24 }, page),
+    ).toEqual({ rect: rect(60, 100, 200, 40 + 24 + FIT_SLACK_PT.height) });
+  });
+  it('a typewriter gets wider and taller, with room after the longest line', () => {
+    expect(
+      grownTextGeometry(
+        { rect: rect(60, 100, 100, 20), intent: 'FreeTextTypeWriter' },
+        { width: 80, height: 12 },
+        page,
+      ),
+    ).toEqual({
+      rect: rect(60, 100, 100 + 80 + FIT_SLACK_PT.width, 20 + 12 + FIT_SLACK_PT.height),
+    });
+  });
+  it('never shrinks; nothing to grow is no change', () => {
+    expect(
+      grownTextGeometry({ rect: rect(60, 100, 200, 40) }, { width: 0, height: 0 }, page),
+    ).toBeNull();
+    expect(
+      grownTextGeometry({ rect: rect(60, 100, 200, 40) }, { width: -30, height: 0.3 }, page),
+    ).toBeNull();
+  });
+  it('stays on the page', () => {
+    expect(
+      grownTextGeometry(
+        { rect: rect(500, 800, 80, 20), intent: 'FreeTextTypeWriter' },
+        { width: 300, height: 300 },
+        page,
+      ),
+    ).toEqual({ rect: rect(500, 800, 95, 42) });
+    expect(
+      grownTextGeometry({ rect: rect(60, 822, 200, 20) }, { width: 0, height: 30 }, page),
+    ).toBeNull();
+  });
+  it('a callout: the text box grows down, the line stays, the rect and /RD follow', () => {
+    // Box (200, 100, 150 × 40) inside the rect (60, 100, 290 × 160): the line goes down-left.
+    const callout = {
+      intent: 'FreeTextCallout',
+      rect: rect(60, 100, 290, 160),
+      rectangleDifferences: { left: 140, top: 0, right: 0, bottom: 120 },
+      calloutLine: [{}, {}, {}],
+    };
+    // 30 pt more: the box ends at 172, still inside the rect.
+    expect(grownTextGeometry(callout, { width: 0, height: 30 }, page)).toEqual({
+      rect: rect(60, 100, 290, 160),
+      rectangleDifferences: { left: 140, top: 0, right: 0, bottom: 88 },
+    });
+    // 200 pt more: the box ends at 342, below the line: the rect grows with it.
+    expect(grownTextGeometry(callout, { width: 0, height: 200 }, page)).toEqual({
+      rect: rect(60, 100, 290, 242),
+      rectangleDifferences: { left: 140, top: 0, right: 0, bottom: 0 },
+    });
+  });
+  it('leaves a turned comment as it is', () => {
+    expect(
+      grownTextGeometry(
+        { rect: rect(60, 100, 200, 40), rotation: 30 },
+        { width: 0, height: 24 },
+        page,
+      ),
+    ).toBeNull();
   });
 });

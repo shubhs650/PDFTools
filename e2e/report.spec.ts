@@ -154,11 +154,20 @@ for (const [platform, mod] of [
       'Flattening and snapshots',
       'Forms',
       'Protected and signed files',
+      // M7-12: the second review's features.
+      'The Home tab',
+      'Light and dark themes',
+      'Text boxes, typewriters and callouts',
+      'Sticky notes',
+      'Pasting pictures',
     ])
       await expect(d.getByRole('heading', { name: heading, exact: true })).toBeVisible();
     // The new sections name the keys from the keymap too.
     await expect(d).toContainText(`Each change is one undo step, and ${mod}+S saves them.`);
     await expect(d).toContainText('open the Form tab');
+    await expect(d).toContainText(`${mod}+Shift+D, the moon button`);
+    await expect(d).toContainText(`${mod}+Enter or a click elsewhere keeps the text`);
+    await expect(d).toContainText(`${mod}+V or the page's right-click Paste`);
     await d.getByRole('button', { name: 'Keyboard shortcuts' }).click();
     const sheet = page.getByRole('dialog', { name: 'Keyboard shortcuts' });
     await expect(sheet.getByRole('row', { name: /^Open/ })).toContainText(`${mod}+O`);

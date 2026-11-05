@@ -39,7 +39,8 @@
     "icons": "node scripts/gen-icons.ts",
     "owner:interop:m3": "playwright test --project=e2e e2e/interop-m3.spec.ts --workers=1",
     "owner:interop:m4": "playwright test --project=e2e e2e/interop-m4.spec.ts --workers=1",
-    "owner:interop:m6": "playwright test --project=e2e e2e/interop-m6.spec.ts --workers=1"
+    "owner:interop:m6": "playwright test --project=e2e e2e/interop-m6.spec.ts --workers=1",
+    "owner:interop:m7": "playwright test --project=e2e e2e/interop-m7.spec.ts e2e/sticky-note-popup.spec.ts e2e/default-styles.spec.ts e2e/paste-image.spec.ts --workers=1 --grep \"M7 interop|interop file|50 % opaque|screenshot fits\""
   },
   "devDependencies": {
     "@axe-core/playwright": "4.13.0",

@@ -5,6 +5,7 @@ import {
   fullFormPdf,
   outlinedPdf,
   richOutlinePdf,
+  simplePdf,
   snapSheet,
 } from './fixtures/generate.ts';
 import { reviewSourcePdf } from './fixtures/comments.ts';
@@ -521,6 +522,130 @@ test(
         timeout: 30_000,
       });
       expect((await savedFiles(page)).map((f) => f.name)).toContain('outline-protected.pdf');
+      expect(await cap(page, 'annotate', 'errors', '')).toEqual([]);
+      expect(outbound).toEqual([]);
+    } finally {
+      await context.setOffline(false);
+    }
+  },
+);
+
+test(
+  'M7 offline: dark theme, a sticky note window, text comments with two colours, a pasted picture; zero outbound requests',
+  { tag: '@offline' },
+  async ({ page, context }) => {
+    test.setTimeout(120_000);
+    await page.goto('/?sw');
+    await expect(status(page).getByText('✓ Ready offline')).toBeVisible({ timeout: 60_000 });
+    await context.grantPermissions(['clipboard-read', 'clipboard-write']);
+
+    await context.setOffline(true);
+    const outbound: string[] = [];
+    page.on('requestfailed', (r) => {
+      if (/^https?:/.test(r.url())) outbound.push(`failed ${r.url()}`);
+    });
+    page.on('response', (r) => {
+      if (/^https?:/.test(r.url()) && !r.fromServiceWorker()) outbound.push(r.url());
+    });
+    try {
+      // The dark theme (M7-11): the toggle, and the cached boot script applies it on a reload.
+      await page.reload();
+      await expect(page.getByTestId('start-screen')).toBeVisible();
+      const html = page.locator('html');
+      await page.locator('.top-bar-actions').getByRole('button', { name: 'Dark Theme' }).click();
+      await expect(html).toHaveAttribute('data-theme', 'dark');
+      await page.reload();
+      await expect(page.getByTestId('start-screen')).toBeVisible();
+      await expect(html).toHaveAttribute('data-theme', 'dark');
+
+      await cap(page, 'annotate', 'setProfile', 'Offline Reviewer');
+      const bytes = simplePdf(1);
+      await drop(page, [{ name: 'm7.pdf', b64: Buffer.from(bytes).toString('base64') }]);
+      await expect(page.locator('[data-page="0"] img.page-preview')).toBeVisible();
+      const id = (await cap(page, 'view', 'activeDocId')) as string;
+      await expect.poll(() => cap(page, 'annotate', 'list', id)).not.toBeNull();
+      const view = page.getByTestId('document-view');
+      await view.focus();
+      await page.keyboard.press('ControlOrMeta+0');
+      const at = async (x: number, y: number) => {
+        const box = await page.locator('[data-page="0"] .page-content').boundingBox();
+        if (!box) throw new Error('page not laid out');
+        const k = box.width / 595;
+        return { x: box.x + x * k, y: box.y + y * k };
+      };
+      const objects = async () =>
+        ((await cap(page, 'annotate', 'objects', id)) as
+          { id: string; type: number; contents?: string; intent?: string }[] | null) ?? [];
+      const comment = page.getByRole('toolbar', { name: 'Comment commands' });
+      const tool = async (name: string) => {
+        await page.getByRole('tab', { name: 'Comment', exact: true }).click();
+        await comment.getByRole('button', { name, exact: true }).click();
+      };
+      const editor = page.locator('[data-text-comment] [contenteditable="true"]');
+
+      // A sticky note window (M7-06): two lines, kept with Ctrl+Enter, closed with Esc.
+      await tool('Sticky Note');
+      const n = await at(80, 140);
+      await page.mouse.click(n.x, n.y);
+      const note = page.getByRole('dialog', { name: /^Sticky note by / });
+      await expect(note.getByRole('textbox', { name: 'Note text' })).toBeFocused();
+      await page.keyboard.type('Offline note');
+      await page.keyboard.press('Enter');
+      await page.keyboard.type('second line');
+      await page.keyboard.press('ControlOrMeta+Enter');
+      await page.keyboard.press('Escape');
+      await expect(note).toHaveCount(0);
+      await expect
+        .poll(async () => (await objects()).find((o) => o.type === 1)?.contents)
+        .toBe('Offline note\nsecond line');
+
+      // A text box edited in place (M7-02), then blue text on its red border (ADR-024).
+      await tool('Text Box');
+      const a = await at(200, 200);
+      const b = await at(420, 250);
+      await page.mouse.move(a.x, a.y);
+      await page.mouse.down();
+      await page.mouse.move(b.x, b.y, { steps: 6 });
+      await page.mouse.up();
+      await expect(editor).toBeFocused();
+      await page.keyboard.type('Offline text box');
+      await page.keyboard.press('Escape');
+      const box = (await objects()).find((o) => o.type === 3);
+      if (!box) throw new Error('no text box');
+      await expect
+        .poll(async () => (await objects()).find((o) => o.id === box.id)?.contents)
+        .toBe('Offline text box');
+      await cap(page, 'annotate', 'update', id, 0, box.id, { fontColor: '#0000FF' });
+
+      // A typewriter: black Courier (M7-07).
+      await view.focus();
+      await page.keyboard.press('Escape');
+      await tool('Typewriter');
+      const t = await at(80, 420);
+      await page.mouse.click(t.x, t.y);
+      await expect(editor).toBeFocused();
+      await page.keyboard.type('Offline');
+      await page.keyboard.press('Escape');
+      await view.focus();
+      await page.keyboard.press('Escape');
+      await page.keyboard.press('Escape');
+
+      // A picture pasted from the system clipboard (M7-08), decoded in the Work worker.
+      await page.evaluate(async () => {
+        const c = new OffscreenCanvas(800, 600);
+        const g = c.getContext('2d');
+        if (!g) throw new Error('no 2d');
+        g.fillStyle = '#2f5fb3';
+        g.fillRect(0, 0, 800, 600);
+        const blob = await c.convertToBlob({ type: 'image/png' });
+        await navigator.clipboard.write([new ClipboardItem({ 'image/png': blob })]);
+      });
+      await view.focus();
+      await page.keyboard.press('ControlOrMeta+v');
+      await expect.poll(async () => (await objects()).filter((o) => o.type === 13).length).toBe(1);
+
+      // A verified save of everything (the same route as Ctrl+S).
+      expect(await cap(page, 'save', 'verifiedSave', id)).toMatchObject({ fellBack: false });
       expect(await cap(page, 'annotate', 'errors', '')).toEqual([]);
       expect(outbound).toEqual([]);
     } finally {
