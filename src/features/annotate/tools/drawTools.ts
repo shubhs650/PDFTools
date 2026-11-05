@@ -18,7 +18,7 @@ import type {
 } from '@embedpdf/plugin-annotation';
 import { t } from '../../../i18n';
 import { capability } from '../../view/host';
-import { openContentsPrompt } from './contentsPrompt';
+import { dropPopups, openNotePopup, saveOpenPopup } from '../notes/notePopupStore';
 import {
   calloutBounds,
   calloutFromDrag,
@@ -379,11 +379,20 @@ export function installDrawTools(registry: PluginRegistry): () => void {
 
   // What comes right after a tool made its annotation.
   const stopEvents = cap.onAnnotationEvent((e) => {
+    if (e.type === 'delete') {
+      // A deleted (or undone) note's window closes (M7-06).
+      if (e.annotation.type === PdfAnnotationSubtype.TEXT)
+        dropPopups(e.documentId, [e.annotation.id]);
+      return;
+    }
     if (e.type !== 'create') return;
     const a = e.annotation;
-    if (a.type === PdfAnnotationSubtype.TEXT && !a.inReplyToId && !a.contents)
-      openContentsPrompt('note', e.documentId, a.pageIndex, a.id);
-    else if (a.type === PdfAnnotationSubtype.LINK && !a.target)
+    if (a.type === PdfAnnotationSubtype.TEXT && !a.inReplyToId) {
+      // A new sticky note opens its window, the caret in it (M7-06, D-44); the
+      // window goes into the file once the note itself is there.
+      if (!e.committed && !a.contents) openNotePopup(e.documentId, a, { focus: true, save: false });
+      else if (e.committed) saveOpenPopup(e.documentId, a);
+    } else if (a.type === PdfAnnotationSubtype.LINK && !a.target)
       openLinkEdit(e.documentId, a.pageIndex, a.id);
   });
   return () => {
@@ -425,7 +434,7 @@ interface CreateInternals {
 
 /**
  * Keyboard creation (M3-Q6): a sticky note, text box or typewriter at the
- * centre of the current page. The note's text is asked next (the create event
+ * centre of the current page. The note's window opens next (the create event
  * above); a text box or typewriter opens its editor with "Type here" selected,
  * as after a click (M7-02).
  */

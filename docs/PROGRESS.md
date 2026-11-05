@@ -1,15 +1,47 @@
 # Triya PDF — Progress
 
-_Last updated: 2026-11-05 (session 46: separate text and border colours, ADR-024)_
+_Last updated: 2026-11-05 (session 47: M7-06 sticky note pop-up windows, spike S23)_
 
 **Current milestone:** M7 — second beta review (plan in [docs/plan/M7.md](plan/M7.md), scope in
 [ADR-023](adr/023-m7-second-beta-review.md), **Accepted** 2026-11-04 with the recommended
-answers Q1–Q7; ARCHITECTURE.md Rev 0.12 after [ADR-024](adr/024-freetext-text-and-border-colours.md)). M7-01 … M7-05 done, plus separate text and border colours (ADR-024); next: M7-06. **Previous milestone:** M6 — Beta review (plan in [docs/plan/M6.md](plan/M6.md), scope changes in
+answers Q1–Q7; ARCHITECTURE.md Rev 0.12 after [ADR-024](adr/024-freetext-text-and-border-colours.md)). M7-01 … M7-06 done, plus separate text and border colours (ADR-024); next: M7-07. **Previous milestone:** M6 — Beta review (plan in [docs/plan/M6.md](plan/M6.md), scope changes in
 [ADR-021](adr/021-m6-beta-review.md), **Accepted** 2026-11-01; ARCHITECTURE.md Rev 0.10; M6-01 … M6-15 done, **M6 complete on the agent side** ([acceptance](acceptance/M6.md)); spike results in
 [ADR-022](adr/022-m6-spikes-s18-s22.md), **Accepted** 2026-11-02 (bookmark route B)). M5 — OCR: M5-01 … M5-04 done under [ADR-020](adr/020-m5-ocr.md); M5-05's owner
 interop is in the M6 pack (CHECKLIST §M6 R1–R4). Rev 0 (M0–M4) is complete on the agent side.
 
 ## Done
+
+- **Session 47 — M7-06 sticky note pop-up windows (ADR-023 D-44; review 4c; bug B12; spike
+  S23).** Spike S23 (`spikes/s23-popup/`, runs with the unit tests, needs qpdf) **works**: a
+  note's window is saved as a standard `/Popup` (`/Parent`, `/Rect`, `/Open`; the note's
+  `/Popup`), as Acrobat and PDF-XChange write it, in one narrow revision, also in AES-256 and
+  RC4-128 files; files from those viewers keep their pop-ups through our edits and saves; PDFium
+  draws no pop-up; EmbedPDF left an orphan pop-up when a note was deleted, so ours goes first
+  (evidence in ADR-023). Render worker `notePopups.ts` (direct PDFium, ADR-001 B14): list a
+  page's pop-ups, create or move one (`setNotePopup`, permission-checked, recorded with the save
+  tracker), remove a deleted comment's pop-up. `/Open` is a boolean PDFium can neither write nor
+  read: the object layer stages it (`'Open'` in `ANNOT_KEYS`) and the Work worker reads it
+  (`popupStates`). UI (`src/features/annotate/notes/`): the window on the page beside its note,
+  joined by a dashed leader, in the note's colour, upright and the same size at every zoom and
+  rotation (NoZoom/NoRotate, `popupGeometry.ts`, unit-tested), clamped to the page; header
+  "Sticky Note", author and date (Intl), Close; multi-line text (Enter = new line; Ctrl+Enter, a
+  click elsewhere or closing keeps it; Esc keeps it and closes; Acrobat's CR line ends shown as
+  lines without rewriting the note); the thread's replies and a reply box; footer: ⋮ menu (Set
+  Status ▸, Delete, Properties), status indicator, Lock (aria-pressed), Reply, resize grip; drag
+  the title bar, or the Move window button and the grip with the arrow keys. A new note opens its
+  window at once with the caret in it (the modal Note dialog is gone); double-click, Enter or F2
+  on a selected note, and **Open Popup** (new command, first in the comment menu and the Comments
+  pane card's menu) open it; several can be open, the last raised on top. Moving or resizing makes
+  the document dirty; opening or closing does not, but the state goes into the file with the next
+  save; without the annotate permission the window still opens read-only and nothing is written.
+  Pages with no notes never ask the Render worker. Keys inside a window are its own (document
+  shortcuts such as Tab, the arrows and Delete are not run there). Help (Reviewing comments)
+  updated. Tests: S23 (10), `tests/annotate/popupGeometry.test.ts`, `e2e/sticky-note-popup.spec.ts`
+  (6: three lines saved and reopened open in place, click-away/Esc/double-click/Enter, Reply,
+  Set Status, Lock, Delete, Open Popup from the Comments pane, move/resize/keyboard/zoom and the
+  saved rect, an Acrobat-made pop-up read open in place with Tab order and axe, and the interop
+  file); `draw-tools` and `default-styles` specs moved from the Note dialog to the window.
+  Interop: CHECKLIST §M7 T1–T4 with `e2e/fixtures/self-made/m7-interop/sticky-note-popups__ctrl-s.pdf`.
 
 - **Session 46 — separate text and border colours (ADR-024, spike S25; owner's ask 2026-11-05).**
   The owner asked for a text box's and a callout's text colour apart from the border colour,
@@ -1904,8 +1936,12 @@ rel="noopener noreferrer">`; the commands `app.home` / `app.reportIssue` open th
 
 ## Next
 
-- **Agent:** M7-06 (sticky note popup, spike S23 first) in its own thread, then
-  M7-07 … M7-12 serially.
+- **Agent:** M7-07 … M7-12 serially, each in its own thread; then the queued task (owner,
+  2026-11-05) to make comment export and import round-trip every property as XFDF does — pop-ups
+  (`/Rect`, `/Open`) included.
+- **Owner (M7-06):** CHECKLIST §M7 T1–T4 (sticky note pop-ups both ways) in Acrobat Reader and
+  PDF-XChange with `e2e/fixtures/self-made/m7-interop/sticky-note-popups__ctrl-s.pdf`; also in
+  the M7-12 interop pack.
 - **Owner (ADR-024):** CHECKLIST §M7 S1–S3 (blue text on a red border in a text box and a
   callout, both ways) in Acrobat Reader and PDF-XChange; also in the M7-12 interop pack.
 - **Owner (M6 interop pack):** [docs/acceptance/M6.md](acceptance/M6.md) §4 — CHECKLIST §M6

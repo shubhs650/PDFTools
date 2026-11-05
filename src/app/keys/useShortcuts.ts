@@ -62,7 +62,11 @@ export function useShortcuts(): void {
         e,
         {
           editable: isEditable(active),
-          inDocument: Boolean(active?.closest('#document-panel')),
+          // A sticky note's window (M7-06) is on the page but keeps its own
+          // keys: Tab walks its controls, the arrows move it, Delete is text.
+          inDocument: Boolean(
+            active?.closest('#document-panel') && !active.closest('[data-note-popup]'),
+          ),
           inBookmarks: Boolean(active?.closest('[data-key-scope="bookmarks"]')),
         },
         mac,

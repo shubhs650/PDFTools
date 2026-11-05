@@ -8,7 +8,8 @@ import type { AnnotTileRequest } from '../workers/render/annotTiles';
 import type { FlattenCounts } from '../workers/render/flatten';
 import type { SnapshotPixels, SnapshotRequest } from '../workers/render/snapshot';
 import type { PageOp } from '../workers/render/pages';
-import type { PageInfo } from '../workers/render/pdfium';
+import type { NotePopupInfo } from '../workers/render/notePopups';
+import type { DeviceRect, PageInfo } from '../workers/render/pdfium';
 import type { DocDigest } from '../workers/render/save/digest';
 import type { SecureAction } from '../workers/render/security';
 import type { MethodSpec } from './protocol';
@@ -172,6 +173,21 @@ export interface RenderApi {
   fileAttachment: MethodSpec<
     { docId: string; pageIndex: number; id: string },
     { name: string; data: ArrayBuffer }
+  >;
+  /**
+   * Sticky note pop-ups (M7-06, ADR-023 D-44, spike S23): the notes on a page
+   * that have a /Popup, with its /Rect (device space) and object number (the
+   * Work worker reads /Open by it).
+   */
+  notePopups: MethodSpec<{ docId: string; pageIndex: number }, { popups: NotePopupInfo[] }>;
+  /**
+   * Creates or moves a note's /Popup and stages its /Open (saved with the next
+   * Ctrl+S). Needs the annotate permission (rule 9). The caller decides whether
+   * the change alone makes the document dirty.
+   */
+  setNotePopup: MethodSpec<
+    { docId: string; pageIndex: number; noteId: string; rect: DeviceRect; open: boolean },
+    { popupId: string; created: boolean }
   >;
   /** What a render of this page costs (M1-17 cost model): objects and path segments. */
   pageCost: MethodSpec<{ docId: string; pageIndex: number }, { objects: number; segments: number }>;

@@ -6,6 +6,7 @@ import type { PagePoint } from '../../app/commands/dispatch';
 import type { ContextMenuEntry, MenuChoice } from '../../ui/components';
 import { objectsOf } from '../annotate/comments/commentsStore';
 import { selectedAttachment } from '../attachments/attachFile';
+import { selectedNote } from '../annotate/notes/openNote';
 import { STATUS_KEYS } from '../annotate/comments/statusLabels';
 import { setStatus } from '../annotate/comments/threadActions';
 import { annotationState } from '../annotate/selection';
@@ -29,6 +30,8 @@ export function commentMenu(docId: string): ContextMenuEntry[] {
   return [
     // A file attachment's own item first (M6-10, D-38 d), as other viewers put it.
     ...(selectedAttachment(docId) ? [cmd('comment.saveAttachment'), sep('attachment')] : []),
+    // A sticky note's own item first too (M7-06, D-44).
+    ...(selectedNote(docId) ? [cmd('comment.openPopup'), sep('popup')] : []),
     cmd('edit.cut'),
     cmd('edit.copy'),
     cmd('edit.paste'),

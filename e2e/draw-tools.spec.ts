@@ -219,9 +219,11 @@ test('keyboard: N then Enter places a note, T then Enter a text box (M3-Q6) @smo
   await page.keyboard.press('n');
   await expect(page.locator('.document-host')).toHaveAttribute('data-tool', 'textComment');
   await page.keyboard.press('Enter');
-  const note = page.getByRole('dialog', { name: 'Note' });
-  await note.getByLabel('Note text').fill('Check this dimension');
-  await page.keyboard.press('Enter');
+  // The note's window opens, the caret in its text (M7-06); Ctrl+Enter saves.
+  const note = page.getByRole('dialog', { name: /^Sticky note by / });
+  await expect(note.getByRole('textbox', { name: 'Note text' })).toBeFocused();
+  await page.keyboard.type('Check this dimension');
+  await page.keyboard.press('Control+Enter');
   await expect
     .poll(async () => (await list(page, id)).map((a) => [a.type, a.contents]))
     .toEqual([[T.TEXT, 'Check this dimension']]);

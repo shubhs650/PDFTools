@@ -3,6 +3,7 @@
 // frame). Never part of a production build.
 import type { SelectionCapability } from '@embedpdf/plugin-selection';
 import type { ZoomCapability } from '@embedpdf/plugin-zoom';
+import { documentStore } from '../app/store/documentStore';
 import { capability, hostStore, renderEngine, tileCache } from '../features/view/host';
 import { renderStats, resetRenderStats, type KindStats } from '../features/view/renderStats';
 import { viewFocus } from '../features/view/tileScheduler';
@@ -78,6 +79,8 @@ export function registerViewProbe(hook: TestHook): void {
       resetRenderStats();
     },
     /** The active document's engine id (M3-04: probes that take a docId). */
+    /** Whether a document has unsaved changes (M7-06). */
+    dirty: (docId: string) => documentStore.getState().docs[docId]?.dirty ?? null,
     activeDocId: () =>
       hostStore.getState().registry?.getStore().getState().core.activeDocumentId ?? null,
     /** The selection plugin's state for the active document (M2-04). */

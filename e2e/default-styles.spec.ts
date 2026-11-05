@@ -229,9 +229,11 @@ test('the sticky note stays yellow (highlight: tests/annotate/toolDefaults.test.
   await page.keyboard.press('n');
   await expect(page.locator('.document-host')).toHaveAttribute('data-tool', 'textComment');
   await page.keyboard.press('Enter');
-  const note = page.getByRole('dialog', { name: 'Note' });
-  await note.getByLabel('Note text').fill('Yellow');
-  await page.keyboard.press('Enter');
+  // The note's window opens, the caret in its text (M7-06); Ctrl+Enter saves.
+  const note = page.getByRole('dialog', { name: /^Sticky note by / });
+  await expect(note.getByRole('textbox', { name: 'Note text' })).toBeFocused();
+  await page.keyboard.type('Yellow');
+  await page.keyboard.press('Control+Enter');
   await expect.poll(async () => (await objects(page, id)).map((o) => o.type)).toEqual([T.TEXT]);
   expect((await objects(page, id))[0]?.strokeColor?.toUpperCase()).toBe('#FFCD45');
 });

@@ -44,6 +44,7 @@ import { applyRedactions } from './work/redact/apply';
 import type { PdfDocumentObject } from '@embedpdf/models';
 import { installFontReadback } from './render/freeTextFonts';
 import { copyItems, editObjects, OutlineError, readOutline } from './work/outline';
+import { popupStates } from './work/popups';
 
 let mod: WrappedPdfiumModule | undefined;
 let native: PdfiumNative | undefined;
@@ -766,6 +767,12 @@ serve<WorkApi>(self, {
       const items = await readOutline(reader);
       return { items };
     }),
+
+  // Sticky note pop-ups (M7-06): /Open from the current bytes.
+  popupStates: ({ docId, objs }, ctx) =>
+    scheduler.run('interactive', ctx.signal, async () => ({
+      open: await popupStates(await liveReader(docId), objs),
+    })),
 
   copyOutline: ({ docId, paths, expect }, ctx) =>
     scheduler.run('interactive', ctx.signal, () =>

@@ -59,6 +59,8 @@ function executorWith(
     snapshot: () => {
       throw new Error('not used');
     },
+    notePopups: () => ({ popups: [] }),
+    setNotePopup: () => ({ popupId: 'p', created: true }),
     fileAttachment: () => {
       throw new Error('not used');
     },

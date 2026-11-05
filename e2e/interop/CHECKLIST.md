@@ -383,7 +383,7 @@ Ctrl+S, then open the file in each viewer.
 | R3  | Chinese (Simplified) scan: copied text pastes as Chinese characters; search finds a two-character word.                     |         |             |
 | R4  | In PDFTools after reopening: Quick Find finds the same words; a second OCR run skips the recognized pages ("already text"). |         |             |
 
-## M7 — text and border colours (ADR-024)
+## M7 — sticky note pop-ups (D-44) and text and border colours (ADR-024)
 
 ### S. Text colour apart from the border colour
 
@@ -396,3 +396,16 @@ Ctrl+S, then open the file in each viewer.
 | S1  | Ours open in their viewer: the text is blue and the border (and the callout's line) red, in both comments.                            |         |             |
 | S2  | Edit our text box's text in their viewer and save: it is still blue on red there, and again after reopening in Triya PDF.             |         |             |
 | S3  | Their own text box opens in Triya PDF with blue text on a red border; its Properties pane shows Text color Blue and Border color Red. |         |             |
+
+### T. Sticky note pop-ups (M7-06, D-44, spike S23)
+
+File: `e2e/fixtures/self-made/m7-interop/sticky-note-popups__ctrl-s.pdf` (made by the app and
+saved with Ctrl+S): a note with three lines, a reply and the status Accepted, its window moved
+and left open; a second note, "Closed note", its window closed.
+
+| #   | Check                                                                                                                                    | Acrobat | PDF-XChange |
+| --- | ---------------------------------------------------------------------------------------------------------------------------------------- | ------- | ----------- |
+| T1  | Opened in their viewer: the first note's pop-up is open, below-right of the note where Triya PDF had it, with the three lines.           |         |             |
+| T2  | The second note's pop-up is closed; opening it shows "Closed note". The reply and the Accepted status show in their comments list.       |         |             |
+| T3  | Move a pop-up, type a fourth line, close the other one and save; reopen in Triya PDF: the windows are where and as they were left there. |         |             |
+| T4  | A note of their own with a multi-line pop-up left open: Triya PDF opens its window at the same place, with every line.                   |         |             |

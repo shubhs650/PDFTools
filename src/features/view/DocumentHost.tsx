@@ -13,6 +13,7 @@ import { installViewportTool } from '../measure/viewports';
 import { installSnapping } from '../measure/snapping';
 import { installHistoryJoin } from '../annotate/historyJoin';
 import { installTextEdit } from '../annotate/textEdit';
+import { installNoteDoubleClick } from '../annotate/notes/openNote';
 import { installTextPointer } from '../annotate/textPointer';
 import { installCommentSelection } from '../annotate/commentSelection';
 import { installSelectAfterDraw } from '../annotate/selectAfterDraw';
@@ -56,6 +57,8 @@ const onInitialized = (registry: Parameters<typeof setRegistry>[0]): Promise<voi
     if (!textEditInstalled) {
       installTextEdit();
       installTextPointer();
+      // A double-click on a sticky note opens its window (M7-06).
+      installNoteDoubleClick();
     }
     textEditInstalled = true;
   }

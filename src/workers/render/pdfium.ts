@@ -147,6 +147,7 @@ export function pageInfos(
   mod: WrappedPdfiumModule,
   native: PdfiumNative,
   docId: string,
+  only?: number,
 ): PageInfo[] {
   const internals = native as unknown as NativeInternals;
   const docPtr = docPtrOf(native, docId);
@@ -161,7 +162,7 @@ export function pageInfos(
   const box = heap.wasmExports.malloc(16);
   const out: PageInfo[] = [];
   try {
-    for (let index = 0; index < count; index++) {
+    for (let index = only ?? 0; index < (only === undefined ? count : only + 1); index++) {
       const read = normalized ? 'EPDF_GetPageSizeByIndexNormalized' : 'FPDF_GetPageSizeByIndexF';
       if (!rawCall(mod, read, docPtr, index, size))
         throw new Error(`page ${String(index)} has no size`);
@@ -182,6 +183,19 @@ export function pageInfos(
   return out;
 }
 
+/** One page as `pageInfos` reads it (M7-06: a pop-up's /Rect conversion). */
+export function pageInfo(
+  mod: WrappedPdfiumModule,
+  native: PdfiumNative,
+  docId: string,
+  index: number,
+): PageInfo {
+  const count = rawCall(mod, 'FPDF_GetPageCount', docPtrOf(native, docId));
+  const page = index >= 0 && index < count ? pageInfos(mod, native, docId, index)[0] : undefined;
+  if (!page) throw new Error('No such page');
+  return page;
+}
+
 /** Whether EmbedPDF opened the document with normalized rotation (a reopen keeps it). */
 export function isNormalized(native: PdfiumNative, docId: string): boolean {
   const ctx = (native as unknown as NativeInternals).cache?.getContext(docId);
@@ -197,6 +211,12 @@ export interface PageSpaceRect {
   bottom: number;
 }
 
+/** Rect in EmbedPDF's device space: top-left origin, points, unrotated page. */
+export interface DeviceRect {
+  origin: { x: number; y: number };
+  size: { width: number; height: number };
+}
+
 /**
  * PdfiumNative's private annotation writers (M6-10, ADR-022 decision 1): the
  * helpers its own create/update use, so an annotation EmbedPDF can't create
@@ -207,6 +227,8 @@ export interface AnnotWriter {
   /** Device rect (top-left, points) → /Rect, as EmbedPDF converts it. */
   setRect(doc: unknown, page: unknown, annot: number, rect: unknown): boolean;
   readRect(annot: number): PageSpaceRect;
+  /** /Rect → device rect (top-left, points), as EmbedPDF reads it (M7-06). */
+  toDeviceRect(doc: unknown, page: unknown, rect: PageSpaceRect): DeviceRect;
   /** `#RRGGBB` → /C. */
   setColor(annot: number, hex: string): boolean;
   /** PdfAnnotationName → /Name. */
@@ -229,6 +251,7 @@ export function annotWriter(native: PdfiumNative): AnnotWriter {
   };
   const setRect = get('setPageAnnoRect');
   const readRect = get('readPageAnnoRect');
+  const toDevice = get('convertPageRectToDeviceRect');
   const setColor = get('setAnnotationColor');
   const setIcon = get('setAnnotationName');
   const applyBase = get('applyBaseAnnotationProperties');
@@ -237,6 +260,7 @@ export function annotWriter(native: PdfiumNative): AnnotWriter {
   return {
     setRect: (doc, page, annot, rect) => Boolean(setRect(doc, page, annot, rect)),
     readRect: (annot) => readRect(annot) as PageSpaceRect,
+    toDeviceRect: (doc, page, rect) => toDevice(doc, page, rect) as DeviceRect,
     setColor: (annot, hex) => Boolean(setColor(annot, hex, 0)),
     setIcon: (annot, name) => Boolean(setIcon(annot, name)),
     applyBase: (doc, page, pagePtr, annot, object) =>

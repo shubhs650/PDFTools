@@ -19,6 +19,12 @@
   --color-page: #ffffff; /* paper under a page's preview: white in every theme */
   --color-form-field: #e3ecfa; /* fillable form fields over the page (M2-14) */
   --color-form-text: #000000;
+  /* A sticky note's window (M7-06): paper and ink over the white page, as the note itself. */
+  --color-note-paper: #ffffff;
+  --color-note-text: #1f1f1f;
+  --color-note-ink-dark: #1f1f1f;
+  --color-note-ink-light: #ffffff;
+  --color-note-leader: rgb(0 0 0 / 0.35);
 
   /* Color — content */
   --color-text: #1f1f1f;
@@ -126,6 +132,11 @@
   --color-page: #ffffff;
   --color-form-field: #e3ecfa; /* on the white page in every theme */
   --color-form-text: #000000;
+  --color-note-paper: #ffffff; /* on the white page in every theme */
+  --color-note-text: #1f1f1f;
+  --color-note-ink-dark: #1f1f1f;
+  --color-note-ink-light: #ffffff;
+  --color-note-leader: rgb(0 0 0 / 0.35);
   --color-text: #ffffff;
   --color-text-muted: #c7c7c7;
   --color-text-disabled: #6e6e6e;
@@ -160,6 +171,11 @@
     --color-page: Canvas;
     --color-form-field: Field;
     --color-form-text: FieldText;
+    --color-note-paper: Canvas;
+    --color-note-text: CanvasText;
+    --color-note-ink-dark: CanvasText;
+    --color-note-ink-light: CanvasText;
+    --color-note-leader: CanvasText;
     --color-text: CanvasText;
     --color-text-muted: CanvasText;
     --color-text-disabled: GrayText;

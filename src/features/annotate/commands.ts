@@ -27,6 +27,7 @@ import { DRAW_COMMANDS, isDrawTool, KEYBOARD_PLACED, VERTEX_TOOLS } from './tool
 import { isSignatureTool, placeAtCentre as placeSignatureAtCentre } from '../sign/signDocument';
 import { annotationLayerReady, finishDrawing, placeAtCentre } from './tools/drawTools';
 import { editableTextComment, editSelectedText } from './textPointer';
+import { openSelectedNote, selectedNote } from './notes/openNote';
 import { registerTextMenuCommands } from './textMenu';
 import { isFieldTool } from '../forms/fieldModel';
 import { placeFieldAtCentre } from '../forms/fieldTools';
@@ -276,6 +277,7 @@ export function registerAnnotateCommands(): () => void {
         const t = appStore.getState().tool;
         const id = activeId();
         if (id && !(isDrawTool(t) && VERTEX_TOOLS.has(t)) && editableTextComment(id)) return null;
+        if (id && !isDrawTool(t) && selectedNote(id)) return null;
         return isDrawTool(t) && (KEYBOARD_PLACED.has(t) || VERTEX_TOOLS.has(t))
           ? null
           : msg('annotate.noneSelected');
@@ -285,6 +287,8 @@ export function registerAnnotateCommands(): () => void {
         const id = activeId();
         const registry = hostStore.getState().registry;
         if (id && !(isDrawTool(t) && VERTEX_TOOLS.has(t)) && editSelectedText(id)) return;
+        // A selected sticky note: its window (M7-06). With a drawing tool on, Enter places.
+        if (id && !isDrawTool(t) && openSelectedNote(id)) return;
         if (!isDrawTool(t) || !id || !registry) return;
         if (VERTEX_TOOLS.has(t)) {
           finishDrawing();
@@ -321,11 +325,25 @@ export function registerAnnotateCommands(): () => void {
       requires: 'annotate',
       disabledReason: () => {
         const id = activeId();
-        return id && editableTextComment(id) ? null : msg('annotate.noneSelected');
+        return id && (editableTextComment(id) || selectedNote(id))
+          ? null
+          : msg('annotate.noneSelected');
       },
       run: () => {
         const id = activeId();
-        if (id) editSelectedText(id);
+        if (id && !editSelectedText(id)) openSelectedNote(id);
+      },
+    }),
+    // Open Popup (M7-06): the selected sticky note's window. Reading needs no permission.
+    registerCommand('comment.openPopup', {
+      requiresDocument: true,
+      disabledReason: () => {
+        const id = activeId();
+        return id && selectedNote(id) ? null : msg('annotate.noneSelected');
+      },
+      run: () => {
+        const id = activeId();
+        if (id) openSelectedNote(id);
       },
     }),
     // Copy/Apply Style (M3-10): the first selected annotation's style onto others.
