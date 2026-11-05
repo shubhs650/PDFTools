@@ -141,6 +141,14 @@ test('Ctrl+V: a 4000 × 3000 screenshot fits inside the A4 page, centred in view
     await page.screenshot({ path: `${SHOTS}/01-ctrl-v-screenshot-fits-page-1280.png` });
   }
 
+  // The plugin commits to PDFium after the stamp shows (a 12-megapixel image
+  // takes a moment on a slow runner): undo the committed stamp.
+  await expect
+    .poll(async () => {
+      const list = (await cap(page, 'annotate', 'list', id)) as { commit: string }[] | null;
+      return list?.every((a) => a.commit === 'synced') ?? false;
+    })
+    .toBe(true);
   await page.getByRole('button', { name: 'Undo' }).first().click();
   await expect.poll(async () => (await stamps(page, id)).length).toBe(0);
   await page.getByRole('button', { name: 'Redo' }).first().click();
