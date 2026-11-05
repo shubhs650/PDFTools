@@ -39,6 +39,7 @@ import { zipBlob } from './work/zip';
 import { exportImages } from './work/images';
 import { assemble, fullAccess, type AssemblePart } from './work/assemble';
 import { commentSource, copyComments, transferComments } from './work/transferJobs';
+import { toBase64 } from '../model/base64';
 import { detectTables, exportTables, tableCells, type TableSources } from './work/tables/job';
 import { applyRedactions } from './work/redact/apply';
 import type { PdfDocumentObject } from '@embedpdf/models';
@@ -296,11 +297,20 @@ serve<WorkApi>(self, {
       }
     }),
 
-  copyComments: ({ docId, ids, withReplies }, ctx) =>
+  copyComments: ({ docId, ids, withReplies, base64 }, ctx) =>
     scheduler.run('interactive', ctx.signal, async (slice) => {
       if (!mod) throw new RpcError('not-initialized', 'The work worker is not initialized');
       try {
         const r = await copyComments(mod, need(), docs, docId, ids, withReplies, inflate, slice);
+        if (base64) {
+          await slice.checkpoint();
+          return {
+            bytes: new ArrayBuffer(0),
+            pages: r.pages,
+            count: r.count,
+            base64: toBase64(r.bytes),
+          };
+        }
         const buf = r.bytes.slice().buffer;
         return new Transfer({ bytes: buf, pages: r.pages, count: r.count }, [buf]);
       } finally {

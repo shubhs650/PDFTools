@@ -147,10 +147,14 @@ export interface WorkApi {
     { docId: string; edit: OutlineEdit; expect: OutlineExpect[] },
     { objects: TransferObject[]; firstNew: number }
   >;
-  /** The in-app clipboard (M4-21): the chosen comments as a small PDF. Needs copy. */
+  /**
+   * The in-app clipboard (M4-21): the chosen comments as a small PDF. Needs copy.
+   * With `base64`, the PDF comes back as base64 in `base64` (a JSON v2 comment
+   * export, ADR-025) and `bytes` is empty.
+   */
   copyComments: MethodSpec<
-    { docId: string; ids: string[]; withReplies: boolean },
-    { bytes: ArrayBuffer; pages: number[]; count: number }
+    { docId: string; ids: string[]; withReplies: boolean; base64?: boolean },
+    { bytes: ArrayBuffer; pages: number[]; count: number; base64?: string }
   >;
   /**
    * Tables (M4-12, §7.7): detected per page — ruled and unruled candidates,

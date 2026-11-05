@@ -1,9 +1,11 @@
-// Import Comments from our JSON v1 (M4-20, ADR-018 option 2, format:
-// docs/formats/pdftools-annotations-v1.md): strict validation of the file,
-// then a plan — which records land on which page, and what is skipped
-// (missing page, an /NM already in the document, a type EmbedPDF cannot
-// re-create without data v1 does not carry). Pure; the dialog applies the
-// plan through the annotation plugin (appearance streams by PDFium, rule 6).
+// Import Comments from our JSON (M4-20, ADR-018, ADR-025; formats:
+// docs/formats/pdftools-annotations-v1.md and -v2.md): strict validation of
+// the file, then a plan — which records land on which page, and what is
+// skipped (missing page, an /NM already in the document, a type EmbedPDF cannot
+// re-create without data the file does not carry). Pure. A v2 file with its
+// comments PDF is applied by object copy (lossless); otherwise the dialog
+// re-creates the plan through the annotation plugin (appearances by PDFium, rule 6).
+import { isBase64 } from '../../../model/base64';
 import type { PdfAnnotationObject } from '@embedpdf/models';
 
 export const JSON_FORMAT = 'pdftools-annotations';
@@ -53,13 +55,24 @@ export interface JsonRecord {
   annotation: Record<string, unknown>;
 }
 
+/** A v2 file's comments PDF (ADR-025): base64, and the document page (0-based) of each of its pages. */
+export interface JsonPdfPart {
+  base64: string;
+  pages: number[];
+}
+
 export interface JsonDocument {
   name: string | null;
   pages: number | null;
   records: JsonRecord[];
+  /** v2: the comments' own PDF objects; null in v1 (re-created from the records). */
+  pdf: JsonPdfPart | null;
 }
 
-export type JsonError = 'syntax' | 'format' | 'version' | 'shape' | 'tooLarge';
+export type JsonError = 'syntax' | 'format' | 'version' | 'shape' | 'tooLarge' | 'pdf';
+
+/** The versions this build reads. */
+export const JSON_VERSIONS: ReadonlySet<unknown> = new Set([1, 2]);
 
 export type ParseResult =
   | { ok: true; doc: JsonDocument }
@@ -140,7 +153,7 @@ export function parseAnnotationJson(text: string): ParseResult {
     return { ok: false, error: 'syntax' };
   }
   if (!isObj(root) || root['format'] !== JSON_FORMAT) return { ok: false, error: 'format' };
-  if (root['version'] !== 1)
+  if (!JSON_VERSIONS.has(root['version']))
     return {
       ok: false,
       error: 'version',
@@ -156,14 +169,28 @@ export function parseAnnotationJson(text: string): ParseResult {
     if (!r) return { ok: false, error: 'shape', at: i + 1 };
     records.push(r);
   }
+  let pdf: JsonPdfPart | null = null;
+  if (root['version'] === 2 && root['pdf'] !== undefined) {
+    pdf = pdfOf(root['pdf'], root['pdfPages']);
+    if (!pdf) return { ok: false, error: 'pdf' };
+  }
   return {
     ok: true,
     doc: {
       name: typeof doc['name'] === 'string' ? doc['name'] : null,
       pages: Number.isInteger(doc['pages']) ? (doc['pages'] as number) : null,
       records,
+      pdf,
     },
   };
+}
+
+/** v2's `pdf` (base64 of a PDF) and `pdfPages` (1-based document pages, one per PDF page). */
+function pdfOf(pdf: unknown, pages: unknown): JsonPdfPart | null {
+  if (typeof pdf !== 'string' || !pdf.startsWith('JVBERi') || !isBase64(pdf)) return null;
+  if (!Array.isArray(pages) || pages.length === 0) return null;
+  if (!pages.every((p) => Number.isInteger(p) && (p as number) >= 1)) return null;
+  return { base64: pdf, pages: (pages as number[]).map((p) => p - 1) };
 }
 
 /** The latest review state of a record (states are oldest first). */
@@ -181,6 +208,8 @@ export interface JsonPlanOptions {
   targetPages: number;
   /** /NMs already in the target. */
   existing: ReadonlySet<string>;
+  /** The file carries its comments PDF (v2, ADR-025): every type comes in by object copy. */
+  lossless?: boolean;
 }
 
 export interface JsonPlanItem {
@@ -216,7 +245,7 @@ export function planJsonImport(
       counts.skipped.filtered += size;
       continue;
     }
-    if (!JSON_TYPES.has(r.type)) {
+    if (!o.lossless && !JSON_TYPES.has(r.type)) {
       counts.skipped.unsupported += size;
       continue;
     }

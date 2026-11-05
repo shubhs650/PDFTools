@@ -6,8 +6,9 @@ import {
   type JsonRecord,
 } from '../../src/features/annotate/transfer/jsonImport';
 
-// M4-20: our JSON v1 as an import source — strict validation, the plan
-// (filters, mapping, duplicates, unsupported types), reply and state handling.
+// M4-20, M8-01 (ADR-025): our JSON v1 and v2 as an import source — strict
+// validation (v2's comments PDF too), the plan (filters, mapping, duplicates,
+// unsupported types only without the PDF), reply and state handling.
 
 const model = (type = 5) => ({
   type,
@@ -57,10 +58,10 @@ describe('parseAnnotationJson', () => {
   it('refuses other formats, other versions and broken records', () => {
     expect(parseAnnotationJson('{')).toEqual({ ok: false, error: 'syntax' });
     expect(parseAnnotationJson('[]')).toEqual({ ok: false, error: 'format' });
-    expect(parseAnnotationJson(file([], { version: 2 }))).toEqual({
+    expect(parseAnnotationJson(file([], { version: 3 }))).toEqual({
       ok: false,
       error: 'version',
-      at: 2,
+      at: 3,
     });
     expect(parseAnnotationJson(file([], { annotations: {} }))).toEqual({
       ok: false,
@@ -82,6 +83,44 @@ describe('parseAnnotationJson', () => {
         ok: false,
         error: 'shape',
         at: 2,
+      });
+  });
+});
+
+describe('parseAnnotationJson, v2 (ADR-025)', () => {
+  // "%PDF-1.7\n" and a little more, as base64.
+  const pdf = Buffer.from('%PDF-1.7\n%%EOF\n').toString('base64');
+
+  it('reads the comments PDF and its pages (1-based → 0-based)', () => {
+    const r = parseAnnotationJson(file([record()], { version: 2, pdf, pdfPages: [1, 3] }));
+    expect(r.ok).toBe(true);
+    if (!r.ok) return;
+    expect(r.doc.pdf).toEqual({ base64: pdf, pages: [0, 2] });
+    expect(r.doc.records).toHaveLength(1);
+  });
+
+  it('a v2 file without the PDF reads as records only; v1 never has one', () => {
+    const v2 = parseAnnotationJson(file([record()], { version: 2 }));
+    expect(v2.ok && v2.doc.pdf).toBeNull();
+    const v1 = parseAnnotationJson(file([record()], { pdf, pdfPages: [1] }));
+    expect(v1.ok && v1.doc.pdf).toBeNull();
+  });
+
+  it('refuses a damaged PDF field', () => {
+    const bad = [
+      { pdf: 'not base64!', pdfPages: [1] },
+      { pdf: Buffer.from('<html>').toString('base64'), pdfPages: [1] },
+      { pdf: pdf.slice(0, -1), pdfPages: [1] },
+      { pdf: 42, pdfPages: [1] },
+      { pdf, pdfPages: [] },
+      { pdf, pdfPages: [0] },
+      { pdf, pdfPages: [1.5] },
+      { pdf },
+    ];
+    for (const b of bad)
+      expect(parseAnnotationJson(file([record()], { version: 2, ...b }))).toEqual({
+        ok: false,
+        error: 'pdf',
       });
   });
 });
@@ -141,6 +180,16 @@ describe('planJsonImport', () => {
     const partial = planJsonImport(list.slice(0, 1), { ...base, existing: new Set(['r1']) });
     expect(partial.items[0]?.replies).toEqual([]);
     expect(partial.counts.skipped.duplicate).toBe(1);
+  });
+
+  it('with the comments PDF (v2), stamps and attached files come too', () => {
+    const list = recs([
+      record({ id: 'c3', type: 'stamp', replies: [], states: [] }),
+      record({ id: 'c4', type: 'fileattachment', replies: [], states: [] }),
+    ]);
+    const plan = planJsonImport(list, { ...base, lossless: true });
+    expect(plan.items.map((i) => i.record.id)).toEqual(['c3', 'c4']);
+    expect(plan.counts.skipped.unsupported).toBe(0);
   });
 });
 

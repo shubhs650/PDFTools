@@ -80,7 +80,8 @@ describe('annotation JSON v1 (M4-08)', () => {
   it('header and one record per comment, in the pane numbering; links are not comments', () => {
     const j = parse(jsonPieces(doc, header));
     expect(j.format).toBe(JSON_FORMAT);
-    expect(j.version).toBe(1);
+    expect(j.version).toBe(2);
+    expect(j).not.toHaveProperty('pdf');
     expect(j.exported).toBe('2026-09-29T12:00:00.000Z');
     expect(j.document).toEqual({ name: 'plan.pdf', pages: 2 });
     expect(j.annotations.map((r) => [r.number, r.page, r.id, r.type])).toEqual([
@@ -124,8 +125,19 @@ describe('annotation JSON v1 (M4-08)', () => {
 
   it('is valid JSON for any batch size, including one record per piece and none at all', () => {
     for (const batch of [1, 2, 200])
-      expect(parse(jsonPieces(doc, header, {}, () => null, batch)).annotations).toHaveLength(2);
+      expect(parse(jsonPieces(doc, header, {}, () => null, null, batch)).annotations).toHaveLength(
+        2,
+      );
     expect(parse(jsonPieces([], header)).annotations).toEqual([]);
+  });
+
+  it('ends with the comments PDF (ADR-025): its pages 1-based, the base64 in pieces', () => {
+    const base64 = 'QUJD'.repeat(400_000); // 1.6 MB: more than one piece
+    const pieces = [...jsonPieces(doc, header, {}, () => null, { base64, pages: [0, 3] })];
+    const j = JSON.parse(pieces.join('')) as { pdf: string; pdfPages: number[] };
+    expect(j.pdfPages).toEqual([1, 4]);
+    expect(j.pdf).toBe(base64);
+    expect(Math.max(...pieces.map((x) => x.length))).toBeLessThanOrEqual(1 << 20);
   });
 
   it('filtered scope, and measurement facts when the annotation is one', () => {

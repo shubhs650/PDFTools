@@ -1,5 +1,6 @@
 // Comment → Export Annotations (M4-08, §7.6, M3-Q1, M4-Q7): every comment (or
-// the ones the Comments pane shows) as CSV, XLSX or our JSON format v1. Rows
+// the ones the Comments pane shows) as CSV, XLSX or our JSON format v2 (with
+// the comments' own PDF objects, built in the Work worker: ADR-025). Rows
 // come from the CRS row builder (numbers, replies, statuses — the same as the
 // pane and the CRS); XLSX is built in the Work worker with ExcelJS (the CRS
 // route, no snapshots); CSV and JSON are produced here in small pieces with a
@@ -24,7 +25,14 @@ import { annotationTypeKey } from '../annotationTypes';
 import { objectsOf, commentsStore, viewOf } from '../comments/commentsStore';
 import { STATUS_KEYS } from '../comments/statusLabels';
 import { annotationState } from '../selection';
-import { jsonPieces, ROW_COLUMNS, type RowColumn } from './annotationData';
+import { syncLive } from '../../pages/pageOps';
+import {
+  exportedComments,
+  jsonPieces,
+  ROW_COLUMNS,
+  type JsonPdf,
+  type RowColumn,
+} from './annotationData';
 
 export type AnnotationFormat = 'csv' | 'xlsx' | 'json';
 
@@ -154,6 +162,22 @@ async function csvBlob(lines: string[][], signal: AbortSignal): Promise<Blob> {
   return new Blob(parts, { type: MIME.csv });
 }
 
+/**
+ * The comments' own PDF objects (ADR-025): the clipboard PDF of `ids` with
+ * their replies, review states, pop-ups, appearances, pictures and attached
+ * files, as base64 — built in the Work worker from the current state (rule 1).
+ */
+async function commentsPdf(docId: string, ids: string[], signal: AbortSignal): Promise<JsonPdf> {
+  await syncLive(docId);
+  signal.throwIfAborted();
+  const r = await workClient().run(
+    'copyComments',
+    { docId, ids, withReplies: true, base64: true },
+    { signal },
+  ).promise;
+  return { base64: r.base64 ?? '', pages: r.pages };
+}
+
 async function build(
   docId: string,
   name: string,
@@ -169,21 +193,22 @@ async function build(
       const kind = kindOf(docId, a);
       return kind ? { kind, value: measurementText(kind, a, scaleForMeasurement(docId, a)) } : null;
     };
+    const ids = exportedComments(all, { filter }).map((c) => c.id);
+    if (ids.length === 0) return null;
+    const pdf = await commentsPdf(docId, ids, signal);
     const parts: string[] = [];
-    let records = 0;
     for (const piece of jsonPieces(
       all,
       { name, pages, exported: new Date() },
       { filter },
       measureOf,
+      pdf,
     )) {
       signal.throwIfAborted();
       parts.push(piece);
-      records++;
       await tick();
     }
-    // Header and footer only: no comments.
-    return records <= 2 ? null : new Blob(parts, { type: MIME.json });
+    return new Blob(parts, { type: MIME.json });
   }
   const rows = await rowsOf(all, docId, o, signal);
   if (rows.length === 0) return null;

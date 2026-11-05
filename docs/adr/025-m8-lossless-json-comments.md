@@ -42,13 +42,14 @@ already builds a small PDF of the chosen comments in the Work worker (`copyComme
    the comments PDF built by `copyComments`) and `pdfPages` (its page i → the document's page).
    Format: `docs/formats/pdftools-annotations-v2.md`; v1 stays frozen.
 2. **Import** accepts v1 and v2. With `pdf`, the chosen comments are copied from it with
-   `importComments` (by `/NM`, page = `pdfPages` + offset, no placement transform) and applied
-   through `SaveTracker.applyObjects`: one undo step, narrow verified Ctrl+S, recovery. Without
-   it, re-creation as today, with three fixes (ink rect, state marker rect, measurement label
-   ids). A damaged `pdf` refuses the file.
-3. **Permissions.** The PDF field needs **copy** (as Copy, ADR-018 decision 7); without it the
-   export writes v2 records without `pdf` and says what was left out (owner Q2). Import needs
-   **annotate**; encrypted targets get the objects encrypted with their key.
+   `importComments` (roots by `/NM`, page = `pdfPages` + offset, placed as an import from a PDF)
+   and applied through `SaveTracker.applyObjects`: one undo step, narrow verified Ctrl+S,
+   recovery. Without it (v1), re-creation as today; v1 does not carry what would remove its small
+   differences (state marker and label rects and ids, the ink's saved rect). A damaged `pdf`
+   refuses the file.
+3. **Permissions.** Export Comments already needs **copy** (M4-08), which the PDF needs too.
+   Import needs **annotate** on the target; encrypted targets get the objects encrypted with
+   their key; the file's own PDF must open and allow copying.
 4. **Nothing app-private** goes into documents (rule 6): the copied objects are the comments' own.
 5. **ARCHITECTURE.md** (on acceptance, Rev 0.13): §7.6 Annotations row "own serializer → CSV /
    XLSX / JSON (JSON v2 carries the comments' PDF objects and imports losslessly, §7.1,
