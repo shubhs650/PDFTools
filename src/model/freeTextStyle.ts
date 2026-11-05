@@ -30,7 +30,13 @@ const fmt = (n: number): string => String(Math.round(n * 100) / 100);
 export function normalizeHex(hex: string): string | null {
   const m = /^#?([0-9a-f]{3}|[0-9a-f]{6})$/iu.exec(hex.trim());
   if (!m?.[1]) return null;
-  const h = m[1].length === 3 ? m[1].split('').map((c) => c + c).join('') : m[1];
+  const h =
+    m[1].length === 3
+      ? m[1]
+          .split('')
+          .map((c) => c + c)
+          .join('')
+      : m[1];
   return `#${h.toUpperCase()}`;
 }
 
