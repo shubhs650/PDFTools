@@ -76,8 +76,17 @@ describe('presets (M6-07, D-37, B5)', () => {
     expect(presetsFor('typewriter')[3]?.props).toEqual({ fontColor: '#0000FF' });
     expect(presetsFor('lineArrow')[4]?.props).toEqual({ strokeColor: '#008000' });
     expect(presetsFor('ink')[6]?.props).toEqual({ strokeColor: '#000000', color: '#000000' });
-    // Highlighter tints, never a full-strength colour over the text.
-    expect(presetsFor('highlight')[5]?.props).toEqual({ strokeColor: '#FFE14D', color: '#FFE14D' });
+    // Highlighter tints, never a full-strength colour over the text, at 50 % (M7-07).
+    expect(presetsFor('highlight')[5]?.props).toEqual({
+      strokeColor: '#FFE14D',
+      color: '#FFE14D',
+      opacity: 0.5,
+    });
+    for (const tool of ['highlight', 'highlightArea', 'inkHighlighter'] as const)
+      for (const p of presetsFor(tool)) expect(p.props.opacity, `${tool} ${p.id}`).toBe(0.5);
+    // The other markups and the pencil keep the opacity they have.
+    for (const tool of ['underline', 'ink', 'square'] as const)
+      for (const p of presetsFor(tool)) expect(p.props.opacity).toBeUndefined();
   });
 
   it('marks the shipped default as current: red, and yellow for the highlights', () => {
@@ -90,6 +99,8 @@ describe('presets (M6-07, D-37, B5)', () => {
       squiggly: [],
       inkHighlighter: [],
       textComment: [],
+      // M7-07: black Courier.
+      typewriter: ['black'],
     };
     for (const tool of STYLE_TOOLS) {
       const current = presetsFor(tool).filter((p) => isCurrent(p.props, SHIPPED_DEFAULTS[tool]));
@@ -120,10 +131,12 @@ describe('presets (M6-07, D-37, B5)', () => {
     expect(presetsFor('highlightArea')[3]?.props).toEqual({
       color: '#9CCBFF',
       strokeColor: '#9CCBFF',
+      opacity: 0.5,
     });
     expect(presetsFor('inkHighlighter')[0]?.props).toEqual({
       strokeColor: '#FF9C9C',
       color: '#FF9C9C',
+      opacity: 0.5,
     });
     expect(presetsFor('textComment')[5]?.props).toEqual({ strokeColor: '#FFFF00' });
   });
@@ -198,6 +211,34 @@ describe('presets as styles (M6-17)', () => {
         'line',
       ),
     ).toEqual([own]);
+  });
+
+  it('v2 → v3 (M7-07): unchanged highlight presets move to 50 %; changed ones are kept', () => {
+    // As v2 stored them: the highlight presets had no opacity.
+    const v2 = (tool: 'highlight' | 'highlightArea' | 'inkHighlighter') =>
+      seedStyles(tool).map((s) => {
+        const props = { ...s.props };
+        delete props.opacity;
+        return { ...s, props };
+      });
+    for (const tool of ['highlight', 'highlightArea', 'inkHighlighter'] as const)
+      expect(migrateStyles({ v: 2, styles: v2(tool) }, tool), tool).toEqual(seedStyles(tool));
+    const [red, purple, indigo] = v2('highlight') as [UserStyle, UserStyle, UserStyle];
+    // Renamed only: the look moves to 50 %, the name stays.
+    const renamed = { ...red, name: 'Urgent' };
+    // The user's own opacity, and the user's own colour, are kept.
+    const opaque = { ...purple, props: { ...purple.props, opacity: 1 } };
+    const recoloured = { ...indigo, props: { strokeColor: '#123456', color: '#123456' } };
+    const own = { id: 'a', name: 'Mine', props: { strokeColor: '#FFE14D', color: '#FFE14D' } };
+    expect(
+      migrateStyles({ v: 2, styles: [renamed, opaque, recoloured, own] }, 'highlight'),
+    ).toEqual([{ ...renamed, props: { ...red.props, opacity: 0.5 } }, opaque, recoloured, own]);
+    // v3 is read as stored (no second upgrade).
+    expect(migrateStyles({ v: 3, styles: [red] }, 'highlight')).toEqual([red]);
+    // Other tools' v2 lists are unchanged.
+    expect(migrateStyles({ v: 2, styles: seedStyles('square') }, 'square')).toEqual(
+      seedStyles('square'),
+    );
   });
 
   it('Reset brings a preset back; Reset All restores the presets and keeps the own styles', () => {

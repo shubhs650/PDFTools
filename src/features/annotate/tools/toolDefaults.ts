@@ -1,12 +1,15 @@
 // Per-tool default styles (M6-03, ADR-021 D-37, beta review B6): what a new
 // comment of each tool looks like. The shipped defaults are red (#FF0000)
-// text at 10 pt and red 1 pt lines and borders, no fill; highlight and the
+// text at 10 pt and red 1 pt lines and borders, no fill; the typewriter is
+// black Courier (M7-07, D-37 amendment); highlight, highlight area and free
+// highlight are at 50 % opacity (M7-07); highlight and the
 // sticky note stay yellow (owner, 2026-11-01; the highlight joined the styled
 // tools in M6-07 for its style palette, still yellow) and the measurement tools keep
 // their own style (measureTools.ts). The user's own defaults are stored as
 // overrides of the shipped ones (toolDefaultsStore.ts), so a later change
 // to a shipped default reaches everyone who has not set that property.
 // Pure: no store, no plugin.
+import { PdfStandardFont } from '@embedpdf/models';
 
 /** Tools with a default style; the ids are the plugin's tool ids. */
 export const STYLE_TOOLS = [
@@ -73,6 +76,15 @@ export const DEFAULT_LINE_WIDTH = 1;
 export const HIGHLIGHT_YELLOW = '#FFE14D';
 /** The plugin's sticky note and free highlight yellow (EmbedPDF 2.15.1 tool defaults). */
 export const NOTE_YELLOW = '#FFCD45';
+/**
+ * Highlight, Highlight Area and Free Highlight (M7-07, D-37 amendment, review
+ * 4d): half strength, so the text under them stays readable. Their palette
+ * presets use it too (stylePalette.ts).
+ */
+export const HIGHLIGHT_OPACITY = 0.5;
+/** The typewriter's text (M7-07, D-37 amendment, Q4): black, the standard Courier font. */
+export const TYPEWRITER_COLOR = '#000000';
+export const TYPEWRITER_FONT = PdfStandardFont.Courier;
 
 const TEXT: StyleProps = {
   fontColor: DEFAULT_RED,
@@ -91,9 +103,11 @@ const LINE: StyleProps = {
 /** The shipped defaults (B6). */
 export const SHIPPED_DEFAULTS: Readonly<Record<StyleTool, Readonly<StyleProps>>> = {
   freeText: TEXT,
-  // A typewriter is text on the page without a box (/IT /FreeTextTypeWriter).
+  // A typewriter is text on the page without a box (/IT /FreeTextTypeWriter),
+  // black Courier as on a typewriter (M7-07).
   typewriter: {
-    fontColor: DEFAULT_RED,
+    fontColor: TYPEWRITER_COLOR,
+    fontFamily: TYPEWRITER_FONT,
     fontSize: DEFAULT_FONT_SIZE,
     strokeWidth: 0,
     color: 'transparent',
@@ -109,7 +123,7 @@ export const SHIPPED_DEFAULTS: Readonly<Record<StyleTool, Readonly<StyleProps>>>
   // The pencil's color is also its deprecated `color` alias in the plugin.
   ink: { strokeColor: DEFAULT_RED, color: DEFAULT_RED, strokeWidth: DEFAULT_LINE_WIDTH },
   // Yellow, as before M6-03 (MARKUP_DEFAULTS); /C is kept in both fields.
-  highlight: { strokeColor: HIGHLIGHT_YELLOW, color: HIGHLIGHT_YELLOW, opacity: 1 },
+  highlight: { strokeColor: HIGHLIGHT_YELLOW, color: HIGHLIGHT_YELLOW, opacity: HIGHLIGHT_OPACITY },
   // M6-17: as markupModel.ts's MARKUP_DEFAULTS drew them.
   underline: { strokeColor: '#1E6FD9', color: '#1E6FD9', opacity: 1 },
   strikeout: { strokeColor: '#D93025', color: '#D93025', opacity: 1 },
@@ -119,10 +133,15 @@ export const SHIPPED_DEFAULTS: Readonly<Record<StyleTool, Readonly<StyleProps>>>
     color: HIGHLIGHT_YELLOW,
     strokeColor: HIGHLIGHT_YELLOW,
     strokeWidth: 0,
-    opacity: 1,
+    opacity: HIGHLIGHT_OPACITY,
   },
-  // As the plugin's own tools drew them.
-  inkHighlighter: { strokeColor: NOTE_YELLOW, color: NOTE_YELLOW, strokeWidth: 14, opacity: 1 },
+  // As the plugin's own tool drew it, at half strength since M7-07.
+  inkHighlighter: {
+    strokeColor: NOTE_YELLOW,
+    color: NOTE_YELLOW,
+    strokeWidth: 14,
+    opacity: HIGHLIGHT_OPACITY,
+  },
   textComment: { strokeColor: NOTE_YELLOW, opacity: 1 },
 };
 

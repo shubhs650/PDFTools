@@ -31,7 +31,13 @@ import {
   type Pt,
 } from './drawModel';
 import { openLinkEdit } from './linkEdit';
-import { defaultsPatch, HIGHLIGHT_YELLOW, isStyleTool, type StyleTool } from './toolDefaults';
+import {
+  defaultsPatch,
+  HIGHLIGHT_OPACITY,
+  HIGHLIGHT_YELLOW,
+  isStyleTool,
+  type StyleTool,
+} from './toolDefaults';
 import { defaultsFor, loadToolDefaults, toolDefaultsStore } from './toolDefaultsStore';
 
 type Handlers = ReturnType<HandlerFactory<PdfAnnotationObject>['create']>;
@@ -274,7 +280,7 @@ export const HIGHLIGHT_AREA_DEFAULTS = {
   color: HIGHLIGHT_YELLOW,
   strokeColor: HIGHLIGHT_YELLOW,
   strokeWidth: 0,
-  opacity: 1,
+  opacity: HIGHLIGHT_OPACITY,
   blendMode: PdfBlendMode.Multiply,
 } as const;
 

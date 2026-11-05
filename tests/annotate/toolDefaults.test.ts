@@ -1,7 +1,9 @@
+import { PdfBlendMode, PdfStandardFont } from '@embedpdf/models';
 import { IDBFactory } from 'fake-indexeddb';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { MARKUP_DEFAULTS, MARKUP_TOOLS } from '../../src/features/annotate/tools/markupModel';
 import { DRAW_TOOLS } from '../../src/features/annotate/tools/drawModel';
+import { HIGHLIGHT_AREA_DEFAULTS } from '../../src/features/annotate/tools/drawTools';
 import {
   cleanProps,
   defaultsPatch,
@@ -24,11 +26,19 @@ const opened = (): Promise<AppDb> => (db ??= AppDb.open({ factory }));
 const store = await import('../../src/features/annotate/tools/toolDefaultsStore');
 
 describe('shipped comment styles (M6-03, D-37, B6)', () => {
-  it('text box, typewriter and callout: red text at 10 pt', () => {
-    for (const tool of ['freeText', 'typewriter', 'freeTextCallout'] as const) {
+  it('text box and callout: red text at 10 pt; typewriter: black Courier at 10 pt (M7-07)', () => {
+    for (const tool of ['freeText', 'freeTextCallout'] as const) {
       expect(SHIPPED_DEFAULTS[tool]).toMatchObject({ fontColor: '#FF0000', fontSize: 10 });
       expect(SHIPPED_DEFAULTS[tool].color).toBe('transparent');
+      // Their font stays the plugin's (Helvetica).
+      expect(SHIPPED_DEFAULTS[tool].fontFamily).toBeUndefined();
     }
+    expect(SHIPPED_DEFAULTS.typewriter).toMatchObject({
+      fontColor: '#000000',
+      fontFamily: PdfStandardFont.Courier,
+      fontSize: 10,
+      color: 'transparent',
+    });
     // Text box and callout have a red 1 pt border; a typewriter has none.
     expect(SHIPPED_DEFAULTS.freeText).toMatchObject({ strokeColor: '#FF0000', strokeWidth: 1 });
     expect(SHIPPED_DEFAULTS.freeTextCallout).toMatchObject({
@@ -58,12 +68,14 @@ describe('shipped comment styles (M6-03, D-37, B6)', () => {
   });
 
   it('highlight and sticky note keep yellow; measurements keep their own', () => {
-    // The highlight has a style (its palette, M6-07), still the yellow of before.
+    // The highlight has a style (its palette, M6-07), still the yellow of
+    // before, at 50 % since M7-07.
     expect(SHIPPED_DEFAULTS.highlight).toEqual({
       strokeColor: MARKUP_DEFAULTS.highlight.color,
       color: MARKUP_DEFAULTS.highlight.color,
-      opacity: 1,
+      opacity: 0.5,
     });
+    expect(MARKUP_DEFAULTS.highlight.opacity).toBe(0.5);
     // M6-17: the other markups, the free highlight and the sticky note joined
     // the styled tools with the look they had before.
     for (const m of ['underline', 'strikeout', 'squiggly'] as const)
@@ -76,8 +88,18 @@ describe('shipped comment styles (M6-03, D-37, B6)', () => {
     expect(SHIPPED_DEFAULTS.inkHighlighter).toMatchObject({
       strokeColor: '#FFCD45',
       strokeWidth: 14,
+      opacity: 0.5,
     });
-    expect(SHIPPED_DEFAULTS.highlightArea).toMatchObject({ color: '#FFE14D', strokeWidth: 0 });
+    expect(SHIPPED_DEFAULTS.highlightArea).toMatchObject({
+      color: '#FFE14D',
+      strokeWidth: 0,
+      opacity: 0.5,
+    });
+    // The highlight area's tool defaults agree (its /BM /Multiply stays).
+    expect(HIGHLIGHT_AREA_DEFAULTS).toMatchObject({
+      opacity: 0.5,
+      blendMode: PdfBlendMode.Multiply,
+    });
     for (const m of ['measureDistance', 'measurePerimeter', 'measureArea'])
       expect(STYLE_TOOLS).not.toContain(m);
     expect(MARKUP_DEFAULTS.highlight.color).toBe('#FFE14D');

@@ -9,6 +9,7 @@
 import { PdfAnnotationBorderStyle } from '@embedpdf/models';
 import {
   cleanProps,
+  HIGHLIGHT_OPACITY,
   STYLE_TOOLS,
   isStyleTool,
   type StyleProps,
@@ -193,8 +194,11 @@ function presetProps(kind: StyleKind, hex: string, cloudy: boolean): StyleProps 
     case 'note':
       return { strokeColor: hex };
     case 'area':
-      // A filled box without a border, multiplied onto the page.
-      return { color: hex, strokeColor: hex };
+      // A filled box without a border, multiplied onto the page at half strength (M7-07).
+      return { color: hex, strokeColor: hex, opacity: HIGHLIGHT_OPACITY };
+    case 'highlight':
+      // Highlight and Free Highlight: half strength too (M7-07); /C in both fields.
+      return { strokeColor: hex, color: hex, opacity: HIGHLIGHT_OPACITY };
     case 'shape':
       return cloudy
         ? {
@@ -205,7 +209,6 @@ function presetProps(kind: StyleKind, hex: string, cloudy: boolean): StyleProps 
           }
         : { strokeColor: hex, cloudyBorderIntensity: 0 };
     case 'ink':
-    case 'highlight':
     case 'markup':
       // /C is kept in both fields (EmbedPDF's `color` is a deprecated alias).
       return { strokeColor: hex, color: hex };
@@ -275,9 +278,10 @@ export const MAX_FILE_BYTES = 256 * 1024;
 /**
  * The stored record's schema version (IndexedDB `commentStyles`, keyed by tool
  * id). v1 (M6-07) held the user's own styles only; v2 (M6-17) holds the whole
- * list, the presets included.
+ * list, the presets included; v3 (M7-07) is v2 with the highlight presets at
+ * 50 % opacity (a v2 preset the user never changed is brought up to it).
  */
-export const COMMENT_STYLES_VERSION = 2;
+export const COMMENT_STYLES_VERSION = 3;
 
 export interface StoredCommentStyles {
   v: typeof COMMENT_STYLES_VERSION;
@@ -339,9 +343,34 @@ function cleanStyles(list: readonly unknown[], tool: StyleTool, presets: boolean
 }
 
 /**
- * A tool's list from its stored record: v2 as stored (well-formed styles
- * only); v1 (M6-07: the user's own styles) after the presets; no record, or
- * one this version cannot read, is the presets alone.
+ * A preset's properties as v2 (M6-17 … M7-06) shipped them: the highlight
+ * kinds had no opacity of their own (the tool's 100 % applied).
+ */
+function v2PresetProps(tool: StyleTool, preset: PresetStyle): StyleProps {
+  const kind = KIND[tool];
+  if (kind !== 'highlight' && kind !== 'area') return preset.props;
+  const rest = { ...preset.props };
+  delete rest.opacity;
+  return rest;
+}
+
+/**
+ * v2 → v3 (M7-07): a preset still as v2 shipped it takes the preset's v3
+ * look (50 % for the highlight kinds); a preset the user changed, and the
+ * user's own styles, are kept as they are.
+ */
+function upgradeV2(tool: StyleTool, list: UserStyle[]): UserStyle[] {
+  return list.map((s) => {
+    const p = presetOf(tool, s);
+    return p && sameProps(s.props, v2PresetProps(tool, p)) ? { ...s, props: p.props } : s;
+  });
+}
+
+/**
+ * A tool's list from its stored record: v3 as stored (well-formed styles
+ * only); v2 the same, its unchanged presets brought up to v3; v1 (M6-07: the
+ * user's own styles) after the presets; no record, or one this version cannot
+ * read, is the presets alone.
  */
 export function migrateStyles(raw: unknown, tool: StyleTool): UserStyle[] {
   if (typeof raw !== 'object' || raw === null) return seedStyles(tool);
@@ -352,6 +381,8 @@ export function migrateStyles(raw: unknown, tool: StyleTool): UserStyle[] {
       0,
       MAX_STYLES,
     );
+  if (r.v === 2)
+    return upgradeV2(tool, cleanStyles(r.styles as unknown[], tool, true)).slice(0, MAX_STYLES);
   if (r.v !== COMMENT_STYLES_VERSION) return seedStyles(tool);
   return cleanStyles(r.styles as unknown[], tool, true).slice(0, MAX_STYLES);
 }
