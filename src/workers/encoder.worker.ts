@@ -120,4 +120,23 @@ serve<EncoderApi>(self, {
       bitmap.close();
     }
   },
+  // M7-08 (D-45): a pasted GIF, WebP or BMP becomes a PNG (PDFium places PNG and JPEG).
+  toPng: async ({ data }) => {
+    let bitmap: ImageBitmap;
+    try {
+      bitmap = await createImageBitmap(new Blob([data]));
+    } catch {
+      return null;
+    }
+    try {
+      const canvas = new OffscreenCanvas(bitmap.width, bitmap.height);
+      const ctx = canvas.getContext('2d');
+      if (!ctx) throw new Error('2d context unavailable');
+      ctx.drawImage(bitmap, 0, 0);
+      const png = await (await canvas.convertToBlob({ type: 'image/png' })).arrayBuffer();
+      return new Transfer({ png, width: bitmap.width, height: bitmap.height }, [png]);
+    } finally {
+      bitmap.close();
+    }
+  },
 });

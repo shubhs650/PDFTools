@@ -53,3 +53,25 @@ export function fitWithin(
   const k = Math.min(1, max / Math.max(size.width, size.height));
   return { width: size.width * k, height: size.height * k };
 }
+
+/** Pasted images (M7-08, D-45): the share of the page's width and height they may fill. */
+export const PASTE_PAGE_SHARE = 0.9;
+
+/** Points per CSS pixel: an image is taken at 96 dpi (PDF points are 1/72 in). */
+export const PT_PER_PX = 72 / 96;
+
+/**
+ * A pasted image's placed size in points (M7-08, D-45): its own size at
+ * 96 dpi, scaled down — aspect ratio kept, never enlarged — to fit inside
+ * `share` of the page's width and height.
+ */
+export function fitToPage(
+  px: { width: number; height: number },
+  page: { width: number; height: number },
+  share: number = PASTE_PAGE_SHARE,
+): { width: number; height: number } {
+  const w = px.width * PT_PER_PX;
+  const h = px.height * PT_PER_PX;
+  const k = Math.min(1, (page.width * share) / w, (page.height * share) / h);
+  return { width: w * k, height: h * k };
+}

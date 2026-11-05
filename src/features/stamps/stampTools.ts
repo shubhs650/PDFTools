@@ -26,7 +26,7 @@ import { requestProfile } from '../settings/profile/profileStore';
 import { currentAuthor } from '../annotate/authoring';
 import { capability, hostStore, renderEngine } from '../view/host';
 import { activeScheme, loadSchemes } from './schemes/schemeStore';
-import { stampStore } from './stampStore';
+import { stampStore, type StampImage } from './stampStore';
 
 interface Pos {
   x: number;
@@ -63,7 +63,7 @@ function rectAt(
 ) {
   const x = Math.min(Math.max(0, pos.x - size.width / 2), Math.max(0, page.width - size.width));
   const y = Math.min(Math.max(0, pos.y - size.height / 2), Math.max(0, page.height - size.height));
-  return { origin: { x, y }, size: { ...size } };
+  return { origin: { x, y }, size: { width: size.width, height: size.height } };
 }
 
 export async function placeDynamicStamp(
@@ -127,8 +127,24 @@ export async function placeImageStamp(
   pos?: Pos,
 ): Promise<string | null> {
   const img = stampStore.getState().image;
+  if (!img) return null;
+  return placeImage(docId, pageIndex, img, { subject: img.name, contents: img.name }, pos);
+}
+
+/**
+ * An Image Stamp of `img` (its placed size in points) centred on `pos` (the
+ * page's middle without one), kept on the page: one undo step. Also the
+ * pasted image's path (M7-08, D-45).
+ */
+export async function placeImage(
+  docId: string,
+  pageIndex: number,
+  img: Pick<StampImage, 'data' | 'mimeType' | 'width' | 'height'>,
+  text: { subject: string; contents?: string },
+  pos?: Pos,
+): Promise<string | null> {
   const page = pageSize(docId, pageIndex);
-  if (!img || !page) return null;
+  if (!page) return null;
   await requestProfile();
   const id = uuidV4();
   const annot = {
@@ -136,8 +152,8 @@ export async function placeImageStamp(
     id,
     pageIndex,
     rect: rectAt(pos ?? { x: page.width / 2, y: page.height / 2 }, img, page),
-    subject: img.name,
-    contents: img.name,
+    subject: text.subject,
+    ...(text.contents === undefined ? {} : { contents: text.contents }),
     flags: ['print'],
     created: new Date(),
   } as PdfStampAnnoObject;

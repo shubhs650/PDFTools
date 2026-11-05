@@ -19,10 +19,9 @@ import {
   copySelectedComments,
   cutBlocked,
   cutSelectedComments,
-  pasteBlocked,
-  pasteComments,
   selectedCount,
 } from '../annotate/transfer/copyPaste';
+import { installPaste, paste, pasteAnyBlocked } from '../annotate/transfer/pasteImage';
 
 const activeId = (): string | null => selectActive(documentStore.getState())?.meta.id ?? null;
 
@@ -98,13 +97,14 @@ export function registerSelectionCommands(): () => void {
       },
     }),
     // Ctrl+V (M4-21): the copied comments onto the page last clicked (in view)
-    // or the current page; from a context menu (M6-02), at the pointer. The
-    // browser keeps Ctrl+V when there is nothing to paste.
+    // or the current page; from a context menu (M6-02), at the pointer. An
+    // image on the system clipboard, when it is the newer copy, becomes an
+    // Image Stamp there (M7-08, D-45); Ctrl+V arrives as the paste event.
     registerCommand('edit.paste', {
-      disabledReason: () => pasteBlocked(activeId()),
+      disabledReason: () => pasteAnyBlocked(activeId()),
       run: async (_ctx, args) => {
         const id = activeId();
-        if (id) await pasteComments(id, 'current', args?.at);
+        if (id) await paste(id, args);
       },
     }),
     // With Select Comments, every comment on the page instead (M7-04).
@@ -120,6 +120,7 @@ export function registerSelectionCommands(): () => void {
       },
     }),
   ];
+  offs.push(installPaste());
   return () => {
     for (const off of offs) off();
   };

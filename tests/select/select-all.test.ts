@@ -37,6 +37,7 @@ vi.mock('../../src/app/store/documentStore', () => ({
   selectActive: () => ({ meta: { id: 'd1' } }),
 }));
 vi.mock('../../src/features/annotate/transfer/copyPaste', () => ({}));
+vi.mock('../../src/features/annotate/transfer/pasteImage', () => ({}));
 
 const { selectPageText, selectionSettled } = await import('../../src/features/select/commands');
 

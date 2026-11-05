@@ -29,6 +29,7 @@ import { removeThreads } from '../comments/threadActions';
 import { annotationState } from '../selection';
 import { announceTransfer } from './transferAnnounce';
 import { fixedReason } from '../properties/flagActions';
+import { tick } from './clipboardClock';
 
 export interface Clip {
   /** The clipboard PDF: empty pages with the copied comments. */
@@ -42,6 +43,8 @@ export interface Clip {
   bounds: Box | null;
   /** Cut: the originals are gone, so a paste onto their page is not shifted. */
   cut: boolean;
+  /** When it was copied (clipboardClock): a newer image on the system clipboard wins (M7-08). */
+  at: number;
 }
 
 export interface Box {
@@ -183,6 +186,7 @@ export async function copySelectedComments(docId: string, cut = false): Promise<
         count: r.count,
         bounds: boundsOf(roots.map((o) => o.rect)),
         cut,
+        at: tick(),
       },
     });
     announceTransfer(

@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { createFormatters } from '../../src/i18n/format';
-import { fitWithin, needsCjk, STAMP_SIZE, stampText } from '../../src/model/stamp';
+import { fitToPage, fitWithin, needsCjk, STAMP_SIZE, stampText } from '../../src/model/stamp';
 
 describe('dynamic stamp text (M3-14)', () => {
   it('lays out code and label, reviewer and date, document and revision', () => {
@@ -60,5 +60,39 @@ describe('dynamic stamp text (M3-14)', () => {
     const tall = fitWithin({ width: 300, height: 900 }, 200);
     expect(tall.height).toBe(200);
     expect(tall.width).toBeCloseTo(200 / 3, 9);
+  });
+});
+
+describe('pasted image size (M7-08, D-45)', () => {
+  const A4 = { width: 595.28, height: 841.89 };
+
+  it('fits a 4000 × 3000 screenshot inside 90 % of an A4 page, aspect ratio kept', () => {
+    const s = fitToPage({ width: 4000, height: 3000 }, A4);
+    expect(s.width).toBeCloseTo(A4.width * 0.9, 6);
+    expect(s.width / s.height).toBeCloseTo(4 / 3, 9);
+    expect(s.height).toBeLessThanOrEqual(A4.height * 0.9);
+  });
+
+  it('fits a tall image by the page height', () => {
+    const s = fitToPage({ width: 1000, height: 8000 }, A4);
+    expect(s.height).toBeCloseTo(A4.height * 0.9, 6);
+    expect(s.height / s.width).toBeCloseTo(8, 9);
+  });
+
+  it('places a small icon at its own size at 96 dpi, never enlarged', () => {
+    expect(fitToPage({ width: 64, height: 32 }, A4)).toEqual({ width: 48, height: 24 });
+  });
+
+  it('fits a landscape page by its own sides', () => {
+    const s = fitToPage({ width: 2000, height: 2000 }, { width: A4.height, height: A4.width });
+    expect(s.height).toBeCloseTo(A4.width * 0.9, 6);
+    expect(s.width).toBeCloseTo(s.height, 9);
+  });
+
+  it('takes the share it is given', () => {
+    expect(fitToPage({ width: 1000, height: 1000 }, { width: 100, height: 100 }, 0.5)).toEqual({
+      width: 50,
+      height: 50,
+    });
   });
 });

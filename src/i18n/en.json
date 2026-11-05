@@ -1130,7 +1130,7 @@
       },
       "transfer": {
         "title": "Comment transfer",
-        "body": "Comment → Import brings comments from another PDF or a {{app}} JSON export into the open file; Export writes them as CSV, Excel or JSON, and Export CRS builds a comment resolution sheet. Copy, Cut and Paste move the selected comments within a document and between open documents: {{copy}}, {{cut}} and {{paste}}, or right-click a comment ({{menu}} from the keyboard). {{paste}} puts them on the page you last clicked, at the same place; Paste from the right-click menu puts them where you clicked. Paste to Original Pages puts them on the pages they came from."
+        "body": "Comment → Import brings comments from another PDF or a {{app}} JSON export into the open file; Export writes them as CSV, Excel or JSON, and Export CRS builds a comment resolution sheet. Copy, Cut and Paste move the selected comments within a document and between open documents: {{copy}}, {{cut}} and {{paste}}, or right-click a comment ({{menu}} from the keyboard). {{paste}} puts them on the page you last clicked, at the same place; Paste from the right-click menu puts them where you clicked. Paste to Original Pages puts them on the pages they came from. With a picture on the clipboard instead (a screenshot, or an image copied in another app), {{paste}} or Paste puts it on the page as an image stamp, scaled down to fit inside the page and selected: the newest copy is pasted, the picture or the comments. Paste from the menu may ask you once to allow clipboard access."
       },
       "measure": {
         "title": "Measuring",
@@ -1943,6 +1943,16 @@
       "confirm": "Import",
       "cancel": "Cancel"
     }
+  },
+  "paste": {
+    "image": {
+      "subject": "Pasted image",
+      "done": "Image pasted.",
+      "tooLarge": "The image is larger than 20 MB.",
+      "unreadable": "This image couldn't be read. Copy it as a PNG or JPG image."
+    },
+    "nothing": "Nothing to paste. Copy comments or an image first.",
+    "refused": "The clipboard couldn't be read. Allow clipboard access for this site in the browser, or press {{key}}."
   },
   "pages": {
     "noDocument": "The document is no longer open.",
