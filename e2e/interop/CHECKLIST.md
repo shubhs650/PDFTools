@@ -383,7 +383,7 @@ Ctrl+S, then open the file in each viewer.
 | R3  | Chinese (Simplified) scan: copied text pastes as Chinese characters; search finds a two-character word.                     |         |             |
 | R4  | In PDFTools after reopening: Quick Find finds the same words; a second OCR run skips the recognized pages ("already text"). |         |             |
 
-## M7 — sticky note pop-ups (D-44) and text and border colours (ADR-024)
+## M7 — sticky note pop-ups (D-44), text and border colours (ADR-024), default styles (M7-07)
 
 ### S. Text colour apart from the border colour
 
@@ -409,3 +409,15 @@ and left open; a second note, "Closed note", its window closed.
 | T2  | The second note's pop-up is closed; opening it shows "Closed note". The reply and the Accepted status show in their comments list.       |         |             |
 | T3  | Move a pop-up, type a fourth line, close the other one and save; reopen in Triya PDF: the windows are where and as they were left there. |         |             |
 | T4  | A note of their own with a multi-line pop-up left open: Triya PDF opens its window at the same place, with every line.                   |         |             |
+
+### U. Default styles: 50 % highlights, black Courier typewriter (M7-07, D-37 amendment)
+
+File: `e2e/fixtures/self-made/m7-interop/default-styles__ctrl-s.pdf` (made by the app with the
+shipped defaults and saved with Ctrl+S): a Highlight over "Page 1", a Highlight Area, a Free
+Highlight stroke and a typewriter "Typewriter: black Courier".
+
+| #   | Check                                                                                                                                             | Acrobat | PDF-XChange |
+| --- | ------------------------------------------------------------------------------------------------------------------------------------------------- | ------- | ----------- |
+| U1  | Opened in their viewer: the three highlights are yellow and see-through (opacity 50 %, as their Properties show); "Page 1" is easy to read.       |         |             |
+| U2  | The typewriter text is black Courier, 10 pt; editing it there keeps Courier and black.                                                            |         |             |
+| U3  | A new Highlight, Highlight Area and Free Highlight in Triya PDF look the same as in the file; Reset All in the Comment Styles Palette keeps 50 %. |         |             |

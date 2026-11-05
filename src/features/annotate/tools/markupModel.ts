@@ -12,6 +12,7 @@ import {
   type PdfAnnotationObject,
   type Rect,
 } from '@embedpdf/models';
+import { HIGHLIGHT_OPACITY } from './toolDefaults';
 
 export const MARKUP_TOOLS = [
   'highlight',
@@ -30,7 +31,7 @@ export const isMarkupTool = (t: string): t is MarkupTool =>
 
 /** Our defaults (colors, opacity), not EmbedPDF's; the Properties pane changes them (M3-10). */
 export const MARKUP_DEFAULTS: Record<MarkupTool, { color: string; opacity: number }> = {
-  highlight: { color: '#FFE14D', opacity: 1 },
+  highlight: { color: '#FFE14D', opacity: HIGHLIGHT_OPACITY },
   underline: { color: '#1E6FD9', opacity: 1 },
   strikeout: { color: '#D93025', opacity: 1 },
   squiggly: { color: '#1E8E3E', opacity: 1 },

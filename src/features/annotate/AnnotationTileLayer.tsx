@@ -5,6 +5,9 @@
 // re-drawn after every committed edit of the document, and leave out the
 // selected annotations, which the annotation plugin's layer draws while they
 // are being edited. Encoding happens in the encoder worker (rule 1).
+// Neighbouring tiles overlap (TILE_OVERLAP_PX); each annotation tile hides
+// the strip it shares with the tile to its left and above (M7-07), as the
+// images are transparent: a 50 % highlight would otherwise show darker seams.
 import { useDocumentState } from '@embedpdf/core/react';
 import type { Tile } from '@embedpdf/plugin-tiling';
 import { useTilingCapability } from '@embedpdf/plugin-tiling/react';
@@ -12,6 +15,7 @@ import { useEffect, useRef, useState } from 'react';
 import { useDocuments } from '../../app/store/documentStore';
 import { isAbortError } from '../../engine/errors';
 import { renderEngine } from '../view/host';
+import { TILE_OVERLAP_PX } from '../view/plugins';
 import { useSelectedIds } from './selection';
 
 interface Frame {
@@ -106,20 +110,39 @@ function AnnotTileImg({
   );
   if (!url) return null;
   const k = scale / tile.srcScale;
+  // The strip shared with the tile to the left and above is left to that tile.
+  // A box with overflow hidden, not a clip-path: the browser snaps a box to
+  // whole pixels as it does the neighbour's image edge, so the two meet with
+  // no pixel drawn twice and none half-covered (a clip-path edge is blended).
+  const cutTop = tile.row > 0 ? TILE_OVERLAP_PX * k : 0;
+  const cutLeft = tile.col > 0 ? TILE_OVERLAP_PX * k : 0;
+  const width = tile.screenRect.size.width * k;
+  const height = tile.screenRect.size.height * k;
   return (
-    <img
-      src={url}
-      alt=""
-      draggable={false}
+    <div
       style={{
         position: 'absolute',
-        left: tile.screenRect.origin.x * k,
-        top: tile.screenRect.origin.y * k,
-        width: tile.screenRect.size.width * k,
-        height: tile.screenRect.size.height * k,
-        display: 'block',
+        left: tile.screenRect.origin.x * k + cutLeft,
+        top: tile.screenRect.origin.y * k + cutTop,
+        width: width - cutLeft,
+        height: height - cutTop,
+        overflow: 'hidden',
       }}
-    />
+    >
+      <img
+        src={url}
+        alt=""
+        draggable={false}
+        style={{
+          position: 'absolute',
+          left: -cutLeft,
+          top: -cutTop,
+          width,
+          height,
+          display: 'block',
+        }}
+      />
+    </div>
   );
 }
 

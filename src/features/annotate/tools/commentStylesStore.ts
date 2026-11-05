@@ -69,7 +69,7 @@ export function loadCommentStyles(): Promise<void> {
       const styles: UserStyles = {};
       for (const [tool, raw] of await db.listCommentStyles()) {
         if (!isStyleTool(tool)) continue;
-        // v1 records are rewritten as v2 the next time the tool's styles change.
+        // v1 and v2 records are rewritten as v3 the next time the tool's styles change.
         styles[tool] = migrateStyles(raw, tool);
       }
       commentStylesStore.setState((s) => ({

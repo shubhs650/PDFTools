@@ -1,15 +1,41 @@
 # Triya PDF — Progress
 
-_Last updated: 2026-11-05 (session 47: M7-06 sticky note pop-up windows, spike S23)_
+_Last updated: 2026-11-05 (session 48: M7-07 default styles, 50 % highlights and black Courier typewriter)_
 
 **Current milestone:** M7 — second beta review (plan in [docs/plan/M7.md](plan/M7.md), scope in
 [ADR-023](adr/023-m7-second-beta-review.md), **Accepted** 2026-11-04 with the recommended
-answers Q1–Q7; ARCHITECTURE.md Rev 0.12 after [ADR-024](adr/024-freetext-text-and-border-colours.md)). M7-01 … M7-06 done, plus separate text and border colours (ADR-024); next: M7-07. **Previous milestone:** M6 — Beta review (plan in [docs/plan/M6.md](plan/M6.md), scope changes in
+answers Q1–Q7; ARCHITECTURE.md Rev 0.12 after [ADR-024](adr/024-freetext-text-and-border-colours.md)). M7-01 … M7-07 done, plus separate text and border colours (ADR-024); next: M7-08. **Previous milestone:** M6 — Beta review (plan in [docs/plan/M6.md](plan/M6.md), scope changes in
 [ADR-021](adr/021-m6-beta-review.md), **Accepted** 2026-11-01; ARCHITECTURE.md Rev 0.10; M6-01 … M6-15 done, **M6 complete on the agent side** ([acceptance](acceptance/M6.md)); spike results in
 [ADR-022](adr/022-m6-spikes-s18-s22.md), **Accepted** 2026-11-02 (bookmark route B)). M5 — OCR: M5-01 … M5-04 done under [ADR-020](adr/020-m5-ocr.md); M5-05's owner
 interop is in the M6 pack (CHECKLIST §M6 R1–R4). Rev 0 (M0–M4) is complete on the agent side.
 
 ## Done
+
+- **Session 48 — M7-07 default styles (ADR-023 D-37 amendment; review 4d and 4b-ii; Q4).**
+  `SHIPPED_DEFAULTS`: Highlight, Highlight Area and Free Highlight at **50 % opacity**
+  (`HIGHLIGHT_OPACITY`; still yellow, the highlight area keeps `/BM /Multiply`; markupModel's
+  and drawTools' own defaults agree); **Typewriter black `#000000`, standard Courier**
+  (`PdfStandardFont.Courier`), 10 pt; text box and callout unchanged (red Helvetica). The
+  palette presets of the three highlight tools carry `opacity: 0.5`. `commentStyles` **v3**:
+  a v2 preset still as v2 shipped it (no opacity) moves to its v3 look; a preset the user
+  changed (colour, opacity) and the user's own styles are kept; the user's tool defaults are
+  overrides, so a set opacity survives without a migration. Help (Reviewing comments) names the
+  new defaults; the Comment Styles Palette window and the ribbon palettes show them (Yellow and
+  Black are current) and Reset / Reset All bring them back. **Found on the way and fixed:** the
+  annotation tiles overlap by `TILE_OVERLAP_PX` (2.5 px, the tiling plugin's), and as they are
+  transparent a 50 % highlight showed darker lines where tiles met; each annotation tile now
+  sits in a box with `overflow: hidden` that leaves out the strip shared with the tile to its
+  left and above (a box, not a clip-path, so the browser pixel-snaps both edges alike; a
+  clip-path left a lighter 1 px line). Saved file: PDFium writes `/CA .50196` (alpha as a byte,
+  128/255) and names the font resource `/FXF_Courier` in `/DA` (`0 0 0 rg /FXF_Courier 10 Tf`)
+  with `font: Courier` in `/DS` and `/BaseFont /Courier` in the appearance — the plan's `/Cour`
+  was a guess at the name; the font is the standard Courier. Tests: unit `toolDefaults`,
+  `stylePalette` (presets at 50 %, v2 → v3 with unchanged, renamed, re-coloured, opaque and own
+  styles), `markup`; e2e `default-styles.spec.ts` (typewriter /DA and /DS readback; three
+  highlights saved and reopened at 50 %, no seam in a pixel check across a tile row and column;
+  v2 records and a user override seeded in IndexedDB, the window, Reset All). Interop: CHECKLIST
+  §M7 U1–U3 with `e2e/fixtures/self-made/m7-interop/default-styles__ctrl-s.pdf`. Screenshots:
+  project files `m7-07/`.
 
 - **Session 47 — M7-06 sticky note pop-up windows (ADR-023 D-44; review 4c; bug B12; spike
   S23).** Spike S23 (`spikes/s23-popup/`, runs with the unit tests, needs qpdf) **works**: a
@@ -1936,9 +1962,11 @@ rel="noopener noreferrer">`; the commands `app.home` / `app.reportIssue` open th
 
 ## Next
 
-- **Agent:** M7-07 … M7-12 serially, each in its own thread; then the queued task (owner,
+- **Agent:** M7-08 … M7-12 serially, each in its own thread; then the queued task (owner,
   2026-11-05) to make comment export and import round-trip every property as XFDF does — pop-ups
   (`/Rect`, `/Open`) included.
+- **Owner (M7-07):** CHECKLIST §M7 U1–U3 (50 % highlights, black Courier typewriter) with
+  `e2e/fixtures/self-made/m7-interop/default-styles__ctrl-s.pdf`; also in the M7-12 pack.
 - **Owner (M7-06):** CHECKLIST §M7 T1–T4 (sticky note pop-ups both ways) in Acrobat Reader and
   PDF-XChange with `e2e/fixtures/self-made/m7-interop/sticky-note-popups__ctrl-s.pdf`; also in
   the M7-12 interop pack.

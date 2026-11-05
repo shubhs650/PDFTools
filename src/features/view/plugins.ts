@@ -50,6 +50,13 @@ export const POINTER_MODE = 'pointerMode';
 export const SELECT_COMMENTS_MODE = 'selectCommentsMode';
 export const HAND_MODE = 'handMode';
 
+/**
+ * How far neighbouring tiles overlap (screen px at the tile's scale). The
+ * annotation tiles clip it away again (AnnotationTileLayer), so a
+ * half-transparent markup is not drawn twice along the seams.
+ */
+export const TILE_OVERLAP_PX = 2.5;
+
 /** A drag shorter than this (CSS px) is a click, not a marquee. */
 export const MARQUEE_MIN_DRAG_PX = 5;
 
@@ -60,7 +67,7 @@ export const PLUGINS = [
   createPluginRegistration(RenderPluginPackage, { defaultImageType: 'image/png' }),
   createPluginRegistration(TilingPluginPackage, {
     tileSize: TILE_SIZE,
-    overlapPx: 2.5,
+    overlapPx: TILE_OVERLAP_PX,
     extraRings: 0,
     defaultImageType: 'image/png',
   }),
