@@ -13,9 +13,10 @@ import { stubSavePicker } from './support/savePicker.ts';
 
 // M4-20 (§7.1, ADR-018): Comment → Import Comments from another PDF (object
 // copy: appearances, replies and states travel as they are) or from our JSON
-// v1 export (re-created); filters, page mapping, a preview of what is
-// skipped, one undo step, a narrow verified save that reopens; a restricted
-// source is refused (rule 9); the dialog works by keyboard alone.
+// export (v2: object copy from its comments PDF, ADR-025; v1: re-created);
+// filters, page mapping, a preview of what is skipped, one undo step, a
+// narrow verified save that reopens; a restricted source is refused (rule 9);
+// the dialog works by keyboard alone.
 
 const b64 = (b: Uint8Array) => Buffer.from(b).toString('base64');
 
@@ -146,7 +147,7 @@ test('from our JSON export, by keyboard: shifted a page; a newer version is refu
 }) => {
   await page.goto('/');
   await cap(page, 'annotate', 'setProfile', 'Ana de Vries');
-  // A JSON v1 export of 2 pages × 3 rectangles (M4-08).
+  // A JSON export of 2 pages × 3 rectangles (M4-08; v2 since ADR-025).
   const src = await open(page, markedContractPdf(2, 3), 'pump.pdf');
   await expect.poll(async () => (await list(page, src)).length).toBe(6);
   await stubSavePicker(page);
@@ -165,7 +166,7 @@ test('from our JSON export, by keyboard: shifted a page; a newer version is refu
   const id = await open(page, simplePdf(2));
   // A newer version first: refused with a message.
   const newer = JSON.parse(json.toString('utf8')) as { version: number };
-  newer.version = 2;
+  newer.version = 3;
   await stubPicker(page, 'newer.json', Buffer.from(JSON.stringify(newer)), 'application/json');
   await page.getByRole('tab', { name: 'Comment' }).click();
   const button = commentBar(page).getByRole('button', { name: 'Import Comments' });

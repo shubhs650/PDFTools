@@ -1,16 +1,16 @@
-// Annotation export data (M4-08, §7.6, M4-Q7, ADR-018): the comments of a
-// document as CSV/XLSX rows (the CRS row builder's numbers, replies and
-// statuses, M3-Q1) and as our own JSON format v1 — import-ready, so each
-// record carries EmbedPDF's full annotation model (geometry, style, text,
-// ids, reply links) plus its replies and review-state history. Pure; the JSON
-// is produced in pieces so a large document never builds one huge string in
-// a single main-thread task (rule 1).
+// Annotation export data (M4-08, §7.6, M4-Q7, ADR-018, ADR-025): the comments
+// of a document as CSV/XLSX rows (the CRS row builder's numbers, replies and
+// statuses, M3-Q1) and as our own JSON format v2 — readable records (EmbedPDF's
+// annotation model: geometry, style, text, ids, reply links, plus replies and
+// review-state history) and the comments' own PDF objects (`pdf`, base64; the
+// lossless import). Pure; the JSON is produced in pieces so a large document
+// never builds one huge string in a single main-thread task (rule 1).
 import { PdfAnnotationSubtype, type PdfAnnotationObject } from '@embedpdf/models';
 import { commentsOf, isStateReply, matches, type CommentFilter } from '../comments/commentsModel';
 import { buildThread, childrenOf } from '../comments/thread';
 
 export const JSON_FORMAT = 'pdftools-annotations';
-export const JSON_VERSION = 1;
+export const JSON_VERSION = 2;
 
 /** The EmbedPDF subtype as a lower-case name ("square", "freeText" → "freetext"). */
 export function subtypeName(type: PdfAnnotationSubtype): string {
@@ -52,21 +52,32 @@ export interface JsonHeader {
   exported: Date;
 }
 
+/** The comments PDF (ADR-025): base64, and the document page of each of its pages (0-based). */
+export interface JsonPdf {
+  base64: string;
+  pages: readonly number[];
+}
+
 /** Measurement facts for a record, when the annotation is one (M3-16). */
 export type MeasureOf = (a: PdfAnnotationObject) => { kind: string; value: string } | null;
 
+/** The comments an export writes (the Comments pane's set, filtered when asked). */
+export const exportedComments = (all: readonly PdfAnnotationObject[], scope: ExportScope = {}) =>
+  commentsOf(all).filter((c) => !scope.filter || matches(c, scope.filter));
+
 /**
  * The JSON document in pieces (valid only when joined): a header, then one
- * record per comment, `batch` records per piece.
+ * record per comment, `batch` records per piece, then the comments PDF.
  */
 export function* jsonPieces(
   all: readonly PdfAnnotationObject[],
   header: JsonHeader,
   scope: ExportScope = {},
   measureOf: MeasureOf = () => null,
+  pdf: JsonPdf | null = null,
   batch = 200,
 ): Generator<string> {
-  const comments = commentsOf(all).filter((c) => !scope.filter || matches(c, scope.filter));
+  const comments = exportedComments(all, scope);
   const kids = childrenOf(all);
   yield `{"format":${JSON.stringify(JSON_FORMAT)},"version":${String(JSON_VERSION)},"exported":${JSON.stringify(header.exported.toISOString())},"document":${JSON.stringify({ name: header.name, pages: header.pages })},"annotations":[`;
   let buf: string[] = [];
@@ -110,7 +121,15 @@ export function* jsonPieces(
     }
   }
   if (buf.length) yield (comments.length > buf.length ? ',' : '') + buf.join(',');
-  yield ']}\n';
+  if (!pdf) {
+    yield ']}\n';
+    return;
+  }
+  yield `],"pdfPages":${JSON.stringify(pdf.pages.map((p) => p + 1))},"pdf":"`;
+  // The base64 in pieces too: a big picture or attached file is a long string.
+  const PIECE = 1 << 20;
+  for (let i = 0; i < pdf.base64.length; i += PIECE) yield pdf.base64.slice(i, i + PIECE);
+  yield '"}\n';
 }
 
 /** The CSV/XLSX columns of the annotation export, in order. */

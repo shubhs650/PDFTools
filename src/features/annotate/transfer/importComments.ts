@@ -1,9 +1,10 @@
-// Comment → Import Comments (M4-20, §7.1, ADR-018): comments from another PDF
-// (never opened as a tab; a password if encrypted; its copy permission, rule
-// 9) or from our JSON v1 export, into the active document as one undo step.
-// A PDF source goes through the Work worker's object copy and the Render
-// worker's reopen (ADR-018 decisions 2–4: every appearance, reply, state and
-// measurement travels as is); a JSON source is re-created through the
+// Comment → Import Comments (M4-20, §7.1, ADR-018, ADR-025): comments from
+// another PDF (never opened as a tab; a password if encrypted; its copy
+// permission, rule 9) or from our JSON export, into the active document as one
+// undo step. A PDF source, and a JSON v2 file's comments PDF, go through the
+// Work worker's object copy and the Render worker's reopen (ADR-018 decisions
+// 2–4: every appearance, reply, state, pop-up, picture, attached file and
+// measurement travels as is); a JSON v1 file is re-created through the
 // annotation plugin (PDFium draws the appearances, rule 6). The main thread
 // only sends options and receives counts (rule 1); both are cancellable.
 import type { PdfAnnotationObject, PdfAnnotationState } from '@embedpdf/models';
@@ -33,6 +34,7 @@ import {
   planJsonImport,
   reviveModel,
   type JsonError,
+  type JsonPdfPart,
   type JsonRecord,
 } from './jsonImport';
 import { announceTransfer } from './transferAnnounce';
@@ -60,6 +62,8 @@ export interface ImportSource {
   pages: number;
   comments: SummaryComment[];
   records?: JsonRecord[];
+  /** JSON v2: the comments' own PDF objects (lossless import, ADR-025). */
+  pdf?: JsonPdfPart;
   /** The file could not be used. */
   error?: MessageKey;
 }
@@ -114,6 +118,7 @@ const JSON_ERRORS: Record<JsonError, MessageKey> = {
   version: msg('transfer.json.version'),
   shape: msg('transfer.json.shape'),
   tooLarge: msg('transfer.json.tooLarge'),
+  pdf: msg('transfer.json.shape'),
 };
 
 const isJson = (f: File) => /\.json$/iu.test(f.name) || f.type === 'application/json';
@@ -157,11 +162,16 @@ async function readJson(file: File): Promise<ImportSource> {
   const r = parseAnnotationJson(await file.text());
   if (!r.ok) return { ...base, pages: 0, comments: [], error: JSON_ERRORS[r.error] };
   const records = r.doc.records;
+  const pdf = r.doc.pdf;
+  // The comments PDF must open (Work worker, rule 1): a damaged one refuses the file.
+  if (pdf && !(await pdfOpens(pdf)))
+    return { ...base, pages: 0, comments: [], error: JSON_ERRORS.pdf };
   const maxPage = records.reduce((m, x) => Math.max(m, x.page + 1), 0);
   return {
     ...base,
     pages: Math.max(r.doc.pages ?? 0, maxPage),
     records,
+    ...(pdf ? { pdf } : {}),
     comments: records.map((x) => ({
       page: x.page,
       author: x.author ?? '',
@@ -170,6 +180,17 @@ async function readJson(file: File): Promise<ImportSource> {
       replies: x.replies.length,
     })),
   };
+}
+
+/** Whether a JSON v2 file's comments PDF opens and may be copied from. */
+async function pdfOpens(pdf: JsonPdfPart): Promise<boolean> {
+  try {
+    const s = await workClient().run('commentSource', { base64: pdf.base64 }).promise;
+    return s.copyAllowed;
+  } catch (err) {
+    recordError('transfer.jsonPdf', err);
+    return false;
+  }
 }
 
 async function readPdf(name: string, bytes: ArrayBuffer, password?: string): Promise<ImportSource> {
@@ -243,6 +264,7 @@ function jsonPlan(docId: string, src: ImportSource, o: ImportOptions) {
     withReplies: o.withReplies,
     targetPages: documentStore.getState().docs[docId]?.meta.pageCount ?? 0,
     existing: existingIds(docId),
+    lossless: Boolean(src.pdf),
   });
 }
 
@@ -351,6 +373,7 @@ async function importJson(
   src: ImportSource,
   o: ImportOptions,
 ): Promise<number | null> {
+  if (src.pdf) return importJsonPdf(docId, src, src.pdf, o);
   const scope = annotationCapability()?.forDocument(docId);
   if (!scope) return null;
   const { items } = jsonPlan(docId, src, o);
@@ -400,4 +423,48 @@ async function importJson(
   });
   if (made > 0) documentStore.getState().markDirty(docId);
   return made;
+}
+
+/**
+ * A JSON v2 file (ADR-025): the planned comments are copied from its comments
+ * PDF, exactly as Paste and Import from a PDF copy (object copy, one undo
+ * step, the next Ctrl+S writes them). The PDF's page i is the document page
+ * `pdf.pages[i]`; the offset moves it as for any import.
+ */
+async function importJsonPdf(
+  docId: string,
+  src: ImportSource,
+  pdf: JsonPdfPart,
+  o: ImportOptions,
+): Promise<number | null> {
+  const { items } = jsonPlan(docId, src, o);
+  if (items.length === 0) return 0;
+  const pageCount = documentStore.getState().docs[docId]?.meta.pageCount ?? 0;
+  const pageMap = pdf.pages.map((p) => {
+    const target = p + o.offset;
+    return target >= 0 && target < pageCount ? target : null;
+  });
+  let roots = 0;
+  const ok = await runTransfer(docId, msg('transfer.importing'), async (progress, onCancel) => {
+    const job = workClient().run(
+      'transferComments',
+      {
+        docId,
+        source: { base64: pdf.base64 },
+        spec: {
+          onlyIds: items.map((i) => i.record.id),
+          pageMap,
+          withReplies: o.withReplies,
+        },
+      },
+      { onProgress: progress },
+    );
+    onCancel(() => {
+      job.cancel();
+    });
+    const r = await job.promise;
+    roots = r.counts.roots;
+    return { objects: r.objects, firstNew: r.firstNew };
+  });
+  return ok ? roots : null;
 }

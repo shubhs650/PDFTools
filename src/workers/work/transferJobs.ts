@@ -9,6 +9,7 @@
 import type { PdfiumNative } from '@embedpdf/engines/pdfium';
 import type { WrappedPdfiumModule } from '@embedpdf/pdfium';
 import { RpcError } from '../../engine/errors';
+import { fromBase64 } from '../../model/base64';
 import { allows } from '../../model/permissions';
 import { PdfReader } from '../../model/pdf/reader';
 import { concatBytes } from '../render/save/bytes';
@@ -29,9 +30,19 @@ import {
 
 type Inflate = (bytes: Uint8Array) => Promise<Uint8Array>;
 
+/** A source PDF: its bytes, or base64 (a JSON v2 comment export's PDF, ADR-025; decoded here, rule 1). */
 export interface TransferSource {
-  bytes: ArrayBuffer;
+  bytes?: ArrayBuffer;
+  base64?: string;
   password?: string;
+}
+
+/** The source's bytes (`pdf-invalid` when neither is usable). */
+function bytesOf(source: TransferSource): ArrayBuffer {
+  if (source.bytes) return source.bytes;
+  const b = source.base64 === undefined ? null : fromBase64(source.base64);
+  if (!b) throw new RpcError('pdf-invalid', 'The source is not a PDF');
+  return b.buffer as ArrayBuffer;
 }
 
 /** The import's options as they cross the worker boundary (plain data). */
@@ -51,6 +62,8 @@ export interface TransferSpec {
   shift?: { dx: number; dy: number };
   /** Count only (the dialog's preview). */
   dryRun?: boolean;
+  /** Only these comments (thread roots by /NM): a JSON v2 import's plan (ADR-025). */
+  onlyIds?: string[];
 }
 
 /** What the dialog shows and the announcement says. */
@@ -83,11 +96,12 @@ async function withPdfium<T>(
   mod: WrappedPdfiumModule,
   native: PdfiumNative,
   source: TransferSource,
-  fn: (copyAllowed: boolean, encrypted: boolean) => Promise<T>,
+  fn: (copyAllowed: boolean, encrypted: boolean, bytes: Uint8Array) => Promise<T>,
 ): Promise<T> {
+  const bytes = bytesOf(source);
   const doc = await native
     .openDocumentBuffer(
-      { id: `transfer-${String(++seq)}`, content: source.bytes.slice(0) },
+      { id: `transfer-${String(++seq)}`, content: bytes.slice(0) },
       source.password === undefined ? {} : { password: source.password },
     )
     .toPromise()
@@ -100,7 +114,7 @@ async function withPdfium<T>(
     const ptr = docPtrOf(native, doc.id);
     const sec = securityOf(mod, ptr);
     const owner = Boolean(rawCall(mod, 'EPDF_IsOwnerUnlocked', ptr));
-    return await fn(owner || allows(sec, 'copy'), sec.revision >= 0);
+    return await fn(owner || allows(sec, 'copy'), sec.revision >= 0, new Uint8Array(bytes));
   } finally {
     await native.closeDocument(doc).toPromise();
   }
@@ -118,9 +132,9 @@ export async function commentSource(
   source: TransferSource,
   inflate: Inflate,
 ): Promise<SourceSummary> {
-  return withPdfium(mod, native, source, async (copyAllowed, encrypted) => {
+  return withPdfium(mod, native, source, async (copyAllowed, encrypted, bytes) => {
     if (!copyAllowed) return { pages: 0, comments: [], copyAllowed, encrypted };
-    const src = await readerOf(new Uint8Array(source.bytes), inflate, source.password);
+    const src = await readerOf(bytes, inflate, source.password);
     return { ...(await summarize(src)), copyAllowed, encrypted };
   });
 }
@@ -167,14 +181,18 @@ export async function transferComments(
   slice: JobSlice,
   progress: Progress,
 ): Promise<{ objects: TransferObject[]; firstNew: number; counts: TransferCounts }> {
-  return withPdfium(mod, native, source, async (copyAllowed) => {
+  return withPdfium(mod, native, source, async (copyAllowed, _encrypted, srcBytes) => {
     if (!copyAllowed)
       throw new RpcError('permission-denied:copy', 'The source does not allow copying');
-    const src = await readerOf(new Uint8Array(source.bytes), inflate, source.password);
+    const src = await readerOf(srcBytes, inflate, source.password);
     await slice.checkpoint();
+    const only = spec.onlyIds ? new Set((await findRoots(src, spec.onlyIds)).keys()) : undefined;
     const bytes = docs.liveBytes(docId);
     const tgt = await readerOf(bytes, inflate, docs.passwordOf(docId));
-    const r = await importComments(src, tgt, bytes, optionsOf(spec, slice, progress));
+    const r = await importComments(src, tgt, bytes, {
+      ...optionsOf(spec, slice, progress),
+      ...(only ? { only } : {}),
+    });
     return {
       objects: r.objects.map((o) => ({ num: o.num, gen: o.gen, bytes: o.bytes })),
       firstNew: r.report.firstNew,

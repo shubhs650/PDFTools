@@ -1,6 +1,8 @@
 # PDFTools annotation export — JSON format, version 1
 
-Written by Comment → Export Annotations (M4-08, §7.6, M4-Q7). Version 1 is also the **import**
+Superseded for writing by [version 2](pdftools-annotations-v2.md) (M8-01, ADR-025), which adds the
+comments' own PDF objects; version 1 files still import. Written by Comment → Export Annotations
+(M4-08, §7.6, M4-Q7) until M8. Version 1 is also the **import**
 format of Comment → Import Comments (M4-20, ADR-018). **Frozen** since M4-20 shipped: later
 changes get a new `version`, and an import refuses a version it does not know.
 

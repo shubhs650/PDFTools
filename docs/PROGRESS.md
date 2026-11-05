@@ -1,15 +1,39 @@
 # Triya PDF — Progress
 
-_Last updated: 2026-11-05 (session 53: M7-12 acceptance)_
+_Last updated: 2026-11-05 (session 54: M8-01 lossless JSON comments)_
 
 **Current milestone:** M7 — second beta review (plan in [docs/plan/M7.md](plan/M7.md), scope in
 [ADR-023](adr/023-m7-second-beta-review.md), **Accepted** 2026-11-04 with the recommended
-answers Q1–Q7; ARCHITECTURE.md Rev 0.12 after [ADR-024](adr/024-freetext-text-and-border-colours.md)). M7-01 … M7-12 done, plus separate text and border colours (ADR-024): **M7 complete on the agent side** ([acceptance](acceptance/M7.md)); next: the owner's interop §M7 run, then the queued comment export/import round-trip task. **Previous milestone:** M6 — Beta review (plan in [docs/plan/M6.md](plan/M6.md), scope changes in
+answers Q1–Q7; ARCHITECTURE.md Rev 0.12 after [ADR-024](adr/024-freetext-text-and-border-colours.md)). M7-01 … M7-12 done, plus separate text and border colours (ADR-024): **M7 complete on the agent side** ([acceptance](acceptance/M7.md)); next: the owner's interop §M7 run, and **M8 — lossless JSON comment export and import (JSON v2)**, plan [docs/plan/M8.md](plan/M8.md) and [ADR-025](adr/025-m8-lossless-json-comments.md) (**Accepted** by the owner 2026-11-05, ARCHITECTURE.md Rev 0.13; M8-01 done in PR #94; XFDF/FDF deferred by the owner). **Previous milestone:** M6 — Beta review (plan in [docs/plan/M6.md](plan/M6.md), scope changes in
 [ADR-021](adr/021-m6-beta-review.md), **Accepted** 2026-11-01; ARCHITECTURE.md Rev 0.10; M6-01 … M6-15 done, **M6 complete on the agent side** ([acceptance](acceptance/M6.md)); spike results in
 [ADR-022](adr/022-m6-spikes-s18-s22.md), **Accepted** 2026-11-02 (bookmark route B)). M5 — OCR: M5-01 … M5-04 done under [ADR-020](adr/020-m5-ocr.md); M5-05's owner
 interop is in the M6 pack (CHECKLIST §M6 R1–R4). Rev 0 (M0–M4) is complete on the agent side.
 
 ## Done
+
+- **Session 54 — M8-01 lossless JSON comment export and import (ADR-025, accepted).** The owner
+  asked (2026-11-05) that comment export and import keep every property; XFDF/FDF were planned
+  first and deferred by the owner (2–3 weeks, with a large varied dataset). **Measured** first
+  with a new round-trip harness (`e2e/json-roundtrip.spec.ts`, `e2e/support/annotDiff.ts`: qpdf's
+  JSON view of the original and of the re-imported, saved file, every annotation by `/NM`, key by
+  key, streams by a hash of their decoded data, pop-ups in full; pixels with `pdftoppm` when
+  installed). JSON v1 skipped stamps and Attach File comments, dropped sticky-note pop-ups, grew
+  ink rects by ~1 pt, moved hidden state markers and renamed measurement labels; every style,
+  flag, ADR-024 colour, measurement, reply and state already round-tripped. **JSON v2**
+  (`docs/formats/pdftools-annotations-v2.md`): v1's records plus `pdf` (base64 of the clipboard
+  PDF that Copy builds, `copyComments` with the new `base64` option, in the Work worker) and
+  `pdfPages`. Import (`parseAnnotationJson` reads v1 and v2; `pdf` validated as base64 `%PDF-`
+  and opened in the Work worker, `commentSource` with a base64 source) copies the planned
+  comments by object copy (`transferComments` with the new `onlyIds`, page map from `pdfPages` +
+  offset): one undo step, narrow verified Ctrl+S. v1 still imports by re-creation. New
+  `src/model/base64.ts`. Help (Comment transfer) says a JSON export keeps every comment exactly.
+  Tests: unit `tests/model/base64.test.ts`, v2 cases in `tests/transfer/json-import.test.ts` and
+  `tests/annotate/annotation-export.test.ts`; e2e: the nine interop files and an in-app
+  properties file round-trip with no key, stream or pixel difference, and a v1 file still imports
+  (@smoke); perf `e2e/perf/json-roundtrip.spec.ts` (1,000 comments exported and imported into
+  the 2,000-page stand-in, no long task). Chromium 153 in the container still crashes the two
+  file-handle tests that fail on `main` too (comment-transfer "from a PDF", comment-copy-paste
+  "three comments"); CI is the reference.
 
 - **Session 53 — M7-12 M7 acceptance (ADR-023, ADR-024).** [docs/acceptance/M7.md](acceptance/M7.md):
   every review observation (1 … F1) and bug (B1 … B15) mapped to its task and tests.

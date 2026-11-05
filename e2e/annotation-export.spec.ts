@@ -45,7 +45,7 @@ async function exportAs(page: Page, format: string): Promise<{ name: string; byt
   return { name: f.name, bytes: Buffer.from(f.b64, 'base64') };
 }
 
-test('50 comments exported as XLSX, CSV and JSON v1, and read back', async ({ page }) => {
+test('50 comments exported as XLSX, CSV and JSON v2, and read back', async ({ page }) => {
   await open(page, markedContractPdf(10, 5));
 
   const xlsx = await exportAs(page, 'Excel workbook (.xlsx)');
@@ -79,6 +79,8 @@ test('50 comments exported as XLSX, CSV and JSON v1, and read back', async ({ pa
   const doc = JSON.parse(json.bytes.toString('utf8')) as {
     format: string;
     version: number;
+    pdf: string;
+    pdfPages: number[];
     annotations: {
       number: number;
       page: number;
@@ -88,8 +90,11 @@ test('50 comments exported as XLSX, CSV and JSON v1, and read back', async ({ pa
     }[];
   };
   expect(doc.format).toBe('pdftools-annotations');
-  expect(doc.version).toBe(1);
+  expect(doc.version).toBe(2);
   expect(doc.annotations).toHaveLength(50);
+  // The comments' own PDF objects (ADR-025): every page that has comments.
+  expect(doc.pdfPages).toEqual([1, 2, 3, 4, 5, 6, 7, 8, 9, 10]);
+  expect(Buffer.from(doc.pdf, 'base64').subarray(0, 5).toString('latin1')).toBe('%PDF-');
   expect(doc.annotations[0]).toMatchObject({ number: 1, page: 1, type: 'square' });
   expect(doc.annotations[0]?.contents).toBe('Comment m-0-0');
   expect(doc.annotations[0]?.annotation.rect).toBeTruthy();

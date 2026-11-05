@@ -1154,7 +1154,7 @@
       },
       "transfer": {
         "title": "Comment transfer",
-        "body": "Comment → Import brings comments from another PDF or a {{app}} JSON export into the open file; Export writes them as CSV, Excel or JSON, and Export CRS builds a comment resolution sheet. Copy, Cut and Paste move the selected comments within a document and between open documents: {{copy}}, {{cut}} and {{paste}}, or right-click a comment ({{menu}} from the keyboard). {{paste}} puts them on the page you last clicked, at the same place; Paste from the right-click menu puts them where you clicked. Paste to Original Pages puts them on the pages they came from. Pasting a picture is described under Pasting pictures."
+        "body": "Comment → Import brings comments from another PDF or a {{app}} JSON export into the open file; Export writes them as CSV, Excel or JSON, and Export CRS builds a comment resolution sheet. A JSON export keeps every comment exactly as it is (its look, replies, statuses, stamps and pictures, attached files and sticky note windows), so importing it brings the same comments back. Copy, Cut and Paste move the selected comments within a document and between open documents: {{copy}}, {{cut}} and {{paste}}, or right-click a comment ({{menu}} from the keyboard). {{paste}} puts them on the page you last clicked, at the same place; Paste from the right-click menu puts them where you clicked. Paste to Original Pages puts them on the pages they came from. Pasting a picture is described under Pasting pictures."
       },
       "paste": {
         "title": "Pasting pictures",
@@ -1966,8 +1966,8 @@
       "skipMissing_other": "{{n}} on pages this document doesn't have",
       "skipDuplicate_one": "{{n}} already in this document",
       "skipDuplicate_other": "{{n}} already in this document",
-      "skipUnsupported_one": "{{n}} of a type a JSON export can't bring (stamps)",
-      "skipUnsupported_other": "{{n}} of a type a JSON export can't bring (stamps)",
+      "skipUnsupported_one": "{{n}} of a type an older JSON export can't bring (stamps, attached files)",
+      "skipUnsupported_other": "{{n}} of a type an older JSON export can't bring (stamps, attached files)",
       "confirm": "Import",
       "cancel": "Cancel"
     }
