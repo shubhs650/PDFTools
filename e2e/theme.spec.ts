@@ -226,21 +226,18 @@ test('the sticky note window and the page menu pass axe in dark', async ({ page 
   await page.goto('/');
   await cap(page, 'annotate', 'setProfile', 'Ana de Vries');
   const id = await openPdf(page, simplePdf(2), 'notes.pdf');
-  const box = await page.locator('[data-page="0"] .page-content').boundingBox();
-  if (!box) throw new Error('page not laid out');
-  await page.mouse.click(box.x + box.width * 0.6, box.y + 300, { button: 'right' });
-  const menu = page.getByRole('menu');
-  await expect(menu).toBeVisible();
-  let r = await new AxeBuilder({ page }).include('[role="menu"]').analyze();
-  expect(r.violations.map((v) => v.id)).toEqual([]);
-  await page.keyboard.press('Escape');
-  await expect(menu).toBeHidden();
+  // The comment layer is ready (as sticky-note-popup.spec.ts waits for it).
+  await expect.poll(() => cap(page, 'annotate', 'list', id)).not.toBeNull();
+  const content = page.locator('[data-page="0"] .page-content');
 
   await page.getByRole('tab', { name: 'Comment' }).click();
-  await page
+  const tool = page
     .getByRole('toolbar', { name: 'Comment commands' })
-    .getByRole('button', { name: 'Sticky Note', exact: true })
-    .click();
+    .getByRole('button', { name: 'Sticky Note', exact: true });
+  await tool.click();
+  await expect(tool).toHaveAttribute('aria-pressed', 'true');
+  let box = await content.boundingBox();
+  if (!box) throw new Error('page not laid out');
   await page.mouse.click(box.x + 100 * (box.width / 595), box.y + 120 * (box.width / 595));
   const win = page.getByRole('dialog', { name: /^Sticky note by / });
   await expect(win).toBeVisible();
@@ -251,10 +248,22 @@ test('the sticky note window and the page menu pass axe in dark', async ({ page 
     return { color: s.color, scheme: s.colorScheme };
   });
   expect(colours).toEqual({ color: 'rgb(31, 31, 31)', scheme: 'light' });
-  r = await new AxeBuilder({ page }).include('.note-popup').analyze();
+  let r = await new AxeBuilder({ page }).include('.note-popup').analyze();
   expect(r.violations.map((v) => v.id)).toEqual([]);
   await page.keyboard.press('Control+Enter');
-  expect(await cap(page, 'annotate', 'list', id)).not.toBeNull();
+
+  // The page menu, away from the note.
+  await page.getByRole('tab', { name: 'Home' }).click();
+  await page.getByRole('button', { name: 'Select', exact: true }).click();
+  box = await content.boundingBox();
+  if (!box) throw new Error('page not laid out');
+  await page.mouse.click(box.x + box.width * 0.7, box.y + 300, { button: 'right' });
+  const menu = page.getByRole('menu');
+  await expect(menu).toBeVisible();
+  r = await new AxeBuilder({ page }).include('[role="menu"]').analyze();
+  expect(r.violations.map((v) => v.id)).toEqual([]);
+  await page.keyboard.press('Escape');
+  await expect(menu).toBeHidden();
 });
 
 // Screenshots for the owner's review (M7-11 acceptance): set M7_11_SHOTS to a
