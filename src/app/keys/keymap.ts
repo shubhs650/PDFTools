@@ -66,6 +66,8 @@ export const KEYMAP: readonly Binding[] = [
   b('view.fitWidth', ['Ctrl+2']),
   b('view.zoomIn', ['Ctrl+=', 'Ctrl++']),
   b('view.zoomOut', ['Ctrl+-']),
+  // Help in its own window (M9, ADR-026 D-46); Ctrl+F1 stays Collapse Ribbon.
+  { ...b('help.help', ['F1']), inText: true },
   b('view.collapseRibbon', ['Ctrl+F1']),
   // Full screen (M6-01, D-35): F11 is the browser's own (page only); Esc leaves.
   b('view.fullScreen', ['Ctrl+Shift+F11']),

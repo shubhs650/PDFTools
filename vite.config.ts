@@ -1,5 +1,5 @@
 import { fileURLToPath } from 'node:url';
-import { defineConfig } from 'vite';
+import { defineConfig, type Plugin } from 'vite';
 import react from '@vitejs/plugin-react';
 import { VitePWA } from 'vite-plugin-pwa';
 import { MANIFEST } from './src/app/manifest.ts';
@@ -7,9 +7,26 @@ import { PRECACHE_EXTENSIONS } from './src/sw/precacheSplit.ts';
 import { selfHostedAssets, thirdPartyNotices } from './scripts/vite-assets.ts';
 import { appVersion } from './scripts/app-version.ts';
 
+/**
+ * Help (M9, ADR-026 D-46) is its own page, `help.html`, served at `/help` as
+ * Cloudflare does; the dev server would otherwise give `/help` the app.
+ */
+function helpRoute(): Plugin {
+  return {
+    name: 'pdftools-help-route',
+    configureServer(server) {
+      server.middlewares.use((req, _res, next) => {
+        if (req.url === '/help' || req.url?.startsWith('/help?')) req.url = `/help.html${req.url.slice(5)}`;
+        next();
+      });
+    },
+  };
+}
+
 export default defineConfig({
   plugins: [
     react(),
+    helpRoute(),
     selfHostedAssets(),
     thirdPartyNotices(),
     // M1-19 manifest; M1-25 service worker (src/sw/sw.ts, our own code:
@@ -60,5 +77,12 @@ export default defineConfig({
   },
   build: {
     target: 'es2022',
+    rollupOptions: {
+      // The app and the Help window (M9, ADR-026 D-46).
+      input: {
+        main: fileURLToPath(new URL('./index.html', import.meta.url)),
+        help: fileURLToPath(new URL('./help.html', import.meta.url)),
+      },
+    },
   },
 });

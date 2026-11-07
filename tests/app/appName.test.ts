@@ -49,8 +49,7 @@ describe('product name (D-41)', () => {
     }
   });
 
-  it('is filled in for real calls (Help title, privacy, error body)', () => {
-    expect(t('help.title')).toBe('Triya PDF Help');
+  it('is filled in for real calls (privacy, error body)', () => {
     expect(t('error.body')).toContain('This part of Triya PDF stopped working.');
     expect(t('app.name')).toBe('Triya PDF');
   });

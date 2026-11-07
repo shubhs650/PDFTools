@@ -28,13 +28,23 @@ export default defineConfig({
   projects: [
     {
       name: 'e2e',
-      testIgnore: ['perf/**'],
+      testIgnore: ['perf/**', 'help-shots/**'],
       use: { ...devices['Desktop Chrome'], viewport: { width: 1280, height: 800 } },
     },
     {
       name: 'perf',
       testMatch: ['perf/**/*.spec.ts'],
       use: { ...devices['Desktop Chrome'], viewport: { width: 1920, height: 1080 } },
+    },
+    {
+      // Help's screenshots (M9, ADR-026): `npm run help:screenshots`, not in CI.
+      name: 'help-shots',
+      testMatch: ['help-shots/**/*.spec.ts'],
+      use: {
+        ...devices['Desktop Chrome'],
+        viewport: { width: 1366, height: 800 },
+        deviceScaleFactor: 2,
+      },
     },
   ],
 });

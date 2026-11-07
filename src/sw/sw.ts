@@ -9,7 +9,7 @@
 // - SKIP_WAITING from the app activates a waiting update (never while
 //   documents are open — the app decides).
 // No other origin is ever contacted (rule 4).
-import { splitPrecache, type PrecacheEntry } from './precacheSplit';
+import { isHelpFile, splitPrecache, type PrecacheEntry } from './precacheSplit';
 
 declare const self: ServiceWorkerGlobalScope & { __WB_MANIFEST: PrecacheEntry[] };
 
@@ -35,6 +35,9 @@ const backgroundUrls = new Map(background.map((e) => [abs(e.url), e.revision]));
 /** Never precached, cached when first fetched (OCR languages other than English, ADR-020). */
 const onDemandUrls = new Map(onDemand.map((e) => [abs(e.url), e.revision]));
 const INDEX = abs('index.html');
+/** The Help window's page (M9, ADR-026 D-46), served for `/help`. */
+const HELP = abs('help.html');
+const HELP_PATHS = new Set([new URL(HELP).pathname, new URL(HELP).pathname.replace(/\.html$/, '')]);
 
 async function broadcast(message: unknown): Promise<void> {
   for (const c of await self.clients.matchAll({ includeUncontrolled: true }))
@@ -116,12 +119,17 @@ async function setPriority(delta: number): Promise<void> {
 
 async function respond(request: Request, url: URL): Promise<Response> {
   const cache = await caches.open(CACHE);
-  if (request.mode === 'navigate') return (await cache.match(INDEX)) ?? fetch(request);
+  if (request.mode === 'navigate') {
+    const page = HELP_PATHS.has(url.pathname) ? HELP : INDEX;
+    return (await cache.match(page)) ?? fetch(request);
+  }
   const key = url.origin + url.pathname;
   const hit = await cache.match(key);
   if (hit) return hit;
   const isBackground = backgroundUrls.has(key) || onDemandUrls.has(key);
-  if (isBackground) await setPriority(1);
+  // The Help window's own files never show the app's "loading a module" spinner.
+  const quiet = isHelpFile(url.pathname);
+  if (isBackground && !quiet) await setPriority(1);
   try {
     const res = await fetch(request);
     if (res.ok && (isBackground || coreUrls.has(key))) {
@@ -135,7 +143,7 @@ async function respond(request: Request, url: URL): Promise<Response> {
     }
     return res;
   } finally {
-    if (isBackground) await setPriority(-1);
+    if (isBackground && !quiet) await setPriority(-1);
   }
 }
 

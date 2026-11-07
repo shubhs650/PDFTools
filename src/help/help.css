@@ -1,0 +1,516 @@
+/* The Help window (M9, ADR-026 D-46). Tokens only (src/ui/tokens.css), so the
+   light and dark themes and Windows High Contrast apply here as in the app. */
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+html,
+body {
+  margin: 0;
+  background: var(--color-bg);
+  color: var(--color-text);
+  font-family: var(--font-family);
+  font-size: var(--font-size-m);
+  line-height: var(--line-height);
+}
+
+:focus-visible {
+  outline: var(--focus-width) solid var(--color-focus);
+  outline-offset: var(--focus-offset);
+}
+
+a {
+  color: var(--color-link);
+}
+
+.help-skip {
+  position: absolute;
+  left: var(--space-3);
+  top: -100px;
+  z-index: 10;
+  padding: var(--space-2) var(--space-4);
+  background: var(--color-surface-raised);
+  border-radius: var(--radius-m);
+  box-shadow: var(--elevation-2);
+}
+
+.help-skip:focus {
+  top: var(--space-3);
+}
+
+/* Header ------------------------------------------------------------------ */
+
+.help-header {
+  position: sticky;
+  top: 0;
+  z-index: 5;
+  display: flex;
+  align-items: center;
+  gap: var(--space-4);
+  height: 56px;
+  padding: 0 var(--space-5);
+  background: var(--color-surface);
+  border-bottom: var(--border-width) solid var(--color-border);
+}
+
+.help-brand {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  color: var(--color-text);
+  font-size: var(--font-size-l);
+  font-weight: var(--font-weight-semibold);
+  text-decoration: none;
+  white-space: nowrap;
+}
+
+.help-search {
+  display: flex;
+  flex: 1 1 auto;
+  max-width: 460px;
+  margin-left: auto;
+  border: var(--border-width) solid var(--color-border-strong);
+  border-radius: var(--radius-m);
+  background: var(--color-bg);
+}
+
+.help-search:focus-within {
+  outline: var(--focus-width) solid var(--color-focus);
+  outline-offset: 1px;
+}
+
+.help-search input {
+  flex: 1 1 auto;
+  min-width: 0;
+  height: var(--control-height-m);
+  padding: 0 var(--space-3);
+  border: 0;
+  background: transparent;
+  color: var(--color-text);
+  font: inherit;
+}
+
+.help-search input:focus {
+  outline: none;
+}
+
+.help-header-actions {
+  display: flex;
+  gap: var(--space-2);
+}
+
+.help-button,
+.help-icon-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-2);
+  min-height: var(--control-height-m);
+  padding: 0 var(--space-3);
+  border: var(--border-width) solid var(--color-border);
+  border-radius: var(--radius-m);
+  background: var(--color-surface);
+  color: var(--color-text);
+  font: inherit;
+  cursor: pointer;
+}
+
+.help-button--subtle,
+.help-icon-button {
+  border-color: transparent;
+  background: transparent;
+}
+
+.help-icon-button {
+  width: var(--control-height-m);
+  padding: 0;
+}
+
+.help-button:hover,
+.help-icon-button:hover {
+  background: var(--color-hover);
+}
+
+.help-toc-toggle {
+  display: none;
+}
+
+/* Layout ------------------------------------------------------------------ */
+
+.help-body {
+  display: grid;
+  grid-template-columns: 290px minmax(0, 1fr);
+  min-height: calc(100vh - 56px);
+}
+
+.help-toc {
+  position: sticky;
+  top: 56px;
+  align-self: start;
+  height: calc(100vh - 56px);
+  overflow-y: auto;
+  padding: var(--space-4) var(--space-3) var(--space-6);
+  background: var(--color-surface);
+  border-right: var(--border-width) solid var(--color-border);
+}
+
+.help-toc-chapter h2 {
+  margin: var(--space-4) var(--space-3) var(--space-1);
+  color: var(--color-text-muted);
+  font-size: var(--font-size-s);
+  font-weight: var(--font-weight-semibold);
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
+}
+
+.help-toc ul {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.help-toc a {
+  display: block;
+  padding: var(--space-1) var(--space-3);
+  border-radius: var(--radius-m);
+  color: var(--color-text);
+  text-decoration: none;
+}
+
+.help-toc a:hover {
+  background: var(--color-hover);
+}
+
+.help-toc a[aria-current='page'] {
+  background: var(--color-selected);
+  box-shadow: inset 3px 0 0 var(--color-accent);
+  font-weight: var(--font-weight-semibold);
+}
+
+.help-main {
+  padding: var(--space-6) var(--space-7) var(--space-7);
+  outline: none;
+}
+
+.help-main > * {
+  max-width: 880px;
+}
+
+/* Topic ------------------------------------------------------------------- */
+
+.help-eyebrow {
+  margin: 0 0 var(--space-1);
+  color: var(--color-accent);
+  font-size: var(--font-size-s);
+  font-weight: var(--font-weight-semibold);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.help-topic h1,
+.help-results h1 {
+  margin: 0 0 var(--space-2);
+  font-size: 28px;
+  font-weight: var(--font-weight-semibold);
+  line-height: 1.25;
+}
+
+.help-topic h2 {
+  margin: var(--space-6) 0 var(--space-2);
+  font-size: var(--font-size-xl);
+  font-weight: var(--font-weight-semibold);
+}
+
+.help-summary {
+  margin: 0 0 var(--space-5);
+  color: var(--color-text-muted);
+  font-size: var(--font-size-l);
+}
+
+.help-topic p,
+.help-topic li {
+  max-width: 72ch;
+}
+
+.help-steps {
+  counter-reset: step;
+  margin: var(--space-3) 0 var(--space-4);
+  padding: 0;
+  list-style: none;
+}
+
+.help-steps > li {
+  position: relative;
+  min-height: 28px;
+  margin: 0 0 var(--space-3);
+  padding-left: 40px;
+  counter-increment: step;
+}
+
+.help-steps > li::before {
+  content: counter(step);
+  position: absolute;
+  left: 0;
+  top: -2px;
+  display: grid;
+  place-items: center;
+  width: 26px;
+  height: 26px;
+  border-radius: var(--radius-round);
+  background: var(--color-brand);
+  color: var(--color-text-on-brand);
+  font-size: var(--font-size-s);
+  font-weight: var(--font-weight-semibold);
+}
+
+.help-ui {
+  font-weight: var(--font-weight-semibold);
+}
+
+kbd {
+  display: inline-block;
+  padding: 0 6px;
+  border: var(--border-width) solid var(--color-border-strong);
+  border-bottom-width: 2px;
+  border-radius: var(--radius-s);
+  background: var(--color-surface);
+  font-family: inherit;
+  font-size: 0.92em;
+  line-height: 1.5;
+  white-space: nowrap;
+}
+
+.help-tip {
+  display: flex;
+  gap: var(--space-3);
+  margin: var(--space-4) 0;
+  padding: var(--space-3) var(--space-4);
+  border-left: 4px solid var(--color-accent);
+  border-radius: var(--radius-m);
+  background: var(--color-surface-sunken);
+}
+
+.help-tip svg {
+  flex: none;
+  margin-top: 2px;
+  color: var(--color-accent);
+}
+
+.help-tip p {
+  margin: 0;
+}
+
+.help-shot {
+  margin: var(--space-4) 0 var(--space-5);
+}
+
+.help-shot-open {
+  display: block;
+  max-width: 100%;
+  padding: 0;
+  border: var(--border-width) solid var(--color-border);
+  border-radius: var(--radius-l);
+  background: #fff;
+  box-shadow: var(--elevation-1);
+  cursor: zoom-in;
+  overflow: hidden;
+}
+
+.help-shot img {
+  display: block;
+  max-width: 100%;
+  height: auto;
+}
+
+.help-shot figcaption {
+  margin-top: var(--space-2);
+  color: var(--color-text-muted);
+  font-size: var(--font-size-s);
+}
+
+.help-lightbox {
+  max-width: 96vw;
+  max-height: 96vh;
+  padding: var(--space-6) var(--space-3) var(--space-3);
+  border: 0;
+  border-radius: var(--radius-l);
+  background: var(--color-surface-raised);
+  box-shadow: var(--elevation-3);
+}
+
+.help-lightbox::backdrop {
+  background: var(--color-backdrop);
+}
+
+.help-lightbox img {
+  display: block;
+  max-width: calc(96vw - 2 * var(--space-3));
+  max-height: calc(96vh - 56px);
+  width: auto;
+  height: auto;
+}
+
+.help-lightbox-close {
+  position: absolute;
+  top: var(--space-1);
+  right: var(--space-1);
+}
+
+.help-shortcuts,
+.shortcut-sheet {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.shortcut-sheet th,
+.shortcut-sheet td {
+  padding: var(--space-2) var(--space-3);
+  border-bottom: var(--border-width) solid var(--color-border);
+  text-align: left;
+  vertical-align: top;
+}
+
+.shortcut-sheet thead th {
+  color: var(--color-text-muted);
+  font-size: var(--font-size-s);
+}
+
+.shortcut-sheet tbody th {
+  font-weight: var(--font-weight-regular);
+}
+
+.shortcut-note {
+  display: block;
+  color: var(--color-text-muted);
+  font-size: var(--font-size-s);
+}
+
+/* Pager and results ------------------------------------------------------- */
+
+.help-pager {
+  display: flex;
+  justify-content: space-between;
+  gap: var(--space-4);
+  margin-top: var(--space-7);
+  padding-top: var(--space-4);
+  border-top: var(--border-width) solid var(--color-border);
+}
+
+.help-pager a {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  max-width: 48%;
+  padding: var(--space-3) var(--space-4);
+  border: var(--border-width) solid var(--color-border);
+  border-radius: var(--radius-l);
+  color: var(--color-text);
+  text-decoration: none;
+}
+
+.help-pager a:hover {
+  border-color: var(--color-accent);
+}
+
+.help-pager span {
+  display: flex;
+  flex-direction: column;
+}
+
+.help-pager small {
+  color: var(--color-text-muted);
+}
+
+.help-pager-next {
+  margin-left: auto;
+  text-align: right;
+}
+
+.help-results ol {
+  padding: 0;
+  list-style: none;
+}
+
+.help-results li {
+  margin: 0 0 var(--space-4);
+}
+
+.help-results a {
+  font-size: var(--font-size-l);
+  font-weight: var(--font-weight-semibold);
+}
+
+.help-results p {
+  margin: var(--space-1) 0 0;
+  color: var(--color-text-muted);
+}
+
+/* Narrow windows: the contents fold into a menu ---------------------------- */
+
+@media (max-width: 900px) {
+  .help-toc-toggle {
+    display: inline-flex;
+  }
+
+  .help-body {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .help-toc {
+    position: fixed;
+    top: 56px;
+    left: 0;
+    z-index: 4;
+    width: min(320px, 90vw);
+    display: none;
+    box-shadow: var(--elevation-3);
+  }
+
+  .help-toc--open {
+    display: block;
+  }
+
+  .help-main {
+    padding: var(--space-5) var(--space-4);
+  }
+
+  .help-header-actions .help-button--subtle,
+  .help-header-actions span {
+    display: none;
+  }
+}
+
+/* Print ------------------------------------------------------------------- */
+
+@media print {
+  .help-header,
+  .help-toc,
+  .help-pager,
+  .help-skip,
+  .help-lightbox {
+    display: none !important;
+  }
+
+  .help-body {
+    display: block;
+  }
+
+  .help-main {
+    padding: 0;
+  }
+
+  .help-topic + .help-topic {
+    break-before: page;
+  }
+
+  .help-shot {
+    break-inside: avoid;
+  }
+
+  .help-shot-open {
+    box-shadow: none;
+  }
+}

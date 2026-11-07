@@ -1,17 +1,18 @@
-// Help → Help and Help → Send Error Report (M2-17, D-22, §10.2), and local
+// Help → Help (M9: its own window) and Help → Send Error Report (M2-17, D-22, §10.2), and local
 // recording of uncaught errors (codes and stack frames only, rule 10): they
 // appear in a report's log only if the user sends one.
 import { recordError } from '../../app/diagnostics';
 import { registerCommand } from '../../app/commands/dispatch';
 import { isAbortError } from '../../engine/errors';
-import { openHelp } from '../help/helpStore';
+import { currentHelpTopic, openHelp } from '../help/openHelp';
 import { openReport } from './reportStore';
 
 export function registerReportCommands(): () => void {
   const offs = [
+    // Help in its own window, at the topic for what the user is doing (M9, ADR-026 D-46).
     registerCommand('help.help', {
       run: () => {
-        openHelp();
+        openHelp(currentHelpTopic());
       },
     }),
     registerCommand('help.errorReport', {

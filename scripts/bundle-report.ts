@@ -1,9 +1,10 @@
 // Bundle-size and install-budget report (M1-27, §9, D-17, ADR-002, ADR-003).
 // Walks a production build, groups the files the service worker precaches
 // into modules (core JS/CSS, workers, pdfium.wasm, core fonts, CJK fonts, …),
-// and reports raw / gzip / brotli sizes. Fails when the install total
-// (everything precached) exceeds 60 MB or the core precache exceeds its
-// budget. Reserved lines show the later milestones' modules with their
+// and reports raw / gzip / brotli sizes. Fails when the core precache
+// exceeds its budget; warns when the install total (everything precached)
+// passes the 60 MB reference (the owner, 2026-11-07, ADR-026: a reference,
+// not a limit). Reserved lines show the later milestones' modules with their
 // estimated sizes so the projection stays visible.
 //
 // Usage: node scripts/bundle-report.ts [dist] [--json <file>] [--markdown <file>]
@@ -17,7 +18,10 @@ import { PRECACHE_EXTENSIONS, splitPrecache } from '../src/sw/precacheSplit.ts';
 const MB = 1_000_000;
 const BROTLI_QUALITY = 9;
 
-/** §9: total install ≤ 60 MB (decimal MB, as the browser's storage estimate reports). */
+/**
+ * §9 (ADR-026): the install size's ~60 MB reference (decimal MB, as the
+ * browser's storage estimate reports). Above it the report warns; it does not fail.
+ */
 export const INSTALL_BUDGET = 60 * MB;
 /**
  * Core precache (installed before the app counts as ready offline). M1
@@ -39,6 +43,7 @@ export type ModuleId =
   | 'coreFonts'
   | 'cjkFonts'
   | 'signatureFonts'
+  | 'help'
   | 'shell';
 
 export const MODULES: readonly { id: ModuleId; label: string; test: RegExp }[] = [
@@ -70,6 +75,12 @@ export const MODULES: readonly { id: ModuleId; label: string; test: RegExp }[] =
   { id: 'cjkFonts', label: 'CJK fonts (SC, TC, JP, KR)', test: /^fonts\/(sc|tc|jp|kr)\// },
   // Typed signatures (M6-13, ADR-022 d3): three handwriting fonts, background.
   { id: 'signatureFonts', label: 'Signature fonts (handwriting)', test: /^fonts\/sig-[\w-]+\// },
+  // M9 (ADR-026 D-46): the Help window's page, script, style and screenshots, background.
+  {
+    id: 'help',
+    label: 'Help window (page and screenshots)',
+    test: /^(help\.html|assets\/help-[\w-]+\.(js|css)|help-img\/.*)$/,
+  },
   { id: 'app', label: 'App JS and CSS', test: /^assets\/[^/]+\.(js|css)$/ },
   { id: 'shell', label: 'Shell (HTML, manifest, icons, notices)', test: /.*/ },
 ];
@@ -113,6 +124,8 @@ export interface Report {
   modules: ModuleRow[];
   totals: Totals;
   problems: string[];
+  /** Over a reference, not a limit (the install size, ADR-026). */
+  warnings: string[];
 }
 
 export function moduleOf(path: string): ModuleId {
@@ -164,9 +177,10 @@ export function aggregate(
     onDemand: cached.filter((f) => onDemandSet.has(f.path)).reduce((s, f) => s + f.raw, 0),
   };
   const problems: string[] = [];
+  const warnings: string[] = [];
   if (totals.raw > budgets.install) {
-    problems.push(
-      `Install total ${mb(totals.raw)} exceeds the ${mb(budgets.install)} budget (§9).`,
+    warnings.push(
+      `Install total ${mb(totals.raw)} is above the ${mb(budgets.install)} reference (§9, ADR-026).`,
     );
   }
   if (totals.core > budgets.core) {
@@ -175,7 +189,7 @@ export function aggregate(
     );
   }
   if (!modules.some((m) => m.id === 'pdfium')) problems.push('pdfium.wasm not found in the build.');
-  return { modules, totals, problems };
+  return { modules, totals, problems, warnings };
 }
 
 export const mb = (n: number): string => `${(n / MB).toFixed(2)} MB`;
@@ -203,10 +217,11 @@ export function renderMarkdown(r: Report): string {
     `| **Total installed** | | **${mb(t.raw)}** | ${mb(t.gzip)} | ${mb(t.brotli)} | |`,
     '',
     `- Core precache: **${mb(t.core)}** of ${mb(CORE_BUDGET)} budget; background: ${mb(t.background)}.`,
-    `- Install total: **${mb(t.raw)}** of ${mb(INSTALL_BUDGET)} budget; ` +
+    `- Install total: **${mb(t.raw)}** (reference ${mb(INSTALL_BUDGET)}, not a limit); ` +
       `projected with reserved modules: ${mb(t.projected)}.`,
     `- On demand (not installed; cached when first used): ${mb(t.onDemand)} (OCR languages other than English, ADR-020).`,
     '',
+    ...r.warnings.map((w) => `- ⚠️ ${w}`),
     r.problems.length ? r.problems.map((p) => `- ❌ ${p}`).join('\n') : '- ✅ Within budget.',
     '',
   );

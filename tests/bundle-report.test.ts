@@ -77,10 +77,12 @@ describe('bundle report (M1-27)', () => {
     expect(r.problems).toEqual([]);
   });
 
-  it('fails the install and core budgets, and a build without pdfium.wasm', () => {
-    expect(aggregate(BUILD, { install: 1_000_000, core: CORE_BUDGET }).problems[0]).toMatch(
-      /Install total .* exceeds the 1\.00 MB budget/,
-    );
+  it('warns above the install reference, fails the core budget and a build without pdfium.wasm', () => {
+    // ADR-026: the install size is a reference, not a limit.
+    const over = aggregate(BUILD, { install: 1_000_000, core: CORE_BUDGET });
+    expect(over.problems).toEqual([]);
+    expect(over.warnings[0]).toMatch(/Install total .* is above the 1\.00 MB reference/);
+    expect(renderMarkdown(over)).toContain('⚠️');
     expect(aggregate(BUILD, { install: INSTALL_BUDGET, core: 1_000_000 }).problems[0]).toMatch(
       /Core precache .* exceeds/,
     );

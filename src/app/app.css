@@ -1949,26 +1949,6 @@ textarea.form-field {
   word-break: break-all;
 }
 
-/* Help (M2-17). */
-.help-page {
-  display: grid;
-  gap: var(--space-3);
-}
-
-.help-section h3 {
-  margin: var(--space-0) var(--space-0) var(--space-1);
-  font-size: var(--font-size-m);
-}
-
-.help-section p {
-  margin: var(--space-0);
-}
-
-.help-actions {
-  display: flex;
-  gap: var(--space-3);
-}
-
 /* ------------------------------------------------------------ link tool (M3-09) */
 .link-edit-form {
   display: grid;
