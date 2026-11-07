@@ -225,6 +225,17 @@
   right: var(--space-3);
 }
 
+/* Help on this dialog (M9, D-46): left of Close; the title keeps clear of both. */
+.ui-dialog-help {
+  position: absolute;
+  top: var(--space-3);
+  right: calc(var(--space-3) + var(--control-height-m) + var(--space-1));
+}
+
+.ui-dialog--help .ui-dialog-title {
+  padding-right: calc(2 * var(--control-height-m));
+}
+
 /* ------------------------------------------------------------ text field */
 
 .ui-field {

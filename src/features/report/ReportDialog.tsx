@@ -14,6 +14,7 @@ import {
   useReport,
   type ReportStatus,
 } from './reportStore';
+import { dialogHelp } from '../help/openHelp';
 
 const STATUS: Partial<Record<ReportStatus, MessageKey>> = {
   sending: msg('report.status.sending'),
@@ -50,6 +51,7 @@ export function ReportDialog() {
       title={t('report.title')}
       description={t('report.description')}
       closeIcon={<Dismiss20Regular />}
+      help={dialogHelp('reporting-problems')}
       footer={
         sent ? (
           <Button label={t('report.close')} variant="primary" onClick={closeReport} />

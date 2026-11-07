@@ -24,6 +24,7 @@ import {
   usePrint,
   viewerBlockFor,
 } from './printStore';
+import { dialogHelp } from '../help/openHelp';
 
 const RANGES: [RangeKind, MessageKey][] = [
   ['all', msg('print.range.all')],
@@ -105,6 +106,7 @@ export function PrintDialog() {
       title={t('print.title')}
       description={t('print.description', { name: doc.meta.name })}
       closeIcon={<Dismiss20Regular />}
+      help={dialogHelp('printing')}
       footer={
         busy ? (
           <Button label={t('print.cancel')} onClick={cancelPrint} />

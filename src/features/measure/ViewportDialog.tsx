@@ -10,6 +10,7 @@ import { UnitFields } from './ScaleDialogs';
 import { toScale, useScaleFields } from './scaleFields';
 import { mediaBoxOf, scaleStore, useScales } from './scaleStore';
 import { closeViewportDialog, saveViewport, useViewports, type ViewportEdit } from './viewports';
+import { dialogHelp } from '../help/openHelp';
 
 /** Measure → Scale Viewport (M3-17): name, box and scale (ratio, or the box's real width). */
 export function ViewportDialog() {
@@ -105,6 +106,7 @@ function ViewportForm({ e }: { e: ViewportEdit }) {
       title={e.index === undefined ? t('viewport.addTitle') : t('viewport.editTitle')}
       description={t('viewport.description')}
       closeIcon={<Dismiss20Regular />}
+      help={dialogHelp('measure-scale')}
       footer={
         <>
           <Button label={t('viewport.save')} variant="primary" type="submit" form={`${ids}-form`} />

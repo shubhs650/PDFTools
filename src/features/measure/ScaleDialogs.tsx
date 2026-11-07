@@ -18,6 +18,7 @@ import { startPicking } from './calibrate';
 import { UNIT_KEYS, type UnitChoice } from './units';
 import { toScale, useScaleFields, type Fields } from './scaleFields';
 import { applyScale, closeScaleDialog, scaleOf, scaleStore, useScales } from './scaleStore';
+import { dialogHelp } from '../help/openHelp';
 
 const UNITS: readonly UnitChoice[] = ['mm', 'cm', 'm', 'in', 'ft', 'ftin'];
 const PRECISIONS = [0, 1, 2, 3, 4] as const;
@@ -203,6 +204,7 @@ function SetScaleForm({ docId }: { docId: string }) {
       title={t('scale.setTitle')}
       description={t('scale.setDescription')}
       closeIcon={<Dismiss20Regular />}
+      help={dialogHelp('measure-scale')}
       footer={
         <>
           <Button label={t('scale.apply')} variant="primary" type="submit" form={`${ids}-form`} />
@@ -324,6 +326,7 @@ function CalibrateForm({ docId }: { docId: string }) {
       title={t('scale.calTitle')}
       description={t('scale.calDescription')}
       closeIcon={<Dismiss20Regular />}
+      help={dialogHelp('measure-scale')}
       footer={
         <>
           <Button label={t('scale.apply')} variant="primary" type="submit" form={`${ids}-form`} />

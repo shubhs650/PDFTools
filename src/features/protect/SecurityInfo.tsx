@@ -6,6 +6,7 @@ import { allows, CAPABILITIES, type Capability } from '../../model/permissions';
 import { Button, Dialog } from '../../ui/components';
 import { useDocProperties } from '../properties/useDocProperties';
 import { closeSecurityInfo, useSecurityInfo } from './securityInfoStore';
+import { dialogHelp } from '../help/openHelp';
 
 const CAPABILITY_LABEL: Record<Capability, MessageKey> = {
   print: msg('security.capability.print'),
@@ -59,6 +60,7 @@ export function SecurityInfoDialog() {
       title={t('security.title')}
       description={t('security.description', { name: meta.name })}
       closeIcon={<Dismiss20Regular />}
+      help={dialogHelp('protected-files')}
       footer={<Button label={t('security.close')} onClick={closeSecurityInfo} />}
     >
       <dl className="facts" data-testid="security-info">

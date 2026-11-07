@@ -19,6 +19,7 @@ import {
   templateGrids,
   useTemplates,
 } from './templateStore';
+import { dialogHelp } from '../help/openHelp';
 
 type Problem =
   | 'empty'
@@ -172,6 +173,7 @@ function Form({ docId }: { docId: string }) {
       title={t('tables.templates.title')}
       description={t('tables.templates.description')}
       closeIcon={<Dismiss20Regular />}
+      help={dialogHelp('extract-tables')}
       footer={
         busy ? (
           <Button

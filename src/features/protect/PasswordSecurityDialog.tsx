@@ -26,6 +26,7 @@ import {
   useSecurity,
   type SecurityMode,
 } from './passwordSecurity';
+import { dialogHelp } from '../help/openHelp';
 
 // Protect → Password Security… / Remove Security (M6-12, D-40 a, §7.12): the
 // form, then progress with Cancel, then the verified result or what failed.
@@ -161,6 +162,7 @@ function Body({ docId, mode }: { docId: string; mode: SecurityMode }) {
       title={t(text.title)}
       description={t(text.description, { name: meta?.name ?? '' })}
       closeIcon={<Dismiss20Regular />}
+      help={dialogHelp('passwords')}
       footer={footer}
     >
       <form

@@ -1,0 +1,1266 @@
+{
+  "ui": {
+    "title": "{{app}} Help",
+    "skip": "Skip to the topic",
+    "contents": "Contents",
+    "searchLabel": "Search Help",
+    "searchPlaceholder": "Search Help (press Enter)",
+    "searchButton": "Search",
+    "resultsTitle": "Results for “{{query}}”",
+    "noResults": "Nothing in Help matches “{{query}}”. Try other words, or browse the contents.",
+    "print": "Print",
+    "printAll": "Print all topics",
+    "pager": "Previous and next topic",
+    "previous": "Previous",
+    "next": "Next",
+    "tip": "Tip:",
+    "zoomShot": "Show full size",
+    "close": "Close"
+  },
+  "chapters": {
+    "start": "Getting started",
+    "view": "Viewing and finding",
+    "bookmarks": "Bookmarks",
+    "comments": "Comments and markup",
+    "measure": "Measuring",
+    "forms": "Forms",
+    "pages": "Pages",
+    "convert": "Convert",
+    "protect": "Protect and sign",
+    "save": "Save, print and recover",
+    "reference": "Reference"
+  },
+  "topics": {
+    "welcome": {
+      "title": "Welcome to {{app}}",
+      "summary": "A free PDF viewer and editor for engineers that works in your browser, offline. Your documents never leave this device.",
+      "body": [
+        {
+          "h": "The window at a glance"
+        },
+        {
+          "shot": "welcome-1",
+          "alt": "The {{app}} window with a drawing open, numbered from 1 to 6",
+          "caption": "1 Top bar · 2 Ribbon · 3 Side panes · 4 Document · 5 Properties pane · 6 Status bar"
+        },
+        {
+          "steps": [
+            "The <b>top bar</b> has the quick commands (Open, Save, Print, Undo, Redo), your open documents as tabs, the dark theme switch, full screen and the links to OpenEngTools and GitHub.",
+            "The <b>ribbon</b> has the commands, grouped in tabs: <b>File</b>, <b>Home</b>, <b>View</b>, <b>Comment</b>, <b>Form</b>, <b>Measure</b>, <b>Organize</b>, <b>Convert</b>, <b>Protect</b> and <b>Help</b>. Point at any button to see its name and shortcut.",
+            "The <b>side panes</b> on the left show thumbnails, bookmarks, attachments, layers, signatures, comments and search results.",
+            "The <b>document</b> area shows the pages. Scroll, zoom and work on them here.",
+            "The <b>Properties pane</b> on the right shows the selected comment, form field or tool, and lets you change it.",
+            "The <b>status bar</b> has the page number, the zoom, the view mode, snapping and whether {{app}} is ready offline."
+          ]
+        },
+        {
+          "tip": "Press <kbd>{{help}}</kbd> in {{app}} at any time to open Help at the topic for what you are doing."
+        },
+        {
+          "h": "Where to start"
+        },
+        {
+          "list": [
+            "[Open a PDF](#opening-files), then [zoom and move around](#zoom-and-pages).",
+            "[Add comments](#comment-tab) and [review them](#reviewing-comments) with others.",
+            "[Measure](#measure-tools) distances and areas on a drawing.",
+            "[Fill in or create forms](#filling-forms), [sign](#signing) or [redact](#redaction) a document."
+          ]
+        }
+      ]
+    },
+    "opening-files": {
+      "title": "Opening files",
+      "summary": "Open PDFs from your computer, by drag and drop, or from the list of recent files. Each file opens in its own tab.",
+      "body": [
+        {
+          "shot": "opening-files-1",
+          "alt": "The start screen with the Open button and the recent files list",
+          "caption": "The start screen: 1 Open a file · 2 Recent files"
+        },
+        {
+          "h": "To open a PDF"
+        },
+        {
+          "steps": [
+            "Press <kbd>{{open}}</kbd>, or choose <b>Open</b> on the start screen or in the <b>File</b> tab.",
+            "Pick one or more PDF files and choose <b>Open</b>.",
+            "Each file opens in its own tab in the top bar. Click a tab to switch documents, or close it with its <b>×</b>."
+          ]
+        },
+        {
+          "list": [
+            "You can also drag PDF files from your desktop or file manager and drop them on the window.",
+            "<b>File</b> › <b>Recent</b> lists the files you opened on this device. Click one to open it again.",
+            "A password-protected file asks for its password first. See [Protected and signed files](#protected-files)."
+          ]
+        },
+        {
+          "shot": "opening-files-2",
+          "alt": "Two documents open as tabs in the top bar",
+          "caption": "Two documents open as tabs."
+        },
+        {
+          "tip": "If {{app}} is installed as an app, you can also open PDFs with it from your file manager (“Open with”)."
+        }
+      ]
+    },
+    "offline": {
+      "title": "Installing and working offline",
+      "summary": "{{app}} keeps a copy of itself on this device, so it opens and works without an internet connection.",
+      "body": [
+        {
+          "steps": [
+            "Open {{app}} once while you are online. It downloads what it needs in the background.",
+            "Wait until the status bar shows <b>✓ Ready offline</b>.",
+            "From then on, {{app}} works with no connection, including Help."
+          ]
+        },
+        {
+          "shot": "offline-1",
+          "alt": "The status bar showing Ready offline",
+          "caption": "The status bar when {{app}} is ready to work offline."
+        },
+        {
+          "h": "To install it as an app"
+        },
+        {
+          "steps": [
+            "In Chrome or Edge, choose the install icon at the right of the address bar (or the browser menu › <b>Install {{app}}</b>).",
+            "{{app}} opens in its own window and appears with your other apps."
+          ]
+        },
+        {
+          "h": "Updates"
+        },
+        {
+          "p": "When a new version is ready, the status bar shows <b>Update ready</b>. Choose it to restart with the new version. It never restarts while you have documents open; <b>Help</b> › <b>Check for Updates</b> looks for one now."
+        }
+      ]
+    },
+    "home-tab": {
+      "title": "The Home tab",
+      "summary": "The Home tab gathers the commands you use most: tools, zoom, view, comments, measuring and signing.",
+      "body": [
+        {
+          "shot": "home-tab-1",
+          "alt": "The Home tab of the ribbon, with its groups numbered",
+          "caption": "1 Tools · 2 Zoom · 3 View · 4 Comment · 5 Measure · 6 Protect"
+        },
+        {
+          "steps": [
+            "<b>Tools</b>: Hand (<kbd>{{hand}}</kbd>) moves the page, Select (<kbd>{{select}}</kbd>) picks text and comments, Snapshot copies part of a page as a picture, Find and Advanced Search find text.",
+            "<b>Zoom</b>: zoom in and out, fit the page or its width, or show it at its actual size.",
+            "<b>View</b>: rotate the view, and open the Comments, Thumbnails, Bookmarks and Attachments panes or the Properties pane.",
+            "<b>Comment</b>: the comment tools you use most.",
+            "<b>Measure</b>: distance, perimeter and area.",
+            "<b>Protect</b>: Sign Document."
+          ]
+        },
+        {
+          "tip": "The Tools and View groups show icons only. Point at an icon, or move to it with <kbd>Tab</kbd>, to see its name and shortcut. On a narrow window, groups first lose their labels and then fold into menus."
+        }
+      ]
+    },
+    "zoom-and-pages": {
+      "title": "Zoom, pages and full screen",
+      "summary": "Zoom, move between pages, choose how pages are laid out, and show the app full screen.",
+      "body": [
+        {
+          "shot": "zoom-and-pages-1",
+          "alt": "The View tab of the ribbon",
+          "caption": "The View tab: go to a page, zoom, page display and window options."
+        },
+        {
+          "h": "To zoom"
+        },
+        {
+          "list": [
+            "<kbd>{{zoomIn}}</kbd> and <kbd>{{zoomOut}}</kbd>, or hold <kbd>{{mod}}</kbd> and turn the mouse wheel.",
+            "<kbd>{{fitPage}}</kbd> fits the whole page, <kbd>{{fitWidth}}</kbd> fits its width and <kbd>{{actualSize}}</kbd> shows it at its actual size.",
+            "<b>View</b> › <b>Loupe</b> magnifies the area under the pointer, and <b>Pan and Zoom Window</b> shows where you are on a large drawing."
+          ]
+        },
+        {
+          "h": "To move around"
+        },
+        {
+          "list": [
+            "Scroll, or hold <kbd>Space</kbd> (or press <kbd>{{hand}}</kbd> for the Hand tool) and drag the page.",
+            "Type a page number in the status bar, or use the first, previous, next and last page buttons.",
+            "<b>View</b> › <b>Single Page</b>, <b>Continuous</b>, <b>Facing</b> and <b>Continuous Facing</b> set how pages are laid out."
+          ]
+        },
+        {
+          "shot": "zoom-and-pages-2",
+          "alt": "The status bar with page navigation, view mode and zoom",
+          "caption": "The status bar: 1 Page number · 2 View mode · 3 Zoom"
+        },
+        {
+          "h": "Rotating the view"
+        },
+        {
+          "p": "<b>Home</b> › <b>Rotate View</b> and <b>View</b> › <b>Rotate View</b> turn the pages on screen only; the file does not change. To turn pages in the file itself, see [Organizing pages](#organize-pages)."
+        },
+        {
+          "h": "Full screen"
+        },
+        {
+          "p": "<kbd>{{fullScreen}}</kbd> or the full-screen button at the top right shows the whole app full screen. <kbd>Esc</kbd> leaves full screen. <b>View</b> › <b>Collapse Ribbon</b> gives the pages more room."
+        }
+      ]
+    },
+    "themes": {
+      "title": "Light and dark themes",
+      "summary": "Switch between the light and dark look of {{app}}. Pages always stay white.",
+      "body": [
+        {
+          "steps": [
+            "Click the moon button at the top right, or press <kbd>{{darkTheme}}</kbd>.",
+            "The app turns dark. Click the sun button (or press the keys again) to go back to light."
+          ]
+        },
+        {
+          "shot": "themes-1",
+          "alt": "{{app}} in the dark theme with a white page",
+          "caption": "The dark theme: the app is dark, the page stays white."
+        },
+        {
+          "list": [
+            "<b>View</b> › <b>Dark Theme</b> and <b>File</b> › <b>Settings</b> › <b>Appearance</b> do the same.",
+            "Your choice is kept on this device only, and Help follows it.",
+            "Form fields, sticky note windows and comment handles keep their light look, so they read well on the white page.",
+            "<b>File</b> › <b>Settings</b> › <b>Clear all local data</b> goes back to the light theme."
+          ]
+        }
+      ]
+    },
+    "side-panes": {
+      "title": "Side panes and the Properties pane",
+      "summary": "The rail on the left opens panes for thumbnails, bookmarks, attachments, layers, signatures, comments and search results.",
+      "body": [
+        {
+          "shot": "side-panes-1",
+          "alt": "The Thumbnails pane open on the left of a document",
+          "caption": "1 The rail · 2 The Thumbnails pane"
+        },
+        {
+          "steps": [
+            "Click an icon in the rail to open its pane. Click it again to close the pane.",
+            "Drag the pane's edge to make it wider or narrower.",
+            "Press <kbd>Esc</kbd> in a pane to go back to the rail."
+          ]
+        },
+        {
+          "list": [
+            "<b>Thumbnails</b>: small pictures of the pages. Click one to go to it; select several to work on them (see [Organizing pages](#organize-pages)).",
+            "<b>Bookmarks</b>: the document's outline. See [Bookmarks](#bookmarks).",
+            "<b>Attachments</b>: files embedded in the PDF. See [Attaching files](#attaching-files).",
+            "<b>Layers</b>: show or hide a drawing's layers.",
+            "<b>Signatures</b>: the digital signatures in the file and whether each signed part is unchanged.",
+            "<b>Comments</b>: every comment in the document. See [Reviewing comments](#reviewing-comments).",
+            "<b>Search Results</b>: the results of Advanced Search."
+          ]
+        },
+        {
+          "p": "The <b>Properties pane</b> on the right (<b>Home</b> › <b>Properties Pane</b>) shows the selected comment, form field or tool. See [Comment properties](#comment-properties)."
+        }
+      ]
+    },
+    "finding-text": {
+      "title": "Finding text",
+      "summary": "Find words on the pages with Quick Find, or search comments, bookmarks and other open documents with Advanced Search.",
+      "body": [
+        {
+          "h": "To find text in the document"
+        },
+        {
+          "steps": [
+            "Press <kbd>{{find}}</kbd> (or <b>Home</b> › <b>Find</b>).",
+            "Type the words and press <kbd>Enter</kbd>. {{app}} searches only when you press Enter.",
+            "Press <kbd>{{findNext}}</kbd> or <kbd>Enter</kbd> again for the next match. Every match is marked on the pages."
+          ]
+        },
+        {
+          "shot": "finding-text-1",
+          "alt": "The Find bar with matches highlighted on the page",
+          "caption": "Quick Find: the current match is orange, the others yellow."
+        },
+        {
+          "h": "To search more widely"
+        },
+        {
+          "steps": [
+            "Press <kbd>{{advancedSearch}}</kbd> (or <b>Home</b> › <b>Advanced Search</b>).",
+            "Type the words, choose where to look (the pages, comments, bookmarks, this document or every open document) and press <kbd>Enter</kbd>.",
+            "Click a result in the <b>Search Results</b> pane to go to it."
+          ]
+        },
+        {
+          "shot": "finding-text-2",
+          "alt": "The Search Results pane listing matches with their page numbers"
+        },
+        {
+          "tip": "A scanned page has no text to find until you run [OCR](#ocr) on it."
+        }
+      ]
+    },
+    "bookmarks": {
+      "title": "Bookmarks",
+      "summary": "Bookmarks are the document's table of contents. Use them to jump around, and add, rename, move and style them.",
+      "body": [
+        {
+          "shot": "bookmarks-1",
+          "alt": "The Bookmarks pane with nested bookmarks and its toolbar",
+          "caption": "The Bookmarks pane: 1 Toolbar · 2 Bookmarks"
+        },
+        {
+          "h": "To add a bookmark"
+        },
+        {
+          "steps": [
+            "Go to the page, and zoom, that the bookmark should open.",
+            "In the Bookmarks pane, choose <b>New Bookmark</b> (or press <kbd>Insert</kbd>).",
+            "Type its title and press <kbd>Enter</kbd>."
+          ]
+        },
+        {
+          "h": "To change bookmarks"
+        },
+        {
+          "list": [
+            "Rename: select it and press <kbd>F2</kbd>.",
+            "Move: drag it, or use <kbd>Alt+Shift</kbd> with the arrow keys. Drop it on another bookmark to put it inside.",
+            "Delete: press <kbd>{{delete}}</kbd>.",
+            "Right-click a bookmark (or press <kbd>{{menu}}</kbd>) for New Child Bookmark, Cut, Copy, Paste, Set Destination, Expand All and Collapse All."
+          ]
+        },
+        {
+          "shot": "bookmarks-2",
+          "alt": "The right-click menu of a bookmark",
+          "caption": "The bookmark menu."
+        },
+        {
+          "p": "<b>Bookmark Properties</b> (<kbd>Alt+Enter</kbd>) sets the title, colour, bold, italic, page and zoom. Every change is one undo step, and <kbd>{{save}}</kbd> saves them in the file."
+        },
+        {
+          "tip": "A file that does not allow changes keeps its bookmarks as they are."
+        }
+      ]
+    },
+    "comment-tab": {
+      "title": "Adding comments",
+      "summary": "The Comment tab has every markup tool: text markup, notes, text boxes, shapes, stamps and more.",
+      "body": [
+        {
+          "shot": "comment-tab-1",
+          "alt": "The Comment tab of the ribbon, with its groups numbered",
+          "caption": "1 Tools · 2 Text · 3 Note · 4 Text markup · 5 Drawing · 6 Stamp · 7 Measure · 8 Manage comments"
+        },
+        {
+          "h": "To add a comment"
+        },
+        {
+          "steps": [
+            "Open the <b>Comment</b> tab and choose a tool, for example <b>Rectangle</b>.",
+            "Drag on the page to draw it (or click, for notes and stamps).",
+            "The new comment stays selected, so you can change its look in the Properties pane straight away.",
+            "Press <kbd>Esc</kbd> to put the tool down."
+          ]
+        },
+        {
+          "list": [
+            "Single letters such as <kbd>N</kbd> (sticky note) or <kbd>B</kbd> (rectangle) choose a tool while the document has focus. Point at a tool to see its letter.",
+            "New comments are red with 1 pt lines and 10 pt text. Highlights are yellow at 50 % opacity, sticky notes are yellow, and the typewriter writes in black Courier.",
+            "The small arrow beside a tool opens its styles. See [Comment styles](#comment-styles).",
+            "<kbd>{{undo}}</kbd> undoes the last change, and <kbd>{{save}}</kbd> keeps your comments in the file."
+          ]
+        },
+        {
+          "tip": "Comments are standard PDF comments: they show in Adobe Acrobat Reader, PDF-XChange and other PDF viewers."
+        }
+      ]
+    },
+    "text-markup": {
+      "title": "Highlighting and marking up text",
+      "summary": "Highlight, underline, strike out or squiggle text, or mark where text should be inserted or replaced.",
+      "body": [
+        {
+          "steps": [
+            "Choose <b>Highlight</b>, <b>Underline</b>, <b>Strikeout</b> or <b>Squiggly</b> on the <b>Comment</b> tab.",
+            "Drag across the text on the page.",
+            "Release the mouse. The markup is added and stays selected."
+          ]
+        },
+        {
+          "shot": "text-markup-1",
+          "alt": "Text on a page with a yellow highlight, an underline and a strikeout"
+        },
+        {
+          "list": [
+            "<b>Insert Text</b> marks where text should go, and <b>Replace Text</b> strikes text out and marks the replacement.",
+            "<b>Highlight Area</b> highlights a rectangle, for drawings with no text. <b>Free Highlight</b> highlights freehand.",
+            "You can also select text first with <b>Select</b>, then right-click it and choose a markup."
+          ]
+        }
+      ]
+    },
+    "text-comments": {
+      "title": "Text boxes, typewriters and callouts",
+      "summary": "Put text on the page: in a box, as plain typed text, or in a box with a leader line that points at something.",
+      "body": [
+        {
+          "h": "To add a callout"
+        },
+        {
+          "steps": [
+            "Choose <b>Callout</b> on the <b>Comment</b> tab.",
+            "Press on the point the callout marks and drag to where its text box should go.",
+            "Type the text. “Type here” is selected, so typing replaces it.",
+            "Click elsewhere, or press <kbd>Esc</kbd>, to keep your text."
+          ]
+        },
+        {
+          "shot": "text-comments-1",
+          "alt": "A callout pointing at part of a drawing, with its text box",
+          "caption": "A callout: 1 the point it marks · 2 the text box"
+        },
+        {
+          "p": "<b>Text Box</b> and <b>Typewriter</b> work the same way: drag a box (or click), then type. A typewriter has no border and its lines do not wrap."
+        },
+        {
+          "h": "To edit or move text"
+        },
+        {
+          "list": [
+            "Click a text comment to select it, and drag it to move it.",
+            "Double-click it to edit the text with the caret where you clicked, or select it and press <kbd>Enter</kbd> or <kbd>{{editText}}</kbd>.",
+            "While editing, right-click the text for Undo, Cut, Copy, Paste, Select All, <b>Text Style</b> and Properties.",
+            "Text boxes and callouts grow taller as you type more lines, so nothing is cut off."
+          ]
+        },
+        {
+          "shot": "text-comments-2",
+          "alt": "The right-click menu while editing a text box, with Text Style",
+          "caption": "The text menu while you edit."
+        },
+        {
+          "tip": "<b>Text Style</b> and the Properties pane change the whole comment: font, size, bold, italic, colour and alignment. A text box and a callout have a <b>Text color</b> and a <b>Border color</b> of their own."
+        }
+      ]
+    },
+    "sticky-notes": {
+      "title": "Sticky notes",
+      "summary": "A sticky note is a small icon on the page with a note window for longer comments and replies.",
+      "body": [
+        {
+          "steps": [
+            "Choose <b>Sticky Note</b> on the <b>Comment</b> tab (or press <kbd>N</kbd>).",
+            "Click on the page. The note window opens.",
+            "Type your note. <kbd>Enter</kbd> starts a new line.",
+            "Click elsewhere or press <kbd>{{mod}}+Enter</kbd> to keep the text; <kbd>Esc</kbd> keeps it and closes the window."
+          ]
+        },
+        {
+          "shot": "sticky-notes-1",
+          "alt": "A sticky note icon with its open note window",
+          "caption": "A sticky note and its window: 1 menu · 2 Lock · 3 Reply"
+        },
+        {
+          "list": [
+            "Drag the window's title bar to move it, and its corner to resize it.",
+            "Its <b>⋮</b> menu sets the status, deletes the note or opens Properties.",
+            "Double-click a note (or select it and press <kbd>Enter</kbd>) to open its window again. Several can be open at once.",
+            "<kbd>{{save}}</kbd> keeps where each window is and whether it is open."
+          ]
+        }
+      ]
+    },
+    "shapes": {
+      "title": "Shapes, lines and drawing",
+      "summary": "Draw rectangles, ovals, clouds, lines, arrows, polylines, polygons and freehand pen strokes.",
+      "body": [
+        {
+          "steps": [
+            "Choose a shape on the <b>Comment</b> tab, for example <b>Cloud</b>.",
+            "Drag on the page. For a polyline, polygon or cloud, click each corner and double-click (or press <kbd>Enter</kbd>) to finish.",
+            "Change the colour, line width or fill in the Properties pane."
+          ]
+        },
+        {
+          "shot": "shapes-1",
+          "alt": "A red rectangle, a cloud and an arrow drawn on a drawing"
+        },
+        {
+          "list": [
+            "Hold <kbd>Shift</kbd> while you drag for a square, a circle, or a line at 45° steps.",
+            "<b>Pencil</b> draws freehand. <b>Free Highlight</b> draws a wide, see-through stroke.",
+            "Drag a selected shape's handles to resize it. A hollow shape is selected by clicking its border."
+          ]
+        }
+      ]
+    },
+    "stamps": {
+      "title": "Stamps",
+      "summary": "Put a status stamp (for example Approved or For Comment) or a picture on the page.",
+      "body": [
+        {
+          "steps": [
+            "Choose <b>Stamp</b> on the <b>Comment</b> tab.",
+            "Pick the status code, and type the document number and revision if you want them on the stamp.",
+            "Choose <b>Place stamp</b>, then click on the page (or press <kbd>Enter</kbd> to place it in the middle of the page)."
+          ]
+        },
+        {
+          "shot": "stamps-1",
+          "alt": "The Stamp dialog with a status code, document number and revision"
+        },
+        {
+          "list": [
+            "The stamp shows the code, your name, today's date, and the document's number and revision.",
+            "<b>Status Schemes</b> sets which codes you can choose from, for your project's own review process.",
+            "<b>Image Stamp</b> places a PNG or JPG picture, or the first page of a PDF."
+          ]
+        },
+        {
+          "tip": "Your name comes from <b>Comment</b> › <b>Reviewer Profile</b>."
+        }
+      ]
+    },
+    "selecting-comments": {
+      "title": "Selecting, moving and deleting comments",
+      "summary": "Select one comment or many, then move, nudge, copy or delete them together.",
+      "body": [
+        {
+          "list": [
+            "Click a comment with <b>Select</b> (<kbd>{{select}}</kbd>) or <b>Select Comments</b> to select it.",
+            "Drag a rectangle on the page to select every comment it touches. With <b>Select</b>, start the drag beside the text.",
+            "<kbd>Shift</kbd>+click or <kbd>{{mod}}</kbd>+click adds a comment to the selection or takes it out.",
+            "<kbd>{{selectAll}}</kbd> with <b>Select Comments</b> selects every comment on the page."
+          ]
+        },
+        {
+          "shot": "selecting-comments-1",
+          "alt": "Three comments selected together after dragging a rectangle around them"
+        },
+        {
+          "h": "With comments selected"
+        },
+        {
+          "list": [
+            "Drag them, or nudge them with the arrow keys (<kbd>Shift</kbd> for bigger steps).",
+            "Press <kbd>{{delete}}</kbd> to delete them, and <kbd>{{undo}}</kbd> to bring them back.",
+            "Right-click for Copy, Cut, Paste, Flatten, Locked, Printable and Properties."
+          ]
+        },
+        {
+          "tip": "A locked comment can't be moved or changed until you clear <b>Locked</b> in its menu or the Properties pane."
+        }
+      ]
+    },
+    "comment-properties": {
+      "title": "Comment properties and colours",
+      "summary": "The Properties pane shows every property of the selected comment, and changes it.",
+      "body": [
+        {
+          "shot": "comment-properties-1",
+          "alt": "The Properties pane for a selected rectangle",
+          "caption": "The Properties pane: 1 General · 2 Style"
+        },
+        {
+          "steps": [
+            "Select a comment.",
+            "Open the Properties pane (<b>Home</b> › <b>Properties Pane</b>) if it is not open.",
+            "Change a property. The comment changes at once, and each change is one undo step."
+          ]
+        },
+        {
+          "list": [
+            "<b>General</b>: subject, author, dates, Printable, Read only, Locked, Marked and the review history.",
+            "<b>Style</b>: fill and stroke colour, line style and width, opacity, blend mode and rotation.",
+            "<b>Text</b>: font, size, bold, italic and alignment."
+          ]
+        },
+        {
+          "h": "To choose a colour"
+        },
+        {
+          "steps": [
+            "Click a colour box.",
+            "Click a colour in <b>Standard colors</b> (or move with the arrow keys and press <kbd>Enter</kbd>).",
+            "<b>More colors…</b> opens your system's colour picker. Fill colours also offer <b>No fill</b>."
+          ]
+        },
+        {
+          "shot": "comment-properties-2",
+          "alt": "The Standard colors picker opened from a colour box"
+        },
+        {
+          "tip": "Right-click a comment and choose <b>Make Current Properties Default</b> to draw the next ones like it."
+        }
+      ]
+    },
+    "comment-styles": {
+      "title": "Comment styles",
+      "summary": "Save named looks for each comment tool and switch between them in one click.",
+      "body": [
+        {
+          "steps": [
+            "Choose <b>Comment</b> › <b>Comment Styles</b> (or <b>Comment Styles Palette…</b> under a tool's arrow).",
+            "Pick a tool on the left.",
+            "Select a style, or <b>Clone</b> one to make your own, and change its properties on the right.",
+            "Choose <b>Set Current</b> to draw the tool's next comments in that style."
+          ]
+        },
+        {
+          "shot": "comment-styles-1",
+          "alt": "The Comment Styles Palette window",
+          "caption": "1 Tools · 2 Current Style and Custom Styles · 3 Properties"
+        },
+        {
+          "list": [
+            "<b>Rename</b>, <b>Reset</b> and <b>Delete</b> are on the toolbar. Reset brings a preset back.",
+            "<b>Reset All</b> puts every tool back to its default and restores the presets. Your own styles are kept.",
+            "<b>Export…</b> and <b>Import…</b> share styles with colleagues as a file.",
+            "On the ribbon, the arrow beside a tool lists its styles too."
+          ]
+        }
+      ]
+    },
+    "reviewing-comments": {
+      "title": "Reviewing comments",
+      "summary": "The Comments pane lists every comment, with replies, statuses, filters and search.",
+      "body": [
+        {
+          "shot": "reviewing-comments-1",
+          "alt": "The Comments pane with comment cards, a reply and a status",
+          "caption": "The Comments pane: 1 Find · 2 A comment card"
+        },
+        {
+          "h": "To reply to a comment"
+        },
+        {
+          "steps": [
+            "Open the Comments pane (<b>Home</b> › <b>Comments</b>, or the rail).",
+            "On the comment's card, choose <b>Reply</b>.",
+            "Type your reply and press <kbd>Enter</kbd> to post it (<kbd>Esc</kbd> cancels)."
+          ]
+        },
+        {
+          "h": "To set a status"
+        },
+        {
+          "p": "Right-click the comment (on the page or its card) › <b>Set Status</b>, and choose Accepted, Rejected, Cancelled, Completed or your own scheme's statuses. The card shows the status and who set it."
+        },
+        {
+          "list": [
+            "<b>Options</b> sorts, groups and filters the cards by page, author, type or status.",
+            "<b>Find</b> (press <kbd>Enter</kbd>) looks through the comments' text and replies.",
+            "Click a card to go to its comment. <kbd>F2</kbd> edits its text.",
+            "<b>Comment</b> › <b>Export CRS (Excel)</b> builds a comment resolution sheet."
+          ]
+        }
+      ]
+    },
+    "flatten-snapshot": {
+      "title": "Flattening comments and snapshots",
+      "summary": "Make comments part of the page, or copy part of a page as a picture.",
+      "body": [
+        {
+          "h": "To flatten comments"
+        },
+        {
+          "steps": [
+            "Choose <b>Comment</b> › <b>Flatten Comments</b>.",
+            "Choose the selected comments, or all comments on some pages.",
+            "Choose <b>Flatten</b>. The comments are drawn into the page: they print and show everywhere, but can no longer be edited."
+          ]
+        },
+        {
+          "shot": "flatten-snapshot-1",
+          "alt": "The Flatten Comments dialog"
+        },
+        {
+          "list": [
+            "Locked and hidden comments, links and redaction marks are left as they are.",
+            "<kbd>{{undo}}</kbd> brings the comments back until you save."
+          ]
+        },
+        {
+          "h": "To take a snapshot"
+        },
+        {
+          "steps": [
+            "Choose <b>Home</b> › <b>Snapshot</b>.",
+            "Drag a rectangle on the page.",
+            "The area is copied to the clipboard as a picture. Paste it into an e-mail, a report or another app."
+          ]
+        },
+        {
+          "tip": "From the keyboard, the arrow keys move and resize the snapshot rectangle and <kbd>Enter</kbd> copies it. A document that does not allow copying refuses snapshots."
+        }
+      ]
+    },
+    "comment-transfer": {
+      "title": "Copying, exporting and importing comments",
+      "summary": "Move comments between documents, or save them as CSV, Excel or JSON and bring them back.",
+      "body": [
+        {
+          "h": "To copy comments to another document"
+        },
+        {
+          "steps": [
+            "Select the comments and press <kbd>{{copy}}</kbd> (or <kbd>{{cut}}</kbd>).",
+            "Go to the other document (or another page) and click the page.",
+            "Press <kbd>{{paste}}</kbd>. They go on the page you clicked, at the same place. <b>Paste to Original Pages</b> puts them on the pages they came from."
+          ]
+        },
+        {
+          "h": "To export comments"
+        },
+        {
+          "steps": [
+            "Choose <b>Comment</b> › <b>Export Comments</b>.",
+            "Choose CSV or Excel for a list you can read and filter, or JSON to keep the comments exactly as they are.",
+            "Choose the pages, authors, types and statuses, then <b>Export</b>."
+          ]
+        },
+        {
+          "h": "To import comments"
+        },
+        {
+          "steps": [
+            "Choose <b>Comment</b> › <b>Import Comments</b>.",
+            "Pick another PDF or a {{app}} JSON export.",
+            "Choose which comments to bring in, and <b>Import</b>."
+          ]
+        },
+        {
+          "shot": "comment-transfer-1",
+          "alt": "The Import Comments dialog with its options"
+        },
+        {
+          "tip": "A JSON export keeps everything: the look, replies, statuses, stamps, pictures, attached files and sticky note windows. Importing it brings the same comments back."
+        }
+      ]
+    },
+    "pasting-pictures": {
+      "title": "Pasting pictures",
+      "summary": "Paste a screenshot or an image you copied in another app onto the page.",
+      "body": [
+        {
+          "steps": [
+            "Copy a picture: take a screenshot, or copy an image in another app.",
+            "Click the page in {{app}}.",
+            "Press <kbd>{{paste}}</kbd>, or right-click the page and choose <b>Paste</b>."
+          ]
+        },
+        {
+          "shot": "pasting-pictures-1",
+          "alt": "A pasted screenshot on the page, selected",
+          "caption": "The picture is placed as an image stamp, scaled to fit the page, and selected."
+        },
+        {
+          "list": [
+            "The newest thing you copied is pasted: the picture or the comments.",
+            "Paste from the menu may ask once to allow clipboard access.",
+            "Pictures up to 20 MB are accepted; other formats are converted to PNG."
+          ]
+        }
+      ]
+    },
+    "attaching-files": {
+      "title": "Attaching files",
+      "summary": "Put a file on the page as a paperclip comment, or see the files embedded in the PDF.",
+      "body": [
+        {
+          "steps": [
+            "Choose <b>Comment</b> › <b>Attach File</b>.",
+            "Click on the page, and pick the file (up to 25 MB).",
+            "A paperclip shows where it is. Double-click it to save the file."
+          ]
+        },
+        {
+          "shot": "attaching-files-1",
+          "alt": "The Attachments pane listing a file attached to the document"
+        },
+        {
+          "p": "The <b>Attachments</b> pane lists every file in the PDF, attached to a page or to the whole document. Choose one to open it or save it."
+        }
+      ]
+    },
+    "measure-scale": {
+      "title": "Setting the scale",
+      "summary": "Tell {{app}} the drawing's scale, so measurements show real lengths and areas.",
+      "body": [
+        {
+          "h": "To set a known scale"
+        },
+        {
+          "steps": [
+            "Choose <b>Measure</b> › <b>Set Scale</b>.",
+            "Type the paper length and the real length (for example 1 mm = 100 mm) and choose the units.",
+            "Choose which pages it applies to, and <b>Apply</b>."
+          ]
+        },
+        {
+          "shot": "measure-scale-1",
+          "alt": "The Set scale dialog"
+        },
+        {
+          "h": "To calibrate from the drawing"
+        },
+        {
+          "steps": [
+            "Choose <b>Measure</b> › <b>Calibrate</b>.",
+            "Click two points a known distance apart, for example the ends of a dimension line.",
+            "Type that distance and choose <b>Apply</b>."
+          ]
+        },
+        {
+          "list": [
+            "<b>Scale Viewport</b> gives part of a page its own scale, for a sheet with details at another scale.",
+            "<b>Units and Precision</b> sets the units, decimal places and rounding."
+          ]
+        }
+      ]
+    },
+    "measure-tools": {
+      "title": "Measuring distance, perimeter and area",
+      "summary": "Measure on the page. Each measurement is a comment with its value, saved in the file.",
+      "body": [
+        {
+          "shot": "measure-tools-1",
+          "alt": "The Measure tab of the ribbon",
+          "caption": "1 Measure tools · 2 Scale · 3 Snapping"
+        },
+        {
+          "steps": [
+            "Set the scale first (see [Setting the scale](#measure-scale)).",
+            "Choose <b>Distance</b>, <b>Perimeter</b> or <b>Area</b> on the <b>Measure</b> tab.",
+            "For Distance, drag from one point to the other. For Perimeter and Area, click each corner and double-click (or press <kbd>Enter</kbd>) to finish.",
+            "The value shows on the page and in the Properties pane."
+          ]
+        },
+        {
+          "shot": "measure-tools-2",
+          "alt": "A distance and an area measured on a drawing, with their values"
+        },
+        {
+          "tip": "Measurements are comments, so they appear in the Comments pane and can be exported with the other comments."
+        }
+      ]
+    },
+    "snapping": {
+      "title": "Snapping",
+      "summary": "Snap measurement and drawing points exactly to the drawing's lines.",
+      "body": [
+        {
+          "steps": [
+            "Turn snapping on with the magnet in the status bar, or <b>Measure</b> › <b>Enable Snapping</b>.",
+            "Choose what to snap to on the <b>Measure</b> tab: endpoints, midpoints, intersections and nearest point on a line.",
+            "Move the pointer near the drawing. A marker shows the point it will snap to."
+          ]
+        },
+        {
+          "shot": "snapping-1",
+          "alt": "The snapping options on the Measure tab"
+        }
+      ]
+    },
+    "filling-forms": {
+      "title": "Filling in forms",
+      "summary": "Type in a PDF form's fields, tick its boxes and choose its options, then save.",
+      "body": [
+        {
+          "steps": [
+            "Click a form field, or press <kbd>Tab</kbd> to move from field to field.",
+            "Type, tick or choose the value.",
+            "Press <kbd>{{save}}</kbd> to save the values in the file."
+          ]
+        },
+        {
+          "shot": "filling-forms-1",
+          "alt": "A form with its fields tinted by Highlight Fields",
+          "caption": "<b>Highlight Fields</b> tints the fields so you can see them."
+        },
+        {
+          "list": [
+            "<b>Form</b> › <b>Highlight Fields</b> shows or hides the tint.",
+            "<b>Form</b> › <b>Reset Form</b> puts every field back to its default.",
+            "A file that does not allow form filling keeps its fields read-only."
+          ]
+        }
+      ]
+    },
+    "creating-fields": {
+      "title": "Creating form fields",
+      "summary": "Add text fields, check boxes, radio buttons, list boxes and dropdowns to any PDF.",
+      "body": [
+        {
+          "shot": "creating-fields-1",
+          "alt": "The Form tab of the ribbon"
+        },
+        {
+          "steps": [
+            "Open the <b>Form</b> tab and choose a field type, for example <b>Text Field</b>.",
+            "Drag a box on the page (or click for the default size).",
+            "Set the field's name, tooltip, default value and look in the Properties pane."
+          ]
+        },
+        {
+          "shot": "creating-fields-2",
+          "alt": "The Properties pane of a new text field"
+        },
+        {
+          "list": [
+            "Radio buttons drawn one after another form one group: only one of them can be on.",
+            "For a list box or dropdown, add its items in the Properties pane.",
+            "{{app}} never adds scripts to a form."
+          ]
+        }
+      ]
+    },
+    "field-order": {
+      "title": "Editing fields and tab order",
+      "summary": "Move, resize and delete fields, and set the order Tab moves through them.",
+      "body": [
+        {
+          "steps": [
+            "Choose <b>Form</b> › <b>Select Fields</b>.",
+            "Click a field to select it. Drag it or its handles to move or resize it; <kbd>{{delete}}</kbd> deletes it.",
+            "Click the page away from any field: the Properties pane shows the page's tab order. Move fields up or down in the list."
+          ]
+        },
+        {
+          "shot": "field-order-1",
+          "alt": "Select Fields with the page's tab order in the Properties pane"
+        }
+      ]
+    },
+    "organize-pages": {
+      "title": "Organizing pages",
+      "summary": "Insert, delete, move, extract, rotate and merge pages. These change the file itself.",
+      "body": [
+        {
+          "shot": "organize-pages-1",
+          "alt": "The Organize tab of the ribbon"
+        },
+        {
+          "steps": [
+            "Select the pages: click thumbnails in the Thumbnails pane (<kbd>Shift</kbd> or <kbd>{{mod}}</kbd>+click for several), or stay on the current page.",
+            "Choose a command on the <b>Organize</b> tab: <b>Rotate</b>, <b>Delete Pages</b>, <b>Move Pages</b>, <b>Extract Pages</b>, <b>Insert Blank Page</b>, <b>Insert from File</b> or <b>Merge Files</b>.",
+            "Check the result, then press <kbd>{{save}}</kbd>. <kbd>{{undo}}</kbd> undoes a page change."
+          ]
+        },
+        {
+          "shot": "organize-pages-2",
+          "alt": "Selected pages in the Thumbnails pane"
+        },
+        {
+          "list": [
+            "Drag thumbnails to move pages.",
+            "Right-click a thumbnail for Cut, Copy and Paste of pages, also between documents.",
+            "Extract Pages saves the chosen pages as a new PDF."
+          ]
+        },
+        {
+          "tip": "Rotate on the <b>Organize</b> tab turns the pages in the file. Rotate View on the Home and View tabs turns them on screen only."
+        }
+      ]
+    },
+    "export-documents": {
+      "title": "Converting to Word, text and images",
+      "summary": "Save the document's content as Word, text, Markdown, HTML or images, on this device.",
+      "body": [
+        {
+          "shot": "export-documents-1",
+          "alt": "The Convert tab of the ribbon"
+        },
+        {
+          "steps": [
+            "Choose a format on the <b>Convert</b> tab: <b>To Word (Beta)</b>, <b>To Text</b>, <b>To Markdown</b>, <b>To HTML</b> or <b>Export Images</b>.",
+            "Choose the pages and the options.",
+            "Choose <b>Export</b> and where to save the file."
+          ]
+        },
+        {
+          "tip": "Conversion runs on this device. Nothing is uploaded. Scanned pages need [OCR](#ocr) first to have text."
+        }
+      ]
+    },
+    "extract-tables": {
+      "title": "Extracting tables",
+      "summary": "Save tables from the pages as an Excel workbook or CSV files.",
+      "body": [
+        {
+          "h": "Quickly"
+        },
+        {
+          "steps": [
+            "Choose <b>Convert</b> › <b>Express Extract</b>.",
+            "Choose <b>Find Tables</b>, then the format (Excel or CSV).",
+            "Choose <b>Save…</b>."
+          ]
+        },
+        {
+          "h": "With control over the grid"
+        },
+        {
+          "steps": [
+            "Choose <b>Convert</b> › <b>Review & Extract</b>. The tables found are outlined on the page.",
+            "Add, move or delete row and column dividers, mark header rows and merge cells.",
+            "Save the result, or save the grid as a template for similar pages."
+          ]
+        },
+        {
+          "shot": "extract-tables-1",
+          "alt": "Review and Extract showing a table's grid on the page"
+        }
+      ]
+    },
+    "ocr": {
+      "title": "Recognizing text in scanned pages (OCR)",
+      "summary": "Give scanned pages an invisible text layer, so their text can be found, selected and copied.",
+      "body": [
+        {
+          "steps": [
+            "Choose <b>Convert</b> › <b>Recognize Text (OCR)</b>.",
+            "Choose the pages and the language.",
+            "Choose <b>Recognize</b>. When it finishes, press <kbd>{{save}}</kbd>."
+          ]
+        },
+        {
+          "shot": "ocr-1",
+          "alt": "The Recognize Text (OCR) dialog"
+        },
+        {
+          "list": [
+            "Recognition runs on this device. Nothing is sent anywhere.",
+            "Pages that already have text are skipped unless you choose otherwise.",
+            "English is ready offline; other languages download the first time you use them."
+          ]
+        }
+      ]
+    },
+    "redaction": {
+      "title": "Redacting",
+      "summary": "Remove sensitive text, images and drawings for good, in a new file.",
+      "body": [
+        {
+          "steps": [
+            "Select text and choose <b>Protect</b> › <b>Mark for Redaction</b>, or choose <b>Mark Area for Redaction</b> and drag a rectangle.",
+            "Check the marks in <b>Pending Redactions</b>. Remove any you don't want.",
+            "Choose <b>Apply Redactions</b> and where to save the new file."
+          ]
+        },
+        {
+          "shot": "redaction-1",
+          "alt": "Redaction marks on a page and the Pending Redactions list",
+          "caption": "Marks wait until you apply them, and can be saved with the document."
+        },
+        {
+          "p": "Applying writes a new, fully rewritten file: the marked content is removed, the document's hidden data is cleared, and the file is checked before it is saved. The original file is not changed."
+        },
+        {
+          "tip": "Open the redacted file and check it before you share it."
+        }
+      ]
+    },
+    "passwords": {
+      "title": "Passwords and permissions",
+      "summary": "Protect a copy of the document with a password, limit what others can do with it, or remove protection.",
+      "body": [
+        {
+          "steps": [
+            "Choose <b>Protect</b> › <b>Password Security…</b>.",
+            "Set an <b>open password</b> (needed to open the file), a <b>permissions password</b> with what is allowed (printing, copying, changes), or both.",
+            "Choose <b>Save</b> and where to save the protected copy. It uses AES-256."
+          ]
+        },
+        {
+          "shot": "passwords-1",
+          "alt": "The Password Security dialog"
+        },
+        {
+          "list": [
+            "<b>Remove Security</b> saves a copy without passwords.",
+            "Both need the owner (permissions) password of a file that is already protected.",
+            "<b>Security Info</b> shows what the open file allows."
+          ]
+        }
+      ]
+    },
+    "signing": {
+      "title": "Signing with your signature",
+      "summary": "Place your signature or initials on the page: drawn, typed or from a picture.",
+      "body": [
+        {
+          "steps": [
+            "Choose <b>Protect</b> › <b>Sign Document…</b> (also on the Home tab).",
+            "Draw your signature, type your name, or choose a picture of it. Add initials if you want.",
+            "Choose <b>Place Signature</b> (or <b>Place Initials</b>), then click on the page. <kbd>Enter</kbd> puts it in the middle of the page."
+          ]
+        },
+        {
+          "shot": "signing-1",
+          "alt": "The Sign Document dialog with a drawn signature"
+        },
+        {
+          "list": [
+            "Your signatures are saved on this device, for next time.",
+            "The signature is a standard comment. Flatten it to make it part of the page."
+          ]
+        },
+        {
+          "tip": "This is a visual signature, not a certificate-based digital signature: it shows your signature but does not prove who signed or that the file is unchanged."
+        }
+      ]
+    },
+    "protected-files": {
+      "title": "Protected and signed files",
+      "summary": "{{app}} respects what a protected file allows, and checks digital signatures.",
+      "body": [
+        {
+          "list": [
+            "A file with an open password asks for it when you open it.",
+            "A file with restrictions shows which commands are not allowed. <b>Protect</b> › <b>Security Info</b> lists what is allowed.",
+            "If you have the owner password, <b>Unlock with Owner Password</b> lifts the restrictions for this session."
+          ]
+        },
+        {
+          "shot": "protected-files-1",
+          "alt": "The Security info dialog listing what the file allows"
+        },
+        {
+          "p": "The <b>Signatures</b> pane lists the file's digital signatures and whether each signed part is unchanged. <kbd>{{save}}</kbd> adds your changes after the signed part, so earlier signatures stay intact."
+        }
+      ]
+    },
+    "saving": {
+      "title": "Saving",
+      "summary": "Save changes into the file, save a copy, or rewrite the file compactly.",
+      "body": [
+        {
+          "shot": "saving-1",
+          "alt": "The File tab with Save, Save As and Save Optimized"
+        },
+        {
+          "list": [
+            "<kbd>{{save}}</kbd> (<b>Save</b>) adds your changes to the end of the file. It is quick, and earlier signed versions are kept as they were.",
+            "<kbd>{{saveAs}}</kbd> (<b>Save As</b>) saves a copy under a new name or place.",
+            "<b>Save Optimized</b> rewrites the file compactly. Digital signatures would no longer be valid."
+          ]
+        },
+        {
+          "p": "<b>File</b> › <b>Document Properties</b> shows the document's title, author, file size and structure."
+        }
+      ]
+    },
+    "printing": {
+      "title": "Printing",
+      "summary": "Print pages with or without comments, at the right size and quality.",
+      "body": [
+        {
+          "steps": [
+            "Press <kbd>{{print}}</kbd>.",
+            "Choose the pages, page size, comments and markups, and the quality (High for drawings).",
+            "Choose <b>Print</b>, then your printer in the browser's print dialog."
+          ]
+        },
+        {
+          "shot": "printing-1",
+          "alt": "The Print dialog"
+        },
+        {
+          "list": [
+            "Large drawings print sharpest through the browser's PDF viewer, which the dialog offers.",
+            "<b>File</b> › <b>Export Print-Ready PDF</b> saves a copy with comments and form values made part of the pages."
+          ]
+        }
+      ]
+    },
+    "recovery": {
+      "title": "Recovering unsaved work",
+      "summary": "If the browser closes before you save, {{app}} offers your changes back the next time it starts.",
+      "body": [
+        {
+          "steps": [
+            "Start {{app}} again.",
+            "The <b>Recover unsaved changes?</b> dialog lists the documents with unsaved changes.",
+            "Choose <b>Recover</b> to continue where you left off, or <b>Discard</b>."
+          ]
+        },
+        {
+          "shot": "recovery-1",
+          "alt": "The Recover unsaved changes dialog"
+        },
+        {
+          "p": "Recovery copies are kept on this device only, never in your original file. They are deleted when you save or discard."
+        }
+      ]
+    },
+    "keyboard-shortcuts": {
+      "title": "Keyboard shortcuts",
+      "summary": "Every keyboard shortcut in {{app}}, for this computer. Help › Keyboard Shortcuts in the app shows the same list, ready to print.",
+      "body": [
+        {
+          "p": "Single-letter keys, such as <kbd>{{hand}}</kbd> for Hand, work while the document has focus. Keys marked as reserved by the browser work in the installed app; use the other key shown in a browser tab."
+        },
+        {
+          "table": "shortcuts"
+        }
+      ]
+    },
+    "privacy": {
+      "title": "Privacy",
+      "summary": "Your documents never leave this device.",
+      "body": [
+        {
+          "list": [
+            "{{app}} opens, shows and saves documents in your browser. Nothing is uploaded.",
+            "No account, no cookies, no tracking and no analytics.",
+            "On its own, {{app}} only loads its program files and checks for updates from its own website.",
+            "Error reports are sent only when you choose to, and you see every word first."
+          ]
+        },
+        {
+          "shot": "privacy-1",
+          "alt": "The Privacy page in the File tab"
+        },
+        {
+          "p": "<b>File</b> › <b>Privacy</b> lists everything {{app}} keeps on this device. <b>File</b> › <b>Settings</b> › <b>Clear all local data</b> deletes it."
+        }
+      ]
+    },
+    "reporting-problems": {
+      "title": "Reporting a problem",
+      "summary": "Tell us what went wrong, by an error report or on GitHub. Never attach confidential documents.",
+      "body": [
+        {
+          "h": "To send an error report"
+        },
+        {
+          "steps": [
+            "In {{app}}, choose <b>Help</b> › <b>Send Error Report</b>.",
+            "Describe what you were doing (optional). Don't paste text from your documents.",
+            "Read the report exactly as it will be sent, then choose <b>Send</b>."
+          ]
+        },
+        {
+          "shot": "reporting-problems-1",
+          "alt": "The Send Error Report dialog"
+        },
+        {
+          "p": "The report never contains your documents, their names or their text. Offline, you can copy it and send it later."
+        },
+        {
+          "h": "On GitHub"
+        },
+        {
+          "p": "The GitHub button at the top right of {{app}} opens a new issue with the app version, browser and operating system filled in."
+        }
+      ]
+    }
+  }
+}

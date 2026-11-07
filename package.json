@@ -37,6 +37,7 @@
     "typecheck:spikes": "tsc -p spikes",
     "corpus": "node scripts/fetch-corpus.ts",
     "icons": "node scripts/gen-icons.ts",
+    "help:screenshots": "playwright test --project=help-shots --workers=1",
     "owner:interop:m3": "playwright test --project=e2e e2e/interop-m3.spec.ts --workers=1",
     "owner:interop:m4": "playwright test --project=e2e e2e/interop-m4.spec.ts --workers=1",
     "owner:interop:m6": "playwright test --project=e2e e2e/interop-m6.spec.ts --workers=1",

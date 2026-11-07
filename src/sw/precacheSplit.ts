@@ -9,6 +9,13 @@ export interface PrecacheEntry {
   revision: string | null;
 }
 
+/** The Help window's own files (M9, ADR-026 D-46): help.html, its entry chunk and CSS, the screenshots. */
+const HELP_FILE = /(^|\/)(help\.html|assets\/help-[\w-]+\.(js|css)|help-img\/[\w-]+\.webp)$/;
+
+export function isHelpFile(url: string): boolean {
+  return HELP_FILE.test(url);
+}
+
 /** Background modules: needed later than the first page, or only for some documents. */
 const BACKGROUND = [
   /(^|\/)assets\/work\.worker-[\w-]+\.js$/,
@@ -28,6 +35,8 @@ const BACKGROUND = [
   /(^|\/)assets\/tesseract-core[\w.-]*\.wasm$/,
   /(^|\/)ocr\/eng\.traineddata\.gz$/,
   /(^|\/)third-party-notices\.txt$/,
+  // The Help window (M9, ADR-026 D-46): its page, script, style and screenshots.
+  HELP_FILE,
 ];
 
 /**
@@ -49,6 +58,8 @@ export const PRECACHE_EXTENSIONS = [
   'ttf',
   'otf',
   'png',
+  // Help's screenshots (M9, ADR-026).
+  'webp',
   'svg',
   'webmanifest',
   'txt',

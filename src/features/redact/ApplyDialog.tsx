@@ -14,6 +14,7 @@ import {
   useApply,
 } from './applyFlow';
 import { useMarks } from './redactStore';
+import { dialogHelp } from '../help/openHelp';
 
 const KINDS: Record<LeakKind, MessageKey> = {
   text: msg('redact.check.text'),
@@ -102,6 +103,7 @@ function Body({ docId }: { docId: string }) {
       title={t('redact.apply.title')}
       description={t('redact.apply.description')}
       closeIcon={<Dismiss20Regular />}
+      help={dialogHelp('redaction')}
       footer={footer}
     >
       <div className="scale-form" data-testid="redact-apply">

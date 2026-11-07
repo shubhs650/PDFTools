@@ -44,7 +44,10 @@ const MIME: Record<string, string> = {
 /** Resolves a URL path inside `base`; never escapes it. */
 export async function resolveInside(base: string, urlPath: string): Promise<string | undefined> {
   const rel = normalize(decodeURIComponent(urlPath));
-  for (const candidate of [join(base, rel), join(base, rel, 'index.html')]) {
+  // `/help` → help.html, as Cloudflare's `auto-trailing-slash` serves it (ADR-026).
+  const candidates = [join(base, rel), join(base, rel, 'index.html')];
+  if (extname(rel) === '' && !rel.endsWith(sep)) candidates.push(join(base, `${rel}.html`));
+  for (const candidate of candidates) {
     if (candidate !== base && !candidate.startsWith(base + sep)) continue;
     try {
       if ((await stat(candidate)).isFile()) return candidate;

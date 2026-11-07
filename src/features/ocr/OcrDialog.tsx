@@ -8,6 +8,7 @@ import { Button, Dialog, TextField } from '../../ui/components';
 import type { Scope, ScopeKind } from '../extract/scope';
 import { usePageSelection } from '../pages/selection';
 import { closeOcr, startOcr, useOcr, type OcrError } from './ocrJob';
+import { dialogHelp } from '../help/openHelp';
 
 const ERRORS: Record<OcrError, MessageKey> = {
   empty: msg('ocr.error.empty'),
@@ -82,6 +83,7 @@ function OcrForm({ docId }: { docId: string }) {
       title={t('ocr.title')}
       description={t('ocr.description')}
       closeIcon={<Dismiss20Regular />}
+      help={dialogHelp('ocr')}
       footer={
         <>
           <Button label={t('ocr.start')} variant="primary" type="submit" form={`${ids}-form`} />

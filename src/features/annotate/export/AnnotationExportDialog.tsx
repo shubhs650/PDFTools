@@ -9,6 +9,7 @@ import {
   useAnnotationExport,
   type AnnotationExportOptions,
 } from './annotationExport';
+import { dialogHelp } from '../../help/openHelp';
 
 /**
  * Comment → Export Annotations (M4-08): all comments or the ones the Comments
@@ -53,6 +54,7 @@ function Form() {
       title={t('annotExport.title')}
       description={t('annotExport.description')}
       closeIcon={<Dismiss20Regular />}
+      help={dialogHelp('comment-transfer')}
       footer={
         running ? (
           <Button key="cancel" label={t('annotExport.cancel')} onClick={cancelAnnotationExport} />

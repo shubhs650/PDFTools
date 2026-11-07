@@ -16,6 +16,7 @@ import { Button, ColorPicker, Dialog, TextField } from '../../ui/components';
 import { internalDestination } from '../view/links';
 import { pageSizeOf } from '../view/pagePoint';
 import { closeProperties, editBlocked, runEdit, useBookmarks } from './bookmarks';
+import { dialogHelp } from '../help/openHelp';
 
 type ZoomChoice = 'inherit' | 'fitPage' | 'fitWidth' | 'custom';
 const MIN_PCT = 1;
@@ -161,6 +162,7 @@ function PropertiesForm({
       }}
       title={t('bookmarks.props.title')}
       closeIcon={<Dismiss20Regular />}
+      help={dialogHelp('bookmarks')}
       footer={
         <>
           <Button

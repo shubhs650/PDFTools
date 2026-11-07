@@ -58,7 +58,8 @@ const ACCENTS: Record<string, string> = {
   Z: 'Ž',
 };
 
-const PROTECTED = /(\{\{[^}]*\}\}|<\/?\d+>|<\/?[a-z]+\s*\/?>)/;
+// Also Help's topic links, `[text](#topic-id)` (M9, ADR-026): the id is an address.
+const PROTECTED = /(\{\{[^}]*\}\}|<\/?\d+>|<\/?[a-z]+\s*\/?>|\]\(#[\w-]+\))/;
 
 export const PSEUDO_LOCALE = 'en-XA';
 export const PSEUDO_EXPANSION = 0.4;
@@ -80,8 +81,13 @@ export function pseudoLocalize(text: string): string {
 /** Applies pseudoLocalize to every string leaf of a resource tree. */
 export function pseudoResources<T>(tree: T): T {
   if (typeof tree === 'string') return pseudoLocalize(tree) as T;
+  // Help's topic bodies are arrays of blocks (ADR-026): keep them arrays.
+  if (Array.isArray(tree)) return tree.map((v: unknown) => pseudoResources(v)) as T;
   if (tree && typeof tree === 'object') {
-    return Object.fromEntries(Object.entries(tree).map(([k, v]) => [k, pseudoResources(v)])) as T;
+    // Help's `shot` values are screenshot file ids, not text (M9, ADR-026).
+    return Object.fromEntries(
+      Object.entries(tree).map(([k, v]) => [k, k === 'shot' ? v : pseudoResources(v)]),
+    ) as T;
   }
   return tree;
 }

@@ -30,7 +30,6 @@ import { BookmarkPropertiesDialog } from '../features/bookmarks/BookmarkProperti
 import { FileDialogs } from '../features/pages/FileDialogs';
 import { PrintDialog } from '../features/print/PrintDialog';
 import { PrintReadyDialog } from '../features/print/PrintReadyDialog';
-import { HelpPage } from '../features/help/HelpPage';
 import { registerReportCommands } from '../features/report/commands';
 import { ReportDialog } from '../features/report/ReportDialog';
 import { ResetFormDialog } from '../features/forms/ResetFormDialog';
@@ -216,7 +215,6 @@ export function App() {
         <FileDialogs />
         <UpdateWaitDialog />
         <DropZone />
-        <HelpPage />
         {CrashProbe ? (
           <Suspense fallback={null}>
             <CrashProbe />
