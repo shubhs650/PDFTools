@@ -1,6 +1,6 @@
 # Triya PDF — Progress
 
-_Last updated: 2026-11-05 (session 54: M8-01 lossless JSON comments)_
+_Last updated: 2026-11-07 (session 55: M9 plan, Help window)_
 
 **Current milestone:** M7 — second beta review (plan in [docs/plan/M7.md](plan/M7.md), scope in
 [ADR-023](adr/023-m7-second-beta-review.md), **Accepted** 2026-11-04 with the recommended
@@ -10,6 +10,13 @@ answers Q1–Q7; ARCHITECTURE.md Rev 0.12 after [ADR-024](adr/024-freetext-text-
 interop is in the M6 pack (CHECKLIST §M6 R1–R4). Rev 0 (M0–M4) is complete on the agent side.
 
 ## Done
+
+- **Session 55 — M9 plan: Help in its own window with screenshots (ADR-026, proposed).** The
+  owner asked (2026-11-07) for a separate help page with screenshots instead of the floating Help
+  dialog, and answered the planning questions upfront: a separate window, offline, rewritten
+  step-by-step text, the dialog removed; screenshots, structure and "?" links were left to the agent.
+  Plan: [docs/plan/M9.md](plan/M9.md). The owner also said the 60 MB install budget is a
+  reference, not a limit: ARCHITECTURE.md §9 now says so (Rev 0.14, with D-46).
 
 - **Session 54 — M8-01 lossless JSON comment export and import (ADR-025, accepted).** The owner
   asked (2026-11-05) that comment export and import keep every property; XFDF/FDF were planned
