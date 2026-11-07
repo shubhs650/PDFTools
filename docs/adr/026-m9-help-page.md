@@ -1,6 +1,6 @@
 # ADR-026: M9 — Help in its own window, with screenshots
 
-- **Status:** Proposed (2026-11-07)
+- **Status:** Accepted (owner, 2026-11-07). Applied: ARCHITECTURE.md Rev 0.14.
 - **Date:** 2026-11-07
 - **Deciders:** owner (Shubham) / agent (M9 thread)
 - **Related decisions:** D-17 (offline), D-22 (CSP, no network), D-30 (i18n, accessibility),

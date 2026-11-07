@@ -11,7 +11,7 @@ interop is in the M6 pack (CHECKLIST §M6 R1–R4). Rev 0 (M0–M4) is complete 
 
 ## Done
 
-- **Session 55 — M9 plan: Help in its own window with screenshots (ADR-026, proposed).** The
+- **Session 55 — M9 plan: Help in its own window with screenshots (ADR-026, accepted 2026-11-07).** The
   owner asked (2026-11-07) for a separate help page with screenshots instead of the floating Help
   dialog, and answered the planning questions upfront: a separate window, offline, rewritten
   step-by-step text, the dialog removed; screenshots, structure and "?" links were left to the agent.
