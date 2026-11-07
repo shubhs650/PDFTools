@@ -193,8 +193,8 @@
         },
         {
           "shot": "zoom-and-pages-2",
-          "alt": "The status bar with page navigation, zoom and view mode",
-          "caption": "The status bar: 1 Page number · 2 Zoom · 3 View mode"
+          "alt": "The status bar with page navigation, view mode and zoom",
+          "caption": "The status bar: 1 Page number · 2 View mode · 3 Zoom"
         },
         {
           "h": "Rotating the view"
@@ -634,7 +634,7 @@
         {
           "shot": "reviewing-comments-1",
           "alt": "The Comments pane with comment cards, a reply and a status",
-          "caption": "The Comments pane: 1 Options · 2 Find · 3 A comment card"
+          "caption": "The Comments pane: 1 Find · 2 A comment card"
         },
         {
           "h": "To reply to a comment"
@@ -838,7 +838,7 @@
           "steps": [
             "Set the scale first (see [Setting the scale](#measure-scale)).",
             "Choose <b>Distance</b>, <b>Perimeter</b> or <b>Area</b> on the <b>Measure</b> tab.",
-            "Click the points on the page. For Perimeter and Area, double-click (or press <kbd>Enter</kbd>) to finish.",
+            "For Distance, drag from one point to the other. For Perimeter and Area, click each corner and double-click (or press <kbd>Enter</kbd>) to finish.",
             "The value shows on the page and in the Properties pane."
           ]
         },
@@ -1099,7 +1099,7 @@
           "steps": [
             "Choose <b>Protect</b> › <b>Sign Document…</b> (also on the Home tab).",
             "Draw your signature, type your name, or choose a picture of it. Add initials if you want.",
-            "Choose <b>Place</b>, then click on the page (<kbd>Enter</kbd> puts it in the middle of the page)."
+            "Choose <b>Place Signature</b> (or <b>Place Initials</b>), then click on the page. <kbd>Enter</kbd> puts it in the middle of the page."
           ]
         },
         {

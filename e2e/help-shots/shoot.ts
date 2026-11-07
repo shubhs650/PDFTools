@@ -39,6 +39,10 @@ export interface ShootOptions {
   callouts?: Callout[];
   /** Outlines without a number. */
   outline?: Target[];
+  /** Areas painted plain white under the marks (room for numbers below a strip of UI). */
+  cover?: Box[];
+  /** Moves the mouse to a corner first so no tooltip or hover shows (default true; false keeps an open menu's hover). */
+  mouseAway?: boolean;
 }
 
 async function boxOf(t: Target): Promise<Box> {
@@ -86,6 +90,10 @@ const MARK = '#ca5010';
 
 export async function shoot(page: Page, id: string, opts: ShootOptions = {}): Promise<void> {
   const vp = page.viewportSize() ?? { width: 1366, height: 800 };
+  if (opts.mouseAway ?? true) {
+    await page.mouse.move(vp.width - 2, vp.height - 2);
+    await page.waitForTimeout(250);
+  }
   const pad = opts.pad ?? 8;
   const targets = opts.clip === undefined ? [] : Array.isArray(opts.clip) ? opts.clip : [opts.clip];
   let clip: Box = targets.length
@@ -102,8 +110,8 @@ export async function shoot(page: Page, id: string, opts: ShootOptions = {}): Pr
     };
   }
 
-  const marks: { kind: 'n' | 'o'; n?: number; x: number; y: number; w?: number; h?: number }[] =
-    [];
+  const marks: { kind: 'n' | 'o' | 'c'; n?: number; x: number; y: number; w?: number; h?: number }[] =
+    (opts.cover ?? []).map((b) => ({ kind: 'c', x: b.x, y: b.y, w: b.width, h: b.height }));
   for (const c of opts.callouts ?? []) {
     const b = await boxOf(c.target);
     const p = anchorPoint(b, c.at ?? 'tl');
@@ -128,7 +136,9 @@ export async function shoot(page: Page, id: string, opts: ShootOptions = {}): Pr
       layer.style.cssText = 'position:fixed;inset:0;z-index:2147483647;pointer-events:none';
       for (const m of marks) {
         const el = document.createElement('div');
-        if (m.kind === 'o') {
+        if (m.kind === 'c') {
+          el.style.cssText = `position:fixed;left:${String(m.x)}px;top:${String(m.y)}px;width:${String(m.w ?? 0)}px;height:${String(m.h ?? 0)}px;background:#fff`;
+        } else if (m.kind === 'o') {
           el.style.cssText = `position:fixed;left:${String(m.x - 3)}px;top:${String(m.y - 3)}px;width:${String((m.w ?? 0) + 6)}px;height:${String((m.h ?? 0) + 6)}px;border:2.5px solid ${color};border-radius:6px;box-sizing:border-box`;
         } else {
           el.textContent = String(m.n);

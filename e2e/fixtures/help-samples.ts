@@ -251,3 +251,64 @@ export function helpReportPdf(): Uint8Array {
   ];
   return buildPdf(objs);
 }
+
+/** A one-page A4 site inspection form: text fields, a dropdown, check boxes and a radio group. */
+export function helpFormPdf(): Uint8Array {
+  const FX = 200;
+  const FW = 323;
+  let page = text(72, 770, 20, 'Site Inspection Record', true);
+  page += text(72, 748, 11, 'Pump Station Upgrade - monthly check, form IR-3');
+  page += '0.5 w\n' + line(72, 736, 523, 736);
+  const labels: [number, string][] = [
+    [697, 'Inspector'],
+    [657, 'Date'],
+    [617, 'Location'],
+    [567, 'Pump condition'],
+    [513, 'Checks'],
+    [403, 'Result'],
+    [363, 'Remarks'],
+  ];
+  for (const [y, l] of labels) page += text(72, y, 11, l, true);
+  page += text(FX + 24, 513, 11, 'Valves exercised');
+  page += text(FX + 24, 483, 11, 'Alarms tested');
+  page += text(FX + 24, 453, 11, 'Standby pump run');
+  page += text(FX + 24, 403, 11, 'Pass');
+  page += text(FX + 104, 403, 11, 'Fail');
+  const tx = (name: string, tu: string, y: number, h = 24, ff = 0, ap = 18) =>
+    `<< /Type /Annot /Subtype /Widget /FT /Tx /T (${name}) /TU (${tu}) /Ff ${String(ff)} /DA (/Helv 11 Tf 0 g) /Rect [${String(FX)} ${String(y)} ${String(FX + FW)} ${String(y + h)}] /F 4 /P 3 0 R /MK << /BC [0.6 0.6 0.6] >> /AP << /N ${String(ap)} 0 R >> >>`;
+  const cb = (name: string, tu: string, y: number) =>
+    `<< /Type /Annot /Subtype /Widget /FT /Btn /T (${name}) /TU (${tu}) /V /Off /AS /Off /Rect [${String(FX)} ${String(y)} ${String(FX + 16)} ${String(y + 16)}] /F 4 /P 3 0 R /MK << /CA (4) >> /AP << /N << /Yes 19 0 R /Off 20 0 R >> >> >>`;
+  const radio = (x: number, state: string) =>
+    `<< /Type /Annot /Subtype /Widget /Parent 14 0 R /AS /Off /Rect [${String(x)} 400 ${String(x + 16)} 416] /F 4 /P 3 0 R /MK << /CA (l) >> /AP << /N << /${state} 19 0 R /Off 20 0 R >> >> >>`;
+  const box = (w: number, h: number, body: string): PdfObject => ({
+    dict: `<< /Type /XObject /Subtype /Form /BBox [0 0 ${String(w)} ${String(h)}] /Resources << /Font << /Helv 5 0 R >> >> >>`,
+    stream: body,
+  });
+  const fields = [7, 8, 9, 10, 11, 12, 13, 14, 17].map((n) => `${String(n)} 0 R`).join(' ');
+  const annots = [7, 8, 9, 10, 11, 12, 13, 15, 16, 17].map((n) => `${String(n)} 0 R`).join(' ');
+  const objs: PdfObject[] = [
+    `<< /Type /Catalog /Pages 2 0 R /AcroForm << /Fields [${fields}] /DA (/Helv 11 Tf 0 g) /DR << /Font << /Helv 5 0 R >> >> >> >>`,
+    '<< /Type /Pages /Kids [3 0 R] /Count 1 >>',
+    `<< /Type /Page /Parent 2 0 R /MediaBox [0 0 595 842] /Resources << /Font << /F1 5 0 R /F2 6 0 R /Helv 5 0 R >> >> /Contents 4 0 R /Annots [${annots}] >>`,
+    flate(page),
+    '<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica /Encoding /WinAnsiEncoding >>',
+    '<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica-Bold /Encoding /WinAnsiEncoding >>',
+    tx('inspector', 'Inspector', 690),
+    tx('date', 'Date', 650),
+    tx('location', 'Location', 610),
+    `<< /Type /Annot /Subtype /Widget /FT /Ch /Ff 131072 /T (condition) /TU (Pump condition) /Opt [(Good) (Fair) (Poor)] /DA (/Helv 11 Tf 0 g) /Rect [${String(FX)} 560 ${String(FX + 160)} 584] /F 4 /P 3 0 R /MK << /BC [0.6 0.6 0.6] >> /AP << /N 22 0 R >> >>`,
+    cb('valves', 'Valves exercised', 510),
+    cb('alarms', 'Alarms tested', 480),
+    cb('standby', 'Standby pump run', 450),
+    '<< /FT /Btn /Ff 49152 /T (result) /TU (Result) /Kids [15 0 R 16 0 R] >>',
+    radio(FX, 'Pass'),
+    radio(FX + 80, 'Fail'),
+    tx('remarks', 'Remarks', 290, 90, 4096, 21),
+    box(FW, 24, '/Tx BMC EMC'),
+    box(16, 16, '0 g 1 w 0.5 0.5 15 15 re S 3 8 m 7 3 l 13 13 l S'),
+    box(16, 16, '0 g 1 w 0.5 0.5 15 15 re S'),
+    box(FW, 90, '/Tx BMC EMC'),
+    box(160, 24, '/Tx BMC EMC'),
+  ];
+  return buildPdf(objs);
+}
