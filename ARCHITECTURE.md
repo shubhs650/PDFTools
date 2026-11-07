@@ -1,7 +1,7 @@
-# Triya PDF — Architecture & Product Specification (Rev 0.13)
+# Triya PDF — Architecture & Product Specification (Rev 0.14)
 
 **App:** Triya PDF (formerly PDFTools, D-41) · **URL:** `pdf-tools.openengtools.com` · **Platform:** Open Engineering Tools (OET)
-**Status:** Approved for implementation · **Last updated:** 05-Nov-2026 (Rev 0.13)
+**Status:** Approved for implementation · **Last updated:** 07-Nov-2026 (Rev 0.14)
 **Companion file:** `CLAUDE.md` (standing rules for the coding agent — read it first)
 
 > This document is the single source of truth. Where code and this document disagree, this document wins until it is deliberately amended. Decisions are numbered (D-xx) so commits, issues and ADRs can reference them.
@@ -19,6 +19,8 @@
 > **Rev 0.11 amendment** — [ADR-023](docs/adr/023-m7-second-beta-review.md) (owner-approved 2026-11-04): **M7 — second beta review** — product name **Triya PDF** (D-41), dark theme with a top-bar toggle (D-42), text comment interaction and marquee selection (D-43), sticky note popup (D-44), pasting an image onto the page (D-45); 50 % highlights and a black Courier typewriter (D-37); Home tab layout with icon-only groups (D-36) (§2, §7.1, §7.3, §8, §10.3, §13 M7, §14).
 
 > **Rev 0.12 amendment** — [ADR-024](docs/adr/024-freetext-text-and-border-colours.md) (owner-approved 2026-11-05): separate **text and border colours** for text boxes and callouts, stored as Acrobat does (`/DA` border, `/DS` text) and drawn by recolouring the text in PDFium's own appearance — the second exception to "no custom appearance streams" (§7.1).
+
+> **Rev 0.14 amendment** — [ADR-026](docs/adr/026-m9-help-page.md) (owner-approved 2026-11-07): **M9 — Help in its own window** with generated screenshots, offline (D-46, §8, §8.2, §9, §13 M9); the ~60 MB install size is a reference, not a limit (§9).
 
 > **Rev 0.13 amendment** — [ADR-025](docs/adr/025-m8-lossless-json-comments.md) (owner-approved 2026-11-05): **M8 — lossless JSON comment export and import** — JSON v2 carries the comments' own PDF objects and imports them by object copy; JSON v1 still imports; XFDF/FDF deferred (§7.1, §7.6, §13 M8).
 
@@ -108,6 +110,7 @@ Tablet/phone UI · Safari parity · PDF text/content editing · form design beyo
 | D-43 | **Text comment interaction** (ADR-023): a new text comment starts editing with its placeholder selected; one click selects and drags; double-click edits; every exit commits the edit; our own text-editing menu; marquee, Ctrl+ and Shift+click selection; a new comment is selected |
 | D-44 | **Sticky note popup** (ADR-023): a multi-line popup window on the page (author, date, menu, status, lock, Reply); `/Popup` saved by our object layer if spike S23 passes |
 | D-45 | **Paste an image** (ADR-023): an image on the system clipboard becomes an Image Stamp scaled to fit the page; needs annotate |
+| D-46 | **Help window** (ADR-026): Help is a separate same-origin page `/help` opened in its own window (Help → Help, F1, "?" buttons); task-oriented topics with screenshots generated from the app, search on Enter, print, deep links; offline; the floating Help dialog is removed |
 | D-34 | **OCR** (Rev 1 item 1, ADR-020): Tesseract WASM core in its own worker, five languages (English precached, the rest on first use), invisible text layer written by our object layer with a glyphless font, pages with text skipped unless asked; needs the modify permission |
 
 ---
@@ -385,10 +388,10 @@ New (from the current view), rename (F2), delete / delete but keep children / de
 - **Do not copy PDF-XChange artwork or proprietary visual assets.** Layout conventions only.
 
 ### 8.1 Keyboard (D-29)
-Ctrl+O/S/P, Ctrl+Shift+S, Ctrl+Z/Y, Ctrl+F, Ctrl+Shift+F, Ctrl+0/1/2 (fit page / actual / fit width), Ctrl+= / Ctrl+-, H (hand), V (select), single-letter tool keys, **Ctrl+F4** close tab, **Ctrl+PageUp/PageDown** switch tabs, Esc cancels tool. Help → printable shortcut sheet. Ctrl+F4 and Ctrl+PageUp/PageDown are reserved by Chrome in a normal tab (may work in the installed PWA window); alternates are defined in M1 (ADR-001 B5).
+Ctrl+O/S/P, Ctrl+Shift+S, Ctrl+Z/Y, Ctrl+F, Ctrl+Shift+F, Ctrl+0/1/2 (fit page / actual / fit width), Ctrl+= / Ctrl+-, H (hand), V (select), single-letter tool keys, **Ctrl+F4** close tab, **Ctrl+PageUp/PageDown** switch tabs, Esc cancels tool. **F1** opens Help (ADR-026). Help → printable shortcut sheet. Ctrl+F4 and Ctrl+PageUp/PageDown are reserved by Chrome in a normal tab (may work in the installed PWA window); alternates are defined in M1 (ADR-001 B5).
 
 ### 8.2 i18n & accessibility (D-30)
-No user-visible string literals in components — all via i18n keys in `en.json`. Locale-aware dates/numbers/units via `Intl`. Layouts tolerate +40 % label length. Every control keyboard-reachable with visible focus and an accessible name.
+No user-visible string literals in components — all via i18n keys in `en.json` (Help's text in `help.en.json`, ADR-026). Locale-aware dates/numbers/units via `Intl`. Layouts tolerate +40 % label length. Every control keyboard-reachable with visible focus and an accessible name.
 
 ---
 
@@ -398,7 +401,7 @@ No user-visible string literals in components — all via i18n keys in `en.json`
 - A feature used before its module is cached triggers a priority fetch with a spinner.
 - Fonts bundled; **EmbedPDF CDN font fallback disabled** (`fontFallback: null` or local config with absolute same-origin URLs — never `undefined`, ADR-003). Fallback fonts: Regular weight only; Latin, Arabic and Hebrew in core, SC/TC/JP/KR in the background precache (ADR-003). No runtime CDN anything. EmbedPDF defaults both `pdfium.wasm` and `@embedpdf/fonts-*` to `cdn.jsdelivr.net`; both must be overridden with self-hosted copies (verified in M0-S8).
 - Updates: new SW installs in the background; app shows "Update ready" and activates only on user click or next launch; never while documents are open.
-- Total install budget ≤ 60 MB (measure and report per module in CI).
+- Install size is measured and reported per module in CI. About **60 MB is a reference, not a limit** (owner, 2026-11-07, ADR-026): the report warns above it and does not fail. The 9 MB core precache budget stays a limit.
 
 ---
 
@@ -496,6 +499,9 @@ The second beta review (2026-11-04): the name Triya PDF, text comment editing an
 
 ### M8 — Lossless JSON comments (ADR-025)
 Comment export and import keep every property: JSON v2 with the comments' own PDF objects, imported by object copy; a round-trip test of every interop file, key by key and pixel by pixel. XFDF/FDF deferred (`docs/plan/M8.md`).
+
+### M9 — Help window (ADR-026)
+Help becomes a separate page in its own window (`/help`): rewritten step-by-step topics, about 45 screenshots generated from the app by a Playwright script, search, print, deep links and "?" buttons, offline; the floating Help dialog is removed (`docs/plan/M9.md`).
 
 ---
 
