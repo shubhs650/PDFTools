@@ -14,6 +14,7 @@ import {
   type ExportFormat,
 } from './exportJob';
 import type { Scope, ScopeKind } from './scope';
+import { dialogHelp } from '../help/openHelp';
 
 const TITLES: Record<ExportFormat, MessageKey> = {
   text: msg('export.title.text'),
@@ -79,6 +80,7 @@ function ExportForm({ format: fmt }: { format: ExportFormat }) {
       title={t(TITLES[fmt])}
       description={t('export.description')}
       closeIcon={<Dismiss20Regular />}
+      help={dialogHelp('export-documents')}
       footer={
         running ? (
           // Its own node (key): a reused submit button would submit the form again.

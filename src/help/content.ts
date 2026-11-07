@@ -93,7 +93,7 @@ export function blockStrings(b: Block): string[] {
 }
 
 /** Where a screenshot is served (public/help-img, made by `npm run help:screenshots`). */
-export const shotUrl = (id: string): string => `/help-img/${id}.webp`;
+export const shotUrl = (id: string): string => `${import.meta.env.BASE_URL}help-img/${id}.webp`;
 
 /** The screenshots a topic shows, in order. */
 export function topicShots(t: Topic): string[] {

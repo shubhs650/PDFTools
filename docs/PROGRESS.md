@@ -1,6 +1,6 @@
 # Triya PDF — Progress
 
-_Last updated: 2026-11-07 (session 55: M9 plan, Help window)_
+_Last updated: 2026-11-07 (session 56: M9 Help window, done)_
 
 **Current milestone:** M7 — second beta review (plan in [docs/plan/M7.md](plan/M7.md), scope in
 [ADR-023](adr/023-m7-second-beta-review.md), **Accepted** 2026-11-04 with the recommended
@@ -10,6 +10,39 @@ answers Q1–Q7; ARCHITECTURE.md Rev 0.12 after [ADR-024](adr/024-freetext-text-
 interop is in the M6 pack (CHECKLIST §M6 R1–R4). Rev 0 (M0–M4) is complete on the agent side.
 
 ## Done
+
+- **Session 56 — M9 Help in its own window, with screenshots (ADR-026 D-46).** M9-01 … M9-05 in
+  one PR. **Window:** `help.html` + `src/help/` (a Vite page of its own, served at `/help`):
+  contents by chapter, topic view with numbered steps, tips, screenshots and a full-size
+  lightbox (native `<dialog>`), previous/next, search on Enter only (rule 3; every word, title
+  matches first, a snippet each), Print and Print all topics, narrow-window menu, light/dark
+  from the app's setting (and live via `storage`), the pseudo-locale. `openHelp(topic)` opens one
+  named popup (`triya-help`, a new tab if refused) and brings it forward; **F1** (new keymap
+  entry, works in text fields) opens the open dialog's topic (`data-help-topic`) or the active
+  ribbon tab's chapter. The floating Help dialog is gone (`HelpPage.tsx`, `helpStore.ts`);
+  `ShortcutTable` is shared by the shortcut sheet and Help's shortcuts topic. **Text:**
+  `src/i18n/help.en.json`, 43 topics in 11 chapters, rewritten as tasks, with `<b>UI</b>`,
+  `<kbd>{{key}}</kbd>` from the keymap (Cmd on macOS) and `[links](#topic)`; every bold UI name
+  was checked against `en.json`, and claims against the code (Distance is a drag; Place
+  Signature). **Screenshots:** `npm run help:screenshots` (Playwright project `help-shots`, not
+  in CI) drives the real app on self-made samples (`e2e/fixtures/help-samples.ts`: an A3 pump
+  station drawing at 1:100, a 3-page design report, an inspection form), draws numbered orange
+  callouts, encodes WebP in Chromium (no image library: sharp is LGPL) into `public/help-img/`
+  (51 files, ~2 MB) and their sizes into `src/help/shots.json`. **"?" buttons:** `Dialog` takes
+  `help` ("Help for this dialog", beside Close; the name never clashes with a dialog's own
+  buttons) on 23 dialogs. **Offline:** the service worker serves `help.html` for `/help`; Help's
+  files are in the background precache group (`webp` added), so they never hold up the app's
+  first offline readiness. **Install budget:** the bundle report warns above 60 MB instead of
+  failing (owner, 2026-11-07); the 9 MB core budget is unchanged. Tests: unit
+  `tests/help/help.test.ts` (topics ↔ chapters, links, keys, every screenshot has file, size and
+  alt, no unused files, search, pseudo-locale, precache), `tests/app/appName.test.ts` covers
+  Help's text; e2e `e2e/help.spec.ts` (@smoke: F1 / "?" / Help → Help at the right topic in one
+  window; contents, pager, search on Enter only, every screenshot loads, lightbox; Ctrl vs Cmd;
+  axe light, dark, pseudo-locale; offline); perf `e2e/perf/help.spec.ts` (F1 with a document
+  open: no long task; `window.open` itself costs ~35 ms here). In the container the full e2e
+  suite shows only the known Chromium 153 file-handle crashes and the
+  comment-transfer "by keyboard" flake, which fails 2 of 4 runs on `main` too. Release note
+  [beta-m9](release-notes/beta-m9.md); review screenshots in the project's shared folder (`m9/`).
 
 - **Session 55 — M9 plan: Help in its own window with screenshots (ADR-026, accepted 2026-11-07).** The
   owner asked (2026-11-07) for a separate help page with screenshots instead of the floating Help
@@ -2125,6 +2158,8 @@ rel="noopener noreferrer">`; the commands `app.home` / `app.reportIssue` open th
 
 ## Next
 
+- **Owner (M9):** try Help on the deployed beta (F1 on a few tabs and dialogs, search, print,
+  installed-app window, offline). Re-run `npm run help:screenshots` after visible UI changes.
 - **Agent:** the queued task (owner, 2026-11-05), in its own thread: make comment export and
   import round-trip every property as XFDF does, pop-ups (`/Rect`, `/Open`) included.
 - **Owner (M7 interop pack):** [docs/acceptance/M7.md](acceptance/M7.md) §5 — CHECKLIST §M7

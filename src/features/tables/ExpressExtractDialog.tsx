@@ -13,6 +13,7 @@ import {
   useExpress,
   type ExpressError,
 } from './expressExtract';
+import { dialogHelp } from '../help/openHelp';
 
 const ERRORS: Record<ExpressError, MessageKey> = {
   denied: msg('export.error.denied'),
@@ -62,6 +63,7 @@ function ExpressForm() {
       title={t('tables.express.title')}
       description={t('tables.express.description')}
       closeIcon={<Dismiss20Regular />}
+      help={dialogHelp('extract-tables')}
       footer={
         running ? (
           <Button key="cancel" label={t('tables.express.cancel')} onClick={cancelExpressExtract} />

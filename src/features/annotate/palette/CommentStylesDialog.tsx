@@ -65,6 +65,7 @@ import {
 import { styleName } from './presetName';
 import { editedStyle, styleRows, styleSample } from './styleSample';
 import { StyleSwatch } from './StyleSwatch';
+import { dialogHelp } from '../../help/openHelp';
 
 const ERRORS: Record<StyleFileError, MessageKey> = {
   tooLarge: msg('stylePalette.error.tooLarge'),
@@ -335,6 +336,7 @@ function StylesWindow() {
       title={t('stylePalette.title')}
       description={t('stylePalette.description')}
       closeIcon={<Dismiss20Regular />}
+      help={dialogHelp('comment-styles')}
       className="styles-window"
       onEscapeKeyDown={(e) => {
         // Esc in the name field cancels the rename, not the window.

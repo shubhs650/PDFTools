@@ -4,6 +4,7 @@ import { useTranslation } from 'react-i18next';
 import { Button, Dialog } from '../../ui/components';
 import { appStore, useApp } from '../store/appStore';
 import { ShortcutTable } from './ShortcutTable';
+import { dialogHelp } from '../../features/help/openHelp';
 
 /** Printable list of every binding, generated from the keymap (§8.1). */
 export function ShortcutSheet() {
@@ -19,6 +20,7 @@ export function ShortcutSheet() {
       title={t('shortcuts.title')}
       description={t('shortcuts.description')}
       closeIcon={<Dismiss20Regular />}
+      help={dialogHelp('keyboard-shortcuts')}
       footer={
         <Button
           label={t('shortcuts.print')}

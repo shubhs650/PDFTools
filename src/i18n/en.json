@@ -9,7 +9,8 @@
   },
   "ui": {
     "dialog": {
-      "close": "Close"
+      "close": "Close",
+      "help": "Help for this dialog"
     },
     "splitButton": {
       "more": "More options for {{label}}"

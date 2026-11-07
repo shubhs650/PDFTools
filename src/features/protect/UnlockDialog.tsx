@@ -4,6 +4,7 @@ import { useTranslation } from 'react-i18next';
 import { useDocuments } from '../../app/store/documentStore';
 import { Button, Dialog, TextField } from '../../ui/components';
 import { closeUnlockDialog, submitUnlock, useUnlock } from './unlock';
+import { dialogHelp } from '../help/openHelp';
 
 /** Protect → Unlock with Owner Password (§7.12): full access for this session. */
 export function UnlockDialog() {
@@ -29,6 +30,7 @@ function UnlockPrompt({ docId }: { docId: string }) {
       title={t('protect.unlockDialog.title')}
       description={t('protect.unlockDialog.description', { name })}
       closeIcon={<Dismiss20Regular />}
+      help={dialogHelp('protected-files')}
       footer={
         <>
           <Button

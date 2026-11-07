@@ -2,8 +2,11 @@
 // its own page, /help, in its own window. One named window is reused, so F1
 // again brings it forward at the new topic. No document data goes to it: the
 // URL carries only a topic id.
+import { QuestionCircle20Regular } from '@fluentui/react-icons/svg/question-circle';
+import { createElement } from 'react';
 import { appStore } from '../../app/store/appStore';
-import { isTopicId, topicForTab } from '../../help/topics';
+import { isTopicId, topicForTab, type TopicId } from '../../help/topics';
+import type { DialogHelp } from '../../ui/components/Dialog';
 
 /** The Help window's name: every open reuses the same window. */
 export const HELP_WINDOW = 'triya-help';
@@ -27,7 +30,7 @@ export function openHelp(topic?: string): void {
 
 /**
  * The topic for what the user is doing (F1): the open dialog's own topic
- * (`data-help-topic`, set by Dialog's `helpTopic`), else the chapter of the
+ * (`data-help-topic`, set by Dialog's `help`), else the chapter of the
  * active ribbon tab.
  */
 export function currentHelpTopic(): string | undefined {
@@ -36,4 +39,15 @@ export function currentHelpTopic(): string | undefined {
   const topic = last?.dataset['helpTopic'];
   if (topic) return topic;
   return topicForTab(appStore.getState().ribbonTab);
+}
+
+/** A Dialog's `help`: its "?" button opens Help at `topic` (M9-04). */
+export function dialogHelp(topic: TopicId): DialogHelp {
+  return {
+    topic,
+    icon: createElement(QuestionCircle20Regular),
+    onOpen: () => {
+      openHelp(topic);
+    },
+  };
 }

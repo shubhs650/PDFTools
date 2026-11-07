@@ -239,7 +239,6 @@ for (const [variant, url] of [
       'file.exportPrintReady',
       'protect.securityInfo',
       'help.errorReport',
-      'help.help',
     ]) {
       expect(await run(id)).toBe(true);
       const dialog = page.getByRole('dialog');

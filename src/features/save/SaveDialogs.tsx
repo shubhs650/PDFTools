@@ -12,6 +12,7 @@ import {
   saveOptimized,
   useSave,
 } from './save';
+import { dialogHelp } from '../help/openHelp';
 
 /**
  * Save Optimized (§4.2, M1-23): a full rewrite, as a new file by default or
@@ -41,6 +42,7 @@ export function SaveOptimizedDialog() {
           : t('save.optimize.description')
       }
       closeIcon={<Dismiss20Regular />}
+      help={dialogHelp('saving')}
       footer={
         <>
           <Button

@@ -24,6 +24,17 @@ export interface DialogProps {
   className?: string;
   /** Esc pressed: preventDefault() keeps the dialog open (an inline edit cancels instead). */
   onEscapeKeyDown?: (e: KeyboardEvent) => void;
+  /**
+   * A "?" button beside Close that opens Help at this dialog's topic (M9,
+   * D-46). The topic is also set as data-help-topic, so F1 opens the same one.
+   */
+  help?: DialogHelp;
+}
+
+export interface DialogHelp {
+  topic: string;
+  icon: ReactNode;
+  onOpen: () => void;
 }
 
 /** Modal dialog: focus is trapped, Esc closes, focus returns to the opener (Radix). */
@@ -38,6 +49,7 @@ export function Dialog({
   initialFocus,
   className,
   onEscapeKeyDown,
+  help,
 }: DialogProps) {
   const { t } = useTranslation();
   // Give focus back to whatever opened the dialog (rule 12). Radix only does
@@ -49,7 +61,10 @@ export function Dialog({
       <RadixDialog.Portal>
         <RadixDialog.Overlay className="ui-dialog-backdrop" />
         <RadixDialog.Content
-          className={className ? `ui-dialog ${className}` : 'ui-dialog'}
+          className={['ui-dialog', help ? 'ui-dialog--help' : '', className ?? '']
+            .filter(Boolean)
+            .join(' ')}
+          {...(help ? { 'data-help-topic': help.topic } : {})}
           {...(onEscapeKeyDown ? { onEscapeKeyDown } : {})}
           onOpenAutoFocus={(e) => {
             const active = document.activeElement;
@@ -77,6 +92,15 @@ export function Dialog({
           ) : null}
           {children}
           {footer ? <div className="ui-dialog-footer">{footer}</div> : null}
+          {help ? (
+            <IconButton
+              className="ui-dialog-help"
+              label={t('ui.dialog.help')}
+              icon={help.icon}
+              tooltip={false}
+              onClick={help.onOpen}
+            />
+          ) : null}
           <RadixDialog.Close asChild>
             <IconButton
               className="ui-dialog-close"

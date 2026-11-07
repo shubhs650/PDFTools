@@ -174,7 +174,9 @@ const REPORT_TEXT = [
 ];
 
 function reportPage(n: number): string {
-  let s = text(72, 800, 9, 'Pump Station Upgrade - Design Report') + text(500, 800, 9, `Page ${String(n)}`);
+  let s =
+    text(72, 800, 9, 'Pump Station Upgrade - Design Report') +
+    text(500, 800, 9, `Page ${String(n)}`);
   s += '0.5 w\n' + line(72, 792, 523, 792);
   if (n === 1) {
     s += text(72, 720, 24, 'Pump Station Upgrade', true);

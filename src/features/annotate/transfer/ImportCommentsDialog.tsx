@@ -18,6 +18,7 @@ import {
   type ImportSource,
 } from './importComments';
 import { typeLabelKey } from './typeLabels';
+import { dialogHelp } from '../../help/openHelp';
 
 // Comment → Import Comments (M4-20): the source's summary (comments per page,
 // authors, types, statuses), a page range, author and type filters, with or
@@ -56,6 +57,7 @@ function Form({ docId }: { docId: string }) {
       title={t('transfer.import.title')}
       description={t('transfer.import.description', { name: docName })}
       closeIcon={<Dismiss20Regular />}
+      help={dialogHelp('comment-transfer')}
       footer={
         <>
           <Button

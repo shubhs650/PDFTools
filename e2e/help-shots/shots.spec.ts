@@ -38,9 +38,15 @@ async function thumbnailsDrawn(page: Page): Promise<void> {
   await expect(list).toBeVisible();
   await expect
     .poll(() =>
-      list.locator('img').evaluateAll((imgs) =>
-        imgs.length > 0 && imgs.every((i) => (i as HTMLImageElement).complete && (i as HTMLImageElement).naturalWidth > 0),
-      ),
+      list
+        .locator('img')
+        .evaluateAll(
+          (imgs) =>
+            imgs.length > 0 &&
+            imgs.every(
+              (i) => (i as HTMLImageElement).complete && (i as HTMLImageElement).naturalWidth > 0,
+            ),
+        ),
     )
     .toBe(true);
 }
@@ -56,7 +62,6 @@ const ribbonTab = (page: Page, name: string) =>
 const toolbar = (page: Page, tab: string) => page.getByRole('toolbar', { name: `${tab} commands` });
 const group = (page: Page, tab: string, name: string) =>
   toolbar(page, tab).getByRole('group', { name, exact: true });
-const ribbon = (page: Page) => page.getByRole('region', { name: 'Ribbon' });
 const statusBar = (page: Page) => page.getByRole('contentinfo', { name: 'Status bar' });
 const panes = (page: Page) => page.getByRole('complementary', { name: 'Navigation panes' });
 const dialog = (page: Page, name?: string | RegExp) =>
@@ -76,7 +81,12 @@ async function ribbonClip(page: Page, tab: string): Promise<Box> {
     .getByRole('group')
     .evaluateAll((gs) => gs.map((g) => g.getBoundingClientRect().right));
   const right = Math.max(lastTab.x + lastTab.width, ...groups) + 12;
-  return { x: file.x, y: file.y - 2, width: right - file.x, height: bar.y + bar.height - file.y + 2 };
+  return {
+    x: file.x,
+    y: file.y - 2,
+    width: right - file.x,
+    height: bar.y + bar.height - file.y + 2,
+  };
 }
 
 /** A ribbon tab with each named group numbered on a white strip below it. */
@@ -105,7 +115,14 @@ async function at(page: Page, doc: Doc, x: number, y: number, pageIndex = 0) {
 }
 
 /** A rectangle on a page, in PDF points from the page's top-left, as a screen box. */
-async function pageBox(page: Page, doc: Doc, x: number, y: number, w: number, h: number): Promise<Box> {
+async function pageBox(
+  page: Page,
+  doc: Doc,
+  x: number,
+  y: number,
+  w: number,
+  h: number,
+): Promise<Box> {
   const a = await at(page, doc, x, y);
   const b = await at(page, doc, x + w, y + h);
   return { x: a.x, y: a.y, width: b.x - a.x, height: b.y - a.y };
@@ -207,7 +224,14 @@ test('opening-files-2: two documents as tabs', async ({ page }) => {
 test('home-tab-1: the Home tab', async ({ page }) => {
   await start(page);
   await open(page);
-  await ribbonShot(page, 'home-tab-1', 'Home', ['Tools', 'Zoom', 'View', 'Comment', 'Measure', 'Protect']);
+  await ribbonShot(page, 'home-tab-1', 'Home', [
+    'Tools',
+    'Zoom',
+    'View',
+    'Comment',
+    'Measure',
+    'Protect',
+  ]);
 });
 
 test('zoom-and-pages-1: the View tab', async ({ page }) => {
@@ -288,7 +312,10 @@ test('finding-text-2: Advanced Search', async ({ page }) => {
   await expect(page.getByTestId('search-results')).toContainText(/DN150/);
   await page.waitForTimeout(300);
   const box = (await pane.boundingBox()) as Box;
-  await shoot(page, 'finding-text-2', { clip: { ...box, height: Math.min(box.height, 520) }, pad: 0 });
+  await shoot(page, 'finding-text-2', {
+    clip: { ...box, height: Math.min(box.height, 520) },
+    pad: 0,
+  });
 });
 
 // --- Bookmarks -----------------------------------------------------------------
@@ -306,7 +333,12 @@ test('bookmarks-1: the Bookmarks pane', async ({ page }) => {
     pad: 0,
     callouts: [
       { n: 1, target: pane.getByRole('toolbar').first(), at: 'r' },
-      { n: 2, target: pane.getByRole('treeitem', { name: /Equipment schedule/ }), at: 'r', dx: -24 },
+      {
+        n: 2,
+        target: pane.getByRole('treeitem', { name: /Equipment schedule/ }),
+        at: 'r',
+        dx: -24,
+      },
     ],
   });
 });
@@ -360,8 +392,15 @@ test('text-markup-1: highlight, underline and strikeout', async ({ page }) => {
   await escapeTool(page);
   await page.waitForTimeout(500);
   await deselect(page);
-  await expect.poll(async () => ((await cap(page, 'annotate', 'selected', await docId(page))) as string[]).length).toBe(0);
-  await shoot(page, 'text-markup-1', { clip: await pageBox(page, REPORT, 60, 190, 470, 76), pad: 0 });
+  await expect
+    .poll(
+      async () => ((await cap(page, 'annotate', 'selected', await docId(page))) as string[]).length,
+    )
+    .toBe(0);
+  await shoot(page, 'text-markup-1', {
+    clip: await pageBox(page, REPORT, 60, 190, 470, 76),
+    pad: 0,
+  });
 });
 
 const textEditor = (page: Page) => page.locator('[data-text-comment] [contenteditable="true"]');
@@ -416,9 +455,9 @@ test('sticky-notes-1: a sticky note window', async ({ page }) => {
   await page.mouse.click(p.x, p.y);
   const win = page.locator('[data-note-popup]');
   await expect(win).toBeVisible();
-  await win.getByRole('textbox', { name: 'Note text' }).fill(
-    'Is there room to lift the valve out?\nPlease check the hatch size.',
-  );
+  await win
+    .getByRole('textbox', { name: 'Note text' })
+    .fill('Is there room to lift the valve out?\nPlease check the hatch size.');
   await shoot(page, 'sticky-notes-1', {
     clip: [win, await pageBox(page, DRAWING, 200, 200, 160, 200)],
     pad: 16,
@@ -519,7 +558,11 @@ test('selecting-comments-1: a marquee selection', async ({ page }) => {
   await ribbonTab(page, 'Comment').click();
   await toolbar(page, 'Comment').getByRole('button', { name: 'Select Comments' }).click();
   await drag(page, DRAWING, [150, 200], [700, 500]);
-  await expect.poll(async () => ((await cap(page, 'annotate', 'selected', await docId(page))) as string[]).length).toBe(3);
+  await expect
+    .poll(
+      async () => ((await cap(page, 'annotate', 'selected', await docId(page))) as string[]).length,
+    )
+    .toBe(3);
   await shoot(page, 'selecting-comments-1', {
     clip: await pageBox(page, DRAWING, 140, 205, 600, 315),
     pad: 0,
@@ -574,7 +617,13 @@ test('comment-styles-1: the Comment Styles Palette', async ({ page }) => {
     pad: 8,
     callouts: [
       { n: 1, target: d.getByRole('listbox').first(), at: 'tr', dx: -16, dy: 16 },
-      { n: 2, target: d.getByText('Current Style', { exact: true }).first(), at: 'tr', dx: 28, dy: 4 },
+      {
+        n: 2,
+        target: d.getByText('Current Style', { exact: true }).first(),
+        at: 'tr',
+        dx: 28,
+        dy: 4,
+      },
       { n: 3, target: page.getByTestId('style-properties'), at: 'tr', dx: -16, dy: 16 },
     ],
   });
@@ -678,7 +727,10 @@ test('attaching-files-1: the Attachments pane', async ({ page }) => {
   const pane = page.getByRole('region', { name: 'Attachments' });
   await expect(pane.getByRole('list', { name: 'Embedded files' })).toBeVisible();
   const box = (await pane.boundingBox()) as Box;
-  await shoot(page, 'attaching-files-1', { clip: { ...box, height: Math.min(box.height, 420) }, pad: 0 });
+  await shoot(page, 'attaching-files-1', {
+    clip: { ...box, height: Math.min(box.height, 420) },
+    pad: 0,
+  });
 });
 
 // --- Measuring -------------------------------------------------------------------
@@ -779,11 +831,16 @@ test('filling-forms-1: a form with Highlight Fields', async ({ page }) => {
   await page.locator('[data-field="alarms"]').check();
   await page.locator('[data-field="condition"]').selectOption({ label: 'Good' });
   await page.locator('[data-field="result"]').first().check();
-  await page.getByRole('textbox', { name: 'Remarks' }).fill('Small leak at the V-12 gland, tightened.');
+  await page
+    .getByRole('textbox', { name: 'Remarks' })
+    .fill('Small leak at the V-12 gland, tightened.');
   await expect(page.locator('.form-layer[data-highlight]').first()).toBeVisible();
   await page.getByRole('textbox', { name: 'Remarks' }).click();
   await page.keyboard.press('End');
-  await shoot(page, 'filling-forms-1', { clip: await pageBox(page, FORM, 60, 50, 475, 520), pad: 0 });
+  await shoot(page, 'filling-forms-1', {
+    clip: await pageBox(page, FORM, 60, 50, 475, 520),
+    pad: 0,
+  });
 });
 
 test('creating-fields-1: the Form tab', async ({ page }) => {
@@ -810,7 +867,12 @@ test('creating-fields-2: a new field and its properties', async ({ page }) => {
   const pbox = (await props.boundingBox()) as Box;
   const left = await at(page, FORM, 40, 0);
   await shoot(page, 'creating-fields-2', {
-    clip: { x: left.x, y: pbox.y, width: pbox.x + pbox.width - left.x, height: Math.min(pbox.height, 600) },
+    clip: {
+      x: left.x,
+      y: pbox.y,
+      width: pbox.x + pbox.width - left.x,
+      height: Math.min(pbox.height, 600),
+    },
     pad: 0,
   });
 });
@@ -845,7 +907,10 @@ test('organize-pages-2: selected thumbnails', async ({ page }) => {
   // Shift+click also selects the pictures as browser text; clear that highlight.
   await page.evaluate(() => getSelection()?.removeAllRanges());
   const box = (await panes(page).boundingBox()) as Box;
-  await shoot(page, 'organize-pages-2', { clip: { ...box, height: Math.min(box.height, 640) }, pad: 0 });
+  await shoot(page, 'organize-pages-2', {
+    clip: { ...box, height: Math.min(box.height, 640) },
+    pad: 0,
+  });
 });
 
 // --- Converting --------------------------------------------------------------------
@@ -892,7 +957,9 @@ test('redaction-1: marks and Pending Redactions', async ({ page }) => {
   // A phrase of the text, then an area.
   await drag(page, REPORT, [72, 842 - 492 - 4], [300, 842 - 492 - 4]);
   await toolbar(page, 'Protect').getByRole('button', { name: 'Mark for Redaction' }).click();
-  await expect(page.getByRole('complementary', { name: 'Pending Redactions' })).toContainText('1 mark');
+  await expect(page.getByRole('complementary', { name: 'Pending Redactions' })).toContainText(
+    '1 mark',
+  );
   const area = toolbar(page, 'Protect').getByRole('button', { name: 'Mark Area for Redaction' });
   await area.click();
   await drag(page, REPORT, [72, 842 - 410], [523, 842 - 360]);
@@ -968,7 +1035,9 @@ test('saving-1: the File tab', async ({ page }) => {
   await expect(backstage(page)).toBeVisible();
   const nav = backstage(page).getByRole('navigation');
   const box = (await nav.boundingBox()) as Box;
-  const last = (await nav.getByRole('button', { name: 'Privacy', exact: true }).boundingBox()) as Box;
+  const last = (await nav
+    .getByRole('button', { name: 'Privacy', exact: true })
+    .boundingBox()) as Box;
   await shoot(page, 'saving-1', {
     clip: { ...box, height: last.y + last.height + 12 - box.y },
     pad: 0,
@@ -999,7 +1068,11 @@ test('recovery-1: the Recover dialog', async ({ page }) => {
   const p = await at(page, REPORT, 300, 300);
   await page.mouse.click(p.x, p.y);
   await page.keyboard.press('Escape');
-  await expect.poll(async () => ((await cap(page, 'storage', 'list')) as unknown[]).length, { timeout: 15_000 }).toBe(1);
+  await expect
+    .poll(async () => ((await cap(page, 'storage', 'list')) as unknown[]).length, {
+      timeout: 15_000,
+    })
+    .toBe(1);
   await page.reload();
   const d = dialog(page, 'Recover unsaved changes?');
   await expect(d).toBeVisible();
@@ -1010,7 +1083,9 @@ test('privacy-1: the Privacy page', async ({ page }) => {
   await start(page);
   await page.getByTestId('file-tab').click();
   await backstage(page).getByRole('button', { name: 'Privacy', exact: true }).click();
-  await expect(backstage(page).getByRole('heading', { name: 'Privacy', exact: true })).toBeVisible();
+  await expect(
+    backstage(page).getByRole('heading', { name: 'Privacy', exact: true }),
+  ).toBeVisible();
   const region = (await backstage(page).getByRole('region').first().boundingBox()) as Box;
   await shoot(page, 'privacy-1', {
     clip: { ...region, height: Math.min(region.height, 470) },

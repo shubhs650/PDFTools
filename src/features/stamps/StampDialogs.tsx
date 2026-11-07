@@ -9,6 +9,7 @@ import { Button, Dialog, TextField } from '../../ui/components';
 import { readStampImage, type ImageProblem } from './imageStamp';
 import { activeScheme, openSchemes, useSchemes } from './schemes/schemeStore';
 import { stampStore, useStamps } from './stampStore';
+import { dialogHelp } from '../help/openHelp';
 
 const IMAGE_PROBLEMS: Record<ImageProblem, MessageKey> = {
   tooLarge: msg('stamps.error.tooLarge'),
@@ -62,6 +63,7 @@ function StampForm() {
       title={t('stamps.title')}
       description={t('stamps.description')}
       closeIcon={<Dismiss20Regular />}
+      help={dialogHelp('stamps')}
       footer={
         <>
           <Button
@@ -163,6 +165,7 @@ export function ImageStampDialog() {
       title={t('stamps.imageTitle')}
       description={t('stamps.imageDescription')}
       closeIcon={<Dismiss20Regular />}
+      help={dialogHelp('stamps')}
       footer={<Button label={t('annotate.caret.cancel')} onClick={close} />}
     >
       <div className="ui-field">

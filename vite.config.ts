@@ -16,7 +16,8 @@ function helpRoute(): Plugin {
     name: 'pdftools-help-route',
     configureServer(server) {
       server.middlewares.use((req, _res, next) => {
-        if (req.url === '/help' || req.url?.startsWith('/help?')) req.url = `/help.html${req.url.slice(5)}`;
+        if (req.url === '/help' || req.url?.startsWith('/help?'))
+          req.url = `/help.html${req.url.slice(5)}`;
         next();
       });
     },

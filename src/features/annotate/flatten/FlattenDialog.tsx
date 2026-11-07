@@ -8,6 +8,7 @@ import { parseRange } from '../../print/options';
 import { useAnnotationMap } from '../comments/commentsStore';
 import { applyFlatten, closeFlatten, previewFlatten, selectedIds, useFlatten } from './flatten';
 import type { FlattenRequest } from './flattenModel';
+import { dialogHelp } from '../../help/openHelp';
 
 // Comment → Flatten Comments (M6-09, ADR-021 D-38 c): the selected comments or
 // every comment on all / the current / a range of pages, with or without their
@@ -83,6 +84,7 @@ function Form({ docId }: { docId: string }) {
       title={t('flatten.title')}
       description={t('flatten.description', { name: doc?.meta.name ?? '' })}
       closeIcon={<Dismiss20Regular />}
+      help={dialogHelp('flatten-snapshot')}
       footer={
         <>
           <Button

@@ -4,6 +4,7 @@
 import { readFileSync } from 'node:fs';
 import { describe, expect, it } from 'vitest';
 import en from '../../src/i18n/en.json';
+import helpEn from '../../src/i18n/help.en.json';
 import { i18n, t } from '../../src/i18n';
 import { APP_NAME } from '../../src/i18n/appName';
 import { MANIFEST } from '../../src/app/manifest';
@@ -41,12 +42,19 @@ describe('product name (D-41)', () => {
     const all = leaves(en);
     expect(all.filter(([, v]) => OLD.test(v))).toEqual([]);
     const withApp = all.filter(([, v]) => v.includes('{{app}}'));
-    expect(withApp.length).toBeGreaterThanOrEqual(35);
+    // The Help text moved to help.en.json (M9), with most of the {{app}} uses.
+    expect(withApp.length).toBeGreaterThanOrEqual(25);
     for (const [k] of withApp) {
       const text = untypedT(k, { version: '1.0', browser: 'B', os: 'O', name: 'n', count: 1 });
       expect(text, k).toContain('Triya PDF');
       expect(text, k).not.toContain('{{app}}');
     }
+  });
+
+  it('Help names it only through {{app}} (M9)', () => {
+    const all = leaves(helpEn);
+    expect(all.filter(([, v]) => OLD.test(v) || v.includes('Triya'))).toEqual([]);
+    expect(all.filter(([, v]) => v.includes('{{app}}')).length).toBeGreaterThanOrEqual(20);
   });
 
   it('is filled in for real calls (privacy, error body)', () => {

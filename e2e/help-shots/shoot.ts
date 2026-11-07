@@ -110,8 +110,14 @@ export async function shoot(page: Page, id: string, opts: ShootOptions = {}): Pr
     };
   }
 
-  const marks: { kind: 'n' | 'o' | 'c'; n?: number; x: number; y: number; w?: number; h?: number }[] =
-    (opts.cover ?? []).map((b) => ({ kind: 'c', x: b.x, y: b.y, w: b.width, h: b.height }));
+  const marks: {
+    kind: 'n' | 'o' | 'c';
+    n?: number;
+    x: number;
+    y: number;
+    w?: number;
+    h?: number;
+  }[] = (opts.cover ?? []).map((b) => ({ kind: 'c', x: b.x, y: b.y, w: b.width, h: b.height }));
   for (const c of opts.callouts ?? []) {
     const b = await boxOf(c.target);
     const p = anchorPoint(b, c.at ?? 'tl');
@@ -151,7 +157,9 @@ export async function shoot(page: Page, id: string, opts: ShootOptions = {}): Pr
     { marks, color: MARK },
   );
   // Let the overlay paint; the app's own caret and hover states stay as they are.
-  await page.evaluate(() => new Promise((r) => requestAnimationFrame(() => requestAnimationFrame(r))));
+  await page.evaluate(
+    () => new Promise((r) => requestAnimationFrame(() => requestAnimationFrame(r))),
+  );
   const png = await page.screenshot({ clip, type: 'png', animations: 'disabled', caret: 'hide' });
   await page.evaluate(() => document.getElementById('__help-shot-marks')?.remove());
 
@@ -168,7 +176,7 @@ export async function shoot(page: Page, id: string, opts: ShootOptions = {}): Pr
     const blob = await new Promise<Blob | null>((r) => {
       canvas.toBlob(r, 'image/webp', 0.82);
     });
-    if (!blob || blob.type !== 'image/webp') throw new Error('no WebP encoder');
+    if (blob?.type !== 'image/webp') throw new Error('no WebP encoder');
     const bytes = new Uint8Array(await blob.arrayBuffer());
     let s = '';
     for (let i = 0; i < bytes.length; i += 0x8000)

@@ -31,6 +31,7 @@ import { canFlatten, placeAtCentre, startPlacement, type SignatureKind } from '.
 import { pngDataUrl, typedField, uploadedField } from './signImages';
 import { loadSignatureFonts } from './signImages';
 import { closeSignDialog, deleteSignature, saveSignature, signStore, useSign } from './signStore';
+import { dialogHelp } from '../help/openHelp';
 
 // Protect → Sign Document (M6-13, ADR-021 D-40 b, §7.11): choose a saved
 // signature or make one — Draw (pointer), Type (the reviewer's name in a
@@ -374,6 +375,7 @@ function Body({ docId }: { docId: string }) {
       title={t('sign.title')}
       description={t('sign.description', { name })}
       closeIcon={<Dismiss20Regular />}
+      help={dialogHelp('signing')}
       footer={footer}
     >
       <div className="print-dialog-form sign-form" data-testid="sign-document">

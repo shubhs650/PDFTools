@@ -10,8 +10,7 @@ export interface SearchHit {
   snippet: string;
 }
 
-const norm = (s: string): string =>
-  s.toLocaleLowerCase().normalize('NFD').replace(/\p{M}/gu, '');
+const norm = (s: string): string => s.toLocaleLowerCase().normalize('NFD').replace(/\p{M}/gu, '');
 
 /** Words of the query; every one must appear in a topic for it to match. */
 export function queryWords(query: string): string[] {

@@ -8,7 +8,14 @@ import { ChevronRight20Regular } from '@fluentui/react-icons/svg/chevron-right';
 import { Navigation20Regular } from '@fluentui/react-icons/svg/navigation';
 import { Print20Regular } from '@fluentui/react-icons/svg/print';
 import { Search20Regular } from '@fluentui/react-icons/svg/search';
-import { useEffect, useMemo, useRef, useState, useSyncExternalStore, type SyntheticEvent } from 'react';
+import {
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+  useSyncExternalStore,
+  type SyntheticEvent,
+} from 'react';
 import { useTranslation } from 'react-i18next';
 import { helpText, plain } from './content';
 import { helpKeys } from './keys';
@@ -128,7 +135,11 @@ export function HelpApp() {
               setQuery(e.target.value);
             }}
           />
-          <button type="submit" className="help-icon-button" aria-label={plain(ui.searchButton, vars)}>
+          <button
+            type="submit"
+            className="help-icon-button"
+            aria-label={plain(ui.searchButton, vars)}
+          >
             <Search20Regular aria-hidden="true" />
           </button>
         </form>
