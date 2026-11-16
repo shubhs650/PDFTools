@@ -357,7 +357,7 @@
       "saveAs": "Save a copy of the document to a new location.",
       "saveOptimized": "Rewrite the file compactly. Digital signatures would be invalidated.",
       "settings": "Settings and the data {{app}} keeps on this device.",
-      "about": "About {{app}}: version and third-party notices.",
+      "about": "About {{app}}: version, the components it is built with and their open-source licenses.",
       "privacy": "{{app}} works offline. Your documents are never uploaded.",
       "properties": "Facts about the open document: its description, file and structure.",
       "print": "Print the document with your printer's dialog: choose pages, size, markups and quality first.",
@@ -555,8 +555,92 @@
   },
   "about": {
     "version": "Version",
+    "commit": "Commit",
+    "built": "Built",
+    "unknown": "Unknown",
+    "offline": {
+      "ready": "Ready to work offline on this device",
+      "preparing": "Preparing to work offline… {{percent}}",
+      "failed": "Not ready to work offline yet. {{app}} tries again the next time it starts.",
+      "off": "Offline use isn't available in this browser window."
+    },
+    "copy": {
+      "label": "Copy version info",
+      "text": "{{app}} {{version}}\nCommit: {{commit}}\nBuilt: {{built}}\nBrowser: {{browser}}\nOS: {{os}}\nOffline: {{offline}}",
+      "done": "Version info copied. Paste it into your bug report.",
+      "failed": "Couldn't copy. The browser blocked the clipboard."
+    },
+    "help": "Open Help",
+    "reportIssue": "Report an issue on GitHub",
+    "privacy": "Privacy and your data",
+    "builtWith": {
+      "title": "Built with",
+      "meta": "{{license}} · version {{version}}",
+      "embedpdf": {
+        "name": "EmbedPDF",
+        "role": "PDF viewer, annotations and forms"
+      },
+      "pdfium": {
+        "name": "PDFium",
+        "role": "Rendering, editing and saving PDF files"
+      },
+      "pdfOxide": {
+        "name": "PDF Oxide",
+        "role": "Text and table extraction for exports"
+      },
+      "tesseract": {
+        "name": "Tesseract",
+        "role": "Text recognition (OCR)"
+      },
+      "fluentIcons": {
+        "name": "Fluent UI System Icons",
+        "role": "Icons"
+      },
+      "noto": {
+        "name": "Noto fonts",
+        "role": "Fonts for text a PDF does not embed"
+      },
+      "react": {
+        "name": "React",
+        "role": "User interface"
+      },
+      "radix": {
+        "name": "Radix UI",
+        "role": "Accessible dialogs, menus and tooltips"
+      },
+      "exceljs": {
+        "name": "ExcelJS",
+        "role": "Excel export"
+      },
+      "docx": {
+        "name": "docx",
+        "role": "Word export"
+      },
+      "pkijs": {
+        "name": "PKI.js",
+        "role": "Digital signature checks"
+      },
+      "i18next": {
+        "name": "i18next",
+        "role": "Interface text and formatting"
+      }
+    },
+    "licenses": {
+      "title": "Open-source licenses",
+      "loading": "Loading the license list…",
+      "failed": "The license list couldn't be loaded. Open the third-party notices instead.",
+      "search": "Search packages",
+      "searchButton": "Search",
+      "clear": "Clear search",
+      "count_one": "{{total}} package. Select one to read its license.",
+      "count_other": "{{total}} packages. Select one to read its license.",
+      "matches_one": "{{shown}} of {{total}} packages match.",
+      "matches_other": "{{shown}} of {{total}} packages match.",
+      "source": "Source: {{url}}"
+    },
     "license": "{{app}} is free software under the MIT License. It includes open-source components under their own permissive licenses.",
-    "notices": "Third-party notices (opens in a new tab)"
+    "notices": "Third-party notices (opens in a new tab)",
+    "download": "Download all notices (.txt)"
   },
   "privacy": {
     "promise": {
@@ -565,7 +649,7 @@
       "telemetry": "No analytics scripts, no tracking and no telemetry.",
       "network": "On its own, {{app}} only loads its program files and checks for app updates from its own website. Nothing about you or your documents is sent.",
       "reports": "If you choose Help → Send Error Report, {{app}} sends the description you typed and the diagnostic details shown in the report dialog to its own website, and nothing else: no documents, file names or document text.",
-      "links": "The OpenEngTools Home and Report an Issue on GitHub buttons at the top right open those websites in a new tab, and only when you click them. They send nothing by themselves; the GitHub issue page is prefilled only with the app version, browser and OS."
+      "links": "The OpenEngTools Home and Report an Issue on GitHub buttons at the top right, and Report an issue on GitHub in File › About, open those websites in a new tab, and only when you click them. They send nothing by themselves; the GitHub issue page is prefilled only with the app version, browser and OS."
     },
     "kind": {
       "indexedDB": "IndexedDB",

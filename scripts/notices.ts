@@ -226,3 +226,60 @@ export function renderNotices(
   }
   return `${out.join('\n')}\n`;
 }
+
+/**
+ * The in-app Open-source licenses list (M10-01, ADR-027 D-48): every package
+ * of the notices file, with each distinct license text stored once (`texts`)
+ * and referenced by index, so the lazily loaded chunk stays small.
+ */
+export interface LicenseData {
+  texts: string[];
+  packages: {
+    name: string;
+    version: string;
+    license: string;
+    homepage?: string;
+    /** [file name or `standard … text`, index into `texts`]. */
+    texts: [string, number][];
+  }[];
+}
+
+export function licenseData(pkgs: readonly NoticePackage[]): LicenseData {
+  const texts: string[] = [];
+  const index = new Map<string, number>();
+  const packages = pkgs.map((p) => ({
+    name: p.name,
+    version: p.version,
+    license: p.license,
+    ...(p.homepage ? { homepage: p.homepage } : {}),
+    texts: p.texts.map((t): [string, number] => {
+      const text = t.text.replace(/\r\n/g, '\n').trimEnd();
+      let i = index.get(text);
+      if (i === undefined) {
+        i = texts.length;
+        texts.push(text);
+        index.set(text, i);
+      }
+      return [t.source, i];
+    }),
+  }));
+  return { texts, packages };
+}
+
+/**
+ * About's "Built with" list (M10-01): the version and license of each named
+ * package, as installed. Throws for a package that is not a runtime package,
+ * so the list cannot name something the app does not ship.
+ */
+export function builtWith(
+  pkgs: readonly NoticePackage[],
+  names: readonly string[],
+): Record<string, { version: string; license: string }> {
+  const out: Record<string, { version: string; license: string }> = {};
+  for (const name of names) {
+    const p = pkgs.find((x) => x.name === name);
+    if (!p) throw new Error(`Built with: ${name} is not a runtime package`);
+    out[name] = { version: p.version, license: p.license };
+  }
+  return out;
+}

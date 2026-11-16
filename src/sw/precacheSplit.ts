@@ -2,7 +2,7 @@
 // worker caches at install (the core: shell, UI, Render worker, PDFium WASM,
 // Latin/Arabic/Hebrew fonts) and what it caches in the background after the
 // first render (Work and Snap workers, CJK fonts, ExcelJS, PDF Oxide, the Word
-// builder, the OCR worker with its WASM and data) and the third-party notices (File → About). Shared by the service worker and its unit test.
+// builder, the OCR worker with its WASM and data) and the third-party notices with About's license list (File → About). Shared by the service worker and its unit test.
 
 export interface PrecacheEntry {
   url: string;
@@ -35,6 +35,8 @@ const BACKGROUND = [
   /(^|\/)assets\/tesseract-core[\w.-]*\.wasm$/,
   /(^|\/)ocr\/eng\.traineddata\.gz$/,
   /(^|\/)third-party-notices\.txt$/,
+  // About's in-app Open-source licenses list (M10-01, ADR-027 D-48): only for File → About.
+  /(^|\/)assets\/licenseData-[\w-]+\.js$/,
   // The Help window (M9, ADR-026 D-46): its page, script, style and screenshots.
   HELP_FILE,
 ];

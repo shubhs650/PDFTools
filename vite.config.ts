@@ -5,7 +5,7 @@ import { VitePWA } from 'vite-plugin-pwa';
 import { MANIFEST } from './src/app/manifest.ts';
 import { PRECACHE_EXTENSIONS } from './src/sw/precacheSplit.ts';
 import { selfHostedAssets, thirdPartyNotices } from './scripts/vite-assets.ts';
-import { appVersion } from './scripts/app-version.ts';
+import { appVersion, buildDate } from './scripts/app-version.ts';
 
 /**
  * Help (M9, ADR-026 D-46) is its own page, `help.html`, served at `/help` as
@@ -52,6 +52,8 @@ export default defineConfig({
   define: {
     // File → About (M1-26): package version and the commit it was built from.
     'import.meta.env.VITE_APP_VERSION': JSON.stringify(appVersion()),
+    // File → About (M10-01): the date of that commit.
+    'import.meta.env.VITE_BUILD_DATE': JSON.stringify(buildDate()),
   },
   resolve: {
     alias: [

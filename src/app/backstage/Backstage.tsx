@@ -10,7 +10,8 @@ import { RecentList } from '../../features/recent/RecentList';
 import { AppearanceSection } from '../../features/settings/AppearanceSection';
 import { LocalData } from '../../features/settings/LocalData';
 import { ProfileSection } from '../../features/settings/profile/ProfileSection';
-import { About, Privacy } from './AboutPrivacy';
+import { About } from '../about/About';
+import { Privacy } from './Privacy';
 import { Properties } from './Properties';
 import { RibbonButton } from '../ribbon/RibbonButton';
 
@@ -156,7 +157,14 @@ export function Backstage({ open, section: initial, onOpenChange }: BackstagePro
                   <LocalData />
                 </div>
               ) : section.id === 'file.about' ? (
-                <About />
+                <About
+                  onShowSection={(id) => {
+                    const i = sections.findIndex((c) => c.id === id);
+                    if (i < 0) return;
+                    setCurrent(i);
+                    navRefs.current[i]?.focus();
+                  }}
+                />
               ) : section.id === 'file.privacy' ? (
                 <Privacy />
               ) : (
