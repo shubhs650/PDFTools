@@ -229,18 +229,24 @@
   box-sizing: border-box;
   max-height: calc(100vh - 2 * var(--space-6));
   overflow-y: auto;
+  /* What scrolls into view stays clear of the sticky footer (M10-06). */
+  scroll-padding-bottom: calc(var(--control-height-m) + 2 * var(--space-4) + var(--space-3));
   padding: var(--space-6);
   border: var(--border-width) solid var(--color-border);
-  border-radius: var(--radius-l);
+  border-radius: var(--radius-xl);
   background: var(--color-surface-raised);
   box-shadow: var(--elevation-3);
   color: var(--color-text);
 }
 
+/* The title row (M10-06, D-47): the title, then "?" and Close centred on its first line;
+   the title keeps clear of them. */
 .ui-dialog-title {
   margin: var(--space-0) var(--space-0) var(--space-3);
+  padding-right: calc(var(--control-height-m) + var(--space-2));
   font-size: var(--font-size-xl);
   font-weight: var(--font-weight-semibold);
+  line-height: var(--line-height);
 }
 
 .ui-dialog-description {
@@ -249,28 +255,38 @@
   font-size: var(--font-size-m);
 }
 
+/* The footer (M10-06, D-47): a band across the dialog's full width under a divider, the
+   buttons at its end. It ends the dialog, so it takes the dialog's bottom padding, and in
+   a long dialog it stays in view while the rest scrolls under it. */
 .ui-dialog-footer {
+  position: sticky;
+  bottom: calc(-1 * var(--space-6));
+  z-index: 1;
   display: flex;
   justify-content: flex-end;
   gap: var(--space-3);
-  margin-top: var(--space-6);
+  margin: var(--space-6) calc(-1 * var(--space-6)) calc(-1 * var(--space-6));
+  padding: var(--space-4) var(--space-6);
+  border-top: var(--border-width) solid var(--color-border);
+  background: var(--color-surface-subtle);
 }
 
-.ui-dialog-close {
+.ui-dialog-close,
+.ui-dialog-help {
   position: absolute;
-  top: var(--space-3);
-  right: var(--space-3);
+  top: calc(
+    var(--space-6) + (var(--font-size-xl) * var(--line-height) - var(--control-height-m)) / 2
+  );
+  right: var(--space-4);
 }
 
 /* Help on this dialog (M9, D-46): left of Close; the title keeps clear of both. */
 .ui-dialog-help {
-  position: absolute;
-  top: var(--space-3);
-  right: calc(var(--space-3) + var(--control-height-m) + var(--space-1));
+  right: calc(var(--space-4) + var(--control-height-m) + var(--space-1));
 }
 
 .ui-dialog--help .ui-dialog-title {
-  padding-right: calc(2 * var(--control-height-m));
+  padding-right: calc(2 * var(--control-height-m) + var(--space-2));
 }
 
 /* ------------------------------------------------------------ form controls (M10-03) */
@@ -518,11 +534,11 @@ textarea.ui-field-input {
   z-index: var(--z-tooltip);
   max-width: var(--tooltip-max-width);
   padding: var(--space-2) var(--space-3);
-  border-radius: var(--radius-m);
+  border-radius: var(--radius-l);
   background: var(--color-tooltip-bg);
   color: var(--color-tooltip-text);
   font-size: var(--font-size-s);
-  box-shadow: var(--elevation-1);
+  box-shadow: var(--elevation-2);
 }
 
 /* ------------------------------------------------------------ progress */

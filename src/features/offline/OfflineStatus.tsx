@@ -47,7 +47,7 @@ export function OfflineStatus() {
           {t('offline.preparing', { percent: format.percent(progress, 0) })}
         </span>
       ) : phase === 'ready' ? (
-        <span className="offline-status" role="status">
+        <span className="offline-status offline-status--ready" role="status">
           {t('offline.ready')}
         </span>
       ) : null}
