@@ -12,12 +12,12 @@
 :root {
   color-scheme: light;
 
-  /* Color — surfaces */
-  --color-bg: #f3f3f3;
+  /* Color — surfaces (slate neutrals, D-47) */
+  --color-bg: #f1f5f9;
   --color-surface: #ffffff;
   --color-surface-raised: #ffffff;
-  --color-surface-sunken: #ebebeb;
-  --color-canvas: #8a8a8a; /* area behind document pages */
+  --color-surface-sunken: #e2e8f0;
+  --color-canvas: #e2e8f0; /* area behind document pages */
   --color-page: #ffffff; /* paper under a page's preview: white in every theme */
   --color-form-field: #e3ecfa; /* fillable form fields over the page (M2-14) */
   --color-form-text: #000000;
@@ -29,30 +29,31 @@
   --color-note-leader: rgb(0 0 0 / 0.35);
 
   /* Color — content */
-  --color-text: #1f1f1f;
-  --color-text-muted: #5c5c5c;
-  --color-text-disabled: #9e9e9e;
-  --color-icon: #424242;
+  --color-text: #0f172a;
+  --color-text-muted: #475569;
+  --color-text-disabled: #94a3b8;
+  --color-icon: #334155;
 
   /* Color — lines and states */
-  --color-border: #d1d1d1;
-  --color-border-strong: #8a8a8a;
-  --color-hover: #e8e8e8;
-  --color-pressed: #dcdcdc;
-  --color-selected: #d6e4f5;
+  --color-border: #e2e8f0;
+  --color-border-strong: #64748b; /* marks a control's edge: 3:1 (WCAG 1.4.11) */
+  --color-hover: #e2e8f0;
+  --color-pressed: #cbd5e1;
+  --color-selected: #dbeafe;
   --color-text-selection: #9fc6ec; /* multiplied over the page */
   --color-find-hit: #ffe27a; /* search hits, multiplied over the page */
   --color-find-hit-text: #1f1f1f;
   --color-find-current: #ffa040;
-  --color-accent: #0f6cbd; /* lines, outlines, indicators and links */
-  --color-link: #0f6cbd;
-  --color-brand: #0f6cbd; /* filled brand surfaces: File tab, backstage, primary buttons */
-  --color-brand-hover: #115ea3;
+  --color-accent: #2563eb; /* lines, outlines, indicators */
+  --color-link: #1d4ed8; /* 4.5:1 on every pane, the sunken one too */
+  --color-brand: #2563eb; /* filled brand surfaces: File tab, backstage, primary buttons */
+  --color-brand-hover: #1d4ed8;
   --color-text-on-brand: #ffffff;
-  --color-focus: #0f6cbd;
-  --color-danger: #c42b1c;
-  --color-backdrop: rgb(0 0 0 / 0.4);
-  --color-tooltip-bg: #242424;
+  --color-focus: #2563eb;
+  --color-focus-halo: rgb(37 99 235 / 0.25); /* the soft ring around the focus ring */
+  --color-danger: #b91c1c;
+  --color-backdrop: rgb(15 23 42 / 0.45);
+  --color-tooltip-bg: #1e293b;
   --color-tooltip-text: #ffffff;
 
   /* Spacing (4 px grid) */
@@ -69,6 +70,7 @@
   --border-width: 1px;
   --focus-width: 2px;
   --focus-offset: 1px;
+  --focus-halo-width: 3px; /* the halo outside the focus ring (D-47) */
   --icon-size-xs: 12px;
   --icon-size-s: 16px;
   --icon-size-m: 20px;
@@ -91,10 +93,11 @@
   --tab-max-width: 240px;
   --ribbon-height: 92px;
 
-  /* Radius */
+  /* Radius (D-47): controls 6 px, menus and cards 8 px, dialogs and the start card 12 px */
   --radius-s: 2px;
-  --radius-m: 4px;
+  --radius-m: 6px;
   --radius-l: 8px;
+  --radius-xl: 12px;
   --radius-round: 999px;
 
   /* Type (system fonts only: nothing is fetched, rule 4) */
@@ -108,14 +111,19 @@
   --font-weight-semibold: 600;
   --line-height: 1.35;
 
-  /* Elevation */
-  --elevation-1: 0 1px 2px rgb(0 0 0 / 0.14), 0 0 2px rgb(0 0 0 / 0.12);
-  --elevation-2: 0 4px 8px rgb(0 0 0 / 0.14), 0 0 2px rgb(0 0 0 / 0.12);
-  --elevation-3: 0 14px 28px rgb(0 0 0 / 0.24), 0 0 8px rgb(0 0 0 / 0.2);
+  /* Elevation (D-47): layered, slate-tinted shadows; the dark set has its own */
+  --elevation-1: 0 0 0 1px rgb(15 23 42 / 0.05), 0 1px 3px rgb(15 23 42 / 0.12);
+  --elevation-2:
+    0 0 0 1px rgb(15 23 42 / 0.04), 0 2px 4px rgb(15 23 42 / 0.06), 0 8px 16px rgb(15 23 42 / 0.12);
+  --elevation-3:
+    0 0 0 1px rgb(15 23 42 / 0.04), 0 4px 8px rgb(15 23 42 / 0.08), 0 24px 48px rgb(15 23 42 / 0.22);
 
-  /* Motion */
-  --duration-fast: 100ms;
-  --duration-normal: 200ms;
+  /* Motion (D-47): calm and short; opacity and transform only, never in the document
+     view; all 0 ms under prefers-reduced-motion (below) */
+  --duration-fast: 120ms; /* hover, press */
+  --duration-normal: 180ms; /* menus, tooltips, panes */
+  --duration-slow: 240ms; /* dialogs, the backstage */
+  --ease-out: cubic-bezier(0.2, 0, 0, 1);
   --spin-duration: 800ms;
 
   /* Layers */
@@ -125,23 +133,23 @@
   --z-tooltip: 300;
 }
 
-/* Dark set: overrides every --color-* token (tests/ui/tokens.test.ts enforces it). */
 /*
- * Dark set (M7-11, D-42): Fluent 2 dark neutrals. The app background is
- * #1f1f1f, panes and the ribbon #292929, raised surfaces (dialogs, menus)
- * #333333 and the document canvas the darkest (#0f0f0f), so white pages stand
- * out without glare. Pages stay white and are never inverted; everything drawn
- * on a page (form fields, the sticky note window, find hits, text selection)
- * keeps its light colours. Overrides every --color-* token
- * (tests/ui/tokens.test.ts enforces it).
+ * Dark set (M7-11, D-42; slate in M10-02, D-47). The app background is
+ * #0b1120, panes and the ribbon slate-900 #0f172a, raised surfaces (dialogs,
+ * menus) slate-800 #1e293b and the document canvas the darkest (#070b14), so
+ * white pages stand out without glare. Filled brand surfaces keep #2563eb
+ * (white text 5.2:1); lines, indicators and links use blue-400 #60a5fa. Pages
+ * stay white and are never inverted; everything drawn on a page (form fields,
+ * the sticky note window, find hits, text selection) keeps its light colours.
+ * Overrides every --color-* token (tests/ui/tokens.test.ts enforces it).
  */
 :root[data-theme='dark'] {
   color-scheme: dark;
-  --color-bg: #1f1f1f;
-  --color-surface: #292929;
-  --color-surface-raised: #333333;
-  --color-surface-sunken: #141414;
-  --color-canvas: #0f0f0f;
+  --color-bg: #0b1120;
+  --color-surface: #0f172a;
+  --color-surface-raised: #1e293b;
+  --color-surface-sunken: #070b14;
+  --color-canvas: #070b14;
   --color-page: #ffffff;
   --color-form-field: #e3ecfa; /* on the white page in every theme */
   --color-form-text: #000000;
@@ -150,29 +158,36 @@
   --color-note-ink-dark: #1f1f1f;
   --color-note-ink-light: #ffffff;
   --color-note-leader: rgb(0 0 0 / 0.35);
-  --color-text: #ffffff;
-  --color-text-muted: #c7c7c7;
-  --color-text-disabled: #6e6e6e;
-  --color-icon: #e0e0e0;
-  --color-border: #474747;
-  --color-border-strong: #8a8a8a;
-  --color-hover: #3d3d3d;
-  --color-pressed: #474747;
-  --color-selected: #1a3a5c;
+  --color-text: #f1f5f9;
+  --color-text-muted: #a8b3c4; /* 4.5:1 on --color-pressed too */
+  --color-text-disabled: #64748b;
+  --color-icon: #e2e8f0;
+  --color-border: #334155;
+  --color-border-strong: #7c8799;
+  --color-hover: #273449;
+  --color-pressed: #334155;
+  --color-selected: #1e3a8a;
   --color-text-selection: #9fc6ec; /* pages stay white in every theme */
   --color-find-hit: #ffe27a;
   --color-find-hit-text: #0a0a0a;
   --color-find-current: #ffa040;
-  --color-accent: #479ef5; /* Fluent brand foreground on dark */
-  --color-link: #62abf5; /* 5.2:1 on --color-surface-raised (a dialog's link) */
-  --color-brand: #115ea3; /* Fluent brand background on dark: white text 6.4:1 */
-  --color-brand-hover: #0f6cbd;
+  --color-accent: #60a5fa; /* blue-400: lines and indicators, 5.7:1 on dialogs */
+  --color-link: #60a5fa;
+  --color-brand: #2563eb; /* filled: white text 5.2:1 (the report's #3b82f6 fails, R12) */
+  --color-brand-hover: #1d4ed8;
   --color-text-on-brand: #ffffff;
-  --color-focus: #ffffff;
-  --color-danger: #ff8a94; /* 5.6:1 on --color-surface-raised (M3-07) */
-  --color-backdrop: rgb(0 0 0 / 0.6);
-  --color-tooltip-bg: #e0e0e0;
-  --color-tooltip-text: #1f1f1f;
+  --color-focus: #93c5fd;
+  --color-focus-halo: rgb(96 165 250 / 0.3);
+  --color-danger: #f87171; /* 5.3:1 on --color-surface-raised */
+  --color-backdrop: rgb(2 6 23 / 0.65);
+  --color-tooltip-bg: #e2e8f0;
+  --color-tooltip-text: #0f172a;
+
+  --elevation-1: 0 0 0 1px rgb(0 0 0 / 0.3), 0 1px 3px rgb(0 0 0 / 0.4);
+  --elevation-2:
+    0 0 0 1px rgb(0 0 0 / 0.3), 0 2px 4px rgb(0 0 0 / 0.3), 0 8px 16px rgb(0 0 0 / 0.4);
+  --elevation-3:
+    0 0 0 1px rgb(0 0 0 / 0.35), 0 4px 8px rgb(0 0 0 / 0.35), 0 24px 48px rgb(0 0 0 / 0.55);
 }
 
 /*
@@ -186,11 +201,11 @@
 @media not (forced-colors: active) {
   :root[data-theme='dark'] .page {
     color-scheme: light;
-    --color-bg: #f3f3f3;
+    --color-bg: #f1f5f9;
     --color-surface: #ffffff;
     --color-surface-raised: #ffffff;
-    --color-surface-sunken: #ebebeb;
-    --color-canvas: #8a8a8a;
+    --color-surface-sunken: #e2e8f0;
+    --color-canvas: #e2e8f0;
     --color-page: #ffffff;
     --color-form-field: #e3ecfa;
     --color-form-text: #000000;
@@ -199,28 +214,29 @@
     --color-note-ink-dark: #1f1f1f;
     --color-note-ink-light: #ffffff;
     --color-note-leader: rgb(0 0 0 / 0.35);
-    --color-text: #1f1f1f;
-    --color-text-muted: #5c5c5c;
-    --color-text-disabled: #9e9e9e;
-    --color-icon: #424242;
-    --color-border: #d1d1d1;
-    --color-border-strong: #8a8a8a;
-    --color-hover: #e8e8e8;
-    --color-pressed: #dcdcdc;
-    --color-selected: #d6e4f5;
+    --color-text: #0f172a;
+    --color-text-muted: #475569;
+    --color-text-disabled: #94a3b8;
+    --color-icon: #334155;
+    --color-border: #e2e8f0;
+    --color-border-strong: #64748b;
+    --color-hover: #e2e8f0;
+    --color-pressed: #cbd5e1;
+    --color-selected: #dbeafe;
     --color-text-selection: #9fc6ec;
     --color-find-hit: #ffe27a;
     --color-find-hit-text: #1f1f1f;
     --color-find-current: #ffa040;
-    --color-accent: #0f6cbd;
-    --color-link: #0f6cbd;
-    --color-brand: #0f6cbd;
-    --color-brand-hover: #115ea3;
+    --color-accent: #2563eb;
+    --color-link: #1d4ed8;
+    --color-brand: #2563eb;
+    --color-brand-hover: #1d4ed8;
     --color-text-on-brand: #ffffff;
-    --color-focus: #0f6cbd;
-    --color-danger: #c42b1c;
-    --color-backdrop: rgb(0 0 0 / 0.4);
-    --color-tooltip-bg: #242424;
+    --color-focus: #2563eb;
+    --color-focus-halo: rgb(37 99 235 / 0.25);
+    --color-danger: #b91c1c;
+    --color-backdrop: rgb(15 23 42 / 0.45);
+    --color-tooltip-bg: #1e293b;
     --color-tooltip-text: #ffffff;
   }
 }
@@ -260,6 +276,7 @@
     --color-brand-hover: Highlight;
     --color-text-on-brand: HighlightText;
     --color-focus: Highlight;
+    --color-focus-halo: transparent;
     --color-danger: CanvasText;
     --color-backdrop: transparent;
     --color-tooltip-bg: Canvas;
@@ -271,5 +288,6 @@
   :root {
     --duration-fast: 0ms;
     --duration-normal: 0ms;
+    --duration-slow: 0ms;
   }
 }

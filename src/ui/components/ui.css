@@ -11,6 +11,15 @@
   outline-offset: var(--focus-offset);
 }
 
+/* Focus (D-47): the 2 px ring plus a soft halo outside it, on keyboard focus only.
+   A box-shadow, so it never moves layout; forced-colors drops it and keeps the ring. */
+.ui-focusable:focus-visible,
+.ui-button:focus-visible,
+.ui-field-input:focus-visible {
+  box-shadow: var(--space-0) var(--space-0) var(--space-0)
+    calc(var(--focus-offset) + var(--focus-width) + var(--focus-halo-width)) var(--color-focus-halo);
+}
+
 /* ------------------------------------------------------------ buttons */
 
 .ui-button {
@@ -28,7 +37,7 @@
   font-size: var(--font-size-m);
   line-height: var(--line-height);
   cursor: pointer;
-  transition: background-color var(--duration-fast);
+  transition: background-color var(--duration-fast) var(--ease-out);
 }
 
 .ui-button:hover:not(:disabled) {
@@ -57,6 +66,13 @@
   background: var(--color-brand-hover);
 }
 
+/* R2 (M10-02): a disabled primary button looks disabled, not like a broken blue one. */
+.ui-button--primary:disabled {
+  background: var(--color-surface-sunken);
+  border-color: var(--color-border);
+  color: var(--color-text-disabled);
+}
+
 .ui-button--subtle {
   border-color: transparent;
   background: transparent;
@@ -81,8 +97,11 @@
   flex: none;
 }
 
+/* R1 (M10-02): on a filled button, and when disabled, the icon is the text's colour
+   (it was grey on blue: the icon colour beat the button's white text). */
+.ui-button--primary svg,
 .ui-button:disabled svg {
-  color: var(--color-text-disabled);
+  color: currentColor;
 }
 
 .ui-split {

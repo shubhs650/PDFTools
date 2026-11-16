@@ -514,3 +514,11 @@ kbd {
     box-shadow: none;
   }
 }
+
+/* High contrast (M10-02): the step numbers keep the system's Highlight pair (the tokens'
+   mapping); the browser's text backplate would otherwise hide the number. */
+@media (forced-colors: active) {
+  .help-steps > li::before {
+    forced-color-adjust: none;
+  }
+}

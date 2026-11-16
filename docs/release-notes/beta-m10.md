@@ -17,3 +17,17 @@ This update is in progress: each part of M10 adds its notes here when it ships.
   ready offline, it opened a second copy of the app instead. You can also download the notices as
   a text file.
 - Buttons for **Help**, **Report an issue on GitHub** and **Privacy** are at the top of About.
+
+## New colours
+
+- A fresher look in both themes: cool slate greys instead of flat greys, and a brighter blue.
+  The dark theme is a deep navy with the same blue for filled buttons and a lighter blue for
+  lines and links. Every text and control colour still meets WCAG AA contrast.
+- The area around the pages is lighter in the light theme. Pages stay white, highlights and
+  sticky notes stay yellow, and comment colours are unchanged.
+- The icon on blue buttons (such as **Open…**) is now white like its label, instead of grey.
+- A blue button that can't be used yet (such as **Search** with an empty box) now looks
+  disabled, instead of a blue button with grey text.
+- Keyboard focus shows a soft blue halo around the focus ring.
+- Windows High Contrast: the **File** tab and the File menu's list are readable again (their
+  labels showed as blank boxes).

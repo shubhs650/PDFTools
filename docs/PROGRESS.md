@@ -1,6 +1,6 @@
 # Triya PDF — Progress
 
-_Last updated: 2026-11-16 (session 58: M10-01 About and open-source notices)_
+_Last updated: 2026-11-16 (session 59: M10-02 design tokens v2 and contrast fixes)_
 
 **Current milestone:** M7 — second beta review (plan in [docs/plan/M7.md](plan/M7.md), scope in
 [ADR-023](adr/023-m7-second-beta-review.md), **Accepted** 2026-11-04 with the recommended
@@ -10,6 +10,32 @@ answers Q1–Q7; ARCHITECTURE.md Rev 0.12 after [ADR-024](adr/024-freetext-text-
 interop is in the M6 pack (CHECKLIST §M6 R1–R4). Rev 0 (M0–M4) is complete on the agent side.
 
 ## Done
+
+- **Session 59 — M10-02 Design tokens v2 and contrast fixes (ADR-027 D-47).** New colour values
+  in `src/ui/tokens.css` (Q1): **light** slate neutrals (background `#f1f5f9`, surfaces white,
+  sunken and borders `#e2e8f0`, text `#0f172a`, muted `#475569`, control edges `#64748b`), brand
+  and accent `#2563eb`, links `#1d4ed8` (AA on the sunken pane too), danger `#b91c1c`, document
+  canvas `#e2e8f0` (as in the accepted preview); **dark** background `#0b1120`, surfaces
+  `#0f172a`, raised `#1e293b`, canvas and sunken `#070b14`, filled brand still `#2563eb` (white
+  5.2:1; the report's `#3b82f6` fails), accent and links `#60a5fa`, focus `#93c5fd`. The on-page
+  copy for dark equals the new light set (as before); on-page colours themselves (form-field
+  tint, note paper and ink, find hits, text selection) are unchanged. New tokens:
+  `--color-focus-halo` and `--focus-halo-width` (a soft halo outside the 2 px ring on
+  `.ui-button`, `.ui-focusable` and `.ui-field-input`, `:focus-visible` only, a box-shadow so
+  forced-colors drops it), `--radius-m` 6 px and `--radius-xl` 12 px, layered slate-tinted
+  `--elevation-1..3` with a dark set, motion `--duration-fast` 120 / `-normal` 180 / `-slow` 240 ms
+  and `--ease-out` (all 0 under reduced motion). `theme-color`, the manifest and `theme-boot.js`
+  follow (`#2563eb` light, `#0b1120` dark); the app icon is unchanged (owner's branding decision).
+  **Fixes:** R1 a primary button's icon takes the label colour (was grey on blue); R2 a disabled
+  primary button looks disabled (sunken fill, disabled text) instead of blue with grey text; in
+  **forced-colors** the File tab, the backstage column, number badges and Help's step numbers
+  keep the Highlight pair (`forced-color-adjust: none`): the browser's text backplate had turned
+  their labels into blank boxes; current/hovered backstage items swap the pair. Tests:
+  `themeContrast.test.ts` now checks focus rings on hover/pressed/selected, accents on hover,
+  control edges on every pane, and the focus ring against its halo at 3:1; e2e `theme.spec.ts`
+  (new colours; primary icon and disabled look in light and dark @smoke; forced-colors ring,
+  no halo, readable File tab and backstage). Screenshots before/after (light, dark, 1280/1366/
+  1920, forced-colors) in the project's shared folder `m10-02/`. Next: M10-08·O8 (Inter).
 
 - **Session 58 — M10-01 About and open-source notices (ADR-027 D-48).** **Bug (the owner's):**
   File → About → Third-party notices opened a second copy of the app once the service worker
