@@ -50,6 +50,10 @@
   --color-hover: #e2e8f0;
   --color-pressed: #cbd5e1;
   --color-selected: #dbeafe;
+  /* A pressed toggle (M10-04): the soft brand tint, a stronger tint on hover, and its
+     brand-coloured label and icon; also the active ribbon tab's label */
+  --color-selected-hover: #bfdbfe;
+  --color-selected-text: #1d4ed8;
   --color-text-selection: #9fc6ec; /* multiplied over the page */
   --color-find-hit: #ffe27a; /* search hits, multiplied over the page */
   --color-find-hit-text: #1f1f1f;
@@ -87,6 +91,7 @@
   --icon-size-l: 32px;
   --control-height-s: 24px;
   --control-height-m: 32px;
+  --control-height-toolbar: 28px; /* top bar and Quick Access buttons (M10-04, review R18) */
   --button-large-width: 56px;
   --button-large-height: 66px;
   --spinner-size: 20px;
@@ -104,6 +109,9 @@
   --pane-width: 260px;
   --tab-max-width: 240px;
   --ribbon-height: 92px;
+  --tab-indicator-width: 24px; /* the active ribbon tab's short bar (M10-04) */
+  --tab-indicator-height: 3px;
+  --rail-pill-height: 16px; /* the left rail's active-pane pill (M10-04) */
 
   /* Radius (D-47): controls 6 px, menus and cards 8 px, dialogs and the start card 12 px */
   --radius-s: 2px;
@@ -126,6 +134,7 @@
   --font-weight-medium: 500; /* field and group labels (M10-03) */
   --font-weight-semibold: 600;
   --line-height: 1.35;
+  --letter-spacing-label: 0.02em; /* ribbon group labels (M10-04) */
 
   /* Elevation (D-47): layered, slate-tinted shadows; the dark set has its own */
   --elevation-1: 0 0 0 1px rgb(15 23 42 / 0.05), 0 1px 3px rgb(15 23 42 / 0.12);
@@ -191,6 +200,8 @@
   --color-hover: #273449;
   --color-pressed: #334155;
   --color-selected: #1e3a8a;
+  --color-selected-hover: #1e40af;
+  --color-selected-text: #93c5fd;
   --color-text-selection: #9fc6ec; /* pages stay white in every theme */
   --color-find-hit: #ffe27a;
   --color-find-hit-text: #0a0a0a;
@@ -251,6 +262,8 @@
     --color-hover: #e2e8f0;
     --color-pressed: #cbd5e1;
     --color-selected: #dbeafe;
+    --color-selected-hover: #bfdbfe;
+    --color-selected-text: #1d4ed8;
     --color-text-selection: #9fc6ec;
     --color-find-hit: #ffe27a;
     --color-find-hit-text: #1f1f1f;
@@ -283,6 +296,8 @@
   /* Teal: teal-700 #0f766e (white 5.5:1); dark lines teal-400 */
   :root[data-accent='teal'] {
     --color-selected: #ccfbf1;
+    --color-selected-hover: #99f6e4;
+    --color-selected-text: #115e59;
     --color-accent: #0f766e;
     --color-link: #115e59;
     --color-brand: #0f766e;
@@ -293,6 +308,8 @@
 
   :root[data-accent='teal'][data-theme='dark'] {
     --color-selected: #134440;
+    --color-selected-hover: #115e59;
+    --color-selected-text: #5eead4;
     --color-accent: #2dd4bf;
     --color-link: #2dd4bf;
     --color-brand: #0f766e;
@@ -303,6 +320,8 @@
 
   :root[data-accent='teal'][data-theme='dark'] .page {
     --color-selected: #ccfbf1;
+    --color-selected-hover: #99f6e4;
+    --color-selected-text: #115e59;
     --color-accent: #0f766e;
     --color-link: #115e59;
     --color-brand: #0f766e;
@@ -314,6 +333,8 @@
   /* Indigo: indigo-600 #4f46e5 (white 6.3:1); dark lines indigo-400 */
   :root[data-accent='indigo'] {
     --color-selected: #e0e7ff;
+    --color-selected-hover: #c7d2fe;
+    --color-selected-text: #4338ca;
     --color-accent: #4f46e5;
     --color-link: #4338ca;
     --color-brand: #4f46e5;
@@ -324,6 +345,8 @@
 
   :root[data-accent='indigo'][data-theme='dark'] {
     --color-selected: #312e81;
+    --color-selected-hover: #3730a3;
+    --color-selected-text: #a5b4fc;
     --color-accent: #818cf8;
     --color-link: #818cf8;
     --color-brand: #4f46e5;
@@ -334,6 +357,8 @@
 
   :root[data-accent='indigo'][data-theme='dark'] .page {
     --color-selected: #e0e7ff;
+    --color-selected-hover: #c7d2fe;
+    --color-selected-text: #4338ca;
     --color-accent: #4f46e5;
     --color-link: #4338ca;
     --color-brand: #4f46e5;
@@ -345,6 +370,8 @@
   /* Graphite: slate-600 #475569 (white 7.6:1); links stay blue so they still read as links */
   :root[data-accent='graphite'] {
     --color-selected: #d5dde8;
+    --color-selected-hover: #c3cede;
+    --color-selected-text: #334155;
     --color-accent: #475569;
     --color-link: #1d4ed8;
     --color-brand: #475569;
@@ -355,6 +382,8 @@
 
   :root[data-accent='graphite'][data-theme='dark'] {
     --color-selected: #2c3a4f;
+    --color-selected-hover: #3a4a63;
+    --color-selected-text: #e2e8f0;
     --color-accent: #94a3b8;
     --color-link: #60a5fa;
     --color-brand: #475569;
@@ -365,6 +394,8 @@
 
   :root[data-accent='graphite'][data-theme='dark'] .page {
     --color-selected: #d5dde8;
+    --color-selected-hover: #c3cede;
+    --color-selected-text: #334155;
     --color-accent: #475569;
     --color-link: #1d4ed8;
     --color-brand: #475569;
@@ -402,6 +433,8 @@
     --color-hover: Highlight;
     --color-pressed: Highlight;
     --color-selected: Highlight;
+    --color-selected-hover: Highlight;
+    --color-selected-text: HighlightText;
     --color-text-selection: Highlight;
     --color-find-hit: Mark;
     --color-find-hit-text: MarkText;

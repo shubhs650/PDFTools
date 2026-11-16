@@ -13,6 +13,7 @@ import { expect, test } from './support/fixtures.ts';
 const html = (page: Page) => page.locator('html');
 const backstage = (page: Page) => page.getByTestId('backstage');
 const stored = (page: Page) => page.evaluate((k) => localStorage.getItem(k), ACCENT_KEY);
+// Polled: the File pill eases its colour (M10-04).
 const fileTabBg = (page: Page) =>
   page.getByTestId('file-tab').evaluate((el) => getComputedStyle(el).backgroundColor);
 const token = (page: Page, name: string) =>
@@ -37,7 +38,7 @@ test('Settings → Appearance: pick an accent, it applies at once and survives a
   page,
 }) => {
   await page.goto('/');
-  expect(await fileTabBg(page)).toBe(BLUE);
+  await expect.poll(() => fileTabBg(page)).toBe(BLUE);
   const group = await appearance(page);
   const radios = group.getByRole('radio');
   await expect(radios).toHaveCount(4);
@@ -47,7 +48,7 @@ test('Settings → Appearance: pick an accent, it applies at once and survives a
   await group.getByRole('radio', { name: 'Teal' }).check();
   await expect(html(page)).toHaveAttribute('data-accent', 'teal');
   expect(await stored(page)).toBe('teal');
-  expect(await fileTabBg(page)).toBe(TEAL);
+  await expect.poll(() => fileTabBg(page)).toBe(TEAL);
   await expect(page.locator('meta[name="theme-color"]')).toHaveAttribute('content', '#0f766e');
 
   // Keyboard: the arrows move between the swatches and pick, as radio buttons do.
@@ -55,7 +56,7 @@ test('Settings → Appearance: pick an accent, it applies at once and survives a
   await page.keyboard.press('ArrowRight');
   await expect(group.getByRole('radio', { name: 'Indigo' })).toBeFocused();
   await expect(group.getByRole('radio', { name: 'Indigo' })).toBeChecked();
-  expect(await fileTabBg(page)).toBe(INDIGO);
+  await expect.poll(() => fileTabBg(page)).toBe(INDIGO);
   // The focused swatch shows the focus ring; the current one the ring.
   const swatch = group.locator(
     '.appearance-accent-input:focus-visible + .appearance-accent-swatch',
@@ -65,7 +66,7 @@ test('Settings → Appearance: pick an accent, it applies at once and survives a
 
   await page.keyboard.press('ArrowRight');
   await expect(group.getByRole('radio', { name: 'Graphite' })).toBeChecked();
-  expect(await fileTabBg(page)).toBe(GRAPHITE);
+  await expect.poll(() => fileTabBg(page)).toBe(GRAPHITE);
 
   const { violations } = await new AxeBuilder({ page }).analyze();
   expect(violations.map((v) => v.id)).toEqual([]);
@@ -73,14 +74,14 @@ test('Settings → Appearance: pick an accent, it applies at once and survives a
   // Before the first paint after a reload (the boot script), then the module agrees.
   await page.reload();
   await expect(html(page)).toHaveAttribute('data-accent', 'graphite');
-  expect(await fileTabBg(page)).toBe(GRAPHITE);
+  await expect.poll(() => fileTabBg(page)).toBe(GRAPHITE);
   await expect((await appearance(page)).getByRole('radio', { name: 'Graphite' })).toBeChecked();
 
   // Blue again: back to the default, nothing stored.
   await (await appearance(page)).getByRole('radio', { name: 'Blue' }).check();
   await expect(html(page)).not.toHaveAttribute('data-accent', /.*/);
   expect(await stored(page)).toBeNull();
-  expect(await fileTabBg(page)).toBe(BLUE);
+  await expect.poll(() => fileTabBg(page)).toBe(BLUE);
 });
 
 test('a stored accent is there from the first paint, in dark too', async ({ page }) => {
@@ -99,7 +100,7 @@ test('a stored accent is there from the first paint, in dark too', async ({ page
     ),
   ).toBe('indigo');
   await expect(html(page)).toHaveAttribute('data-theme', 'dark');
-  expect(await fileTabBg(page)).toBe(INDIGO);
+  await expect.poll(() => fileTabBg(page)).toBe(INDIGO);
   // Lines and the focus ring use indigo's dark set; the title bar stays the app background.
   expect(await token(page, '--color-accent')).toBe('#818cf8');
   expect(await token(page, '--color-focus')).toBe('#a5b4fc');
@@ -162,7 +163,7 @@ test('Privacy lists the accent, and Clear all local data goes back to Blue', asy
   await expect(confirm).toBeHidden();
   await expect(html(page)).not.toHaveAttribute('data-accent', /.*/);
   expect(await stored(page)).toBeNull();
-  expect(await fileTabBg(page)).toBe(BLUE);
+  await expect.poll(() => fileTabBg(page)).toBe(BLUE);
   await expect(
     backstage(page).getByTestId('appearance-section').getByRole('radio', { name: 'Blue' }),
   ).toBeChecked();
@@ -177,7 +178,7 @@ test('forced-colors: system colours win over the accent; the swatches keep their
   await expect(html(page)).toHaveAttribute('data-accent', 'teal');
   expect(await token(page, '--color-brand')).toBe('Highlight');
   expect(await token(page, '--color-focus')).toBe('Highlight');
-  expect(await fileTabBg(page)).not.toBe(TEAL);
+  await expect.poll(() => fileTabBg(page)).not.toBe(TEAL);
   const group = await appearance(page);
   const swatch = group.locator('.appearance-accent-swatch').nth(1);
   const look = await swatch.evaluate((el) => {
@@ -195,5 +196,5 @@ test('in dark with forced-colors, the File tab takes the system pair too', async
   await page.emulateMedia({ forcedColors: 'active' });
   await page.goto('/');
   expect(await token(page, '--color-brand')).toBe('Highlight');
-  expect(await fileTabBg(page)).not.toBe(BLUE);
+  await expect.poll(() => fileTabBg(page)).not.toBe(BLUE);
 });

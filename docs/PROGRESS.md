@@ -1,6 +1,6 @@
 # Triya PDF — Progress
 
-_Last updated: 2026-11-16 (session 62: M10-03 form controls)_
+_Last updated: 2026-11-16 (session 63: M10-04 ribbon and top bar)_
 
 **Current milestone:** M7 — second beta review (plan in [docs/plan/M7.md](plan/M7.md), scope in
 [ADR-023](adr/023-m7-second-beta-review.md), **Accepted** 2026-11-04 with the recommended
@@ -10,6 +10,38 @@ answers Q1–Q7; ARCHITECTURE.md Rev 0.12 after [ADR-024](adr/024-freetext-text-
 interop is in the M6 pack (CHECKLIST §M6 R1–R4). Rev 0 (M0–M4) is complete on the agent side.
 
 ## Done
+
+- **Session 63 — M10-04 Ribbon and top bar (ADR-027 D-47; review R4, R7, R17, R18).** Same
+  layout, softer framing. The title rows sit on the app background and the **ribbon panel is a
+  card** on it (8 px corners, a 1 px edge, elevation 1, 8 px side margins). **File** is a pill
+  (semibold, brand hover). **Tabs** are 28 px rounded targets; the active one is semibold
+  brand text (`--color-selected-text`) over a **short 24 × 3 px bar that slides** between tabs
+  (a `transform` transition, compositor only; instant with reduced motion; never on the first
+  placement; a ResizeObserver follows font and language changes). A hidden semibold copy of each
+  label (`::after`, `attr(data-label) / ''`, so it is neither text nor name) reserves its width,
+  so the row never shifts when a tab becomes active. **Groups:** inset dividers (a border on
+  `::after`, none after the last group) instead of full-height lines, 11 px semibold labels with
+  a little letter-spacing. **Pressed toggles** (R4) are a borderless soft brand tint
+  (`--color-selected`, a stronger `--color-selected-hover` on hover) with brand text and icon
+  plus the Filled icon; a pressed comment tool's palette arrow joins the tint so the split
+  button reads as one unit. **Disabled** (R7, Q3): greyed, no tint, no hover; a disabled
+  pressed toggle keeps only a neutral tint. **Top bar and Quick Access** buttons are 28 × 28 px
+  (R18) with 4 px between them and inset dividers; the theme toggle shows its pressed tint in
+  dark. **Left rail:** the open pane's button has the tint and a 3 × 16 px accent pill at the
+  rail's edge (the area toggle gets the tint only). New tokens: `--color-selected-hover`,
+  `--color-selected-text` (every theme, accent, the page copy and forced-colors; contrast
+  tested), `--control-height-toolbar`, `--tab-indicator-width/-height`, `--rail-pill-height`,
+  `--letter-spacing-label`. Forced-colors: pressed toggles keep the Highlight pair
+  (`forced-color-adjust: none`), the active tab's label is Highlight, the bar, dividers and pill
+  are borders. Every tab still fits 1280 … 1920 px (adaptive-ribbon spec). **Screenshot helper
+  (owner's ask):** `e2e/support/shots.ts` (`startShots`, `skipReviewerPrompt`, `openSample`), so
+  a screenshot run never stalls on the "Who is reviewing?" dialog. Tests: e2e
+  `ribbon-polish.spec.ts` (@smoke: tint, text and icon colours, rail pill, axe light/dark, the
+  bar's slide and no row shift, 28 px buttons, the card, dividers, reduced motion,
+  forced-colors); `themeContrast.test.ts` covers the new pairs; `accent.spec` polls the File
+  tab's colour (it eases now). Screenshots (before/after, light and dark, 1280/1366/1920, five
+  scenes, forced-colors) in the project's shared folder `m10-04/`. Next: M10-08·O3 one-row
+  header.
 
 - **Session 62 — M10-03 Form controls (ADR-027 D-47).** One styled set for the app's own
   controls, all from tokens, all still native inputs (keyboard and screen readers unchanged).

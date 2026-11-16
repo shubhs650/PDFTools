@@ -80,6 +80,12 @@ const TEXT_PAIRS: [string, string[]][] = [
   ['--color-text', SURFACES],
   ['--color-text-muted', SURFACES],
   ['--color-link', PANES],
+  // M10-04 (D-47): a pressed toggle's label and icon on its tint (and hovered), and the
+  // active ribbon tab's label on the title rows.
+  [
+    '--color-selected-text',
+    [...PANES, '--color-hover', '--color-selected', '--color-selected-hover'],
+  ],
   ['--color-danger', PANES],
   ['--color-text-on-brand', ['--color-brand', '--color-brand-hover']],
   ['--color-tooltip-text', ['--color-tooltip-bg']],
@@ -92,6 +98,8 @@ const UI_PAIRS: [string, string[]][] = [
   // M10-02 (D-47): a focus ring also shows on a hovered, pressed or selected row.
   ['--color-focus', SURFACES],
   ['--color-accent', [...PANES, '--color-selected', '--color-hover']],
+  // M10-04: a focus ring on a pressed toggle that is hovered.
+  ['--color-focus', ['--color-selected-hover']],
   // A control's edge (inputs, check boxes, colour buttons) on every surface it sits on.
   ['--color-border-strong', [...PANES, '--color-hover']],
   ['--color-danger', PANES],
@@ -151,6 +159,8 @@ describe('the page in dark (M7-11)', () => {
 /** The tokens an accent may change; everything else (neutrals, page, comments) never follows it. */
 const ACCENT_TOKENS = [
   '--color-selected',
+  '--color-selected-hover',
+  '--color-selected-text',
   '--color-accent',
   '--color-link',
   '--color-brand',
