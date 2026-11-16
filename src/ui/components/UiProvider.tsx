@@ -2,6 +2,7 @@ import type { ReactNode } from 'react';
 import { TooltipProvider } from './Tooltip';
 import '../tokens.css';
 import './ui.css';
+import '../motion.css';
 
 /** Mount once around the app: tokens, primitive styles and tooltip timing. */
 export function UiProvider({ children }: { children: ReactNode }) {

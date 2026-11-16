@@ -1,6 +1,6 @@
 # Triya PDF — Progress
 
-_Last updated: 2026-11-16 (session 69: M10-08·O9 density)_
+_Last updated: 2026-11-16 (session 70: M10-07 motion)_
 
 **Current milestone:** M7 — second beta review (plan in [docs/plan/M7.md](plan/M7.md), scope in
 [ADR-023](adr/023-m7-second-beta-review.md), **Accepted** 2026-11-04 with the recommended
@@ -10,6 +10,39 @@ answers Q1–Q7; ARCHITECTURE.md Rev 0.12 after [ADR-024](adr/024-freetext-text-
 interop is in the M6 pack (CHECKLIST §M6 R1–R4). Rev 0 (M0–M4) is complete on the agent side.
 
 ## Done
+
+- **Session 70 — M10-07 Motion (ADR-027 D-47, Q4 "subtle").** Short, calm entrances, in
+  `src/ui/motion.css` (keyframes, menus, tooltips, the colour picker, dialogs) and the
+  "motion" section at the end of `app.css` (backstage, panes, ribbon, thumbnails, toast):
+  menus, submenus, context menus and the colour picker pop in from their anchor (opacity and
+  a 0.96 scale, `--radix-popper-transform-origin`, 180 ms); a tooltip after its delay does
+  the same (moving along the ribbon, `instant-open`, stays instant); dialogs fade and rise
+  8 px (240 ms, keeping their centring translate) over a fading backdrop; the backstage
+  slides in 24 px from the left (240 ms); a pane's content fades in when it opens or shows
+  another pane, and so does the Properties pane's (the frame and header are there at once:
+  widths never animate); the ribbon's groups fade in on a tab change (the tab bar already
+  slides, M10-04); thumbnails fade in as their images arrive; a toast rises in. Hover now
+  eases (120 ms, colour only) on the pane rows, cards and small controls that had no
+  transition (search results, bookmarks, layers, comment rows and chips, attachments,
+  styles window lists, tab-order list, licence rows, status inputs, thumbnails' frames, the
+  colour picker's button and actions); menu items stay instant. **Rules kept:** opacity and
+  transform only; every duration a token, so `prefers-reduced-motion` (tokens at 0 ms) turns
+  it all off; **entrances only**, so a closing surface unmounts at once (its closed state has
+  no animation for Radix Presence to wait on) and focus and shortcuts never wait; nothing in
+  the document view. New tokens `--motion-rise` (8 px) and `--motion-slide` (24 px). End
+  states are pixel-identical to before at 1280/1366/1920 in light and dark (no layout
+  change). **Tests:** `tests/ui/motion.test.ts` (token durations only, reduced motion zeroes
+  them, keyframes animate opacity/transform only, colour-only transitions with two listed
+  older exceptions, the list of animated selectors, nothing in the document view, Radix
+  surfaces animate only in their open state); e2e `motion.spec.ts` (@smoke: each surface's
+  animation and duration, keyboard at once in a fresh menu, focus in a fresh dialog, settled
+  dialog centred, closing immediate, document view still; reduced motion: 0 s everywhere);
+  perf `e2e/perf/motion.spec.ts` (every ribbon tab, four panes, a menu, Print, the backstage
+  and Properties, twice, 200-page document: no long task). The functional e2e project and
+  help-shots now run with `contextOptions.reducedMotion: 'reduce'`, so boxes measured right
+  after something opens are final; `motion.spec` and the perf project run with motion.
+  Screenshots (before/after end states, frame strips at 0/10/25/50 % and the end, and a short
+  GIF) in the project's shared folder `m10-07/`. Next: M10-08·O5 loading placeholders.
 
 - **Session 69 — M10-08·O9 Density (ADR-027 D-47).** **Comfortable** (default) or
   **Compact**, from **View → Window → Compact Density** (a toggle, Fluent `TextDensity`) and

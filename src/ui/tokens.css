@@ -172,6 +172,8 @@
   --duration-normal: 180ms; /* menus, tooltips, panes */
   --duration-slow: 240ms; /* dialogs, the backstage */
   --ease-out: cubic-bezier(0.2, 0, 0, 1);
+  --motion-rise: 8px; /* how far a dialog or toast rises as it fades in (M10-07) */
+  --motion-slide: 24px; /* how far the backstage slides in from the left (M10-07) */
   --spin-duration: 800ms;
 
   /* Form control marks (M10-03): a check box's tick, drawn in --color-text-on-brand
