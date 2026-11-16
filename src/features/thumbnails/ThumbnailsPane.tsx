@@ -10,7 +10,9 @@ import {
 import { useTranslation } from 'react-i18next';
 import { useDocuments } from '../../app/store/documentStore';
 import { useDensity, type Density } from '../../app/theme';
+import { isAbortError } from '../../engine/errors';
 import { format } from '../../i18n';
+import { LoadingPlaceholder } from '../../ui/components';
 import { movePages } from '../pages/commands';
 import { dropIndex, moveByOne, moveTo } from '../pages/move';
 import { usePages as usePageOps } from '../pages/pageOps';
@@ -442,6 +444,8 @@ function ThumbImage({
   priority: number;
 }) {
   const [url, setUrl] = useState<string | null>(null);
+  // A render that failed leaves the plain page, not a shimmer that never ends (O5).
+  const [failed, setFailed] = useState(false);
   const turned = page.rotation % 2 === 1;
   // Rendered unrotated (both render paths), turned by CSS like the viewer's pages.
   const renderWidth = turned ? (width * page.width) / page.height : width;
@@ -458,7 +462,9 @@ function ThumbImage({
         objectUrl = URL.createObjectURL(blob);
         setUrl(objectUrl);
       },
-      () => undefined,
+      (err: unknown) => {
+        if (live && !isAbortError(err)) setFailed(true);
+      },
     );
     return () => {
       live = false;
@@ -468,7 +474,7 @@ function ThumbImage({
     // eslint-disable-next-line react-hooks/exhaustive-deps -- priority changes go through reprioritize(), not a new request
   }, [documentId, pageIndex, scale]);
 
-  if (!url) return null;
+  if (!url) return failed ? null : <LoadingPlaceholder />;
   const h = (renderWidth * page.height) / page.width;
   return (
     <img

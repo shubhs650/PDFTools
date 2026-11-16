@@ -15,6 +15,13 @@ import { rawCall } from './pdfium';
 const FPDF_REVERSE_BYTE_ORDER = 0x10;
 const FPDFBitmap_BGRA = 4;
 const FPDF_RENDER_TOBECONTINUED = 1;
+const FPDF_RENDER_DONE = 2;
+/**
+ * Fresh starts after another render took the page's context (see below). Each one
+ * needs a render of the same page in between (its tiles: about 15 for a dense A0 sheet
+ * opening at 31 %), so this only stops a page that can never finish.
+ */
+const MAX_RESTARTS = 100;
 const WHITE = 0xffffffff;
 
 export const DEFAULT_SLICE_MS = 10;
@@ -51,7 +58,33 @@ function yieldNow(): Promise<void> {
   });
 }
 
-export async function renderProgressive(
+/**
+ * PDFium keeps ONE render context per page. Two progressive renders of a page must
+ * never interleave (the second Start replaces the first's context, so the first draws
+ * nothing more and returns a half-drawn bitmap): per page, they run one at a time, in
+ * order. Different pages still interleave slice by slice.
+ */
+const queues = new Map<number, Promise<unknown>>();
+
+export function renderProgressive(
+  mod: WrappedPdfiumModule,
+  pagePtr: number,
+  page: { width: number; height: number },
+  scale: number,
+  signal: AbortSignal,
+  sliceMs = DEFAULT_SLICE_MS,
+): Promise<ProgressiveResult> {
+  const before = queues.get(pagePtr) ?? Promise.resolve();
+  const run = before.then(() => renderNow(mod, pagePtr, page, scale, signal, sliceMs));
+  const settled = run.catch(() => undefined);
+  queues.set(pagePtr, settled);
+  void settled.then(() => {
+    if (queues.get(pagePtr) === settled) queues.delete(pagePtr);
+  });
+  return run;
+}
+
+async function renderNow(
   mod: WrappedPdfiumModule,
   pagePtr: number,
   page: { width: number; height: number },
@@ -82,28 +115,42 @@ export async function renderProgressive(
   const slices: number[] = [];
   let started = false;
   try {
-    if (isAborted(signal)) throw new AbortError();
-    let status = rawCall(
-      mod,
-      'FPDF_RenderPageBitmap_Start',
-      bitmap,
-      pagePtr,
-      0,
-      0,
-      width,
-      height,
-      0,
-      FPDF_REVERSE_BYTE_ORDER,
-      pause,
-    );
-    started = true;
-    slices.push(performance.now() - sliceStart);
-    while (status === FPDF_RENDER_TOBECONTINUED) {
-      await yieldNow();
+    for (let attempt = 0; ; attempt++) {
       if (isAborted(signal)) throw new AbortError();
+      if (attempt > 0) rawCall(mod, 'FPDFBitmap_FillRect', bitmap, 0, 0, width, height, WHITE);
+      const firstSlice = slices.length;
       sliceStart = performance.now();
-      status = rawCall(mod, 'FPDF_RenderPage_Continue', pagePtr, pause);
+      let status = rawCall(
+        mod,
+        'FPDF_RenderPageBitmap_Start',
+        bitmap,
+        pagePtr,
+        0,
+        0,
+        width,
+        height,
+        0,
+        FPDF_REVERSE_BYTE_ORDER,
+        pause,
+      );
+      started = true;
       slices.push(performance.now() - sliceStart);
+      while (status === FPDF_RENDER_TOBECONTINUED) {
+        await yieldNow();
+        if (isAborted(signal)) throw new AbortError();
+        sliceStart = performance.now();
+        status = rawCall(mod, 'FPDF_RenderPage_Continue', pagePtr, pause);
+        slices.push(performance.now() - sliceStart);
+      }
+      if (status === FPDF_RENDER_DONE) break;
+      // Failing in the first slice is the page itself: nothing else ran in between.
+      if (slices.length === firstSlice + 1) throw new Error('progressive render failed');
+      // Another render of this page between two slices (a tile, the engine's own
+      // preview: plain renders run whole in one message) set and cleared the page's
+      // context, so Continue failed with the bitmap half drawn: start again.
+      rawCall(mod, 'FPDF_RenderPage_Close', pagePtr);
+      started = false;
+      if (attempt >= MAX_RESTARTS) throw new Error('progressive render kept being interrupted');
     }
     // Copy out of the WASM heap into a buffer we can transfer.
     const data = new Uint8ClampedArray(bytes);

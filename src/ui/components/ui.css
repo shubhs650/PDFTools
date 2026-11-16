@@ -571,6 +571,57 @@ textarea.ui-field-input {
   }
 }
 
+/* A page or thumbnail still rendering (M10-08·O5, LoadingPlaceholder): a paper tint that
+   fades in after --placeholder-delay (so a cached page never flashes it), with a soft
+   light band sweeping across. The sweep moves a pseudo-element by transform only (the
+   compositor's job, no repaint) and runs only while the placeholder exists: the image
+   replaces it. Fills its positioned parent, so no layout changes. */
+.ui-placeholder {
+  position: absolute;
+  inset: var(--space-0);
+  overflow: hidden;
+  background: var(--color-page-loading);
+  pointer-events: none;
+  animation: motion-fade-in var(--duration-normal) var(--ease-out) var(--placeholder-delay)
+    backwards;
+}
+
+.ui-placeholder::after {
+  content: '';
+  position: absolute;
+  inset: var(--space-0);
+  background: linear-gradient(
+    100deg,
+    transparent 25%,
+    var(--color-page-shine) 50%,
+    transparent 75%
+  );
+  transform: translateX(-100%);
+  animation: ui-shimmer var(--shimmer-duration) ease-in-out var(--placeholder-delay) infinite;
+}
+
+@keyframes ui-shimmer {
+  to {
+    transform: translateX(100%);
+  }
+}
+
+/* Reduced motion keeps the still tint (the fade above is 0 ms then); High Contrast
+   draws the plain system page. */
+@media (prefers-reduced-motion: reduce) {
+  .ui-placeholder::after {
+    animation: none;
+    display: none;
+  }
+}
+
+@media (forced-colors: active) {
+  .ui-placeholder::after {
+    animation: none;
+    display: none;
+  }
+}
+
 .ui-progress {
   position: relative;
   overflow: hidden;

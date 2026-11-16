@@ -23,6 +23,10 @@
   --color-surface-subtle: #f8fafc; /* a dialog's footer band (M10-06) */
   --color-canvas: #e2e8f0; /* area behind document pages */
   --color-page: #ffffff; /* paper under a page's preview: white in every theme */
+  /* A page or thumbnail still rendering (M10-08·O5): a soft paper tint and the light
+     band that sweeps over it; on the white page in every theme */
+  --color-page-loading: #eef2f7;
+  --color-page-shine: rgb(255 255 255 / 0.9);
   --color-form-field: #e3ecfa; /* fillable form fields over the page (M2-14) */
   --color-form-text: #000000;
   /* A sticky note's window (M7-06): paper and ink over the white page, as the note itself. */
@@ -175,6 +179,10 @@
   --motion-rise: 8px; /* how far a dialog or toast rises as it fades in (M10-07) */
   --motion-slide: 24px; /* how far the backstage slides in from the left (M10-07) */
   --spin-duration: 800ms;
+  /* Loading placeholders (M10-08·O5): shown after a short wait, so a page from the cache
+     never flashes one; then a slow sweep, stopped under prefers-reduced-motion (ui.css) */
+  --placeholder-delay: 200ms;
+  --shimmer-duration: 1600ms;
 
   /* Form control marks (M10-03): a check box's tick, drawn in --color-text-on-brand
      (white in every theme and accent), and a select's chevron in --color-icon or, when
@@ -251,6 +259,8 @@
   --color-surface-subtle: #162033;
   --color-canvas: #070b14;
   --color-page: #ffffff;
+  --color-page-loading: #eef2f7; /* on the white page in every theme */
+  --color-page-shine: rgb(255 255 255 / 0.9);
   --color-form-field: #e3ecfa; /* on the white page in every theme */
   --color-form-text: #000000;
   --color-note-paper: #ffffff; /* on the white page in every theme */
@@ -321,6 +331,8 @@
     --color-surface-subtle: #f8fafc;
     --color-canvas: #e2e8f0;
     --color-page: #ffffff;
+    --color-page-loading: #eef2f7;
+    --color-page-shine: rgb(255 255 255 / 0.9);
     --color-form-field: #e3ecfa;
     --color-form-text: #000000;
     --color-note-paper: #ffffff;
@@ -500,6 +512,8 @@
     --color-surface-subtle: Canvas;
     --color-canvas: Canvas;
     --color-page: Canvas;
+    --color-page-loading: Canvas;
+    --color-page-shine: transparent;
     --color-form-field: Field;
     --color-form-text: FieldText;
     --color-note-paper: Canvas;

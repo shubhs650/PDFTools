@@ -223,6 +223,7 @@ body {
 }
 
 .thumb-image {
+  position: relative; /* holds the loading placeholder (O5) */
   display: flex;
   align-items: center;
   justify-content: center;

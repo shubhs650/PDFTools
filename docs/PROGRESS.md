@@ -1,6 +1,6 @@
 # Triya PDF — Progress
 
-_Last updated: 2026-11-16 (session 70: M10-07 motion)_
+_Last updated: 2026-11-16 (session 71: M10-08·O5 loading placeholders)_
 
 **Current milestone:** M7 — second beta review (plan in [docs/plan/M7.md](plan/M7.md), scope in
 [ADR-023](adr/023-m7-second-beta-review.md), **Accepted** 2026-11-04 with the recommended
@@ -10,6 +10,38 @@ answers Q1–Q7; ARCHITECTURE.md Rev 0.12 after [ADR-024](adr/024-freetext-text-
 interop is in the M6 pack (CHECKLIST §M6 R1–R4). Rev 0 (M0–M4) is complete on the agent side.
 
 ## Done
+
+- **Session 71 — M10-08·O5 Loading placeholders (ADR-027).** A page or thumbnail that is
+  still rendering shows a soft paper tint (`--color-page-loading`, the same on the white page
+  in every theme) with a slow light band sweeping across it (`--color-page-shine`,
+  `--shimmer-duration` 1.6 s), instead of blank white. `LoadingPlaceholder`
+  (`src/ui/components`, `.ui-placeholder` in ui.css) fills the page's content box
+  (PreviewLayer) or the thumbnail frame (ThumbImage; `.thumb-image` is now
+  `position: relative`), so **no layout changes**; the image replaces it and the shimmer ends
+  with it. It fades in only after `--placeholder-delay` (200 ms), so a page from the cache never
+  flashes it; the sweep is a pseudo-element moved by `transform` (compositor only, no repaint);
+  `prefers-reduced-motion` keeps the still tint without the sweep, and High Contrast draws the
+  plain system page. A render that fails shows the plain page, not an endless shimmer.
+  Decoration only (`aria-hidden`), like the page images. **Two render bugs found on the way
+  (the shimmer made them visible):** (1) a document whose first page is heavy (progressive
+  path, M1-17) never got thumbnails: they wait for the first preview, and only the engine's
+  `renderPage` marked it (`markFirstPreview` in renderStats, called by PreviewLayer's
+  progressive path); (2) PDFium keeps **one render context per page**, so a tile rendered
+  between two slices of a progressive render (or a second progressive render of the same
+  page) cleared it and the render returned a **half-drawn** preview or thumbnail, which was
+  cached. `renderProgressive` now runs one progressive render per page at a time and starts
+  again when Continue fails after another render took the context (at most 100 fresh starts;
+  a failure in the first slice is the page's own and throws). **Tests:** unit
+  `progressive.test.ts` (a plain render between slices, two renders of one page at once: both
+  pixel-equal to EmbedPDF's own render; failed before the fix), `motion.test.ts` (the shimmer
+  is listed with the spinners, stops under reduced motion; the reduced-motion block detection
+  now counts braces); e2e `loading-placeholders.spec.ts` (@smoke with motion: pages and
+  thumbnails of a dense A0 sheet show the placeholder filling their frame, with the sweep and
+  the 200 ms delay, then none is left and every thumbnail arrives; reduced motion: still tint).
+  Perf specs (acceptance, progressive, thumbnails, zoom, scroll, idle, motion, pane-load,
+  open) pass. Screenshots in the project's shared folder `m10-o5/` (before/after; the
+  "after 8 s" pair shows the heavy sheet's thumbnails that never arrived before). Next:
+  M10-08·O2 command search ("Tell me").
 
 - **Session 70 — M10-07 Motion (ADR-027 D-47, Q4 "subtle").** Short, calm entrances, in
   `src/ui/motion.css` (keyframes, menus, tooltips, the colour picker, dialogs) and the

@@ -86,6 +86,15 @@ export function hasFirstPreview(docId: string): boolean {
   return previewed.has(docId);
 }
 
+/**
+ * A heavy page's preview arrived through the progressive path (M1-17), which does not
+ * go through the engine's renderPage: without this a document whose first page is
+ * heavy never released its thumbnails (they waited for a preview that "never" came).
+ */
+export function markFirstPreview(docId: string): void {
+  previewed.add(docId);
+}
+
 export function instrumentEngine(engine: PdfEngine, cache: TileCache): void {
   const wrap = (method: 'renderPage' | 'renderPageRect', stats: () => KindStats): void => {
     const target = engine as unknown as Record<string, RenderFn>;
