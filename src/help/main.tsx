@@ -2,18 +2,29 @@
 // strings, tokens and theme, but loads no PDF engine, worker or ribbon.
 import { StrictMode } from 'react';
 import { createRoot } from 'react-dom/client';
-import { ACCENT_STORAGE_KEY, initTheme, THEME_STORAGE_KEY } from '../app/theme';
+import {
+  ACCENT_STORAGE_KEY,
+  DENSITY_STORAGE_KEY,
+  initTheme,
+  THEME_STORAGE_KEY,
+} from '../app/theme';
 import '../i18n';
 import '../ui/tokens.css';
 import './help.css';
 import { HelpApp } from './HelpApp';
 
-// The app's light or dark choice and accent colour (public/theme-boot.js
+// The app's light or dark choice, accent colour and density (public/theme-boot.js
 // applied them before the first paint); a change in the app's window follows
 // here too.
 initTheme();
 window.addEventListener('storage', (e) => {
-  if (e.key === null || e.key === THEME_STORAGE_KEY || e.key === ACCENT_STORAGE_KEY) initTheme();
+  if (
+    e.key === null ||
+    e.key === THEME_STORAGE_KEY ||
+    e.key === ACCENT_STORAGE_KEY ||
+    e.key === DENSITY_STORAGE_KEY
+  )
+    initTheme();
 });
 
 const rootElement = document.getElementById('root');

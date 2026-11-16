@@ -8,7 +8,14 @@ import { canFullScreen, isFullScreen, subscribeFullScreen, toggleFullScreen } fr
 import { msg, t } from '../../i18n';
 import { currentIssueUrl, OPENENGTOOLS_URL } from '../links';
 import { appStore } from '../store/appStore';
-import { getTheme, subscribeTheme, toggleTheme } from '../theme';
+import {
+  getDensity,
+  getTheme,
+  subscribeDensity,
+  subscribeTheme,
+  toggleDensity,
+  toggleTheme,
+} from '../theme';
 import { documentStore } from '../store/documentStore';
 import { notify, registerCommand } from './dispatch';
 
@@ -88,6 +95,12 @@ export function registerBuiltinCommands(): () => void {
       isPressed: () => getTheme() === 'dark',
     }),
     subscribeTheme(notify),
+    // Density (M10-08·O9, D-47): View → Window and File → Settings → Appearance.
+    registerCommand('view.compactDensity', {
+      run: toggleDensity,
+      isPressed: () => getDensity() === 'compact',
+    }),
+    subscribeDensity(notify),
     registerCommand('help.shortcuts', {
       run: () => {
         appStore.getState().setShortcutsOpen(true);

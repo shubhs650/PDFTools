@@ -11,6 +11,12 @@
 // tokens.css swaps only the brand, accent, link, focus and selection tokens.
 // Comment colours, highlight and sticky-note yellow and the white page never
 // follow it.
+//
+// The density (ADR-027 D-47, M10-08·O9) works the same way again: Comfortable
+// is the default, Compact sets `data-density="compact"` on <html>, and
+// tokens.css swaps only the spacing tokens (row heights, paddings, the ribbon's
+// group spacing). No pane, dialog or command moves, and no target goes below
+// 24 × 24 px (WCAG 2.2 SC 2.5.8).
 import { useSyncExternalStore } from 'react';
 
 export type Theme = 'light' | 'dark';
@@ -53,6 +59,14 @@ export const ACCENT_BRAND: Readonly<Record<Accent, string>> = {
 
 const isAccent = (v: unknown): v is Accent => ACCENTS.includes(v as Accent);
 
+export type Density = 'comfortable' | 'compact';
+
+/** In the order Settings → Appearance shows them; Comfortable is the default. */
+export const DENSITIES: readonly Density[] = ['comfortable', 'compact'];
+
+/** localStorage key, next to the theme's. public/theme-boot.js uses the same. */
+export const DENSITY_STORAGE_KEY = 'pdftools.density';
+
 /** The title-bar colour for a theme and accent: the accent's brand in light, the app background in dark. */
 export function themeColor(theme: Theme, accent: Accent): string {
   return theme === 'dark' ? THEME_COLOR.dark : ACCENT_BRAND[accent];
@@ -78,10 +92,21 @@ export function readStoredAccent(): Accent {
   }
 }
 
+/** The stored density; Comfortable when none, unknown (or storage is blocked). */
+export function readStoredDensity(): Density {
+  try {
+    return localStorage.getItem(DENSITY_STORAGE_KEY) === 'compact' ? 'compact' : 'comfortable';
+  } catch {
+    return 'comfortable';
+  }
+}
+
 let current: Theme = typeof document === 'undefined' ? 'light' : readStoredTheme();
 let currentAccent: Accent = typeof document === 'undefined' ? 'blue' : readStoredAccent();
+let currentDensity: Density = typeof document === 'undefined' ? 'comfortable' : readStoredDensity();
 const listeners = new Set<() => void>();
 const accentListeners = new Set<() => void>();
+const densityListeners = new Set<() => void>();
 
 function applyToDocument(): void {
   if (typeof document === 'undefined') return;
@@ -90,6 +115,8 @@ function applyToDocument(): void {
   else root.removeAttribute('data-theme');
   if (currentAccent === 'blue') root.removeAttribute('data-accent');
   else root.setAttribute('data-accent', currentAccent);
+  if (currentDensity === 'compact') root.setAttribute('data-density', 'compact');
+  else root.removeAttribute('data-density');
   document
     .querySelector('meta[name="theme-color"]')
     ?.setAttribute('content', themeColor(current, currentAccent));
@@ -129,13 +156,17 @@ export function resetTheme(): void {
 export function initTheme(): void {
   const theme = readStoredTheme();
   const accent = readStoredAccent();
+  const density = readStoredDensity();
   const changed = theme !== current;
   const accentChanged = accent !== currentAccent;
+  const densityChanged = density !== currentDensity;
   current = theme;
   currentAccent = accent;
+  currentDensity = density;
   applyToDocument();
   if (changed) for (const l of listeners) l();
   if (accentChanged) for (const l of accentListeners) l();
+  if (densityChanged) for (const l of densityListeners) l();
 }
 
 export function subscribeTheme(onChange: () => void): () => void {
@@ -181,4 +212,43 @@ export function subscribeAccent(onChange: () => void): () => void {
 
 export function useAccent(): Accent {
   return useSyncExternalStore(subscribeAccent, getAccent, () => 'blue');
+}
+
+export function getDensity(): Density {
+  return currentDensity;
+}
+
+/** Switches the density now and remembers it on this device (Comfortable removes the entry). */
+export function setDensity(density: Density): void {
+  try {
+    if (density === 'comfortable') localStorage.removeItem(DENSITY_STORAGE_KEY);
+    else localStorage.setItem(DENSITY_STORAGE_KEY, density);
+  } catch {
+    // Storage blocked: the density still changes for this session.
+  }
+  const changed = density !== currentDensity;
+  currentDensity = density;
+  applyToDocument();
+  if (changed) for (const l of densityListeners) l();
+}
+
+/** View → Compact Density: Compact on, or back to Comfortable. */
+export function toggleDensity(): void {
+  setDensity(currentDensity === 'compact' ? 'comfortable' : 'compact');
+}
+
+/** Clear all local data: forget the density and go back to Comfortable. */
+export function resetDensity(): void {
+  setDensity('comfortable');
+}
+
+export function subscribeDensity(onChange: () => void): () => void {
+  densityListeners.add(onChange);
+  return () => {
+    densityListeners.delete(onChange);
+  };
+}
+
+export function useDensity(): Density {
+  return useSyncExternalStore(subscribeDensity, getDensity, () => 'comfortable');
 }

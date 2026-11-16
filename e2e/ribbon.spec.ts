@@ -57,7 +57,8 @@ test('keyboard: arrows between tabs and controls, Tab into the toolbar, Esc to t
   await page.keyboard.press('ArrowRight');
   await expect(toolbar.getByRole('button', { name: 'Previous Page' })).toBeFocused();
   await page.keyboard.press('End');
-  await expect(toolbar.getByRole('button', { name: 'Dark Theme' })).toBeFocused();
+  // The last command of View → Window: Compact Density (M10-08·O9), after Dark Theme.
+  await expect(toolbar.getByRole('button', { name: 'Compact Density' })).toBeFocused();
   await page.keyboard.press('Escape');
   await expect(page.getByRole('main', { name: 'Document area' })).toBeFocused();
 });

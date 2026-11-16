@@ -626,6 +626,17 @@ export const COMMANDS: readonly CommandDef[] = [
     shipped: true,
     toggle: true,
   },
+  // M10-08·O9 (ADR-027 D-47): Compact density on or off; also File → Settings → Appearance.
+  {
+    id: 'view.compactDensity',
+    tab: 'view',
+    group: 'window',
+    size: 'small',
+    fluent: 'TextDensity',
+    milestone: 'M6',
+    shipped: true,
+    toggle: true,
+  },
   // Comment tab (M6-08, ADR-021 D-36, beta review B7a): Tools (reused from Home),
   // Text, Note, Text Markup, Drawing, Stamp, Measure (reused), Manage Comments.
   {

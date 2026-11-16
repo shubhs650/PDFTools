@@ -182,11 +182,52 @@
   --image-chevron: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Cpath d='M4 6l4 4 4-4' fill='none' stroke='%23334155' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
   --image-chevron-disabled: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Cpath d='M4 6l4 4 4-4' fill='none' stroke='%2394a3b8' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
 
+  /* Density (M10-08·O9, D-47): Comfortable, the default, below; Compact in the
+     :root[data-density='compact'] block after this one. Spacing only: no pane, dialog or
+     command moves, the header and ribbon keep their heights, and no target goes below
+     24 × 24 px (WCAG 2.2 SC 2.5.8). */
+  --density-row-height: var(--control-height-m); /* menu items, list group rows */
+  --density-pad-y: var(--space-2); /* pane bars, list rows and cards, menus */
+  --density-pad-x: var(--space-3); /* pane bars, list rows and cards */
+  --density-card-pad: var(--space-3); /* attachment and signature cards */
+  --density-section-gap: var(--space-4); /* a pane's form (Search), its sections */
+  --density-pane-header-height: calc(var(--control-height-m) + var(--space-2));
+  --density-pane-header-pad-y: var(--space-1);
+  --density-dialog-pad: var(--space-6);
+  --density-dialog-gap: var(--space-5); /* under a dialog's description */
+  --density-footer-pad-y: var(--space-4); /* a dialog's button band */
+  --density-ribbon-pad-x: var(--space-2); /* ribbon groups and buttons, sideways */
+  --density-ribbon-min-width: auto; /* a small ribbon button (Compact: 24 px) */
+  --density-rail-gap: var(--space-2); /* between the left rail's buttons */
+
   /* Layers */
   --z-menu: 100;
   --z-dialog: 200;
   --z-popover: 250; /* above dialogs: a colour picker in a dialog (M6-16) */
   --z-tooltip: 300;
+}
+
+/*
+ * Compact density (M10-08·O9, D-47): set by View → Compact Density or File → Settings →
+ * Appearance, stored on the device (src/app/theme.ts) and applied before the first paint
+ * (public/theme-boot.js). Rows of 24 px, the smallest WCAG 2.2 target, and half the
+ * padding; ribbon groups and large buttons narrower, so a tab folds fewer groups.
+ */
+:root[data-density='compact'] {
+  --density-row-height: var(--control-height-s);
+  --density-pad-y: var(--space-1);
+  --density-pad-x: var(--space-2);
+  --density-card-pad: var(--space-2);
+  --density-section-gap: var(--space-3);
+  --density-pane-header-height: calc(var(--control-height-s) + var(--space-2));
+  --density-pane-header-pad-y: var(--space-0);
+  --density-dialog-pad: var(--space-5);
+  --density-dialog-gap: var(--space-4);
+  --density-footer-pad-y: var(--space-3);
+  --density-ribbon-pad-x: var(--space-1);
+  --density-ribbon-min-width: var(--control-height-s);
+  --density-rail-gap: var(--space-1);
+  --button-large-width: 48px;
 }
 
 /*

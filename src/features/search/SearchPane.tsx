@@ -1,6 +1,7 @@
 import { useEffect, useId, useMemo, useRef, useState, type KeyboardEvent } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useDocuments } from '../../app/store/documentStore';
+import { useDensity, type Density } from '../../app/theme';
 import { format, msg, type MessageKey } from '../../i18n';
 import { Button } from '../../ui/components';
 import { goToPage } from '../view/controller';
@@ -29,8 +30,14 @@ const EXTRA_LABEL: Record<'bookmark' | 'annotation', MessageKey> = {
   annotation: msg('search.row.annotation'),
 };
 
-/** Row height in CSS px (fixed: the list is virtualized by index). */
-const ROW_H = 28;
+/**
+ * Row height in CSS px (fixed per density: the list is virtualized by index).
+ * Compact (M10-08·O9) uses the 24 px row of the other panes' lists.
+ */
+const RESULT_ROW_HEIGHT: Readonly<Record<Density, number>> = {
+  comfortable: 28,
+  compact: 24,
+};
 /** Rows rendered beyond the window on each side. */
 const OVERSCAN = 8;
 
@@ -181,6 +188,7 @@ function ResultsList({ rows }: { rows: ReturnType<typeof buildRows> }) {
   const [scrollTop, setScrollTop] = useState(0);
   const [viewHeight, setViewHeight] = useState(400);
   const [active, setActive] = useState(0);
+  const ROW_H = RESULT_ROW_HEIGHT[useDensity()];
 
   useEffect(() => {
     const el = list.current;

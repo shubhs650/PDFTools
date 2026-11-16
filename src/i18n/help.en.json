@@ -241,7 +241,8 @@
             "Your choice is kept on this device only, and Help follows it.",
             "Form fields, sticky note windows and comment handles keep their light look, so they read well on the white page.",
             "<b>File</b> › <b>Settings</b> › <b>Appearance</b> › <b>Accent colour</b> changes the blue of the File tab, buttons, selections and focus rings to Teal, Indigo or Graphite. Comment colours, yellow highlights and sticky notes never change.",
-            "<b>File</b> › <b>Settings</b> › <b>Clear all local data</b> goes back to the light theme and the blue accent."
+            "<b>View</b> › <b>Compact Density</b> (or <b>File</b> › <b>Settings</b> › <b>Appearance</b> › <b>Density</b>) fits more rows in panes, lists, menus and dialogs and tightens the ribbon. Nothing moves, and every button stays at least 24 pixels.",
+            "<b>File</b> › <b>Settings</b> › <b>Clear all local data</b> goes back to the light theme, the blue accent and the comfortable density."
           ]
         }
       ]

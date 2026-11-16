@@ -9,6 +9,7 @@ import {
 } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useDocuments } from '../../app/store/documentStore';
+import { useDensity, type Density } from '../../app/theme';
 import { format } from '../../i18n';
 import { movePages } from '../pages/commands';
 import { dropIndex, moveByOne, moveTo } from '../pages/move';
@@ -23,7 +24,8 @@ import { thumbnails } from './loader';
 /** Thumbnail image width in CSS px. */
 const THUMB_WIDTH = 120;
 const LABEL_HEIGHT = 20;
-const GAP = 12;
+/** Space between thumbnails in CSS px: tighter in Compact (M10-08·O9). */
+const THUMB_GAP: Readonly<Record<Density, number>> = { comfortable: 12, compact: 8 };
 
 interface PageInfo {
   width: number;
@@ -85,9 +87,10 @@ export function ThumbnailsPane() {
       ),
     [pages],
   );
+  const GAP = THUMB_GAP[useDensity()];
   const layout = useMemo(
     () => thumbLayout(shown, { width: THUMB_WIDTH, labelHeight: LABEL_HEIGHT, gap: GAP }),
-    [shown],
+    [shown, GAP],
   );
   const list = useRef<HTMLDivElement>(null);
   const [scrollTop, setScrollTop] = useState(0);
@@ -124,7 +127,7 @@ export function ThumbnailsPane() {
     if (!el || top === undefined || bottom === undefined) return;
     if (top < el.scrollTop || bottom > el.scrollTop + el.clientHeight)
       el.scrollTop = Math.max(0, top - GAP);
-  }, [current, layout]);
+  }, [current, layout, GAP]);
 
   // Keyboard moves: focus the item once it is rendered (move() scrolled it into view).
   useEffect(() => {

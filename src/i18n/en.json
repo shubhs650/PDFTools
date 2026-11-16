@@ -74,7 +74,8 @@
       "collapseRibbon": "Collapse Ribbon",
       "fullScreen": "Full Screen",
       "exitFullScreen": "Exit Full Screen",
-      "darkTheme": "Dark Theme"
+      "darkTheme": "Dark Theme",
+      "compactDensity": "Compact Density"
     },
     "comment": {
       "highlight": "Highlight",
@@ -544,10 +545,10 @@
       "snapshots": "Recovery snapshots",
       "used": "Storage used by {{app}}",
       "unknown": "Not reported by this browser",
-      "note": "Your PDF files stay where they are. {{app}} keeps only settings, the light or dark theme and accent colour, your reviewer profile, comment tool defaults and saved comment styles, saved visual signatures, custom status schemes, table templates, the recent files list and recovery snapshots of unsaved changes. Storage used includes the offline copy of the app.",
+      "note": "Your PDF files stay where they are. {{app}} keeps only settings, the light or dark theme, accent colour and density, your reviewer profile, comment tool defaults and saved comment styles, saved visual signatures, custom status schemes, table templates, the recent files list and recovery snapshots of unsaved changes. Storage used includes the offline copy of the app.",
       "clear": "Clear all local data…",
       "confirmTitle": "Clear all local data?",
-      "confirmDescription": "This deletes your settings, theme and accent colour (back to light and blue), reviewer profile, comment tool defaults and saved comment styles, saved visual signatures, custom status schemes, table templates, the recent files list and all recovery snapshots on this device. Your PDF files are not changed. The offline copy of the app is kept, so {{app}} keeps working offline.",
+      "confirmDescription": "This deletes your settings, theme, accent colour and density (back to light, blue and comfortable), reviewer profile, comment tool defaults and saved comment styles, saved visual signatures, custom status schemes, table templates, the recent files list and all recovery snapshots on this device. Your PDF files are not changed. The offline copy of the app is kept, so {{app}} keeps working offline.",
       "warnOpen_one": "{{count}} document is open. It stays open.",
       "warnOpen_other": "{{count}} documents are open. They stay open.",
       "warnUnsaved_one": "{{count}} open document has unsaved changes. Its recovery snapshot is deleted too, so those changes could not be recovered after a crash until you change the document again.",
@@ -569,7 +570,11 @@
       "accentTeal": "Teal",
       "accentIndigo": "Indigo",
       "accentGraphite": "Graphite",
-      "note": "Light and Blue are the defaults. The choices are kept on this device only; PDF pages always stay white, and comment colours (yellow highlights and sticky notes too) never change."
+      "density": "Density",
+      "comfortable": "Comfortable",
+      "compact": "Compact",
+      "densityHint": "Compact fits more rows in panes, lists, menus and dialogs, and tightens the ribbon.",
+      "note": "Light, Blue and Comfortable are the defaults. The choices are kept on this device only; PDF pages always stay white, and comment colours (yellow highlights and sticky notes too) never change."
     }
   },
   "about": {
@@ -698,7 +703,8 @@
       "commentStyles": "Comment styles you saved in the style palette (names, colours, line widths, font sizes)",
       "visualSignatures": "Visual signatures and initials you saved in Sign Document (drawn strokes or pictures)",
       "theme": "Light or dark theme",
-      "accent": "Accent colour (Blue, Teal, Indigo or Graphite)"
+      "accent": "Accent colour (Blue, Teal, Indigo or Graphite)",
+      "density": "Density (Comfortable or Compact)"
     },
     "clearHint": "To delete this data, use File → Settings → Clear all local data."
   },

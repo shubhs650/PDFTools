@@ -182,7 +182,9 @@ test('Privacy lists the theme choice, and Clear all local data goes back to ligh
   await settings(page);
   await backstage(page).getByRole('button', { name: 'Clear all local data…' }).click();
   const confirm = page.getByRole('dialog', { name: 'Clear all local data?' });
-  await expect(confirm).toContainText('theme and accent colour (back to light and blue)');
+  await expect(confirm).toContainText(
+    'theme, accent colour and density (back to light, blue and comfortable)',
+  );
   await confirm.getByRole('button', { name: 'Clear data' }).click();
   await expect(confirm).toBeHidden();
   await expect(html(page)).not.toHaveAttribute('data-theme', 'dark');

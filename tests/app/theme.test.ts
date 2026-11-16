@@ -9,19 +9,27 @@ import {
   ACCENT_BRAND,
   ACCENT_STORAGE_KEY,
   ACCENTS,
+  DENSITIES,
+  DENSITY_STORAGE_KEY,
   THEME_COLOR,
   THEME_STORAGE_KEY,
   getAccent,
+  getDensity,
   getTheme,
   initTheme,
   readStoredAccent,
+  readStoredDensity,
   readStoredTheme,
   resetAccent,
+  resetDensity,
   resetTheme,
   setAccent,
+  setDensity,
   setTheme,
   subscribeAccent,
+  subscribeDensity,
   subscribeTheme,
+  toggleDensity,
   toggleTheme,
 } from '../../src/app/theme';
 import { KEYMAP } from '../../src/app/keys/keymap';
@@ -37,6 +45,7 @@ beforeEach(() => {
   document.head.innerHTML = '<meta name="theme-color" content="#2563eb" />';
   root().removeAttribute('data-theme');
   root().removeAttribute('data-accent');
+  root().removeAttribute('data-density');
   initTheme();
 });
 afterEach(() => {
@@ -140,18 +149,83 @@ describe('accent colour (M10 O7, D-47)', () => {
   });
 });
 
+describe('density store (M10-08·O9)', () => {
+  it('is comfortable by default and when the stored value is unknown', () => {
+    expect(DENSITIES).toEqual(['comfortable', 'compact']);
+    expect(getDensity()).toBe('comfortable');
+    localStorage.setItem(DENSITY_STORAGE_KEY, 'tiny');
+    expect(readStoredDensity()).toBe('comfortable');
+  });
+
+  it('switches <html> and the stored choice, and notifies; the theme and accent stay', () => {
+    let calls = 0;
+    const off = subscribeDensity(() => (calls += 1));
+    setAccent('teal');
+    setDensity('compact');
+    expect(root().getAttribute('data-density')).toBe('compact');
+    expect(localStorage.getItem(DENSITY_STORAGE_KEY)).toBe('compact');
+    expect(root().getAttribute('data-accent')).toBe('teal');
+    expect(meta()).toBe(ACCENT_BRAND.teal);
+    expect(calls).toBe(1);
+    setDensity('compact');
+    expect(calls).toBe(1);
+    // Comfortable is the default: no attribute, nothing stored.
+    toggleDensity();
+    expect(getDensity()).toBe('comfortable');
+    expect(root().hasAttribute('data-density')).toBe(false);
+    expect(localStorage.getItem(DENSITY_STORAGE_KEY)).toBeNull();
+    expect(calls).toBe(2);
+    off();
+  });
+
+  it('reads the stored choice at start, and Clear all local data resets it', () => {
+    localStorage.setItem(DENSITY_STORAGE_KEY, 'compact');
+    initTheme();
+    expect(getDensity()).toBe('compact');
+    expect(root().getAttribute('data-density')).toBe('compact');
+    resetDensity();
+    expect(getDensity()).toBe('comfortable');
+    expect(localStorage.getItem(DENSITY_STORAGE_KEY)).toBeNull();
+  });
+});
+
 describe('boot script (public/theme-boot.js)', () => {
   const source = readFileSync('public/theme-boot.js', 'utf8');
-  const boot = (stored: string | null, accent: string | null = null) => {
+  const boot = (
+    stored: string | null,
+    accent: string | null = null,
+    density: string | null = null,
+  ) => {
     root().removeAttribute('data-theme');
     root().removeAttribute('data-accent');
+    root().removeAttribute('data-density');
     document.head.innerHTML = '<meta name="theme-color" content="#2563eb" />';
     const storage = {
       getItem: (k: string) =>
-        k === THEME_STORAGE_KEY ? stored : k === ACCENT_STORAGE_KEY ? accent : null,
+        k === THEME_STORAGE_KEY
+          ? stored
+          : k === ACCENT_STORAGE_KEY
+            ? accent
+            : k === DENSITY_STORAGE_KEY
+              ? density
+              : null,
     };
     runInNewContext(source, { document, localStorage: storage });
   };
+
+  it('applies a stored compact density with the module’s key, and nothing else', () => {
+    boot(null, null, 'compact');
+    expect(root().getAttribute('data-density')).toBe('compact');
+    expect(root().hasAttribute('data-theme')).toBe(false);
+    expect(meta()).toBe(THEME_COLOR.light);
+    boot('dark', 'indigo', 'compact');
+    expect(root().getAttribute('data-density')).toBe('compact');
+    expect(meta()).toBe(THEME_COLOR.dark);
+    for (const other of [null, 'comfortable', 'tiny']) {
+      boot(null, null, other);
+      expect(root().hasAttribute('data-density')).toBe(false);
+    }
+  });
 
   it('applies a stored accent with the module’s key and colours, in light and dark', () => {
     for (const a of ACCENTS.filter((x) => x !== 'blue')) {
@@ -204,9 +278,23 @@ describe('where the theme is reached', () => {
     expect(binding?.chords).toHaveLength(1);
   });
 
-  it('is listed with the data kept on this device, and cleared (the accent too)', () => {
+  it('density is a toggle command in View → Window', () => {
+    expect(COMMANDS.find((c) => c.id === 'view.compactDensity')).toMatchObject({
+      tab: 'view',
+      group: 'window',
+      toggle: true,
+      fluent: 'TextDensity',
+      shipped: true,
+    });
+  });
+
+  it('is listed with the data kept on this device, and cleared (the accent and density too)', () => {
     const items = LOCAL_DATA.filter((d) => d.kind === 'localStorage');
-    expect(items.map((d) => d.location)).toEqual([THEME_STORAGE_KEY, ACCENT_STORAGE_KEY]);
+    expect(items.map((d) => d.location)).toEqual([
+      THEME_STORAGE_KEY,
+      ACCENT_STORAGE_KEY,
+      DENSITY_STORAGE_KEY,
+    ]);
     expect(items.every((d) => d.cleared)).toBe(true);
   });
 });

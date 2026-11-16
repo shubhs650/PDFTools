@@ -135,6 +135,7 @@ import { Target20Filled, Target20Regular } from '@fluentui/react-icons/svg/targe
 import { TargetArrow20Regular } from '@fluentui/react-icons/svg/target-arrow';
 import { TextAdd20Filled, TextAdd20Regular } from '@fluentui/react-icons/svg/text-add';
 import { TextBulletListSquare20Filled, TextBulletListSquare20Regular, TextBulletListSquare32Filled, TextBulletListSquare32Regular } from '@fluentui/react-icons/svg/text-bullet-list-square';
+import { TextDensity20Filled, TextDensity20Regular } from '@fluentui/react-icons/svg/text-density';
 import { TextEditStyle20Filled, TextEditStyle20Regular } from '@fluentui/react-icons/svg/text-edit-style';
 import { TextField20Filled, TextField20Regular, TextField24Filled, TextField24Regular } from '@fluentui/react-icons/svg/text-field';
 import { TextIndentDecrease20Regular } from '@fluentui/react-icons/svg/text-indent-decrease';
@@ -202,6 +203,7 @@ export const FLUENT_GLYPHS: Record<string, FluentGlyphs> = {
   'view.propertiesPane': { regular: { small: PanelRight20Regular }, filled: { small: PanelRight20Filled } },
   'view.collapseRibbon': { regular: { small: PanelTopContract20Regular } },
   'view.darkTheme': { regular: { small: WeatherMoon20Regular }, filled: { small: WeatherMoon20Filled } },
+  'view.compactDensity': { regular: { small: TextDensity20Regular }, filled: { small: TextDensity20Filled } },
   'comment.typewriter': { regular: { small: DrawText20Regular }, filled: { small: DrawText20Filled } },
   'comment.textBox': { regular: { small: Textbox20Regular }, filled: { small: Textbox20Filled } },
   'comment.callout': { regular: { small: TooltipQuote20Regular }, filled: { small: TooltipQuote20Filled } },
