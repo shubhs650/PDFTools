@@ -22,11 +22,18 @@ interface QuickAction {
   run: () => void;
 }
 
-/**
- * The start screen's quick actions: commands that work with no document open.
- * Create Blank PDF (M10-08·O4) joins this list as its first entry.
- */
+/** The start screen's quick actions: commands that work with no document open. */
 const QUICK_ACTIONS: readonly QuickAction[] = [
+  {
+    // Create Blank PDF (M10-08·O4, D-49).
+    id: 'new',
+    icon: 'file.new',
+    label: msg('open.start.actions.new'),
+    detail: msg('open.start.actions.newDetail'),
+    run: () => {
+      void runCommand('file.new');
+    },
+  },
   {
     id: 'merge',
     icon: 'organize.merge',

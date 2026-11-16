@@ -50,6 +50,7 @@ for (const theme of ['light', 'dark'] as const)
 
     const actions = start(page).getByRole('list', { name: 'Quick actions' });
     await expect(actions.getByRole('button')).toHaveText([
+      /Create blank PDF/, // M10-08·O4
       /Merge files/,
       /Getting started/,
       /Keyboard shortcuts/,
@@ -86,7 +87,9 @@ test('quick actions open Merge Files, Help at its start page and the shortcut sh
   await page.goto('/');
   const open = dropCard(page).getByRole('button', { name: 'Open…' });
   await open.focus();
-  // Open, then the three actions, in reading order.
+  // Open, then the four actions, in reading order (Create blank PDF first, M10-08·O4).
+  await page.keyboard.press('Tab');
+  await expect(page.getByRole('button', { name: 'Create blank PDF' })).toBeFocused();
   await page.keyboard.press('Tab');
   await expect(page.getByRole('button', { name: 'Merge files' })).toBeFocused();
   await page.keyboard.press('Enter');

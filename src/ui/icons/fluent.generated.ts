@@ -158,6 +158,7 @@ export const FLUENT_GLYPHS: Record<string, FluentGlyphs> = {
   'qat.print': { regular: { small: Print20Regular } },
   'qat.undo': { regular: { small: ArrowUndo20Regular } },
   'qat.redo': { regular: { small: ArrowRedo20Regular } },
+  'file.new': { regular: { small: DocumentAdd20Regular, large: DocumentAdd28Regular, largeNative: 28 } },
   'file.open': { regular: { small: FolderOpen20Regular, large: FolderOpen28Regular, largeNative: 28 } },
   'file.recent': { regular: { small: History20Regular, large: History32Regular, largeNative: 32 } },
   'file.save': { regular: { small: Save20Regular, large: Save32Regular, largeNative: 32 } },

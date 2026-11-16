@@ -63,6 +63,7 @@ type JobMethod =
   | 'exportImages'
   | 'indexText'
   | 'assemble'
+  | 'createBlank'
   | 'commentSource'
   | 'transferComments'
   | 'copyComments'

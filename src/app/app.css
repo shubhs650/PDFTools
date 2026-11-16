@@ -4210,6 +4210,18 @@ textarea.form-field {
   align-items: end;
 }
 
+/* Create Blank PDF (M10-08·O4): width, height and units on one row. */
+.blank-custom {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(var(--space-0), 1fr));
+  gap: var(--space-2);
+  align-items: start;
+}
+
+.blank-custom .ui-field-input {
+  width: 100%;
+}
+
 .scale-points {
   display: grid;
   grid-template-columns: 1fr 1fr;

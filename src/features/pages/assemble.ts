@@ -106,7 +106,7 @@ export async function pickSources(multiple: boolean): Promise<SourceFile[]> {
 }
 
 /** Opens a built document as a new unsaved tab. */
-async function openResult(name: string, bytes: ArrayBuffer): Promise<string | undefined> {
+export async function openResult(name: string, bytes: ArrayBuffer): Promise<string | undefined> {
   const [id] = await openFiles([
     { file: new File([bytes], name, { type: 'application/pdf' }), recordRecent: false },
   ]);

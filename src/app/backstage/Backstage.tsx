@@ -17,6 +17,7 @@ import { RibbonButton } from '../ribbon/RibbonButton';
 
 /** One description per backstage section (content arrives with each feature task). */
 const DESCRIPTIONS: Record<string, MessageKey> = {
+  'file.new': msg('backstage.section.new'),
   'file.open': msg('backstage.section.open'),
   'file.recent': msg('backstage.section.recent'),
   'file.save': msg('backstage.section.save'),

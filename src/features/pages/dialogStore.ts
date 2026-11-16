@@ -3,7 +3,15 @@
 import { createStore, useStore } from 'zustand';
 import type { Where } from './sizes';
 
-export type PageDialogKind = 'delete' | 'insertBlank' | 'move' | 'insertFile' | 'extract' | 'merge';
+export type PageDialogKind =
+  | 'delete'
+  | 'insertBlank'
+  | 'move'
+  | 'insertFile'
+  | 'extract'
+  | 'merge'
+  /** Create Blank PDF (M10-08·O4): needs no document. */
+  | 'newBlank';
 
 interface DialogState {
   open: { kind: PageDialogKind; docId: string; where?: Where } | null;

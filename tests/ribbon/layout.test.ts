@@ -258,6 +258,7 @@ describe('ribbon layout from the command table (§8, ADR-001 B6, M1-Q2)', () => 
 
   it('builds the File backstage and quick access toolbar', () => {
     expect(m1.backstage.map((c) => c.id)).toEqual([
+      'file.new', // M10-08·O4
       'file.open',
       'file.recent',
       'file.save',

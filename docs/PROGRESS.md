@@ -1,6 +1,6 @@
 # Triya PDF — Progress
 
-_Last updated: 2026-11-16 (session 66: M10-05 start screen and empty tab strip)_
+_Last updated: 2026-11-16 (session 67: M10-08·O4 Create Blank PDF)_
 
 **Current milestone:** M7 — second beta review (plan in [docs/plan/M7.md](plan/M7.md), scope in
 [ADR-023](adr/023-m7-second-beta-review.md), **Accepted** 2026-11-04 with the recommended
@@ -10,6 +10,34 @@ answers Q1–Q7; ARCHITECTURE.md Rev 0.12 after [ADR-024](adr/024-freetext-text-
 interop is in the M6 pack (CHECKLIST §M6 R1–R4). Rev 0 (M0–M4) is complete on the agent side.
 
 ## Done
+
+- **Session 67 — M10-08·O4 Create Blank PDF (ADR-027 D-49; review R15).** A new document
+  from **File → New** (first in the backstage), the start screen's first quick action
+  **Create blank PDF**, or **Ctrl+Alt+N** (Ctrl+N is bound first but Chrome keeps it in a
+  normal tab; the installed app may get it; not while typing, since Ctrl+Alt is AltGr on many
+  keyboards). The dialog (`NewBlankDialog`, opened through the Organize dialog store as
+  `newBlank`) asks for the page size (A4, A3, Letter, Legal, or a custom width × height in mm
+  or inches, 0.5 to 200 in per side), the orientation (paper sizes) and the number of pages
+  (1–1000), shows a summary line ("3 pages, each 11 × 8.5 in"), has "?" → Help at
+  `opening-files`, and keeps its choices for the session. The **Work worker** builds it
+  (`createBlank`, `src/workers/work/blank.ts`: `FPDF_CreateNewDocument`, `FPDFPage_New` in
+  slices of 50 with progress and cancel, PDFium's full save; the shared Organize progress
+  dialog shows after 300 ms). PDFium writes the **same trailer /ID** for every new document,
+  so two blanks made in the same second were byte-identical and the second opened as "already
+  open" (fingerprint, §4.3); a random ID of the same length is written in place
+  (`withFreshId`). It opens as an unsaved tab named **"Untitled n.pdf"** (the first free n
+  among open tabs); with no file handle, the first Ctrl+S is a Save As. Insert Blank Page is
+  unchanged. Pure sizes and names in `src/model/blankSize.ts`. Help's "Opening files" topic
+  gets "To start a blank PDF". Tests: `tests/pages/blank.test.ts` (sizes, typed sides with a
+  comma or point, limits, page counts, names, real PDFium pages and MediaBoxes, qpdf-clean,
+  progress, unique IDs, refused specs, cancel); e2e `new-blank.spec.ts` (@smoke light and
+  dark: the tile, the dialog with axe, Letter landscape × 3; File → New, custom size errors,
+  Ctrl+Alt+N with the last choices, Untitled 2 and 3, Ctrl+S downloads "Untitled 3.pdf");
+  `start-screen.spec` (four tiles, keyboard order), `keys.spec` (74 rows, New) and the
+  backstage list in `layout.test.ts` follow. Screenshots (before/after, light and dark,
+  1280/1366/1920, backstage, tile focus, dialog, custom-size error, A3 landscape, the new
+  document, forced-colors) in the project's shared folder `m10-o4/`. Next: M10-06 panes,
+  backstage, dialogs, menus, status bar.
 
 - **Session 66 — M10-05 Start screen and empty tab strip (ADR-027 D-47; review R6, R8, R15).**
   With nothing open, the **document-tab strip collapses** (it was a 33 px empty band); it
