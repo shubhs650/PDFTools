@@ -108,6 +108,19 @@ export async function firstPreviewAt(page: Page): Promise<number> {
 /** The theme's localStorage key (src/app/theme.ts, M7-11). */
 export const THEME_KEY = 'pdftools.theme';
 
+/** The accent colour's localStorage key (src/app/theme.ts, M10 O7). */
+export const ACCENT_KEY = 'pdftools.accent';
+
+/** Starts every page load of this test with an accent colour stored (M10 O7). Call before `page.goto`. */
+export async function accentColour(page: Page, accent: string): Promise<void> {
+  await page.addInitScript(
+    ([key, value]) => {
+      localStorage.setItem(key, value);
+    },
+    [ACCENT_KEY, accent] as const,
+  );
+}
+
 /**
  * Starts every page load of this test in the dark theme, as the theme toggle
  * leaves it stored on the device (M7-11, D-42). Call before `page.goto`.

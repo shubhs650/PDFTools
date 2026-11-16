@@ -530,10 +530,10 @@
       "snapshots": "Recovery snapshots",
       "used": "Storage used by {{app}}",
       "unknown": "Not reported by this browser",
-      "note": "Your PDF files stay where they are. {{app}} keeps only settings, the light or dark theme, your reviewer profile, comment tool defaults and saved comment styles, saved visual signatures, custom status schemes, table templates, the recent files list and recovery snapshots of unsaved changes. Storage used includes the offline copy of the app.",
+      "note": "Your PDF files stay where they are. {{app}} keeps only settings, the light or dark theme and accent colour, your reviewer profile, comment tool defaults and saved comment styles, saved visual signatures, custom status schemes, table templates, the recent files list and recovery snapshots of unsaved changes. Storage used includes the offline copy of the app.",
       "clear": "Clear all local data…",
       "confirmTitle": "Clear all local data?",
-      "confirmDescription": "This deletes your settings, theme choice (back to light), reviewer profile, comment tool defaults and saved comment styles, saved visual signatures, custom status schemes, table templates, the recent files list and all recovery snapshots on this device. Your PDF files are not changed. The offline copy of the app is kept, so {{app}} keeps working offline.",
+      "confirmDescription": "This deletes your settings, theme and accent colour (back to light and blue), reviewer profile, comment tool defaults and saved comment styles, saved visual signatures, custom status schemes, table templates, the recent files list and all recovery snapshots on this device. Your PDF files are not changed. The offline copy of the app is kept, so {{app}} keeps working offline.",
       "warnOpen_one": "{{count}} document is open. It stays open.",
       "warnOpen_other": "{{count}} documents are open. They stay open.",
       "warnUnsaved_one": "{{count}} open document has unsaved changes. Its recovery snapshot is deleted too, so those changes could not be recovered after a crash until you change the document again.",
@@ -550,7 +550,12 @@
       "theme": "Theme",
       "light": "Light",
       "dark": "Dark",
-      "note": "Light is the default. The choice is kept on this device only; PDF pages always stay white."
+      "accent": "Accent colour",
+      "accentBlue": "Blue",
+      "accentTeal": "Teal",
+      "accentIndigo": "Indigo",
+      "accentGraphite": "Graphite",
+      "note": "Light and Blue are the defaults. The choices are kept on this device only; PDF pages always stay white, and comment colours (yellow highlights and sticky notes too) never change."
     }
   },
   "about": {
@@ -678,7 +683,8 @@
       "toolDefaults": "Comment tool defaults you set (colours, line widths, font sizes); the shipped defaults are used until you change one",
       "commentStyles": "Comment styles you saved in the style palette (names, colours, line widths, font sizes)",
       "visualSignatures": "Visual signatures and initials you saved in Sign Document (drawn strokes or pictures)",
-      "theme": "Light or dark theme"
+      "theme": "Light or dark theme",
+      "accent": "Accent colour (Blue, Teal, Indigo or Graphite)"
     },
     "clearHint": "To delete this data, use File → Settings → Clear all local data."
   },

@@ -13,6 +13,8 @@ body {
   font-family: var(--font-family);
   font-size: var(--font-size-m);
   line-height: var(--line-height);
+  /* Native check boxes, radio buttons and sliders take the accent colour (O7). */
+  accent-color: var(--color-accent);
 }
 
 .error-boundary-content {
@@ -1304,6 +1306,76 @@ body {
 .appearance-themes > legend {
   padding: var(--space-0);
   margin-bottom: var(--space-3);
+}
+
+/* Accent colour (M10 O7, D-47): radio buttons drawn as swatches, in the colour
+   picker's style (M6-16): the colour itself with a control edge, a ring on the
+   current one, the focus ring outside it. The native radio stays in the tab order
+   and takes the arrows; only its circle is hidden. */
+.appearance-accents {
+  margin-top: var(--space-5);
+}
+
+.appearance-accent {
+  position: relative;
+  display: flex;
+  gap: var(--space-3);
+  align-items: center;
+  cursor: pointer;
+}
+
+.appearance-accent-input {
+  position: absolute;
+  width: var(--accent-swatch-size);
+  height: var(--accent-swatch-size);
+  margin: var(--space-0);
+  opacity: 0;
+  cursor: pointer;
+}
+
+.appearance-accent-swatch {
+  box-sizing: border-box;
+  flex: none;
+  width: var(--accent-swatch-size);
+  height: var(--accent-swatch-size);
+  border: var(--border-width) solid var(--color-border-strong);
+  border-radius: var(--radius-s);
+  background: var(--swatch); /* set per accent: var(--accent-swatch-…) */
+}
+
+.appearance-accent:hover .appearance-accent-swatch {
+  outline: var(--border-width) solid var(--color-text);
+  outline-offset: var(--border-width);
+}
+
+/* The current accent: a ring, as in the colour picker's grid. */
+.appearance-accent-input:checked + .appearance-accent-swatch {
+  outline: var(--focus-width) solid var(--color-text);
+  outline-offset: var(--border-width);
+}
+
+.appearance-accent-input:focus-visible + .appearance-accent-swatch {
+  outline: var(--focus-width) solid var(--color-focus);
+  outline-offset: var(--border-width);
+  box-shadow: var(--space-0) var(--space-0) var(--space-0)
+    calc(var(--border-width) + var(--focus-width) + var(--focus-halo-width)) var(--color-focus-halo);
+}
+
+/* High contrast: the swatches are the colours themselves (as the picker's cells); the
+   ring and the focus ring take the system colours. */
+@media (forced-colors: active) {
+  .appearance-accent-swatch {
+    forced-color-adjust: none;
+    border-color: CanvasText;
+  }
+
+  .appearance-accent-input:checked + .appearance-accent-swatch {
+    outline-color: CanvasText;
+  }
+
+  .appearance-accent-input:focus-visible + .appearance-accent-swatch {
+    outline-color: Highlight;
+  }
 }
 
 .profile-form {

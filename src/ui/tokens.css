@@ -37,6 +37,13 @@
   --color-text-disabled: #94a3b8;
   --color-icon: #334155;
 
+  /* Accent colour swatches (O7): each accent's filled brand colour, the same in both
+     themes; the swatch shows the colour itself (also in forced-colors) */
+  --accent-swatch-blue: #2563eb;
+  --accent-swatch-teal: #0f766e;
+  --accent-swatch-indigo: #4f46e5;
+  --accent-swatch-graphite: #475569;
+
   /* Color — lines and states */
   --color-border: #e2e8f0;
   --color-border-strong: #64748b; /* marks a control's edge: 3:1 (WCAG 1.4.11) */
@@ -90,6 +97,7 @@
   --split-arrow-width: 10px; /* a split button's arrow part (M6-07) */
   --swatch-cell-size: 20px; /* a swatch of the colour picker's grid (M6-16) */
   --swatch-chip-width: 28px; /* the colour shown on a colour picker's button (M6-16) */
+  --accent-swatch-size: 24px; /* Settings → Appearance → Accent colour (O7) */
   --tooltip-max-width: 280px;
   --app-min-width: 1280px; /* §8 */
   --pane-width: 260px;
@@ -246,9 +254,117 @@
   }
 }
 
-/* Windows High Contrast: hand colors to the system (D-30 accessibility). */
+/*
+ * Accent colours (ADR-027 D-47, M10 O7): Settings → Appearance → Accent colour
+ * sets `data-accent` on <html> (src/app/theme.ts; Blue, the default, sets
+ * nothing and uses the sets above). An accent swaps only the brand, accent,
+ * link, focus and selection tokens, in each theme; neutrals, comment colours,
+ * find hits, highlight and sticky-note yellow and the white page never follow
+ * it. On the page in dark, the light values apply, as for Blue. Every accent
+ * and theme is checked at WCAG AA in tests/ui/themeContrast.test.ts. Not in
+ * forced-colors mode: the system colours win there, whatever the accent.
+ */
+@media not (forced-colors: active) {
+  /* Teal: teal-700 #0f766e (white 5.5:1); dark lines teal-400 */
+  :root[data-accent='teal'] {
+    --color-selected: #ccfbf1;
+    --color-accent: #0f766e;
+    --color-link: #115e59;
+    --color-brand: #0f766e;
+    --color-brand-hover: #115e59;
+    --color-focus: #0f766e;
+    --color-focus-halo: rgb(15 118 110 / 0.25);
+  }
+
+  :root[data-accent='teal'][data-theme='dark'] {
+    --color-selected: #134440;
+    --color-accent: #2dd4bf;
+    --color-link: #2dd4bf;
+    --color-brand: #0f766e;
+    --color-brand-hover: #115e59;
+    --color-focus: #5eead4;
+    --color-focus-halo: rgb(45 212 191 / 0.3);
+  }
+
+  :root[data-accent='teal'][data-theme='dark'] .page {
+    --color-selected: #ccfbf1;
+    --color-accent: #0f766e;
+    --color-link: #115e59;
+    --color-brand: #0f766e;
+    --color-brand-hover: #115e59;
+    --color-focus: #0f766e;
+    --color-focus-halo: rgb(15 118 110 / 0.25);
+  }
+
+  /* Indigo: indigo-600 #4f46e5 (white 6.3:1); dark lines indigo-400 */
+  :root[data-accent='indigo'] {
+    --color-selected: #e0e7ff;
+    --color-accent: #4f46e5;
+    --color-link: #4338ca;
+    --color-brand: #4f46e5;
+    --color-brand-hover: #4338ca;
+    --color-focus: #4f46e5;
+    --color-focus-halo: rgb(79 70 229 / 0.25);
+  }
+
+  :root[data-accent='indigo'][data-theme='dark'] {
+    --color-selected: #312e81;
+    --color-accent: #818cf8;
+    --color-link: #818cf8;
+    --color-brand: #4f46e5;
+    --color-brand-hover: #4338ca;
+    --color-focus: #a5b4fc;
+    --color-focus-halo: rgb(129 140 248 / 0.3);
+  }
+
+  :root[data-accent='indigo'][data-theme='dark'] .page {
+    --color-selected: #e0e7ff;
+    --color-accent: #4f46e5;
+    --color-link: #4338ca;
+    --color-brand: #4f46e5;
+    --color-brand-hover: #4338ca;
+    --color-focus: #4f46e5;
+    --color-focus-halo: rgb(79 70 229 / 0.25);
+  }
+
+  /* Graphite: slate-600 #475569 (white 7.6:1); links stay blue so they still read as links */
+  :root[data-accent='graphite'] {
+    --color-selected: #d5dde8;
+    --color-accent: #475569;
+    --color-link: #1d4ed8;
+    --color-brand: #475569;
+    --color-brand-hover: #334155;
+    --color-focus: #334155;
+    --color-focus-halo: rgb(71 85 105 / 0.25);
+  }
+
+  :root[data-accent='graphite'][data-theme='dark'] {
+    --color-selected: #2c3a4f;
+    --color-accent: #94a3b8;
+    --color-link: #60a5fa;
+    --color-brand: #475569;
+    --color-brand-hover: #334155;
+    --color-focus: #cbd5e1;
+    --color-focus-halo: rgb(148 163 184 / 0.3);
+  }
+
+  :root[data-accent='graphite'][data-theme='dark'] .page {
+    --color-selected: #d5dde8;
+    --color-accent: #475569;
+    --color-link: #1d4ed8;
+    --color-brand: #475569;
+    --color-brand-hover: #334155;
+    --color-focus: #334155;
+    --color-focus-halo: rgb(71 85 105 / 0.25);
+  }
+}
+
+/* Windows High Contrast: hand colors to the system (D-30 accessibility); in the dark
+   theme too (the selector outranks the dark set's), so filled brand surfaces that keep
+   their colours (forced-color-adjust: none) get the system pair, not the dark blue. */
 @media (forced-colors: active) {
-  :root {
+  :root,
+  :root[data-theme='dark'] {
     --color-bg: Canvas;
     --color-surface: Canvas;
     --color-surface-raised: Canvas;
