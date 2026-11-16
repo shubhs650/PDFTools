@@ -1,5 +1,5 @@
 // The app's side of "Clear all local data" (clearAll.ts, M1-26).
-import { resetAccent, resetTheme } from '../../app/theme';
+import { resetAccent, resetDensity, resetTheme } from '../../app/theme';
 import { storageClient } from '../../engine/storageClient';
 import { deleteAppDb } from '../../storage/appDb';
 import { recentStore } from '../recent/recent';
@@ -31,8 +31,10 @@ export const appClearDeps: ClearDeps = {
     resetAllToolDefaults();
     resetAllCommentStyles();
     resetSignatures();
-    // The theme and accent choices (localStorage, M7-11, O7): back to light and blue.
+    // The theme, accent and density choices (localStorage, M7-11, O7, O9): back to
+    // light, blue and comfortable.
     resetTheme();
     resetAccent();
+    resetDensity();
   },
 };

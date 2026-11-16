@@ -126,7 +126,7 @@
 .ui-menu {
   z-index: var(--z-menu);
   min-width: var(--menu-min-width);
-  padding: var(--space-2);
+  padding: var(--density-pad-y);
   border: var(--border-width) solid var(--color-border);
   border-radius: var(--radius-l);
   background: var(--color-surface-raised);
@@ -139,7 +139,7 @@
   display: flex;
   align-items: center;
   gap: var(--space-3);
-  min-height: var(--control-height-m);
+  min-height: var(--density-row-height); /* 32 px, or 24 px in Compact (O9) */
   padding: var(--space-0) var(--space-3);
   border-radius: var(--radius-m);
   cursor: pointer;
@@ -203,7 +203,7 @@
 
 .ui-menu-separator {
   height: var(--border-width);
-  margin: var(--space-2) var(--space-0);
+  margin: var(--density-pad-y) var(--space-0);
   background: var(--color-border);
 }
 
@@ -230,8 +230,11 @@
   max-height: calc(100vh - 2 * var(--space-6));
   overflow-y: auto;
   /* What scrolls into view stays clear of the sticky footer (M10-06). */
-  scroll-padding-bottom: calc(var(--control-height-m) + 2 * var(--space-4) + var(--space-3));
-  padding: var(--space-6);
+  scroll-padding-bottom: calc(
+    var(--control-height-m) + 2 * var(--density-footer-pad-y) + var(--space-3)
+  );
+  /* 24 px, or 16 px in Compact (O9); the footer and the title row follow it. */
+  padding: var(--density-dialog-pad);
   border: var(--border-width) solid var(--color-border);
   border-radius: var(--radius-xl);
   background: var(--color-surface-raised);
@@ -250,7 +253,7 @@
 }
 
 .ui-dialog-description {
-  margin: var(--space-0) var(--space-0) var(--space-5);
+  margin: var(--space-0) var(--space-0) var(--density-dialog-gap);
   color: var(--color-text-muted);
   font-size: var(--font-size-m);
 }
@@ -260,13 +263,14 @@
    a long dialog it stays in view while the rest scrolls under it. */
 .ui-dialog-footer {
   position: sticky;
-  bottom: calc(-1 * var(--space-6));
+  bottom: calc(-1 * var(--density-dialog-pad));
   z-index: 1;
   display: flex;
   justify-content: flex-end;
   gap: var(--space-3);
-  margin: var(--space-6) calc(-1 * var(--space-6)) calc(-1 * var(--space-6));
-  padding: var(--space-4) var(--space-6);
+  margin: var(--density-dialog-pad) calc(-1 * var(--density-dialog-pad))
+    calc(-1 * var(--density-dialog-pad));
+  padding: var(--density-footer-pad-y) var(--density-dialog-pad);
   border-top: var(--border-width) solid var(--color-border);
   background: var(--color-surface-subtle);
 }
@@ -275,7 +279,8 @@
 .ui-dialog-help {
   position: absolute;
   top: calc(
-    var(--space-6) + (var(--font-size-xl) * var(--line-height) - var(--control-height-m)) / 2
+    var(--density-dialog-pad) +
+      (var(--font-size-xl) * var(--line-height) - var(--control-height-m)) / 2
   );
   right: var(--space-4);
 }

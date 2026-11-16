@@ -1,6 +1,6 @@
 # Triya PDF — Progress
 
-_Last updated: 2026-11-16 (session 68: M10-06 panes, backstage, dialogs, menus, status bar)_
+_Last updated: 2026-11-16 (session 69: M10-08·O9 density)_
 
 **Current milestone:** M7 — second beta review (plan in [docs/plan/M7.md](plan/M7.md), scope in
 [ADR-023](adr/023-m7-second-beta-review.md), **Accepted** 2026-11-04 with the recommended
@@ -10,6 +10,34 @@ answers Q1–Q7; ARCHITECTURE.md Rev 0.12 after [ADR-024](adr/024-freetext-text-
 interop is in the M6 pack (CHECKLIST §M6 R1–R4). Rev 0 (M0–M4) is complete on the agent side.
 
 ## Done
+
+- **Session 69 — M10-08·O9 Density (ADR-027 D-47).** **Comfortable** (default) or
+  **Compact**, from **View → Window → Compact Density** (a toggle, Fluent `TextDensity`) and
+  **File → Settings → Appearance → Density** (two radios and a hint). Stored on this device
+  next to the theme and accent (`pdftools.density` in localStorage, nothing stored for
+  Comfortable), set as `data-density="compact"` on `<html>` by `theme-boot.js` before the
+  first paint (`src/app/theme.ts` owns it afterwards; Help follows it through the storage
+  event), listed on the Privacy page and reset by Clear all local data. **Spacing only:** new
+  `--density-*` tokens in `tokens.css` hold today's values, and the
+  `:root[data-density='compact']` block halves them: menu rows 32 → 24 px, pane headers 36 →
+  28 px, pane bars, list rows and comment, attachment and signature cards 4/8 → 2/4 px padding,
+  the Properties pane's section rows 32 → 24 px, Search Results rows 28 → 24 px and the
+  thumbnail gap 12 → 8 px (both per density in JS: the lists are virtualized), dialogs 24 →
+  16 px padding with a slimmer footer band, the left rail's gap 4 → 2 px, and the ribbon's
+  groups and buttons 4 → 2 px at the sides with 48 px large buttons (was 56), so a tab folds
+  fewer groups at 1280 px. The header, ribbon height, panes' widths and every command's place
+  are unchanged. The adaptive ribbon measures its groups per language **and density**, so a
+  live switch refits at once. Small ribbon buttons get `min-width: 24px`, which an icon-only
+  drawing tool in Compact needed (23 px); a split button's 10 px style arrow is unchanged
+  (M6-07). Comfortable is pixel-identical to before (screenshot diff), apart from the new
+  View button and the Settings group. Tests: `theme.test.ts` (store, boot script, command,
+  Privacy list); e2e `density.spec.ts` (@smoke: View toggle and Settings radios, measured menu
+  rows, pane header and dialog padding, nothing moves, reload before paint, a live switch at
+  1280 px refits the View tab, axe; Compact at 1280 px light and dark: every tab fits, no
+  ribbon, menu or pane target under 24 × 24 px, axe; Privacy row and Clear all local data).
+  `ribbon.spec` (End now lands on Compact Density) and `theme.spec` (the Clear text) updated.
+  Screenshots (before; after in both densities, light and dark, 1280 and 1366) in the
+  project's shared folder `m10-08/`. Next: M10-07 motion.
 
 - **Session 68 — M10-06 Panes, backstage, dialogs, menus, status bar (ADR-027 D-47; review
   R5, R11).** Polished in place: no pane, dialog or command moves. **Panes:** one header

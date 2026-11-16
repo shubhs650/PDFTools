@@ -14,8 +14,8 @@ if (!rootElement) {
 const root = createRoot(rootElement);
 const params = new URLSearchParams(location.search);
 
-// The stored light/dark choice (M7-11, D-42) and accent colour (O7, D-47);
-// public/theme-boot.js already applied them before the first paint.
+// The stored light/dark choice (M7-11, D-42), accent colour (O7, D-47) and
+// density (O9); public/theme-boot.js already applied them before the first paint.
 initTheme();
 
 // Test-only hook and component gallery (M1-Q3): statically false outside

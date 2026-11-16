@@ -1,5 +1,6 @@
 import { useLayoutEffect, useMemo, useRef, useState, type ReactNode, type RefObject } from 'react';
 import { useTranslation } from 'react-i18next';
+import { useDensity } from '../theme';
 import { RibbonGroup, type Stop } from './RibbonGroup';
 import {
   choosePlan,
@@ -13,8 +14,9 @@ import {
 } from './layout';
 
 /**
- * Measured group widths in CSS pixels, by language, group and step. They only
- * change with the language (labels), so a tab measures once per language.
+ * Measured group widths in CSS pixels, by language and density, group and step.
+ * They only change with the language (labels) and the density (paddings,
+ * M10-08·O9), so a tab measures once per language and density.
  */
 const widths = new Map<string, number>();
 const widthKey = (lang: string, group: string, step: GroupStep): string =>
@@ -33,13 +35,13 @@ export interface AdaptiveSteps {
 
 /**
  * The adaptive ribbon (D-36): the widest layout of the tab whose groups fit the
- * panel. A hidden copy of every group at every step is measured once per tab
- * and language (before the first paint); a ResizeObserver follows the panel's
+ * panel. A hidden copy of every group at every step is measured once per tab,
+ * language and density (before the first paint); a ResizeObserver follows the panel's
  * width. The steps themselves are pure (layout.ts).
  */
 export function useAdaptiveSteps(tab: RibbonTabLayout): AdaptiveSteps {
   const { i18n } = useTranslation();
-  const lang = i18n.language;
+  const lang = `${i18n.language}|${useDensity()}`;
   const panelRef = useRef<HTMLDivElement | null>(null);
   const layerRef = useRef<HTMLDivElement | null>(null);
   const [available, setAvailable] = useState<number | null>(null);
