@@ -172,6 +172,24 @@
   flex: 1 1 auto;
 }
 
+/* Icon accents (M10-08·O1): the same hue as on the ribbon (a folded group's menu), never
+   on a disabled item. */
+.ui-menu-item:not([data-disabled]) [data-icon-accent='markup'] {
+  color: var(--color-icon-markup);
+}
+
+.ui-menu-item:not([data-disabled]) [data-icon-accent='sign'] {
+  color: var(--color-icon-sign);
+}
+
+.ui-menu-item:not([data-disabled]) [data-icon-accent='convert'] {
+  color: var(--color-icon-convert);
+}
+
+.ui-menu-item:not([data-disabled]) [data-icon-accent='redact'] {
+  color: var(--color-icon-redact);
+}
+
 .ui-menu-shortcut,
 .ui-menu-chevron {
   flex: none;

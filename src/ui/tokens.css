@@ -37,6 +37,14 @@
   --color-text-disabled: #94a3b8;
   --color-icon: #334155;
 
+  /* Icon accents (M10-08·O1): a second icon colour on about ten key tools (amber
+     highlight and notes, green signing, violet conversion, red redaction); 3:1 on every
+     surface, hover and pressed background (WCAG 1.4.11) */
+  --color-icon-markup: #b45309;
+  --color-icon-sign: #15803d;
+  --color-icon-convert: #7c3aed;
+  --color-icon-redact: #b91c1c;
+
   /* Accent colour swatches (O7): each accent's filled brand colour, the same in both
      themes; the swatch shows the colour itself (also in forced-colors) */
   --accent-swatch-blue: #2563eb;
@@ -200,6 +208,10 @@
   --color-text-muted: #a8b3c4; /* 4.5:1 on --color-pressed too */
   --color-text-disabled: #64748b;
   --color-icon: #e2e8f0;
+  --color-icon-markup: #fbbf24;
+  --color-icon-sign: #4ade80;
+  --color-icon-convert: #a78bfa;
+  --color-icon-redact: #f87171;
   --color-border: #334155;
   --color-border-strong: #7c8799;
   --color-hover: #273449;
@@ -262,6 +274,10 @@
     --color-text-muted: #475569;
     --color-text-disabled: #94a3b8;
     --color-icon: #334155;
+    --color-icon-markup: #b45309;
+    --color-icon-sign: #15803d;
+    --color-icon-convert: #7c3aed;
+    --color-icon-redact: #b91c1c;
     --color-border: #e2e8f0;
     --color-border-strong: #64748b;
     --color-hover: #e2e8f0;
@@ -433,6 +449,10 @@
     --color-text-muted: CanvasText;
     --color-text-disabled: GrayText;
     --color-icon: ButtonText;
+    --color-icon-markup: ButtonText;
+    --color-icon-sign: ButtonText;
+    --color-icon-convert: ButtonText;
+    --color-icon-redact: ButtonText;
     --color-border: ButtonText;
     --color-border-strong: ButtonText;
     --color-hover: Highlight;
