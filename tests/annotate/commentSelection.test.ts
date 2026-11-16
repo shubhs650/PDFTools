@@ -44,18 +44,34 @@ describe('changedDuringCommit', () => {
     ]);
   });
 
-  it('deleted, purged or already written comments are the plugin’s own business', () => {
+  it('purged or already written comments are the plugin’s own business', () => {
     const sent = new Map([
-      ['a', obj('a')],
       ['b', obj('b')],
       ['c', obj('c')],
     ]);
     expect(
       changedDuringCommit(sent, {
-        a: { object: obj('a', 3), commitState: 'deleted' },
         c: { object: obj('c', 3), commitState: 'synced' },
       }),
     ).toEqual([]);
+  });
+
+  it('a comment deleted while it was written is deleted again (redact-marks flake)', () => {
+    // An undo right after drawing: the object is the same one that was sent.
+    const a = obj('a', 0, 1);
+    const sent = new Map([
+      ['a', a],
+      ['b', obj('b')],
+    ]);
+    expect(
+      changedDuringCommit(sent, {
+        a: { object: a, commitState: 'deleted' },
+        b: { object: obj('b', 3), commitState: 'deleted' },
+      }),
+    ).toEqual([
+      { uid: 'a', pageIndex: 1, kind: 'delete' },
+      { uid: 'b', pageIndex: 0, kind: 'delete' },
+    ]);
   });
 });
 

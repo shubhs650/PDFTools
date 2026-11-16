@@ -188,3 +188,30 @@ test('keyboard: Ctrl+A then Mark for Redaction; the area rectangle from the keyb
   await expect(rect).toHaveCount(0);
   await expect(area).toHaveAttribute('aria-pressed', 'false');
 });
+
+// The CI flake on main: an undo while the new mark was still being written left it in the
+// engine as "deleted" until the next edit (commitGuard.ts). Several draw-then-undo rounds
+// in a row hit that window every time before the fix.
+test('undo straight after drawing a mark deletes it from the document too', async ({ page }) => {
+  await page.goto('/');
+  const id = await open(page, simplePdf(2));
+  await page.getByRole('tab', { name: 'Protect' }).click();
+  const area = bar(page).getByRole('button', { name: 'Mark Area for Redaction' });
+  await area.click();
+  await expect(area).toHaveAttribute('aria-pressed', 'true');
+  const box = await page.locator('[data-page="0"] .page-content').boundingBox();
+  if (!box) throw new Error('page not laid out');
+  for (let i = 0; i < 6; i += 1) {
+    await page.mouse.move(box.x + 100, box.y + 100 + i * 60);
+    await page.mouse.down();
+    await page.mouse.move(box.x + 250, box.y + 140 + i * 60, { steps: 2 });
+    await page.mouse.up();
+    await page.keyboard.press('ControlOrMeta+z');
+  }
+  const unwritten = async () =>
+    (((await cap(page, 'annotate', 'list', id)) as { commit: string }[] | null) ?? []).filter(
+      (a) => a.commit !== 'synced',
+    ).length;
+  await expect.poll(unwritten).toBe(0);
+  expect(await list(page, id)).toEqual([]);
+});
