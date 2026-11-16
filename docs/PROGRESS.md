@@ -1,6 +1,6 @@
 # Triya PDF — Progress
 
-_Last updated: 2026-11-07 (session 56: M9 Help window, done)_
+_Last updated: 2026-11-16 (session 57: M10 plan, proposed)_
 
 **Current milestone:** M7 — second beta review (plan in [docs/plan/M7.md](plan/M7.md), scope in
 [ADR-023](adr/023-m7-second-beta-review.md), **Accepted** 2026-11-04 with the recommended
@@ -10,6 +10,19 @@ answers Q1–Q7; ARCHITECTURE.md Rev 0.12 after [ADR-024](adr/024-freetext-text-
 interop is in the M6 pack (CHECKLIST §M6 R1–R4). Rev 0 (M0–M4) is complete on the agent side.
 
 ## Done
+
+- **Session 57 — M10 plan: modern look and feel, About and open-source notices (ADR-027
+  Proposed, D-47, D-48).** The owner shared the engineers' verdict ("solid tool but basic UI")
+  and an external UI review, and asked for a polished UI without changing the layout, a better
+  About and a working third-party notices link. Every review claim was checked against the
+  production build (light and dark, 1366 px): primary-button icons are grey on blue (a CSS
+  inheritance bug), controls are native, toggles boxy, the start screen bare, no animation; the
+  review is wrong about the pane width, the status bar and its own dark contrast values, and its
+  Lucide icons conflict with rule 15. The notices link opens a second copy of the app because the
+  service worker answers every navigation with `index.html`. Plan:
+  [docs/plan/M10.md](plan/M10.md) (M10-01 … M10-09, optional O1–O9, questions Q1–Q6);
+  ARCHITECTURE.md changes are listed in the ADR and wait for the owner's acceptance.
+  **Next:** the owner's review of the plan; then M10-01 (About and notices).
 
 - **Session 56 — M9 Help in its own window, with screenshots (ADR-026 D-46).** M9-01 … M9-05 in
   one PR. **Window:** `help.html` + `src/help/` (a Vite page of its own, served at `/help`):
