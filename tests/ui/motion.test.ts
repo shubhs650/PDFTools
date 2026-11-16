@@ -35,14 +35,17 @@ function declarations(): Decl[] {
     const body = css.replace(/@keyframes\s+[\w-]+\s*\{(?:[^{}]*\{[^{}]*\})*\s*\}/g, '');
     for (const m of body.matchAll(/([^{}]+)\{([^{}]*)\}/g)) {
       const selector = (m[1] ?? '').trim().replace(/\s+/g, ' ');
-      // Is this rule inside a reduced-motion block? (Its opening brace is the nearest
-      // unclosed one after a prefers-reduced-motion query.)
+      // Is this rule inside a reduced-motion block? (The nearest @media before it is a
+      // prefers-reduced-motion query whose block is still open: more { than } since.)
       const before = body.slice(0, m.index);
       const lastMedia = before.lastIndexOf('@media');
+      const open = before.indexOf('{', lastMedia);
+      const since = before.slice(open);
       const reduced =
         lastMedia >= 0 &&
-        body.slice(lastMedia, before.indexOf('{', lastMedia)).includes('prefers-reduced-motion') &&
-        !before.slice(lastMedia).includes('\n}\n');
+        open >= 0 &&
+        body.slice(lastMedia, open).includes('prefers-reduced-motion') &&
+        (since.match(/\{/g) ?? []).length > (since.match(/\}/g) ?? []).length;
       for (const d of (m[2] ?? '').matchAll(/(?:^|;)\s*(animation|transition)\s*:\s*([^;]+)/g)) {
         out.push({
           file,
@@ -60,8 +63,9 @@ function declarations(): Decl[] {
 const decls = declarations();
 const parts = (value: string) => value.split(/,(?![^(]*\))/).map((p) => p.trim());
 
-/** Infinite spinners: their own reduced-motion rule stops them (checked below). */
-const SPINNERS = new Set(['ui-spin', 'offline-spin']);
+/** Infinite spinners and the loading shimmer (O5): their own reduced-motion rule
+ *  stops them (checked below). */
+const SPINNERS = new Set(['ui-spin', 'offline-spin', 'ui-shimmer']);
 
 describe('motion (M10-07, D-47)', () => {
   it('prefers-reduced-motion sets every duration token to 0 ms', () => {
@@ -128,6 +132,9 @@ describe('motion (M10-07, D-47)', () => {
     expect(offenders).toEqual([]);
   });
 
+  // The one animation that reaches the document view is the loading placeholder
+  // (M10-08·O5, .ui-placeholder): it exists only while a page has no image yet, so a
+  // rendered page, zooming, scrolling and drawing never animate.
   it('only the reviewed surfaces animate, and nothing in the document view', () => {
     const animated = decls
       .filter((d) => d.property === 'animation' && !d.reduced && d.value !== 'none')
@@ -145,6 +152,8 @@ describe('motion (M10-07, D-47)', () => {
         ".ui-dialog-backdrop[data-state='open']",
         ".ui-dialog[data-state='open']",
         ".ui-menu[data-state='open'], .ui-color-popup[data-state='open']",
+        '.ui-placeholder',
+        '.ui-placeholder::after',
         '.ui-spinner',
         ".ui-tooltip[data-state='delayed-open']",
       ].sort(),

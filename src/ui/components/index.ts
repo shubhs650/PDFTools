@@ -18,3 +18,4 @@ export {
   type ContextMenuEntry,
   type MenuChoice,
 } from './ContextMenu';
+export { LoadingPlaceholder } from './LoadingPlaceholder';

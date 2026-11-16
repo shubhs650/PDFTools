@@ -24,6 +24,12 @@ async function open(bytes: Uint8Array) {
   return native.openDocumentBuffer({ id: `p${String(++seq)}`, content }).toPromise();
 }
 
+function meanDiff(a: ArrayLike<number>, b: ArrayLike<number>): number {
+  let diff = 0;
+  for (let i = 0; i < a.length; i++) diff += Math.abs((a[i] ?? 0) - (b[i] ?? 0));
+  return diff / a.length;
+}
+
 function sizeOf(pagePtr: number) {
   return {
     width: rawCall(mod, 'FPDF_GetPageWidthF', pagePtr),
@@ -135,6 +141,66 @@ describe('progressive render (M1-17)', () => {
         new AbortController().signal,
       );
       expect(out.width).toBeGreaterThan(0);
+    } finally {
+      page.release();
+      await native.closeDocument(doc).toPromise();
+    }
+  });
+
+  // PDFium keeps one render context per page: a plain render of the same page between
+  // two slices (a tile, the engine's own preview) clears it, and Continue then fails.
+  // The progressive render must start again, not return the half-drawn bitmap (which
+  // was cached and shown as a partial thumbnail or preview).
+  it('starts again when another render of the page takes its context between slices', async () => {
+    const doc = await open(a0Sheet(40_000));
+    const first = doc.pages[0];
+    if (!first) throw new Error('no page');
+    const page = acquirePage(native, doc.id, 0);
+    try {
+      const p = renderProgressive(
+        mod,
+        page.pagePtr,
+        sizeOf(page.pagePtr),
+        0.1,
+        new AbortController().signal,
+        1,
+      );
+      // After the first slice: a tile render of the same page.
+      queueMicrotask(() => {
+        void native.renderPageRaw(doc, first, { scaleFactor: 0.05, dpr: 1 }).toPromise();
+      });
+      const out = await p;
+      const ref = await native.renderPageRaw(doc, first, { scaleFactor: 0.1, dpr: 1 }).toPromise();
+      expect([out.width, out.height]).toEqual([ref.width, ref.height]);
+      expect(meanDiff(out.data, ref.data)).toBeLessThan(0.5);
+    } finally {
+      page.release();
+      await native.closeDocument(doc).toPromise();
+    }
+  });
+
+  it('two progressive renders of the same page never mix (one at a time)', async () => {
+    const doc = await open(a0Sheet(40_000));
+    const first = doc.pages[0];
+    if (!first) throw new Error('no page');
+    const page = acquirePage(native, doc.id, 0);
+    try {
+      const size = sizeOf(page.pagePtr);
+      const signal = new AbortController().signal;
+      const [a, b] = await Promise.all([
+        renderProgressive(mod, page.pagePtr, size, 0.1, signal, 1),
+        renderProgressive(mod, page.pagePtr, size, 0.05, signal, 1),
+      ]);
+      for (const [out, scale] of [
+        [a, 0.1],
+        [b, 0.05],
+      ] as const) {
+        const ref = await native
+          .renderPageRaw(doc, first, { scaleFactor: scale, dpr: 1 })
+          .toPromise();
+        expect([out.width, out.height]).toEqual([ref.width, ref.height]);
+        expect(meanDiff(out.data, ref.data), String(scale)).toBeLessThan(0.5);
+      }
     } finally {
       page.release();
       await native.closeDocument(doc).toPromise();

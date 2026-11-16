@@ -1,11 +1,13 @@
 import { useDocumentState } from '@embedpdf/core/react';
-import { ignore, PdfErrorCode } from '@embedpdf/models';
+import { PdfErrorCode } from '@embedpdf/models';
 import { useRenderCapability } from '@embedpdf/plugin-render/react';
 import { useEffect, useRef, useState } from 'react';
 import { isAbortError } from '../../engine/errors';
+import { LoadingPlaceholder } from '../../ui/components';
 import { isHeavy } from '../../workers/render/costModel';
 import { previewScale } from './preview';
 import { pageCost, progressivePreview } from './progressivePreview';
+import { markFirstPreview } from './renderStats';
 
 /**
  * Bounded base image of one page (ADR-011 decision 3): drawn at once from the
@@ -23,6 +25,10 @@ export function PreviewLayer({ documentId, pageIndex }: { documentId: string; pa
     : 0;
   const refresh = doc?.pageRefreshVersions[pageIndex] ?? 0;
   const [url, setUrl] = useState<string | null>(null);
+  // The render that failed (its inputs), so that page shows plain paper, not a
+  // shimmer that never ends (O5); a new zoom or refresh tries again.
+  const [failedKey, setFailedKey] = useState<string | null>(null);
+  const attempt = `${documentId}:${String(pageIndex)}:${String(scaleFactor)}:${String(refresh)}`;
   const current = useRef<string | null>(null);
 
   useEffect(() => {
@@ -35,6 +41,9 @@ export function PreviewLayer({ documentId, pageIndex }: { documentId: string; pa
     };
     let cancel: () => void = () => undefined;
     let live = true;
+    const fail = (): void => {
+      if (live) setFailedKey(attempt);
+    };
     void pageCost(documentId, pageIndex)
       .catch(() => ({ objects: 0, segments: 0 }))
       .then((cost) => {
@@ -50,10 +59,13 @@ export function PreviewLayer({ documentId, pageIndex }: { documentId: string; pa
           };
           job.promise.then(
             (blob) => {
+              markFirstPreview(documentId);
               if (live) show(blob);
             },
             (err: unknown) => {
-              if (!isAbortError(err)) throw err;
+              if (isAbortError(err)) return;
+              fail();
+              throw err;
             },
           );
           return;
@@ -66,7 +78,7 @@ export function PreviewLayer({ documentId, pageIndex }: { documentId: string; pa
         task.wait((blob) => {
           settled = true;
           if (live) show(blob);
-        }, ignore);
+        }, fail);
         cancel = () => {
           if (!settled) task.abort({ code: PdfErrorCode.Cancelled, message: 'preview superseded' });
         };
@@ -75,7 +87,7 @@ export function PreviewLayer({ documentId, pageIndex }: { documentId: string; pa
       live = false;
       cancel();
     };
-  }, [render, documentId, pageIndex, scaleFactor, refresh, size]);
+  }, [render, documentId, pageIndex, scaleFactor, refresh, size, attempt]);
 
   useEffect(
     () => () => {
@@ -85,6 +97,8 @@ export function PreviewLayer({ documentId, pageIndex }: { documentId: string; pa
     [],
   );
 
-  if (!url) return null;
+  // Until the first image arrives: a soft shimmer instead of blank white (M10-08·O5).
+  // Later renders (zoom, edits) keep the previous image up, so it shows only once.
+  if (!url) return failedKey === attempt ? null : <LoadingPlaceholder />;
   return <img className="page-preview" src={url} alt="" draggable={false} />;
 }
