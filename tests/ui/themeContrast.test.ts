@@ -71,11 +71,18 @@ const SURFACES = [
   '--color-surface',
   '--color-surface-raised',
   '--color-surface-sunken',
+  '--color-surface-subtle',
   '--color-hover',
   '--color-pressed',
   '--color-selected',
 ];
-const PANES = ['--color-bg', '--color-surface', '--color-surface-raised', '--color-surface-sunken'];
+const PANES = [
+  '--color-bg',
+  '--color-surface',
+  '--color-surface-raised',
+  '--color-surface-sunken',
+  '--color-surface-subtle',
+];
 
 const TEXT_PAIRS: [string, string[]][] = [
   ['--color-text', SURFACES],
@@ -88,6 +95,8 @@ const TEXT_PAIRS: [string, string[]][] = [
     [...PANES, '--color-hover', '--color-selected', '--color-selected-hover'],
   ],
   ['--color-danger', PANES],
+  // M10-06: the status bar's "Ready offline" pill.
+  ['--color-success-text', ['--color-success-bg']],
   ['--color-text-on-brand', ['--color-brand', '--color-brand-hover']],
   ['--color-tooltip-text', ['--color-tooltip-bg']],
   ['--color-find-hit-text', ['--color-find-hit', '--color-find-current']],

@@ -210,8 +210,9 @@ body {
 
 .thumb {
   position: absolute;
-  left: var(--space-0);
-  right: var(--space-0);
+  left: var(--space-2);
+  right: var(--space-2);
+  border-radius: var(--radius-l);
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -227,10 +228,18 @@ body {
   justify-content: center;
   overflow: hidden;
   border: var(--border-width) solid var(--color-border);
+  border-radius: var(--radius-s);
   background: var(--color-page);
+  box-shadow: var(--elevation-1);
 }
 
-.thumb--current .thumb-image {
+/* M10-06: hover outlines the page; the current one keeps its accent ring. */
+.thumb:hover .thumb-image {
+  border-color: var(--color-border-strong);
+}
+
+.thumb--current .thumb-image,
+.thumb--current:hover .thumb-image {
   border-color: var(--color-accent);
   box-shadow: 0 0 0 var(--border-width) var(--color-accent);
 }
@@ -272,6 +281,7 @@ body {
 }
 
 .thumb--current .thumb-label {
+  color: var(--color-selected-text);
   font-weight: var(--font-weight-semibold);
 }
 
@@ -289,16 +299,24 @@ body {
 
 .pane-header {
   display: flex;
+  flex: none;
   align-items: center;
   justify-content: space-between;
-  padding: var(--space-2) var(--space-3);
+  gap: var(--space-2);
+  min-height: calc(var(--control-height-m) + var(--space-2));
+  box-sizing: border-box;
+  padding: var(--space-1) var(--space-2) var(--space-1) var(--space-4);
   border-bottom: var(--border-width) solid var(--color-border);
+  background: var(--color-surface);
 }
 
 .pane-title {
+  overflow: hidden;
   margin: var(--space-0);
   font-size: var(--font-size-m);
   font-weight: var(--font-weight-semibold);
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 /* ------------------------------------------------------------ status bar */
@@ -320,6 +338,7 @@ body {
 
 .status-bar-slot--end {
   display: inline-flex;
+  align-items: center;
   gap: var(--space-4);
   justify-self: end;
 }
@@ -979,59 +998,117 @@ body {
   flex-direction: column;
   overflow-y: auto;
   gap: var(--space-2);
-  padding: var(--space-4) var(--space-0);
-  background: var(--color-brand);
-  color: var(--color-text-on-brand);
+  padding: var(--space-4) var(--space-3);
+  border-right: var(--border-width) solid var(--color-border);
+  background: var(--color-bg);
+  color: var(--color-text);
+}
+
+/* Q2 (M10-06, D-47): a surface column with the product mark at the top; the current
+   section is a soft brand tint with a short accent bar, as the left rail's open pane. */
+.backstage-brand {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  padding: var(--space-2) var(--space-4) var(--space-3);
+  font-size: var(--font-size-l);
+  font-weight: var(--font-weight-semibold);
+}
+
+.backstage-brand-mark {
+  flex: none;
+  width: var(--control-height-s);
+  height: var(--control-height-s);
 }
 
 .backstage-list {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
   margin: var(--space-0);
-  padding: var(--space-0);
+  padding: var(--space-2) var(--space-0) var(--space-0);
+  border-top: var(--border-width) solid var(--color-border);
   list-style: none;
 }
 
 .backstage-back,
 .backstage-item {
+  position: relative;
   display: flex;
   align-items: center;
   gap: var(--space-3);
   width: 100%;
   min-height: var(--control-height-m);
-  padding: var(--space-2) var(--space-5);
+  padding: var(--space-2) var(--space-4);
   border: none;
+  border-radius: var(--radius-m);
   background: transparent;
   color: inherit;
   font: inherit;
   text-align: left;
   cursor: pointer;
+  transition: background-color var(--duration-fast) var(--ease-out);
 }
 
-.backstage-item[aria-current='page'],
+.backstage-back svg,
+.backstage-item svg {
+  flex: none;
+  color: var(--color-icon);
+}
+
 .backstage-back:hover,
 .backstage-item:hover {
-  background: var(--color-brand-hover);
+  background: var(--color-hover);
 }
 
-.backstage-back:focus-visible,
-.backstage-item:focus-visible {
-  outline-color: var(--color-text-on-brand);
-  outline-offset: calc(-1 * var(--focus-width));
+.backstage-item[aria-current='page'] {
+  background: var(--color-selected);
+  color: var(--color-selected-text);
+  font-weight: var(--font-weight-semibold);
 }
 
-/* High contrast (M10-02): on the Highlight column, the current and hovered items swap
-   the pair, so they still stand out. */
+.backstage-item[aria-current='page']:hover {
+  background: var(--color-selected-hover);
+}
+
+.backstage-item[aria-current='page'] svg {
+  color: var(--color-selected-text);
+}
+
+.backstage-item[aria-current='page']::before {
+  position: absolute;
+  top: calc(50% - var(--rail-pill-height) / 2);
+  left: var(--space-0);
+  height: var(--rail-pill-height);
+  border-left: var(--tab-indicator-height) solid var(--color-accent);
+  border-radius: var(--radius-round);
+  content: '';
+}
+
+/* High contrast (M10-02, M10-06): the column keeps its system colours; the current and
+   hovered items take the Highlight pair, and their focus ring the text colour. */
 @media (forced-colors: active) {
   .backstage-item[aria-current='page'],
   .backstage-back:hover,
   .backstage-item:hover {
-    background: HighlightText;
-    color: Highlight;
+    background: Highlight;
+    color: HighlightText;
+  }
+
+  .backstage-item[aria-current='page'] svg,
+  .backstage-back:hover svg,
+  .backstage-item:hover svg {
+    color: HighlightText;
+  }
+
+  .backstage-item[aria-current='page']::before {
+    border-left-color: HighlightText;
   }
 
   .backstage-item[aria-current='page']:focus-visible,
   .backstage-back:hover:focus-visible,
   .backstage-item:hover:focus-visible {
-    outline-color: Highlight;
+    outline-color: CanvasText;
   }
 }
 
@@ -1049,6 +1126,47 @@ body {
 .backstage-description {
   margin: var(--space-0) var(--space-0) var(--space-6);
   color: var(--color-text-muted);
+}
+
+/* A section that runs one command (New, Open, Save …; M10-06, review R5): the command as
+   a card, its icon on a soft brand tile, as the start screen's quick actions. */
+.backstage-action {
+  display: flex;
+}
+
+.backstage-action .ribbon-button--large {
+  gap: var(--space-3);
+  min-width: calc(var(--start-action-min-width) + var(--space-6));
+  padding: var(--space-5) var(--space-4) var(--space-4);
+  border-color: var(--color-border);
+  border-radius: var(--radius-l);
+  background: var(--color-surface);
+  box-shadow: var(--elevation-1);
+  font-size: var(--font-size-m);
+  font-weight: var(--font-weight-semibold);
+}
+
+.backstage-action .ribbon-button--large:hover:not([aria-disabled='true']) {
+  border-color: var(--color-border-strong);
+  background: var(--color-surface);
+  box-shadow: var(--elevation-2);
+}
+
+.backstage-action .ribbon-button--large:active:not([aria-disabled='true']) {
+  background: var(--color-hover);
+}
+
+.backstage-action .ribbon-button--large .ribbon-icon {
+  box-sizing: content-box;
+  padding: var(--space-3);
+  border-radius: var(--radius-xl);
+  background: var(--color-selected);
+  color: var(--color-selected-text);
+}
+
+.backstage-action .ribbon-button--large[aria-disabled='true'] .ribbon-icon {
+  background: var(--color-surface-sunken);
+  color: var(--color-text-disabled);
 }
 
 /* ------------------------------------------------------------ shortcut sheet */
@@ -1429,14 +1547,20 @@ body {
 
 /* ------------------------------------------------------------ status controls (M1-15) */
 
+/* Page navigation, zoom and view modes as three framed groups (M10-06, review R11). A
+   border, so forced-colors draws the frame too. */
 .status-group {
   display: inline-flex;
   align-items: center;
   gap: var(--space-1);
+  padding: var(--space-0) var(--space-1);
+  border: var(--border-width) solid var(--color-border);
+  border-radius: var(--radius-l);
+  background: var(--color-bg);
 }
 
 .status-input {
-  height: var(--control-height-s);
+  height: calc(var(--control-height-s) - 2 * var(--border-width));
   padding: var(--space-0) var(--space-2);
   border: var(--border-width) solid var(--color-border);
   border-radius: var(--radius-m);
@@ -1444,6 +1568,10 @@ body {
   color: var(--color-text);
   font: inherit;
   text-align: center;
+}
+
+.status-input:hover:not(:focus-visible) {
+  border-color: var(--color-border-strong);
 }
 
 .status-input[aria-invalid='true'] {
@@ -1524,15 +1652,24 @@ body {
   min-height: 0;
 }
 
+/* M10-06 (D-47): a raised card over the canvas, an accent bar at its start. */
 .permission-banner {
   display: flex;
   align-items: center;
   gap: var(--space-4);
+  margin: var(--space-2) var(--space-3) var(--space-0);
   padding: var(--space-2) var(--space-4);
-  border-bottom: var(--border-width) solid var(--color-border);
-  border-left: var(--focus-width) solid var(--color-accent);
-  background: var(--color-surface);
+  border: var(--border-width) solid var(--color-border);
+  border-left: var(--tab-indicator-height) solid var(--color-accent);
+  border-radius: var(--radius-l);
+  background: var(--color-surface-raised);
+  box-shadow: var(--elevation-1);
   color: var(--color-text);
+}
+
+/* The last of the banners keeps a gap above the document. */
+.permission-banner:not(:has(+ .permission-banner)) {
+  margin-bottom: var(--space-2);
 }
 
 .permission-banner-text {
@@ -1715,6 +1852,24 @@ body {
   white-space: nowrap;
 }
 
+/* "Ready offline" (M10-06, review R11): a small green pill. A border, so forced-colors
+   draws its outline. */
+.offline-status--ready {
+  min-height: calc(var(--control-height-s) - 2 * var(--space-1));
+  padding: var(--space-0) var(--space-3);
+  border: var(--border-width) solid transparent;
+  border-radius: var(--radius-round);
+  background: var(--color-success-bg);
+  color: var(--color-success-text);
+  font-weight: var(--font-weight-medium);
+}
+
+@media (forced-colors: active) {
+  .offline-status--ready {
+    border-color: CanvasText;
+  }
+}
+
 .offline-spinner {
   inline-size: 12px;
   block-size: 12px;
@@ -1768,9 +1923,19 @@ body {
 }
 
 /* ------------------------------------------------------------ reviewer profile (M3-07) */
+/* File → Settings (M10-06, review R5): each group a card, one under the other. */
 .settings-sections {
   display: grid;
-  gap: var(--space-7);
+  gap: var(--space-5);
+  max-width: calc(var(--dialog-max-width) * 1.5);
+}
+
+.settings-sections > * {
+  padding: var(--space-5) var(--space-6) var(--space-6);
+  border: var(--border-width) solid var(--color-border);
+  border-radius: var(--radius-l);
+  background: var(--color-surface-raised);
+  box-shadow: var(--elevation-1);
 }
 
 .profile-section {
@@ -2265,13 +2430,18 @@ body {
 
 .search-result {
   position: absolute;
-  left: var(--space-0);
-  right: var(--space-0);
+  left: var(--space-2);
+  right: var(--space-2);
   display: flex;
   align-items: center;
-  padding: var(--space-0) var(--space-3);
+  padding: var(--space-0) var(--space-2);
+  border-radius: var(--radius-m);
   font-size: var(--font-size-s);
   cursor: pointer;
+}
+
+.search-result:hover {
+  background: var(--color-hover);
 }
 
 .search-result--doc,
@@ -2281,10 +2451,11 @@ body {
 
 .search-result--hit,
 .search-result--extra {
-  padding-left: calc(var(--space-3) * 2);
+  padding-left: calc(var(--space-2) + var(--space-4));
 }
 
-.search-result--active {
+.search-result--active,
+.search-result--active:hover {
   background: var(--color-selected);
 }
 
@@ -2333,14 +2504,35 @@ body {
   align-items: center;
   gap: var(--space-1);
   min-height: var(--control-height-s);
+  margin: var(--space-0) var(--space-2);
   padding-right: var(--space-3);
+  border-radius: var(--radius-m);
   font-size: var(--font-size-s);
   cursor: pointer;
   outline: none;
 }
 
-.bookmark--focused {
+/* M10-06: rows as soft rounded targets, as the other panes' lists. */
+.bookmark:hover {
+  background: var(--color-hover);
+}
+
+.bookmark--focused,
+.bookmark--focused:hover {
   background: var(--color-selected);
+}
+
+/* Where a dragged bookmark lands: a line before or after the row, or a frame round it. */
+.bookmark--drop-before {
+  box-shadow: inset 0 var(--tab-indicator-height) 0 var(--color-accent);
+}
+
+.bookmark--drop-after {
+  box-shadow: inset 0 calc(-1 * var(--tab-indicator-height)) 0 var(--color-accent);
+}
+
+.bookmark--drop-inside {
+  box-shadow: inset 0 0 0 var(--focus-width) var(--color-accent);
 }
 
 .bookmark:focus-visible {
@@ -2407,19 +2599,40 @@ body {
   overflow-y: auto;
 }
 
-.attachment-list {
+/* Attachments and signatures (M10-06): one card per item, as the Comments pane's. */
+.attachment-list,
+.signature-list {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
   margin: var(--space-0);
-  padding: var(--space-0);
+  padding: var(--space-2);
   list-style: none;
 }
 
-.attachment {
+.attachment,
+.signature {
   display: flex;
   flex-direction: column;
   gap: var(--space-1);
   padding: var(--space-3);
-  border-bottom: var(--border-width) solid var(--color-border);
+  border: var(--border-width) solid var(--color-border);
+  border-radius: var(--radius-m);
+  background: var(--color-surface);
   outline: none;
+  transition: border-color var(--duration-fast) var(--ease-out);
+}
+
+.attachment:hover,
+.signature:hover {
+  border-color: var(--color-border-strong);
+}
+
+.attachment:focus-visible,
+.signature:focus-visible,
+.layer:focus-visible {
+  outline: var(--focus-width) solid var(--color-focus);
+  outline-offset: calc(-1 * var(--focus-width));
 }
 
 .attachment-name {
@@ -2463,17 +2676,24 @@ body {
 
 .layer-list {
   margin: var(--space-0);
-  padding: var(--space-0);
+  padding: var(--space-0) var(--space-2) var(--space-2);
   list-style: none;
 }
 
+/* One row per layer (M10-06): a soft rounded target, as bookmarks. */
 .layer {
   display: flex;
+  align-items: center;
   justify-content: space-between;
   gap: var(--space-3);
-  padding: var(--space-2) var(--space-3);
-  border-bottom: var(--border-width) solid var(--color-border);
+  min-height: var(--control-height-s);
+  padding: var(--space-1) var(--space-2);
+  border-radius: var(--radius-m);
   outline: none;
+}
+
+.layer:hover {
+  background: var(--color-hover);
 }
 
 .layer-state {
@@ -2536,20 +2756,8 @@ body {
   overflow-y: auto;
 }
 
-.signature-list {
-  margin: var(--space-0);
-  padding: var(--space-0);
-  list-style: none;
-}
-
-.signature {
-  padding: var(--space-3);
-  border-bottom: var(--border-width) solid var(--color-border);
-  outline: none;
-}
-
 .signature-signer {
-  margin-bottom: var(--space-2);
+  margin-bottom: var(--space-1);
   font-weight: var(--font-weight-semibold);
 }
 
@@ -2842,11 +3050,11 @@ textarea.form-field {
 
 .annot-props > p,
 .prop-actions {
-  padding: var(--space-0) var(--space-3);
+  padding: var(--space-0) var(--space-4);
 }
 
 .prop-empty {
-  padding: var(--space-3);
+  padding: var(--space-3) var(--space-4);
 }
 
 .prop-empty,
@@ -2866,9 +3074,15 @@ textarea.form-field {
   font-weight: var(--font-weight-semibold);
 }
 
-/* A section: a heading button over a two-column grid (property | value). */
+/* A section: a heading button over a two-column grid (property | value). M10-06: the
+   heading is a clear row on the pane (no grey band), the rows line up with the pane's
+   title, and the last row has no rule under it. */
 .prop-section {
   border-top: var(--border-width) solid var(--color-border);
+}
+
+.prop-section + .prop-section {
+  margin-top: var(--space-1);
 }
 
 .prop-section-title {
@@ -2881,14 +3095,16 @@ textarea.form-field {
   gap: var(--space-2);
   align-items: center;
   width: 100%;
-  padding: var(--space-2) var(--space-3);
+  min-height: var(--control-height-m);
+  padding: var(--space-2) var(--space-4) var(--space-2) var(--space-3);
   border: none;
-  background: var(--color-surface-sunken);
+  background: transparent;
   color: var(--color-text);
   font: inherit;
   font-weight: var(--font-weight-semibold);
   text-align: start;
   cursor: pointer;
+  transition: background-color var(--duration-fast) var(--ease-out);
 }
 
 .prop-section-toggle:hover {
@@ -2897,13 +3113,14 @@ textarea.form-field {
 
 .prop-section-chevron {
   display: inline-flex;
+  color: var(--color-icon);
 }
 
 .prop-grid {
   display: grid;
   grid-template-columns: minmax(5.5em, 42%) minmax(0, 1fr);
   column-gap: var(--space-2);
-  padding: var(--space-1) var(--space-3) var(--space-2);
+  padding: var(--space-0) var(--space-4) var(--space-2);
 }
 
 .prop-grid[hidden] {
@@ -2918,7 +3135,11 @@ textarea.form-field {
   align-items: center;
   min-height: var(--control-height-m);
   padding: var(--space-1) var(--space-0);
-  border-bottom: var(--border-width) solid var(--color-surface-sunken);
+  border-bottom: var(--border-width) solid var(--color-border);
+}
+
+.prop-field:last-child {
+  border-bottom: none;
 }
 
 .prop-field > label,
@@ -3419,7 +3640,7 @@ textarea.form-field {
   border-radius: var(--radius-m);
   background: var(--color-surface-raised);
   color: var(--color-text);
-  box-shadow: var(--shadow-1);
+  box-shadow: var(--elevation-1);
   font-size: var(--font-size-xs);
   font-variant-numeric: tabular-nums;
   white-space: nowrap;
@@ -4557,17 +4778,22 @@ textarea.form-field {
   pointer-events: none;
 }
 
+/* M10-06 (D-47): a raised card, an accent bar at its start (red for a failure). */
 .snapshot-toast {
   margin: var(--space-0);
   padding: var(--space-3) var(--space-5);
-  border-radius: var(--radius-m);
+  border: var(--border-width) solid var(--color-border);
+  border-left: var(--tab-indicator-height) solid var(--color-accent);
+  border-radius: var(--radius-l);
   background: var(--color-surface-raised);
-  box-shadow: var(--elevation-2);
+  box-shadow: var(--elevation-3);
   color: var(--color-text);
   font-size: var(--font-size-m);
+  font-weight: var(--font-weight-medium);
 }
 
 .snapshot-toast--error {
+  border-left-color: var(--color-danger);
   color: var(--color-danger);
 }
 

@@ -20,6 +20,7 @@
   --color-surface: #ffffff;
   --color-surface-raised: #ffffff;
   --color-surface-sunken: #e2e8f0;
+  --color-surface-subtle: #f8fafc; /* a dialog's footer band (M10-06) */
   --color-canvas: #e2e8f0; /* area behind document pages */
   --color-page: #ffffff; /* paper under a page's preview: white in every theme */
   --color-form-field: #e3ecfa; /* fillable form fields over the page (M2-14) */
@@ -75,6 +76,9 @@
   --color-focus: #2563eb;
   --color-focus-halo: rgb(37 99 235 / 0.25); /* the soft ring around the focus ring */
   --color-danger: #b91c1c;
+  /* "Ready offline" in the status bar (M10-06): a small green pill */
+  --color-success-bg: #dcfce7;
+  --color-success-text: #166534;
   --color-backdrop: rgb(15 23 42 / 0.45);
   --color-tooltip-bg: #1e293b;
   --color-tooltip-text: #ffffff;
@@ -201,6 +205,7 @@
   --color-surface: #0f172a;
   --color-surface-raised: #1e293b;
   --color-surface-sunken: #070b14;
+  --color-surface-subtle: #162033;
   --color-canvas: #070b14;
   --color-page: #ffffff;
   --color-form-field: #e3ecfa; /* on the white page in every theme */
@@ -238,6 +243,8 @@
   --color-focus: #93c5fd;
   --color-focus-halo: rgb(96 165 250 / 0.3);
   --color-danger: #f87171; /* 5.3:1 on --color-surface-raised */
+  --color-success-bg: #14532d;
+  --color-success-text: #86efac;
   --color-backdrop: rgb(2 6 23 / 0.65);
   --color-tooltip-bg: #e2e8f0;
   --color-tooltip-text: #0f172a;
@@ -268,6 +275,7 @@
     --color-surface: #ffffff;
     --color-surface-raised: #ffffff;
     --color-surface-sunken: #e2e8f0;
+    --color-surface-subtle: #f8fafc;
     --color-canvas: #e2e8f0;
     --color-page: #ffffff;
     --color-form-field: #e3ecfa;
@@ -305,6 +313,8 @@
     --color-focus: #2563eb;
     --color-focus-halo: rgb(37 99 235 / 0.25);
     --color-danger: #b91c1c;
+    --color-success-bg: #dcfce7;
+    --color-success-text: #166534;
     --color-backdrop: rgb(15 23 42 / 0.45);
     --color-tooltip-bg: #1e293b;
     --color-tooltip-text: #ffffff;
@@ -444,6 +454,7 @@
     --color-surface: Canvas;
     --color-surface-raised: Canvas;
     --color-surface-sunken: Canvas;
+    --color-surface-subtle: Canvas;
     --color-canvas: Canvas;
     --color-page: Canvas;
     --color-form-field: Field;
@@ -481,6 +492,8 @@
     --color-focus: Highlight;
     --color-focus-halo: transparent;
     --color-danger: CanvasText;
+    --color-success-bg: Canvas;
+    --color-success-text: CanvasText;
     --color-backdrop: transparent;
     --color-tooltip-bg: Canvas;
     --color-tooltip-text: CanvasText;

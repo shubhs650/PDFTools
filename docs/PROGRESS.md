@@ -1,6 +1,6 @@
 # Triya PDF — Progress
 
-_Last updated: 2026-11-16 (session 67: M10-08·O4 Create Blank PDF)_
+_Last updated: 2026-11-16 (session 68: M10-06 panes, backstage, dialogs, menus, status bar)_
 
 **Current milestone:** M7 — second beta review (plan in [docs/plan/M7.md](plan/M7.md), scope in
 [ADR-023](adr/023-m7-second-beta-review.md), **Accepted** 2026-11-04 with the recommended
@@ -10,6 +10,36 @@ answers Q1–Q7; ARCHITECTURE.md Rev 0.12 after [ADR-024](adr/024-freetext-text-
 interop is in the M6 pack (CHECKLIST §M6 R1–R4). Rev 0 (M0–M4) is complete on the agent side.
 
 ## Done
+
+- **Session 68 — M10-06 Panes, backstage, dialogs, menus, status bar (ADR-027 D-47; review
+  R5, R11).** Polished in place: no pane, dialog or command moves. **Panes:** one header
+  style (36 px, the title lined up with the rows); bookmarks, layers and search results are
+  soft rounded rows with a hover tint (the selected one keeps the brand tint); bookmark drag
+  targets now show (a line before or after a row, a frame round it; they had no style);
+  thumbnails get rounded selection, a hover outline, a soft page shadow and the current
+  page's number in the brand text colour; attachments and signatures are cards, as the
+  Comments pane's. **Properties pane:** each group a clear section (no grey band, the rows
+  lined up with the pane title, no rule under the last row). **File backstage (Q2):** a
+  surface column (the app background) with the product mark at the top (decorative), the
+  current section a soft brand tint with a short accent bar, as the left rail; New, Open,
+  Save … show their command as a card with the icon on a soft brand tile; **Settings** shows
+  each group (Appearance, Reviewer profile, Data on this device) as a card (R5). **Dialogs:**
+  12 px corners; "?" and Close centred on the title's first line; the footer is a band under
+  a divider that **stays in view** while a long dialog scrolls (Print at 800 px showed no
+  buttons before), with `scroll-padding-bottom` so keyboard focus never hides under it.
+  **Menus and tooltips:** 8 px corners and the second elevation. **Status bar (R11):** "✓
+  Ready offline" is a small green pill (new tokens `--color-success-bg/-text`, 4.5 : 1 in
+  both themes, CanvasText in forced-colors); page navigation, zoom and view modes are framed
+  groups; the end slot is centred. **Banners and the snapshot toast:** raised cards with an
+  accent bar (red for a failed snapshot). New token `--color-surface-subtle` (dialog footers;
+  in the contrast test's surfaces); the measure label's undefined `--shadow-1` is now
+  `--elevation-1`. Forced-colors: the backstage's current and hovered items take the
+  Highlight pair. Tests: `themeContrast.test.ts` (the pill pair, the footer surface); e2e
+  `panes-dialogs-polish.spec.ts` (@smoke, light and dark: framed status groups, the Print
+  dialog's 12 px corners, Close on the title row and its Print button in view without
+  scrolling, the backstage column, accent bar, command card, Settings cards, axe). Screenshots
+  (before/after, light and dark, 1280/1366/1920 for the main views, forced-colors) in the
+  project's shared folder `m10-06/`. Next: M10-08·O9 density.
 
 - **Session 67 — M10-08·O4 Create Blank PDF (ADR-027 D-49; review R15).** A new document
   from **File → New** (first in the backstage), the start screen's first quick action

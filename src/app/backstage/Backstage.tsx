@@ -14,6 +14,7 @@ import { About } from '../about/About';
 import { Privacy } from './Privacy';
 import { Properties } from './Properties';
 import { RibbonButton } from '../ribbon/RibbonButton';
+import { AppMark } from '../TopBar';
 
 /** One description per backstage section (content arrives with each feature task). */
 const DESCRIPTIONS: Record<string, MessageKey> = {
@@ -103,6 +104,11 @@ export function Backstage({ open, section: initial, onOpenChange }: BackstagePro
             {t('backstage.label')}
           </RadixDialog.Title>
           <nav aria-label={t('backstage.nav')} className="backstage-nav">
+            {/* The product mark (Q2, M10-06): decorative, the header's brand is the name. */}
+            <div className="backstage-brand" aria-hidden="true">
+              <AppMark className="backstage-brand-mark" />
+              <span>{t('app.name')}</span>
+            </div>
             <RadixDialog.Close asChild>
               <button type="button" className="backstage-back ui-focusable">
                 <ArrowLeft20Regular aria-hidden />
@@ -175,14 +181,16 @@ export function Backstage({ open, section: initial, onOpenChange }: BackstagePro
               ) : section.id === 'file.privacy' ? (
                 <Privacy />
               ) : (
-                <RibbonButton
-                  command={section}
-                  large
-                  tabIndex={0}
-                  onRan={() => {
-                    onOpenChange(false);
-                  }}
-                />
+                <div className="backstage-action">
+                  <RibbonButton
+                    command={section}
+                    large
+                    tabIndex={0}
+                    onRan={() => {
+                      onOpenChange(false);
+                    }}
+                  />
+                </div>
               )}
             </section>
           ) : null}
