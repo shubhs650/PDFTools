@@ -64,6 +64,8 @@ async function placeNote(page: Page, id: string, x = 100, y = 120): Promise<Obj>
     .getByRole('toolbar', { name: 'Comment commands' })
     .getByRole('button', { name: 'Sticky Note', exact: true });
   await b.click();
+  // The tool turns on after the author profile is read (async): click the page only then.
+  await expect(b).toHaveAttribute('aria-pressed', 'true');
   const p = await at(page, x, y);
   await page.mouse.click(p.x, p.y);
   await expect.poll(async () => (await notes(page, id)).length).toBe(1);

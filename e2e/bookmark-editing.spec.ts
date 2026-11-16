@@ -185,6 +185,10 @@ test('drag and drop, Alt+Shift+arrows, cut and paste, Properties', async ({ page
   // An action other than a link in this document is shown, not edited.
   await expect(dialog.getByTestId('bookmark-action')).toContainText('GoToR');
   await dialog.getByRole('button', { name: 'Cancel' }).click();
+  // The closed dialog hands focus back to "Other file" a moment later; moving on before that
+  // lets it take the focus back, and Alt+Enter opens "Other file" again.
+  await expect(dialog).toHaveCount(0);
+  await expect(item(page, 'Other file')).toBeFocused();
   await item(page, 'Named destination').focus();
   await page.keyboard.press('Alt+Enter');
   await expect(dialog.getByLabel('Page')).toHaveValue('2');

@@ -17,6 +17,14 @@ interop is in the M6 pack (CHECKLIST §M6 R1–R4). Rev 0 (M0–M4) is complete 
   box at once, and on a slow runner the box was still the fit-width one (161 %, x ≈ 312, against
   66 %, x ≈ 596 after Fit Page), so the Sticky Note click fell on the empty canvas. A shared
   `fitPage()` helper waits for the zoom and the page's new width (M6 and M7 offline tests).
+  That was not the whole story: it still failed on main. The same miss shows in
+  `sticky-note-popup.spec` ("no note"): a comment tool turns on only after `requestProfile()`
+  (async) resolves, so a page click right after the ribbon click can come first. The offline,
+  sticky-note-popup and theme specs now wait for the button's `aria-pressed="true"` (as
+  theme.spec already did once). Also `bookmark-editing.spec` (red on main too): after Cancel the
+  dialog hands focus back to the item a moment later and stole it from the next item; it now
+  waits for that. CI keeps the offline gate's traces (`offline-results/`, which the perf run no
+  longer wipes).
   **Inter:** `@fontsource-variable/inter` 5.3.0 (OFL-1.1), the variable WOFF2 files for Latin and
   Latin-extended, upright and italic (bookmarks can be italic), 277 KB in all, declared in
   `src/ui/fonts.css` (the package's own unicode ranges; `font-display: block`, since the files are
