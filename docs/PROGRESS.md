@@ -22,8 +22,10 @@ interop is in the M6 pack (CHECKLIST §M6 R1–R4). Rev 0 (M0–M4) is complete 
   service worker answers every navigation with `index.html`. Plan:
   [docs/plan/M10.md](plan/M10.md) (M10-01 … M10-09, optional O1–O9, questions Q1–Q6);
   **Accepted** by the owner 2026-11-16 with every recommended answer and the recommended
-  optional items (O1 icon accents, O2 command search, O5 loading placeholders, O6 "What's new";
-  O4 Create Blank PDF later); ARCHITECTURE.md Rev 0.15. **Next:** M10-01 (About and notices),
+  optional items; the same day the owner accepted **all nine** optional items O1–O9 (one-row
+  header, Create Blank PDF, accent colour, Inter, density too): ADR-027 amended (D-47 extended,
+  D-49 Create Blank PDF), ARCHITECTURE.md Rev 0.16, and the plan's "Order of work" lists all 17
+  task PRs. **Next:** M10-01 (About and notices),
   one thread and PR per task.
 
 - **Session 56 — M9 Help in its own window, with screenshots (ADR-026 D-46).** M9-01 … M9-05 in

@@ -1,7 +1,9 @@
 # ADR-027: M10 — visual refresh (design language v2, motion) and an in-app About with open-source licenses
 
 - **Status:** Accepted (owner, 2026-11-16, with the plan's recommended answers Q1–Q6). Applied:
-  ARCHITECTURE.md Rev 0.15.
+  ARCHITECTURE.md Rev 0.15. **Amended** the same day: the owner accepted all nine optional
+  items (O1–O9), adding the one-row header, a bundled UI font, accent and density choices to
+  D-47 and Create Blank PDF as D-49; ARCHITECTURE.md Rev 0.16.
 - **Date:** 2026-11-16
 - **Deciders:** owner (Shubham) / agent (M10 thread)
 - **Related decisions:** D-01 (layout), D-12 (licenses), D-17 (offline), D-20 (icons, tokens),
@@ -39,7 +41,8 @@ claims against the app; the relevant findings for this ADR:
    accessibility rules. Same structure, same commands, same keyboard paths.
 3. **Re-layout** (one-row header, a different shell, a new icon set). Larger visual change, but
    against the owner's "without changing the overall layout", rule 15 (icons) and D-36 (the
-   ribbon's fit at 1280 px). Rejected; the one-row header stays an optional item (O3).
+   ribbon's fit at 1280 px). Rejected as a whole; the one-row header was offered as optional item
+   O3, and the owner accepted it (see the amendment below).
 
 For the notices:
 
@@ -71,6 +74,26 @@ tokens (§8):
 - Icons stay **Fluent System Icons** (ADR-010). Optional second-colour accents on a few tools
   (plan O1) use tokens only.
 
+**Amendment (owner, 2026-11-16): all optional items accepted.** D-47 also covers:
+
+- **One-row header (O3):** the product mark, Quick Access, File, the ribbon tabs and the top-bar
+  buttons share one row above the ribbon panel (28 px more height for the document). Same
+  commands, names and keyboard paths; the tab list scrolls inside its row when too narrow.
+- **Bundled UI font (O8):** Inter (OFL-1.1, variable WOFF2, Latin subsets) self-hosted and in
+  the core precache, with the system fonts as fallback; no font is fetched from anywhere else
+  (rule 4).
+- **Accent colour (O7)** and **density (O9)** in Settings → Appearance: Blue (default), Teal,
+  Indigo, Graphite; Comfortable (default) or Compact. Stored on the device with the theme,
+  applied before first paint, every accent contrast-tested in both themes, targets never below
+  24 × 24 px. Accents never change comment colours, the yellow highlight and sticky-note
+  defaults, or the white page.
+- Icon accents (O1), loading placeholders (O5), command search (O2, search on Enter, rule 3)
+  and "What's new" (O6) need no architecture change.
+
+**D-49 — Create Blank PDF (O4).** File → New (and the start screen) creates a new document of a
+chosen page size, orientation and page count in the Work worker (the `FPDF_CreateNewDocument`
+route Merge uses) and opens it as an unsaved tab whose first save is a Save As.
+
 **D-48 — About and open-source licenses.** File → About shows the product, version, build date
 and commit, offline status, **Copy version info** (version, browser, OS only: no document data,
 rule 10), links to Help, Report an issue and Privacy, a short "Built with" list of the main
@@ -90,13 +113,20 @@ returns `index.html` only for navigations to app routes and serves other same-or
   files as files (D-48).
 - §13: add M10.
 
+**Rev 0.16 (the amendment):** §2 D-47 extended and D-49 added; §3.2 adds the Inter font row; §8
+top bar becomes one row with Quick Access and the tabs, and Appearance lists accent and density;
+§7.8 gains Create Blank PDF; §10.3 lists the accent and density choices.
+
 ## Consequences
 
 - Most of the work is CSS on existing tokens and components; no layout code moves, so the
   adaptive ribbon, keyboard paths and accessible names are unchanged. Each PR still re-checks the
   1280 px fit.
 - The 51 Help screenshots go stale and are regenerated once at the end of M10.
-- The licenses chunk adds about 300 KB to the background precache (not the 9 MB core).
+- The licenses chunk adds about 300 KB to the background precache (not the 9 MB core); Inter
+  adds about 100–300 KB to the core precache.
+- The one-row header (O3) is the one layout change in M10, accepted by the owner; e2e locators
+  and Help screenshots that rely on the old two-row banner are updated in its PR.
 - Risk: e2e tests that read colours or box positions; mitigated by full-suite runs on the larger
   PRs and by disabling animation in position-measuring tests.
 
