@@ -337,14 +337,8 @@ body {
 
 /* ------------------------------------------------------------ ribbon */
 
-/* Title row (M6-01, D-35): product mark and name, then the quick access toolbar. */
-.app-title-row {
-  display: flex;
-  align-items: center;
-  gap: var(--space-2);
-  padding-left: var(--space-3);
-}
-
+/* The header is one row (M10-08·O3, D-47; D-35): the product mark and name, Quick Access,
+   File, the tabs, then the top bar buttons, above the ribbon panel. */
 .app-brand {
   display: inline-flex;
   flex: none;
@@ -365,14 +359,17 @@ body {
   white-space: nowrap;
 }
 
-/* M10-04 (D-47, review R18): 28 px icon buttons, evenly spaced, after an inset divider. */
+/* M10-04 (D-47, review R18): 28 px icon buttons, evenly spaced, between inset dividers
+   (the brand on the left, File on the right, M10-08·O3). */
 .quick-access {
   display: flex;
+  flex: none;
   align-items: center;
   gap: var(--space-2);
-  margin-left: var(--space-2);
+  margin: var(--space-0) var(--space-2);
   padding: var(--space-0) var(--space-3);
   border-left: var(--border-width) solid var(--color-border);
+  border-right: var(--border-width) solid var(--color-border);
 }
 
 .quick-access .ribbon-button--small {
@@ -386,14 +383,16 @@ body {
   min-width: var(--space-0);
 }
 
-/* The tab row (M10-04): File as a pill, the tabs as soft rounded targets, the active one
-   in semibold brand text over a short bar that slides from tab to tab. */
+/* The header row (M10-04, M10-08·O3): File as a pill, the tabs as soft rounded targets, the
+   active one in semibold brand text over a short bar that slides from tab to tab. Only the
+   tab list scrolls when the row is too narrow (a long language at 1280 px); the brand,
+   Quick Access, File and the top bar buttons never shrink or leave the screen. */
 .ribbon-tabs {
   display: flex;
-  overflow-x: auto;
   align-items: center;
   gap: var(--space-2);
-  min-height: calc(var(--control-height-m) + var(--space-1));
+  min-width: var(--space-0);
+  min-height: var(--header-height);
   padding-left: var(--space-3);
 }
 
@@ -450,12 +449,49 @@ body {
   font-weight: var(--font-weight-semibold);
 }
 
+/* The tab list's own scroller. Its padding keeps the focus ring and halo inside the clip;
+   equal negative margins keep it from taking room in the row. Its height follows its
+   content, so a scrollbar (only when the tabs overflow) grows the row instead of
+   squeezing the tabs. */
 .ribbon-tablist-wrap {
   position: relative;
   display: flex;
-  flex: none;
-  align-self: stretch;
+  flex: 0 1 auto;
   align-items: center;
+  min-width: var(--space-0);
+  margin: calc(-1 * var(--focus-reach)) calc(-1 * var(--space-2));
+  padding: var(--focus-reach);
+  overflow: auto hidden;
+  scroll-padding-inline: var(--tab-fade-width);
+  scrollbar-width: thin;
+}
+
+/* More tabs behind an edge: that edge fades out (a mask: only its alpha counts, so it works in every theme and in
+   forced-colors). A tab reached by the keyboard scrolls clear of the fade. */
+.ribbon-tablist-wrap[data-more-end] {
+  mask-image: linear-gradient(
+    to right,
+    currentcolor calc(100% - var(--tab-fade-width)),
+    transparent
+  );
+}
+
+.ribbon-tablist-wrap[data-more-start] {
+  mask-image: linear-gradient(
+    to left,
+    currentcolor calc(100% - var(--tab-fade-width)),
+    transparent
+  );
+}
+
+.ribbon-tablist-wrap[data-more-start][data-more-end] {
+  mask-image: linear-gradient(
+    to right,
+    transparent,
+    currentcolor var(--tab-fade-width),
+    currentcolor calc(100% - var(--tab-fade-width)),
+    transparent
+  );
 }
 
 .ribbon-tablist {
@@ -466,7 +502,8 @@ body {
 /* A border, not a background, so forced-colors mode draws it in the system colour. */
 .ribbon-tab-indicator {
   position: absolute;
-  bottom: var(--space-0);
+  /* At the row's bottom edge, under the tab (the scroller reaches past the row). */
+  bottom: calc(var(--focus-reach) - (var(--header-height) - var(--control-height-toolbar)) / 2);
   left: var(--space-0);
   width: var(--tab-indicator-width);
   height: var(--space-0);
@@ -503,6 +540,7 @@ body {
 
 .ribbon-tabs-end {
   display: flex;
+  flex: none;
   align-items: center;
   gap: var(--space-2);
   margin-left: auto;

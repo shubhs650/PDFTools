@@ -1,5 +1,5 @@
 // Top bar (M6-01, ADR-021 D-35): the product mark and name at the left of the
-// quick access row, and at the right end of the ribbon's tab row the theme
+// one header row (M10-08·O3, D-47), and at the right end of that row the theme
 // toggle (M7-11, ADR-023 D-42), the OpenEngTools home link, the GitHub issue
 // link and the full-screen button.
 import { WeatherSunny20Regular } from '@fluentui/react-icons/svg/weather-sunny';

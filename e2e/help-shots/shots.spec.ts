@@ -67,11 +67,15 @@ const panes = (page: Page) => page.getByRole('complementary', { name: 'Navigatio
 const dialog = (page: Page, name?: string | RegExp) =>
   name ? page.getByRole('dialog', { name }) : page.getByRole('dialog');
 
-/** The ribbon's tabs and the active tab's commands, without the empty space on its right. */
+/**
+ * The header row (mark and name, Quick Access, File, the tabs; M10-08·O3) and the active
+ * tab's commands, without the empty space on its right.
+ */
 async function ribbonClip(page: Page, tab: string): Promise<Box> {
   await ribbonTab(page, tab).click();
   const bar = (await toolbar(page, tab).boundingBox()) as Box;
   const file = (await page.getByTestId('file-tab').boundingBox()) as Box;
+  const panel = (await page.locator('.ribbon-panel').boundingBox()) as Box;
   const lastTab = (await page
     .getByRole('tablist', { name: 'Ribbon tabs' })
     .getByRole('tab')
@@ -82,9 +86,9 @@ async function ribbonClip(page: Page, tab: string): Promise<Box> {
     .evaluateAll((gs) => gs.map((g) => g.getBoundingClientRect().right));
   const right = Math.max(lastTab.x + lastTab.width, ...groups) + 12;
   return {
-    x: file.x,
+    x: panel.x,
     y: file.y - 2,
-    width: right - file.x,
+    width: right - panel.x,
     height: bar.y + bar.height - file.y + 2,
   };
 }
@@ -180,7 +184,13 @@ test('welcome-1: the window at a glance', async ({ page }) => {
   await expect(page.getByTestId('properties-pane')).toBeVisible();
   await shoot(page, 'welcome-1', {
     callouts: [
-      { n: 1, target: page.getByRole('toolbar', { name: 'Quick access toolbar' }), at: 'r' },
+      {
+        n: 1,
+        target: page.getByRole('toolbar', { name: 'Quick access toolbar' }),
+        at: 'b',
+        dx: -28,
+        dy: 4,
+      },
       { n: 2, target: group(page, 'Home', 'Protect'), at: 'r', dx: 16 },
       { n: 3, target: panes(page), at: 'c' },
       { n: 4, target: page.getByRole('main', { name: 'Document area' }), at: 'c' },
