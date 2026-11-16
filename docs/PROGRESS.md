@@ -1,6 +1,6 @@
 # Triya PDF — Progress
 
-_Last updated: 2026-11-16 (session 57: M10 plan, proposed)_
+_Last updated: 2026-11-16 (session 57: M10 plan, accepted)_
 
 **Current milestone:** M7 — second beta review (plan in [docs/plan/M7.md](plan/M7.md), scope in
 [ADR-023](adr/023-m7-second-beta-review.md), **Accepted** 2026-11-04 with the recommended
@@ -21,8 +21,10 @@ interop is in the M6 pack (CHECKLIST §M6 R1–R4). Rev 0 (M0–M4) is complete 
   Lucide icons conflict with rule 15. The notices link opens a second copy of the app because the
   service worker answers every navigation with `index.html`. Plan:
   [docs/plan/M10.md](plan/M10.md) (M10-01 … M10-09, optional O1–O9, questions Q1–Q6);
-  ARCHITECTURE.md changes are listed in the ADR and wait for the owner's acceptance.
-  **Next:** the owner's review of the plan; then M10-01 (About and notices).
+  **Accepted** by the owner 2026-11-16 with every recommended answer and the recommended
+  optional items (O1 icon accents, O2 command search, O5 loading placeholders, O6 "What's new";
+  O4 Create Blank PDF later); ARCHITECTURE.md Rev 0.15. **Next:** M10-01 (About and notices),
+  one thread and PR per task.
 
 - **Session 56 — M9 Help in its own window, with screenshots (ADR-026 D-46).** M9-01 … M9-05 in
   one PR. **Window:** `help.html` + `src/help/` (a Vite page of its own, served at `/help`):

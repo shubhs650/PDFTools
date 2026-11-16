@@ -1,6 +1,7 @@
 # ADR-027: M10 — visual refresh (design language v2, motion) and an in-app About with open-source licenses
 
-- **Status:** Proposed (2026-11-16), waiting for the owner's review of [docs/plan/M10.md](../plan/M10.md)
+- **Status:** Accepted (owner, 2026-11-16, with the plan's recommended answers Q1–Q6). Applied:
+  ARCHITECTURE.md Rev 0.15.
 - **Date:** 2026-11-16
 - **Deciders:** owner (Shubham) / agent (M10 thread)
 - **Related decisions:** D-01 (layout), D-12 (licenses), D-17 (offline), D-20 (icons, tokens),
@@ -53,8 +54,7 @@ generated at build time and imported lazily (an app chunk, not a network call), 
 **D-47 — Design language v2 (visual refresh, M10).** Within the existing layout (D-01) and
 tokens (§8):
 
-- Colours: cool slate neutrals and a blue brand (owner's Q1 answer decides `#2563eb` or
-  Fluent `#0f6cbd`); in dark, a filled brand that keeps white text at AA and a lighter accent for
+- Colours: cool slate neutrals and a blue brand `#2563eb` (owner's Q1 answer); in dark, a filled brand that keeps white text at AA and a lighter accent for
   lines and links. Every text pair at 4.5 : 1 and every control boundary and focus indicator at
   3 : 1, tested. Pages stay white, highlight and sticky-note defaults stay yellow, comment
   colours come from the standard swatch picker, and `forced-colors` hands colours to the system.
@@ -80,7 +80,7 @@ lazy app chunk (no network call, rule 4), with the `.txt` download kept. The ser
 returns `index.html` only for navigations to app routes and serves other same-origin files
 (the notices `.txt`) as files, from its cache when offline.
 
-### Proposed ARCHITECTURE.md changes (Rev 0.15, applied only after the owner accepts this ADR)
+### ARCHITECTURE.md changes (Rev 0.15, applied on acceptance)
 
 - §2: add D-47 and D-48.
 - §8: the Design tokens bullet gains "radius, elevation and **motion** tokens; motion only on
