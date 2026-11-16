@@ -32,7 +32,8 @@ body {
 
 .app-banner {
   min-width: var(--space-0);
-  background: var(--color-surface);
+  /* The title rows sit on the app background; the ribbon panel is a card on it (M10-04). */
+  background: var(--color-bg);
   border-bottom: var(--border-width) solid var(--color-border);
 }
 
@@ -124,6 +125,35 @@ body {
   gap: var(--space-2);
   padding: var(--space-2);
   border-right: var(--border-width) solid var(--color-border);
+}
+
+/* The open pane's rail button (M10-04): the pressed tint and brand icon, plus a short
+   accent pill at the rail's edge. Borders, so forced-colors draws the pill too. */
+.left-rail-icons .ui-button[aria-pressed='true'] {
+  background: var(--color-selected);
+}
+
+.left-rail-icons .ui-button[aria-pressed='true']:hover {
+  background: var(--color-selected-hover);
+}
+
+.left-rail-icons .ui-button[aria-pressed='true'] svg {
+  color: var(--color-selected-text);
+}
+
+.left-rail-button {
+  position: relative;
+  display: flex;
+}
+
+.left-rail-button:has(> .ui-button[aria-pressed='true'])::before {
+  position: absolute;
+  top: calc(50% - var(--rail-pill-height) / 2);
+  left: calc(-1 * var(--space-2));
+  height: var(--rail-pill-height);
+  border-left: var(--tab-indicator-height) solid var(--color-accent);
+  border-radius: var(--radius-round);
+  content: '';
 }
 
 .left-pane {
@@ -335,49 +365,118 @@ body {
   white-space: nowrap;
 }
 
+/* M10-04 (D-47, review R18): 28 px icon buttons, evenly spaced, after an inset divider. */
 .quick-access {
   display: flex;
-  gap: var(--space-1);
-  padding: var(--space-1) var(--space-3);
+  align-items: center;
+  gap: var(--space-2);
+  margin-left: var(--space-2);
+  padding: var(--space-0) var(--space-3);
   border-left: var(--border-width) solid var(--color-border);
+}
+
+.quick-access .ribbon-button--small {
+  justify-content: center;
+  width: var(--control-height-toolbar);
+  min-height: var(--control-height-toolbar);
+  padding: var(--space-0);
 }
 
 .ribbon {
   min-width: var(--space-0);
 }
 
+/* The tab row (M10-04): File as a pill, the tabs as soft rounded targets, the active one
+   in semibold brand text over a short bar that slides from tab to tab. */
 .ribbon-tabs {
   display: flex;
   overflow-x: auto;
-  align-items: stretch;
-  border-bottom: var(--border-width) solid var(--color-border);
+  align-items: center;
+  gap: var(--space-2);
+  min-height: calc(var(--control-height-m) + var(--space-1));
+  padding-left: var(--space-3);
 }
 
 .ribbon-file,
 .ribbon-tab {
-  min-height: var(--control-height-m);
-  padding: var(--space-0) var(--space-5);
+  flex: none;
+  min-height: var(--control-height-toolbar);
+  padding: var(--space-0) var(--space-4);
   border: none;
+  border-radius: var(--radius-m);
   background: transparent;
   color: var(--color-text);
   font: inherit;
   cursor: pointer;
+  transition:
+    background-color var(--duration-fast) var(--ease-out),
+    color var(--duration-fast) var(--ease-out);
 }
 
 .ribbon-file {
+  border-radius: var(--radius-round);
   background: var(--color-brand);
   color: var(--color-text-on-brand);
-}
-
-.ribbon-tab[aria-selected='true'] {
-  box-shadow: inset var(--space-0) calc(-1 * var(--focus-width)) var(--color-accent);
   font-weight: var(--font-weight-semibold);
 }
 
-.ribbon-tab:hover,
 .ribbon-file:hover {
+  background: var(--color-brand-hover);
+}
+
+/* The label, and a hidden semibold copy (generated, so it is neither text nor part of the
+   name) that reserves its width, so the row never shifts when a tab becomes active. */
+.ribbon-tab {
+  display: inline-grid;
+  place-items: center;
+  white-space: nowrap;
+}
+
+.ribbon-tab::after {
+  grid-area: 1 / 1;
+  height: var(--space-0);
+  overflow: hidden;
+  font-weight: var(--font-weight-semibold);
+  visibility: hidden;
+  content: attr(data-label) / '';
+}
+
+.ribbon-tab:hover {
   background: var(--color-hover);
-  color: var(--color-text);
+}
+
+.ribbon-tab[aria-selected='true'] {
+  color: var(--color-selected-text);
+  font-weight: var(--font-weight-semibold);
+}
+
+.ribbon-tablist-wrap {
+  position: relative;
+  display: flex;
+  flex: none;
+  align-self: stretch;
+  align-items: center;
+}
+
+.ribbon-tablist {
+  display: flex;
+  gap: var(--space-1);
+}
+
+/* A border, not a background, so forced-colors mode draws it in the system colour. */
+.ribbon-tab-indicator {
+  position: absolute;
+  bottom: var(--space-0);
+  left: var(--space-0);
+  width: var(--tab-indicator-width);
+  height: var(--space-0);
+  border-top: var(--tab-indicator-height) solid var(--color-accent);
+  border-radius: var(--radius-round);
+  pointer-events: none;
+}
+
+.ribbon-tab-indicator[data-ready] {
+  transition: transform var(--duration-normal) var(--ease-out);
 }
 
 /* High contrast (M10-02): filled brand surfaces (the File tab, the backstage column,
@@ -395,27 +494,34 @@ body {
     background: HighlightText;
     color: Highlight;
   }
-}
 
-.ribbon-tablist {
-  display: flex;
+  /* The active tab's label is on the plain row, not on a Highlight tint (M10-04). */
+  .ribbon-tab[aria-selected='true'] {
+    color: Highlight;
+  }
 }
 
 .ribbon-tabs-end {
   display: flex;
   align-items: center;
-  gap: var(--space-1);
+  gap: var(--space-2);
   margin-left: auto;
   padding-left: var(--space-2);
-  padding-right: var(--space-2);
+  padding-right: var(--space-3);
+}
+
+.ribbon-tabs-end > .ui-button {
+  width: var(--control-height-toolbar);
+  min-width: var(--control-height-toolbar);
+  min-height: var(--control-height-toolbar);
 }
 
 /* OpenEngTools home, report an issue, full screen (M6-01, D-35). */
 .top-bar-actions {
   display: flex;
   align-items: center;
-  gap: var(--space-1);
-  padding-right: var(--space-1);
+  gap: var(--space-2);
+  padding-right: var(--space-3);
   border-right: var(--border-width) solid var(--color-border);
 }
 
@@ -423,17 +529,27 @@ body {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  width: var(--control-height-s);
-  height: var(--control-height-s);
+  width: var(--control-height-toolbar);
+  height: var(--control-height-toolbar);
   border: none;
   border-radius: var(--radius-m);
   background: transparent;
   color: var(--color-icon);
   cursor: pointer;
+  transition: background-color var(--duration-fast) var(--ease-out);
 }
 
 .top-bar-button:hover {
   background: var(--color-hover);
+}
+
+.top-bar-button[aria-pressed='true'] {
+  background: var(--color-selected);
+  color: var(--color-selected-text);
+}
+
+.top-bar-button[aria-pressed='true']:hover {
+  background: var(--color-selected-hover);
 }
 
 .top-bar-button[aria-disabled='true'] {
@@ -441,32 +557,53 @@ body {
   cursor: default;
 }
 
+.top-bar-button[aria-disabled='true']:hover {
+  background: transparent;
+}
+
 .top-bar-icon {
   width: var(--icon-size-m);
   height: var(--icon-size-m);
 }
 
+/* The panel as a softly framed card on the title rows' background (M10-04, review R17). */
 .ribbon-panel {
   /* The containing block of the buttons' visually hidden text, which would
      otherwise escape this scroller and widen the page (pseudo-locale). */
   position: relative;
   min-height: var(--ribbon-height);
+  margin: var(--space-0) var(--space-3) var(--space-2);
   overflow-x: auto;
+  border: var(--border-width) solid var(--color-border);
+  border-radius: var(--radius-l);
+  background: var(--color-surface);
+  box-shadow: var(--elevation-1);
 }
 
 .ribbon-toolbar {
   display: flex;
   align-items: stretch;
   min-height: var(--ribbon-height);
+  padding: var(--space-0) var(--space-1);
 }
 
 .ribbon-group {
+  position: relative;
   display: flex;
   /* Never shrink: an overflowing tab scrolls honestly instead of squeezing labels. */
   flex: none;
   flex-direction: column;
   padding: var(--space-2) var(--space-2) var(--space-1);
+}
+
+/* Inset dividers between groups (R17): a border, so forced-colors draws them too. */
+.ribbon-toolbar > .ribbon-group:not(:last-child)::after {
+  position: absolute;
+  top: var(--space-3);
+  right: var(--space-0);
+  bottom: var(--space-3);
   border-right: var(--border-width) solid var(--color-border);
+  content: '';
 }
 
 .ribbon-group-body {
@@ -495,6 +632,8 @@ body {
   margin-top: var(--space-1);
   color: var(--color-text-muted);
   font-size: var(--font-size-xs);
+  font-weight: var(--font-weight-semibold);
+  letter-spacing: var(--letter-spacing-label);
   text-align: center;
   white-space: nowrap;
 }
@@ -510,20 +649,44 @@ body {
   font: inherit;
   font-size: var(--font-size-s);
   cursor: pointer;
+  transition:
+    background-color var(--duration-fast) var(--ease-out),
+    color var(--duration-fast) var(--ease-out);
 }
 
 .ribbon-button:hover:not([aria-disabled='true']) {
   background: var(--color-hover);
 }
 
-.ribbon-button[aria-pressed='true'] {
-  background: var(--color-selected);
-  border-color: var(--color-accent);
+.ribbon-button:active:not([aria-disabled='true']) {
+  background: var(--color-pressed);
 }
 
+/* A pressed toggle (R4): a borderless soft brand tint with brand-coloured text and icon,
+   and the Filled icon (ADR-010), so the state never rests on the tint alone. */
+.ribbon-button[aria-pressed='true'] {
+  background: var(--color-selected);
+  color: var(--color-selected-text);
+}
+
+.ribbon-button[aria-pressed='true']:hover:not([aria-disabled='true']) {
+  background: var(--color-selected-hover);
+}
+
+.ribbon-button[aria-pressed='true'] .ribbon-icon {
+  color: var(--color-selected-text);
+}
+
+/* Disabled (R7, Q3): visible but calm. Greyed text and icon, no tint, no hover; a pressed
+   toggle that is disabled keeps only a neutral tint. */
 .ribbon-button[aria-disabled='true'] {
   color: var(--color-text-disabled);
   cursor: default;
+}
+
+.ribbon-button[aria-disabled='true'][aria-pressed='true'] {
+  background: var(--color-hover);
+  color: var(--color-text-disabled);
 }
 
 .ribbon-button--large {
@@ -564,6 +727,7 @@ body {
    name (on two lines if need be) and an arrow; the menu lists the group's commands. */
 .ribbon-group-menu {
   flex-direction: column;
+  align-items: center;
   justify-content: flex-start;
   gap: var(--space-1);
   min-width: var(--button-large-width);
@@ -584,10 +748,12 @@ body {
   height: var(--icon-size-m);
 }
 
+/* Every ribbon arrow (folded groups and split buttons) is the same chevron, in the icon
+   colour, centred on its part (M10-04). */
 .ribbon-group-menu-chevron {
   flex: none;
-  width: var(--icon-size-xs);
-  height: var(--icon-size-xs);
+  width: var(--split-arrow-width);
+  height: var(--split-arrow-width);
   color: var(--color-icon);
 }
 
@@ -641,15 +807,28 @@ body {
   width: var(--split-arrow-width);
   padding: var(--space-0);
   border: none;
-  border-radius: var(--radius-s) var(--radius-m) var(--radius-m) var(--radius-s);
+  border-radius: var(--space-0) var(--radius-m) var(--radius-m) var(--space-0);
   background: transparent;
   color: var(--color-icon);
   cursor: pointer;
+  transition: background-color var(--duration-fast) var(--ease-out);
 }
 
 .ribbon-split-arrow:hover:not([aria-disabled='true']),
 .ribbon-split-arrow[data-state='open'] {
   background: var(--color-hover);
+}
+
+/* A pressed tool's arrow joins its tint, so the split button reads as one pressed unit. */
+.ribbon-split:has(> .ribbon-button[aria-pressed='true']:not([aria-disabled='true']))
+  > .ribbon-split-arrow {
+  background: var(--color-selected);
+  color: var(--color-selected-text);
+}
+
+.ribbon-split:has(> .ribbon-button[aria-pressed='true']:not([aria-disabled='true']))
+  > .ribbon-split-arrow:hover {
+  background: var(--color-selected-hover);
 }
 
 .ribbon-split-arrow[aria-disabled='true'] {
@@ -661,6 +840,18 @@ body {
   flex: none;
   width: var(--split-arrow-width);
   height: var(--split-arrow-width);
+}
+
+/* High contrast: a pressed toggle keeps the system's Highlight pair (the tokens map the
+   tint and its text to it); the browser would otherwise drop the tint. */
+@media (forced-colors: active) {
+  .ribbon-button[aria-pressed='true']:not([aria-disabled='true']),
+  .ribbon-split:has(> .ribbon-button[aria-pressed='true']:not([aria-disabled='true']))
+    > .ribbon-split-arrow,
+  .top-bar-button[aria-pressed='true'],
+  .left-rail-icons .ui-button[aria-pressed='true'] {
+    forced-color-adjust: none;
+  }
 }
 
 /* The style palette (M6-07): swatches drawn on paper white, seven to a row. */

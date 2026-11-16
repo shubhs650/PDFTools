@@ -196,8 +196,10 @@ test('the page menu’s Paste puts a small icon at its own size where you clicke
   // 64 × 32 px at 96 dpi = 48 × 24 pt, never enlarged; centred at the pointer.
   expect(s.rect.size.width).toBeCloseTo(48, 1);
   expect(s.rect.size.height).toBeCloseTo(24, 1);
-  expect(centre(s).x).toBeCloseTo(150, 0);
-  expect(centre(s).y).toBeCloseTo(200, 0);
+  // The click lands on whole CSS pixels, and at Fit Page one pixel is more than a point
+  // (about 1.3 pt at 1280 × 800), so the centre is within a point of the target.
+  expect(Math.abs(centre(s).x - 150)).toBeLessThanOrEqual(1);
+  expect(Math.abs(centre(s).y - 200)).toBeLessThanOrEqual(1);
   await expect.poll(() => cap(page, 'annotate', 'selected', id)).toEqual([s.id]);
   if (SHOTS) {
     await page.waitForTimeout(400);

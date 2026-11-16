@@ -1,6 +1,6 @@
 import { ChevronDown20Regular } from '@fluentui/react-icons/svg/chevron-down';
 import { ChevronUp20Regular } from '@fluentui/react-icons/svg/chevron-up';
-import { useEffect, useMemo, useRef, useState, type KeyboardEvent } from 'react';
+import { useEffect, useLayoutEffect, useMemo, useRef, useState, type KeyboardEvent } from 'react';
 import { useTranslation } from 'react-i18next';
 import { IconButton } from '../../ui/components';
 import { tabLabelKey } from '../commandLabels';
@@ -31,7 +31,32 @@ export function Ribbon({ onOpenBackstage, focusDocument }: RibbonProps) {
   const [tabIndex, setTabIndex] = useState(0);
   const collapsed = useApp((s) => s.ribbonCollapsed);
   const tabRefs = useRef<(HTMLButtonElement | null)[]>([]);
+  const indicator = useRef<HTMLSpanElement>(null);
   const active = layout.tabs[tabIndex];
+  // The active tab's short bar (M10-04, D-47) sits centred under its tab and slides to the
+  // next one (a transform, on the compositor; instant with reduced motion). Tab widths
+  // change with the font and the language, so it follows their sizes too.
+  useLayoutEffect(() => {
+    const bar = indicator.current;
+    if (!bar) return;
+    const place = (): void => {
+      const tab = tabRefs.current[tabIndex];
+      if (!tab) return;
+      const x = tab.offsetLeft + (tab.offsetWidth - bar.offsetWidth) / 2;
+      bar.style.transform = `translateX(${String(Math.round(x))}px)`;
+    };
+    place();
+    // Only moves between tabs animate, never the first placement.
+    const raf = requestAnimationFrame(() => {
+      bar.dataset['ready'] = '';
+    });
+    const ro = new ResizeObserver(place);
+    for (const el of tabRefs.current) if (el) ro.observe(el);
+    return () => {
+      cancelAnimationFrame(raf);
+      ro.disconnect();
+    };
+  }, [tabIndex]);
   // Pages show tab-specific layers (scale viewports on Measure, M3-17).
   useEffect(() => {
     if (active) appStore.getState().setRibbonTab(active.tab);
@@ -70,31 +95,36 @@ export function Ribbon({ onOpenBackstage, focusDocument }: RibbonProps) {
         >
           {t('ribbon.tab.file')}
         </button>
-        <div role="tablist" aria-label={t('ribbon.tabs')} className="ribbon-tablist">
-          {layout.tabs.map((tab, i) => (
-            <button
-              key={tab.tab}
-              ref={(el) => {
-                tabRefs.current[i] = el;
-              }}
-              type="button"
-              role="tab"
-              id={`ribbon-tab-${tab.tab}`}
-              aria-selected={i === tabIndex}
-              aria-controls={PANEL_ID}
-              tabIndex={i === tabIndex ? 0 : -1}
-              className="ribbon-tab ui-focusable"
-              onClick={() => {
-                setTabIndex(i);
-                if (collapsed) appStore.getState().toggleRibbon();
-              }}
-              onKeyDown={(e) => {
-                onTabKey(e, i);
-              }}
-            >
-              {t(tabLabelKey(tab.tab))}
-            </button>
-          ))}
+        <div className="ribbon-tablist-wrap">
+          <div role="tablist" aria-label={t('ribbon.tabs')} className="ribbon-tablist">
+            {layout.tabs.map((tab, i) => (
+              <button
+                key={tab.tab}
+                ref={(el) => {
+                  tabRefs.current[i] = el;
+                }}
+                type="button"
+                role="tab"
+                id={`ribbon-tab-${tab.tab}`}
+                aria-selected={i === tabIndex}
+                aria-controls={PANEL_ID}
+                tabIndex={i === tabIndex ? 0 : -1}
+                className="ribbon-tab ui-focusable"
+                // A hidden semibold copy reserves the label's width (app.css, M10-04).
+                data-label={t(tabLabelKey(tab.tab))}
+                onClick={() => {
+                  setTabIndex(i);
+                  if (collapsed) appStore.getState().toggleRibbon();
+                }}
+                onKeyDown={(e) => {
+                  onTabKey(e, i);
+                }}
+              >
+                {t(tabLabelKey(tab.tab))}
+              </button>
+            ))}
+          </div>
+          <span ref={indicator} className="ribbon-tab-indicator" aria-hidden="true" />
         </div>
         <span className="ribbon-tabs-end">
           <TopBarActions />
