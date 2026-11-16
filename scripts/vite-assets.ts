@@ -80,7 +80,10 @@ export const BUILT_WITH_MODULE = 'virtual:built-with';
  * every package and its license text in the app without a network call (rule 4).
  */
 export function thirdPartyNotices(): Plugin {
-  const make = (): string => renderNotices(collectNotices(root));
+  // A UTF-8 byte order mark: Cloudflare serves .txt as `text/plain` with no
+  // charset, and without it the browser shows "—" and other non-ASCII text as
+  // windows-1252 mojibake when the notices open in a tab (M10-01).
+  const make = (): string => `\uFEFF${renderNotices(collectNotices(root))}`;
   const resolved = (id: string): string => `\0${id}`;
   return {
     name: 'pdftools-third-party-notices',

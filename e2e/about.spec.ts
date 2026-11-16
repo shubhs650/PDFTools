@@ -155,6 +155,8 @@ test(
       expect(new URL(tab.url()).pathname).toBe('/third-party-notices.txt');
       const text = await tab.evaluate(() => document.body.innerText);
       expect(text.startsWith(NOTICES_HEAD)).toBe(true);
+      // Served as `text/plain` without a charset, as on Cloudflare: the BOM makes it UTF-8.
+      expect(await tab.evaluate(() => document.characterSet)).toBe('UTF-8');
       expect(text).toContain('@embedpdf/pdfium');
       // Not the app: no ribbon, no app title.
       expect(await tab.title()).not.toBe('Triya PDF');

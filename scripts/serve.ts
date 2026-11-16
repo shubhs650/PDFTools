@@ -38,7 +38,8 @@ const MIME: Record<string, string> = {
   '.png': 'image/png',
   '.svg': 'image/svg+xml',
   '.ico': 'image/x-icon',
-  '.txt': 'text/plain; charset=utf-8',
+  // As Cloudflare serves it: no charset (the notices carry a UTF-8 BOM, M10-01).
+  '.txt': 'text/plain',
 };
 
 /** Resolves a URL path inside `base`; never escapes it. */

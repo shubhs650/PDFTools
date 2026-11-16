@@ -134,7 +134,13 @@ export function Backstage({ open, section: initial, onOpenChange }: BackstagePro
             </ul>
           </nav>
           {section ? (
-            <section className="backstage-content" aria-labelledby={HEADING_ID}>
+            <section
+              className="backstage-content ui-focusable"
+              aria-labelledby={HEADING_ID}
+              // The content scrolls on its own (M10-01): keyboard users scroll it with focus on it.
+              // eslint-disable-next-line jsx-a11y/no-noninteractive-tabindex -- a scrollable region is focusable
+              tabIndex={0}
+            >
               <h2 id={HEADING_ID} className="backstage-heading">
                 {t(commandLabelKey(section.id))}
               </h2>

@@ -28,7 +28,10 @@ interop is in the M6 pack (CHECKLIST §M6 R1–R4). Rev 0 (M0–M4) is complete 
   (`licenseData()` in `scripts/notices.ts`, each distinct text once) is the lazily imported chunk
   `licenseData-*.js` (~296 KB) from `virtual:open-source-licenses`, in the background precache:
   no network call (rule 4) and the core is unchanged. The `.txt` link stays, plus "Download all
-  notices (.txt)". The backstage now scrolls its content (it was clipped below the window).
+  notices (.txt)". The notices file now starts with a UTF-8 BOM: Cloudflare serves `.txt` as
+  `text/plain` with no charset, so the tab showed "â€”" mojibake (`scripts/serve.ts` now serves
+  `.txt` the same way, so e2e catches it). The backstage content now scrolls (it was clipped
+  below the window) and is focusable, as a scrollable region must be.
   `package.json` version is now `0.10.0-beta` (it was `0.0.0`). "What's new" (O6) is a separate
   later task: a draft of its data is in the project's shared folder (`m10-01/whats-new-draft/`).
   Tests: unit `tests/about/about.test.ts` (navigation routes, precache split, license data covers
