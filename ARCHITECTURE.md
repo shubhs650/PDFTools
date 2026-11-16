@@ -1,7 +1,7 @@
-# Triya PDF — Architecture & Product Specification (Rev 0.14)
+# Triya PDF — Architecture & Product Specification (Rev 0.16)
 
 **App:** Triya PDF (formerly PDFTools, D-41) · **URL:** `pdf-tools.openengtools.com` · **Platform:** Open Engineering Tools (OET)
-**Status:** Approved for implementation · **Last updated:** 07-Nov-2026 (Rev 0.14)
+**Status:** Approved for implementation · **Last updated:** 16-Nov-2026 (Rev 0.16)
 **Companion file:** `CLAUDE.md` (standing rules for the coding agent — read it first)
 
 > This document is the single source of truth. Where code and this document disagree, this document wins until it is deliberately amended. Decisions are numbered (D-xx) so commits, issues and ADRs can reference them.
@@ -21,6 +21,10 @@
 > **Rev 0.12 amendment** — [ADR-024](docs/adr/024-freetext-text-and-border-colours.md) (owner-approved 2026-11-05): separate **text and border colours** for text boxes and callouts, stored as Acrobat does (`/DA` border, `/DS` text) and drawn by recolouring the text in PDFium's own appearance — the second exception to "no custom appearance streams" (§7.1).
 
 > **Rev 0.14 amendment** — [ADR-026](docs/adr/026-m9-help-page.md) (owner-approved 2026-11-07): **M9 — Help in its own window** with generated screenshots, offline (D-46, §8, §8.2, §9, §13 M9); the ~60 MB install size is a reference, not a limit (§9).
+
+> **Rev 0.16 amendment** — [ADR-027](docs/adr/027-m10-visual-refresh.md) amendment (owner-approved 2026-11-16, all optional items accepted): one-row header, bundled Inter font, accent colour and density choices (D-47), Create Blank PDF (D-49) (§2, §3.2, §7.8, §8, §10.3).
+
+> **Rev 0.15 amendment** — [ADR-027](docs/adr/027-m10-visual-refresh.md) (owner-approved 2026-11-16): **M10 — visual refresh** within the existing layout: design language v2 with motion rules (D-47), an in-app About with open-source licenses and the service worker serving non-app files as files (D-48) (§2, §8, §9, §13 M10).
 
 > **Rev 0.13 amendment** — [ADR-025](docs/adr/025-m8-lossless-json-comments.md) (owner-approved 2026-11-05): **M8 — lossless JSON comment export and import** — JSON v2 carries the comments' own PDF objects and imports them by object copy; JSON v1 still imports; XFDF/FDF deferred (§7.1, §7.6, §13 M8).
 
@@ -111,6 +115,9 @@ Tablet/phone UI · Safari parity · PDF text/content editing · form design beyo
 | D-44 | **Sticky note popup** (ADR-023): a multi-line popup window on the page (author, date, menu, status, lock, Reply); `/Popup` saved by our object layer if spike S23 passes |
 | D-45 | **Paste an image** (ADR-023): an image on the system clipboard becomes an Image Stamp scaled to fit the page; needs annotate |
 | D-46 | **Help window** (ADR-026): Help is a separate same-origin page `/help` opened in its own window (Help → Help, F1, "?" buttons); task-oriented topics with screenshots generated from the app, search on Enter, print, deep links; offline; the floating Help dialog is removed |
+| D-47 | **Design language v2** (ADR-027): visual refresh inside the D-01 layout: slate neutrals and a blue brand, 6/8/12 px radii, layered elevation, styled native controls, pressed toggles as brand tint plus Filled icon, focus ring with halo; **motion** 120–240 ms on opacity/transform only, never in the document view, off under reduced motion; every pair tested at WCAG AA; Fluent icons kept. Also (Rev 0.16): a **one-row header** (mark, Quick Access, File, tabs, top-bar buttons), a bundled **Inter** UI font, **accent colour** (Blue, Teal, Indigo, Graphite) and **density** (Comfortable, Compact) choices stored on the device |
+| D-49 | **Create Blank PDF** (ADR-027): File → New builds a document of a chosen page size, orientation and page count in the Work worker and opens it as an unsaved tab (first save is Save As) |
+| D-48 | **About and open-source licenses** (ADR-027): About shows version, build, offline status, Copy version info (no document data), links, the main components, and an in-app searchable list of every runtime package's license (a lazy build-time chunk; the `.txt` stays for download); the service worker returns `index.html` only for app-route navigations |
 | D-34 | **OCR** (Rev 1 item 1, ADR-020): Tesseract WASM core in its own worker, five languages (English precached, the rest on first use), invisible text layer written by our object layer with a glyphless font, pages with text skipped unless asked; needs the modify permission |
 
 ---
@@ -185,6 +192,7 @@ Rules:
 | OCR language data | `@tesseract.js-data/{eng,chi_sim,hin,spa,fra}`, **self-hosted** under `/ocr/` | MIT (packages); data Apache-2.0 |
 | Context menus | `@radix-ui/react-context-menu` (ADR-021) | MIT |
 | Form field creation · visual signatures | `@embedpdf/plugin-form`, `@embedpdf/plugin-signature` at the pinned EmbedPDF version (ADR-021) | MIT (`plugin-form` declares no license in `package.json`; its `LICENSE` file is MIT — reviewed entry in `scripts/license-exceptions.json`, ADR-022) |
+| UI font | Inter (variable WOFF2, Latin subsets), **self-hosted**, core precache; system fonts as fallback (ADR-027) | OFL-1.1 |
 | Handwriting fonts for typed signatures | `@embedpdf/default-signature-fonts`, **exact pin** (prerelease), self-hosted and precached (ADR-022) | Apache-2.0 AND OFL-1.1 |
 | License gate | own script `scripts/check-licenses.ts` + `scripts/license-policy.ts` in CI | MIT (ours) |
 
@@ -339,7 +347,7 @@ PDF Oxide runs in the Work worker, lazy-loaded (non-core) from a self-hosted WAS
 - Test fixture of record: a public pipe dimension chart style table (side-by-side tables, merged headers, multi-row cells, dual units).
 
 ### 7.8 Page operations
-Rotate, delete, insert (blank / from file), extract to new PDF, merge files, reorder via thumbnails drag. Page ops that rewrite content streams mark the doc as "optimize recommended".
+Rotate, delete, insert (blank / from file), extract to new PDF, merge files, reorder via thumbnails drag. **Create Blank PDF** (File → New, D-49): a new document of a chosen page size, orientation and page count, built in the Work worker and opened as an unsaved tab. Page ops that rewrite content streams mark the doc as "optimize recommended".
 
 ### 7.9 Redaction (D-31)
 0. Engine: EmbedPDF redaction (`plugin-redaction`; engine `redactTextInRects` / `applyRedaction` / `applyAllRedactions`) — no custom content-stream rewriter; the geometry of path objects crossing a redacted rectangle may be re-cut through PDFium's page-object API (ADR-001 B8, ADR-017 decision 3). Steps 2–5 wrap it.
@@ -377,12 +385,12 @@ New (from the current view), rename (F2), delete / delete but keep children / de
 
 ## 8. UI specification
 
-- Ribbon tabs (Rev 0) — this list is authoritative; `docs/ui-reference/` images are layout-only, and out-of-scope commands are omitted rather than shown disabled (ADR-001 B6): **File** (backstage: open, recent, save, save as, save optimized, print, properties, settings, about/privacy), **Home**, **View**, **Comment**, **Form** (ADR-021), **Measure**, **Organize**, **Convert**, **Protect** (redact, security info, signatures), **Help**.
-- **Top bar** (D-35, ADR-021): product mark and "Triya PDF" at the left (D-41); a **light/dark theme** toggle (D-42), **OpenEngTools** (standard Home icon), **Report an issue** (GitHub, new tab, version/browser/OS only) and **Full screen** (the whole app; Esc leaves) at the right.
+- Ribbon tabs (Rev 0) — this list is authoritative; `docs/ui-reference/` images are layout-only, and out-of-scope commands are omitted rather than shown disabled (ADR-001 B6): **File** (backstage: open, recent, save, save as, save optimized, print, properties, settings, about (version, open-source licenses, D-48)/privacy), **Home**, **View**, **Comment**, **Form** (ADR-021), **Measure**, **Organize**, **Convert**, **Protect** (redact, security info, signatures), **Help**.
+- **Top bar** (D-35, ADR-021): **one row** (D-47) holding the product mark and "Triya PDF" at the left (D-41), Quick Access, File and the ribbon tabs; a **light/dark theme** toggle (D-42), **OpenEngTools** (standard Home icon), **Report an issue** (GitHub, new tab, version/browser/OS only) and **Full screen** (the whole app; Esc leaves) at the right.
 - Large (32 px) and small (16/20 px) buttons, groups with labels, split buttons and dropdowns, collapsible ribbon, keyboard access (Alt key tips — nice-to-have).
 - **Adaptive ribbon** (D-36, ADR-021): when a tab does not fit, groups step down by priority — full labels → icons with short labels → icon-only grid → one group button opening a dropdown — so every tab fits 1280 px and every command keeps its accessible name and keyboard path. Home's rotate buttons rotate the **view**; Organize rotates pages.
 - Icons: Fluent System Icons **Regular** style (Filled for active/toggled states), colored via design tokens (`currentColor`); small buttons use 20 px glyphs, large (32 px) buttons use the native 32 px glyph or the 28/24 px glyph scaled up. The 23 missing icons listed in [ADR-010](docs/adr/010-s6-fluent-icons.md) and [S6-icon-map.md](docs/plan/S6-icon-map.md) (incl. cloud, calibrate, scale viewport, CRS export, stamp; express extract uses Fluent `TableLightning`) are drawn in the same grid/line style in `/src/ui/icons`. Fluent icons are imported per icon by path, via one registry (ADR-010).
-- Design tokens (color, spacing, type, radius, elevation) as CSS variables; light theme default; **dark theme** through the top-bar toggle (D-42, ADR-023), stored on the device; PDF pages stay white in both; no literal colours outside the tokens.
+- Design tokens (color, spacing, type, radius, elevation, **motion**) as CSS variables (design language v2, D-47: motion only on opacity/transform, never in the document view, off under `prefers-reduced-motion`); light theme default; **dark theme** through the top-bar toggle (D-42, ADR-023), stored on the device; PDF pages stay white in both; no literal colours outside the tokens.
 - Layout minimum 1280 px wide.
 - Start screen: open file, drop zone, recent files (clearable).
 - **Do not copy PDF-XChange artwork or proprietary visual assets.** Layout conventions only.
@@ -398,6 +406,7 @@ No user-visible string literals in components — all via i18n keys in `en.json`
 ## 9. Offline, PWA & updates (D-17, D-18)
 
 - Service worker precaches the **core** (shell, UI, Render worker, PDFium WASM, base fonts) first; after first render, background-precaches the rest (Work worker, PDF Oxide WASM, CJK/extra fonts, ExcelJS, docx, the OCR worker with its WASM and the English data). Status bar shows progress then "✓ Ready offline". **On demand** (ADR-020): the other OCR languages are never precached (the install budget) but cached by the service worker when first fetched.
+- The service worker answers navigations to app routes with `index.html` (and `/help` with `help.html`); other same-origin files, such as the third-party notices, are served as themselves, from the cache when offline (D-48).
 - A feature used before its module is cached triggers a priority fetch with a spinner.
 - Fonts bundled; **EmbedPDF CDN font fallback disabled** (`fontFallback: null` or local config with absolute same-origin URLs — never `undefined`, ADR-003). Fallback fonts: Regular weight only; Latin, Arabic and Hebrew in core, SC/TC/JP/KR in the background precache (ADR-003). No runtime CDN anything. EmbedPDF defaults both `pdfium.wasm` and `@embedpdf/fonts-*` to `cdn.jsdelivr.net`; both must be overridden with self-hosted copies (verified in M0-S8).
 - Updates: new SW installs in the background; app shows "Update ready" and activates only on user click or next launch; never while documents are open.
@@ -426,7 +435,7 @@ Analytics uses **Cloudflare's server-side request analytics only**. No beacon sc
 - The top bar's **Report an issue** opens the repository's GitHub new-issue page in a new tab, prefilled with app version, commit, browser and OS only; the app itself sends nothing (D-35, ADR-021).
 
 ### 10.3 Local data
-IndexedDB: profile, schemes, settings, recent-file handles, table templates, comment tool defaults and styles, saved visual signatures (ADR-021); the theme choice (ADR-023, stored before first paint). OPFS: recovery snapshots. Privacy page lists all of it; Settings → "Clear all local data".
+IndexedDB: profile, schemes, settings, recent-file handles, table templates, comment tool defaults and styles, saved visual signatures (ADR-021); the theme, accent colour and density choices (ADR-023, ADR-027, stored before first paint). OPFS: recovery snapshots. Privacy page lists all of it; Settings → "Clear all local data".
 
 ---
 
@@ -502,6 +511,9 @@ Comment export and import keep every property: JSON v2 with the comments' own PD
 
 ### M9 — Help window (ADR-026)
 Help becomes a separate page in its own window (`/help`): rewritten step-by-step topics, about 45 screenshots generated from the app by a Playwright script, search, print, deep links and "?" buttons, offline; the floating Help dialog is removed (`docs/plan/M9.md`).
+
+### M10 — Visual refresh (ADR-027)
+The "solid tool but basic UI" feedback (2026-11-16): design language v2 inside the existing layout (tokens, styled controls, ribbon, start screen, panes, dialogs, motion), the About page with in-app open-source licenses and the notices link fixed; command search, icon accents, loading placeholders and "What's new"; Help screenshots regenerated (`docs/plan/M10.md`).
 
 ---
 

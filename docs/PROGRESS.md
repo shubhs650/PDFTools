@@ -39,6 +39,23 @@ interop is in the M6 pack (CHECKLIST §M6 R1–R4). Rev 0 (M0–M4) is complete 
   and the download work offline). No long task opening About or searching. Release note
   [beta-m10](release-notes/beta-m10.md) (started; later M10 tasks add to it).
 
+- **Session 57 — M10 plan: modern look and feel, About and open-source notices (ADR-027
+  Proposed, D-47, D-48).** The owner shared the engineers' verdict ("solid tool but basic UI")
+  and an external UI review, and asked for a polished UI without changing the layout, a better
+  About and a working third-party notices link. Every review claim was checked against the
+  production build (light and dark, 1366 px): primary-button icons are grey on blue (a CSS
+  inheritance bug), controls are native, toggles boxy, the start screen bare, no animation; the
+  review is wrong about the pane width, the status bar and its own dark contrast values, and its
+  Lucide icons conflict with rule 15. The notices link opens a second copy of the app because the
+  service worker answers every navigation with `index.html`. Plan:
+  [docs/plan/M10.md](plan/M10.md) (M10-01 … M10-09, optional O1–O9, questions Q1–Q6);
+  **Accepted** by the owner 2026-11-16 with every recommended answer and the recommended
+  optional items; the same day the owner accepted **all nine** optional items O1–O9 (one-row
+  header, Create Blank PDF, accent colour, Inter, density too): ADR-027 amended (D-47 extended,
+  D-49 Create Blank PDF), ARCHITECTURE.md Rev 0.16, and the plan's "Order of work" lists all 17
+  task PRs. **Next:** M10-01 (About and notices),
+  one thread and PR per task.
+
 - **Session 56 — M9 Help in its own window, with screenshots (ADR-026 D-46).** M9-01 … M9-05 in
   one PR. **Window:** `help.html` + `src/help/` (a Vite page of its own, served at `/help`):
   contents by chapter, topic view with numbered steps, tips, screenshots and a full-size
