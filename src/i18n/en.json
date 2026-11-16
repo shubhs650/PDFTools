@@ -596,6 +596,10 @@
         "name": "Fluent UI System Icons",
         "role": "Icons"
       },
+      "inter": {
+        "name": "Inter",
+        "role": "The interface font"
+      },
       "noto": {
         "name": "Noto fonts",
         "role": "Fonts for text a PDF does not embed"

@@ -44,6 +44,11 @@ export const BUILT_WITH: readonly BuiltWithItem[] = [
     role: msg('about.builtWith.fluentIcons.role'),
   },
   {
+    pkg: '@fontsource-variable/inter',
+    name: msg('about.builtWith.inter.name'),
+    role: msg('about.builtWith.inter.role'),
+  },
+  {
     pkg: '@embedpdf/fonts-latin',
     name: msg('about.builtWith.noto.name'),
     role: msg('about.builtWith.noto.role'),

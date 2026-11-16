@@ -43,6 +43,7 @@ export type ModuleId =
   | 'coreFonts'
   | 'cjkFonts'
   | 'signatureFonts'
+  | 'uiFont'
   | 'help'
   | 'shell';
 
@@ -75,6 +76,8 @@ export const MODULES: readonly { id: ModuleId; label: string; test: RegExp }[] =
   { id: 'cjkFonts', label: 'CJK fonts (SC, TC, JP, KR)', test: /^fonts\/(sc|tc|jp|kr)\// },
   // Typed signatures (M6-13, ADR-022 d3): three handwriting fonts, background.
   { id: 'signatureFonts', label: 'Signature fonts (handwriting)', test: /^fonts\/sig-[\w-]+\// },
+  // M10 O8 (ADR-027 D-47): the UI font, Inter (Latin and Latin-extended, upright and italic), core.
+  { id: 'uiFont', label: 'UI font (Inter)', test: /^assets\/inter-[\w-]+\.woff2$/ },
   // M9 (ADR-026 D-46): the Help window's page, script, style and screenshots, background.
   {
     id: 'help',

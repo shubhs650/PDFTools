@@ -57,11 +57,15 @@ test(
 
     // Built with: the main components with their licenses.
     const components = about(page).getByTestId('about-components').getByRole('listitem');
-    await expect(components).toHaveCount(12);
+    await expect(components).toHaveCount(13);
     await expect(components.filter({ hasText: 'PDFium' })).toContainText(
       'BSD-3-Clause, Apache-2.0',
     );
     await expect(components.filter({ hasText: 'React' }).first()).toContainText(/MIT · version 19/);
+    // The bundled UI font (M10 O8).
+    await expect(components.filter({ hasText: 'The interface font' })).toContainText(
+      /OFL-1\.1 · version 5/,
+    );
 
     // Open-source licenses: every package, searchable on Enter, each expandable.
     const licenses = about(page).getByTestId('about-licenses');

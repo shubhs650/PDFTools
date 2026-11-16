@@ -10,6 +10,8 @@ describe('precache split (§9, ADR-003 decision 3)', () => {
     'icons/icon-192.png',
     'assets/index-Ab12.js',
     'assets/index-Cd34.css',
+    'assets/inter-latin-wght-normal-Dx4kXJAl.woff2',
+    'assets/inter-latin-ext-wght-italic-0pjOp8NU.woff2',
     'assets/render.worker-Ef56.js',
     'assets/storage.worker-Gh78.js',
     'assets/encoder.worker-Ij90.js',
@@ -41,13 +43,15 @@ describe('precache split (§9, ADR-003 decision 3)', () => {
   const { core, background, onDemand } = splitPrecache(entries);
   const urls = (l: { url: string }[]) => l.map((x) => x.url);
 
-  it('core: shell, UI, Render/storage/encoder workers, PDFium WASM, Latin/Arabic/Hebrew fonts', () => {
+  it('core: shell, UI and its Inter font, Render/storage/encoder workers, PDFium WASM, Latin/Arabic/Hebrew fonts', () => {
     expect(urls(core)).toEqual([
       'index.html',
       'manifest.webmanifest',
       'icons/icon-192.png',
       'assets/index-Ab12.js',
       'assets/index-Cd34.css',
+      'assets/inter-latin-wght-normal-Dx4kXJAl.woff2',
+      'assets/inter-latin-ext-wght-italic-0pjOp8NU.woff2',
       'assets/render.worker-Ef56.js',
       'assets/storage.worker-Gh78.js',
       'assets/encoder.worker-Ij90.js',
