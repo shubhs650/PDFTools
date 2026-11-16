@@ -77,7 +77,7 @@ export function FindBar() {
     <section className="find-bar" aria-label={t('find.barName')}>
       <input
         ref={input}
-        className="find-input"
+        className="ui-field-input ui-field-input--small find-input"
         type="search"
         aria-label={t('find.label')}
         placeholder={t('find.placeholder')}

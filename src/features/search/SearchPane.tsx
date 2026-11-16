@@ -112,7 +112,7 @@ export function SearchPane() {
           <input
             ref={input}
             data-pane-focus
-            className="find-input search-input"
+            className="ui-field-input search-input"
             type="search"
             aria-label={t('search.label')}
             placeholder={t('search.label')}
@@ -122,11 +122,10 @@ export function SearchPane() {
             }}
           />
           {status === 'searching' ? (
-            <Button label={t('find.stop')} size="small" onClick={cancelSearch} />
+            <Button label={t('find.stop')} onClick={cancelSearch} />
           ) : (
             <Button
               label={t('search.run')}
-              size="small"
               variant="primary"
               type="submit"
               disabled={!hasDocument || !query.trim()}

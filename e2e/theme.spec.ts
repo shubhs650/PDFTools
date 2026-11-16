@@ -437,7 +437,8 @@ test('forced-colors: the focus ring stays, the halo goes, brand surfaces keep th
   });
   expect(ring.outline).toBe('solid');
   expect(ring.width).toBe('2px');
-  expect(ring.shadow).toBe('none');
+  // No halo: none, or (on a filled button that keeps its colours, M10-03) a transparent one.
+  expect(ring.shadow).toMatch(/^(none|rgba\(0, 0, 0, 0\) .*)$/);
 
   // Filled brand surfaces keep the Highlight pair: the browser's text backplate hid the
   // File tab's label and the backstage items (a blank box) before M10-02.
