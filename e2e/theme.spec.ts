@@ -154,7 +154,10 @@ test('View → Dark Theme, Ctrl+Shift+D and Settings → Appearance switch the s
   // The shortcut is in the shortcut sheet and named in Help.
   await page.keyboard.press('Escape');
   await page.getByRole('tab', { name: 'Help' }).click();
-  await page.getByRole('button', { name: 'Keyboard Shortcuts' }).click();
+  await page
+    .getByRole('toolbar', { name: 'Help commands' })
+    .getByRole('button', { name: 'Keyboard Shortcuts' })
+    .click();
   const sheet = page.getByRole('dialog', { name: 'Keyboard shortcuts' });
   await expect(sheet.getByRole('row', { name: /Dark Theme/ })).toContainText('Ctrl+Shift+D');
 });

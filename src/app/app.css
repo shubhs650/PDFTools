@@ -1120,24 +1120,192 @@ body {
   padding: var(--space-0) var(--space-2);
 }
 
+/* ------------------------------------------------------------ start screen (M10-05) */
+
+/* A centred column: the drop card, quick actions, Recent files. Auto margins centre it
+   while it fits and let it scroll from the top when it doesn't. */
 .start-screen {
   display: flex;
   flex-direction: column;
   align-items: center;
-  justify-content: center;
-  gap: var(--space-4);
+  box-sizing: border-box;
   height: 100%;
+  overflow: auto;
+  padding: var(--space-7) var(--space-6);
   background: var(--color-bg);
-  color: var(--color-text-muted);
+  color: var(--color-text);
 }
 
-.start-screen h2 {
-  margin: var(--space-0);
-  color: var(--color-text);
+.start-column {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+  width: min(100%, var(--start-column-width));
+  margin-block: auto;
+}
+
+.start-drop {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--space-3);
+  padding: var(--space-6) var(--space-6) var(--space-5);
+  border: var(--focus-width) dashed var(--color-drop-border);
+  border-radius: var(--radius-xl);
+  background: var(--color-surface);
+  text-align: center;
+  transition:
+    border-color var(--duration-normal) var(--ease-out),
+    background-color var(--duration-normal) var(--ease-out);
+}
+
+/* Files are being dragged over the window. */
+.start-drop[data-over] {
+  border-color: var(--color-accent);
+  background: var(--color-selected);
+}
+
+.start-drop h2 {
+  margin: var(--space-1) var(--space-0) var(--space-0);
   font-size: var(--font-size-xl);
   font-weight: var(--font-weight-semibold);
 }
 
+.start-hint {
+  max-width: 44ch;
+  margin: var(--space-0);
+  color: var(--color-text-muted);
+}
+
+.start-drop[data-over] .start-hint {
+  color: var(--color-selected-text);
+  font-weight: var(--font-weight-semibold);
+}
+
+.start-open {
+  margin-top: var(--space-3);
+}
+
+/* The shortcut inside the Open button, after a thin divider. */
+.start-open-keys {
+  margin-left: var(--space-2);
+  padding-left: var(--space-3);
+  border-left: var(--border-width) solid currentcolor;
+  font: inherit;
+  font-size: var(--font-size-s);
+}
+
+.start-privacy {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  margin: var(--space-2) var(--space-0) var(--space-0);
+  color: var(--color-text-muted);
+  font-size: var(--font-size-s);
+}
+
+/* An icon on a soft brand tile: the drop card's and each quick action's. */
+.start-badge {
+  display: inline-grid;
+  flex: none;
+  place-items: center;
+  width: var(--start-badge-size);
+  height: var(--start-badge-size);
+  border-radius: var(--radius-l);
+  background: var(--color-selected);
+  color: var(--color-selected-text);
+  transition: transform var(--duration-normal) var(--ease-out);
+}
+
+.start-badge--large {
+  width: var(--start-badge-size-l);
+  height: var(--start-badge-size-l);
+  border-radius: var(--radius-xl);
+}
+
+.start-drop[data-over] .start-badge {
+  background: var(--color-brand);
+  color: var(--color-text-on-brand);
+  transform: translateY(calc(-1 * var(--space-2)));
+}
+
+.start-actions {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(var(--start-action-min-width), 1fr));
+  gap: var(--space-3);
+  margin: var(--space-0);
+  padding: var(--space-0);
+  list-style: none;
+}
+
+.start-action {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  box-sizing: border-box;
+  width: 100%;
+  height: 100%;
+  padding: var(--space-4);
+  border: var(--border-width) solid var(--color-border);
+  border-radius: var(--radius-l);
+  background: var(--color-surface);
+  box-shadow: var(--elevation-1);
+  color: var(--color-text);
+  line-height: var(--line-height);
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+  transition:
+    border-color var(--duration-fast) var(--ease-out),
+    box-shadow var(--duration-fast) var(--ease-out);
+}
+
+.start-action:hover {
+  border-color: var(--color-border-strong);
+  box-shadow: var(--elevation-2);
+}
+
+.start-action:active {
+  background: var(--color-hover);
+}
+
+.start-action-text {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+  min-width: var(--space-0);
+}
+
+.start-action-label {
+  font-weight: var(--font-weight-semibold);
+}
+
+.start-action-detail {
+  color: var(--color-text-muted);
+  font-size: var(--font-size-s);
+}
+
+@media (forced-colors: active) {
+  /* The badges are frames around system-coloured icons; the drop card's highlight is its
+     border, a system colour. */
+  .start-badge,
+  .start-drop[data-over] .start-badge {
+    border: var(--border-width) solid CanvasText;
+    background: Canvas;
+    color: CanvasText;
+  }
+
+  .start-drop[data-over] {
+    border-color: Highlight;
+  }
+
+  .start-drop[data-over] .start-hint {
+    color: CanvasText;
+  }
+}
+
+/* While files are dragged over the window: a dashed frame lines it; with a document open,
+   a card in the middle says what a drop does (with none, the start screen's card does). */
 .drop-overlay {
   position: fixed;
   inset: var(--space-0);
@@ -1145,18 +1313,55 @@ body {
   display: flex;
   align-items: center;
   justify-content: center;
-  border: var(--focus-width) dashed var(--color-accent);
   background: var(--color-backdrop);
   pointer-events: none;
 }
 
-.drop-overlay-label {
-  padding: var(--space-5) var(--space-6);
-  border-radius: var(--radius-l);
+.drop-overlay::before {
+  position: absolute;
+  inset: var(--space-3);
+  border: var(--focus-width) dashed var(--color-accent);
+  border-radius: var(--radius-xl);
+  content: '';
+}
+
+.drop-overlay[data-start] {
+  background: transparent;
+}
+
+.drop-overlay-card {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--space-4);
+  padding: var(--space-6) var(--space-7);
+  border-radius: var(--radius-xl);
   background: var(--color-surface-raised);
   box-shadow: var(--elevation-3);
+  animation: drop-card-in var(--duration-normal) var(--ease-out);
+}
+
+@keyframes drop-card-in {
+  from {
+    opacity: 0;
+    transform: scale(0.96);
+  }
+}
+
+.drop-overlay-label {
   color: var(--color-text);
-  font-size: var(--font-size-xl);
+  font-size: var(--font-size-l);
+  font-weight: var(--font-weight-semibold);
+}
+
+@media (forced-colors: active) {
+  .drop-overlay::before {
+    border-color: Highlight;
+  }
+
+  .drop-overlay-card {
+    border: var(--border-width) solid CanvasText;
+  }
 }
 
 .viewport {
@@ -1357,21 +1562,33 @@ body {
   text-align: left;
 }
 
+/* On the start screen (M10-05): a card as wide as the column. */
+.recent--card {
+  box-sizing: border-box;
+  width: 100%;
+  padding: var(--space-4) var(--space-4) var(--space-3);
+  border: var(--border-width) solid var(--color-border);
+  border-radius: var(--radius-l);
+  background: var(--color-surface);
+  box-shadow: var(--elevation-1);
+}
+
 .recent-header {
   display: flex;
   align-items: center;
   justify-content: space-between;
   gap: var(--space-3);
+  min-height: var(--control-height-s);
 }
 
 .recent-header h3 {
   margin: var(--space-0);
-  font-size: var(--font-size-l);
+  font-size: var(--font-size-m);
   font-weight: var(--font-weight-semibold);
 }
 
 .recent-items {
-  margin: var(--space-3) var(--space-0) var(--space-0);
+  margin: var(--space-2) var(--space-0) var(--space-0);
   padding: var(--space-0);
   list-style: none;
 }
@@ -1382,14 +1599,18 @@ body {
   gap: var(--space-2);
 }
 
+.recent--card .recent-item + .recent-item {
+  border-top: var(--border-width) solid var(--color-border);
+}
+
 .recent-open {
   display: flex;
   flex: 1;
-  justify-content: space-between;
-  gap: var(--space-4);
+  align-items: center;
+  gap: var(--space-3);
   min-width: var(--space-0);
   min-height: var(--control-height-m);
-  padding: var(--space-0) var(--space-3);
+  padding: var(--space-1) var(--space-3);
   border: none;
   border-radius: var(--radius-m);
   background: transparent;
@@ -1397,10 +1618,23 @@ body {
   font: inherit;
   text-align: left;
   cursor: pointer;
+  transition: background-color var(--duration-fast) var(--ease-out);
 }
 
 .recent-open:hover {
   background: var(--color-hover);
+}
+
+.recent-icon {
+  flex: none;
+  color: var(--color-accent);
+}
+
+.recent-text {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  min-width: var(--space-0);
 }
 
 .recent-name {
@@ -1409,10 +1643,23 @@ body {
   white-space: nowrap;
 }
 
+.recent-size {
+  color: var(--color-text-muted);
+  font-size: var(--font-size-s);
+}
+
 .recent-when,
 .recent-empty {
   color: var(--color-text-muted);
   white-space: nowrap;
+}
+
+.recent-when {
+  font-size: var(--font-size-s);
+}
+
+.recent-empty {
+  margin: var(--space-3) var(--space-0) var(--space-2);
 }
 
 .recent-problem {

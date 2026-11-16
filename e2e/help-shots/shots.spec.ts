@@ -206,7 +206,7 @@ test('opening-files-1: the start screen', async ({ page }) => {
   await expect(screen).toBeVisible();
   await shoot(page, 'opening-files-1', {
     clip: [
-      screen.getByRole('heading', { name: 'No document open' }),
+      screen.getByRole('heading', { name: 'Open a PDF to get started' }),
       screen.getByRole('heading', { name: 'Recent files' }),
     ],
     pad: 60,

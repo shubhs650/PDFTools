@@ -434,9 +434,19 @@
     },
     "overflow": "All open documents",
     "start": {
-      "title": "No document open",
-      "hint": "Open a PDF or drop files here.",
-      "open": "Open…"
+      "title": "Open a PDF to get started",
+      "hint": "Drop PDF files anywhere in this window, or choose them from your computer.",
+      "open": "Open…",
+      "privacy": "Your files stay on this device. Nothing is uploaded.",
+      "actions": {
+        "title": "Quick actions",
+        "merge": "Merge files",
+        "mergeDetail": "Combine PDFs into one",
+        "help": "Getting started",
+        "helpDetail": "A short tour of Help",
+        "shortcuts": "Keyboard shortcuts",
+        "shortcutsDetail": "Every key, on one sheet"
+      }
     },
     "ok": "OK"
   },

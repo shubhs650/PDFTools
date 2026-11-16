@@ -96,7 +96,10 @@ test('shortcuts do not fire while typing in a text field (Esc and file chords li
 test('the shortcut sheet opens from Help and lists every binding', async ({ page }) => {
   await page.goto('/');
   await page.getByRole('tab', { name: 'Help' }).click();
-  await page.getByRole('button', { name: 'Keyboard Shortcuts' }).click();
+  await page
+    .getByRole('toolbar', { name: 'Help commands' })
+    .getByRole('button', { name: 'Keyboard Shortcuts' })
+    .click();
   const dialog = page.getByRole('dialog', { name: 'Keyboard shortcuts' });
   await expect(dialog).toBeVisible();
   const rows = dialog.getByTestId('shortcut-sheet').locator('tbody tr');
