@@ -7,12 +7,18 @@
 // sent; when the commit ends, a comment whose object is no longer the one sent
 // is marked changed again (the plugin's own patch or move, so its commit loop
 // writes it next), and the save waits for that (annotationsSettled).
+// A comment deleted meanwhile (an undo straight after drawing it, on a slow
+// machine) is the same story: the plugin's commit marks the batch done and
+// clears "pending changes", so the delete waited for the next edit and the
+// mark stayed in the file until then (the redact-marks e2e flake). Its delete
+// is dispatched again, which makes the commit loop run once more.
 import type { PluginRegistry } from '@embedpdf/core';
 import type { PdfAnnotationObject } from '@embedpdf/models';
 
 const COMMIT = 'ANNOTATION/COMMIT';
 const PATCH = 'ANNOTATION/PATCH_ANNOTATION';
 const MOVE = 'ANNOTATION/MOVE_ANNOTATION';
+const DELETE = 'ANNOTATION/DELETE_ANNOTATION';
 
 type CommitState = 'new' | 'dirty' | 'moved' | 'deleted' | 'synced' | 'ignored';
 
@@ -40,18 +46,23 @@ interface CommitInternals {
 /**
  * The comments to mark changed again after a commit: those sent whose object
  * changed since (by identity: the plugin replaces it on every change), with
- * the kind of change still pending. A comment deleted meanwhile is the
- * plugin's own business ("deleted" survives the commit).
+ * the kind of change still pending, and those deleted since. The plugin keeps
+ * "deleted" through the commit but no longer counts it as pending, so nothing
+ * would write the delete until the next change.
  */
 export function changedDuringCommit(
   sent: ReadonlyMap<string, PdfAnnotationObject>,
   now: Readonly<Record<string, Tracked | undefined>>,
-): { uid: string; pageIndex: number; kind: 'move' | 'patch' }[] {
-  const out: { uid: string; pageIndex: number; kind: 'move' | 'patch' }[] = [];
+): { uid: string; pageIndex: number; kind: 'move' | 'patch' | 'delete' }[] {
+  const out: { uid: string; pageIndex: number; kind: 'move' | 'patch' | 'delete' }[] = [];
   for (const [uid, obj] of sent) {
     const t = now[uid];
-    if (!t || t.object === obj || t.commitState === 'deleted' || t.commitState === 'synced')
+    if (!t || t.commitState === 'synced') continue;
+    if (t.commitState === 'deleted') {
+      out.push({ uid, pageIndex: t.object.pageIndex, kind: 'delete' });
       continue;
+    }
+    if (t.object === obj) continue;
     // Moved since a move: a move again (no new appearance); anything else a full update.
     out.push({
       uid,
@@ -98,8 +109,11 @@ export function installCommitGuard(registry: PluginRegistry): () => void {
     // Synced now; the same (empty) change makes each one pending again, as it really is.
     for (const { uid, pageIndex, kind } of again)
       dispatch({
-        type: kind === 'move' ? MOVE : PATCH,
-        payload: { documentId, pageIndex, id: uid, patch: {} },
+        type: kind === 'move' ? MOVE : kind === 'delete' ? DELETE : PATCH,
+        payload:
+          kind === 'delete'
+            ? { documentId, pageIndex, id: uid }
+            : { documentId, pageIndex, id: uid, patch: {} },
       });
     return result;
   };
