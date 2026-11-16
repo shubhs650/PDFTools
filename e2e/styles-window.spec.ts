@@ -215,6 +215,9 @@ test('keyboard: tool list, tiles, rename with F2, Esc cancels only the rename, D
   await field.fill('Review');
   await page.keyboard.press('Enter');
   await expect(custom.nth(1)).toHaveAccessibleName('Review');
+  // The name shows as soon as the store has it; the rename ends (and the tile's keys work
+  // again) only when focus is back on the tile.
+  await expect(custom.nth(1)).toBeFocused();
 
   // Alt+Left moves it first; Delete deletes and selects the next.
   await page.keyboard.press('Alt+ArrowLeft');
