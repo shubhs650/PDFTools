@@ -255,7 +255,17 @@
   padding-right: calc(2 * var(--control-height-m));
 }
 
-/* ------------------------------------------------------------ text field */
+/* ------------------------------------------------------------ form controls (M10-03) */
+
+/*
+ * One styled set for the app's own form controls (ADR-027 D-47, M10-03): text,
+ * number, search and password inputs, selects and text areas take .ui-field-input;
+ * every check box and radio button outside the page is drawn by us (appearance:
+ * none, our own tick and dot), as M7-10 did for the page's form fields. They stay
+ * native inputs, so the keyboard and screen readers work as before. In
+ * forced-colors mode the browser draws its own controls in system colours.
+ * Heights: 32 px (--control-height-m), 16 px boxes, 8 px between a box and its text.
+ */
 
 .ui-field {
   display: flex;
@@ -266,25 +276,216 @@
 .ui-field-label {
   color: var(--color-text);
   font-size: var(--font-size-m);
+  font-weight: var(--font-weight-medium);
+}
+
+/* Help text under a field or a group: muted, a size smaller. */
+.ui-field-hint {
+  margin: var(--space-0);
+  color: var(--color-text-muted);
+  font-size: var(--font-size-s);
 }
 
 .ui-field-input {
+  box-sizing: border-box;
+  min-width: var(--space-0);
   height: var(--control-height-m);
   padding: var(--space-0) var(--space-3);
   border: var(--border-width) solid var(--color-border-strong);
   border-radius: var(--radius-m);
-  background: var(--color-surface);
+  background-color: var(--color-surface);
   color: var(--color-text);
   font: inherit;
+  font-size: var(--font-size-m);
+  line-height: var(--line-height);
+  transition: border-color var(--duration-fast) var(--ease-out);
+}
+
+.ui-field-input::placeholder {
+  color: var(--color-text-muted);
+  opacity: 1;
+}
+
+.ui-field-input:hover:not(:disabled, :focus-visible, [readonly]) {
+  border-color: var(--color-text-muted);
 }
 
 .ui-field-input:focus-visible {
+  border-color: var(--color-focus);
   outline: var(--focus-width) solid var(--color-focus);
   outline-offset: var(--focus-offset);
 }
 
 .ui-field-input[aria-invalid='true'] {
   border-color: var(--color-danger);
+}
+
+.ui-field-input:disabled {
+  border-color: var(--color-border);
+  background-color: var(--color-surface-sunken);
+  color: var(--color-text-disabled);
+  cursor: default;
+}
+
+/* Read-only text (a value to copy, a summary): sunken, still in full text colour. */
+.ui-field-input[readonly] {
+  background-color: var(--color-surface-sunken);
+}
+
+/* A smaller field for compact bars (Quick Find): 24 px, like the bar's buttons. */
+.ui-field-input--small {
+  height: var(--control-height-s);
+  padding: var(--space-0) var(--space-2);
+  font-size: var(--font-size-s);
+}
+
+textarea.ui-field-input {
+  height: auto;
+  min-height: calc(var(--control-height-m) * 2);
+  padding: var(--space-2) var(--space-3);
+  resize: vertical;
+}
+
+/* The search box's clear button, in the field's colours. */
+.ui-field-input::-webkit-search-cancel-button {
+  cursor: pointer;
+}
+
+/* A visible file input's button looks like one of ours. */
+:where(input[type='file'])::file-selector-button {
+  min-height: var(--control-height-m);
+  margin-inline-end: var(--space-3);
+  padding: var(--space-0) var(--space-4);
+  border: var(--border-width) solid var(--color-border-strong);
+  border-radius: var(--radius-m);
+  background: var(--color-surface);
+  color: var(--color-text);
+  font: inherit;
+  cursor: pointer;
+}
+
+:where(input[type='file']:not(:disabled))::file-selector-button:hover {
+  background: var(--color-hover);
+}
+
+/* Check boxes and radio buttons: every one outside the page (the page's own form
+   fields, .form-field, keep M7-10's look) and the accent swatches (O7). No
+   specificity (:where), so a feature's layout rules still apply. */
+:where(input[type='checkbox'], input[type='radio']):where(
+  :not(.form-field, .appearance-accent-input)
+) {
+  flex: none;
+  box-sizing: border-box;
+  width: var(--check-size);
+  height: var(--check-size);
+  margin: var(--space-0);
+  cursor: pointer;
+}
+
+:where(input[type='checkbox'], input[type='radio']):where(
+    :not(.form-field, .appearance-accent-input)
+  ):disabled {
+  cursor: default;
+}
+
+/* The text of a disabled choice is greyed with its box. */
+:where(label:has(> input:is([type='checkbox'], [type='radio']):disabled)) {
+  color: var(--color-text-disabled);
+}
+
+@media not (forced-colors: active) {
+  select.ui-field-input {
+    appearance: none;
+    padding-inline-end: calc(var(--space-3) + var(--icon-size-s) + var(--space-2));
+    background-image: var(--image-chevron);
+    background-position: right var(--space-3) center;
+    background-repeat: no-repeat;
+    background-size: var(--icon-size-s);
+  }
+
+  select.ui-field-input:disabled {
+    background-image: var(--image-chevron-disabled);
+  }
+
+  :where(input[type='checkbox'], input[type='radio']):where(
+    :not(.form-field, .appearance-accent-input)
+  ) {
+    appearance: none;
+    border: var(--border-width) solid var(--color-border-strong);
+    border-radius: var(--radius-check);
+    background: var(--color-surface) center / contain no-repeat;
+    transition:
+      background-color var(--duration-fast) var(--ease-out),
+      border-color var(--duration-fast) var(--ease-out);
+  }
+
+  :where(input[type='radio']):where(:not(.form-field, .appearance-accent-input)) {
+    border-radius: var(--radius-round);
+  }
+
+  :where(input[type='checkbox'], input[type='radio']):where(
+      :not(.form-field, .appearance-accent-input)
+    ):hover:not(:disabled) {
+    border-color: var(--color-text-muted);
+    background-color: var(--color-hover);
+  }
+
+  /* On: the filled brand with a white tick or dot; the edge in the accent, which
+     keeps 3:1 against every pane in dark too (WCAG 1.4.11). */
+  :where(input[type='checkbox'], input[type='radio']):where(
+      :not(.form-field, .appearance-accent-input)
+    ):is(:checked, :indeterminate) {
+    border-color: var(--color-accent);
+    background-color: var(--color-brand);
+  }
+
+  :where(input[type='checkbox'], input[type='radio']):where(
+      :not(.form-field, .appearance-accent-input)
+    ):is(:checked, :indeterminate):hover:not(:disabled) {
+    border-color: var(--color-accent);
+    background-color: var(--color-brand-hover);
+  }
+
+  :where(input[type='checkbox']):where(:not(.form-field)):checked {
+    background-image: var(--image-check);
+  }
+
+  :where(input[type='checkbox']):where(:not(.form-field)):indeterminate {
+    background-image: linear-gradient(var(--color-text-on-brand), var(--color-text-on-brand));
+    background-size: 50% var(--focus-width);
+  }
+
+  :where(input[type='radio']):where(:not(.form-field, .appearance-accent-input)):checked {
+    background-image: radial-gradient(
+      circle closest-side,
+      var(--color-text-on-brand) 0 40%,
+      transparent 48%
+    );
+  }
+
+  :where(input[type='checkbox'], input[type='radio']):where(
+      :not(.form-field, .appearance-accent-input)
+    ):disabled {
+    border-color: var(--color-text-disabled);
+    background-color: var(--color-surface-sunken);
+  }
+
+  :where(input[type='checkbox'], input[type='radio']):where(
+      :not(.form-field, .appearance-accent-input)
+    ):is(:checked, :indeterminate):disabled {
+    border-color: var(--color-text-disabled);
+    background-color: var(--color-text-disabled);
+  }
+}
+
+/* Keyboard focus: the ring plus the halo (D-47), as on buttons. */
+:where(input[type='checkbox'], input[type='radio']):where(
+    :not(.form-field, .appearance-accent-input)
+  ):focus-visible {
+  outline: var(--focus-width) solid var(--color-focus);
+  outline-offset: var(--focus-offset);
+  box-shadow: var(--space-0) var(--space-0) var(--space-0)
+    calc(var(--focus-offset) + var(--focus-width) + var(--focus-halo-width)) var(--color-focus-halo);
 }
 
 .ui-field-error {
@@ -366,6 +567,12 @@
 
   .ui-progress-bar {
     background: Highlight;
+    forced-color-adjust: none;
+  }
+
+  /* A filled button keeps its system pair (Highlight, HighlightText): Chromium's text
+     backplate (Canvas) hid the label otherwise, as on the File tab (M10-02). */
+  .ui-button--primary:not(:disabled) {
     forced-color-adjust: none;
   }
 }

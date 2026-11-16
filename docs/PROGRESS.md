@@ -1,6 +1,6 @@
 # Triya PDF — Progress
 
-_Last updated: 2026-11-16 (session 61: redact-marks flake fix, M10-08·O7 accent colour)_
+_Last updated: 2026-11-16 (session 62: M10-03 form controls)_
 
 **Current milestone:** M7 — second beta review (plan in [docs/plan/M7.md](plan/M7.md), scope in
 [ADR-023](adr/023-m7-second-beta-review.md), **Accepted** 2026-11-04 with the recommended
@@ -10,6 +10,36 @@ answers Q1–Q7; ARCHITECTURE.md Rev 0.12 after [ADR-024](adr/024-freetext-text-
 interop is in the M6 pack (CHECKLIST §M6 R1–R4). Rev 0 (M0–M4) is complete on the agent side.
 
 ## Done
+
+- **Session 62 — M10-03 Form controls (ADR-027 D-47).** One styled set for the app's own
+  controls, all from tokens, all still native inputs (keyboard and screen readers unchanged).
+  **Check boxes and radio buttons** outside the page are drawn by us (`appearance: none`): a
+  16 px box (4 px corners; radios round) with a 3 : 1 control edge; on, the filled brand with a
+  white tick (`--image-check`) or dot, and an edge in `--color-accent` so the box keeps 3 : 1
+  against every pane in dark too; an indeterminate dash; hover tint; a greyed box and label when
+  disabled; the focus ring plus halo. They follow the accent colour (O7). The rules use
+  `:where()` (no specificity), so features' layout rules still apply, and leave out the page's
+  form fields (`.form-field`, M7-10) and the accent swatches. **Fields** (`.ui-field-input`): 32
+  px, 6 px corners, a muted placeholder, a hover edge, focus ring and halo, sunken when disabled
+  or read-only; **text areas** now honour their `rows` (they were squeezed to 32 px, so the
+  Send Error Report and comment boxes showed one line); **selects** get our chevron
+  (`--image-chevron`, dark and disabled variants). A visible file input's button looks like
+  ours. Labels are medium weight (`--font-weight-medium`, new), help text muted (`.ui-field-hint`).
+  **Rhythm:** each choice is a 24 px row with 8 px between box and text, groups 2 px apart
+  under their title (the shared `.scale-where`/`.scale-radio` used by most dialogs, Print, the
+  stamp codes). **Search pane:** a 32 px box and Search button, groups 12 px apart with muted
+  titles, 24 px option rows. **Quick Find:** the same field, 24 px (`.ui-field-input--small`).
+  The report preview has rounded corners and no longer overflows. Forced-colors keeps the
+  browser's own check boxes, radios and selects. Also fixed in forced-colors: a primary button's
+  label was hidden by Chromium's text backplate (as the File tab was before M10-02); primary
+  buttons now keep their system pair (`forced-color-adjust: none`). There are no on/off
+  switches in the app, so none was added. Tests: e2e `form-controls.spec.ts` (@smoke: box,
+  tick, dot, chevron, 32 px fields, Space and arrows, axe on the Search pane and a dialog; dark,
+  teal, forced-colors, reduced motion); `themeContrast.test.ts` checks the tick and chevron
+  colours written into the images match their tokens; `theme.spec` accepts a transparent halo
+  in forced-colors. Screenshots (before/after, light and dark, 1280/1366/1920 for Settings and
+  the Search pane, eight dialogs and Quick Find at 1366, forced-colors) in the project's shared
+  folder `m10-03/`. Next: M10-04 ribbon and top bar.
 
 - **Session 61 — M10-08·O7 Accent colour choice (ADR-027 D-47), and the redact-marks flake.**
   **Flake (PR #103):** `redact-marks.spec.ts:49` failed now and then on main: an undo while the

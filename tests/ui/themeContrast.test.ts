@@ -209,3 +209,33 @@ describe('accent colours (M10 O7)', () => {
     }
   });
 });
+
+// M10-03 (D-47): the form controls' marks are images, so their colours are written into
+// tokens.css; they must stay the token colours they stand for, in each theme.
+describe('form control marks (M10-03)', () => {
+  /** The stroke colour of a `--image-…` data-URI token in a block. */
+  function stroke(selector: string, name: string): string {
+    const start = tokens.indexOf(`${selector} {`);
+    const body = tokens.slice(start, tokens.indexOf('\n}', start));
+    const m = new RegExp(`${name}:\\s*url\\("[^"]*stroke='%23([0-9a-f]{6})'`).exec(body);
+    if (!m) throw new Error(`no ${name} in ${selector}`);
+    return `#${m[1] ?? ''}`;
+  }
+
+  it('the tick is --color-text-on-brand, the same in every theme and accent', () => {
+    const tick = stroke(':root', '--image-check');
+    for (const [name, set] of SETS) expect(set.get('--color-text-on-brand'), name).toBe(tick);
+  });
+
+  it('the chevron is --color-icon, and --color-text-disabled when disabled, in each theme', () => {
+    for (const [selector, set] of [
+      [':root', light],
+      [":root[data-theme='dark']", dark],
+    ] as const) {
+      expect(stroke(selector, '--image-chevron'), selector).toBe(set.get('--color-icon'));
+      expect(stroke(selector, '--image-chevron-disabled'), selector).toBe(
+        set.get('--color-text-disabled'),
+      );
+    }
+  });
+});
