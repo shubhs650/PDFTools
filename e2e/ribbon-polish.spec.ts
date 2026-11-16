@@ -43,6 +43,10 @@ const indicatorCentre = (page: Page) =>
     return r.left + r.width / 2;
   });
 
+/** How far the bar's centre is from a tab's, in CSS px (the bar sits on whole pixels). */
+const offCentre = async (page: Page, tab: Locator) =>
+  Math.abs((await indicatorCentre(page)) - (await centreOf(tab)));
+
 const centreOf = async (el: Locator) => {
   const b = await el.boundingBox();
   if (!b) throw new Error('not laid out');
@@ -103,12 +107,12 @@ test('the tab bar slides under the active tab and the row never shifts @smoke', 
   const tabs = page.getByRole('tablist', { name: 'Ribbon tabs' });
   const home = page.getByRole('tab', { name: 'Home', exact: true });
   const measure = page.getByRole('tab', { name: 'Measure', exact: true });
-  await expect.poll(() => indicatorCentre(page)).toBeCloseTo(await centreOf(home), 0);
+  await expect.poll(() => offCentre(page, home)).toBeLessThanOrEqual(1);
   const before = await tabs.boundingBox();
   const homeWidth = (await home.boundingBox())?.width;
 
   await measure.click();
-  await expect.poll(() => indicatorCentre(page)).toBeCloseTo(await centreOf(measure), 0);
+  await expect.poll(() => offCentre(page, measure)).toBeLessThanOrEqual(1);
   // The bar slides (a transform transition) instead of jumping.
   const slide = await page
     .locator('.ribbon-tab-indicator')
@@ -124,7 +128,7 @@ test('the tab bar slides under the active tab and the row never shifts @smoke', 
   const organize = page.getByRole('tab', { name: 'Organize', exact: true });
   await expect(organize).toBeFocused();
   await expect(organize).toHaveAccessibleName('Organize');
-  await expect.poll(() => indicatorCentre(page)).toBeCloseTo(await centreOf(organize), 0);
+  await expect.poll(() => offCentre(page, organize)).toBeLessThanOrEqual(1);
 });
 
 test('reduced motion: the tab bar moves at once', async ({ page }) => {
