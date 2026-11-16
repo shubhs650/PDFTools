@@ -1,4 +1,5 @@
 import { Dismiss16Regular } from '@fluentui/react-icons/svg/dismiss';
+import { DocumentPdf20Regular } from '@fluentui/react-icons/svg/document-pdf';
 import { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { format, msg, type MessageKey } from '../../i18n';
@@ -30,10 +31,13 @@ const TITLE_ID = 'recent-title';
 export function RecentList({
   onOpened,
   labelledBy,
+  variant,
 }: {
   onOpened?: () => void;
   /** Id of an existing heading (the backstage section's); otherwise the list shows its own. */
   labelledBy?: string;
+  /** 'card': a raised card, as on the start screen (M10-05). */
+  variant?: 'card';
 }) {
   const { t } = useTranslation();
   const entries = useRecent((s) => s.entries);
@@ -60,7 +64,7 @@ export function RecentList({
     // Inside the backstage the section around it is already the named region
     // (a second one with the same name fails axe landmark-unique).
     <Root
-      className="recent"
+      className={variant === 'card' ? 'recent recent--card' : 'recent'}
       {...(labelledBy ? {} : { 'aria-labelledby': TITLE_ID })}
       data-testid={TEST_ID}
     >
@@ -110,7 +114,11 @@ export function RecentList({
                   });
                 }}
               >
-                <span className="recent-name">{e.name}</span>
+                <DocumentPdf20Regular className="recent-icon" aria-hidden="true" />
+                <span className="recent-text">
+                  <span className="recent-name">{e.name}</span>
+                  <span className="recent-size">{format.bytes(e.size)}</span>
+                </span>
                 <span className="recent-when">
                   {format.relative(Math.min(e.lastOpened, now), now)}
                 </span>

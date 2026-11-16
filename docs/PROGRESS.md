@@ -1,6 +1,6 @@
 # Triya PDF — Progress
 
-_Last updated: 2026-11-16 (session 65: M10-08·O1 icon accents)_
+_Last updated: 2026-11-16 (session 66: M10-05 start screen and empty tab strip)_
 
 **Current milestone:** M7 — second beta review (plan in [docs/plan/M7.md](plan/M7.md), scope in
 [ADR-023](adr/023-m7-second-beta-review.md), **Accepted** 2026-11-04 with the recommended
@@ -10,6 +10,39 @@ answers Q1–Q7; ARCHITECTURE.md Rev 0.12 after [ADR-024](adr/024-freetext-text-
 interop is in the M6 pack (CHECKLIST §M6 R1–R4). Rev 0 (M0–M4) is complete on the agent side.
 
 ## Done
+
+- **Session 66 — M10-05 Start screen and empty tab strip (ADR-027 D-47; review R6, R8, R15).**
+  With nothing open, the **document-tab strip collapses** (it was a 33 px empty band); it
+  comes back with the first file (its busy placeholders show while files open) and goes
+  again when the last tab closes. The start screen is a **centred column** (640 px, auto
+  margins, so it scrolls from the top when the window is short): a **drop card** (dashed
+  border, PDF badge, "Open a PDF to get started", a hint, the primary **Open…** button with
+  its shortcut shown inside after a divider, from the keymap, so Cmd+O on macOS; the name
+  stays "Open…"), and the privacy line "Your files stay on this device. Nothing is
+  uploaded."; **quick actions** as tiles (Merge files, Getting started → Help at
+  `welcome`, Keyboard shortcuts), a labelled list whose entries come from `QUICK_ACTIONS` in
+  `StartScreen.tsx`, where O4's Create Blank PDF goes first; and **Recent files** as a card
+  (PDF icon, name, size, when, remove, Clear). The backstage Recent list gets the same
+  icon and size lines. Browsers don't expose a file handle's folder, so the plan's "folder
+  hint" is not shown. **Drag and drop:** `DropZone` keeps its state in `dragStore`; while
+  files are over the window a dashed frame lines it, and with no document the drop card
+  highlights (brand border and tint, the hint becomes "Drop PDF files to open them", the
+  badge turns solid and lifts); with a document open, the overlay shows a card with the
+  same badge. New tokens: `--color-drop-border` (all sets; CanvasText in forced-colors),
+  `--start-column-width`, `--start-badge-size(-l)`, `--start-action-min-width`.
+  Forced-colors: badges become framed system-colour icons, the highlight is a Highlight
+  border. Reduced motion: every transition is 0 ms through the motion tokens. Disabled
+  ribbon commands stay visible in the softer style (Q3, unchanged). Tests:
+  `start-screen.spec.ts` (@smoke: layout and names in light and dark with axe, the tab strip
+  collapsing and returning, quick actions by keyboard and click, drag highlight and the
+  overlay card, Recent card contents, forced-colors and reduced motion). `keys.spec` and
+  `theme.spec` now click Help → Keyboard Shortcuts inside the Help toolbar (the start
+  screen has a tile with the same name). The e2e probe `open.showRecent` fills Recent files
+  without handles for screenshots (headless Chromium 153 crashes reading a handle back).
+  Help's `opening-files-1` locator follows the new title; the picture is re-made in M10-09.
+  Screenshots (before/after, light and dark, 1280/1366/1920, empty and with recent files,
+  focus, drag over, document open, forced-colors) in the project's shared folder `m10-05/`.
+  Next: M10-08·O4 Create Blank PDF.
 
 - **Session 65 — M10-08·O1 Icon accents (ADR-027 D-47; review R16).** Ten key tools draw
   their Fluent **Regular** glyph in a second colour, so the ribbon gets a few landmarks:

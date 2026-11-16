@@ -55,6 +55,7 @@
   /* Color — lines and states */
   --color-border: #e2e8f0;
   --color-border-strong: #64748b; /* marks a control's edge: 3:1 (WCAG 1.4.11) */
+  --color-drop-border: #94a3b8; /* the start screen's dashed drop card (M10-05), decorative */
   --color-hover: #e2e8f0;
   --color-pressed: #cbd5e1;
   --color-selected: #dbeafe;
@@ -125,6 +126,11 @@
   --tab-indicator-height: 3px;
   --tab-fade-width: 32px; /* the faded edge of a scrolling tab list (M10-08·O3) */
   --rail-pill-height: 16px; /* the left rail's active-pane pill (M10-04) */
+  /* The start screen (M10-05): its centred column, icon badges and quick-action tiles */
+  --start-column-width: 640px;
+  --start-badge-size: 36px;
+  --start-badge-size-l: 48px;
+  --start-action-min-width: 140px;
 
   /* Radius (D-47): controls 6 px, menus and cards 8 px, dialogs and the start card 12 px */
   --radius-s: 2px;
@@ -214,6 +220,7 @@
   --color-icon-redact: #f87171;
   --color-border: #334155;
   --color-border-strong: #7c8799;
+  --color-drop-border: #475569;
   --color-hover: #273449;
   --color-pressed: #334155;
   --color-selected: #1e3a8a;
@@ -280,6 +287,7 @@
     --color-icon-redact: #b91c1c;
     --color-border: #e2e8f0;
     --color-border-strong: #64748b;
+    --color-drop-border: #94a3b8;
     --color-hover: #e2e8f0;
     --color-pressed: #cbd5e1;
     --color-selected: #dbeafe;
@@ -455,6 +463,7 @@
     --color-icon-redact: ButtonText;
     --color-border: ButtonText;
     --color-border-strong: ButtonText;
+    --color-drop-border: CanvasText;
     --color-hover: Highlight;
     --color-pressed: Highlight;
     --color-selected: Highlight;

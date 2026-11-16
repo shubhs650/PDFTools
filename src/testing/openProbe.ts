@@ -3,6 +3,7 @@ import type { DocumentManagerCapability } from '@embedpdf/plugin-document-manage
 import { documentStore } from '../app/store/documentStore';
 import { openFiles } from '../features/open/openDocument';
 import { sources } from '../features/open/sources';
+import { recentStore } from '../features/recent/recent';
 import { capability, hostStore } from '../features/view/host';
 import type { TestHook } from './hook';
 
@@ -63,6 +64,21 @@ export function registerOpenProbe(hook: TestHook): void {
         s += String.fromCharCode(...bytes.subarray(i, i + 0x8000));
       }
       return btoa(s);
+    },
+    /**
+     * Shows entries in Recent files without storing handles (screenshots: headless
+     * Chromium 153 crashes reading a handle back from IndexedDB). Reopening them fails.
+     */
+    showRecent(entries: { name: string; size: number; agoMinutes: number }[]) {
+      const now = Date.now();
+      recentStore.setState({
+        entries: entries.map((e, i) => ({
+          id: `shot-${String(i)}`,
+          name: e.name,
+          size: e.size,
+          lastOpened: now - e.agoMinutes * 60_000,
+        })),
+      });
     },
     state() {
       const s = documentStore.getState();

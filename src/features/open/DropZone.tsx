@@ -1,12 +1,21 @@
-import { useEffect, useState } from 'react';
+import { DocumentPdf24Regular } from '@fluentui/react-icons/svg/document-pdf';
+import { useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
+import { useDocuments } from '../../app/store/documentStore';
+import { setDragOver as setOver, useDragOver } from './dragStore';
 import { collectDropped, hasFiles } from './dropped';
 import { openFiles } from './openDocument';
 
-/** Window-level drop target (§4.1): drop one or many PDFs anywhere to open them. */
+/**
+ * Window-level drop target (§4.1): drop one or many PDFs anywhere to open them.
+ * While files are dragged over the window, a dashed frame lines it; with a
+ * document open, a card in the middle says what a drop does. With none open,
+ * the start screen's drop card highlights instead (M10-05).
+ */
 export function DropZone() {
   const { t } = useTranslation();
-  const [over, setOver] = useState(false);
+  const over = useDragOver();
+  const hasDocument = useDocuments((s) => s.order.length > 0);
 
   useEffect(() => {
     let depth = 0;
@@ -47,8 +56,15 @@ export function DropZone() {
 
   if (!over) return null;
   return (
-    <div className="drop-overlay" aria-hidden="true">
-      <span className="drop-overlay-label">{t('open.dropHint')}</span>
+    <div className="drop-overlay" aria-hidden="true" data-start={hasDocument ? undefined : ''}>
+      {hasDocument ? (
+        <div className="drop-overlay-card">
+          <span className="start-badge">
+            <DocumentPdf24Regular />
+          </span>
+          <span className="drop-overlay-label">{t('open.dropHint')}</span>
+        </div>
+      ) : null}
     </div>
   );
 }

@@ -33,7 +33,10 @@ export function TabStrip() {
       </div>
     ) : null;
 
-  if (order.length === 0) return <div className="tab-strip tab-strip--empty">{opening}</div>;
+  // With nothing open the strip collapses (M10-05, review R8); while the first
+  // files are opening it shows their busy placeholders.
+  if (order.length === 0)
+    return opening ? <div className="tab-strip tab-strip--empty">{opening}</div> : null;
 
   const focusTab = (i: number): void => {
     const id = order[(i + order.length) % order.length];
