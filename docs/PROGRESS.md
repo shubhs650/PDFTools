@@ -27,8 +27,8 @@ interop is in the M6 pack (CHECKLIST §M6 R1–R4). Rev 0 (M0–M4) is complete 
   groups and buttons 4 → 2 px at the sides with 48 px large buttons (was 56), so a tab folds
   fewer groups at 1280 px. The header, ribbon height, panes' widths and every command's place
   are unchanged. The adaptive ribbon measures its groups per language **and density**, so a
-  live switch refits at once. Small ribbon buttons get `min-width: 24px`, which an icon-only
-  drawing tool in Compact needed (23 px); a split button's 10 px style arrow is unchanged
+  live switch refits at once. In Compact, small ribbon buttons get `min-width: 24px` (an icon-only
+  drawing tool was 23 px; Comfortable keeps its widths, so its folding is unchanged); a split button's 10 px style arrow is unchanged
   (M6-07). Comfortable is pixel-identical to before (screenshot diff), apart from the new
   View button and the Settings group. Tests: `theme.test.ts` (store, boot script, command,
   Privacy list); e2e `density.spec.ts` (@smoke: View toggle and Settings radios, measured menu

@@ -763,8 +763,8 @@ body {
 }
 
 .ribbon-button--small {
-  /* Never under 24 × 24 px (WCAG 2.2 SC 2.5.8), also an icon-only tool in Compact (O9). */
-  min-width: var(--control-height-s);
+  /* Compact (O9): never under 24 × 24 px (WCAG 2.2 SC 2.5.8), an icon-only tool too. */
+  min-width: var(--density-ribbon-min-width);
   min-height: var(--control-height-s);
   padding: var(--space-0) var(--density-ribbon-pad-x);
   white-space: nowrap;

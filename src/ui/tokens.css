@@ -197,6 +197,7 @@
   --density-dialog-gap: var(--space-5); /* under a dialog's description */
   --density-footer-pad-y: var(--space-4); /* a dialog's button band */
   --density-ribbon-pad-x: var(--space-2); /* ribbon groups and buttons, sideways */
+  --density-ribbon-min-width: auto; /* a small ribbon button (Compact: 24 px) */
   --density-rail-gap: var(--space-2); /* between the left rail's buttons */
 
   /* Layers */
@@ -224,6 +225,7 @@
   --density-dialog-gap: var(--space-4);
   --density-footer-pad-y: var(--space-3);
   --density-ribbon-pad-x: var(--space-1);
+  --density-ribbon-min-width: var(--control-height-s);
   --density-rail-gap: var(--space-1);
   --button-large-width: 48px;
 }
