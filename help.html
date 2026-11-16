@@ -7,6 +7,14 @@
     <meta name="theme-color" content="#2563eb" />
     <!-- The app's light/dark choice, before the first paint (M7-11, D-42). -->
     <script src="/theme-boot.js"></script>
+    <!-- The UI font (ADR-027 D-47, O8), fetched with the first CSS rather than at first text. -->
+    <link
+      rel="preload"
+      href="/node_modules/@fontsource-variable/inter/files/inter-latin-wght-normal.woff2"
+      as="font"
+      type="font/woff2"
+      crossorigin
+    />
     <title>Triya PDF Help</title>
   </head>
   <body>

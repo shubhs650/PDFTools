@@ -1,5 +1,5 @@
 // Offline precache split (§9, D-17, ADR-003 decision 3): what the service
-// worker caches at install (the core: shell, UI, Render worker, PDFium WASM,
+// worker caches at install (the core: shell, UI and its Inter font, Render worker, PDFium WASM,
 // Latin/Arabic/Hebrew fonts) and what it caches in the background after the
 // first render (Work and Snap workers, CJK fonts, ExcelJS, PDF Oxide, the Word
 // builder, the OCR worker with its WASM and data) and the third-party notices with About's license list (File → About). Shared by the service worker and its unit test.
@@ -59,6 +59,8 @@ export const PRECACHE_EXTENSIONS = [
   'wasm',
   'ttf',
   'otf',
+  // The UI font, Inter (M10 O8, ADR-027 D-47): core, so the UI never shows another font.
+  'woff2',
   'png',
   // Help's screenshots (M9, ADR-026).
   'webp',

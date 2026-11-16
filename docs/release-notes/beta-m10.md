@@ -31,3 +31,12 @@ This update is in progress: each part of M10 adds its notes here when it ships.
 - Keyboard focus shows a soft blue halo around the focus ring.
 - Windows High Contrast: the **File** tab and the File menu's list are readable again (their
   labels showed as blank boxes).
+
+## One font everywhere
+
+- Triya PDF now uses its own interface font, **Inter**, on Windows, macOS and Linux, so the app
+  looks the same on every computer. The font comes with the app and works offline; nothing is
+  downloaded from anywhere else.
+- Text in languages Inter doesn't cover (such as Greek, Cyrillic, Chinese, Japanese, Korean,
+  Arabic or Hebrew) still uses your computer's own fonts.
+- Your PDFs are not affected: pages show the fonts in the document as before.

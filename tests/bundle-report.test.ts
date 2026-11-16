@@ -49,6 +49,7 @@ describe('bundle report (M1-27)', () => {
     expect(moduleOf('fonts/hebrew/NotoSansHebrew-Regular.ttf')).toBe('coreFonts');
     expect(moduleOf('fonts/kr/NotoSansKR-Regular.otf')).toBe('cjkFonts');
     expect(moduleOf('fonts/sig-allura/Allura-Regular.ttf')).toBe('signatureFonts');
+    expect(moduleOf('assets/inter-latin-wght-normal-Dx4kXJAl.woff2')).toBe('uiFont');
     expect(moduleOf('assets/index-abc.js')).toBe('app');
     expect(moduleOf('icons/icon-192.png')).toBe('shell');
   });
@@ -57,6 +58,7 @@ describe('bundle report (M1-27)', () => {
     expect(isPrecached('fonts/latin/LICENSE')).toBe(false);
     expect(isPrecached('_headers')).toBe(false);
     expect(isPrecached('assets/pdfium-x5.wasm')).toBe(true);
+    expect(isPrecached('assets/inter-latin-wght-normal-Dx4kXJAl.woff2')).toBe(true);
     const r = aggregate(BUILD);
     const all = r.modules.reduce((s, m) => s + m.files, 0);
     // everything but sw.js, _headers and the font LICENSE

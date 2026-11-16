@@ -208,7 +208,9 @@ jobs:
       - name: Install qpdf (test fixtures only; not a dependency)
         run: sudo apt-get install -y qpdf
       - name: Offline and update flow (§9, D-17, D-18)
-        run: npm run e2e:offline -- --reporter=github,json
+        # Its own output folder: the perf run below starts by clearing test-results/, which
+        # took the offline traces with it.
+        run: npm run e2e:offline -- --reporter=github,json --output=offline-results
         env:
           PLAYWRIGHT_JSON_OUTPUT_NAME: reports/offline.json
       - name: Perf gate (no main-thread task > 100 ms after boot)
@@ -233,5 +235,7 @@ jobs:
         if: failure()
         with:
           name: playwright-report-gates
-          path: playwright-report/
+          path: |
+            playwright-report/
+            offline-results/
           retention-days: 7

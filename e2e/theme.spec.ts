@@ -359,10 +359,11 @@ for (const theme of ['light', 'dark'] as const) {
       if (width === 1280) {
         // A sticky note and its window.
         await page.getByRole('tab', { name: 'Comment', exact: true }).click();
-        await page
+        const note = page
           .getByRole('toolbar', { name: 'Comment commands' })
-          .getByRole('button', { name: 'Sticky Note', exact: true })
-          .click();
+          .getByRole('button', { name: 'Sticky Note', exact: true });
+        await note.click();
+        await expect(note).toHaveAttribute('aria-pressed', 'true');
         await page.mouse.click(box.x + box.width * 0.2, box.y + box.height * 0.25);
         await expect(page.getByRole('dialog', { name: /^Sticky note by / })).toBeVisible();
         await page.keyboard.type('Check the weld size at grid C4.');

@@ -9,6 +9,9 @@
  * UI pair is checked against WCAG AA in tests/ui/themeContrast.test.ts.
  */
 
+/* The bundled UI font, Inter (ADR-027 D-47, O8): self-hosted, in the core precache. */
+@import './fonts.css';
+
 :root {
   color-scheme: light;
 
@@ -100,8 +103,10 @@
   --radius-xl: 12px;
   --radius-round: 999px;
 
-  /* Type (system fonts only: nothing is fetched, rule 4) */
-  --font-family: 'Segoe UI Variable Text', 'Segoe UI', system-ui, -apple-system, sans-serif;
+  /* Type: the bundled Inter (fonts.css, our own origin, rule 4), then the system fonts for the
+     scripts it doesn't cover (Greek, Cyrillic, CJK, Arabic, Hebrew …) */
+  --font-family:
+    'Inter Variable', 'Segoe UI Variable Text', 'Segoe UI', system-ui, -apple-system, sans-serif;
   --font-size-xs: 11px;
   --font-size-s: 12px;
   --font-size-m: 14px;

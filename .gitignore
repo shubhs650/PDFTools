@@ -21,3 +21,4 @@ corpus/files/
 # Spike outputs (generated fixtures, saved files, interop packs)
 spikes/**/out/
 spikes/**/dist-frame/
+offline-results/

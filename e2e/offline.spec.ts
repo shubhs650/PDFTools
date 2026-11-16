@@ -595,9 +595,13 @@ test(
         ((await cap(page, 'annotate', 'objects', id)) as
           { id: string; type: number; contents?: string; intent?: string }[] | null) ?? [];
       const comment = page.getByRole('toolbar', { name: 'Comment commands' });
+      // A comment tool turns on only after the author profile is read (an async step), so a
+      // click on the page right after the ribbon click can come first and make nothing.
       const tool = async (name: string) => {
         await page.getByRole('tab', { name: 'Comment', exact: true }).click();
-        await comment.getByRole('button', { name, exact: true }).click();
+        const button = comment.getByRole('button', { name, exact: true });
+        await button.click();
+        await expect(button).toHaveAttribute('aria-pressed', 'true');
       };
       const editor = page.locator('[data-text-comment] [contenteditable="true"]');
 

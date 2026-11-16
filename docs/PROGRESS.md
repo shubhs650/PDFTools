@@ -1,6 +1,6 @@
 # Triya PDF — Progress
 
-_Last updated: 2026-11-16 (session 59: M10-02 design tokens v2 and contrast fixes)_
+_Last updated: 2026-11-16 (session 60: offline-test fix, M10-08·O8 bundled Inter font)_
 
 **Current milestone:** M7 — second beta review (plan in [docs/plan/M7.md](plan/M7.md), scope in
 [ADR-023](adr/023-m7-second-beta-review.md), **Accepted** 2026-11-04 with the recommended
@@ -10,6 +10,41 @@ answers Q1–Q7; ARCHITECTURE.md Rev 0.12 after [ADR-024](adr/024-freetext-text-
 interop is in the M6 pack (CHECKLIST §M6 R1–R4). Rev 0 (M0–M4) is complete on the agent side.
 
 ## Done
+
+- **Session 60 — M10-08·O8 Bundled Inter font (ADR-027 D-47), and the Offline proof fix.**
+  **Offline proof (PR #101):** `offline.spec.ts:533` (M7 offline, sticky note) failed the
+  Offline proof gate on most pushes since about 15 Nov: the test pressed Ctrl+0 and read page 1's
+  box at once, and on a slow runner the box was still the fit-width one (161 %, x ≈ 312, against
+  66 %, x ≈ 596 after Fit Page), so the Sticky Note click fell on the empty canvas. A shared
+  `fitPage()` helper waits for the zoom and the page's new width (M6 and M7 offline tests).
+  That was not the whole story: it still failed on main. The same miss shows in
+  `sticky-note-popup.spec` ("no note"): a comment tool turns on only after `requestProfile()`
+  (async) resolves, so a page click right after the ribbon click can come first. The offline,
+  sticky-note-popup and theme specs now wait for the button's `aria-pressed="true"` (as
+  theme.spec already did once). Also `bookmark-editing.spec` (red on main too): after Cancel the
+  dialog hands focus back to the item a moment later and stole it from the next item; it now
+  waits for that. CI keeps the offline gate's traces (`offline-results/`, which the perf run no
+  longer wipes).
+  **Inter:** `@fontsource-variable/inter` 5.3.0 (OFL-1.1), the variable WOFF2 files for Latin and
+  Latin-extended, upright and italic (bookmarks can be italic), 277 KB in all, declared in
+  `src/ui/fonts.css` (the package's own unicode ranges; `font-display: block`, since the files are
+  same-origin and precached) and imported by `tokens.css`, so the app and the Help window both use
+  it. `--font-family` is now `'Inter Variable'` first, then the old system list (Segoe UI
+  Variable, Segoe UI, system-ui …) for the scripts Inter's subsets don't cover. Vite emits the
+  files under `/assets/` (`font-src 'self'`, rule 4); `woff2` joined `PRECACHE_EXTENSIONS`, and
+  they land in the **core** precache (bundle report row "UI font (Inter)"). `index.html` and
+  `help.html` preload the Latin upright file (the same hashed asset the CSS uses, one request).
+  About → Built with lists Inter (13 components). The adaptive ribbon still fits every tab at
+  1280 px (Inter is a little narrower than DejaVu Sans, a little wider than Segoe UI). Tests:
+  new e2e `ui-font.spec.ts` (@smoke: the File tab and the start heading are drawn with the
+  **web font** Inter, checked with CDP `CSS.getPlatformFontsForNode`, since a system Inter may be
+  installed, as in the cloud container; all font requests are same-origin `/assets/inter-*`;
+  Help uses it; @offline: the four files are in the cache before "Ready offline" and the UI is
+  still in Inter after an offline reload); unit `precacheSplit` and `bundle-report` cover the
+  new files; `about.spec` checks the Inter row. Screenshots before/after, light and dark, 1280
+  and 1366, with the container's own Inter hidden (so "before" shows the Linux fallback, DejaVu
+  Sans, and "after" proves the bundled file is used) in the project's shared folder `m10-o8/`.
+  Next: M10-08·O7 accent colour.
 
 - **Session 59 — M10-02 Design tokens v2 and contrast fixes (ADR-027 D-47).** New colour values
   in `src/ui/tokens.css` (Q1): **light** slate neutrals (background `#f1f5f9`, surfaces white,
