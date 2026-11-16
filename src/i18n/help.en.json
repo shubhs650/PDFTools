@@ -230,7 +230,8 @@
             "<b>View</b> › <b>Dark Theme</b> and <b>File</b> › <b>Settings</b> › <b>Appearance</b> do the same.",
             "Your choice is kept on this device only, and Help follows it.",
             "Form fields, sticky note windows and comment handles keep their light look, so they read well on the white page.",
-            "<b>File</b> › <b>Settings</b> › <b>Clear all local data</b> goes back to the light theme."
+            "<b>File</b> › <b>Settings</b> › <b>Appearance</b> › <b>Accent colour</b> changes the blue of the File tab, buttons, selections and focus rings to Teal, Indigo or Graphite. Comment colours, yellow highlights and sticky notes never change.",
+            "<b>File</b> › <b>Settings</b> › <b>Clear all local data</b> goes back to the light theme and the blue accent."
           ]
         }
       ]

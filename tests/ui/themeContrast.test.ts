@@ -1,5 +1,6 @@
 import { readFileSync } from 'node:fs';
 import { describe, expect, it } from 'vitest';
+import { ACCENT_BRAND, ACCENTS } from '../../src/app/theme';
 
 // M7-11 (ADR-023 D-42): every token pair the UI draws text or controls with
 // meets WCAG AA in both themes — 4.5:1 for text, 3:1 for icons, focus rings,
@@ -10,7 +11,8 @@ const tokens = readFileSync('src/ui/tokens.css', 'utf8');
 function block(selector: string): Map<string, string> {
   const start = tokens.indexOf(`${selector} {`);
   if (start < 0) throw new Error(`no ${selector} block`);
-  const body = tokens.slice(start, tokens.indexOf('\n}', start));
+  // Token blocks hold no nested braces: the first one closes the block.
+  const body = tokens.slice(start, tokens.indexOf('}', start));
   return new Map(
     [...body.matchAll(/(--color-[\w-]+)\s*:\s*([^;]+);/g)].map((m) => [m[1] ?? '', m[2] ?? '']),
   );
@@ -18,6 +20,20 @@ function block(selector: string): Map<string, string> {
 
 const light = block(':root');
 const dark = new Map([...light, ...block(":root[data-theme='dark']")]);
+
+// The accent colours (M10 O7, D-47): Blue is the sets above; each other accent's light
+// block applies in both themes and its dark block (more specific) overrides it in dark.
+const OTHER_ACCENTS = ACCENTS.filter((a) => a !== 'blue');
+const accentLight = (a: string) => block(`:root[data-accent='${a}']`);
+const accentDark = (a: string) => block(`:root[data-accent='${a}'][data-theme='dark']`);
+const SETS: [string, Map<string, string>][] = [
+  ['light', light],
+  ['dark', dark],
+  ...OTHER_ACCENTS.flatMap((a): [string, Map<string, string>][] => [
+    [`${a} light`, new Map([...light, ...accentLight(a)])],
+    [`${a} dark`, new Map([...dark, ...accentLight(a), ...accentDark(a)])],
+  ]),
+];
 
 type Rgb = [number, number, number];
 function rgb(value: string): Rgb {
@@ -81,10 +97,7 @@ const UI_PAIRS: [string, string[]][] = [
   ['--color-danger', PANES],
 ];
 
-describe.each([
-  ['light', light],
-  ['dark', dark],
-] as const)('%s theme contrast (WCAG AA)', (_name, set) => {
+describe.each(SETS)('%s theme contrast (WCAG AA)', (_name, set) => {
   const get = (t: string): string => {
     const v = set.get(t);
     if (!v) throw new Error(`missing ${t}`);
@@ -132,5 +145,67 @@ describe('the page in dark (M7-11)', () => {
       [...body.matchAll(/(--color-[\w-]+)\s*:\s*([^;]+);/g)].map((m) => [m[1] ?? '', m[2] ?? '']),
     );
     expect(page).toEqual(light);
+  });
+});
+
+/** The tokens an accent may change; everything else (neutrals, page, comments) never follows it. */
+const ACCENT_TOKENS = [
+  '--color-selected',
+  '--color-accent',
+  '--color-link',
+  '--color-brand',
+  '--color-brand-hover',
+  '--color-focus',
+  '--color-focus-halo',
+];
+
+describe('accent colours (M10 O7)', () => {
+  it('tokens.css has a light and a dark set for every accent but Blue, and no other', () => {
+    const named = new Set([...tokens.matchAll(/data-accent='(\w+)'/g)].map((m) => m[1]));
+    expect([...named].sort()).toEqual([...OTHER_ACCENTS].sort());
+  });
+
+  it.each(OTHER_ACCENTS)('%s changes only the accent tokens, in both themes', (a) => {
+    expect([...accentLight(a).keys()]).toEqual(ACCENT_TOKENS);
+    expect([...accentDark(a).keys()]).toEqual(ACCENT_TOKENS);
+  });
+
+  it.each(OTHER_ACCENTS)('%s keeps its light colours on the white page in dark', (a) => {
+    expect(block(`:root[data-accent='${a}'][data-theme='dark'] .page`)).toEqual(accentLight(a));
+  });
+
+  it('the accent sets stay out of forced-colors mode', () => {
+    const at = tokens.indexOf("[data-accent='");
+    const media = tokens.lastIndexOf('@media', at);
+    expect(tokens.slice(media, at)).toMatch(/^@media not \(forced-colors: active\) \{/);
+  });
+
+  it('each accent has one filled brand in both themes, as theme.ts and the swatch say', () => {
+    const swatches = new Map(
+      [...tokens.matchAll(/(--accent-swatch-\w+)\s*:\s*([^;]+);/g)].map((m) => [
+        m[1] ?? '',
+        m[2] ?? '',
+      ]),
+    );
+    for (const a of ACCENTS) {
+      const [l, d] =
+        a === 'blue'
+          ? [light, dark]
+          : [
+              new Map([...light, ...accentLight(a)]),
+              new Map([...dark, ...accentLight(a), ...accentDark(a)]),
+            ];
+      expect(l.get('--color-brand'), a).toBe(ACCENT_BRAND[a]);
+      expect(d.get('--color-brand'), a).toBe(ACCENT_BRAND[a]);
+      expect(swatches.get(`--accent-swatch-${a}`), a).toBe(ACCENT_BRAND[a]);
+    }
+  });
+
+  it('every accent is told apart from the others in each theme', () => {
+    for (const [name, set] of SETS) {
+      const others = SETS.filter(([n]) => n !== name && n.endsWith(name.split(' ').pop() ?? ''));
+      for (const [other, o] of others)
+        expect(set.get('--color-accent'), `${name} vs ${other}`).not.toBe(o.get('--color-accent'));
+    }
   });
 });

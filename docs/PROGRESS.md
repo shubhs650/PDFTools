@@ -1,6 +1,6 @@
 # Triya PDF — Progress
 
-_Last updated: 2026-11-16 (session 60: offline-test fix, M10-08·O8 bundled Inter font)_
+_Last updated: 2026-11-16 (session 61: redact-marks flake fix, M10-08·O7 accent colour)_
 
 **Current milestone:** M7 — second beta review (plan in [docs/plan/M7.md](plan/M7.md), scope in
 [ADR-023](adr/023-m7-second-beta-review.md), **Accepted** 2026-11-04 with the recommended
@@ -10,6 +10,33 @@ answers Q1–Q7; ARCHITECTURE.md Rev 0.12 after [ADR-024](adr/024-freetext-text-
 interop is in the M6 pack (CHECKLIST §M6 R1–R4). Rev 0 (M0–M4) is complete on the agent side.
 
 ## Done
+
+- **Session 61 — M10-08·O7 Accent colour choice (ADR-027 D-47), and the redact-marks flake.**
+  **Flake (PR #103):** `redact-marks.spec.ts:49` failed now and then on main: an undo while the
+  annotation plugin was still writing the new mark left it as `deleted` until the next edit (the
+  plugin's commit reducer clears `hasPendingChanges` for every uid it sent). `commitGuard.ts`
+  now dispatches the delete again after the commit, so the plugin's loop writes it; a new e2e
+  (six draw-then-undo rounds) failed 4 of 4 before. `pages.spec.ts:238` (Cancel after the
+  2000-page rotate already finished) is still open.
+  **Accent:** File → Settings → Appearance → **Accent colour**: Blue (default), Teal, Indigo,
+  Graphite, radio buttons drawn as swatches in the colour picker's style (ring on the current
+  one, arrows move and pick, focus ring with halo). `src/app/theme.ts` keeps it next to the
+  theme (`pdftools.accent` in localStorage, nothing stored for Blue) and sets `data-accent` on
+  `<html>`; `public/theme-boot.js` applies it before the first paint, and the light title bar
+  takes the accent's brand. `tokens.css` has a light, a dark and an on-the-page-in-dark set per
+  accent, changing only `--color-selected/-accent/-link/-brand/-brand-hover/-focus/-focus-halo`
+  (filled brands `#0f766e`, `#4f46e5`, `#475569`, white text at AA; Graphite keeps blue links),
+  all inside `@media not (forced-colors: active)`. The forced-colors token block now also
+  outranks the dark set, so filled brand surfaces get the system pair in dark too. Native check
+  boxes and radios follow the accent (`accent-color`). Comment colours, highlight and
+  sticky-note yellow, find hits, form fields and white pages never follow it. Privacy lists
+  the key; Clear all local data resets it; Help follows a change made in the app window and
+  its Themes topic mentions it. Tests: `themeContrast.test.ts` runs every check for all eight
+  accent × theme sets and checks the accent blocks touch only those tokens; `theme.test.ts`
+  (store, boot script, privacy list); e2e `accent.spec.ts` (@smoke pick/keyboard/reload/axe,
+  first paint in dark, page and comment colours unchanged, Privacy and Clear, forced-colors).
+  Screenshots (light and dark, each accent, forced-colors) in the project's shared folder
+  `m10-o7/`. Next: M10-03 form controls.
 
 - **Session 60 — M10-08·O8 Bundled Inter font (ADR-027 D-47), and the Offline proof fix.**
   **Offline proof (PR #101):** `offline.spec.ts:533` (M7 offline, sticky note) failed the

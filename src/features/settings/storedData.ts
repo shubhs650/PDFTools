@@ -3,7 +3,7 @@
 // migrations and the OPFS layout, so a new store cannot appear unlisted.
 // Documents themselves are never stored here: they stay in the user's files;
 // only crash-recovery snapshots of unsaved changes go to OPFS (§4.3).
-import { THEME_STORAGE_KEY } from '../../app/theme';
+import { ACCENT_STORAGE_KEY, THEME_STORAGE_KEY } from '../../app/theme';
 import { msg, type MessageKey } from '../../i18n';
 import { DB_NAME } from '../../storage/idb';
 import { RECOVERY_DIR } from '../../storage/recoveryTypes';
@@ -94,6 +94,14 @@ export const LOCAL_DATA: readonly LocalDataItem[] = [
     location: THEME_STORAGE_KEY,
     store: THEME_STORAGE_KEY,
     what: msg('privacy.data.theme'),
+    cleared: true,
+  },
+  {
+    // The accent colour (M10 O7, D-47): read before the first paint, as the theme.
+    kind: 'localStorage',
+    location: ACCENT_STORAGE_KEY,
+    store: ACCENT_STORAGE_KEY,
+    what: msg('privacy.data.accent'),
     cleared: true,
   },
   {

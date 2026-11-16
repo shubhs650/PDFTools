@@ -6,13 +6,21 @@ import { readFileSync } from 'node:fs';
 import { runInNewContext } from 'node:vm';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import {
+  ACCENT_BRAND,
+  ACCENT_STORAGE_KEY,
+  ACCENTS,
   THEME_COLOR,
   THEME_STORAGE_KEY,
+  getAccent,
   getTheme,
   initTheme,
+  readStoredAccent,
   readStoredTheme,
+  resetAccent,
   resetTheme,
+  setAccent,
   setTheme,
+  subscribeAccent,
   subscribeTheme,
   toggleTheme,
 } from '../../src/app/theme';
@@ -28,6 +36,7 @@ beforeEach(() => {
   localStorage.clear();
   document.head.innerHTML = '<meta name="theme-color" content="#2563eb" />';
   root().removeAttribute('data-theme');
+  root().removeAttribute('data-accent');
   initTheme();
 });
 afterEach(() => {
@@ -85,14 +94,80 @@ describe('theme store', () => {
   });
 });
 
+describe('accent colour (M10 O7, D-47)', () => {
+  it('is Blue by default and when the stored value is unknown', () => {
+    expect(readStoredAccent()).toBe('blue');
+    expect(getAccent()).toBe('blue');
+    localStorage.setItem(ACCENT_STORAGE_KEY, 'magenta');
+    expect(readStoredAccent()).toBe('blue');
+    expect(ACCENTS).toEqual(['blue', 'teal', 'indigo', 'graphite']);
+  });
+
+  it('switches <html>, the light title bar and the stored choice, and notifies', () => {
+    let calls = 0;
+    const off = subscribeAccent(() => (calls += 1));
+    setAccent('teal');
+    expect(root().getAttribute('data-accent')).toBe('teal');
+    expect(meta()).toBe(ACCENT_BRAND.teal);
+    expect(localStorage.getItem(ACCENT_STORAGE_KEY)).toBe('teal');
+    expect(calls).toBe(1);
+    // In dark the title bar is the app background, whatever the accent.
+    setTheme('dark');
+    expect(meta()).toBe(THEME_COLOR.dark);
+    setTheme('light');
+    expect(meta()).toBe(ACCENT_BRAND.teal);
+    // Blue is the default: no attribute, nothing stored.
+    setAccent('blue');
+    expect(root().hasAttribute('data-accent')).toBe(false);
+    expect(localStorage.getItem(ACCENT_STORAGE_KEY)).toBeNull();
+    expect(meta()).toBe(THEME_COLOR.light);
+    expect(calls).toBe(2);
+    off();
+  });
+
+  it('reads the stored choice at start, and Clear all local data resets it', () => {
+    localStorage.setItem(ACCENT_STORAGE_KEY, 'graphite');
+    initTheme();
+    expect(getAccent()).toBe('graphite');
+    expect(root().getAttribute('data-accent')).toBe('graphite');
+    resetAccent();
+    expect(getAccent()).toBe('blue');
+    expect(localStorage.getItem(ACCENT_STORAGE_KEY)).toBeNull();
+  });
+
+  it('Blue is the brand the light title bar and the manifest already use', () => {
+    expect(ACCENT_BRAND.blue).toBe(THEME_COLOR.light);
+  });
+});
+
 describe('boot script (public/theme-boot.js)', () => {
   const source = readFileSync('public/theme-boot.js', 'utf8');
-  const boot = (stored: string | null) => {
+  const boot = (stored: string | null, accent: string | null = null) => {
     root().removeAttribute('data-theme');
+    root().removeAttribute('data-accent');
     document.head.innerHTML = '<meta name="theme-color" content="#2563eb" />';
-    const storage = { getItem: (k: string) => (k === THEME_STORAGE_KEY ? stored : null) };
+    const storage = {
+      getItem: (k: string) =>
+        k === THEME_STORAGE_KEY ? stored : k === ACCENT_STORAGE_KEY ? accent : null,
+    };
     runInNewContext(source, { document, localStorage: storage });
   };
+
+  it('applies a stored accent with the module’s key and colours, in light and dark', () => {
+    for (const a of ACCENTS.filter((x) => x !== 'blue')) {
+      boot(null, a);
+      expect(root().getAttribute('data-accent')).toBe(a);
+      expect(meta()).toBe(ACCENT_BRAND[a]);
+      boot('dark', a);
+      expect(root().getAttribute('data-accent')).toBe(a);
+      expect(meta()).toBe(THEME_COLOR.dark);
+    }
+    boot(null, 'blue');
+    expect(root().hasAttribute('data-accent')).toBe(false);
+    boot(null, 'toString');
+    expect(root().hasAttribute('data-accent')).toBe(false);
+    expect(meta()).toBe(THEME_COLOR.light);
+  });
 
   it('applies a stored dark theme with the module’s key and colour', () => {
     boot('dark');
@@ -129,8 +204,9 @@ describe('where the theme is reached', () => {
     expect(binding?.chords).toHaveLength(1);
   });
 
-  it('is listed with the data kept on this device, and cleared', () => {
-    const item = LOCAL_DATA.find((d) => d.kind === 'localStorage');
-    expect(item).toMatchObject({ location: THEME_STORAGE_KEY, cleared: true });
+  it('is listed with the data kept on this device, and cleared (the accent too)', () => {
+    const items = LOCAL_DATA.filter((d) => d.kind === 'localStorage');
+    expect(items.map((d) => d.location)).toEqual([THEME_STORAGE_KEY, ACCENT_STORAGE_KEY]);
+    expect(items.every((d) => d.cleared)).toBe(true);
   });
 });
