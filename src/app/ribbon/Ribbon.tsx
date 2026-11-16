@@ -4,8 +4,9 @@ import { useEffect, useLayoutEffect, useMemo, useRef, useState, type KeyboardEve
 import { useTranslation } from 'react-i18next';
 import { IconButton } from '../../ui/components';
 import { tabLabelKey } from '../commandLabels';
-import { TopBarActions } from '../TopBar';
+import { Brand, TopBarActions } from '../TopBar';
 import { appStore, useApp } from '../store/appStore';
+import { QuickAccess } from './QuickAccess';
 import { PALETTE_COMMANDS } from '../../features/annotate/tools/stylePalette';
 import { RibbonGroup, type Stop } from './RibbonGroup';
 import { ribbonLayout, STEP_MENU, type RibbonTabLayout } from './layout';
@@ -24,6 +25,10 @@ export interface RibbonProps {
  * The ribbon (§8): File opens the backstage; the other tabs form a tablist
  * whose panel is a toolbar with roving focus. Esc returns focus to the
  * document; Ctrl+F1 (keymap) collapses the ribbon.
+ *
+ * Its first row is the app's one-row header (M10-08·O3, D-47): the product mark
+ * and name, Quick Access, File, the tabs, then the top bar buttons. When the row
+ * is too narrow, only the tab list scrolls; the rest never leaves the screen.
  */
 export function Ribbon({ onOpenBackstage, focusDocument }: RibbonProps) {
   const { t } = useTranslation();
@@ -57,6 +62,27 @@ export function Ribbon({ onOpenBackstage, focusDocument }: RibbonProps) {
       ro.disconnect();
     };
   }, [tabIndex]);
+  // When the header row is too narrow, the tab list scrolls (M10-08·O3) and fades at an
+  // edge that has more tabs behind it.
+  const scroller = useRef<HTMLDivElement>(null);
+  useLayoutEffect(() => {
+    const wrap = scroller.current;
+    if (!wrap) return;
+    const edges = (): void => {
+      const max = wrap.scrollWidth - wrap.clientWidth;
+      wrap.toggleAttribute('data-more-start', wrap.scrollLeft > 1);
+      wrap.toggleAttribute('data-more-end', wrap.scrollLeft < max - 1);
+    };
+    edges();
+    wrap.addEventListener('scroll', edges, { passive: true });
+    const ro = new ResizeObserver(edges);
+    ro.observe(wrap);
+    if (wrap.firstElementChild) ro.observe(wrap.firstElementChild);
+    return () => {
+      wrap.removeEventListener('scroll', edges);
+      ro.disconnect();
+    };
+  }, []);
   // Pages show tab-specific layers (scale viewports on Measure, M3-17).
   useEffect(() => {
     if (active) appStore.getState().setRibbonTab(active.tab);
@@ -87,6 +113,8 @@ export function Ribbon({ onOpenBackstage, focusDocument }: RibbonProps) {
       role="region"
     >
       <div className="ribbon-tabs">
+        <Brand />
+        <QuickAccess />
         <button
           type="button"
           className="ribbon-file ui-focusable"
@@ -95,7 +123,7 @@ export function Ribbon({ onOpenBackstage, focusDocument }: RibbonProps) {
         >
           {t('ribbon.tab.file')}
         </button>
-        <div className="ribbon-tablist-wrap">
+        <div ref={scroller} className="ribbon-tablist-wrap">
           <div role="tablist" aria-label={t('ribbon.tabs')} className="ribbon-tablist">
             {layout.tabs.map((tab, i) => (
               <button

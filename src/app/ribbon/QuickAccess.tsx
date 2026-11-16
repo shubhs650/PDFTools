@@ -4,7 +4,7 @@ import { RibbonButton } from './RibbonButton';
 import { ribbonLayout } from './layout';
 import { useRovingToolbar } from './useRovingToolbar';
 
-/** Quick access toolbar in the title bar (§8): icon-only small buttons. */
+/** Quick access toolbar in the header row, after the brand (§8, M10-08·O3): icon-only small buttons. */
 export function QuickAccess() {
   const { t } = useTranslation();
   const commands = useMemo(() => ribbonLayout().quickAccess, []);

@@ -73,7 +73,6 @@ import { BOUNDARY } from './diagnostics';
 import { ErrorBoundary } from './ErrorBoundary';
 import { ShortcutSheet } from './keys/ShortcutSheet';
 import { useShortcuts } from './keys/useShortcuts';
-import { QuickAccess } from './ribbon/QuickAccess';
 import { Ribbon } from './ribbon/Ribbon';
 import './app.css';
 
@@ -154,7 +153,6 @@ export function App() {
               </>
             ),
           }}
-          quickAccess={<QuickAccess />}
           ribbon={
             <Ribbon
               onOpenBackstage={() => {

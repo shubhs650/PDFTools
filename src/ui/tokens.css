@@ -85,6 +85,8 @@
   --focus-width: 2px;
   --focus-offset: 1px;
   --focus-halo-width: 3px; /* the halo outside the focus ring (D-47) */
+  /* How far the ring and halo reach outside a control: room a scroller keeps for them. */
+  --focus-reach: calc(var(--focus-offset) + var(--focus-width) + var(--focus-halo-width));
   --icon-size-xs: 12px;
   --icon-size-s: 16px;
   --icon-size-m: 20px;
@@ -109,8 +111,11 @@
   --pane-width: 260px;
   --tab-max-width: 240px;
   --ribbon-height: 92px;
+  /* The one header row: mark and name, Quick Access, File, the tabs, top bar (M10-08·O3). */
+  --header-height: calc(var(--control-height-m) + var(--space-1));
   --tab-indicator-width: 24px; /* the active ribbon tab's short bar (M10-04) */
   --tab-indicator-height: 3px;
+  --tab-fade-width: 32px; /* the faded edge of a scrolling tab list (M10-08·O3) */
   --rail-pill-height: 16px; /* the left rail's active-pane pill (M10-04) */
 
   /* Radius (D-47): controls 6 px, menus and cards 8 px, dialogs and the start card 12 px */

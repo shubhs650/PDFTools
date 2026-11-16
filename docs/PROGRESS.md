@@ -1,6 +1,6 @@
 # Triya PDF — Progress
 
-_Last updated: 2026-11-16 (session 63: M10-04 ribbon and top bar)_
+_Last updated: 2026-11-16 (session 64: M10-08·O3 one-row header)_
 
 **Current milestone:** M7 — second beta review (plan in [docs/plan/M7.md](plan/M7.md), scope in
 [ADR-023](adr/023-m7-second-beta-review.md), **Accepted** 2026-11-04 with the recommended
@@ -10,6 +10,30 @@ answers Q1–Q7; ARCHITECTURE.md Rev 0.12 after [ADR-024](adr/024-freetext-text-
 interop is in the M6 pack (CHECKLIST §M6 R1–R4). Rev 0 (M0–M4) is complete on the agent side.
 
 ## Done
+
+- **Session 64 — M10-08·O3 One-row header (ADR-027 D-47; review R14).** The product mark and
+  name, Quick Access, File, the nine tabs and the top-bar buttons now share **one 34 px row**
+  (`--header-height`) above the ribbon panel, so the document gets **28 px more height**. The
+  `Ribbon` renders the whole row (`Brand`, `QuickAccess`, File, the tablist, `TopBarActions`);
+  `AppFrame` lost its title row and `quickAccess` prop. DOM order, accessible names, the h1,
+  the roving toolbars and keyboard paths are unchanged. Quick Access sits between two inset
+  dividers. **Narrow rows:** in English every tab fits at 1280 px with about 100 px to spare;
+  in a long language (the pseudo-locale) only the tab list scrolls (`.ribbon-tablist-wrap`,
+  thin scrollbar), while the brand, Quick Access, File and the top bar never shrink or leave
+  the screen. An edge with more tabs behind it fades (`data-more-start`/`-end`, a mask, so it
+  works in every theme and forced-colors), and a tab reached by the keyboard scrolls clear of
+  the fade (`scroll-padding-inline`). The scroller keeps room for the focus ring and halo
+  (`--focus-reach` padding with equal negative margins), and the tab bar still sits at the
+  row's bottom edge. New tokens: `--header-height`, `--focus-reach`, `--tab-fade-width`.
+  **Help:** `ribbonClip` now starts at the ribbon panel's left edge (it started at File), and
+  the nine pictures that show the header were re-made (welcome-1, themes-1 and the seven ribbon
+  tab pictures); callout 1 in welcome-1 moved below Quick Access. The other Help pictures are
+  re-made in M10-09 as planned. Tests: `top-bar.spec.ts` (@smoke: one row in order and on one
+  line, 34 px, the panel right under it, no scrolling in English at 1280 px; the pseudo-locale
+  scrolls only the tab list, End reaches the last tab clear of the fade, the bar follows it).
+  Screenshots (before/after, light and dark, 1280/1366/1920, start, document, Comment tab,
+  collapsed ribbon, the pseudo-locale at 1280 px, forced-colors) in the project's shared folder
+  `m10-o3/`. Next: M10-08·O1 icon accents.
 
 - **Session 63 — M10-04 Ribbon and top bar (ADR-027 D-47; review R4, R7, R17, R18).** Same
   layout, softer framing. The title rows sit on the app background and the **ribbon panel is a
