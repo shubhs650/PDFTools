@@ -174,9 +174,17 @@ export function editorOpened(el: HTMLElement): void {
   if (!d || performance.now() - d.at > DOUBLE_FRESH_MS) return;
   const r = el.getBoundingClientRect();
   if (d.x < r.left || d.x > r.right || d.y < r.top || d.y > r.bottom) return;
-  // After the plugin's own caret placement (its effect runs after the render).
+  // After the plugin's own caret placement (its effect runs after the render),
+  // unless a key came first: a fast Ctrl+End and typing must not be split by
+  // a late caret move (seen in e2e interop-m7 on CI).
+  let keyed = false;
+  const onKey = () => {
+    keyed = true;
+  };
+  el.addEventListener('keydown', onKey, { capture: true, once: true });
   requestAnimationFrame(() => {
-    if (el.isContentEditable) caretAt(el, d.x, d.y);
+    el.removeEventListener('keydown', onKey, { capture: true });
+    if (!keyed && el.isContentEditable) caretAt(el, d.x, d.y);
   });
 }
 
