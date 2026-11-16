@@ -15,7 +15,8 @@ import {
   type FontPackage,
 } from '../src/engine/fonts.ts';
 import { OCR_LANGUAGES, ocrDataPath } from '../src/model/ocr/languages.ts';
-import { NOTICES_FILE, collectNotices, renderNotices } from './notices.ts';
+import { NOTICES_FILE, builtWith, collectNotices, licenseData, renderNotices } from './notices.ts';
+import { BUILT_WITH_PACKAGES } from '../src/app/about/components.ts';
 
 const root = join(dirname(fileURLToPath(import.meta.url)), '..');
 const pkgDir = (pkg: FontPackage): string =>
@@ -66,15 +67,36 @@ export function selfHostedAssets(): Plugin {
   };
 }
 
+/** About's in-app license list (M10-01, D-48), loaded lazily: see src/app/about/licenseData.ts. */
+export const LICENSES_MODULE = 'virtual:open-source-licenses';
+/** About's "Built with" versions and licenses (M10-01), a few hundred bytes. */
+export const BUILT_WITH_MODULE = 'virtual:built-with';
+
 /**
  * Third-party notices (M1-26): `third-party-notices.txt` next to index.html,
  * generated from the installed runtime packages at build time (and served by
- * the dev server), so it can never be stale. Linked from File → About.
+ * the dev server), so it can never be stale. Linked from File → About. Since
+ * M10-01 (ADR-027 D-48) the same data is also an app module, so About lists
+ * every package and its license text in the app without a network call (rule 4).
  */
 export function thirdPartyNotices(): Plugin {
-  const make = (): string => renderNotices(collectNotices(root));
+  // A UTF-8 byte order mark: Cloudflare serves .txt as `text/plain` with no
+  // charset, and without it the browser shows "—" and other non-ASCII text as
+  // windows-1252 mojibake when the notices open in a tab (M10-01).
+  const make = (): string => `\uFEFF${renderNotices(collectNotices(root))}`;
+  const resolved = (id: string): string => `\0${id}`;
   return {
     name: 'pdftools-third-party-notices',
+    resolveId(id) {
+      return id === LICENSES_MODULE || id === BUILT_WITH_MODULE ? resolved(id) : null;
+    },
+    load(id) {
+      if (id === resolved(LICENSES_MODULE))
+        return `export default ${JSON.stringify(licenseData(collectNotices(root)))};`;
+      if (id === resolved(BUILT_WITH_MODULE))
+        return `export default ${JSON.stringify(builtWith(collectNotices(root), BUILT_WITH_PACKAGES))};`;
+      return null;
+    },
     configureServer(server) {
       server.middlewares.use((req, res, next) => {
         if ((req.url ?? '').split('?')[0] !== `/${NOTICES_FILE}`) {

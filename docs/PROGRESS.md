@@ -1,6 +1,6 @@
 # Triya PDF — Progress
 
-_Last updated: 2026-11-16 (session 57: M10 plan, accepted)_
+_Last updated: 2026-11-16 (session 58: M10-01 About and open-source notices)_
 
 **Current milestone:** M7 — second beta review (plan in [docs/plan/M7.md](plan/M7.md), scope in
 [ADR-023](adr/023-m7-second-beta-review.md), **Accepted** 2026-11-04 with the recommended
@@ -10,6 +10,37 @@ answers Q1–Q7; ARCHITECTURE.md Rev 0.12 after [ADR-024](adr/024-freetext-text-
 interop is in the M6 pack (CHECKLIST §M6 R1–R4). Rev 0 (M0–M4) is complete on the agent side.
 
 ## Done
+
+- **Session 58 — M10-01 About and open-source notices (ADR-027 D-48).** **Bug (the owner's):**
+  File → About → Third-party notices opened a second copy of the app once the service worker
+  controlled the site, because `respond()` answered every navigation with `index.html`. New
+  `src/sw/routes.ts` (`navigationPage`): only app routes (`/`, `/index.html`, extensionless
+  paths) get the app, `/help` gets Help, and a path with a file extension is served as that file
+  (from the cache, offline too, else the network). **About rebuilt** (`src/app/about/`): product
+  mark, name and tagline; version, commit and build date (`VITE_BUILD_DATE`, the commit's date,
+  `scripts/app-version.ts`); the offline state; **Copy version info** (version, commit, build,
+  browser, OS, offline state only: rule 10, `versionInfo.ts`); Open Help, Report an issue on
+  GitHub (the top bar's prefilled link) and Privacy and your data (switches the backstage
+  section); **Built with** (12 main components, versions and licenses from the installed
+  packages at build time, `virtual:built-with`; PDFium's own BSD-3-Clause/Apache-2.0 shown);
+  **Open-source licenses**: every runtime package (275) with version, license and full text,
+  filtered on Enter or Search only (rule 3), each text rendered only when expanded. The data
+  (`licenseData()` in `scripts/notices.ts`, each distinct text once) is the lazily imported chunk
+  `licenseData-*.js` (~296 KB) from `virtual:open-source-licenses`, in the background precache:
+  no network call (rule 4) and the core is unchanged. The `.txt` link stays, plus "Download all
+  notices (.txt)". The notices file now starts with a UTF-8 BOM: Cloudflare serves `.txt` as
+  `text/plain` with no charset, so the tab showed "â€”" mojibake (`scripts/serve.ts` now serves
+  `.txt` the same way, so e2e catches it). The backstage content now scrolls (it was clipped
+  below the window) and is focusable, as a scrollable region must be.
+  `package.json` version is now `0.10.0-beta` (it was `0.0.0`). "What's new" (O6) is a separate
+  later task: a draft of its data is in the project's shared folder (`m10-01/whats-new-draft/`).
+  Tests: unit `tests/about/about.test.ts` (navigation routes, precache split, license data covers
+  every package with shared texts, search, Built with versions, Copy version info text); e2e
+  `e2e/about.spec.ts` (@smoke: About content, copy, Built with, search on Enter only, expand,
+  Privacy, issue link, Help popup, axe light and dark; @offline: with the service worker in
+  control the notices open as text, also offline, app routes still get the app, the license list
+  and the download work offline). No long task opening About or searching. Release note
+  [beta-m10](release-notes/beta-m10.md) (started; later M10 tasks add to it).
 
 - **Session 57 — M10 plan: modern look and feel, About and open-source notices (ADR-027
   Proposed, D-47, D-48).** The owner shared the engineers' verdict ("solid tool but basic UI")

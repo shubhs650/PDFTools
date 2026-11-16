@@ -141,7 +141,10 @@ test('Privacy lists every local store; About shows the version and serves the no
   expect(await axe(page)).toEqual([]);
   const res = await request.get(new URL((await link.getAttribute('href')) ?? '', page.url()).href);
   expect(res.status()).toBe(200);
-  const notices = await res.text();
+  // A UTF-8 byte order mark first (M10-01), so the browser reads it as UTF-8.
+  const raw = await res.text();
+  expect(raw.startsWith('\uFEFF')).toBe(true);
+  const notices = raw.slice(1);
   expect(notices.startsWith('Triya PDF — third-party notices')).toBe(true);
   for (const needle of [
     '@embedpdf/pdfium',

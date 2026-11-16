@@ -48,4 +48,17 @@ describe('scanDist', () => {
     const findings = await scanDist(dir);
     expect(findings.map((f) => f.file)).toEqual([join('assets', 'bad.js')]);
   });
+
+  it("flags ExcelJS's unzipper in code, not in the notices or About's license list (M10-01)", async () => {
+    const dir = await mkdtemp(join(tmpdir(), 'pdftools-dist-'));
+    await mkdir(join(dir, 'assets'));
+    await writeFile(join(dir, 'assets', 'exceljs-Ab12.js'), 'require("unzipper")');
+    await writeFile(
+      join(dir, 'assets', 'licenseData-Cd_34.js'),
+      'export default {"name":"unzipper"}',
+    );
+    await writeFile(join(dir, 'third-party-notices.txt'), 'unzipper 0.12.3');
+    const findings = await scanDist(dir);
+    expect(findings.map((f) => f.file)).toEqual([join('assets', 'exceljs-Ab12.js')]);
+  });
 });

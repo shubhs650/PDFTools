@@ -24,3 +24,22 @@ export function appVersion(): string {
   const sha = (process.env.CF_PAGES_COMMIT_SHA ?? process.env.WORKERS_CI_COMMIT_SHA)?.slice(0, 7);
   return sha ? `${pkg.version}+${sha}` : pkg.version;
 }
+
+/**
+ * The build date shown in File → About (M10-01): the date of the commit the
+ * build came from, so rebuilding the same commit gives the same app; the
+ * current time when there is no git.
+ */
+export function buildDate(): string {
+  try {
+    const date = execFileSync('git', ['log', '-1', '--format=%cI'], {
+      cwd: root,
+      encoding: 'utf8',
+      stdio: ['ignore', 'pipe', 'ignore'],
+    }).trim();
+    if (date && !Number.isNaN(Date.parse(date))) return new Date(date).toISOString();
+  } catch {
+    // no git: fall through
+  }
+  return new Date().toISOString();
+}

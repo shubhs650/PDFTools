@@ -10,7 +10,8 @@ import { RecentList } from '../../features/recent/RecentList';
 import { AppearanceSection } from '../../features/settings/AppearanceSection';
 import { LocalData } from '../../features/settings/LocalData';
 import { ProfileSection } from '../../features/settings/profile/ProfileSection';
-import { About, Privacy } from './AboutPrivacy';
+import { About } from '../about/About';
+import { Privacy } from './Privacy';
 import { Properties } from './Properties';
 import { RibbonButton } from '../ribbon/RibbonButton';
 
@@ -133,7 +134,13 @@ export function Backstage({ open, section: initial, onOpenChange }: BackstagePro
             </ul>
           </nav>
           {section ? (
-            <section className="backstage-content" aria-labelledby={HEADING_ID}>
+            <section
+              className="backstage-content ui-focusable"
+              aria-labelledby={HEADING_ID}
+              // The content scrolls on its own (M10-01): keyboard users scroll it with focus on it.
+              // eslint-disable-next-line jsx-a11y/no-noninteractive-tabindex -- a scrollable region is focusable
+              tabIndex={0}
+            >
               <h2 id={HEADING_ID} className="backstage-heading">
                 {t(commandLabelKey(section.id))}
               </h2>
@@ -156,7 +163,14 @@ export function Backstage({ open, section: initial, onOpenChange }: BackstagePro
                   <LocalData />
                 </div>
               ) : section.id === 'file.about' ? (
-                <About />
+                <About
+                  onShowSection={(id) => {
+                    const i = sections.findIndex((c) => c.id === id);
+                    if (i < 0) return;
+                    setCurrent(i);
+                    navRefs.current[i]?.focus();
+                  }}
+                />
               ) : section.id === 'file.privacy' ? (
                 <Privacy />
               ) : (

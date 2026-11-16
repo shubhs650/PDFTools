@@ -3,6 +3,8 @@
 // - install: cache the core (precacheSplit.ts); the first install activates at
 //   once, an update waits (installed → "Update ready" in the app);
 // - the app asks for the background precache after its first render;
+// - navigations: app routes get index.html, /help gets help.html, any other
+//   file (the third-party notices .txt) is served as itself (M10-01, D-48);
 // - fetch: same-origin GETs from the cache, else the network (a background
 //   or on-demand module fetched on demand is cached and reported, for the
 //   app's spinner);
@@ -10,6 +12,7 @@
 //   documents are open — the app decides).
 // No other origin is ever contacted (rule 4).
 import { isHelpFile, splitPrecache, type PrecacheEntry } from './precacheSplit';
+import { navigationPage } from './routes';
 
 declare const self: ServiceWorkerGlobalScope & { __WB_MANIFEST: PrecacheEntry[] };
 
@@ -120,8 +123,9 @@ async function setPriority(delta: number): Promise<void> {
 async function respond(request: Request, url: URL): Promise<Response> {
   const cache = await caches.open(CACHE);
   if (request.mode === 'navigate') {
-    const page = HELP_PATHS.has(url.pathname) ? HELP : INDEX;
-    return (await cache.match(page)) ?? fetch(request);
+    const page = navigationPage(url.pathname, HELP_PATHS);
+    if (page !== 'file')
+      return (await cache.match(page === 'help' ? HELP : INDEX)) ?? fetch(request);
   }
   const key = url.origin + url.pathname;
   const hit = await cache.match(key);
