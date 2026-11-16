@@ -86,6 +86,12 @@ export function registerPageCommands(): () => void {
         openPageDialog('merge', activeId() ?? '');
       },
     }),
+    registerCommand('file.new', {
+      disabledReason: () => (pagesStore.getState().busy ? msg('pages.busy') : null),
+      run: () => {
+        openPageDialog('newBlank', '');
+      },
+    }),
     registerCommand('organize.insertBlank', {
       ...common,
       run: () => {

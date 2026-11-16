@@ -226,6 +226,16 @@ export const COMMANDS: readonly CommandDef[] = [
     shipped: true, // M3-05
   },
   {
+    // Create Blank PDF (M10-08·O4, D-49): a dialog, then a new unsaved tab.
+    id: 'file.new',
+    tab: 'file',
+    group: 'backstage',
+    size: 'large',
+    fluent: 'DocumentAdd',
+    milestone: 'M6',
+    shipped: true,
+  },
+  {
     id: 'file.open',
     tab: 'file',
     group: 'backstage',

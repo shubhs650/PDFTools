@@ -93,6 +93,15 @@ export interface WorkApi {
     { done: number; total: number }
   >;
   /**
+   * Create Blank PDF (M10-08·O4, D-49): a new, unencrypted document of `count`
+   * empty pages of `width` × `height` points. Refused outside the dialog's limits.
+   */
+  createBlank: MethodSpec<
+    { width: number; height: number; count: number },
+    { bytes: ArrayBuffer },
+    { done: number; total: number }
+  >;
+  /**
    * Import Comments (M4-20, ADR-018): a source PDF's comments for the dialog's
    * summary. Wrong or missing password: `pdfium:4`. `copyAllowed` false: the
    * source's permissions forbid copying (rule 9) and nothing else is read.

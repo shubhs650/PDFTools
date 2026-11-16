@@ -10,6 +10,7 @@ import { answerSigned, cancelPageOp, dismissPagesError, runPageOp, usePages } fr
 import { movePages } from './commands';
 import { closePageDialog as closeDialog, usePageDialog } from './dialogStore';
 import { moveTo } from './move';
+import { NewBlankDialog } from './NewBlankDialog';
 import { selectionOf } from './selection';
 import { blankSize, insertAt, type Orientation, type SizeChoice, type Where } from './sizes';
 
@@ -53,6 +54,7 @@ export function PageDialogs() {
       {open?.kind === 'insertBlank' ? (
         <InsertDialog key={open.docId} docId={open.docId} where={open.where ?? 'after'} />
       ) : null}
+      {open?.kind === 'newBlank' ? <NewBlankDialog /> : null}
       <ProgressDialog />
       <SignedDialog />
       <ErrorDialog />

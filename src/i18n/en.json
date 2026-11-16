@@ -25,6 +25,7 @@
       "redo": "Redo"
     },
     "file": {
+      "new": "New",
       "open": "Open",
       "recent": "Recent",
       "save": "Save",
@@ -351,6 +352,7 @@
     "nav": "File menu",
     "back": "Back to the document",
     "section": {
+      "new": "Create a blank PDF of the page size you choose. It opens in its own tab.",
       "open": "Open a PDF from your computer. Files never leave this device.",
       "recent": "Files you opened recently on this device.",
       "save": "Save changes to the original file (incremental save).",
@@ -440,6 +442,8 @@
       "privacy": "Your files stay on this device. Nothing is uploaded.",
       "actions": {
         "title": "Quick actions",
+        "new": "Create blank PDF",
+        "newDetail": "A4, Letter or a custom size",
         "merge": "Merge files",
         "mergeDetail": "Combine PDFs into one",
         "help": "Getting started",
@@ -2122,6 +2126,40 @@
       "insertAfter": "Insert Blank Page After",
       "delete": "Delete Pages…"
     }
+  },
+  "blank": {
+    "title": "Create Blank PDF",
+    "description": "Creates a new document with empty pages, in its own tab. Save it to choose where it goes.",
+    "size": "Page size",
+    "paper": {
+      "a4": "A4 (210 × 297 mm)",
+      "a3": "A3 (297 × 420 mm)",
+      "letter": "Letter (8.5 × 11 in)",
+      "legal": "Legal (8.5 × 14 in)",
+      "custom": "Custom size"
+    },
+    "width": "Width",
+    "height": "Height",
+    "unit": {
+      "label": "Units",
+      "mm": "mm",
+      "in": "in"
+    },
+    "orientation": "Orientation",
+    "portrait": "Portrait",
+    "landscape": "Landscape",
+    "count": "Number of pages",
+    "summary_one": "{{pages}} page, {{width}} × {{height}} {{unit}}",
+    "summary_other": "{{pages}} pages, each {{width}} × {{height}} {{unit}}",
+    "error": {
+      "side": "Enter a size from {{min}} to {{max}} {{unit}}.",
+      "count": "Enter a whole number from 1 to {{max}}."
+    },
+    "confirm": "Create",
+    "cancel": "Cancel",
+    "creating": "Creating the blank PDF…",
+    "failed": "The blank PDF could not be created.",
+    "fileName": "Untitled {{n}}.pdf"
   },
   "tables": {
     "express": {

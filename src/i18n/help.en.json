@@ -96,6 +96,16 @@
           ]
         },
         {
+          "h": "To start a blank PDF"
+        },
+        {
+          "steps": [
+            "Choose <b>Create blank PDF</b> on the start screen, or <b>File</b> › <b>New</b> (<kbd>{{newDoc}}</kbd>).",
+            "Choose the page size (A4, A3, Letter, Legal, or a custom width and height in mm or inches), the orientation and the number of pages, then choose <b>Create</b>.",
+            "The new PDF opens in its own tab as “Untitled 1.pdf”. Press <kbd>{{save}}</kbd> to choose where to save it."
+          ]
+        },
+        {
           "shot": "opening-files-2",
           "alt": "Two documents open as tabs in the top bar",
           "caption": "Two documents open as tabs."

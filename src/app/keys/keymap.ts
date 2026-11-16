@@ -57,6 +57,10 @@ const b = (
 
 export const KEYMAP: readonly Binding[] = [
   { ...b('file.open', ['Ctrl+O']), inText: true },
+  // Create Blank PDF (M10-08·O4, D-49): Chrome keeps Ctrl+N in a normal tab (a new
+  // window); the installed app may get it. Ctrl+Alt+N always works. Not while typing:
+  // Ctrl+Alt is AltGr on many keyboards (AltGr+N types a letter in Polish).
+  b('file.new', ['Ctrl+N', 'Ctrl+Alt+N'], 'global', true),
   { ...b('file.save', ['Ctrl+S']), inText: true },
   { ...b('file.saveAs', ['Ctrl+Shift+S']), inText: true },
   // Our print dialog (M2-15), not the browser's print of the app window.

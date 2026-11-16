@@ -130,7 +130,9 @@ test('View → Dark Theme, Ctrl+Shift+D and Settings → Appearance switch the s
   await expect(viewButton).toHaveAttribute('aria-pressed', 'true');
   await expect(toggle(page)).toHaveAttribute('aria-pressed', 'true');
 
-  await page.locator('body').click({ position: { x: 640, y: 500 } });
+  // Focus leaves the ribbon on an empty corner of the start screen (its quick-action
+  // tiles moved up when Create blank PDF joined them, M10-08·O4).
+  await page.getByTestId('start-screen').click({ position: { x: 8, y: 8 } });
   await page.keyboard.press('Control+Shift+D');
   await expect(html(page)).not.toHaveAttribute('data-theme', 'dark');
   await expect(viewButton).toHaveAttribute('aria-pressed', 'false');
