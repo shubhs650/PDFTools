@@ -26,6 +26,16 @@ function rgb(value: string): Rgb {
   const n = parseInt(hex[1] ?? '', 16);
   return [(n >> 16) & 255, (n >> 8) & 255, n & 255];
 }
+const toHex = (c: Rgb): string =>
+  `#${c.map((v) => Math.round(v).toString(16).padStart(2, '0')).join('')}`;
+/** A translucent `rgb(r g b / a)` token painted over an opaque background. */
+function over(value: string, background: string): string {
+  const m = /^rgb\((\d+) (\d+) (\d+) \/ ([\d.]+)\)$/.exec(value.trim());
+  if (!m) throw new Error(`not an rgb(r g b / a) colour: ${value}`);
+  const a = Number(m[4]);
+  const bg = rgb(background);
+  return toHex([0, 1, 2].map((i) => Number(m[i + 1]) * a + (bg[i] ?? 0) * (1 - a)) as Rgb);
+}
 const lum = ([r, g, b]: Rgb): number => {
   const c = (v: number) => {
     const s = v / 255;
@@ -63,9 +73,11 @@ const TEXT_PAIRS: [string, string[]][] = [
 ];
 const UI_PAIRS: [string, string[]][] = [
   ['--color-icon', SURFACES],
-  ['--color-focus', PANES],
-  ['--color-accent', [...PANES, '--color-selected']],
-  ['--color-border-strong', ['--color-bg', '--color-surface', '--color-surface-raised']],
+  // M10-02 (D-47): a focus ring also shows on a hovered, pressed or selected row.
+  ['--color-focus', SURFACES],
+  ['--color-accent', [...PANES, '--color-selected', '--color-hover']],
+  // A control's edge (inputs, check boxes, colour buttons) on every surface it sits on.
+  ['--color-border-strong', [...PANES, '--color-hover']],
   ['--color-danger', PANES],
 ];
 
@@ -94,6 +106,16 @@ describe.each([
         const c = contrast(get(fg), get(bg));
         if (c < 3) fails.push(`${fg} on ${bg}: ${c.toFixed(2)}`);
       }
+    expect(fails).toEqual([]);
+  });
+  // M10-02 (D-47): the soft halo outside the focus ring must not swallow it.
+  it('the focus ring stands out from its halo by 3:1 on every pane', () => {
+    const fails: string[] = [];
+    for (const bg of PANES) {
+      const halo = over(get('--color-focus-halo'), get(bg));
+      const c = contrast(get('--color-focus'), halo);
+      if (c < 3) fails.push(`--color-focus on its halo over ${bg}: ${c.toFixed(2)}`);
+    }
     expect(fails).toEqual([]);
   });
 });

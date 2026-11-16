@@ -8,7 +8,7 @@
     if (localStorage.getItem('pdftools.theme') === 'dark') {
       document.documentElement.setAttribute('data-theme', 'dark');
       var meta = document.querySelector('meta[name="theme-color"]');
-      if (meta) meta.setAttribute('content', '#1f1f1f');
+      if (meta) meta.setAttribute('content', '#0b1120');
     }
   } catch (e) {
     // Storage blocked: the default light theme.

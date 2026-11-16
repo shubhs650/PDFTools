@@ -26,7 +26,7 @@ const meta = () => document.querySelector('meta[name="theme-color"]')?.getAttrib
 
 beforeEach(() => {
   localStorage.clear();
-  document.head.innerHTML = '<meta name="theme-color" content="#0f6cbd" />';
+  document.head.innerHTML = '<meta name="theme-color" content="#2563eb" />';
   root().removeAttribute('data-theme');
   initTheme();
 });
@@ -89,7 +89,7 @@ describe('boot script (public/theme-boot.js)', () => {
   const source = readFileSync('public/theme-boot.js', 'utf8');
   const boot = (stored: string | null) => {
     root().removeAttribute('data-theme');
-    document.head.innerHTML = '<meta name="theme-color" content="#0f6cbd" />';
+    document.head.innerHTML = '<meta name="theme-color" content="#2563eb" />';
     const storage = { getItem: (k: string) => (k === THEME_STORAGE_KEY ? stored : null) };
     runInNewContext(source, { document, localStorage: storage });
   };

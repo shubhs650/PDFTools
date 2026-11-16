@@ -18,8 +18,8 @@ export const THEME_STORAGE_KEY = 'pdftools.theme';
  * --color-bg), so the window frame does not glare above a dark app.
  */
 export const THEME_COLOR: Readonly<Record<Theme, string>> = {
-  light: '#0f6cbd',
-  dark: '#1f1f1f',
+  light: '#2563eb',
+  dark: '#0b1120',
 };
 
 const isTheme = (v: unknown): v is Theme => v === 'light' || v === 'dark';

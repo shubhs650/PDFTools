@@ -261,7 +261,7 @@ test('Highlight Fields tints check boxes and radio buttons like every other fiel
       now[name]?.bg.every((bg) => bg === TINT),
       name,
     ).toBe(true);
-  expect(now.required?.shadow).toContain('rgb(196, 43, 28)'); // --color-danger
+  expect(now.required?.shadow).toContain('rgb(185, 28, 28)'); // --color-danger
   expect(now.agree?.shadow).toBe('none');
   // Our own check and dot, only when checked; radio buttons are round.
   expect(now.agree?.mark).toEqual(['none']); // /V /Off in the fixture
@@ -274,7 +274,7 @@ test('Highlight Fields tints check boxes and radio buttons like every other fiel
     el.removeAttribute('aria-required');
     return s;
   });
-  expect(requiredShadow).toContain('rgb(196, 43, 28)');
+  expect(requiredShadow).toContain('rgb(185, 28, 28)');
 
   // Keyboard: Tab reaches the check box with the focus ring; Space toggles it and the radio.
   await page.getByRole('textbox', { name: 'required field' }).focus();

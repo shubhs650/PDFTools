@@ -23,8 +23,8 @@ export const MANIFEST = {
   scope: '/',
   display: 'standalone',
   // tokens.css --color-bg and --color-accent
-  background_color: '#f3f3f3',
-  theme_color: '#0f6cbd',
+  background_color: '#f1f5f9',
+  theme_color: '#2563eb',
   icons: [
     { src: 'icons/icon-192.png', sizes: '192x192', type: 'image/png', purpose: 'any' },
     { src: 'icons/icon-512.png', sizes: '512x512', type: 'image/png', purpose: 'any' },

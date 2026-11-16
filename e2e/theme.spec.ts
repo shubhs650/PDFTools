@@ -19,8 +19,8 @@ const bodyBg = (page: Page) => page.evaluate(() => getComputedStyle(document.bod
 const themeColor = (page: Page) => page.locator('meta[name="theme-color"]').getAttribute('content');
 const backstage = (page: Page) => page.getByTestId('backstage');
 
-const LIGHT_BG = 'rgb(243, 243, 243)';
-const DARK_BG = 'rgb(31, 31, 31)';
+const LIGHT_BG = 'rgb(241, 245, 249)'; // --color-bg, slate-100 (M10-02)
+const DARK_BG = 'rgb(11, 17, 32)';
 
 async function settings(page: Page, name = 'Settings'): Promise<void> {
   if (!(await backstage(page).isVisible())) await page.getByTestId('file-tab').click();
@@ -57,7 +57,7 @@ test('light by default; the top-bar toggle switches at once and is remembered ac
   await expect(page.getByTestId('start-screen')).toBeVisible();
   await expect(html(page)).not.toHaveAttribute('data-theme', 'dark');
   expect(await bodyBg(page)).toBe(LIGHT_BG);
-  expect(await themeColor(page)).toBe('#0f6cbd');
+  expect(await themeColor(page)).toBe('#2563eb');
   const button = toggle(page);
   await expect(button).toHaveAccessibleName('Dark Theme');
   await expect(button).toHaveAttribute('aria-pressed', 'false');
@@ -73,7 +73,7 @@ test('light by default; the top-bar toggle switches at once and is remembered ac
   await expect(button).toHaveAttribute('aria-pressed', 'true');
   await expect(button).toHaveAccessibleName('Dark Theme');
   expect(await bodyBg(page)).toBe(DARK_BG);
-  expect(await themeColor(page)).toBe('#1f1f1f');
+  expect(await themeColor(page)).toBe('#0b1120');
   expect(await stored(page)).toBe('dark');
   // Switching is a style change only: no long task (rule 1).
   expect(await guard.longTasksOverLimit()).toEqual([]);
@@ -113,7 +113,7 @@ test('a reload in dark is dark from the first paint (no light flash)', async ({ 
   // comes from the stylesheet, which blocks rendering, and the attribute was
   // there before <body>.
   expect(await bodyBg(page)).toBe(DARK_BG);
-  expect(await themeColor(page)).toBe('#1f1f1f');
+  expect(await themeColor(page)).toBe('#0b1120');
 });
 
 test('View → Dark Theme, Ctrl+Shift+D and Settings → Appearance switch the same theme', async ({
@@ -207,9 +207,10 @@ test('in dark, pages stay white and what is drawn on them keeps the light colour
   });
   expect(look.bg).toBe('rgb(255, 255, 255)');
   expect(look.scheme).toBe('light');
-  // A white focus ring would vanish on the white page: the page keeps the light one.
-  expect(look.focus).toBe('#0f6cbd');
-  expect(look.rootFocus).toMatch(/^#fff(fff)?$/i);
+  // The dark theme's light-blue focus ring would be faint on the white page: the page keeps
+  // the light one.
+  expect(look.focus).toBe('#2563eb');
+  expect(look.rootFocus).toBe('#93c5fd');
 
   // Form fields (Highlight Fields on by default) look as in light.
   const field = page.locator('.form-layer .form-field').first();
@@ -382,3 +383,76 @@ for (const theme of ['light', 'dark'] as const) {
     });
   }
 }
+
+// M10-02 (ADR-027 D-47; review R1, R2): a filled button's icon takes the button's text
+// colour (it was grey on blue), and a disabled primary button looks disabled.
+for (const theme of ['light', 'dark'] as const)
+  test(`primary buttons: icon in the text colour, disabled looks disabled (${theme}) @smoke`, async ({
+    page,
+  }) => {
+    if (theme === 'dark') await darkTheme(page);
+    await page.goto('/');
+    const open = page.getByTestId('start-screen').getByRole('button', { name: 'Open…' });
+    await expect(open).toBeVisible();
+    const look = await open.evaluate((b) => {
+      const svg = b.querySelector('svg');
+      return {
+        text: getComputedStyle(b).color,
+        icon: svg ? getComputedStyle(svg).color : null,
+        bg: getComputedStyle(b).backgroundColor,
+      };
+    });
+    expect(look.text).toBe('rgb(255, 255, 255)');
+    expect(look.icon).toBe(look.text);
+    expect(look.bg).toBe('rgb(37, 99, 235)'); // #2563eb in both themes
+
+    await openPdf(page, simplePdf(1), 'plain.pdf');
+    await page.getByTestId('document-view').focus();
+    await page.keyboard.press('Control+Shift+F');
+    const search = page
+      .getByRole('region', { name: 'Search Results' })
+      .getByRole('button', { name: 'Search', exact: true });
+    await expect(search).toBeDisabled();
+    const off = await search.evaluate((b) => {
+      const s = getComputedStyle(b);
+      return { bg: s.backgroundColor, color: s.color };
+    });
+    expect(off.bg).not.toBe('rgb(37, 99, 235)');
+    expect(off.color).not.toBe('rgb(255, 255, 255)');
+  });
+
+test('forced-colors: the focus ring stays, the halo goes, brand surfaces keep their labels', async ({
+  page,
+}) => {
+  await page.emulateMedia({ forcedColors: 'active' });
+  await page.goto('/');
+  const open = page.getByTestId('start-screen').getByRole('button', { name: 'Open…' });
+  await expect(open).toBeVisible();
+  await page.keyboard.press('Tab');
+  await open.focus();
+  const ring = await open.evaluate((b) => {
+    const s = getComputedStyle(b);
+    return { outline: s.outlineStyle, width: s.outlineWidth, shadow: s.boxShadow };
+  });
+  expect(ring.outline).toBe('solid');
+  expect(ring.width).toBe('2px');
+  expect(ring.shadow).toBe('none');
+
+  // Filled brand surfaces keep the Highlight pair: the browser's text backplate hid the
+  // File tab's label and the backstage items (a blank box) before M10-02.
+  const pair = (testId: string) =>
+    page.getByTestId(testId).evaluate((el) => {
+      const s = getComputedStyle(el);
+      return { adjust: s.forcedColorAdjust, color: s.color, bg: s.backgroundColor };
+    });
+  const file = await pair('file-tab');
+  expect(file.adjust).toBe('none');
+  expect(file.color).not.toBe(file.bg);
+  await page.getByTestId('file-tab').click();
+  const nav = await page.locator('.backstage-nav').evaluate((el) => {
+    const s = getComputedStyle(el);
+    return { adjust: s.forcedColorAdjust, color: s.color, bg: s.backgroundColor };
+  });
+  expect(nav.adjust).toBe('none');
+  expect(nav.color).not.toBe(nav.bg);
+});

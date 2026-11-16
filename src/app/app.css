@@ -378,6 +378,23 @@ body {
   color: var(--color-text);
 }
 
+/* High contrast (M10-02): filled brand surfaces (the File tab, the backstage column,
+   number badges) keep the system's Highlight pair, which the tokens map them to. Left to
+   the browser, its text backplate (Canvas) hid every HighlightText label: blank boxes. */
+@media (forced-colors: active) {
+  .ribbon-file,
+  .backstage-nav,
+  .viewport-label,
+  .comment-number-badge {
+    forced-color-adjust: none;
+  }
+
+  .ribbon-file:hover {
+    background: HighlightText;
+    color: Highlight;
+  }
+}
+
 .ribbon-tablist {
   display: flex;
 }
@@ -747,6 +764,23 @@ body {
 .backstage-item:focus-visible {
   outline-color: var(--color-text-on-brand);
   outline-offset: calc(-1 * var(--focus-width));
+}
+
+/* High contrast (M10-02): on the Highlight column, the current and hovered items swap
+   the pair, so they still stand out. */
+@media (forced-colors: active) {
+  .backstage-item[aria-current='page'],
+  .backstage-back:hover,
+  .backstage-item:hover {
+    background: HighlightText;
+    color: Highlight;
+  }
+
+  .backstage-item[aria-current='page']:focus-visible,
+  .backstage-back:hover:focus-visible,
+  .backstage-item:hover:focus-visible {
+    outline-color: Highlight;
+  }
 }
 
 .backstage-content {
