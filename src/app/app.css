@@ -5119,3 +5119,61 @@ textarea.form-field {
 .note-popup-grip:focus-visible {
   outline: var(--focus-width) solid var(--color-focus);
 }
+
+/* ------------------------------------------------------------ motion (M10-07) */
+/* ADR-027 D-47: the rules and keyframes are in src/ui/motion.css. Entrances only, opacity
+   and transform only, token durations (0 ms under prefers-reduced-motion), and nothing
+   in the document view. */
+
+/* The backstage slides in from the File tab's side. */
+.backstage[data-state='open'] {
+  animation: motion-slide-in var(--duration-slow) var(--ease-out);
+}
+
+/* A pane's content fades in when the pane opens or shows another pane; its header and
+   frame are there at once (a width never animates). */
+.left-pane-body > *,
+.properties-pane > :not(.pane-header) {
+  animation: motion-fade-in var(--duration-normal) var(--ease-out);
+}
+
+/* The ribbon's panel fades its groups in on a tab change (each tab's groups are new
+   elements); the tab bar slides under the tab (.ribbon-tab-indicator). */
+.ribbon-toolbar > .ribbon-group {
+  animation: motion-fade-in var(--duration-normal) var(--ease-out);
+}
+
+/* A thumbnail fades in when its image arrives (the pane, not the document view). */
+.thumb-img {
+  animation: motion-fade-in var(--duration-normal) var(--ease-out);
+}
+
+/* Each new toast message rises into place (keyed by its sequence number). */
+.snapshot-toast {
+  animation: motion-rise-in var(--duration-normal) var(--ease-out);
+}
+
+/* Hover eases in on the pane rows, cards and small controls that had no transition. */
+.ribbon-group-menu,
+.about-license summary,
+.search-result,
+.bookmark,
+.layer,
+.comments-chip,
+.comment-row,
+.snap-toggle,
+.styles-tools-item,
+.styles-tile,
+.tab-order-item {
+  transition: background-color var(--duration-fast) var(--ease-out);
+}
+
+.attachment,
+.status-input,
+.thumb-image {
+  transition: border-color var(--duration-fast) var(--ease-out);
+}
+
+.comment-group {
+  transition: color var(--duration-fast) var(--ease-out);
+}

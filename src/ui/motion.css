@@ -1,0 +1,84 @@
+/* Motion (M10-07, ADR-027 D-47): short and calm, so it is felt rather than watched.
+ *
+ * - Only opacity and transform animate (the compositor's properties): no layout, no
+ *   filter or shadow animation, so no main-thread long task (rule 1, e2e/perf/motion).
+ * - Every duration is a token (--duration-fast 120 ms, -normal 180 ms, -slow 240 ms),
+ *   and prefers-reduced-motion sets all three to 0 ms (tokens.css): nothing moves.
+ * - Entrances only. A surface closes at once: Radix unmounts it straight away because
+ *   its closed state has no animation, so nothing ever waits on an animation, and focus
+ *   and shortcuts act at once (no exit animation to sit through).
+ * - Nothing here touches the document view (pages, zoom, scrolling, comments being drawn
+ *   or dragged, the measure tools): motion.test.ts checks the selectors.
+ *
+ * The app's own surfaces (backstage, panes, ribbon groups, thumbnails, the toast) are in
+ * the "motion" section at the end of app.css, with the same keyframes.
+ */
+
+/* A fade, for content that appears in place. */
+@keyframes motion-fade-in {
+  from {
+    opacity: 0;
+  }
+}
+
+/* Menus, tooltips and popovers grow out of their anchor (transform-origin below). */
+@keyframes motion-pop-in {
+  from {
+    opacity: 0;
+    transform: scale(0.96);
+  }
+}
+
+/* Dialogs fade and rise a little; they keep their centring translate. */
+@keyframes motion-dialog-in {
+  from {
+    opacity: 0;
+    transform: translate(-50%, -50%) translateY(var(--motion-rise)) scale(0.98);
+  }
+}
+
+/* The backstage slides in from the File tab's side. */
+@keyframes motion-slide-in {
+  from {
+    opacity: 0;
+    transform: translateX(calc(-1 * var(--motion-slide)));
+  }
+}
+
+/* A toast rises into place. */
+@keyframes motion-rise-in {
+  from {
+    opacity: 0;
+    transform: translateY(var(--motion-rise));
+  }
+}
+
+/* Menus, submenus and context menus (DropdownMenu and ContextMenu content). */
+.ui-menu[data-state='open'],
+.ui-color-popup[data-state='open'] {
+  transform-origin: var(--radix-popper-transform-origin);
+  animation: motion-pop-in var(--duration-normal) var(--ease-out);
+}
+
+/* A tooltip after its delay; moving from one tooltip to the next (instant-open) is
+   instant, as it should be when skimming along the ribbon. */
+.ui-tooltip[data-state='delayed-open'] {
+  transform-origin: var(--radix-popper-transform-origin);
+  animation: motion-pop-in var(--duration-normal) var(--ease-out);
+}
+
+.ui-dialog-backdrop[data-state='open'] {
+  animation: motion-fade-in var(--duration-slow) var(--ease-out);
+}
+
+.ui-dialog[data-state='open'] {
+  animation: motion-dialog-in var(--duration-slow) var(--ease-out);
+}
+
+/* Hover and press ease in (--duration-fast) on the rows and controls that did not yet:
+   colour only, on small areas. Menu items stay instant: they follow the pointer and
+   the arrow keys, where any lag reads as sluggish. */
+.ui-color-button,
+.ui-color-action {
+  transition: background-color var(--duration-fast) var(--ease-out);
+}

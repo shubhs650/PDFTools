@@ -29,7 +29,14 @@ export default defineConfig({
     {
       name: 'e2e',
       testIgnore: ['perf/**', 'help-shots/**'],
-      use: { ...devices['Desktop Chrome'], viewport: { width: 1280, height: 800 } },
+      // Motion (M10-07, D-47) is off in functional tests, so boxes measured right after
+      // a menu, dialog or pane opens are final; e2e/motion.spec.ts turns it back on to
+      // test the animations, and the perf project runs with them.
+      use: {
+        ...devices['Desktop Chrome'],
+        viewport: { width: 1280, height: 800 },
+        contextOptions: { reducedMotion: 'reduce' },
+      },
     },
     {
       name: 'perf',
@@ -44,6 +51,7 @@ export default defineConfig({
         ...devices['Desktop Chrome'],
         viewport: { width: 1366, height: 800 },
         deviceScaleFactor: 2,
+        contextOptions: { reducedMotion: 'reduce' }, // still frames, never mid-animation
       },
     },
   ],
