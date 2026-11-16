@@ -761,6 +761,27 @@ body {
   color: var(--color-text-disabled);
 }
 
+/* Icon accents (M10-08·O1, review R16): about ten key tools draw their Regular glyph in a
+   second colour (src/ui/icons/accents.ts), at rest and on hover. A pressed toggle keeps
+   the one pressed look (CommandIcon drops the attribute), a disabled command stays grey,
+   and forced-colors maps every hue to ButtonText. Folded groups show their first
+   command's icon, so they keep its accent too. */
+.ribbon-button:not([aria-disabled='true']) .ribbon-icon[data-icon-accent='markup'] {
+  color: var(--color-icon-markup);
+}
+
+.ribbon-button:not([aria-disabled='true']) .ribbon-icon[data-icon-accent='sign'] {
+  color: var(--color-icon-sign);
+}
+
+.ribbon-button:not([aria-disabled='true']) .ribbon-icon[data-icon-accent='convert'] {
+  color: var(--color-icon-convert);
+}
+
+.ribbon-button:not([aria-disabled='true']) .ribbon-icon[data-icon-accent='redact'] {
+  color: var(--color-icon-redact);
+}
+
 /* A group folded into one button (adaptive ribbon, M6-08, D-36): its icon, its
    name (on two lines if need be) and an arrow; the menu lists the group's commands. */
 .ribbon-group-menu {

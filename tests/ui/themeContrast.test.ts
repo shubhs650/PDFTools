@@ -1,6 +1,7 @@
 import { readFileSync } from 'node:fs';
 import { describe, expect, it } from 'vitest';
 import { ACCENT_BRAND, ACCENTS } from '../../src/app/theme';
+import { ICON_ACCENT_ROLES } from '../../src/ui/icons/accents';
 
 // M7-11 (ADR-023 D-42): every token pair the UI draws text or controls with
 // meets WCAG AA in both themes — 4.5:1 for text, 3:1 for icons, focus rings,
@@ -103,6 +104,12 @@ const UI_PAIRS: [string, string[]][] = [
   // A control's edge (inputs, check boxes, colour buttons) on every surface it sits on.
   ['--color-border-strong', [...PANES, '--color-hover']],
   ['--color-danger', PANES],
+  // M10-08·O1: the icon accents on every pane and on a hovered or pressed button or menu
+  // item (a pressed toggle drops its accent, so --color-selected is not among them).
+  ...ICON_ACCENT_ROLES.map((r): [string, string[]] => [
+    `--color-icon-${r}`,
+    [...PANES, '--color-hover', '--color-pressed'],
+  ]),
 ];
 
 describe.each(SETS)('%s theme contrast (WCAG AA)', (_name, set) => {

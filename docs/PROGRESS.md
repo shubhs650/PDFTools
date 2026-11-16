@@ -1,6 +1,6 @@
 # Triya PDF — Progress
 
-_Last updated: 2026-11-16 (session 64: M10-08·O3 one-row header)_
+_Last updated: 2026-11-16 (session 65: M10-08·O1 icon accents)_
 
 **Current milestone:** M7 — second beta review (plan in [docs/plan/M7.md](plan/M7.md), scope in
 [ADR-023](adr/023-m7-second-beta-review.md), **Accepted** 2026-11-04 with the recommended
@@ -10,6 +10,32 @@ answers Q1–Q7; ARCHITECTURE.md Rev 0.12 after [ADR-024](adr/024-freetext-text-
 interop is in the M6 pack (CHECKLIST §M6 R1–R4). Rev 0 (M0–M4) is complete on the agent side.
 
 ## Done
+
+- **Session 65 — M10-08·O1 Icon accents (ADR-027 D-47; review R16).** Ten key tools draw
+  their Fluent **Regular** glyph in a second colour, so the ribbon gets a few landmarks:
+  **markup** amber (Highlight, Sticky Note), **sign** green (Sign Document, Signatures),
+  **convert** violet (OCR, To Word, Express Extract), **redact** red (Mark for Redaction, Mark
+  Area for Redaction, Apply Redactions). The list is `src/ui/icons/accents.ts`;
+  `CommandIcon` puts `data-icon-accent="<role>"` on the svg, and the ribbon (`app.css`) and menu
+  (`ui.css`, a folded group's menu) rules colour it from new role tokens
+  `--color-icon-markup/-sign/-convert/-redact` (light #b45309 #15803d #7c3aed #b91c1c; dark
+  #fbbf24 #4ade80 #a78bfa #f87171; the dark page copy keeps the light set; ButtonText in
+  forced-colors). Tokens are named by role, not hue (the no-named-colours test rejects
+  `green`/`red` in app.css, and a hue can change without renaming). The accent shows at rest
+  and on hover only: a **pressed** toggle keeps the brand tint and brand Filled icon (D-47;
+  `CommandIcon` drops the attribute while pressed), a **disabled** command stays grey (Q3), and
+  the accent sets (O7) never touch these tokens. Every hue reaches 3 : 1 on every pane, hover
+  and pressed background in both themes and all four accents (`themeContrast.test.ts`). A
+  two-tone fill (Filled glyph as a tint under the Regular one) was tried on paper and dropped:
+  Fluent's Filled shapes are not the Regular shapes' insides (Highlight's cap differs), so the
+  tint would misalign. Tests: `iconAccents.test.tsx` (real commands, at most 12, every role has
+  a token and both rules, the attribute drops while pressed); e2e `icon-accents.spec.ts`
+  (@smoke, light and dark: grey with no document, the hue with a document and on hover, the
+  brand colour while pressed, other icons unchanged, Protect and Convert, axe on the ribbon;
+  forced-colors: the same system colour as the other icons). Screenshots (before/after, light
+  and dark, 1280/1366/1920, Home, Comment, Protect, Convert, hover, pressed, no document,
+  forced-colors) in the project's shared folder `m10-o1/`. Next: M10-05 start screen and empty
+  tab strip.
 
 - **Session 64 — M10-08·O3 One-row header (ADR-027 D-47; review R14).** The product mark and
   name, Quick Access, File, the nine tabs and the top-bar buttons now share **one 34 px row**
