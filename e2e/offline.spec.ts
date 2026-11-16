@@ -23,6 +23,26 @@ import { savedFiles, stubSavePicker } from './support/savePicker.ts';
 const status = (page: Page) => page.getByRole('contentinfo', { name: 'Status bar' });
 const tabs = (page: Page) => page.getByRole('tablist', { name: 'Open documents' }).getByRole('tab');
 
+/**
+ * Fit Page (Ctrl+0), then wait until page 1 is laid out at the new zoom. The tests turn page
+ * points into screen points from page 1's box; read before the zoom lands (a slow CI runner),
+ * the box is still the fit-width one and a click at a page point falls on the empty canvas.
+ */
+async function fitPage(page: Page): Promise<void> {
+  const zoom = page.getByRole('textbox', { name: 'Zoom', exact: true });
+  const before = await zoom.inputValue();
+  await page.getByTestId('document-view').focus();
+  await page.keyboard.press('ControlOrMeta+0');
+  await expect(zoom).not.toHaveValue(before);
+  const percent = Number.parseFloat(await zoom.inputValue());
+  await expect
+    .poll(async () => {
+      const box = await page.locator('[data-page="0"] .page-content').boundingBox();
+      return box ? Math.abs(box.width - (595 * percent) / 100) : Number.POSITIVE_INFINITY;
+    })
+    .toBeLessThan(6);
+}
+
 test(
   'first visit: "Preparing offline… n %" then "✓ Ready offline"; offline: reload, open, render, save and recover with zero outbound requests',
   { tag: '@offline' },
@@ -422,8 +442,7 @@ test(
       await expect(page.locator('[data-page="0"] img.page-preview')).toBeVisible();
       const id = (await cap(page, 'view', 'activeDocId')) as string;
       await expect.poll(() => cap(page, 'annotate', 'list', id)).not.toBeNull();
-      await page.getByTestId('document-view').focus();
-      await page.keyboard.press('ControlOrMeta+0');
+      await fitPage(page);
       const at = async (x: number, y: number) => {
         const box = await page.locator('[data-page="0"] .page-content').boundingBox();
         if (!box) throw new Error('page not laid out');
@@ -565,8 +584,7 @@ test(
       const id = (await cap(page, 'view', 'activeDocId')) as string;
       await expect.poll(() => cap(page, 'annotate', 'list', id)).not.toBeNull();
       const view = page.getByTestId('document-view');
-      await view.focus();
-      await page.keyboard.press('ControlOrMeta+0');
+      await fitPage(page);
       const at = async (x: number, y: number) => {
         const box = await page.locator('[data-page="0"] .page-content').boundingBox();
         if (!box) throw new Error('page not laid out');
