@@ -10,6 +10,8 @@ export type PageDialogKind =
   | 'insertFile'
   | 'extract'
   | 'merge'
+  /** Split Document (M11-08·O7). */
+  | 'split'
   /** Create Blank PDF (M10-08·O4): needs no document. */
   | 'newBlank';
 

@@ -21,6 +21,8 @@ import { closePageDialog as closeDialog, usePageDialog } from './dialogStore';
 import { runPageOp } from './pageOps';
 import { selectionOf } from './selection';
 import { insertAt, type Where } from './sizes';
+import { SplitDialog } from './SplitDialog';
+import { rangeText } from './splitPlan';
 
 // Organize → Insert from File, Extract Pages and Merge Files (M4-11, §7.8,
 // M4-Q2, M4-Q8). A picked file is checked in the Render worker (pages,
@@ -44,6 +46,7 @@ export function FileDialogs() {
   if (open?.kind === 'insertFile') return <InsertFileDialog key={open.docId} docId={open.docId} />;
   if (open?.kind === 'extract') return <ExtractDialog key={open.docId} docId={open.docId} />;
   if (open?.kind === 'merge') return <MergeDialog />;
+  if (open?.kind === 'split') return <SplitDialog key={open.docId} docId={open.docId} />;
   return null;
 }
 
@@ -245,22 +248,6 @@ function ExtractDialog({ docId }: { docId: string }) {
     </label>
   );
   const rangeError = !r.ok && scope.kind === 'custom' ? RANGE_ERRORS[r.error] : undefined;
-  const rangeText = (pages: readonly number[]): string => {
-    // "1-3, 8": consecutive runs, 1-based.
-    const runs: string[] = [];
-    let start = pages[0] ?? 0;
-    let prev = start;
-    for (const p of [...pages.slice(1), -2]) {
-      if (p === prev + 1) {
-        prev = p;
-        continue;
-      }
-      runs.push(start === prev ? String(start + 1) : `${String(start + 1)}-${String(prev + 1)}`);
-      start = p;
-      prev = p;
-    }
-    return runs.join(', ');
-  };
   return (
     <Dialog
       open

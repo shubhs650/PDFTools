@@ -151,6 +151,7 @@
       "move": "Move Pages",
       "extract": "Extract Pages",
       "merge": "Merge Files",
+      "split": "Split Document",
       "imagesToPdf": "Images to PDF",
       "rotateCw": "Rotate Clockwise",
       "rotateCcw": "Rotate Counterclockwise"
@@ -2274,6 +2275,46 @@
       "insertBefore": "Insert Blank Page Before",
       "insertAfter": "Insert Blank Page After",
       "delete": "Delete Pages…"
+    }
+  },
+  "split": {
+    "title": "Split Document",
+    "description": "Saves parts of this document as separate PDFs, with your unsaved changes. This document is not changed.",
+    "legend": "Split",
+    "mode": {
+      "every": "Every few pages",
+      "ranges": "By page ranges, one file per range",
+      "bookmarks": "By top-level bookmarks, one file per bookmark",
+      "bookmarksLoading": "By top-level bookmarks (reading the bookmarks…)",
+      "bookmarksNone": "By top-level bookmarks (this document has none that go to its pages)"
+    },
+    "everyLabel": "Pages in each file",
+    "rangesLabel": "Page ranges",
+    "rangesHint": "e.g. 1-5, 6-12, 13-",
+    "preview_one": "{{n}} file:",
+    "preview_other": "{{n}} files:",
+    "more_one": "and {{n}} more",
+    "more_other": "and {{n}} more",
+    "folderNote": "You choose a folder for the files. Files already in it are never replaced.",
+    "zipNote": "The files are saved together in one ZIP file.",
+    "confirm": "Split",
+    "cancel": "Cancel",
+    "running": "Splitting the document…",
+    "failed": "The document could not be split.",
+    "doneFolder_one": "Saved {{n}} file in {{folder}}",
+    "doneFolder_other": "Saved {{n}} files in {{folder}}",
+    "doneZip_one": "Saved {{n}} file in {{name}}",
+    "doneZip_other": "Saved {{n}} files in {{name}}",
+    "fileName_one": "{{base}} (page {{range}}).pdf",
+    "fileName_other": "{{base}} (pages {{range}}).pdf",
+    "bookmarkName": "{{base}} - {{n}} {{title}}.pdf",
+    "bookmarkNameEmpty": "{{base}} - {{n}}.pdf",
+    "zipName": "{{base}} (split).zip",
+    "error": {
+      "empty": "Type the page ranges, one for each file.",
+      "every": "Type a whole number of pages from 1 to {{pages}}.",
+      "noBookmarks": "This document has no top-level bookmarks that go to its pages.",
+      "tooMany": "That makes more than {{max}} files. Choose more pages for each file."
     }
   },
   "images": {

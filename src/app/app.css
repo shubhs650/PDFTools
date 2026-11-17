@@ -5168,6 +5168,31 @@ textarea.form-field {
   flex-direction: column;
 }
 
+/* Split Document (M11-08·O7): the three ways, the chosen one's field under it, the names. */
+.ui-dialog.split-dialog {
+  width: min(520px, calc(100vw - 2 * var(--space-6)));
+}
+
+.split-mode > .ui-field {
+  margin: var(--space-1) var(--space-0) var(--space-3);
+  padding-left: calc(var(--space-5) + var(--space-3));
+}
+
+.split-preview ul {
+  margin: var(--space-2) var(--space-0) var(--space-0);
+  padding-left: var(--space-5);
+  overflow-wrap: anywhere;
+}
+
+.split-preview li {
+  min-height: var(--space-5);
+}
+
+.split-more {
+  list-style: none;
+  color: var(--color-text-muted);
+}
+
 /* Images to PDF / Insert from Image (M11-08·O8): the images in page order. */
 .ui-dialog.images-dialog {
   width: min(560px, calc(100vw - 2 * var(--space-6)));

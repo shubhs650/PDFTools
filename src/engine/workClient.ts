@@ -65,6 +65,7 @@ type JobMethod =
   | 'indexText'
   | 'assemble'
   | 'createBlank'
+  | 'split'
   | 'imagesToPdf'
   | 'commentSource'
   | 'transferComments'

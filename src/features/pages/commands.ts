@@ -94,6 +94,19 @@ export function registerPageCommands(): () => void {
         if (id) openPageDialog('extract', id);
       },
     }),
+    registerCommand('organize.split', {
+      requiresDocument: true,
+      disabledReason: () => {
+        const id = activeId();
+        const meta = id ? documentStore.getState().docs[id]?.meta : undefined;
+        if (meta && !hasFullAccess(meta)) return msg('pages.extract.restricted');
+        return blocked();
+      },
+      run: () => {
+        const id = activeId();
+        if (id) openPageDialog('split', id);
+      },
+    }),
     registerCommand('organize.merge', {
       disabledReason: () => (pagesStore.getState().busy ? msg('pages.busy') : null),
       run: () => {

@@ -63,3 +63,14 @@ _In progress: M11's tasks add their notes here as they land; M11-09 (acceptance)
 - Photos taken with the phone turned show upright (the camera's EXIF orientation is applied).
   JPEGs go into the PDF as they are, without re-compression; transparent parts of a PNG stay
   transparent.
+
+## Split Document
+
+- **Organize › Split Document** saves parts of the open document as separate PDFs: **every few
+  pages**, **by page ranges** (such as `1-5, 6-12, 13-`, one file per range) or **by top-level
+  bookmarks** (each file from its bookmark to the page before the next; pages before the first
+  bookmark go into the first file). The dialog lists the file names before you split.
+- The files go into a folder you choose, named after the document with their pages or their
+  bookmark, and never replace a file already there. Where the browser can't save into a folder,
+  they come in one ZIP file. Your unsaved changes go into the files; the open document is not
+  changed.
