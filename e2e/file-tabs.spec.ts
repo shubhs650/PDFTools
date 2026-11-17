@@ -80,10 +80,19 @@ for (const [theme, accent] of [
     expect(s.shadow).toContain(line);
     const close = page.locator('.tab-close.tab--active');
     expect(await close.evaluate((el) => getComputedStyle(el).backgroundColor)).toBe(brand);
+    // The × is drawn in the name's colour (white on the fill), also while another tab
+    // is hovered (owner, 2026-11-17: it was the dark icon colour on blue).
+    const crossColour = () => close.locator('svg').evaluate((el) => getComputedStyle(el).color);
+    expect(await crossColour()).toBe(onBrand);
     // Other tabs: no fill until hovered.
     expect((await style(0)).background).toBe('rgba(0, 0, 0, 0)');
     await tabs(page).nth(0).hover();
     expect((await style(0)).background).toBe(await tokenColour(page, '--color-surface-raised'));
+    expect(await crossColour()).toBe(onBrand);
+    // An unselected tab's × is its text colour.
+    expect(
+      await page.locator('.tab-close.tab--hover svg').evaluate((el) => getComputedStyle(el).color),
+    ).toBe(await tokenColour(page, '--color-text'));
   });
 }
 

@@ -160,7 +160,7 @@ describe.each(SETS)('%s theme contrast (WCAG AA)', (_name, set) => {
 // M11-03 (ADR-028 D-50): the selected file tab is filled with the accent (--color-brand)
 // and has a 2 px --color-accent line along its bottom on the sunken strip. Its name and
 // × are --color-text-on-brand; the × hovers to --color-brand-hover. Other tabs hover to
-// --color-surface-raised and their × to --color-pressed. The hover card is a raised
+// --color-surface-raised and their × (in --color-text) to --color-pressed. The hover card is a raised
 // surface with muted text and the "Unsaved changes" chip in the selected tint.
 describe.each(SETS)('%s file tabs (M11-03)', (_name, set) => {
   const get = (t: string): string => {

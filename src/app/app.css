@@ -137,9 +137,15 @@ body {
     var(--color-accent);
 }
 
+/* The × is drawn in its tab's text colour: white on the selected tab (the shared
+   `.ui-button svg` rule would make it the dark icon colour, hard to see on blue). */
 .tab-close .ui-button {
-  color: var(--color-icon);
+  color: var(--color-text);
   opacity: 0;
+}
+
+.tab-close .ui-button svg {
+  color: currentColor;
 }
 
 .tab-close.tab--hover .ui-button,
