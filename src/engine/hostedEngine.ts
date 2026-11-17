@@ -61,6 +61,15 @@ export function slimArgs(args: unknown[]): unknown[] {
   });
 }
 
+/**
+ * How many calls of each executor method went to the Render worker since the
+ * app started (a counter per method name, nothing else). The perf gate in
+ * e2e/perf/annotation-load.spec.ts checks that loading every annotation never
+ * reaches the Render queue (ADR-014 decision 2), which tile timing alone
+ * cannot show reliably on a busy CI machine (issue #59).
+ */
+export const renderCallCounts = new Map<string, number>();
+
 /** Called after a document-changing call succeeded (the tab's dirty mark, M1-22). */
 export type MutationListener = (method: string, docId: string) => void;
 
@@ -72,6 +81,7 @@ export function createHostedExecutor(
     get(_target, method) {
       if (typeof method !== 'string' || method === 'then') return undefined;
       return (...args: unknown[]) => {
+        renderCallCounts.set(method, (renderCallCounts.get(method) ?? 0) + 1);
         const task = new Task<unknown, { code: PdfErrorCode; message: string }>();
         const job = rpc.call(
           'exec',

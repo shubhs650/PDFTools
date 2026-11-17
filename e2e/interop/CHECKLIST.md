@@ -452,3 +452,55 @@ typewriter grew to hold its one line (B15).
 | W1  | Opened in their viewer: the three comments show their full, edited text ("…, moved") where they were moved to; the callout's arrow still points where it was drawn. |         |             |
 | W2  | The typewriter reads "Typewriter: black Courier, moved" on one line, black Courier, nothing cut off; the text box and callout are red, 10 pt.                       |         |             |
 | W3  | Edit each one's text there and save; reopened in Triya PDF, the new text shows, and a double-click edits it with the caret where you clicked.                       |         |             |
+
+## M11 — fonts in text comments (D-52, D-54), crop, split and images to PDF (D-55; [M11 acceptance](../../docs/acceptance/M11.md))
+
+Files X and Z are in `e2e/fixtures/self-made/m11-interop/`, made by the app and saved with Ctrl+S
+(regenerate them with `M11_INTEROP_OUT=1 npm run owner:interop:m11`). Y and AA use your own
+computer's fonts and your own files, on the deployed beta.
+
+### X. Text comments in library fonts (M11-07, D-52)
+
+File: `fonts-library__ctrl-s.pdf`: eleven text boxes, blue text on a red border, one family of
+every group in the font list: Carlito, Arimo, IBM Plex Sans, Barlow Condensed, B612, Source
+Serif 4, JetBrains Mono, Caveat, Noto Sans Devanagari (नमस्ते: परियोजना संशोधन), Noto Sans SC
+(中文：二层结构计算), and a line of symbols (⌀ ± ° Ω ² Δ µ) in Carlito. Each line names its font.
+(The S26 sample passed this check on 2026-11-17; this is the shipped library.)
+
+| #   | Check                                                                                                                                                    | Acrobat | PDF-XChange |
+| --- | -------------------------------------------------------------------------------------------------------------------------------------------------------- | ------- | ----------- |
+| X1  | Each line shows in the face it names (Caveat handwritten, JetBrains Mono monospaced, Barlow Condensed narrow), with no missing-font prompt or boxes.     |         |             |
+| X2  | The Hindi line's letters join as in Triya PDF (the conjuncts in स्ते and शो), the Chinese line shows its characters, and the X2 line shows every symbol. |         |             |
+| X3  | Their comments list shows each comment's text as written (the Hindi and Chinese too).                                                                    |         |             |
+| X4  | Edit the Carlito comment's text there and save; reopened in Triya PDF, the new text shows (in Carlito, or in the font their viewer chose: note which).   |         |             |
+
+### Y. Fonts on this computer (M11-08·O5, D-54; Chrome or Edge on your computer)
+
+1. In Triya PDF, add a text box, open the Font list, choose **Show fonts on this computer…** and
+   allow the browser's prompt.
+2. Choose a font that came with Windows or Office (Calibri, Arial, Segoe UI) and one from your
+   CAD install if you have one (ISOCPEUR). Type a line in each, with ⌀ 150 ± 0.5. Ctrl+S.
+
+| #   | Check                                                                                                                                                        | Acrobat | PDF-XChange |
+| --- | ------------------------------------------------------------------------------------------------------------------------------------------------------------ | ------- | ----------- |
+| Y1  | The saved file shows each line in its font in their viewer; if you can, also on a second computer that doesn't have the font (it is embedded).               |         |             |
+| Y2  | A font the list shows greyed out gives a reason (its license doesn't allow embedding); note the font's name.                                                 |         |             |
+| Y3  | After closing and reopening the browser, the font list shows your computer's fonts again without a new prompt (tell us if you would rather click each time). | n/a     | n/a         |
+
+### Z. Cropped pages (M11-08·O9, D-55)
+
+File: `cropped__ctrl-s.pdf`: three pages, each cropped with **Crop Pages** by 20 mm top and
+bottom and 10 mm left and right (A4 becomes 189.9 × 257 mm).
+
+| #   | Check                                                                                                                                          | Acrobat | PDF-XChange |
+| --- | ---------------------------------------------------------------------------------------------------------------------------------------------- | ------- | ----------- |
+| Z1  | Each page shows cropped, and the page size in their document properties is 189.9 × 257 mm (about 7.48 × 10.13 in).                             |         |             |
+| Z2  | Printing (or Print to PDF) from their viewer prints the cropped area only.                                                                     |         |             |
+| Z3  | Their own crop of a page (Acrobat: Edit PDF › Crop Pages; PDF-XChange: Organize › Crop) opens cropped in Triya PDF, and Remove Crop undoes it. |         |             |
+
+### AA. Split Document and Images to PDF (M11-08·O7, O8; your own files)
+
+| #   | Check                                                                                                                                                                   | Acrobat | PDF-XChange |
+| --- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------- | ----------- |
+| AA1 | **Organize › Split Document** on a real drawing set, by top-level bookmarks: each part opens in their viewer with the right pages, in order, and its comments.          |         |             |
+| AA2 | **Images to PDF** from phone photos (some taken with the phone turned) and a scan, A4: in their viewer every photo is upright, sharp and inside the page, one per page. |         |             |

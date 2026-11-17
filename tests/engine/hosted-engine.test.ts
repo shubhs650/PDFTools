@@ -5,6 +5,7 @@ import { RpcError } from '../../src/engine/errors';
 import {
   RoutedPdfEngine,
   createHostedExecutor,
+  renderCallCounts,
   slimArgs,
   type TextSource,
 } from '../../src/engine/hostedEngine';
@@ -228,6 +229,36 @@ describe('RoutedPdfEngine: text geometry off the Render queue (ADR-012 decision 
       runs: [{ fromRender: true }],
     });
     expect(called).toEqual(['getPageGeometry']);
+  });
+
+  it('counts every executor call sent to the Render worker; a Work-served annotation load adds none (issue #59)', async () => {
+    const annDoc = {
+      id: 'a',
+      pageCount: 2,
+      pages: [{ index: 0 }, { index: 1 }],
+    } as unknown as Parameters<RoutedPdfEngine['getAllAnnotations']>[0];
+    const batches = () => renderCallCounts.get('getAnnotationsBatch') ?? 0;
+    let fromWork = true;
+    const text: TextSource = {
+      pageGeometry: () => null,
+      textSlices: () => null,
+      allAnnotations: (_d, fallback) =>
+        fromWork
+          ? { promise: Promise.resolve({ 0: [], 1: [] }), cancel: () => undefined }
+          : { promise: fallback(), cancel: () => undefined },
+    };
+    const engine = new RoutedPdfEngine(
+      executorWith(() => ({ 0: [], 1: [] })),
+      { imageConverter: converter },
+      text,
+    );
+    const before = batches();
+    await engine.getAllAnnotations(annDoc).toPromise();
+    expect(batches()).toBe(before);
+    // The negative control: the Render worker's own listing is counted.
+    fromWork = false;
+    await engine.getAllAnnotations(annDoc).toPromise();
+    expect(batches()).toBeGreaterThan(before);
   });
 
   it('a refused job rejects with its PDFium code (copy denied, rule 9)', async () => {

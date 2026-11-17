@@ -760,3 +760,88 @@ for (const [variant, url] of [
     },
   );
 }
+
+// M11 (ADR-028): the tab strip's card and menu, the comment font list, Crop Pages,
+// Split Document, Images to PDF and Settings › Start-up, in the same four variants as
+// M10. Reached by command ids, classes and roles, so the steps work in every language.
+for (const [variant, url] of [
+  ['light', '/'],
+  ['dark', '/'],
+  ['pseudo-locale', '/?locale=pseudo'],
+  ['dark, indigo accent, compact', '/'],
+] as const) {
+  test(
+    `M11 tabs, font list, Crop, Split, Images to PDF and Start-up (${variant})`,
+    { tag: '@a11y' },
+    async ({ page, pdfs }) => {
+      test.setTimeout(120_000);
+      if (variant.startsWith('dark')) await darkTheme(page);
+      if (variant.includes('compact'))
+        await page.addInitScript(() => {
+          localStorage.setItem('pdftools.accent', 'indigo');
+          localStorage.setItem('pdftools.density', 'compact');
+        });
+      await page.goto(url);
+      await cap(page, 'annotate', 'setProfile', 'Ana de Vries');
+      for (const [i, n] of ['m11-a.pdf', 'm11-b.pdf'].entries())
+        await drop(page, [{ name: n, b64: pdfs.simple(i + 2).toString('base64') }]);
+      const strip = page.locator('.tab-tablist [role="tab"]');
+      await expect(strip).toHaveCount(2);
+      await expect(page.locator('[data-page="0"] img.page-preview')).toBeVisible();
+      const run = (cmd: string) => cap(page, 'commands', 'run', cmd);
+
+      // The tab's hover card (M11-03) and its right-click menu (M11-05).
+      await strip.nth(0).hover();
+      await expect(page.getByTestId('tab-card')).toBeVisible();
+      await axe(page, 'tab strip with the hover card');
+      await strip.nth(1).click({ button: 'right' });
+      const menu = page.getByRole('menu');
+      await expect(menu).toBeVisible();
+      await axe(page, 'tab menu', '[role="menu"]');
+      await page.keyboard.press('Escape');
+      await expect(menu).toHaveCount(0);
+
+      // The comment font list (M11-07, O5's "On this computer" section in Chromium).
+      const id = (await cap(page, 'view', 'activeDocId')) as string;
+      const box = (await cap(page, 'annotate', 'create', id, 0, {
+        type: 3,
+        rect: { origin: { x: 60, y: 60 }, size: { width: 300, height: 50 } },
+        contents: 'Font list',
+        fontFamily: 4,
+        libraryFont: '',
+        fontSize: 14,
+        fontColor: '#1F3A93',
+        strokeColor: '#E44234',
+        strokeWidth: 1,
+        color: 'transparent',
+        textAlign: 0,
+        verticalAlign: 0,
+      })) as string;
+      expect(await run('view.propertiesPane')).toBe(true);
+      await cap(page, 'annotate', 'select', id, 0, box);
+      const fontButton = page.locator('.ui-font-button');
+      await expect(fontButton).toBeVisible();
+      await fontButton.focus();
+      await page.keyboard.press('ArrowDown');
+      await expect(page.locator('.ui-font-popup')).toBeVisible();
+      await axe(page, 'comment font list', '.ui-font-popup');
+      await page.keyboard.press('Escape');
+      await expect(page.locator('.ui-font-popup')).toHaveCount(0);
+
+      // Crop Pages (O9), Split Document (O7) and Images to PDF (O8).
+      for (const cmd of ['organize.crop', 'organize.split', 'organize.imagesToPdf']) {
+        expect(await run(cmd), cmd).toBe(true);
+        const dialog = page.getByRole('dialog');
+        await expect(dialog).toBeVisible();
+        await axe(page, cmd, '[role="dialog"]');
+        await page.keyboard.press('Escape');
+        await expect(dialog).toHaveCount(0);
+      }
+
+      // File › Settings › Start-up (O2).
+      expect(await run('file.settings')).toBe(true);
+      await expect(page.getByTestId('startup-section')).toBeVisible();
+      await axe(page, 'Settings with Start-up');
+    },
+  );
+}
