@@ -61,6 +61,7 @@ type JobMethod =
   | 'oxideWarm'
   | 'extract'
   | 'exportImages'
+  | 'pageImage'
   | 'indexText'
   | 'assemble'
   | 'createBlank'

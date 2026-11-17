@@ -73,6 +73,18 @@ export function pageSizeOf(docId: string, page: number): Size | null {
   return doc?.pages[page]?.size ?? null;
 }
 
+/**
+ * How a page is turned on screen, in quarter turns clockwise: its own /Rotate
+ * plus the view's rotation, as the page is drawn (DocumentView). The document
+ * store keeps the view's rotation in degrees.
+ */
+function turnsOf(docId: string, page: number): number {
+  const core = hostStore.getState().registry?.getStore().getState().core.documents[docId];
+  const own = core?.document?.pages[page]?.rotation ?? 0;
+  const view = core?.rotation ?? 0;
+  return (((own + view) % 4) + 4) % 4;
+}
+
 function geometry(docId: string, page: number) {
   const view = viewOf(docId);
   const el = view?.querySelector<HTMLElement>(`.page[data-page="${String(page)}"]`);
@@ -83,7 +95,7 @@ function geometry(docId: string, page: number) {
     view,
     box: el.getBoundingClientRect(),
     size,
-    rotation: d.view.rotation,
+    rotation: turnsOf(docId, page),
     scale: d.view.scale,
   };
 }

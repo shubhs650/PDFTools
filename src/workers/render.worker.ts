@@ -24,6 +24,7 @@ import { applyPageOp, withSource } from './render/pages';
 import { renderProgressive } from './render/progressive';
 import { AnnotBoxCache, annotBoxes, renderAnnotTile } from './render/annotTiles';
 import { renderSnapshot } from './render/snapshot';
+import { imageUnder } from './shared/pageImages';
 import { dropCustom, keepAuthor, nameTargets, writeMarkupIntent } from './render/annotIds';
 import { installFontReadback } from './render/freeTextFonts';
 import { applyTextColors, takeTextColorFallbacks } from './render/freeTextColors';
@@ -309,6 +310,18 @@ const handlers: Handlers<RenderApi> = {
     } finally {
       m.pdfium.wasmExports.free(buf);
       rawCall(m, 'FPDF_ClosePage', page);
+    }
+  },
+
+  // Copy Image / Save Image As (M11-08·O6): the page menu's hit test, on the live page.
+  imageAt: ({ docId, pageIndex, x, y }) => {
+    const { mod: m, native: n } = ready();
+    const ref = acquirePage(n, docId, pageIndex);
+    try {
+      const hit = imageUnder(m, ref.pagePtr, { x, y });
+      return hit ? { width: hit.width, height: hit.height } : null;
+    } finally {
+      ref.release();
     }
   },
 

@@ -13,8 +13,10 @@ import { TextEditMenu } from '../annotate/TextEditMenu';
 import { textMenuFromEvent } from '../annotate/textMenu';
 import { selectedTextMenu, snippetOf } from '../select/selectedText';
 import { onTextSelectionAt, selectedQuery, textSelectionOf } from '../select/textSelection';
+import { imageAt } from '../pageImage/pageImage';
 import {
   commentMenu,
+  IMAGE_ITEMS,
   keyboardAnchor,
   onSelectedComment,
   openers,
@@ -48,6 +50,9 @@ export function DocumentMenu({
     kind: 'page',
     at: null,
   });
+  // The page menu's open is on a picture of the page content (M11-08·O6), and which open it is.
+  const [onImage, setOnImage] = useState(false);
+  const probing = useRef(0);
   // The selected-text menu's quote of the text ('' until read), and which open it is for.
   const [snippet, setSnippet] = useState('');
   const reading = useRef(0);
@@ -117,10 +122,16 @@ export function DocumentMenu({
       });
       return;
     }
-    setTarget({
-      kind: at && onSelectedComment(at, selectedComments(documentId)) ? 'comment' : 'page',
-      at,
-    });
+    const kind = at && onSelectedComment(at, selectedComments(documentId)) ? 'comment' : 'page';
+    setTarget({ kind, at });
+    // On a picture: Copy Image and Save Image As… join the page menu once the
+    // Render worker has looked (a few milliseconds).
+    const probe = ++probing.current;
+    setOnImage(false);
+    if (kind === 'page' && at)
+      void imageAt(at).then((hit) => {
+        if (hit && probe === probing.current) setOnImage(true);
+      });
   };
 
   // Back to the document unless an item moved focus on purpose (a dialog, the reply box).
@@ -139,7 +150,9 @@ export function DocumentMenu({
             ? selectedTextMenu(snippet)
             : target.kind === 'comment'
               ? commentMenu(documentId)
-              : PAGE_MENU
+              : onImage
+                ? [...IMAGE_ITEMS, ...PAGE_MENU]
+                : PAGE_MENU
         }
         {...(target.at ? { args: { at: target.at } } : {})}
         onCloseAutoFocus={onCloseAutoFocus}

@@ -32,6 +32,44 @@ interface Heap {
   UTF8ToString(ptr: number): string;
 }
 
+/** Whether a 4-channel bitmap leaves any pixel transparent. */
+export function bitmapHasAlpha(mod: WrappedPdfiumModule, bmp: number): boolean {
+  const heap = mod.pdfium as unknown as Heap;
+  const call = (name: string, ...a: number[]) => rawCall(mod, name, ...a);
+  if (call('FPDFBitmap_GetFormat', bmp) !== 4) return false;
+  const w = call('FPDFBitmap_GetWidth', bmp);
+  const h = call('FPDFBitmap_GetHeight', bmp);
+  const stride = call('FPDFBitmap_GetStride', bmp);
+  const at = call('FPDFBitmap_GetBuffer', bmp);
+  for (let y = 0; y < h; y++)
+    for (let x = 0; x < w; x++)
+      if ((heap.HEAPU8[at + y * stride + x * 4 + 3] ?? 255) < 255) return true;
+  return false;
+}
+
+/** A PDFium bitmap as a PNG (exact pixels); the bitmap is destroyed. */
+export async function bitmapPng(mod: WrappedPdfiumModule, bmp: number): Promise<Uint8Array> {
+  const heap = mod.pdfium as unknown as Heap;
+  const call = (name: string, ...a: number[]) => rawCall(mod, name, ...a);
+  try {
+    const w = call('FPDFBitmap_GetWidth', bmp);
+    const h = call('FPDFBitmap_GetHeight', bmp);
+    const stride = call('FPDFBitmap_GetStride', bmp);
+    const at = call('FPDFBitmap_GetBuffer', bmp);
+    // toRgba copies the pixels before the encoder awaits, so the heap may move after.
+    const rgba = toRgba(
+      heap.HEAPU8.subarray(at, at + stride * h),
+      w,
+      h,
+      stride,
+      call('FPDFBitmap_GetFormat', bmp),
+    );
+    return await encodePng(rgba, w, h);
+  } finally {
+    call('FPDFBitmap_Destroy', bmp);
+  }
+}
+
 export async function exportImages(
   mod: WrappedPdfiumModule,
   docPtr: number,
@@ -69,36 +107,6 @@ export async function exportImages(
       const b = bytesOf((p, l) => call('FPDFImageObj_GetImageFilter', obj, i, p, l));
       return new TextDecoder().decode(b.subarray(0, Math.max(0, b.length - 1)));
     });
-  const hasAlpha = (bmp: number): boolean => {
-    if (call('FPDFBitmap_GetFormat', bmp) !== 4) return false;
-    const w = call('FPDFBitmap_GetWidth', bmp);
-    const h = call('FPDFBitmap_GetHeight', bmp);
-    const stride = call('FPDFBitmap_GetStride', bmp);
-    const at = call('FPDFBitmap_GetBuffer', bmp);
-    for (let y = 0; y < h; y++)
-      for (let x = 0; x < w; x++)
-        if ((heap.HEAPU8[at + y * stride + x * 4 + 3] ?? 255) < 255) return true;
-    return false;
-  };
-  const pngOf = async (bmp: number): Promise<Uint8Array> => {
-    try {
-      const w = call('FPDFBitmap_GetWidth', bmp);
-      const h = call('FPDFBitmap_GetHeight', bmp);
-      const stride = call('FPDFBitmap_GetStride', bmp);
-      const at = call('FPDFBitmap_GetBuffer', bmp);
-      const rgba = toRgba(
-        heap.HEAPU8.subarray(at, at + stride * h),
-        w,
-        h,
-        stride,
-        call('FPDFBitmap_GetFormat', bmp),
-      );
-      return await encodePng(rgba, w, h);
-    } finally {
-      call('FPDFBitmap_Destroy', bmp);
-    }
-  };
-
   try {
     progress({ done: 0, total: list.length });
     for (const [i, p] of list.entries()) {
@@ -144,14 +152,18 @@ export async function exportImages(
           // transparent, that rendering (with alpha) is the image. Otherwise the
           // native pixels — or, for a plain JPEG, its own bytes.
           const rendered = call('FPDFImageObj_GetRenderedBitmap', docPtr, page, obj);
-          const transparent = rendered !== 0 && hasAlpha(rendered);
+          const transparent = rendered !== 0 && bitmapHasAlpha(mod, rendered);
           if (rendered && !transparent) call('FPDFBitmap_Destroy', rendered);
           if (!transparent && f.length === 1 && f[0] === 'DCTDecode' && raw.length > 0) {
             out.files.push({ path: `${name}.jpg`, data: raw, type: 'image/jpeg' });
           } else {
             const bmp = transparent ? rendered : call('FPDFImageObj_GetBitmap', obj);
             if (!bmp) continue;
-            out.files.push({ path: `${name}.png`, data: await pngOf(bmp), type: 'image/png' });
+            out.files.push({
+              path: `${name}.png`,
+              data: await bitmapPng(mod, bmp),
+              type: 'image/png',
+            });
           }
           out.images++;
         }

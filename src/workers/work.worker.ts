@@ -37,6 +37,7 @@ import { requireCapability, securityOf } from './work/permissionGate';
 import { extract } from './work/extract';
 import { zipBlob } from './work/zip';
 import { exportImages } from './work/images';
+import { pageImagePng } from './work/pageImage';
 import { assemble, fullAccess, type AssemblePart } from './work/assemble';
 import { createBlank } from './work/blank';
 import { commentSource, copyComments, transferComments } from './work/transferJobs';
@@ -782,6 +783,23 @@ serve<WorkApi>(self, {
         };
       } finally {
         wasmBytes(); // decoded images grow the heap (ADR-004 respawn policy)
+      }
+    }),
+
+  // Copy Image / Save Image As (M11-08·O6): one image of the page content, as a PNG.
+  pageImage: ({ docId, pageIndex, x, y }, ctx) =>
+    scheduler.run('interactive', ctx.signal, async (slice) => {
+      if (!mod) throw new RpcError('not-initialized', 'The work worker is not initialized');
+      const { doc } = await docs.get(docId);
+      const ptr = docPtrOf(need(), doc.id);
+      requireCapability(securityOf(mod, ptr), 'copy'); // rule 9
+      try {
+        const r = await pageImagePng(mod, ptr, pageIndex, { x, y }, slice);
+        if (!r) return null;
+        const { png, width, height } = r;
+        return { blob: new Blob([png as BlobPart], { type: 'image/png' }), width, height };
+      } finally {
+        wasmBytes(); // a decoded image grows the heap (ADR-004 respawn policy)
       }
     }),
 

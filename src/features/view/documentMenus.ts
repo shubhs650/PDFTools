@@ -60,6 +60,13 @@ export function commentMenu(docId: string): ContextMenuEntry[] {
   ];
 }
 
+/** A picture of the page content under the pointer (M11-08·O6): its items above the page menu's. */
+export const IMAGE_ITEMS: readonly ContextMenuEntry[] = [
+  cmd('edit.copyImage'),
+  cmd('edit.saveImage'),
+  sep('image'),
+];
+
 /** The page background. */
 export const PAGE_MENU: readonly ContextMenuEntry[] = [
   cmd('edit.paste'),

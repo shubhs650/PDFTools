@@ -208,6 +208,8 @@
       "paste": "Paste",
       "selectAll": "Select All",
       "searchSelection": "Search for Selected Text",
+      "copyImage": "Copy Image",
+      "saveImage": "Save Image As…",
       "properties": "Properties"
     },
     "bookmark": {
@@ -2025,6 +2027,18 @@
     "restricted": "This document's security settings don't allow copying its content.",
     "keyRect": "Area to copy as a picture",
     "keyRectHelp": "Arrow keys move it (Ctrl: 1 point), Shift+arrow keys resize it, Enter copies the area, Esc ends."
+  },
+  "pageImage": {
+    "copied": "Image copied",
+    "saved": "Image saved",
+    "none": "There is no picture at that point.",
+    "copyFailed": "The image could not be copied to the clipboard.",
+    "saveFailed": "The image could not be saved.",
+    "copyTitle": "Copying image",
+    "saveTitle": "Saving image",
+    "progress": "Making a PNG of the image at its full resolution.",
+    "progressName": "Image progress",
+    "cancel": "Cancel"
   },
   "transfer": {
     "restricted": "This document's security settings don't allow adding comments.",
