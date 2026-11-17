@@ -2135,6 +2135,11 @@ body {
   cursor: grabbing;
 }
 
+/* A file's last view being put in place (D-53): the pages wait, so page 1 does not flash first. */
+.document-host[data-restoring='true'] .page {
+  opacity: 0;
+}
+
 /* ------------------------------------------------------------ recent files (M1-18) */
 
 .recent {

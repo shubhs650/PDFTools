@@ -6,7 +6,12 @@ import type { RotateCapability } from '@embedpdf/plugin-rotate';
 import type { ScrollCapability, ScrollScope } from '@embedpdf/plugin-scroll';
 import { SpreadMode, type SpreadCapability } from '@embedpdf/plugin-spread';
 import { ZoomMode, type ZoomCapability, type ZoomScope } from '@embedpdf/plugin-zoom';
-import { documentStore, type ViewMode, type ZoomSetting } from '../../app/store/documentStore';
+import {
+  documentStore,
+  type Rotation,
+  type ViewMode,
+  type ZoomSetting,
+} from '../../app/store/documentStore';
 import { capability, hostStore, renderEngine } from './host';
 import type { ViewTarget } from './destination';
 import type { ViewEntry } from './history';
@@ -254,10 +259,16 @@ export function setViewMode(mode: ViewMode): void {
 /** Rotate view (not the page): view state only, never a document change or dirty flag. */
 export function rotate(dir: 1 | -1): void {
   const a = active();
+  const view = a ? documentStore.getState().docs[a.docId]?.view : undefined;
+  if (view) setViewRotation(rotateView(view.rotation, dir));
+}
+
+/** The view rotation itself (a file's last view, D-53); the current page stays in view. */
+export function setViewRotation(rotation: Rotation): void {
+  const a = active();
   if (!a) return;
   const view = documentStore.getState().docs[a.docId]?.view;
-  if (!view) return;
-  const rotation = rotateView(view.rotation, dir);
+  if (!view || view.rotation === rotation) return;
   documentStore.getState().setView(a.docId, { rotation });
   a.rotate.forDocument(a.docId).setRotation(toQuarterTurns(rotation));
   keepPage(a, view.page);

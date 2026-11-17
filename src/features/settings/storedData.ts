@@ -84,6 +84,14 @@ export const LOCAL_DATA: readonly LocalDataItem[] = [
     cleared: true,
   },
   {
+    // Each file's last view (M11-08·O3, D-53), by fingerprint: never a name or content.
+    kind: 'indexedDB',
+    location: `${DB_NAME} › lastViews`,
+    store: 'lastViews',
+    what: msg('privacy.data.lastViews'),
+    cleared: true,
+  },
+  {
     kind: 'opfs',
     location: `${RECOVERY_DIR}/`,
     store: RECOVERY_DIR,
