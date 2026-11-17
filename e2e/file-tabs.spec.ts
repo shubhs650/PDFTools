@@ -14,9 +14,12 @@ const addButton = (page: Page) =>
   page.locator('.tab-add').getByRole('button', { name: 'Open a file' });
 
 async function openThree(page: Page, pdfs: { simple(n: number): Buffer }): Promise<void> {
-  for (const [i, name] of [LONG, 'GA-drawing_pump-house.pdf', 'photos.pdf'].entries())
+  // One at a time: three drops in flight open concurrently, and the one that finishes
+  // last (not always photos.pdf) would be the selected tab.
+  for (const [i, name] of [LONG, 'GA-drawing_pump-house.pdf', 'photos.pdf'].entries()) {
     await drop(page, [{ name, b64: pdfs.simple(i + 1).toString('base64') }]);
-  await expect(tabs(page)).toHaveCount(3);
+    await expect(tabs(page)).toHaveCount(i + 1);
+  }
   await expect(page.locator('[data-page="0"] img.page-preview')).toBeVisible();
 }
 
