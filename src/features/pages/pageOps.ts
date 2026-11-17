@@ -59,6 +59,8 @@ interface PagesState {
   /** Bumped per document after each page change: per-page panes re-read. */
   version: Record<string, number>;
   error: MessageKey | null;
+  /** Values for the error's placeholders (a file name, M11-08·O8). */
+  errorParams: Record<string, string> | null;
   /** A signed document waits for "change pages anyway?" (signatures show "changed after signing"). */
   signedPrompt: string | null;
   /** Said by the Thumbnails pane's live region (a move's new position, M4-10). */
@@ -69,6 +71,7 @@ export const pagesStore = createStore<PagesState>()(() => ({
   busy: null,
   version: {},
   error: null,
+  errorParams: null,
   signedPrompt: null,
   announcement: null,
 }));
@@ -114,7 +117,7 @@ export function announce(text: string | null): void {
 }
 
 export function dismissPagesError(): void {
-  pagesStore.setState({ error: null });
+  pagesStore.setState({ error: null, errorParams: null });
 }
 
 // ---- signed documents --------------------------------------------------------------
@@ -242,7 +245,7 @@ async function runOp(docId: string, op: PageOp, label: MessageKey): Promise<Appl
     return await applyAsStep(docId, { kind: 'op', op }, label);
   } catch (err) {
     recordError('pages.op', err);
-    pagesStore.setState({ error: msg('pages.failed') });
+    pagesStore.setState({ errorParams: null, error: msg('pages.failed') });
     return null;
   } finally {
     cancelRunning = null;
@@ -412,7 +415,7 @@ async function apply(docId: string, change: Change, label: MessageKey): Promise<
   } catch (err) {
     if (!isAbortError(err) && !(err as { code?: string }).code?.startsWith('cancelled')) {
       recordError('pages.op', err);
-      pagesStore.setState({ error: msg('pages.failed') });
+      pagesStore.setState({ errorParams: null, error: msg('pages.failed') });
     }
     return null;
   }
@@ -538,7 +541,7 @@ async function undo(
   keepView: boolean,
 ): Promise<void> {
   if (evicted.has(token)) {
-    pagesStore.setState({ error: msg('pages.undoGone') });
+    pagesStore.setState({ errorParams: null, error: msg('pages.undoGone') });
     return;
   }
   setBusy({ docId, label: msg('pages.undoing'), done: 0, total: 0, started: performance.now() });
@@ -548,7 +551,7 @@ async function undo(
     documentStore.getState().markDirty(docId);
   } catch (err) {
     recordError('pages.undo', err);
-    pagesStore.setState({ error: msg('pages.failed') });
+    pagesStore.setState({ errorParams: null, error: msg('pages.failed') });
   } finally {
     setBusy(null);
   }
@@ -564,7 +567,7 @@ async function redo(docId: string, change: Change, label: MessageKey): Promise<v
     documentStore.getState().markDirty(docId);
   } catch (err) {
     recordError('pages.redo', err);
-    pagesStore.setState({ error: msg('pages.failed') });
+    pagesStore.setState({ errorParams: null, error: msg('pages.failed') });
   } finally {
     cancelRunning = null;
     setBusy(null);
@@ -602,8 +605,8 @@ export async function runBusy<T>(
 }
 
 /** Shows a page-operation error (M4-11 jobs outside runPageOp). */
-export function showPagesError(key: MessageKey): void {
-  pagesStore.setState({ error: key });
+export function showPagesError(key: MessageKey, params?: Record<string, string>): void {
+  pagesStore.setState({ error: key, errorParams: params ?? null });
 }
 
 export { settleEdits };

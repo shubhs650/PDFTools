@@ -74,7 +74,7 @@
     },
     "opening-files": {
       "title": "Opening files",
-      "summary": "Open PDFs from your computer, by drag and drop, or from the list of recent files, and pick up where you left off. Each file opens in its own tab.",
+      "summary": "Open PDFs from your computer, by drag and drop, or from the list of recent files, make a PDF from images, and pick up where you left off. Each file opens in its own tab.",
       "body": [
         {
           "shot": "opening-files-1",
@@ -104,6 +104,23 @@
             "You can also drag PDF files from your desktop or file manager and drop them on the window.",
             "<b>File</b> › <b>Recent</b> lists the files you opened on this device. Click one to open it again.",
             "A password-protected file asks for its password first. See [Protected and signed files](#protected-files)."
+          ]
+        },
+        {
+          "h": "To make a PDF from images"
+        },
+        {
+          "steps": [
+            "Open or drop JPG or PNG files, such as site photos or scans, or choose <b>Organize</b> › <b>Images to PDF</b> (also in <b>File</b> › <b>New</b>) and <b>Add Images…</b>.",
+            "Put the images in page order: drag them, or use the up and down arrows.",
+            "Choose the page size: <b>Fit each page to its image</b>, or <b>A4</b> or <b>Letter</b>, which turn to suit each image. Then choose <b>Create</b>.",
+            "The new PDF opens in its own tab. Save it to choose where it goes."
+          ]
+        },
+        {
+          "list": [
+            "Photos taken with the phone turned show upright, and JPEGs go into the PDF without being compressed again.",
+            "To add images to a document that is open, choose <b>Organize</b> › <b>Insert from Image</b>."
           ]
         },
         {
@@ -1061,7 +1078,7 @@
         {
           "steps": [
             "Select the pages: click thumbnails in the Thumbnails pane (<kbd>Shift</kbd> or <kbd>{{mod}}</kbd>+click for several), or stay on the current page.",
-            "Choose a command on the <b>Organize</b> tab: <b>Rotate</b>, <b>Delete Pages</b>, <b>Move Pages</b>, <b>Extract Pages</b>, <b>Insert Blank Page</b>, <b>Insert from File</b> or <b>Merge Files</b>.",
+            "Choose a command on the <b>Organize</b> tab: <b>Rotate</b>, <b>Delete Pages</b>, <b>Move Pages</b>, <b>Extract Pages</b>, <b>Insert Blank Page</b>, <b>Insert from File</b>, <b>Insert from Image</b>, <b>Merge Files</b> or <b>Images to PDF</b>.",
             "Check the result, then press <kbd>{{save}}</kbd>. <kbd>{{undo}}</kbd> undoes a page change."
           ]
         },
@@ -1073,7 +1090,8 @@
           "list": [
             "Drag thumbnails to move pages.",
             "Right-click a thumbnail for Cut, Copy and Paste of pages, also between documents.",
-            "Extract Pages saves the chosen pages as a new PDF."
+            "Extract Pages saves the chosen pages as a new PDF.",
+            "Insert from Image adds JPG or PNG images as pages, one image per page, before or after the page you choose. See [Opening files](#opening-files) for the page sizes."
           ]
         },
         {

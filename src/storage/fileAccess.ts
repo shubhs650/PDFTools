@@ -11,6 +11,14 @@ import { AbortError } from '../engine/errors';
 
 const PDF_TYPES = [{ description: 'PDF', accept: { 'application/pdf': ['.pdf'] } }] as const;
 
+/** JPG and PNG for Images to PDF (M11-08·O8, D-55). */
+const IMAGE_ACCEPT = { 'image/jpeg': ['.jpg', '.jpeg', '.jfif'], 'image/png': ['.png'] } as const;
+const IMAGE_TYPES = [{ description: 'JPG, PNG', accept: IMAGE_ACCEPT }] as const;
+/** File › Open (M11-08·O8): PDFs, and images, which become a new PDF. */
+const OPEN_TYPES = [
+  { description: 'PDF, JPG, PNG', accept: { 'application/pdf': ['.pdf'], ...IMAGE_ACCEPT } },
+] as const;
+
 type PickerTypes = readonly { description: string; accept: Record<string, readonly string[]> }[];
 
 interface PickerWindow {
@@ -54,13 +62,19 @@ export interface OpenedFile {
 
 const isAbort = (err: unknown): boolean => (err as DOMException | undefined)?.name === 'AbortError';
 
-/** Open dialog (§4.1). Resolves [] when the user cancels. */
-export async function pickPdfFiles(win: Window = window): Promise<OpenedFile[]> {
+/**
+ * Open dialog (§4.1). Resolves [] when the user cancels. `withImages`: File ›
+ * Open also offers JPG and PNG files (M11-08·O8).
+ */
+export async function pickPdfFiles(
+  win: Window = window,
+  withImages = false,
+): Promise<OpenedFile[]> {
   if (accessStrategy(win) === 'fsa') {
     try {
       const handles = await (win as PickerWindow).showOpenFilePicker?.({
         multiple: true,
-        types: PDF_TYPES,
+        types: withImages ? OPEN_TYPES : PDF_TYPES,
         id: 'pdftools-open',
       });
       return await Promise.all(
@@ -71,7 +85,33 @@ export async function pickPdfFiles(win: Window = window): Promise<OpenedFile[]> 
       throw err;
     }
   }
-  return pickWithInput(win.document);
+  return pickWithInput(
+    win.document,
+    withImages ? '.pdf,application/pdf,.jpg,.jpeg,.jfif,image/jpeg,.png,image/png' : undefined,
+  );
+}
+
+/** Images to PDF and Insert from Image (M11-08·O8): JPG and PNG files. Resolves [] when cancelled. */
+export async function pickImageFiles(win: Window = window): Promise<File[]> {
+  if (accessStrategy(win) === 'fsa') {
+    try {
+      const handles = await (win as PickerWindow).showOpenFilePicker?.({
+        multiple: true,
+        types: IMAGE_TYPES,
+        id: 'pdftools-images',
+      });
+      return await Promise.all((handles ?? []).map((h) => h.getFile()));
+    } catch (err) {
+      if (isAbort(err)) return [];
+      throw err;
+    }
+  }
+  const picked = await pickWithInput(
+    win.document,
+    '.jpg,.jpeg,.jfif,image/jpeg,.png,image/png',
+    true,
+  );
+  return picked.map((p) => p.file);
 }
 
 /** Import Comments (M4-20): one PDF or one of our JSON exports. Resolves null when cancelled. */

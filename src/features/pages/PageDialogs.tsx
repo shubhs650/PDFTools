@@ -10,6 +10,7 @@ import { answerSigned, cancelPageOp, dismissPagesError, runPageOp, usePages } fr
 import { movePages } from './commands';
 import { closePageDialog as closeDialog, usePageDialog } from './dialogStore';
 import { moveTo } from './move';
+import { ImagesDialog } from './ImagesDialog';
 import { NewBlankDialog } from './NewBlankDialog';
 import { selectionOf } from './selection';
 import { blankSize, insertAt, type Orientation, type SizeChoice, type Where } from './sizes';
@@ -55,6 +56,7 @@ export function PageDialogs() {
         <InsertDialog key={open.docId} docId={open.docId} where={open.where ?? 'after'} />
       ) : null}
       {open?.kind === 'newBlank' ? <NewBlankDialog /> : null}
+      <ImagesDialog />
       <ProgressDialog />
       <SignedDialog />
       <ErrorDialog />
@@ -499,6 +501,7 @@ function SignedDialog() {
 function ErrorDialog() {
   const { t } = useTranslation();
   const error = usePages((s) => s.error);
+  const params = usePages((s) => s.errorParams);
   if (!error) return null;
   return (
     <Dialog
@@ -507,7 +510,7 @@ function ErrorDialog() {
         if (!o) dismissPagesError();
       }}
       title={t('pages.errorTitle')}
-      description={t(error)}
+      description={params ? (t as (k: string, o: object) => string)(error, params) : t(error)}
       closeIcon={<Dismiss20Regular />}
       footer={<Button label={t('pages.dismiss')} variant="primary" onClick={dismissPagesError} />}
     />

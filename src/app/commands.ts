@@ -1254,6 +1254,16 @@ export const COMMANDS: readonly CommandDef[] = [
     shipped: true, // M4-11
   },
   {
+    // Insert from Image (M11-08·O8, D-55): JPG or PNG files as new pages.
+    id: 'organize.insertFromImage',
+    tab: 'organize',
+    group: 'pages',
+    size: 'large',
+    fluent: 'ImageAdd',
+    milestone: 'M6',
+    shipped: true,
+  },
+  {
     id: 'organize.delete',
     tab: 'organize',
     group: 'pages',
@@ -1288,6 +1298,16 @@ export const COMMANDS: readonly CommandDef[] = [
     fluent: 'DocumentMultiple',
     milestone: 'M4',
     shipped: true, // M4-11
+  },
+  {
+    // Images to PDF (M11-08·O8, D-55): JPG or PNG files as a new document; needs none open.
+    id: 'organize.imagesToPdf',
+    tab: 'organize',
+    group: 'pages',
+    size: 'large',
+    fluent: 'ImageMultiple',
+    milestone: 'M6',
+    shipped: true,
   },
   {
     id: 'organize.rotateCw',

@@ -136,7 +136,9 @@ test('dragging files over the window highlights the drop card; with a document, 
   await page.goto('/');
   await dragIn(page);
   await expect(dropCard(page)).toHaveAttribute('data-over', '');
-  await expect(dropCard(page)).toContainText('Drop PDF files to open them');
+  await expect(dropCard(page)).toContainText(
+    'Drop PDF files to open them, or JPG and PNG images to make a PDF',
+  );
   const overlay = page.locator('.drop-overlay');
   await expect(overlay).toHaveAttribute('data-start', '');
   await expect(overlay.locator('.drop-overlay-card')).toHaveCount(0);
@@ -148,7 +150,9 @@ test('dragging files over the window highlights the drop card; with a document, 
   await expect(tabs(page).getByRole('tab')).toHaveCount(1);
   await dragIn(page);
   await expect(overlay).not.toHaveAttribute('data-start');
-  await expect(overlay.locator('.drop-overlay-card')).toHaveText('Drop PDF files to open them');
+  await expect(overlay.locator('.drop-overlay-card')).toHaveText(
+    'Drop PDF files to open them, or JPG and PNG images to make a PDF',
+  );
 });
 
 test('Recent files on the start screen: a card with name, size and when', async ({ page }) => {

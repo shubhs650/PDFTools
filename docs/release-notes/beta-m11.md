@@ -50,3 +50,16 @@ _In progress: M11's tasks add their notes here as they land; M11-09 (acceptance)
   show either pane.
 - **View › Zoom to Area**: drag a rectangle and it fills the window (or hold Z while using Hand).
 - Right-click a picture on the page to copy it or save it as a PNG at its own resolution.
+
+## Images to PDF
+
+- Open (Ctrl+O) or drop **JPG and PNG files**, such as site photos or scans, and **Images to
+  PDF** lists them: put them in order, then choose the page size. **Fit each page to its image**
+  uses the size the image states (96 dpi when it states none); **A4** and **Letter** turn to
+  suit each image (landscape for a wide photo), with an optional 10 mm margin, and never enlarge
+  an image. The new PDF opens in its own tab; save it to choose where it goes.
+- **Organize › Insert from Image** adds images as pages to the open document, before or after
+  a page, as one undo step. **Organize › Images to PDF** and **File › New** start an empty list.
+- Photos taken with the phone turned show upright (the camera's EXIF orientation is applied).
+  JPEGs go into the PDF as they are, without re-compression; transparent parts of a PNG stay
+  transparent.

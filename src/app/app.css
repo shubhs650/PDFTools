@@ -1528,6 +1528,8 @@ body {
    a card, its icon on a soft brand tile, as the start screen's quick actions. */
 .backstage-action {
   display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-3);
 }
 
 .backstage-action .ribbon-button--large {
@@ -5164,6 +5166,100 @@ textarea.form-field {
 .pages-merge-controls {
   display: flex;
   flex-direction: column;
+}
+
+/* Images to PDF / Insert from Image (M11-08·O8): the images in page order. */
+.ui-dialog.images-dialog {
+  width: min(560px, calc(100vw - 2 * var(--space-6)));
+}
+
+.images-add {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+}
+
+.images-list {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+  max-height: min(40vh, 320px);
+  margin: 0;
+  padding: 0;
+  overflow: auto;
+  list-style: none;
+}
+
+.images-item {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  padding: var(--space-1) var(--space-2);
+  border: var(--border-width) solid var(--color-border);
+  border-radius: var(--radius-m, 4px);
+  background: var(--color-surface, transparent);
+}
+
+.images-item--dragged {
+  opacity: 0.5;
+}
+
+.images-number {
+  min-width: 2ch;
+  color: var(--color-text-muted);
+  font-variant-numeric: tabular-nums;
+  text-align: end;
+}
+
+.images-thumb {
+  display: grid;
+  flex: none;
+  place-items: center;
+  width: 48px;
+  height: 36px;
+  overflow: hidden;
+  border-radius: var(--radius-s, 2px);
+  background: var(--color-surface-sunken, var(--color-border));
+}
+
+.images-thumb img {
+  max-width: 100%;
+  max-height: 100%;
+  object-fit: contain;
+}
+
+.images-text {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.images-name {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.images-size {
+  color: var(--color-text-muted);
+  font-size: var(--font-size-s, 12px);
+}
+
+.images-controls {
+  display: flex;
+  flex: none;
+}
+
+.images-skipped {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: var(--space-2);
+}
+
+.images-skipped p {
+  margin: 0;
 }
 
 /* ------------------------------------------------------------ comment styles palette (M6-07, M6-17) */

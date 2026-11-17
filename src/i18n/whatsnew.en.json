@@ -15,7 +15,8 @@
         "Text boxes, typewriter text and callouts can use a library of fonts that ships with the app and works offline.",
         "Right-click selected text to copy, highlight, underline, strike out, mark it for redaction or search for it.",
         "View › Zoom to Area: drag a rectangle and it fills the window (or hold Z while using Hand).",
-        "Right-click a picture on the page to copy it or save it as a PNG."
+        "Right-click a picture on the page to copy it or save it as a PNG.",
+        "Images to PDF: open or drop JPG and PNG files, such as site photos or scans, to make a PDF with one image per page (each page fits its image, or A4 or Letter). Organize › Insert from Image adds images as pages to an open document."
       ]
     },
     {
