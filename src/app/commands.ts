@@ -1768,6 +1768,25 @@ export const COMMANDS: readonly CommandDef[] = [
     milestone: 'M6',
     shipped: true, // M11-08·O1: the selected-text menu
   },
+  // The page menu on a picture of the page content (M11-08·O6, ADR-028).
+  {
+    id: 'edit.copyImage',
+    tab: 'menu',
+    group: 'menu',
+    size: 'small',
+    fluent: 'ImageCopy',
+    milestone: 'M6',
+    shipped: true, // M11-08·O6: copy an image on the page
+  },
+  {
+    id: 'edit.saveImage',
+    tab: 'menu',
+    group: 'menu',
+    size: 'small',
+    fluent: 'ArrowDownload',
+    milestone: 'M6',
+    shipped: true, // M11-08·O6: save an image on the page
+  },
   {
     id: 'edit.properties',
     tab: 'menu',

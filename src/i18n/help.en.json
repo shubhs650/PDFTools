@@ -781,6 +781,18 @@
         },
         {
           "tip": "From the keyboard, the arrow keys move and resize the snapshot rectangle and <kbd>Enter</kbd> copies it. A document that does not allow copying refuses snapshots."
+        },
+        {
+          "h": "To copy or save a picture on the page"
+        },
+        {
+          "steps": [
+            "Right-click a picture that is part of the page, such as a photo, a logo or a scanned page.",
+            "Choose <b>Copy Image</b> to put it on the clipboard, or <b>Save Image As…</b> to save it as a PNG file."
+          ]
+        },
+        {
+          "tip": "You get the picture itself at its full resolution, upright and with its transparency, not the area around it. To copy several pictures at once, use <b>Convert</b> › <b>Export Images</b>. Pictures that are comments, such as image stamps, have their own menu."
         }
       ]
     },

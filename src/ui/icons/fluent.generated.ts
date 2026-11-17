@@ -77,6 +77,7 @@ import { Highlight20Filled, Highlight20Regular, Highlight24Filled, Highlight24Re
 import { History20Regular, History32Regular } from '@fluentui/react-icons/svg/history';
 import { Home20Regular } from '@fluentui/react-icons/svg/home';
 import { ImageAdd20Regular } from '@fluentui/react-icons/svg/image-add';
+import { ImageCopy20Regular } from '@fluentui/react-icons/svg/image-copy';
 import { ImageMultiple20Regular, ImageMultiple32Regular } from '@fluentui/react-icons/svg/image-multiple';
 import { Info20Regular, Info32Regular } from '@fluentui/react-icons/svg/info';
 import { InkingTool20Filled, InkingTool20Regular } from '@fluentui/react-icons/svg/inking-tool';
@@ -327,6 +328,8 @@ export const FLUENT_GLYPHS: Record<string, FluentGlyphs> = {
   'edit.paste': { regular: { small: ClipboardPaste20Regular } },
   'edit.selectAll': { regular: { small: SelectAllOn20Regular } },
   'edit.searchSelection': { regular: { small: Search20Regular } },
+  'edit.copyImage': { regular: { small: ImageCopy20Regular } },
+  'edit.saveImage': { regular: { small: ArrowDownload20Regular } },
   'edit.properties': { regular: { small: Info20Regular } },
   'text.undo': { regular: { small: ArrowUndo20Regular } },
   'text.redo': { regular: { small: ArrowRedo20Regular } },

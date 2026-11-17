@@ -422,6 +422,17 @@ export interface WorkApi {
     },
     { done: number; total: number }
   >;
+  /**
+   * Copy Image / Save Image As (M11-08·O6, ADR-028): the picture of the page
+   * content under page point (x, y) (points from the visible page's top-left
+   * corner, unrotated) as a PNG at its own resolution, from the document as it
+   * is now (live section synced first); null when no image is there. Copy
+   * permission first (rule 9). Cancellable before the PNG is made.
+   */
+  pageImage: MethodSpec<
+    { docId: string; pageIndex: number; x: number; y: number },
+    { blob: Blob; width: number; height: number } | null
+  >;
   /** The user is scrolling or zooming: background work backs off for `quietMs`. */
   activity: MethodSpec<{ quietMs?: number }, null>;
   textStats: MethodSpec<

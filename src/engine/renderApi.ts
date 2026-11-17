@@ -4,6 +4,7 @@
 import type { FontFallbackConfig } from '@embedpdf/engines/pdfium';
 import type { PdfJson } from '../model/pdf/wire';
 import type { Capability } from '../model/permissions';
+import type { PageImageHit } from '../model/pageImageHit';
 import type { AnnotTileRequest } from '../workers/render/annotTiles';
 import type { FlattenCounts } from '../workers/render/flatten';
 import type { SnapshotPixels, SnapshotRequest } from '../workers/render/snapshot';
@@ -44,6 +45,15 @@ export interface RenderApi {
   contentBox: MethodSpec<
     { docId: string; pageIndex: number },
     { left: number; top: number; right: number; bottom: number } | null
+  >;
+  /**
+   * The picture of the page content under page point (x, y), in the same
+   * points as `contentBox` (M11-08·O6): its size in pixels, or null. The page
+   * menu offers Copy Image and Save Image As on it.
+   */
+  imageAt: MethodSpec<
+    { docId: string; pageIndex: number; x: number; y: number },
+    PageImageHit | null
   >;
   memory: MethodSpec<null, { wasmBytes: number }>;
   /**

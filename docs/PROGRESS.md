@@ -1,6 +1,6 @@
 # Triya PDF — Progress
 
-_Last updated: 2026-11-17 (session 86: M11-08·O4 Zoom to Area)_
+_Last updated: 2026-11-17 (session 87: M11-08·O6 copy or save an image on the page)_
 
 **Current milestone:** M11 — file tabs, OCR text selection, a font library and comments in every
 pointer mode: plan [docs/plan/M11.md](plan/M11.md) and [ADR-028](adr/028-m11-tabs-fonts-select.md)
@@ -20,6 +20,30 @@ interop is in the M6 pack (CHECKLIST §M6 R1–R4). Rev 0 (M0–M4) is complete 
 
 ## Done
 
+- **Session 87 — M11-08·O6 copy or save an image on the page (ADR-028, plan O6).** A right
+  click on a picture of the page content (not a comment) puts **Copy Image** and **Save Image
+  As…** at the top of the page menu (commands `edit.copyImage`, `edit.saveImage`, menu only,
+  icons Fluent `ImageCopy` and `ArrowDownload`; both need the copy permission, rule 9). The
+  Render worker's `imageAt` finds the picture under the pointer on the live page (shared
+  `src/workers/shared/pageImages.ts`: the page's objects walked with their matrices, Form
+  XObjects included, the last drawn on top, images under 16 px skipped; pure geometry in
+  `src/model/pageImageHit.ts`); the items join the open menu when it answers. The Work worker's
+  `pageImage` (copy synced first with `syncLive`) makes the PNG at the image's own resolution:
+  the decoded pixels exactly, or, when a mask leaves pixels transparent, PDFium's rendering with
+  the image matrix set to its pixel size for the call (`FPDFImageObj_GetRenderedBitmap` sizes its
+  bitmap from the matrix), so the picture is upright, full size and keeps its alpha (above 64 MP
+  the decoded pixels without the mask). Export Images' bitmap helpers (`bitmapHasAlpha`,
+  `bitmapPng`) are shared. Copy hands the clipboard a promise in the click itself; Save opens the
+  picker first (`<document>-page-<n>-image.png`), else downloads. A progress dialog with Cancel
+  shows after 300 ms (rule 2); outcomes go to the status toast. **Fixed on the way:** the page
+  point under the pointer (`pagePointAt`, `clientPointOf`, used by the menus' Paste, markups,
+  the selected-text menu and bookmarks' current destination) took the view rotation in degrees
+  as quarter turns and ignored the page's own /Rotate; it now uses the drawn rotation. Help:
+  "Flattening comments and snapshots" › "To copy or save a picture on the page". Tests:
+  `tests/pageImage/pageImageHit.test.ts`, `tests/pageImage/pageImage.test.ts` (real PDFium);
+  `e2e/page-image.spec.ts` (clipboard pixels, Save, soft mask alpha, form image with the view
+  rotated after a page delete, page /Rotate, progress and Cancel, axe, rule 9). Shots in project
+  files `m11-08-o6/`. Next: M11-08·O2 pick up where you left off.
 - **Session 86 — M11-08·O4 Zoom to Area (ADR-028, plan O4).** **View › Zoom to Area** (a
   toggle in the Zoom group, icon Fluent `ZoomFit`; also in the page menu's zoom section) is a
   pointer tool (`zoomArea`): a drag anywhere in the view draws a dashed accent rectangle, and on
@@ -2989,7 +3013,7 @@ rel="noopener noreferrer">`; the commands `app.home` / `app.reportIssue` open th
   each. Done: M11-01, M11-10, M11-02 (spike S26), M11-03 (tabs: look, hover card, +), M11-04
   (drag to reorder), M11-05 (tab menus), M11-06 (comments in every pointer mode), M11-07 (font
   library), M11-08·O1 (selected-text menu), M11-08·O3 (each file's last view), M11-08·O4 (Zoom
-  to Area). Next: M11-08·O6 (copy or save a page image).
+  to Area), M11-08·O6 (copy or save a page image). Next: M11-08·O2 (pick up where you left off).
 - **Owner (M11-02):** open `m11-02/s26-interop.pdf` in Acrobat Reader and PDF-XChange: the
   eleven comments look as in the PNG beside it, Find finds their text in the flattened copy, and
   the font names show in the document's font list. This gates M11-07.

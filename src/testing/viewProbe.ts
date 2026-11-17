@@ -7,6 +7,7 @@ import { documentStore } from '../app/store/documentStore';
 import { capability, hostStore, renderEngine, tileCache } from '../features/view/host';
 import { renderStats, resetRenderStats, type KindStats } from '../features/view/renderStats';
 import { viewFocus } from '../features/view/tileScheduler';
+import { pagePointAt } from '../features/view/pagePoint';
 import type { TestHook } from './hook';
 
 const viewport = (): HTMLElement => {
@@ -83,6 +84,11 @@ export function registerViewProbe(hook: TestHook): void {
     dirty: (docId: string) => documentStore.getState().docs[docId]?.dirty ?? null,
     activeDocId: () =>
       hostStore.getState().registry?.getStore().getState().core.activeDocumentId ?? null,
+    /** The page point under a screen point (M11-08·O6). */
+    pagePointAt: (docId: string, x: number, y: number) => pagePointAt(docId, x, y),
+    /** The Render worker's hit test for Copy Image (M11-08·O6). */
+    imageAt: (docId: string, page: number, x: number, y: number) =>
+      renderEngine().rpc.call('imageAt', { docId, pageIndex: page, x, y }).promise,
     /** The selection plugin's state for the active document (M2-04). */
     selection: () => {
       const registry = hostStore.getState().registry;

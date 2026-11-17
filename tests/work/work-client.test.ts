@@ -128,6 +128,7 @@ function fakeSpawn(world: FakeWorld) {
       copyComments: () => ({ bytes: new ArrayBuffer(0), pages: [], count: 0 }),
       readOutline: () => ({ items: [] }),
       popupStates: () => ({ open: [] }),
+      pageImage: () => null,
       copyOutline: () => ({ items: [] }),
       editOutline: () => ({ objects: [], firstNew: 0 }),
       verifySecurity: () => ({ ok: true }),

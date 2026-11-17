@@ -29,6 +29,7 @@ function executorWith(
   serve<RenderApi>(ch.port1, {
     init: () => ({ ms: 0, wasmBytes: 0 }),
     contentBox: () => null,
+    imageAt: () => null,
     pageCost: () => ({ objects: 0, segments: 0 }),
     saveIncremental: () => {
       throw new Error('not used');

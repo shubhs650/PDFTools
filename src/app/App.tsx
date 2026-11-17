@@ -15,6 +15,8 @@ import { registerExtractCommands } from '../features/extract/commands';
 import { registerTableCommands } from '../features/tables/commands';
 import { registerRedactCommands } from '../features/redact/commands';
 import { registerSnapshotCommands } from '../features/snapshot/snapshot';
+import { registerPageImageCommands } from '../features/pageImage/pageImage';
+import { PageImageProgress } from '../features/pageImage/PageImageProgress';
 import { registerAttachFileCommands } from '../features/attachments/attachFile';
 import { registerSignCommands } from '../features/sign/signDocument';
 import { SignDocumentDialog } from '../features/sign/SignDocumentDialog';
@@ -140,6 +142,7 @@ export function App() {
   useEffect(() => registerTableCommands(), []);
   useEffect(() => registerRedactCommands(), []);
   useEffect(() => registerSnapshotCommands(), []);
+  useEffect(() => registerPageImageCommands(), []);
   useEffect(() => registerAttachFileCommands(), []);
   useEffect(() => registerSignCommands(), []);
   useEffect(() => registerBookmarkCommands(), []);
@@ -244,6 +247,7 @@ export function App() {
         <ImportCommentsDialog />
         <FlattenDialog />
         <SnapshotToast />
+        <PageImageProgress />
         <ExportDialog />
         <ExpressExtractDialog />
         <TemplatesDialog />
