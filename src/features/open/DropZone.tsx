@@ -4,10 +4,11 @@ import { useTranslation } from 'react-i18next';
 import { useDocuments } from '../../app/store/documentStore';
 import { setDragOver as setOver, useDragOver } from './dragStore';
 import { collectDropped, hasFiles } from './dropped';
-import { openFiles } from './openDocument';
+import { openOrConvert } from '../pages/images';
 
 /**
- * Window-level drop target (§4.1): drop one or many PDFs anywhere to open them.
+ * Window-level drop target (§4.1): drop one or many PDFs anywhere to open them,
+ * or JPG and PNG images to make a PDF of them (M11-08·O8).
  * While files are dragged over the window, a dashed frame lines it; with a
  * document open, a card in the middle says what a drop does. With none open,
  * the start screen's drop card highlights instead (M10-05).
@@ -40,7 +41,8 @@ export function DropZone() {
       setOver(false);
       if (!e.dataTransfer || !hasFiles(e.dataTransfer)) return;
       e.preventDefault(); // never let the browser navigate to the file
-      void collectDropped(e.dataTransfer).then((files) => openFiles(files, 'dropped'));
+      // JPG and PNG files go to Images to PDF (M11-08·O8); PDFs open.
+      void collectDropped(e.dataTransfer).then((files) => openOrConvert(files, 'dropped'));
     };
     window.addEventListener('dragenter', enter);
     window.addEventListener('dragover', overFn);

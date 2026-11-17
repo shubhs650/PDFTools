@@ -8,6 +8,7 @@ import { documentStore } from '../../app/store/documentStore';
 import { format, msg, t } from '../../i18n';
 import { hasFullAccess } from './assemble';
 import { openPageDialog } from './dialogStore';
+import { openImagesDialog } from './images';
 import { announce, pageOpBlocked, pagesStore, runPageOp } from './pageOps';
 import { targetPages } from './selection';
 
@@ -65,6 +66,19 @@ export function registerPageCommands(): () => void {
       run: () => {
         const id = activeId();
         if (id) openPageDialog('insertFile', id);
+      },
+    }),
+    registerCommand('organize.insertFromImage', {
+      ...common,
+      run: () => {
+        const id = activeId();
+        if (id) void openImagesDialog({ mode: 'insert', docId: id });
+      },
+    }),
+    registerCommand('organize.imagesToPdf', {
+      disabledReason: () => (pagesStore.getState().busy ? msg('pages.busy') : null),
+      run: () => {
+        void openImagesDialog({ mode: 'new' });
       },
     }),
     registerCommand('organize.extract', {

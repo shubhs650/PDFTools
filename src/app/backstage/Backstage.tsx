@@ -5,6 +5,7 @@ import { useTranslation } from 'react-i18next';
 import { msg, type MessageKey } from '../../i18n';
 import { CommandIcon } from '../../ui/icons/CommandIcon';
 import { commandLabelKey } from '../commandLabels';
+import { COMMANDS, type CommandDef } from '../commands';
 import { ribbonLayout } from '../ribbon/layout';
 import { RecentList } from '../../features/recent/RecentList';
 import { AppearanceSection } from '../../features/settings/AppearanceSection';
@@ -31,6 +32,11 @@ const DESCRIPTIONS: Record<string, MessageKey> = {
   'file.settings': msg('backstage.section.settings'),
   'file.about': msg('backstage.section.about'),
   'file.privacy': msg('backstage.section.privacy'),
+};
+
+/** Commands shown beside a section's own (New: Images to PDF, M11-08·O8). */
+const EXTRA_ACTIONS: Record<string, CommandDef[]> = {
+  'file.new': COMMANDS.filter((c) => c.id === 'organize.imagesToPdf'),
 };
 
 const TEST_ID = 'backstage';
@@ -184,14 +190,17 @@ export function Backstage({ open, section: initial, onOpenChange }: BackstagePro
                 <Privacy />
               ) : (
                 <div className="backstage-action">
-                  <RibbonButton
-                    command={section}
-                    large
-                    tabIndex={0}
-                    onRan={() => {
-                      onOpenChange(false);
-                    }}
-                  />
+                  {[section, ...(EXTRA_ACTIONS[section.id] ?? [])].map((command) => (
+                    <RibbonButton
+                      key={command.id}
+                      command={command}
+                      large
+                      tabIndex={0}
+                      onRan={() => {
+                        onOpenChange(false);
+                      }}
+                    />
+                  ))}
                 </div>
               )}
             </section>

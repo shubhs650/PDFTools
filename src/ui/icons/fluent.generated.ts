@@ -76,7 +76,7 @@ import { HandLeft20Filled, HandLeft20Regular } from '@fluentui/react-icons/svg/h
 import { Highlight20Filled, Highlight20Regular, Highlight24Filled, Highlight24Regular } from '@fluentui/react-icons/svg/highlight';
 import { History20Regular, History32Regular } from '@fluentui/react-icons/svg/history';
 import { Home20Regular } from '@fluentui/react-icons/svg/home';
-import { ImageAdd20Regular } from '@fluentui/react-icons/svg/image-add';
+import { ImageAdd20Regular, ImageAdd32Regular } from '@fluentui/react-icons/svg/image-add';
 import { ImageCopy20Regular } from '@fluentui/react-icons/svg/image-copy';
 import { ImageMultiple20Regular, ImageMultiple32Regular } from '@fluentui/react-icons/svg/image-multiple';
 import { Info20Regular, Info32Regular } from '@fluentui/react-icons/svg/info';
@@ -274,10 +274,12 @@ export const FLUENT_GLYPHS: Record<string, FluentGlyphs> = {
   'measure.snapNearest': { regular: { small: Circle20Regular }, filled: { small: Circle20Filled } },
   'organize.insertBlank': { regular: { small: DocumentOnePageAdd20Regular, large: DocumentOnePageAdd24Regular, largeNative: 24 } },
   'organize.insertFromFile': { regular: { small: DocumentAdd20Regular, large: DocumentAdd28Regular, largeNative: 28 } },
+  'organize.insertFromImage': { regular: { small: ImageAdd20Regular, large: ImageAdd32Regular, largeNative: 32 } },
   'organize.delete': { regular: { small: DocumentDismiss20Regular, large: DocumentDismiss24Regular, largeNative: 24 } },
   'organize.move': { regular: { small: ReOrder20Regular, large: ReOrder24Regular, largeNative: 24 } },
   'organize.extract': { regular: { small: DocumentArrowRight20Regular, large: DocumentArrowRight24Regular, largeNative: 24 } },
   'organize.merge': { regular: { small: DocumentMultiple20Regular, large: DocumentMultiple24Regular, largeNative: 24 } },
+  'organize.imagesToPdf': { regular: { small: ImageMultiple20Regular, large: ImageMultiple32Regular, largeNative: 32 } },
   'organize.rotateCw': { regular: { small: RotateRight20Regular, large: RotateRight24Regular, largeNative: 24 } },
   'organize.rotateCcw': { regular: { small: RotateLeft20Regular, large: RotateLeft24Regular, largeNative: 24 } },
   'convert.text': { regular: { small: DocumentText20Regular, large: DocumentText32Regular, largeNative: 32 } },

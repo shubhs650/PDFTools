@@ -40,6 +40,7 @@ import { exportImages } from './work/images';
 import { pageImagePng } from './work/pageImage';
 import { assemble, fullAccess, type AssemblePart } from './work/assemble';
 import { createBlank } from './work/blank';
+import { imagesToPdf } from './work/imagesPdf';
 import { commentSource, copyComments, transferComments } from './work/transferJobs';
 import { toBase64 } from '../model/base64';
 import { detectTables, exportTables, tableCells, type TableSources } from './work/tables/job';
@@ -219,6 +220,20 @@ serve<WorkApi>(self, {
       if (!mod) throw new RpcError('not-initialized', 'The work worker is not initialized');
       try {
         const bytes = await createBlank(mod, spec, slice, (p) => {
+          ctx.progress(p);
+        });
+        const buf = bytes.slice().buffer;
+        return new Transfer({ bytes: buf }, [buf]);
+      } finally {
+        wasmBytes();
+      }
+    }),
+
+  imagesToPdf: (spec, ctx) =>
+    scheduler.run('interactive', ctx.signal, async (slice) => {
+      if (!mod) throw new RpcError('not-initialized', 'The work worker is not initialized');
+      try {
+        const bytes = await imagesToPdf(mod, spec, slice, (p) => {
           ctx.progress(p);
         });
         const buf = bytes.slice().buffer;

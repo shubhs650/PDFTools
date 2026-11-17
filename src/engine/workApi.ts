@@ -4,6 +4,7 @@ import type { PdfAnnotationObject, PageTextSlice, PdfPageGeometry } from '@embed
 import type { DocDigest } from '../workers/render/save/digest';
 import type { AttachmentInfo, AttachmentRef } from '../workers/work/attachments';
 import type { FormFacts } from '../model/formFacts';
+import type { ImagePageSize } from '../model/imagePages';
 import type { PageVp } from '../workers/work/viewports';
 import type { Band, BandRequest } from '../workers/work/print';
 import type { FlattenOptions } from '../workers/work/flatten';
@@ -98,6 +99,17 @@ export interface WorkApi {
    */
   createBlank: MethodSpec<
     { width: number; height: number; count: number },
+    { bytes: ArrayBuffer },
+    { done: number; total: number }
+  >;
+  /**
+   * Images to PDF (M11-08·O8, D-55): a new, unencrypted document with one JPG
+   * or PNG per page (`fit`: the image's size; A4 or Letter turned to match
+   * each image). An image that can't be read rejects with
+   * `images-unreadable:<index>`.
+   */
+  imagesToPdf: MethodSpec<
+    { images: ArrayBuffer[]; size: ImagePageSize; margin: boolean },
     { bytes: ArrayBuffer },
     { done: number; total: number }
   >;

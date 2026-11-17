@@ -146,10 +146,12 @@
     "organize": {
       "insertBlank": "Insert Blank Page",
       "insertFromFile": "Insert from File",
+      "insertFromImage": "Insert from Image",
       "delete": "Delete Pages",
       "move": "Move Pages",
       "extract": "Extract Pages",
       "merge": "Merge Files",
+      "imagesToPdf": "Images to PDF",
       "rotateCw": "Rotate Clockwise",
       "rotateCcw": "Rotate Counterclockwise"
     },
@@ -434,7 +436,7 @@
     "nav": "File menu",
     "back": "Back to the document",
     "section": {
-      "new": "Create a blank PDF of the page size you choose. It opens in its own tab.",
+      "new": "Create a blank PDF of the page size you choose, or a PDF of JPG and PNG images, one per page. It opens in its own tab.",
       "open": "Open a PDF from your computer. Files never leave this device.",
       "recent": "Files you opened recently on this device.",
       "save": "Save changes to the original file (incremental save).",
@@ -512,7 +514,7 @@
       "unknown": "Something went wrong while opening this file.",
       "denied": "The browser didn't allow the file to be read again. Open it from File → Open."
     },
-    "dropHint": "Drop PDF files to open them",
+    "dropHint": "Drop PDF files to open them, or JPG and PNG images to make a PDF",
     "close": {
       "title": "Save changes to {{name}}?",
       "description": "Your changes will be lost if you don't save them.",
@@ -523,7 +525,7 @@
     "overflow": "All open documents",
     "start": {
       "title": "Open a PDF to get started",
-      "hint": "Drop PDF files anywhere in this window, or choose them from your computer.",
+      "hint": "Drop PDF files anywhere in this window, or choose them from your computer. JPG and PNG images become a new PDF.",
       "open": "Open…",
       "privacy": "Your files stay on this device. Nothing is uploaded.",
       "actions": {
@@ -2273,6 +2275,49 @@
       "insertAfter": "Insert Blank Page After",
       "delete": "Delete Pages…"
     }
+  },
+  "images": {
+    "title": "Images to PDF",
+    "description": "Makes a new PDF with one JPG or PNG image per page, in its own tab. Save it to choose where it goes. The images themselves are not changed.",
+    "insertTitle": "Insert from Image",
+    "insertDescription": "Inserts JPG or PNG images into this document, one image per page.",
+    "add": "Add Images…",
+    "count_one": "{{n}} image",
+    "count_other": "{{n}} images",
+    "empty": "No images yet. Choose Add Images…, or drop JPG or PNG files on the window.",
+    "list": "Images in page order",
+    "pixels": "{{width}} × {{height}} px",
+    "up": "Move {{name}} up",
+    "down": "Move {{name}} down",
+    "remove": "Remove {{name}}",
+    "skipped": "Left out because they aren't JPG or PNG images: {{names}}.",
+    "overflow_one": "{{n}} more image was left out: one document takes up to {{max}} images.",
+    "overflow_other": "{{n}} more images were left out: one document takes up to {{max}} images.",
+    "dismissSkipped": "OK",
+    "tooLarge": "These images come to more than {{max}} MB together, too much for one document. Remove some and make a second PDF for the rest.",
+    "size": {
+      "legend": "Page size",
+      "fit": "Fit each page to its image",
+      "a4": "A4, turned to suit each image",
+      "letter": "Letter, turned to suit each image"
+    },
+    "margin": "Leave a 10 mm margin on A4 and Letter pages",
+    "summary": {
+      "fit_one": "{{n}} page, the size of the image",
+      "fit_other": "{{n}} pages, each the size of its image",
+      "a4_one": "{{n}} A4 page",
+      "a4_other": "{{n}} A4 pages",
+      "letter_one": "{{n}} Letter page",
+      "letter_other": "{{n}} Letter pages"
+    },
+    "confirm": "Create",
+    "insertConfirm": "Insert",
+    "cancel": "Cancel",
+    "building": "Making pages from the images…",
+    "failed": "The images could not be made into pages.",
+    "unreadable": "{{name}} could not be read as a JPG or PNG image. Remove it from the list and try again.",
+    "fileName": "Images ({{count}} pages).pdf",
+    "fileNameOne": "{{base}}.pdf"
   },
   "blank": {
     "title": "Create Blank PDF",

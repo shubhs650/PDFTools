@@ -46,7 +46,15 @@ describe('release list', () => {
 
   it('the newest release covers M11 so far (tabs, fonts, last view, start-up)', () => {
     const text = list[0]?.items.join(' ') ?? '';
-    for (const words of ['Start-up', 'last time', 'tabs', 'OCR', 'fonts', 'Zoom to Area'])
+    for (const words of [
+      'Start-up',
+      'last time',
+      'tabs',
+      'OCR',
+      'fonts',
+      'Zoom to Area',
+      'Images to PDF',
+    ])
       expect(text, words).toContain(words);
   });
 

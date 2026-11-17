@@ -2,7 +2,7 @@
 // theirs (save M1-22, view M1-15/16, help M1-11/25/26; QAT Open and Check for
 // Updates M1-28).
 import { checkForUpdates } from '../../features/offline/offline';
-import { openFiles } from '../../features/open/openDocument';
+import { openOrConvert } from '../../features/pages/images';
 import { pickPdfFiles } from '../../storage/fileAccess';
 import { canFullScreen, isFullScreen, subscribeFullScreen, toggleFullScreen } from '../fullScreen';
 import { msg, t } from '../../i18n';
@@ -108,13 +108,13 @@ export function registerBuiltinCommands(): () => void {
     }),
     registerCommand('file.open', {
       run: async () => {
-        await openFiles(await pickPdfFiles());
+        await openOrConvert(await pickPdfFiles(window, true), 'picked');
       },
     }),
     // Quick access toolbar (§8): the same command as File → Open.
     registerCommand('qat.open', {
       run: async () => {
-        await openFiles(await pickPdfFiles());
+        await openOrConvert(await pickPdfFiles(window, true), 'picked');
       },
     }),
     registerCommand('help.updates', {

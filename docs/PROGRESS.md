@@ -1,6 +1,6 @@
 # Triya PDF — Progress
 
-_Last updated: 2026-11-17 (session 88: M11-08·O2 pick up where you left off)_
+_Last updated: 2026-11-17 (session 89: M11-08·O8 images to PDF)_
 
 **Current milestone:** M11 — file tabs, OCR text selection, a font library and comments in every
 pointer mode: plan [docs/plan/M11.md](plan/M11.md) and [ADR-028](adr/028-m11-tabs-fonts-select.md)
@@ -20,6 +20,34 @@ interop is in the M6 pack (CHECKLIST §M6 R1–R4). Rev 0 (M0–M4) is complete 
 
 ## Done
 
+- **Session 89 — M11-08·O8 images to PDF (D-55, ADR-028, plan O8).** JPG and PNG files that
+  are **opened** (File › Open and the Open picker now offer "PDF, JPG, PNG") or **dropped** go
+  to the **Images to PDF** dialog instead of the open error (`openOrConvert` in
+  `src/features/pages/images.ts`; other pictures, such as HEIC or GIF, are listed as left out;
+  PDFs in the same drop open as before; a drop while the dialog is open adds to its list). The
+  dialog lists the images in page order with a thumbnail (an `<img>` of the file, decoded by the
+  browser), their size as shown, drag or Move up/down and Remove, **Add Images…**, the page size
+  (**Fit each page to its image**, **A4** or **Letter**, which turn to suit each image) and a
+  10 mm margin for paper sizes; choices are kept for the session. **Organize › Images to PDF**
+  (also beside Create Blank PDF in File › New) starts an empty list; **Organize › Insert from
+  Image** asks where (before/after a page) and inserts through the Render worker's `import`
+  page op, one undo step. The Work worker's `imagesToPdf` (`src/workers/work/imagesPdf.ts`)
+  builds one page per image on Create Blank's route: JPEGs pass through as DCTDecode
+  (`EPDFImageObj_SetJpeg`), PNGs via `EPDFImageObj_SetPng` (Flate, alpha as /SMask; grey,
+  palette, 16-bit and interlaced all checked in a spike); progress per image, cancellable. Only
+  headers are read on the main thread (pure `src/model/imageFile.ts`: size, JFIF/EXIF/pHYs dpi,
+  EXIF orientation); placement is pure (`src/model/imagePages.ts`): fit uses the stated dpi
+  (96 when none) within PDF's page limits, paper sizes never enlarge, and the EXIF orientation
+  (1–8) is applied by the image matrix, so turned phone photos show upright. A single image
+  names the file after it; several give "Images (N pages).pdf". Help: "Opening files" › "To make
+  a PDF from images" and "Organizing pages". What's new: an item in `beta-m11`. Tests:
+  `tests/pages/images.test.ts` (headers, orientation matrices, placement, real PDFium build
+  with qpdf check, upright render, unreadable and cancel); `e2e/images-to-pdf.spec.ts` (drop on
+  the start screen with reorder and A4, light and dark, axe; one image named after it and a
+  second drop; mixed drop with a PDF and left-out pictures; File › Open, Add Images…, Letter
+  without margin, Organize and File › New entries; Insert from Image before a page and undo).
+  Fixtures: `e2e/fixtures/self-made/images/` (drawn with Pillow). Shots in project files
+  `m11-08-o8/`. Next: M11-08·O7 split document.
 - **Session 88 — M11-08·O2 pick up where you left off (D-53, ADR-028, plan O2).** **File ›
   Settings › Start-up › When Triya PDF starts**: **Show the start screen** (default) or
   **Reopen the files from last time** (`StartupSection`; the choice in IndexedDB `settings`
@@ -3041,7 +3069,8 @@ rel="noopener noreferrer">`; the commands `app.home` / `app.reportIssue` open th
   each. Done: M11-01, M11-10, M11-02 (spike S26), M11-03 (tabs: look, hover card, +), M11-04
   (drag to reorder), M11-05 (tab menus), M11-06 (comments in every pointer mode), M11-07 (font
   library), M11-08·O1 (selected-text menu), M11-08·O3 (each file's last view), M11-08·O4 (Zoom
-  to Area), M11-08·O6 (copy or save a page image). Next: M11-08·O2 (pick up where you left off).
+  to Area), M11-08·O6 (copy or save a page image), M11-08·O2 (pick up where you left off),
+  M11-08·O8 (images to PDF). Next: M11-08·O7 (split document).
 - **Owner (M11-02):** open `m11-02/s26-interop.pdf` in Acrobat Reader and PDF-XChange: the
   eleven comments look as in the PNG beside it, Find finds their text in the flattened copy, and
   the font names show in the document's font list. This gates M11-07.
