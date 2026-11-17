@@ -262,3 +262,30 @@ test('on touch, holding a tab lifts it for a drag; a swipe scrolls the row inste
   await touch('touchEnd', 0, 0);
   await expect.poll(async () => (await names(page)).slice(0, 2)).toEqual([many[1], many[0]]);
 });
+
+test('a thin divider separates tabs, except beside the selected or hovered tab', async ({
+  page,
+  pdfs,
+}) => {
+  await page.goto('/');
+  await openTabs(page, pdfs, FOUR);
+  await tabs(page).nth(1).click();
+  await page.mouse.move(600, 500);
+  const divider = (i: number) =>
+    tabs(page)
+      .nth(i)
+      .evaluate((el) => {
+        const s = getComputedStyle(el, '::before');
+        return s.content !== 'none' && Number(s.opacity) > 0 && s.width !== '0px';
+      });
+  // Not before the first tab, nor on either side of the selected one (bravo).
+  expect([await divider(0), await divider(1), await divider(2), await divider(3)]).toEqual([
+    false,
+    false,
+    false,
+    true,
+  ]);
+  // Hovering charlie hides the one before delta.
+  await tabs(page).nth(2).hover();
+  await expect.poll(() => divider(3)).toBe(false);
+});

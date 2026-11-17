@@ -104,6 +104,36 @@ body {
   cursor: pointer;
 }
 
+/* A thin divider between tabs (owner, M11-04 review), Chrome-like: not before the first
+   tab, and not on either side of the selected, hovered or dragged tab, where the tab's
+   own fill (or lift) already separates it. The tab buttons are DOM siblings in tab
+   order, so "+" reaches the next tab. Decorative: the tabs are told apart by their
+   names and the selected one by its fill, line and weight. */
+.tab-button {
+  position: relative;
+}
+
+.tab-button::before {
+  content: '';
+  position: absolute;
+  top: 25%;
+  bottom: 25%;
+  left: var(--space-0);
+  width: var(--border-width);
+  background: var(--color-border-strong);
+  transition: opacity var(--duration-fast) var(--ease-out);
+}
+
+.tab-button:first-child::before,
+.tab-button.tab--active::before,
+.tab-button.tab--active + .tab-button::before,
+.tab-button.tab--hover::before,
+.tab-button.tab--hover + .tab-button::before,
+.tab-button.tab--dragging::before,
+.tab-button.tab--dragging + .tab-button::before {
+  opacity: 0;
+}
+
 .tab-close {
   display: inline-flex;
   align-items: center;
