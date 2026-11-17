@@ -181,6 +181,18 @@ export async function findSnapshots(): Promise<Snapshot[]> {
   return offers;
 }
 
+let launchScan: Promise<Snapshot[]> | null = null;
+
+/**
+ * The snapshots found at launch, looked for once (the recovery prompt and Pick up where you
+ * left off both wait for it: last session's files open only after it, so their snapshots
+ * are still offered).
+ */
+export function launchSnapshots(): Promise<Snapshot[]> {
+  launchScan ??= findSnapshots();
+  return launchScan;
+}
+
 function dropOffer(fp: string): void {
   recoveryStore.setState((s) => ({ offers: s.offers.filter((o) => o.fp !== fp) }));
 }

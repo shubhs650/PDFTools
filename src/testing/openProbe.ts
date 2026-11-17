@@ -4,6 +4,7 @@ import { documentStore } from '../app/store/documentStore';
 import { openFiles } from '../features/open/openDocument';
 import { sources } from '../features/open/sources';
 import { recentStore } from '../features/recent/recent';
+import { sessionStore } from '../features/session/session';
 import { capability, hostStore } from '../features/view/host';
 import type { TestHook } from './hook';
 
@@ -100,6 +101,20 @@ export function registerOpenProbe(hook: TestHook): void {
       return s.order.map((id) => {
         const m = s.docs[id]?.meta;
         return { name: m?.name, source: m?.source, fileSize: m?.fileSize, modified: m?.modified };
+      });
+    },
+    /**
+     * Screenshots only (M11-08·O2): shows last session's files as waiting for "Reopen files"
+     * without reading handles back from IndexedDB (which crashes headless Chromium 153).
+     */
+    showWaiting(names: string[]) {
+      sessionStore.setState({
+        waiting: names.map((name) => ({
+          name,
+          handle: { kind: 'file', name } as unknown as FileSystemFileHandle,
+          fp: `shot-${name}`,
+          source: 'picked' as const,
+        })),
       });
     },
     state() {

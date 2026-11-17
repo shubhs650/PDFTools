@@ -5,7 +5,7 @@ import { format } from '../../i18n';
 import { Button, Dialog } from '../../ui/components';
 import {
   discardSnapshot,
-  findSnapshots,
+  launchSnapshots,
   recoverSnapshot,
   recoveryStore,
   useRecovery,
@@ -18,7 +18,7 @@ export function RecoveryDialog() {
   const [busy, setBusy] = useState<string | null>(null);
   const [now] = useState(Date.now);
   useEffect(() => {
-    void findSnapshots();
+    void launchSnapshots();
   }, []);
   const close = (): void => {
     recoveryStore.setState({ offers: [] });

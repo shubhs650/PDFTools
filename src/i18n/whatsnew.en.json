@@ -1,6 +1,24 @@
 {
   "releases": [
     {
+      "id": "beta-m11",
+      "date": "2026-11-17",
+      "title": "Better tabs, more fonts and picking up where you left off",
+      "items": [
+        "Pick up where you left off: in File › Settings › Start-up, choose to reopen the files that were open last time, in the same tabs with the same one selected.",
+        "Each file opens again at the page, zoom, layout and rotation you left it at.",
+        "Document tabs are easier to tell apart: the selected tab stands out, resting on a tab shows the file's details, and + opens more files.",
+        "Drag tabs to reorder them, and right-click a tab for Close Others, Close Tabs to the Right, Reopen Closed Tab, Sort by Name, Copy File Name, Rename File and more.",
+        "Text recognised with OCR can be selected and copied straight away, without reopening the file.",
+        "The Properties pane can be resized like the left pane, and the arrows on the pane edges hide or show either pane.",
+        "Comments can be selected and moved with Hand and Select Text too, and right-clicking a comment always opens its menu.",
+        "Text boxes, typewriter text and callouts can use a library of fonts that ships with the app and works offline.",
+        "Right-click selected text to copy, highlight, underline, strike out, mark it for redaction or search for it.",
+        "View › Zoom to Area: drag a rectangle and it fills the window (or hold Z while using Hand).",
+        "Right-click a picture on the page to copy it or save it as a PNG."
+      ]
+    },
+    {
       "id": "beta-m10",
       "date": "2026-11-17",
       "title": "A fresher look, Tell me and blank PDFs",

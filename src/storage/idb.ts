@@ -1,8 +1,8 @@
 // IndexedDB: small app data only (ARCHITECTURE §10.3, D-04). Settings, the
 // recent-files list (file handles + display metadata), the reviewer profile,
 // status schemes, table templates, the comment tools' default styles and the
-// user's own comment styles (style palette), saved visual signatures and each
-// file's last view (by fingerprint).
+// user's own comment styles (style palette), saved visual signatures, each
+// file's last view (by fingerprint) and the files open last time (their handles).
 // Never document bytes:
 // those live in the user's file and, for recovery, in OPFS (§4.3).
 //
@@ -65,7 +65,14 @@ export const MIGRATIONS: readonly Migration[] = [
   (db) => {
     db.createObjectStore('lastViews').createIndex('savedAt', 'savedAt');
   },
+  // v9 (M11-08·O2, D-53): the files open last time, one record under SESSION_KEY
+  // (validate it: sessionModel.ts), kept only while Settings › Start-up says to reopen them.
+  (db) => {
+    db.createObjectStore('session');
+  },
 ];
+
+const SESSION_KEY = 'last';
 
 const PROFILE_KEY = 'reviewer';
 
@@ -277,6 +284,24 @@ export class AppDb {
         c.continue();
       };
     }
+    await done(tx);
+  }
+
+  /** The files open last time, as stored (validate it: sessionModel.ts). */
+  async getSession(): Promise<unknown> {
+    const tx = this.db.transaction('session', 'readonly');
+    return request(tx.objectStore('session').get(SESSION_KEY));
+  }
+
+  async putSession(value: unknown): Promise<void> {
+    const tx = this.db.transaction('session', 'readwrite');
+    tx.objectStore('session').put(value, SESSION_KEY);
+    await done(tx);
+  }
+
+  async deleteSession(): Promise<void> {
+    const tx = this.db.transaction('session', 'readwrite');
+    tx.objectStore('session').delete(SESSION_KEY);
     await done(tx);
   }
 

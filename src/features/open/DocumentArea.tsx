@@ -8,6 +8,7 @@ import { DocumentHost } from '../view/DocumentHost';
 import { DocumentView } from '../view/DocumentView';
 import { capability, tileCache, useHost } from '../view/host';
 import type { DocumentManagerCapability } from '@embedpdf/plugin-document-manager';
+import { SessionPrompt } from '../session/SessionPrompt';
 import { StartScreen } from './StartScreen';
 
 /**
@@ -35,6 +36,7 @@ export function DocumentArea() {
     <DocumentHost>
       {activeId ? (
         <div className="document-stack">
+          <SessionPrompt variant="bar" />
           <PermissionBanner documentId={activeId} />
           <SignatureBanner documentId={activeId} />
           <XfaBanner documentId={activeId} />

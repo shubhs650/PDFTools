@@ -44,8 +44,14 @@ describe('release list', () => {
     expect(notes).toContain(`${LATEST_RELEASE_ID}.md`);
   });
 
-  it('the newest release covers the look-and-feel work (M10)', () => {
+  it('the newest release covers M11 so far (tabs, fonts, last view, start-up)', () => {
     const text = list[0]?.items.join(' ') ?? '';
+    for (const words of ['Start-up', 'last time', 'tabs', 'OCR', 'fonts', 'Zoom to Area'])
+      expect(text, words).toContain(words);
+  });
+
+  it('the M10 release covers the look-and-feel work', () => {
+    const text = list.find((r) => r.id === 'beta-m10')?.items.join(' ') ?? '';
     for (const words of [
       'Inter',
       'accent colour',

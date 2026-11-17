@@ -558,6 +558,20 @@
     "denied": "Permission to open {{name}} was not granted.",
     "missing": "{{name}} is no longer available. It may have been moved, renamed or deleted."
   },
+  "session": {
+    "prompt": {
+      "title": "Pick up where you left off",
+      "text_one": "{{list}} was open last time. Your browser asks once before {{app}} can open it again.",
+      "text_other": "{{count}} files were open last time: {{list}}. Your browser asks once for each before {{app}} can open them again.",
+      "bar_one": "{{list}} from last time is not open yet: your browser asks before {{app}} can open it again.",
+      "bar_other": "{{count}} files from last time are not open yet ({{list}}): your browser asks before {{app}} can open them again.",
+      "more_one": "{{list}} and {{count}} more",
+      "more_other": "{{list}} and {{count}} more",
+      "reopen_one": "Reopen file",
+      "reopen_other": "Reopen {{count}} files",
+      "notNow": "Not now"
+    }
+  },
   "save": {
     "phase": {
       "saving": "Saving…",
@@ -660,6 +674,14 @@
       "compact": "Compact",
       "densityHint": "Compact fits more rows in panes, lists, menus and dialogs, and tightens the ribbon.",
       "note": "Light, Blue and Comfortable are the defaults. The choices are kept on this device only; PDF pages always stay white, and comment colours (yellow highlights and sticky notes too) never change."
+    },
+    "startup": {
+      "title": "Start-up",
+      "legend": "When {{app}} starts",
+      "start": "Show the start screen",
+      "reopen": "Reopen the files from last time",
+      "hint": "Files open when you leave {{app}} open again in their tabs, each where you left it. Your browser may ask once per file to allow access again. New documents that were never saved can't be reopened, and files with unsaved changes are offered by recovery instead.",
+      "note": "While this is on, {{app}} keeps which files are open (their names and the browser's permission handles) on this device. Nothing is kept when the start screen is chosen."
     }
   },
   "about": {
@@ -810,7 +832,8 @@
       "accent": "Accent colour (Blue, Teal, Indigo or Graphite)",
       "density": "Density (Comfortable or Compact)",
       "whatsNew": "Which version's What's new was last shown, so it shows once after each update",
-      "recentFonts": "Comment fonts you chose last (font names only), shown first in the font list"
+      "recentFonts": "Comment fonts you chose last (font names only), shown first in the font list",
+      "session": "Files open last time: their names and the browser's permission handles, kept only while File › Settings › Start-up reopens them"
     },
     "clearHint": "To delete this data, use File → Settings → Clear all local data."
   },

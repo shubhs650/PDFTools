@@ -9,6 +9,7 @@ import { ribbonLayout } from '../ribbon/layout';
 import { RecentList } from '../../features/recent/RecentList';
 import { AppearanceSection } from '../../features/settings/AppearanceSection';
 import { LocalData } from '../../features/settings/LocalData';
+import { StartupSection } from '../../features/settings/StartupSection';
 import { ProfileSection } from '../../features/settings/profile/ProfileSection';
 import { About } from '../about/About';
 import { Privacy } from './Privacy';
@@ -166,6 +167,7 @@ export function Backstage({ open, section: initial, onOpenChange }: BackstagePro
               ) : section.id === 'file.settings' ? (
                 <div className="settings-sections">
                   <AppearanceSection />
+                  <StartupSection />
                   <ProfileSection />
                   <LocalData />
                 </div>
