@@ -1,6 +1,6 @@
 # Triya PDF — Progress
 
-_Last updated: 2026-11-17 (session 77: M11-10 resizable Properties pane and pane edge arrows)_
+_Last updated: 2026-11-17 (session 78: M11-02 spike S26, fonts in text comment appearances)_
 
 **Current milestone:** M11 — file tabs, OCR text selection, a font library and comments in every
 pointer mode: plan [docs/plan/M11.md](plan/M11.md) and [ADR-028](adr/028-m11-tabs-fonts-select.md)
@@ -19,6 +19,24 @@ answers Q1–Q7; ARCHITECTURE.md Rev 0.12 after [ADR-024](adr/024-freetext-text-
 interop is in the M6 pack (CHECKLIST §M6 R1–R4). Rev 0 (M0–M4) is complete on the agent side.
 
 ## Done
+
+- **Session 78 — M11-02 spike S26: fonts in text comment appearances (D-52, ADR-028).**
+  `spikes/s26-freetext-fonts/`, result as an amendment in ADR-028 (proposed, awaiting the
+  owner). **Route R2 works:** HarfBuzz (`harfbuzzjs` 1.6.4, MIT, a dev dependency until M11-07)
+  shapes and subsets; PDFium's appearance keeps its box, border and callout line, its text is
+  replaced by ours (Type0/CIDFontType2 subsets, Identity-H, ToUnicode, one `/ActualText` span per
+  run), set with `EPDFAnnot_SetAppearanceFromPage`. Route R1 (PDFium text objects) does not shape
+  Devanagari and embeds whole faces. 17 tests with real PDFium: Latin and engineering symbols,
+  Devanagari, Chinese, mixed scripts, fallback, bold/italic (real or drawn), wrap and alignment,
+  rotation, ADR-024 colours, callout, re-apply after a move, Ctrl+S incremental, reopen,
+  flatten (text found); poppler and MuPDF checked locally. **Measured library:** 26 families,
+  88 faces, 16.0 MB (8.7 MB compressed); Chinese is Noto Sans SC TrueType cut to GB 2312 (the
+  CFF file we ship breaks in MuPDF and poppler); Noto Sans Math added as a hidden fallback (⌀ is
+  in no family); Carlito and IBM Plex ship unmodified (reserved font names). **Fixed on the
+  way:** ADR-024's two-colour text boxes were squeezed when turned (`turnedBounds` in
+  `freeTextColors.ts`; the unit test now writes a turned comment as the plugin does). Owner
+  interop file: shared folder `m11-02/s26-interop.pdf` (and a flattened copy). **The owner
+  accepted route R2 and the measured library on 2026-11-17** (no trimming).
 
 - **Session 77 — M11-10 panes (D-56, ADR-028).** The owner's two items: the right Properties
   pane could not be resized, and each side pane gets a PDF-XChange-style arrow that hides or
@@ -2746,7 +2764,10 @@ rel="noopener noreferrer">`; the commands `app.home` / `app.reportIssue` open th
 ## Next
 
 - **Agent (M11):** the 18 tasks in [docs/plan/M11.md](plan/M11.md) "Order of work", one thread
-  each, starting with M11-01 (OCR text selection), then M11-10 (panes), then spike S26.
+  each. Done: M11-01, M11-10, M11-02 (spike S26). Next: M11-03 (tabs: look, hover card, +).
+- **Owner (M11-02):** open `m11-02/s26-interop.pdf` in Acrobat Reader and PDF-XChange: the
+  eleven comments look as in the PNG beside it, Find finds their text in the flattened copy, and
+  the font names show in the document's font list. This gates M11-07.
 - **Owner (M10):** done — the owner closed M10 on 2026-11-17.
 - **Owner (M9):** try Help on the deployed beta (F1 on a few tabs and dialogs, search, print,
   installed-app window, offline). Re-run `npm run help:screenshots` after visible UI changes.

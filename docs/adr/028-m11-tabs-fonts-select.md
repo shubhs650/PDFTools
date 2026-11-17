@@ -107,6 +107,72 @@ is re-applied whenever EmbedPDF regenerates the appearance. This is the **third 
 "no custom appearance streams" in §7.1. Form fields keep the standard fonts (owner's Q3). If S26
 finds a blocker, this ADR is amended with the fallback (Latin families first) before M11-07.
 
+_S26 result (2026-11-17, M11-02, `spikes/s26-freetext-fonts/`): **works, route R2**, with
+the changes below. **Amendment accepted by the owner on 2026-11-17** (route R2 and the
+measured 16.0 MB library, Chinese Regular and Bold); the owner's interop check of the sample file
+still gates M11-07:_
+
+- **Route R2 is chosen.** HarfBuzz (`harfbuzzjs` 1.6.4, MIT; `harfbuzz.wasm` 444 KB for shaping,
+  `harfbuzz-subset.wasm` 684 KB for subsetting, which needs no JavaScript glue) shapes the text
+  and cuts the font; we write the text and the font objects. Route R1 (PDFium's
+  `FPDFText_LoadFont` and text objects) is rejected: it does not shape (for कि it writes क then
+  the vowel sign, in typed order and with nominal glyphs, where HarfBuzz draws a contextual ि
+  first), and it embeds the whole face in every comment (Roboto 38 KB, Noto Sans Devanagari
+  75 KB, Noto Sans SC 1.4 MB compressed, per comment) where R2 adds 3.5–6.5 KB of font objects.
+- **The appearance.** PDFium's own appearance stays for everything but the text: its fill,
+  border and callout line (so ADR-024's border colour, the callout geometry and the opacity are
+  PDFium's), with its `BT … ET` blocks removed. Our text follows in the text area: the box inset
+  by the border width, or a callout's /Rect minus /RD inset by the border and 2 pt (PDFium's
+  numbers; PDFium draws no text at all for characters outside WinAnsi, which is why Hindi and
+  Chinese text boxes are blank today in every viewer but ours). Lines use the editor's CSS line
+  height (1.18) and the face's ascent and descent; breaks after spaces and hyphens, between
+  ideographs, and inside a word wider than the box (as the editor's `contenteditable` does).
+  Each face is a Type0 font → CIDFontType2 (Identity-H, `/CIDToGIDMap /Identity`) with HarfBuzz's
+  subset of the used glyphs (glyph ids kept, layout and hinting tables dropped, Flate), `/W` from
+  `hmtx`, and a ToUnicode CMap (the first glyph of a cluster maps to the cluster's text). Every
+  run of one font and baseline is a `/Span << /ActualText … >>`, so text that shaping reordered or
+  merged (Devanagari) is extracted as typed. It is set with `EPDFAnnot_SetAppearanceFromPage` as
+  ADR-024 does, which copies the font objects into the document.
+- **Fallback by character:** the chosen face, then **Noto Sans Math** (new, not in the picker,
+  90 KB: no family in the list has ⌀ U+2300, several lack ≤ ≥ ≈ √ ∞ or arrows), Noto Sans
+  Devanagari, Noto Sans SC. Faces without bold or italic (Devanagari, Chinese, Caveat, Kalam,
+  Architects Daughter) are drawn bold with a stroke of 1/30 em and italic with a 12° slant.
+- **Chinese is Noto Sans SC TrueType from Google Fonts**, pinned to Regular and Bold and cut to
+  GB 2312 (6,763 hanzi and its symbols, plus CJK punctuation and full-width forms; 2.25 MB each).
+  The CFF Noto Sans CJK SC we ship for rendering (`@embedpdf/fonts-sc`) cannot be reused: embedded
+  either as OpenType or as bare CFF, PDFium draws it, but MuPDF draws half of the glyphs and
+  extracts no text, and poppler reports glyph errors. M11-07 may widen the cut to the 8,105
+  characters of the Table of General Standard Chinese Characters (Unihan `kTGH`).
+- **Licenses.** Every file is OFL-1.1 in the Google Fonts repository today (Arimo, Tinos,
+  Cousine and Roboto included; Carlito is there, under OFL). Three families reserve their names
+  (OFL §3): Carlito ("Carlito") and IBM Plex Sans and Mono ("Plex"), so they ship as the
+  unmodified upstream files (a pinned or cut copy is a Modified Version); subsets embedded in a
+  document are not. Tinos has no OFL.txt upstream; its notice comes from the font's `name` table.
+- **Size, measured** (`build-library.ts`): 26 families, 88 faces, **16.0 MB** in the background
+  precache (8.7 MB over the wire compressed): the Latin families 11.5 MB (Office-compatible
+  3.9, sans 2.9, serif 1.1, mono 1.0, hand 0.7, technical 0.6, narrow 0.4), Hindi 0.75, Chinese
+  4.5, the math fallback 0.09. The plan estimated 8–10 MB; the difference is the Chinese file
+  (planned as the existing one) and the reserved-name families. Every other face is pinned to one
+  instance and cut to Latin, Latin Extended, Greek and the technical symbols (Devanagari for the
+  Hindi families), keeping its layout tables. The upstream files total 46 MB.
+- **Checked** (17 tests, real PDFium, `s26.test.ts`): Latin with accents and ° ± µ Ω ² ³ ⌀ Δ → ≤;
+  Devanagari conjuncts and vowel signs; Hindi typed in Roboto (fallback); Chinese; mixed scripts;
+  bold and italic, real and drawn; wrap with left, centre and right alignment; rotation;
+  ADR-024's blue text on a red border; a callout; Ctrl+S's incremental save (the original bytes
+  untouched); reopened pixels identical; flattened, the text is found exactly. poppler and MuPDF
+  draw the saved files the same and extract the text from the flattened ones, except MuPDF
+  1.23's Devanagari (it ignores `/ActualText`; Acrobat, PDF-XChange, PDFium and poppler use it).
+  Cost about 3–7 ms per comment write (median, Node). A saved comment grows by 6–9.5 KB.
+- **Re-applying:** EmbedPDF regenerates a Helvetica appearance on a resize or any change with
+  `regenerateAppearance` (the default); ours must be applied again after it, as ADR-024 does.
+  A move without regeneration keeps our appearance and places it right.
+- **Found on the way, fixed in the same PR:** ADR-024's recoloured appearance was squeezed when
+  the text box is turned. `EPDFAnnot_SetAppearanceFromPage` makes the page's MediaBox the
+  appearance's /BBox, which viewers fit to /Rect, and a turned comment's /Rect is the turned
+  box's bounds, larger than the box. The page now has the bounds' size
+  (`turnedBounds` in `freeTextColors.ts`); the unit test now writes a turned comment as the
+  annotation plugin does (bounds as /Rect, plus `unrotatedRect`).
+
 **Optional items (owner, 2026-11-17: all nine accepted).** O1 (selected-text menu), O4 (Zoom
 to Area) and O6 (copy or save a page image, extracted in the Work worker) need no architecture
 change. The others:
