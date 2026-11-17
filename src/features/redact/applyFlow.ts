@@ -184,5 +184,8 @@ export async function openRedacted(): Promise<void> {
   if (!result) return;
   const file = new File([result.bytes], result.name, { type: 'application/pdf' });
   closeApply();
-  await openFiles([{ file, ...(result.handle ? { handle: result.handle } : {}) }]);
+  await openFiles(
+    [{ file, ...(result.handle ? { handle: result.handle } : {}) }],
+    result.handle ? 'saved' : 'downloaded',
+  );
 }

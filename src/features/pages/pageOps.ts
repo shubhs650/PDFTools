@@ -88,6 +88,14 @@ export function pagesBusy(docId?: string): boolean {
 setPageOpProbe((docId) => pagesBusy(docId));
 
 let cancelRunning: (() => void) | null = null;
+/**
+ * Cancel was pressed while a step was being applied. The worker may already have
+ * finished the change (Cancel came while the viewer followed it): the step then goes
+ * back to its snapshot, so Cancel always leaves the document as it was.
+ */
+let cancelAsked = false;
+/** Read through a call: the flag is set by the Cancel callback, not in the flow that reads it. */
+const cancelWasAsked = (): boolean => cancelAsked;
 
 export function cancelPageOp(): void {
   cancelRunning?.();
@@ -251,6 +259,7 @@ async function applyAsStep(
   const rpc = renderEngine().rpc;
   const snap = await rpc.call('pagesSnapshot', { docId }).promise;
   for (const t of snap.dropped) evicted.add(t);
+  cancelAsked = false;
   let applied: Applied | null;
   try {
     applied = await apply(docId, change, label);
@@ -264,7 +273,15 @@ async function applyAsStep(
     await restore(docId, snap.token, contentPages(change), keepsView(change));
     return null;
   }
+  // The change is done; a Cancel from here on undoes it (the dialog still shows Cancel).
+  cancelRunning = () => {
+    cancelAsked = true;
+  };
   await afterChange(docId, applied.pages, contentPages(change), keepsView(change));
+  if (cancelWasAsked()) {
+    await restore(docId, snap.token, contentPages(change), keepsView(change));
+    return null;
+  }
   registerStep(docId, change, label, snap.token);
   documentStore.getState().markDirty(docId);
   return applied;

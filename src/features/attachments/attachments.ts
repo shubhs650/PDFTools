@@ -179,9 +179,10 @@ export function openAttachment(docId: string, item: AttachmentInfo, index: numbe
     if (!isPdf(await blob.slice(0, 5).arrayBuffer()))
       throw Object.assign(new Error('not a PDF'), { code: 'attachment-not-pdf' });
     // A File over the same Blob data: no copy.
-    await openFiles([
-      { file: new File([blob], item.name || 'attachment.pdf', { type: 'application/pdf' }) },
-    ]);
+    await openFiles(
+      [{ file: new File([blob], item.name || 'attachment.pdf', { type: 'application/pdf' }) }],
+      'attachment',
+    );
   });
 }
 

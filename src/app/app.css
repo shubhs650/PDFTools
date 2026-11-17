@@ -39,8 +39,15 @@ body {
 
 /* ------------------------------------------------------------ tabs */
 
+/* File tabs (M11-03, ADR-028 D-50): tabs sit at the bottom of the sunken strip with
+   rounded tops. The selected tab is filled with the accent (--color-brand, white
+   semibold name) and has a 2 px line in --color-accent along its bottom edge: in dark,
+   the filled indigo and graphite are below 3:1 against the strip, the line is not
+   (themeContrast.test.ts). Others: no dividers, a raised tint on hover, × on hover and
+   focus. The strip keeps its height (32 px): 4 px above, 28 px tabs. */
 .tab-strip {
   display: flex;
+  align-items: flex-end;
   min-height: var(--control-height-m);
   background: var(--color-surface-sunken);
   border-bottom: var(--border-width) solid var(--color-border);
@@ -48,7 +55,13 @@ body {
 
 .tab-list {
   display: flex;
+  align-items: stretch;
+  min-width: var(--space-0);
+  padding: var(--space-2) var(--space-0) var(--space-0) var(--space-2);
   overflow-x: auto;
+  /* A tab scrolled into view keeps its × clear of the sticky + (and the row's start). */
+  scroll-padding-inline: var(--space-2) calc(2 * var(--control-height-m));
+  scrollbar-width: none;
 }
 
 /* Only tabs inside (see TabStrip); its children join .tab-list's flex row. */
@@ -61,18 +74,14 @@ body {
   align-items: center;
   gap: var(--space-1);
   padding-right: var(--space-2);
-  border-right: var(--border-width) solid var(--color-border);
 }
 
-.tab--active {
-  background: var(--color-surface);
-}
-
+/* A tab is two elements, the tab and its ×: one shape, rounded at the top. */
+.tab-button,
 .tab-close {
-  display: inline-flex;
-  align-items: center;
-  padding-right: var(--space-2);
-  border-right: var(--border-width) solid var(--color-border);
+  flex: none;
+  color: var(--color-text);
+  transition: background-color var(--duration-fast) var(--ease-out);
 }
 
 .tab-button {
@@ -80,13 +89,85 @@ body {
   align-items: center;
   gap: var(--space-2);
   max-width: var(--tab-max-width);
-  min-height: var(--control-height-m);
-  padding: var(--space-0) var(--space-3);
+  min-height: var(--control-height-toolbar);
+  padding: var(--space-0) var(--space-2) var(--space-0) var(--space-4);
   border: none;
+  border-radius: var(--tab-radius) var(--space-0) var(--space-0) var(--space-0);
   background: transparent;
-  color: inherit;
   font: inherit;
   cursor: pointer;
+}
+
+.tab-close {
+  display: inline-flex;
+  align-items: center;
+  margin-right: var(--space-1);
+  padding-right: var(--space-2);
+  border-radius: var(--space-0) var(--tab-radius) var(--space-0) var(--space-0);
+}
+
+.tab-button.tab--hover,
+.tab-close.tab--hover {
+  background: var(--color-surface-raised);
+}
+
+.tab-button.tab--active,
+.tab-close.tab--active {
+  background: var(--color-brand);
+  color: var(--color-text-on-brand);
+  box-shadow: inset var(--space-0) calc(-1 * var(--tab-line-width)) var(--space-0)
+    var(--color-accent);
+}
+
+.tab-button.tab--active {
+  font-weight: var(--font-weight-semibold);
+}
+
+/* Focus: a ring inside the tab (the scrolling row would clip one outside), white on
+   the filled tab; the line stays, the halo is left out. */
+.tab-button.ui-focusable:focus-visible,
+.tab-close .ui-button:focus-visible {
+  outline-offset: calc(-1 * var(--focus-width));
+  box-shadow: none;
+}
+
+.tab-button.tab--active.ui-focusable:focus-visible {
+  outline-color: var(--color-text-on-brand);
+  box-shadow: inset var(--space-0) calc(-1 * var(--tab-line-width)) var(--space-0)
+    var(--color-accent);
+}
+
+/* The × is drawn in its tab's text colour: white on the selected tab (the shared
+   `.ui-button svg` rule would make it the dark icon colour, hard to see on blue). */
+.tab-close .ui-button {
+  color: var(--color-text);
+  opacity: 0;
+}
+
+.tab-close .ui-button svg {
+  color: currentColor;
+}
+
+.tab-close.tab--hover .ui-button,
+.tab-close.tab--active .ui-button,
+.tab-close .ui-button:focus-visible {
+  opacity: 1;
+}
+
+.tab-close .ui-button:hover:not(:disabled) {
+  background: var(--color-pressed);
+}
+
+.tab-close.tab--active .ui-button {
+  color: var(--color-text-on-brand);
+}
+
+.tab-close.tab--active .ui-button:hover:not(:disabled) {
+  background: var(--color-brand-hover);
+}
+
+.tab-close.tab--active .ui-button:focus-visible {
+  outline-color: var(--color-text-on-brand);
 }
 
 .tab-name {
@@ -96,10 +177,138 @@ body {
 }
 
 .tab-dirty {
+  flex: none;
   width: var(--space-3);
   height: var(--space-3);
   border-radius: var(--radius-round);
   background: var(--color-accent);
+}
+
+.tab--active .tab-dirty {
+  background: var(--color-text-on-brand);
+}
+
+/* The + after the last tab (D-50): it moves with the tabs and sticks to the row's end
+   while the tabs scroll. */
+.tab-add {
+  position: sticky;
+  right: var(--space-0);
+  display: inline-flex;
+  flex: none;
+  align-items: center;
+  padding: var(--space-0) var(--space-2);
+  background: var(--color-surface-sunken);
+}
+
+.tab-add .ui-button:hover:not(:disabled) {
+  background: var(--color-pressed);
+}
+
+/* The hover card (D-50): page 1, the full name, where the file came from, its facts and
+   status. On a raised surface; never over the tab (below it, Radix positions it). */
+.tab-card {
+  z-index: var(--z-tooltip);
+  max-width: var(--tab-card-max-width);
+  padding: var(--space-4);
+  border: var(--border-width) solid var(--color-border);
+  border-radius: var(--radius-l);
+  background: var(--color-surface-raised);
+  color: var(--color-text);
+  font-size: var(--font-size-s);
+  box-shadow: var(--elevation-2);
+}
+
+.tab-card-body {
+  display: flex;
+  gap: var(--space-4);
+  align-items: flex-start;
+}
+
+.tab-card-thumb {
+  position: relative;
+  display: grid;
+  flex: none;
+  place-items: center;
+  overflow: hidden;
+  border: var(--border-width) solid var(--color-border);
+  background: var(--color-page);
+}
+
+.tab-card-img {
+  display: block;
+}
+
+.tab-card-text {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+  min-width: var(--space-0);
+}
+
+.tab-card-text p {
+  margin: var(--space-0);
+}
+
+.tab-card-name {
+  font-size: var(--font-size-m);
+  font-weight: var(--font-weight-semibold);
+  overflow-wrap: anywhere;
+}
+
+.tab-card-muted,
+.tab-card-details {
+  color: var(--color-text-muted);
+}
+
+.tab-card-status {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+  margin: var(--space-2) var(--space-0) var(--space-0);
+  padding: var(--space-0);
+  list-style: none;
+}
+
+.tab-card-chip {
+  padding: var(--space-0) var(--space-3);
+  border: var(--border-width) solid var(--color-border-strong);
+  border-radius: var(--radius-round);
+  color: var(--color-text);
+}
+
+.tab-card-chip--unsaved {
+  border-color: var(--color-accent);
+  background: var(--color-selected);
+  color: var(--color-selected-text);
+}
+
+/* High contrast: the selected tab is the system's Highlight pair, kept as drawn (the
+   text backplate would hide HighlightText otherwise, as on the File tab, M10-02). */
+@media (forced-colors: active) {
+  .tab-button.tab--active,
+  .tab-close.tab--active {
+    background: Highlight;
+    color: HighlightText;
+    forced-color-adjust: none;
+  }
+
+  .tab-close.tab--active .ui-button {
+    color: HighlightText;
+    forced-color-adjust: none;
+  }
+
+  .tab-dirty {
+    background: CanvasText;
+  }
+
+  .tab--active .tab-dirty {
+    background: HighlightText;
+    forced-color-adjust: none;
+  }
+
+  .tab-close .ui-button {
+    opacity: 1;
+  }
 }
 
 /* ------------------------------------------------------------ body */

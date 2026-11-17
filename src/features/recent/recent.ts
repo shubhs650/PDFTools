@@ -107,6 +107,6 @@ export async function openRecent(entry: RecentEntry): Promise<boolean> {
     return report('missing');
   }
   recentStore.setState({ problem: null });
-  const [id] = await openFiles([{ file, handle: entry.handle }]);
+  const [id] = await openFiles([{ file, handle: entry.handle }], 'recent');
   return id !== undefined;
 }

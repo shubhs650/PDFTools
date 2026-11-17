@@ -9,6 +9,23 @@ export type ViewMode = 'single' | 'continuous' | 'facing' | 'continuousFacing';
 export type Rotation = 0 | 90 | 180 | 270;
 export type ZoomSetting = number | 'fitPage' | 'fitWidth' | 'fitVisible';
 
+/**
+ * Where a document came from (M11-03, D-50): shown on the tab's hover card instead of a
+ * folder path, which a web app never learns. 'saved': Save As or Save Optimized wrote it
+ * to a file the user picked; 'downloaded': a new file that went to the browser's
+ * downloads (no file handle); 'created': built in the app and not saved yet.
+ */
+export type DocumentSource =
+  | 'picked'
+  | 'dropped'
+  | 'launched'
+  | 'recent'
+  | 'recovered'
+  | 'attachment'
+  | 'created'
+  | 'saved'
+  | 'downloaded';
+
 export interface DocumentMeta {
   id: string;
   /** Display name for the tab (file name). Never logged or reported (rule 10). */
@@ -23,7 +40,16 @@ export interface DocumentMeta {
   signatureCount: number;
   /** `FPDF_GetFormType` (M2-14): 2 full XFA, 3 hybrid XFA → banner; absent: none. */
   formType?: number;
+  /** Where it came from (M11-03); absent: opened from this device. */
+  source?: DocumentSource;
+  /** The file's size on disk in bytes, as last opened or written; absent: no file yet. */
+  fileSize?: number;
+  /** The file's last-modified time (ms since the epoch), as last opened or written. */
+  modified?: number;
 }
+
+/** What the tab's hover card shows about the file (M11-03); set at open and after a save. */
+export type FileFacts = Partial<Pick<DocumentMeta, 'source' | 'fileSize' | 'modified'>>;
 
 export interface ViewState {
   /** 0-based current page. */
@@ -63,6 +89,8 @@ export interface DocumentsState {
   markOptimized(id: string, editsAtStart: number): void;
   /** Tab name after Save As to a new file (M1-22). */
   rename(id: string, name: string): void;
+  /** The file was written (or adopted a new file): its source, size and time (M11-03). */
+  setFileFacts(id: string, facts: FileFacts): void;
   /** After a page operation (M4-09). */
   setPageCount(id: string, pageCount: number): void;
   /** The first form field was created (M6-14). */
@@ -156,6 +184,9 @@ export const createDocumentStore = () =>
     },
     rename: (id, name) => {
       set((s) => update(s, id, (d) => ({ meta: { ...d.meta, name } })));
+    },
+    setFileFacts: (id, facts) => {
+      set((s) => update(s, id, (d) => ({ meta: { ...d.meta, ...facts } })));
     },
     setFormType: (id, formType) => {
       set((s) => update(s, id, (d) => ({ meta: { ...d.meta, formType } })));

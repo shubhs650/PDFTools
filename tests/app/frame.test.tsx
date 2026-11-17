@@ -12,6 +12,8 @@ import { UiProvider } from '../../src/ui/components';
 
 afterEach(cleanup);
 beforeEach(() => {
+  // jsdom has no layout: the strip scrolls the selected tab into view (M11-03).
+  Element.prototype.scrollIntoView = () => undefined;
   for (const id of documentStore.getState().order) documentStore.getState().close(id);
 });
 
@@ -110,5 +112,31 @@ describe('TabStrip', () => {
     expect(documentStore.getState().activeId).toBe('a'); // wraps
     await userEvent.click(screen.getByRole('button', { name: 'Close c.pdf' }));
     expect(documentStore.getState().order).toEqual(['a', 'b']);
+  });
+
+  // M11-03 (D-50): the hover card's text is each tab's accessible description; a + after
+  // the last tab opens a file.
+  it('describes each tab and ends with a named + button', () => {
+    act(() => {
+      documentStore.getState().open({ ...meta('a'), source: 'dropped' });
+      documentStore.getState().open(meta('b'));
+      documentStore.getState().markDirty('b');
+    });
+    render(
+      <UiProvider>
+        <TabStrip />
+      </UiProvider>,
+    );
+    const [a, b] = screen.getAllByRole('tab');
+    expect(a?.getAttribute('aria-describedby')).toBe('tab-desc-a');
+    expect(document.getElementById('tab-desc-a')?.textContent).toBe(
+      'Dropped onto Triya PDF. 1 page',
+    );
+    expect(document.getElementById(b?.getAttribute('aria-describedby') ?? '')?.textContent).toBe(
+      'Opened from this device. 1 page. Unsaved changes',
+    );
+    const add = screen.getByRole('button', { name: 'Open a file' });
+    // After the last tab's close button, in the row's order.
+    expect(add.closest('.tab-add')?.getAttribute('style')).toContain('order: 4');
   });
 });

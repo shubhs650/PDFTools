@@ -31,7 +31,8 @@ export async function filesFromLaunch(params: LaunchParams): Promise<OpenedFile[
 /** Registers the consumer once at startup; false where the browser has no launchQueue. */
 export function installLaunchQueue(
   win: object = window,
-  open: (files: readonly OpenedFile[]) => Promise<unknown> = openFiles,
+  open: (files: readonly OpenedFile[]) => Promise<unknown> = (files) =>
+    openFiles(files, 'launched'),
 ): boolean {
   const queue = (win as { launchQueue?: LaunchQueue }).launchQueue;
   if (typeof queue?.setConsumer !== 'function') return false;

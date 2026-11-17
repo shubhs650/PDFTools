@@ -1,6 +1,6 @@
 # Triya PDF — Progress
 
-_Last updated: 2026-11-17 (session 78: M11-02 spike S26, fonts in text comment appearances)_
+_Last updated: 2026-11-17 (session 79: M11-03 file tabs: look, hover card and + button)_
 
 **Current milestone:** M11 — file tabs, OCR text selection, a font library and comments in every
 pointer mode: plan [docs/plan/M11.md](plan/M11.md) and [ADR-028](adr/028-m11-tabs-fonts-select.md)
@@ -19,6 +19,34 @@ answers Q1–Q7; ARCHITECTURE.md Rev 0.12 after [ADR-024](adr/024-freetext-text-
 interop is in the M6 pack (CHECKLIST §M6 R1–R4). Rev 0 (M0–M4) is complete on the agent side.
 
 ## Done
+
+- **Session 79 — M11-03 file tabs: look, hover card and + button (D-50, ADR-028).** **Look:**
+  the selected tab (tab and ×) is filled with `--color-brand` with a white semibold name and a
+  2 px `--color-accent` line along its bottom (the line keeps 3:1 against the dark strip where
+  indigo and graphite fills do not); the old CSS-order bug (only the × turned white) is gone,
+  and an e2e test reads the tab's computed background. Other tabs have no dividers, hover to
+  `--color-surface-raised` and show their × on hover and focus; the strip keeps its 32 px.
+  Forced colours: Highlight/HighlightText. **Hover card** (`src/app/TabCard.tsx`, text from the
+  pure `src/app/tabCardText.ts`): Radix Tooltip, controlled; 500 ms over a tab or 800 ms of
+  keyboard focus (focus-visible only, so arrowing along tabs stays quiet); page 1 from the
+  thumbnail queue (`ThumbImage` and `usePages` moved out of `ThumbnailsPane` into
+  `src/features/thumbnails/`), the full name, the source, pages · size · modified (`Intl`), and
+  chips (Unsaved changes, Password protected, Restricted, Signed). It renders inside the strip
+  (axe `region`), is hoverable and Esc closes it; the card is `aria-hidden` because each tab's
+  `aria-describedby` carries the same text. **Source:** `DocumentMeta` gains `source`,
+  `fileSize`, `modified`; `openFiles(files, source)` (picked, dropped, launched, recent,
+  recovered, attachment, created, saved, downloaded) and `fileFacts()`; Save As and Save
+  Optimized to a new file set 'saved' and re-read size and time from the handle (metadata
+  only). **+** after the last tab (sticky at the row's end when it scrolls; `scroll-padding`
+  keeps the selected tab clear of it) and a double-click on the empty strip run `file.open`;
+  the selected tab scrolls into view. Help (Opening files, Themes) and 7 Help screenshots
+  updated. Tests: `tests/app/tabCardText.test.ts`, frame test, `themeContrast` "file tabs" for
+  every accent and theme, `e2e/file-tabs.spec.ts` (look in light and dark indigo, ×, card by
+  pointer and keyboard, Save As source, +, double-click, 1280 px with 8 tabs, axe light, dark
+  and pseudo-locale). E2E gotcha: register a `filechooser` listener before the click (the
+  interception otherwise races the chooser), and Playwright's one-step hover from one tab to
+  another stays in Radix's hover grace area (move away in steps first). Shots in the shared
+  folder `m11-03/after/` (before: `m11-plan/before/`).
 
 - **Session 78 — M11-02 spike S26: fonts in text comment appearances (D-52, ADR-028).**
   `spikes/s26-freetext-fonts/`, result as an amendment in ADR-028 (proposed, awaiting the
@@ -2764,7 +2792,8 @@ rel="noopener noreferrer">`; the commands `app.home` / `app.reportIssue` open th
 ## Next
 
 - **Agent (M11):** the 18 tasks in [docs/plan/M11.md](plan/M11.md) "Order of work", one thread
-  each. Done: M11-01, M11-10, M11-02 (spike S26). Next: M11-03 (tabs: look, hover card, +).
+  each. Done: M11-01, M11-10, M11-02 (spike S26), M11-03 (tabs: look, hover card, +). Next:
+  M11-04 (tabs: drag to reorder; the hover card must not show during a drag).
 - **Owner (M11-02):** open `m11-02/s26-interop.pdf` in Acrobat Reader and PDF-XChange: the
   eleven comments look as in the PNG beside it, Find finds their text in the flattened copy, and
   the font names show in the document's font list. This gates M11-07.

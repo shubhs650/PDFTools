@@ -347,7 +347,33 @@
     "hidePropertiesPane": "Hide Properties pane",
     "showPropertiesPane": "Show Properties pane",
     "propertiesDock": "Properties pane",
-    "resizeProperties": "Resize the Properties pane"
+    "resizeProperties": "Resize the Properties pane",
+    "openFile": "Open a file",
+    "openFileTip": "Open a file ({{keys}})"
+  },
+  "tabCard": {
+    "source": {
+      "picked": "Opened from this device",
+      "dropped": "Dropped onto {{app}}",
+      "launched": "Opened with {{app}} from your computer",
+      "recent": "Opened from Recent files",
+      "recovered": "Recovered after a crash",
+      "attachment": "Opened from an attachment in another PDF",
+      "created": "New document, not saved yet",
+      "saved": "Saved on this device",
+      "downloaded": "Saved to your downloads"
+    },
+    "pages_one": "{{count}} page",
+    "pages_other": "{{count}} pages",
+    "modified": "modified {{date}}",
+    "separator": " · ",
+    "sentence": ". ",
+    "status": {
+      "unsaved": "Unsaved changes",
+      "protected": "Password protected",
+      "restricted": "Restricted",
+      "signed": "Signed"
+    }
   },
   "error": {
     "title": "Something went wrong",

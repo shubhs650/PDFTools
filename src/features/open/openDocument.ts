@@ -3,7 +3,7 @@
 // parses them in the Render worker (rule 1). The Work worker gets its own copy
 // afterwards, read again from the file, so the first page never waits for it.
 // Opening writes nothing to OPFS: recovery starts on the first edit (§4.3).
-import { documentStore } from '../../app/store/documentStore';
+import { documentStore, type DocumentSource, type FileFacts } from '../../app/store/documentStore';
 import { storageClient } from '../../engine/storageClient';
 import type { OpenedFile } from '../../storage/fileAccess';
 import {
@@ -38,16 +38,40 @@ export interface RecoveredOpen extends OpenedFile {
   recordRecent: false;
 }
 
-/** Opens files one after another, each in its own tab, in the given order. */
+/**
+ * Opens files one after another, each in its own tab, in the given order.
+ * `source`: where they came from, for the tab's hover card (M11-03).
+ */
 export async function openFiles(
   files: readonly (OpenedFile | RecoveredOpen)[],
+  source: DocumentSource = 'picked',
 ): Promise<(string | undefined)[]> {
   const ids: (string | undefined)[] = [];
-  for (const f of files) ids.push(await openOne(f));
+  for (const f of files) ids.push(await openOne(f, source));
   return ids;
 }
 
-async function openOne(req: OpenedFile | RecoveredOpen): Promise<string | undefined> {
+/** Sources whose File is a file on disk (or a download): its size and time are worth showing. */
+const ON_DISK: ReadonlySet<DocumentSource> = new Set([
+  'picked',
+  'dropped',
+  'launched',
+  'recent',
+  'saved',
+  'downloaded',
+]);
+
+/** The hover card's facts for a document opened from `file` (M11-03). */
+export function fileFacts(file: File, source: DocumentSource): FileFacts {
+  return ON_DISK.has(source)
+    ? { source, fileSize: file.size, modified: file.lastModified }
+    : { source };
+}
+
+async function openOne(
+  req: OpenedFile | RecoveredOpen,
+  source: DocumentSource,
+): Promise<string | undefined> {
   const { file, handle } = req;
   const recovered = 'recordRecent' in req;
   const job = startJob(file.name);
@@ -120,6 +144,7 @@ async function openOne(req: OpenedFile | RecoveredOpen): Promise<string | undefi
       ownerUnlocked: info.ownerUnlocked,
       signatureCount: info.signatureCount,
       formType: info.formType,
+      ...fileFacts(file, source),
     });
     advance(job, { type: 'opened', docId: id });
     void openInWorkWorker(id, file, password);

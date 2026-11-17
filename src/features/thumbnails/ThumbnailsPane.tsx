@@ -10,47 +10,23 @@ import {
 import { useTranslation } from 'react-i18next';
 import { useDocuments } from '../../app/store/documentStore';
 import { useDensity, type Density } from '../../app/theme';
-import { isAbortError } from '../../engine/errors';
 import { format } from '../../i18n';
-import { LoadingPlaceholder } from '../../ui/components';
 import { movePages } from '../pages/commands';
 import { dropIndex, moveByOne, moveTo } from '../pages/move';
 import { usePages as usePageOps } from '../pages/pageOps';
 import { clickPage, setSelection, usePageSelection } from '../pages/selection';
 import { PageMenu } from './PageMenu';
 import { goToPage } from '../view/controller';
-import { useHost } from '../view/host';
 import { thumbLayout, visibleRange } from './layout';
 import { thumbnails } from './loader';
+import { ThumbImage } from './ThumbImage';
+import { usePages } from './pageInfo';
 
 /** Thumbnail image width in CSS px. */
 const THUMB_WIDTH = 120;
 const LABEL_HEIGHT = 20;
 /** Space between thumbnails in CSS px: tighter in Compact (M10-08·O9). */
 const THUMB_GAP: Readonly<Record<Density, number>> = { comfortable: 12, compact: 8 };
-
-interface PageInfo {
-  width: number;
-  height: number;
-  /** Quarter turns of the page's own /Rotate (EmbedPDF normalizes page space). */
-  rotation: number;
-}
-
-function usePages(documentId: string | null): PageInfo[] {
-  const registry = useHost((s) => s.registry);
-  // Page operations replace the page list (M4-09).
-  const version = usePageOps((s) => (documentId ? (s.version[documentId] ?? 0) : 0));
-  return useMemo(() => {
-    if (!registry || !documentId) return [];
-    const doc = registry.getStore().getState().core.documents[documentId]?.document;
-    return (doc?.pages ?? []).map((p) => ({
-      width: p.size.width,
-      height: p.size.height,
-      rotation: p.rotation,
-    }));
-    // eslint-disable-next-line react-hooks/exhaustive-deps -- version: the page list changed in place
-  }, [registry, documentId, version]);
-}
 
 /**
  * Thumbnails pane (§5, M2-08): a virtualized list of every page. Only the
@@ -427,66 +403,5 @@ export function ThumbnailsPane() {
         </div>
       ) : null}
     </>
-  );
-}
-
-function ThumbImage({
-  documentId,
-  pageIndex,
-  page,
-  width,
-  priority,
-}: {
-  documentId: string;
-  pageIndex: number;
-  page: PageInfo;
-  width: number;
-  priority: number;
-}) {
-  const [url, setUrl] = useState<string | null>(null);
-  // A render that failed leaves the plain page, not a shimmer that never ends (O5).
-  const [failed, setFailed] = useState(false);
-  const turned = page.rotation % 2 === 1;
-  // Rendered unrotated (both render paths), turned by CSS like the viewer's pages.
-  const renderWidth = turned ? (width * page.width) / page.height : width;
-  const dpr = typeof window === 'undefined' ? 1 : window.devicePixelRatio;
-  const scale = (renderWidth * dpr) / page.width;
-
-  useEffect(() => {
-    let live = true;
-    let objectUrl: string | null = null;
-    const job = thumbnails.request({ docId: documentId, pageIndex, scale, priority });
-    job.promise.then(
-      (blob) => {
-        if (!live) return;
-        objectUrl = URL.createObjectURL(blob);
-        setUrl(objectUrl);
-      },
-      (err: unknown) => {
-        if (live && !isAbortError(err)) setFailed(true);
-      },
-    );
-    return () => {
-      live = false;
-      job.cancel();
-      if (objectUrl) URL.revokeObjectURL(objectUrl);
-    };
-    // eslint-disable-next-line react-hooks/exhaustive-deps -- priority changes go through reprioritize(), not a new request
-  }, [documentId, pageIndex, scale]);
-
-  if (!url) return failed ? null : <LoadingPlaceholder />;
-  const h = (renderWidth * page.height) / page.width;
-  return (
-    <img
-      className="thumb-img"
-      src={url}
-      alt=""
-      draggable={false}
-      style={{
-        width: renderWidth,
-        height: h,
-        transform: page.rotation ? `rotate(${String(page.rotation * 90)}deg)` : undefined,
-      }}
-    />
   );
 }

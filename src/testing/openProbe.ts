@@ -80,6 +80,19 @@ export function registerOpenProbe(hook: TestHook): void {
         })),
       });
     },
+    /** Marks the active document changed (the tab's dot and the card's chip, M11-03). */
+    markActiveDirty() {
+      const s = documentStore.getState();
+      if (s.activeId) s.markDirty(s.activeId);
+    },
+    /** Where each tab's document came from, its size and time (M11-03). */
+    facts() {
+      const s = documentStore.getState();
+      return s.order.map((id) => {
+        const m = s.docs[id]?.meta;
+        return { name: m?.name, source: m?.source, fileSize: m?.fileSize, modified: m?.modified };
+      });
+    },
     state() {
       const s = documentStore.getState();
       const registry = hostStore.getState().registry;
