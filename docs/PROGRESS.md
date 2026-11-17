@@ -1,10 +1,16 @@
 # Triya PDF — Progress
 
-_Last updated: 2026-11-17 (session 74: M10-09 acceptance, M10 complete on the agent side)_
+_Last updated: 2026-11-17 (session 75: M11 plan accepted; M10 closed by the owner)_
 
-**Current milestone:** M10 — modern look and feel (plan [docs/plan/M10.md](plan/M10.md),
-[ADR-027](adr/027-m10-visual-refresh.md), ARCHITECTURE.md Rev 0.16): **complete on the agent
-side** ([acceptance](acceptance/M10.md)), waiting on the owner's look and feel review. M9 (Help
+**Current milestone:** M11 — file tabs, OCR text selection, a font library and comments in every
+pointer mode: plan [docs/plan/M11.md](plan/M11.md) and [ADR-028](adr/028-m11-tabs-fonts-select.md)
+**accepted** by the owner (2026-11-17: recommended answers, fonts all shipped with the app, and
+all nine optional items O1–O9), plus task M11-10 (resizable Properties pane and pane edge arrows,
+D-56) added by the owner; ARCHITECTURE.md Rev 0.17 (D-50 … D-56). Tasks run one thread each
+in the plan's "Order of work", starting with M11-01 (OCR text selection). **M10 closed** by the
+owner on 2026-11-17 ("majority aspects of the tool are working good"). **Earlier:** M10 — modern
+look and feel (plan [docs/plan/M10.md](plan/M10.md),
+[ADR-027](adr/027-m10-visual-refresh.md), ARCHITECTURE.md Rev 0.16): **complete** ([acceptance](acceptance/M10.md)); the owner closed it on 2026-11-17. M9 (Help
 window) and M8 (JSON comments) are done. **Earlier:** M7 — second beta review (plan in [docs/plan/M7.md](plan/M7.md), scope in
 [ADR-023](adr/023-m7-second-beta-review.md), **Accepted** 2026-11-04 with the recommended
 answers Q1–Q7; ARCHITECTURE.md Rev 0.12 after [ADR-024](adr/024-freetext-text-and-border-colours.md)). M7-01 … M7-12 done, plus separate text and border colours (ADR-024): **M7 complete on the agent side** ([acceptance](acceptance/M7.md)); next: the owner's interop §M7 run, and **M8 — lossless JSON comment export and import (JSON v2)**, plan [docs/plan/M8.md](plan/M8.md) and [ADR-025](adr/025-m8-lossless-json-comments.md) (**Accepted** by the owner 2026-11-05, ARCHITECTURE.md Rev 0.13; M8-01 done in PR #94; XFDF/FDF deferred by the owner). **Previous milestone:** M6 — Beta review (plan in [docs/plan/M6.md](plan/M6.md), scope changes in
@@ -13,6 +19,18 @@ answers Q1–Q7; ARCHITECTURE.md Rev 0.12 after [ADR-024](adr/024-freetext-text-
 interop is in the M6 pack (CHECKLIST §M6 R1–R4). Rev 0 (M0–M4) is complete on the agent side.
 
 ## Done
+
+- **Session 75 — M11 plan (accepted the same day; ARCHITECTURE.md Rev 0.17).** From the owner's message of 2026-11-17 (users' tests of
+  the M10 build): [docs/plan/M11.md](plan/M11.md) and [ADR-028](adr/028-m11-tabs-fonts-select.md)
+  (Proposed: D-50 document tabs v2, D-51 comments in every pointer mode, D-52 font library for
+  text comments). **Root causes found:** OCR text not selectable until reopen = the selection
+  plugin's cached page geometry is never evicted after an `objects` change (`contentPages()` in
+  `pageOps.ts` lists only Flatten's pages); the faint selected tab = `.tab-button`'s transparent
+  background overriding `.tab--active` (same specificity, later rule). A web app cannot show a
+  file's folder path (File System Access), so the hover card shows where the file came from.
+  Tasks M11-01 … M11-09 (OCR fix first, spike S26 for fonts in FreeText appearances second),
+  optional items O1–O9 for the owner. Before shots and a rough tab preview in the shared folder
+  `m11-plan/`.
 
 - **Session 74 — M10-09 acceptance (ADR-027). M10 is complete on the agent side**
   ([acceptance](acceptance/M10.md)). Every review item maps to a task or the reason we did not
@@ -2675,9 +2693,9 @@ rel="noopener noreferrer">`; the commands `app.home` / `app.reportIssue` open th
 
 ## Next
 
-- **Owner (M10):** the look and feel review in [docs/acceptance/M10.md](acceptance/M10.md) §6 on
-  the deployed beta: light and dark, each accent, Compact, Windows High Contrast, the What's new
-  card after an update, Help's new screenshots.
+- **Agent (M11):** the 18 tasks in [docs/plan/M11.md](plan/M11.md) "Order of work", one thread
+  each, starting with M11-01 (OCR text selection), then M11-10 (panes), then spike S26.
+- **Owner (M10):** done — the owner closed M10 on 2026-11-17.
 - **Owner (M9):** try Help on the deployed beta (F1 on a few tabs and dialogs, search, print,
   installed-app window, offline). Re-run `npm run help:screenshots` after visible UI changes.
 - **Agent:** the queued task (owner, 2026-11-05), in its own thread: make comment export and
@@ -2885,6 +2903,7 @@ rel="noopener noreferrer">`; the commands `app.home` / `app.reportIssue` open th
 
 | Date       | Ref              | Decision                                                                                                                                                                                                                                                                                                                                                                                                                                                  |
 | ---------- | ---------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| 2026-11-17 | ADR-028          | Owner accepted the M11 plan and ADR-028 with the recommended answers Q1–Q6 and Q8 (Q1: the whole font library ships with the app) and all nine optional items O1–O9 (Q7). ARCHITECTURE.md Rev 0.17: D-50 document tabs v2, D-51 comments in every pointer mode, D-52 font library, D-53 pick up where you left off, D-54 system fonts, D-55 split, images to PDF and crop.                                                                                |
 | 2026-11-04 | ADR-023          | Owner accepted the M7 plan (second beta review) and ADR-023 with the recommended answers Q1–Q7: name Triya PDF (D-41), dark theme toggle (D-42), text comment interaction and marquee selection (D-43), sticky note popup (D-44), paste image (D-45), 50 % highlights and black Courier typewriter (D-37), Home tab icon-only groups (D-36). ARCHITECTURE.md Rev 0.11.                                                                                    |
 | 2026-11-02 | ADR-022          | Owner accepted ADR-022 (M6 spikes S18 – S22). ARCHITECTURE.md Rev 0.10: §3.2 signature fonts and the plugin-form license exception, §7.1 Attach File by direct PDFium calls, §7.10 modify + annotate gate and `/TU`, §7.11 handwriting font, §7.12 copy route, owner-rights gate, 127-byte limit, §7.15 our own outline writer.                                                                                                                           |
 | 2026-11-02 | ADR-022 d5       | Owner picked bookmark route B for M6-11: our own outline writer (Work worker) applied with `applyObjects`, every outline key kept.                                                                                                                                                                                                                                                                                                                        |
