@@ -55,6 +55,7 @@ describe('release list', () => {
       'Zoom to Area',
       'Images to PDF',
       'Split Document',
+      'Crop Pages',
     ])
       expect(text, words).toContain(words);
   });

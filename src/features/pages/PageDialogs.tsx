@@ -10,6 +10,7 @@ import { answerSigned, cancelPageOp, dismissPagesError, runPageOp, usePages } fr
 import { movePages } from './commands';
 import { closePageDialog as closeDialog, usePageDialog } from './dialogStore';
 import { moveTo } from './move';
+import { CropDialog } from './CropDialog';
 import { ImagesDialog } from './ImagesDialog';
 import { NewBlankDialog } from './NewBlankDialog';
 import { selectionOf } from './selection';
@@ -56,6 +57,13 @@ export function PageDialogs() {
         <InsertDialog key={open.docId} docId={open.docId} where={open.where ?? 'after'} />
       ) : null}
       {open?.kind === 'newBlank' ? <NewBlankDialog /> : null}
+      {open?.kind === 'crop' ? (
+        <CropDialog
+          key={`${open.docId}-${String(open.crop?.page ?? -1)}`}
+          docId={open.docId}
+          from={open.crop}
+        />
+      ) : null}
       <ImagesDialog />
       <ProgressDialog />
       <SignedDialog />

@@ -31,13 +31,17 @@ export function changedPages(before: readonly Identity[], after: readonly Identi
 
 /**
  * Pages whose content a change rewrites without changing their identity: a
- * flatten, or objects that change page text (an OCR layer, M11-01). Without
+ * flatten, a crop, or objects that change page text (an OCR layer, M11-01). Without
  * them, EmbedPDF's selection plugin keeps its cached text geometry, so new
  * text could not be selected (or removed text still could) until reopening.
  * Pure.
  */
 export const contentPages = (change: Change): number[] => {
-  if (change.kind === 'op')
-    return change.op.kind === 'flatten' ? change.op.pages.map((p) => p.page) : [];
+  if (change.kind === 'op') {
+    if (change.op.kind === 'flatten') return change.op.pages.map((p) => p.page);
+    // A crop moves the page's origin even where its size stays (M11-08·O9).
+    if (change.op.kind === 'crop') return [...change.op.pages];
+    return [];
+  }
   return change.content ?? [];
 };

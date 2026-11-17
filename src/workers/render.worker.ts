@@ -413,10 +413,12 @@ const handlers: Handlers<RenderApi> = {
     const { mod: m, native: n, tracker: t } = ready();
     // Rule 9: page operations need assemble (ADR-016 d9); a flatten changes page
     // content and removes comments, so it needs modify and annotate (M6-09).
+    // A crop changes how pages show, not which pages there are: modify (M11-08·O9).
     if (op.kind === 'flatten') {
       t.requireCapability(docId, 'modify');
       t.requireCapability(docId, 'annotate');
-    } else t.requireCapability(docId, 'assemble');
+    } else if (op.kind === 'crop') t.requireCapability(docId, 'modify');
+    else t.requireCapability(docId, 'assemble');
     let map: number[] | null = null;
     try {
       const r = await applyPageOp(m, n, docId, op, {

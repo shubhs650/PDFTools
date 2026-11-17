@@ -168,8 +168,25 @@ export function flattenBlocked(docId: string): MessageKey | null {
   return null;
 }
 
+/**
+ * Why pages can't be cropped now (null: they can; M11-08·O9): a crop changes
+ * how pages show, which needs modify (rule 9), not assemble.
+ */
+export function cropBlocked(docId: string): MessageKey | null {
+  const d = documentStore.getState().docs[docId];
+  if (!d) return msg('pages.noDocument');
+  if (!allows(securityOf(d.meta), 'modify')) return msg('crop.restricted');
+  if (pagesBusy()) return msg('pages.busy');
+  if (isActive(phaseOf(docId))) return msg('pages.saving');
+  return null;
+}
+
 const blockedFor = (docId: string, op: PageOp): MessageKey | null =>
-  op.kind === 'flatten' ? flattenBlocked(docId) : pageOpBlocked(docId);
+  op.kind === 'flatten'
+    ? flattenBlocked(docId)
+    : op.kind === 'crop'
+      ? cropBlocked(docId)
+      : pageOpBlocked(docId);
 
 /** What a change did in the Render worker. */
 interface Applied {

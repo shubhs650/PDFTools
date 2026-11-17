@@ -5193,6 +5193,114 @@ textarea.form-field {
   color: var(--color-text-muted);
 }
 
+/* Crop Pages (M11-08·O9): margins and pages beside a preview of the first page. */
+.ui-dialog.crop-dialog {
+  width: min(600px, calc(100vw - 2 * var(--space-6)));
+}
+
+.crop-form {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: var(--space-4) var(--space-6);
+  align-items: start;
+}
+
+.crop-form > .print-note,
+.crop-form > .print-error {
+  grid-column: 1 / -1;
+  margin: var(--space-0);
+}
+
+.crop-form > .print-note:empty {
+  display: none;
+}
+
+.crop-fields {
+  display: grid;
+  gap: var(--space-4);
+}
+
+.crop-margins {
+  display: grid;
+  gap: var(--space-3);
+  margin: var(--space-0);
+  padding: var(--space-0);
+  border: none;
+}
+
+.crop-margin-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: var(--space-3);
+}
+
+.crop-margin-grid .ui-field-input,
+.crop-unit .ui-field-input {
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.crop-unit {
+  max-width: calc(50% - var(--space-3) / 2);
+}
+
+.crop-preview {
+  display: grid;
+  justify-items: center;
+  gap: var(--space-2);
+  margin: var(--space-0);
+}
+
+.crop-preview-page {
+  position: relative;
+}
+
+/* The area kept: outlined; what is cut off is shaded by the outline's shadow. */
+.crop-preview-kept {
+  position: absolute;
+  box-sizing: border-box;
+  border: 1px dashed var(--color-accent);
+  box-shadow: 0 0 0 999px var(--color-backdrop);
+  pointer-events: none;
+}
+
+.crop-preview-caption {
+  max-width: 168px;
+  color: var(--color-text-muted);
+  font-size: var(--font-size-s);
+  text-align: center;
+}
+
+@media (max-width: 560px) {
+  .crop-form {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
+/* The Crop Tool (M11-08·O9): the page takes the pointer; outside the area drawn is shaded. */
+.crop-area-layer {
+  position: absolute;
+  inset: var(--space-0);
+  overflow: hidden;
+  cursor: crosshair;
+}
+
+.crop-area-rect {
+  position: absolute;
+  box-sizing: border-box;
+  border: 1px dashed var(--color-accent);
+  box-shadow: 0 0 0 9999px var(--color-backdrop);
+  pointer-events: none;
+}
+
+@media (forced-colors: active) {
+  .crop-preview-kept,
+  .crop-area-rect {
+    border: 2px solid Highlight;
+    box-shadow: none;
+  }
+}
+
 /* Images to PDF / Insert from Image (M11-08·O8): the images in page order. */
 .ui-dialog.images-dialog {
   width: min(560px, calc(100vw - 2 * var(--space-6)));

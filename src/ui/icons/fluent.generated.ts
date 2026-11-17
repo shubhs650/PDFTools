@@ -45,6 +45,8 @@ import { CloudCheckmark20Regular } from '@fluentui/react-icons/svg/cloud-checkma
 import { Color20Regular } from '@fluentui/react-icons/svg/color';
 import { CommentMultiple20Filled, CommentMultiple20Regular } from '@fluentui/react-icons/svg/comment-multiple';
 import { Copy20Regular } from '@fluentui/react-icons/svg/copy';
+import { Crop20Regular, Crop32Regular } from '@fluentui/react-icons/svg/crop';
+import { CropInterim20Filled, CropInterim20Regular, CropInterim24Filled, CropInterim24Regular } from '@fluentui/react-icons/svg/crop-interim';
 import { Cursor20Filled, Cursor20Regular } from '@fluentui/react-icons/svg/cursor';
 import { Cut20Regular } from '@fluentui/react-icons/svg/cut';
 import { Delete20Regular, Delete32Regular } from '@fluentui/react-icons/svg/delete';
@@ -284,6 +286,8 @@ export const FLUENT_GLYPHS: Record<string, FluentGlyphs> = {
   'organize.imagesToPdf': { regular: { small: ImageMultiple20Regular, large: ImageMultiple32Regular, largeNative: 32 } },
   'organize.rotateCw': { regular: { small: RotateRight20Regular, large: RotateRight24Regular, largeNative: 24 } },
   'organize.rotateCcw': { regular: { small: RotateLeft20Regular, large: RotateLeft24Regular, largeNative: 24 } },
+  'organize.crop': { regular: { small: Crop20Regular, large: Crop32Regular, largeNative: 32 } },
+  'organize.cropTool': { regular: { small: CropInterim20Regular, large: CropInterim24Regular, largeNative: 24 }, filled: { small: CropInterim20Filled, large: CropInterim24Filled, largeNative: 24 } },
   'convert.text': { regular: { small: DocumentText20Regular, large: DocumentText32Regular, largeNative: 32 } },
   'convert.markdown': { regular: { small: Markdown20Regular, large: Markdown28Regular, largeNative: 28 } },
   'convert.html': { regular: { small: WebAsset20Regular, large: WebAsset24Regular, largeNative: 24 } },

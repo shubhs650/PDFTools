@@ -17,7 +17,8 @@
         "View › Zoom to Area: drag a rectangle and it fills the window (or hold Z while using Hand).",
         "Right-click a picture on the page to copy it or save it as a PNG.",
         "Images to PDF: open or drop JPG and PNG files, such as site photos or scans, to make a PDF with one image per page (each page fits its image, or A4 or Letter). Organize › Insert from Image adds images as pages to an open document.",
-        "Organize › Split Document saves parts of a document as separate PDFs: every few pages, by page ranges, or one file per top-level bookmark, into a folder you choose."
+        "Organize › Split Document saves parts of a document as separate PDFs: every few pages, by page ranges, or one file per top-level bookmark, into a folder you choose.",
+        "Organize › Crop Pages cuts margins off pages (typed in mm or inches, or drawn with the Crop Tool), for all pages or a range. Only the crop box changes, so Remove Crop shows the whole page again and measurements keep their values."
       ]
     },
     {

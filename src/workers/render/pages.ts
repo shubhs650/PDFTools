@@ -9,6 +9,14 @@
 import type { PdfiumNative } from '@embedpdf/engines/pdfium';
 import type { WrappedPdfiumModule } from '@embedpdf/pdfium';
 import { RpcError } from '../../engine/errors';
+import {
+  croppedBox,
+  marginsValid,
+  normBox,
+  visibleBox,
+  type CropMargins,
+  type UserBox,
+} from '../../model/cropBox';
 import { CAPABILITIES, allows } from '../../model/permissions';
 import { checkFlattenPlan, flattenOnPage, type FlattenCounts, type FlattenPage } from './flatten';
 import { docPtrOf, pageInfos, purgePageCache, rawCall, type PageInfo } from './pdfium';
@@ -27,7 +35,14 @@ export type PageOp =
    * Flatten comments into page content (M6-09, ADR-021 D-38 c): needs modify
    * and annotate, not assemble (render.worker.ts). Pages keep their identity.
    */
-  | { kind: 'flatten'; pages: FlattenPage[] };
+  | { kind: 'flatten'; pages: FlattenPage[] }
+  /**
+   * Crop (M11-08·O9, D-55): `margins` (points, as each page is shown) are cut
+   * off the page as shown now by setting its /CropBox; null removes the crop
+   * (the /CropBox becomes the /MediaBox). Content is untouched; needs modify
+   * (render.worker.ts). Pages keep their identity.
+   */
+  | { kind: 'crop'; pages: number[]; margins: CropMargins | null };
 
 export interface PageOpResult {
   pages: PageInfo[];
@@ -113,6 +128,21 @@ export async function applyPageOp(
           rawCall(mod, 'FPDF_ClosePage', page);
         }
         ctx.progress({ done: i + 1, total: plan.length });
+        await pause();
+      }
+    } else if (op.kind === 'crop') {
+      const pages = checkPages(op.pages, count);
+      if (op.margins && !marginsValid(op.margins))
+        throw new RpcError('crop-margins', 'The margins are not valid');
+      for (const [i, index] of pages.entries()) {
+        const page = rawCall(mod, 'FPDF_LoadPage', doc, index);
+        if (!page) throw new RpcError('page-not-loaded', 'The page could not be loaded');
+        try {
+          cropPage(mod, page, op.margins);
+        } finally {
+          rawCall(mod, 'FPDF_ClosePage', page);
+        }
+        ctx.progress({ done: i + 1, total: pages.length });
         await pause();
       }
     } else if (op.kind === 'rotate') {
@@ -201,6 +231,49 @@ export async function applyPageOp(
   const after = new Map(pages.map((p) => [p.objectNumber, p.index]));
   const map = before.map((obj) => (obj > 0 ? (after.get(obj) ?? -1) : -1));
   return flattened ? { pages, map, flattened } : { pages, map };
+}
+
+/** A page's box (FPDFPage_GetMediaBox / GetCropBox order: left, bottom, right, top); null when absent. */
+function readBox(
+  mod: WrappedPdfiumModule,
+  page: number,
+  fn: 'FPDFPage_GetMediaBox' | 'FPDFPage_GetCropBox',
+): UserBox | null {
+  const heap = mod.pdfium as unknown as {
+    wasmExports: { malloc(n: number): number; free(p: number): void };
+    getValue(ptr: number, type: 'float'): number;
+  };
+  const p = heap.wasmExports.malloc(16);
+  try {
+    if (!rawCall(mod, fn, page, p, p + 4, p + 8, p + 12)) return null;
+    return normBox({
+      left: heap.getValue(p, 'float'),
+      bottom: heap.getValue(p + 4, 'float'),
+      right: heap.getValue(p + 8, 'float'),
+      top: heap.getValue(p + 12, 'float'),
+    });
+  } finally {
+    heap.wasmExports.free(p);
+  }
+}
+
+/** US Letter: PDFium's media box for a page without one. */
+const LETTER: UserBox = { left: 0, bottom: 0, right: 612, top: 792 };
+
+/**
+ * Sets one loaded page's /CropBox (M11-08·O9): the margins cut off the page as
+ * shown now (crop box within media box, its /Rotate applied); null: the whole
+ * media box. Throws `crop-too-small` when less than CROP_MIN_SIDE would be left.
+ */
+function cropPage(mod: WrappedPdfiumModule, page: number, margins: CropMargins | null): void {
+  const media = readBox(mod, page, 'FPDFPage_GetMediaBox') ?? LETTER;
+  let box: UserBox | null = media;
+  if (margins) {
+    const visible = visibleBox(media, readBox(mod, page, 'FPDFPage_GetCropBox'));
+    box = croppedBox(visible, rawCall(mod, 'FPDFPage_GetRotation', page), margins);
+    if (!box) throw new RpcError('crop-too-small', 'The margins leave too little of a page');
+  }
+  rawCall(mod, 'FPDFPage_SetCropBox', page, box.left, box.bottom, box.right, box.top);
 }
 
 export interface SourceInfo {
