@@ -136,6 +136,17 @@ describe('resolveBinding: scopes and text fields', () => {
     // Global keys still work there.
     expect(resolveBinding(ev('z', { ctrlKey: true }), tree, false)?.target).toBe('qat.undo');
   });
+  it('moves the focused file tab with Ctrl+Shift+arrows only on a tab (M11-04)', () => {
+    const onTab = { ...focus, inTabs: true };
+    const ctrlShift = { ctrlKey: true, shiftKey: true };
+    expect(resolveBinding(ev('ArrowLeft', ctrlShift), onTab, false)?.target).toBe('tab.moveLeft');
+    expect(resolveBinding(ev('ArrowRight', ctrlShift), onTab, false)?.target).toBe('tab.moveRight');
+    expect(resolveBinding(ev('PageDown', ctrlShift), onTab, false)?.target).toBe('tab.moveRight');
+    expect(resolveBinding(ev('ArrowLeft', ctrlShift), focus, false)).toBeUndefined();
+    expect(
+      resolveBinding(ev('ArrowLeft', ctrlShift), { ...focus, inDocument: true }, false),
+    ).toBeUndefined();
+  });
   it('fires global keys anywhere', () => {
     expect(resolveBinding(ev('o', { ctrlKey: true }), focus, false)?.target).toBe('file.open');
   });

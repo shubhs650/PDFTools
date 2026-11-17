@@ -14,7 +14,9 @@ export type KeyScope =
   /** Only when focus is inside the document area (single-letter keys). */
   | 'document'
   /** Only when focus is in the Bookmarks pane's tree (M6-11): its own Delete, Ctrl+C, F2… */
-  | 'bookmarks';
+  | 'bookmarks'
+  /** Only when focus is on a file tab or its × (M11-04): moving the tab. */
+  | 'tabs';
 
 export interface Binding {
   /** A command id from src/app/commands.ts or an internal action. */
@@ -177,4 +179,8 @@ export const KEYMAP: readonly Binding[] = [
   b('tab.close', ['Ctrl+F4', 'Ctrl+Alt+W', 'Ctrl+Alt+F4'], 'global', true),
   b('tab.next', ['Ctrl+PageDown', 'Ctrl+Alt+PageDown'], 'global', true),
   b('tab.prev', ['Ctrl+PageUp', 'Ctrl+Alt+PageUp'], 'global', true),
+  // Move the focused file tab (M11-04, D-50). Chrome keeps Ctrl+Shift+PageUp/PageDown
+  // (its own Move Tab) in a normal tab; the installed app gets them.
+  b('tab.moveLeft', ['Ctrl+Shift+PageUp', 'Ctrl+Shift+ArrowLeft'], 'tabs', true),
+  b('tab.moveRight', ['Ctrl+Shift+PageDown', 'Ctrl+Shift+ArrowRight'], 'tabs', true),
 ];

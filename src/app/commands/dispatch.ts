@@ -57,6 +57,9 @@ export const INTERNAL_ACTIONS = [
   'tab.close',
   'tab.next',
   'tab.prev',
+  // Move the active (focused) file tab (M11-04, D-50).
+  'tab.moveLeft',
+  'tab.moveRight',
   'tool.cancel',
   // Shift+F10 / the Menu key in the document: its context menu (M6-02).
   'menu.context',

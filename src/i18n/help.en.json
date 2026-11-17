@@ -95,6 +95,8 @@
           "list": [
             "Rest the pointer on a tab (or keep the keyboard focus on it) to see its full name, its first page, where it came from, its pages, size and last change, and whether it has unsaved changes. Browsers never tell a web app which folder a file is in, so the folder is not shown.",
             "Double-click the empty part of the tab row to open a file, as in a web browser.",
+            "Drag a tab along the row to change the order of your documents; the others slide out of the way, and <kbd>Esc</kbd> puts it back. With the keyboard, press <kbd>{{tabLeft}}</kbd> or <kbd>{{tabRight}}</kbd> on a tab. On a touch screen, hold the tab for a moment, then drag.",
+            "Click a tab with the middle mouse button (the wheel) to close it.",
             "You can also drag PDF files from your desktop or file manager and drop them on the window.",
             "<b>File</b> › <b>Recent</b> lists the files you opened on this device. Click one to open it again.",
             "A password-protected file asks for its password first. See [Protected and signed files](#protected-files)."

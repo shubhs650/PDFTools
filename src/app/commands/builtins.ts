@@ -17,6 +17,7 @@ import {
   toggleTheme,
 } from '../theme';
 import { documentStore } from '../store/documentStore';
+import { moveActiveTab } from '../tabMove';
 import { notify, registerCommand } from './dispatch';
 
 /** A link of the top bar from a command (keyboard, menus): a new tab, no opener (M6-01). */
@@ -139,6 +140,18 @@ export function registerBuiltinCommands(): () => void {
       requiresDocument: true,
       run: () => {
         cycleTab(-1);
+      },
+    }),
+    registerCommand('tab.moveLeft', {
+      requiresDocument: true,
+      run: () => {
+        moveActiveTab(-1);
+      },
+    }),
+    registerCommand('tab.moveRight', {
+      requiresDocument: true,
+      run: () => {
+        moveActiveTab(1);
       },
     }),
   ];

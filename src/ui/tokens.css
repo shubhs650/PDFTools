@@ -135,6 +135,10 @@
   --tab-radius: 8px; /* a file tab's top corners (M11-03) */
   --tab-line-width: 2px; /* the selected file tab's bottom line (M11-03) */
   --tab-card-max-width: 360px; /* a file tab's hover card (M11-03) */
+  /* A file tab lifted by a drag (M11-04): a soft shadow along each side only, so the
+     tab and its × (two elements) read as one raised piece with no seam between them. */
+  --tab-lift-start: -6px 0 8px -6px rgb(15 23 42 / 0.45);
+  --tab-lift-end: 6px 0 8px -6px rgb(15 23 42 / 0.45);
   --ribbon-height: 92px;
   /* The one header row: mark and name, Quick Access, File, the tabs, top bar (M10-08·O3). */
   --header-height: calc(var(--control-height-m) + var(--space-1));
@@ -312,6 +316,8 @@
   --color-tooltip-text: #0f172a;
 
   --elevation-1: 0 0 0 1px rgb(0 0 0 / 0.3), 0 1px 3px rgb(0 0 0 / 0.4);
+  --tab-lift-start: -6px 0 8px -6px rgb(0 0 0 / 0.7);
+  --tab-lift-end: 6px 0 8px -6px rgb(0 0 0 / 0.7);
   --elevation-2:
     0 0 0 1px rgb(0 0 0 / 0.3), 0 2px 4px rgb(0 0 0 / 0.3), 0 8px 16px rgb(0 0 0 / 0.4);
   --elevation-3:

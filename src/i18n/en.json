@@ -349,7 +349,8 @@
     "propertiesDock": "Properties pane",
     "resizeProperties": "Resize the Properties pane",
     "openFile": "Open a file",
-    "openFileTip": "Open a file ({{keys}})"
+    "openFileTip": "Open a file ({{keys}})",
+    "tabMoved": "Moved to position {{position}} of {{count}}"
   },
   "tabCard": {
     "source": {
@@ -408,11 +409,14 @@
     "print": "Print",
     "or": " or ",
     "inBookmarks": "{{command}} (Bookmarks pane)",
+    "inTabs": "{{command}} (on a file tab)",
     "reservedNote": "The first key is used by the browser in a normal tab; use the alternate there.",
     "action": {
       "tabClose": "Close Tab",
       "tabNext": "Next Tab",
       "tabPrev": "Previous Tab",
+      "tabMoveLeft": "Move Tab Left",
+      "tabMoveRight": "Move Tab Right",
       "toolCancel": "Cancel Tool",
       "editCopy": "Copy Selected Text or Comments",
       "editPaste": "Paste Comments",

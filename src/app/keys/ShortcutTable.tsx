@@ -17,6 +17,8 @@ const ACTION_LABELS: Record<
   'tab.close': msg('shortcuts.action.tabClose'),
   'tab.next': msg('shortcuts.action.tabNext'),
   'tab.prev': msg('shortcuts.action.tabPrev'),
+  'tab.moveLeft': msg('shortcuts.action.tabMoveLeft'),
+  'tab.moveRight': msg('shortcuts.action.tabMoveRight'),
   'tool.cancel': msg('shortcuts.action.toolCancel'),
   'tool.enter': msg('shortcuts.action.toolEnter'),
   'annotation.editText': msg('shortcuts.action.annotationEditText'),
@@ -58,7 +60,9 @@ export function ShortcutTable({ testId = 'shortcut-sheet' }: { testId?: string }
             <th scope="row">
               {bnd.scope === 'bookmarks'
                 ? t('shortcuts.inBookmarks', { command: label(bnd.target) })
-                : label(bnd.target)}
+                : bnd.scope === 'tabs'
+                  ? t('shortcuts.inTabs', { command: label(bnd.target) })
+                  : label(bnd.target)}
             </th>
             <td>
               {chordsOn(bnd, mac).map((c, i) => (
