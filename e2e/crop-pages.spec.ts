@@ -154,7 +154,9 @@ test('Crop Tool: the area drawn on a page opens Crop Pages for that page; Remove
   expect(Math.abs((await mm('Right')) - 195 / MM)).toBeLessThan(1);
   expect(Math.abs((await mm('Bottom')) - 242 / MM)).toBeLessThan(1);
   await dialog(page).getByRole('button', { name: 'Crop', exact: true }).click();
-  await expect.poll(async () => (await sizes(page, id))[1]).toEqual([595, 842]);
+  // Wait for the crop itself (page 2 is never cropped, so its size says nothing about it).
+  await expect.poll(async () => (await sizes(page, id))[0]?.[0]).toBeLessThan(595);
+  expect((await sizes(page, id))[1]).toEqual([595, 842]);
   const [w = 0, h = 0] = (await sizes(page, id))[0] ?? [];
   expect(Math.abs(w - 300)).toBeLessThanOrEqual(2);
   expect(Math.abs(h - 450)).toBeLessThanOrEqual(2);
