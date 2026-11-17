@@ -282,7 +282,7 @@ async function selectTitle(page: Page): Promise<void> {
   await page.keyboard.press('Control+C');
 }
 
-test('OCR text can be selected and copied at once, after Ctrl+S, after undo (none) and redo', async ({
+test('OCR text can be selected and copied at once, after Ctrl+S, after undo (none) and redo @smoke', async ({
   page,
   pdfs,
 }) => {
