@@ -1,6 +1,6 @@
 # Triya PDF — Progress
 
-_Last updated: 2026-11-17 (session 87: M11-08·O6 copy or save an image on the page)_
+_Last updated: 2026-11-17 (session 88: M11-08·O2 pick up where you left off)_
 
 **Current milestone:** M11 — file tabs, OCR text selection, a font library and comments in every
 pointer mode: plan [docs/plan/M11.md](plan/M11.md) and [ADR-028](adr/028-m11-tabs-fonts-select.md)
@@ -20,6 +20,34 @@ interop is in the M6 pack (CHECKLIST §M6 R1–R4). Rev 0 (M0–M4) is complete 
 
 ## Done
 
+- **Session 88 — M11-08·O2 pick up where you left off (D-53, ADR-028, plan O2).** **File ›
+  Settings › Start-up › When Triya PDF starts**: **Show the start screen** (default) or
+  **Reopen the files from last time** (`StartupSection`; the choice in IndexedDB `settings`
+  under `startup`; hidden where files have no handles, as Recent files). **Kept** while
+  "reopen" is chosen: IndexedDB `pdftools › session` (schema v9), one record (`last`) of the
+  open tabs that have a file handle, in tab order (name, handle, the fingerprint as opened,
+  where it came from) and the selected tab, rewritten whenever that changes
+  (`src/features/session/session.ts`, pure model `sessionModel.ts`); choosing the start screen
+  deletes it; listed in Privacy, removed by Clear all local data (which also resets the
+  choice). **At start**: after the recovery scan (`launchSnapshots`, shared with the recovery
+  prompt, so files with a snapshot are left to **Recover unsaved changes?** and their offers are
+  not hidden), files whose handle still answers `granted` open at once, one by one in order,
+  with their old source, and the selected tab is selected again (each at its last view, O3).
+  Files the browser asks about again wait: on the start screen a **Pick up where you left off**
+  card (names, **Reopen N files**, **Not now**), or with documents open a bar above the document
+  (`SessionPrompt`). **Reopen** asks for each from the click (`ensurePermission`); a denial or
+  a missing file goes to the open-error dialog; a SecurityError (the click expired) keeps the
+  file waiting. Waiting files stay in the record until reopened or dismissed. Help: "Opening
+  files" › "To pick up where you left off". What's new: a `beta-m11` entry and
+  `docs/release-notes/beta-m11.md` covering M11 so far (M11-09 finishes them). Tests:
+  `tests/session/sessionModel.test.ts`, `tests/session/session.test.ts`, idb v9;
+  `e2e/session-restore.spec.ts` (default keeps nothing; reopen in order with the selected tab,
+  a new unsaved document left out, close updates the record, start screen forgets; files that
+  need permission wait on the start card and reopen by keyboard, axe; a partial reopen with the
+  bar and Not now; a file with unsaved changes goes to recovery; Privacy and Clear all; no
+  choice without handles). The handle-based e2e run on CI only: this container's Chromium 153
+  crashes reading handles back from IndexedDB (see open issues). Shots in project files
+  `m11-08-o2/`. Next: M11-08·O8 images to PDF.
 - **Session 87 — M11-08·O6 copy or save an image on the page (ADR-028, plan O6).** A right
   click on a picture of the page content (not a comment) puts **Copy Image** and **Save Image
   As…** at the top of the page menu (commands `edit.copyImage`, `edit.saveImage`, menu only,

@@ -8,7 +8,7 @@ import { expect, test } from './support/fixtures.ts';
 // moving anything or taking focus. "See what's new" opens About at the list.
 
 const KEY = 'pdftools.whatsNewSeen';
-const LATEST_TITLE = 'A fresher look, Tell me and blank PDFs';
+const LATEST_TITLE = 'Better tabs, more fonts and picking up where you left off';
 
 const backstage = (page: Page) => page.getByTestId('backstage');
 const banner = (page: Page) => page.getByTestId('whats-new-banner');
@@ -41,14 +41,14 @@ test(
     await expect(latest.getByRole('heading', { name: LATEST_TITLE })).toBeVisible();
     await expect(latest).toContainText(/Released \w+ \d+, \d{4}|Released \d+/);
     await expect(latest.getByRole('listitem')).toHaveCount(11);
-    await expect(latest).toContainText('Tell me (Alt+Q');
+    await expect(latest).toContainText('View › Zoom to Area');
 
     // Earlier versions are folded until asked for.
     const earlier = section.getByTestId('whats-new-earlier');
     await expect(earlier.getByRole('heading', { name: 'Help in its own window' })).toBeHidden();
     await earlier.getByText('Earlier versions').click();
     await expect(earlier.getByRole('heading', { name: 'Help in its own window' })).toBeVisible();
-    await expect(earlier.getByRole('heading', { level: 4 })).toHaveCount(4);
+    await expect(earlier.getByRole('heading', { level: 4 })).toHaveCount(5);
 
     // It sits between the actions and Built with.
     const headings = await backstage(page).getByTestId('about').locator('h3').allTextContents();
@@ -63,7 +63,7 @@ test(
   async ({ page }) => {
     await page.goto('/');
     await expect(page.getByRole('tab', { name: 'Home' })).toBeVisible();
-    await expect.poll(() => stored(page)).toBe('beta-m10');
+    await expect.poll(() => stored(page)).toBe('beta-m11');
     await expect(banner(page)).toHaveCount(0);
     await page.reload();
     await expect(page.getByRole('tab', { name: 'Home' })).toBeVisible();
@@ -86,7 +86,7 @@ for (const theme of ['light', 'dark'] as const) {
       await expect(card).toBeVisible();
       await expect(card.getByRole('heading', { name: 'Triya PDF has been updated' })).toBeVisible();
       await expect(card).toContainText(LATEST_TITLE);
-      expect(await stored(page)).toBe('beta-m10');
+      expect(await stored(page)).toBe('beta-m11');
 
       // It takes no focus and no room: over the document area, above the status bar.
       expect(await card.evaluate((el) => el.contains(document.activeElement))).toBe(false);

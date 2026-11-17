@@ -74,7 +74,7 @@
     },
     "opening-files": {
       "title": "Opening files",
-      "summary": "Open PDFs from your computer, by drag and drop, or from the list of recent files. Each file opens in its own tab.",
+      "summary": "Open PDFs from your computer, by drag and drop, or from the list of recent files, and pick up where you left off. Each file opens in its own tab.",
       "body": [
         {
           "shot": "opening-files-1",
@@ -104,6 +104,23 @@
             "You can also drag PDF files from your desktop or file manager and drop them on the window.",
             "<b>File</b> › <b>Recent</b> lists the files you opened on this device. Click one to open it again.",
             "A password-protected file asks for its password first. See [Protected and signed files](#protected-files)."
+          ]
+        },
+        {
+          "h": "To pick up where you left off"
+        },
+        {
+          "steps": [
+            "Choose <b>File</b> › <b>Settings</b>, and under <b>Start-up</b> › <b>When {{app}} starts</b> choose <b>Reopen the files from last time</b>.",
+            "The next time you start {{app}}, the files that were open when you left open again in their tabs, in the same order, with the same tab selected and each at the page and zoom you left it at.",
+            "If the browser asks again before {{app}} may open them (it usually does after it restarts), the start screen shows <b>Pick up where you left off</b> with their names. Choose <b>Reopen</b> and allow access, or <b>Not now</b>."
+          ]
+        },
+        {
+          "list": [
+            "Only files opened from your device can be reopened. New documents that were never saved and files saved to your downloads are not.",
+            "A file with unsaved changes is offered in <b>Recover unsaved changes?</b> instead, so you get your changes back.",
+            "Choose <b>Show the start screen</b> to stop: {{app}} then forgets which files were open. This needs Chrome or Edge on a computer, as <b>Recent files</b> does."
           ]
         },
         {

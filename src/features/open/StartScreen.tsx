@@ -9,6 +9,7 @@ import { buttonClass } from '../../ui/components/buttonClass';
 import { CommandIcon } from '../../ui/icons/CommandIcon';
 import { openHelp } from '../help/openHelp';
 import { RecentList } from '../recent/RecentList';
+import { SessionPrompt } from '../session/SessionPrompt';
 import { useDragOver } from './dragStore';
 
 const OPEN = 'file.open';
@@ -65,7 +66,8 @@ const QUICK_ACTIONS: readonly QuickAction[] = [
 
 /**
  * Shown when no document is open (§8, M10-05): a drop card with Open…, quick
- * actions that work without a document, and Recent files. The drop card
+ * actions that work without a document, and Recent files; above them, last session's
+ * files waiting to be reopened (M11-08·O2). The drop card
  * highlights while files are dragged over the window (DropZone).
  */
 export function StartScreen() {
@@ -75,6 +77,7 @@ export function StartScreen() {
   return (
     <section className="start-screen" aria-labelledby="start-title" data-testid="start-screen">
       <div className="start-column">
+        <SessionPrompt variant="card" />
         <div className="start-drop" data-testid="start-drop" data-over={over ? '' : undefined}>
           <span className="start-badge start-badge--large" aria-hidden="true">
             <DocumentPdf28Regular />

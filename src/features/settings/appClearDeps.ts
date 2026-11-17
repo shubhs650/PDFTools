@@ -12,6 +12,7 @@ import { resetAllCommentStyles } from '../annotate/tools/commentStylesStore';
 import { resetSignatures } from '../sign/signStore';
 import { resetWhatsNew } from '../whatsNew/releases';
 import { resetRecentFonts } from '../annotate/fonts/recentFonts';
+import { resetSession } from '../session/session';
 import type { ClearDeps } from './clearAll';
 
 const hasCaches = (): boolean => typeof caches !== 'undefined';
@@ -42,5 +43,7 @@ export const appClearDeps: ClearDeps = {
     resetWhatsNew();
     // The comment fonts chosen last (M11-07).
     resetRecentFonts();
+    // Start-up back to the start screen, no files kept (M11-08·O2).
+    resetSession();
   },
 };

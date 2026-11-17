@@ -92,6 +92,14 @@ export const LOCAL_DATA: readonly LocalDataItem[] = [
     cleared: true,
   },
   {
+    // The files open last time (M11-08·O2, D-53), only while Start-up reopens them.
+    kind: 'indexedDB',
+    location: `${DB_NAME} › session`,
+    store: 'session',
+    what: msg('privacy.data.session'),
+    cleared: true,
+  },
+  {
     kind: 'opfs',
     location: `${RECOVERY_DIR}/`,
     store: RECOVERY_DIR,

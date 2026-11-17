@@ -26,6 +26,7 @@ describe('AppDb (M1-12)', () => {
       'profile',
       'recent',
       'schemes',
+      'session',
       'settings',
       'tableTemplates',
       'toolDefaults',
@@ -239,7 +240,7 @@ describe('AppDb v8 (M11-08·O3)', () => {
     await v7.putSignature('a', { v: 1 });
     v7.close();
     const db = await AppDb.open({ factory });
-    expect(db.db.version).toBe(8);
+    expect(db.db.version).toBe(MIGRATIONS.length);
     expect(await db.listSignatures()).toEqual([{ v: 1 }]);
     expect(await db.getLastView('fp-a')).toBeUndefined();
     await db.putLastView('fp-a', view(1));
@@ -262,6 +263,30 @@ describe('AppDb v8 (M11-08·O3)', () => {
     expect(await db.getLastView('a')).toBeUndefined();
     expect(await db.getLastView('b')).toEqual(view(20));
     expect(await db.getLastView('c')).toEqual(view(30));
+    db.close();
+  });
+});
+
+describe('AppDb v9 (M11-08·O2)', () => {
+  const record = (savedAt: number) => ({ entries: [], active: -1, savedAt });
+
+  it('keeps one record of the files open last time, keeping the last views of v8', async () => {
+    const factory = new IDBFactory();
+    const v8 = await AppDb.open({ factory, migrations: MIGRATIONS.slice(0, 8) });
+    await v8.putLastView('fp-a', { savedAt: 1 });
+    v8.close();
+    const db = await AppDb.open({ factory });
+    expect(db.db.version).toBe(9);
+    expect(await db.getLastView('fp-a')).toEqual({ savedAt: 1 });
+    expect(await db.getSession()).toBeUndefined();
+    await db.putSession(record(1));
+    await db.putSession(record(2));
+    expect(await db.getSession()).toEqual(record(2));
+    await db.deleteSession();
+    expect(await db.getSession()).toBeUndefined();
+    await db.putSession(record(3));
+    await db.clearAll();
+    expect(await db.getSession()).toBeUndefined();
     db.close();
   });
 });

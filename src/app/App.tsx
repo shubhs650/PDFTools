@@ -9,6 +9,7 @@ import { OfflineStatus, UpdateWaitDialog } from '../features/offline/OfflineStat
 import { ToolHint } from '../features/annotate/tools/ToolHint';
 import { installRecovery } from '../features/recovery/recovery';
 import { installLastViews } from '../features/view/lastView';
+import { installSession } from '../features/session/session';
 import { registerFormCommands } from '../features/forms/commands';
 import { registerPrintCommands } from '../features/print/commands';
 import { registerExtractCommands } from '../features/extract/commands';
@@ -167,6 +168,8 @@ export function App() {
       }, 1000);
     });
   }, []);
+  // Pick up where you left off (M11-08·O2, D-53): last session's files, if so chosen.
+  useEffect(() => installSession(), []);
   // After the commands exist: launched files open like any other (M1-19).
   useEffect(() => {
     installLaunchQueue();

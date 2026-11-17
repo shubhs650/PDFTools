@@ -2172,6 +2172,54 @@ body {
   text-align: left;
 }
 
+/* Pick up where you left off (M11-08·O2): last session's files waiting for a click, a
+   card above the drop card with the accent bar of the banners. */
+.session-card {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--space-4);
+  padding: var(--space-4);
+  border: var(--border-width) solid var(--color-border);
+  border-left: var(--tab-indicator-height) solid var(--color-accent);
+  border-radius: var(--radius-l);
+  background: var(--color-surface-raised);
+  box-shadow: var(--elevation-1);
+  color: var(--color-text);
+}
+
+.session-card-body {
+  display: grid;
+  flex: 1;
+  gap: var(--space-1);
+  min-width: var(--space-0);
+}
+
+.session-card-title {
+  margin: var(--space-0);
+  font-size: var(--font-size-m);
+  font-weight: var(--font-weight-semibold);
+}
+
+.session-card-text {
+  margin: var(--space-0);
+  color: var(--color-text-muted);
+  overflow-wrap: anywhere;
+}
+
+.session-prompt-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+}
+
+.session-card .session-prompt-actions {
+  margin-top: var(--space-2);
+}
+
+.session-bar .permission-banner-text {
+  overflow-wrap: anywhere;
+}
+
 /* On the start screen (M10-05): a card as wide as the column. */
 .recent--card {
   box-sizing: border-box;
