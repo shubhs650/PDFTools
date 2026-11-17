@@ -671,6 +671,16 @@
     "notices": "Third-party notices (opens in a new tab)",
     "download": "Download all notices (.txt)"
   },
+  "whatsNew": {
+    "title": "What's new",
+    "released": "Released {{date}}",
+    "earlier": "Earlier versions",
+    "banner": {
+      "title": "{{app}} has been updated",
+      "see": "See what's new",
+      "dismiss": "Close What's new"
+    }
+  },
   "privacy": {
     "promise": {
       "documents": "Your documents never leave this device. {{app}} opens, renders and saves them in your browser.",
@@ -705,7 +715,8 @@
       "visualSignatures": "Visual signatures and initials you saved in Sign Document (drawn strokes or pictures)",
       "theme": "Light or dark theme",
       "accent": "Accent colour (Blue, Teal, Indigo or Graphite)",
-      "density": "Density (Comfortable or Compact)"
+      "density": "Density (Comfortable or Compact)",
+      "whatsNew": "Which version's What's new was last shown, so it shows once after each update"
     },
     "clearHint": "To delete this data, use File → Settings → Clear all local data."
   },

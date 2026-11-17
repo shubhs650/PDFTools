@@ -1,6 +1,6 @@
 # Triya PDF — Progress
 
-_Last updated: 2026-11-17 (session 72: M10-08·O2 command search, "Tell me")_
+_Last updated: 2026-11-17 (session 73: M10-08·O6 "What's new")_
 
 **Current milestone:** M7 — second beta review (plan in [docs/plan/M7.md](plan/M7.md), scope in
 [ADR-023](adr/023-m7-second-beta-review.md), **Accepted** 2026-11-04 with the recommended
@@ -10,6 +10,35 @@ answers Q1–Q7; ARCHITECTURE.md Rev 0.12 after [ADR-024](adr/024-freetext-text-
 interop is in the M6 pack (CHECKLIST §M6 R1–R4). Rev 0 (M0–M4) is complete on the agent side.
 
 ## Done
+
+- **Session 73 — M10-08·O6 "What's new" (ADR-027).** **File › About** has a **What's new**
+  section between its buttons and Built with: the newest release as a card (title, "Released
+  <date>" through `Intl`, its notes as a list), earlier releases folded under **Earlier
+  versions** (a `<details>`). The text is `src/i18n/whatsnew.en.json` (rule 11; pseudo-localized
+  in the pseudo-locale), a short form of `docs/release-notes/<id>.md`; the M10 entry
+  (`beta-m10`) covers PRs #99–#115 and `docs/release-notes/beta-m10.md` now has every M10 part.
+  **Once after an update** a banner says "Triya PDF has been updated" with the release title,
+  **See what's new** (opens File › About and focuses the What's new heading, scrolled into view)
+  and Close. It is a raised card at the bottom right over the document area, above the status
+  bar (`--z-banner`, under menus and dialogs), so nothing moves and it takes no focus; an
+  always-mounted polite live region announces it; it rises in like the snapshot toast (none
+  with reduced motion). **When:** `pdftools.whatsNewSeen` in localStorage holds the last release
+  announced on this device (Privacy lists it; Clear all local data removes it). A first visit
+  (no record, page not served by the service worker) records the newest release quietly; an
+  older record, or no record on a device whose page came from the service worker (a returning
+  user from before this release), shows the banner, and the release is recorded as it is shown,
+  so a reload never shows it again (`announceAction` in `src/features/whatsNew/releases.ts`).
+  The e2e build has no service worker without `?sw`, so other e2e tests never see the banner.
+  **Tests:** unit `tests/whatsNew/whatsNew.test.ts` (newest first, unique ids, dates, the newest
+  has release notes and covers the M10 parts, pseudo-locale, when the banner shows, once, Privacy
+  and Clear), `motion.test` (the banner's rise-in), `theme.test` (localStorage list);
+  e2e `whats-new.spec.ts` (@smoke: About's section, folded earlier versions, order, axe; a first
+  visit shows no banner; after an update in light and dark at 1280 px: the banner is over the
+  document area above the status bar, takes no focus, axe, Tab reaches both buttons, See what's
+  new focuses the heading in view, no banner after a reload; Close and the Privacy row).
+  Screenshots (banner on the start screen at 1280/1366/1920 and over a document, focus, About's
+  section, earlier versions, light and dark) in the project's shared folder `m10-o6/`. Next:
+  M10-09 acceptance.
 
 - **Session 72 — M10-08·O2 Command search, "Tell me" (ADR-027).** **Alt+Q** (Ctrl+Q too,
   except on macOS, where Cmd+Q quits the browser; Option+Q there) or the new lightbulb at the

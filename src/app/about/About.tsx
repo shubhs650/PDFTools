@@ -1,7 +1,7 @@
 // File → About (M1-26; rebuilt in M10-01, ADR-027 D-48): the product, its
 // version, build and offline state, Copy version info for bug reports, links
-// to Help, Report an issue and Privacy, the main components it is
-// built with, and every open-source package with its license text.
+// to Help, Report an issue and Privacy, What's new (M10-08·O6), the main
+// components it is built with, and every open-source package with its license text.
 import { ArrowDownload20Regular } from '@fluentui/react-icons/svg/arrow-download';
 import { Bug20Regular } from '@fluentui/react-icons/svg/bug';
 import { CheckmarkCircle20Regular } from '@fluentui/react-icons/svg/checkmark-circle';
@@ -14,6 +14,7 @@ import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import builtWith from 'virtual:built-with';
 import { openHelp } from '../../features/help/openHelp';
+import { WhatsNewSection } from '../../features/whatsNew/WhatsNew';
 import { useOffline, type OfflinePhase } from '../../features/offline/offline';
 import { format, msg, type MessageKey } from '../../i18n';
 import { Button } from '../../ui/components';
@@ -142,6 +143,8 @@ export function About({ onShowSection }: AboutProps) {
               : ''}
         </span>
       </div>
+
+      <WhatsNewSection />
 
       <section className="about-section" aria-labelledby={HEADING.builtWith}>
         <h3 id={HEADING.builtWith} className="about-section-title">

@@ -213,6 +213,7 @@
   --density-rail-gap: var(--space-2); /* between the left rail's buttons */
 
   /* Layers */
+  --z-banner: 50; /* the What's new banner (M10-08·O6), under menus and dialogs */
   --z-menu: 100;
   --z-dialog: 200;
   --z-popover: 250; /* above dialogs: a colour picker in a dialog (M6-16) */

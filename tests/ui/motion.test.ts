@@ -157,6 +157,7 @@ describe('motion (M10-07, D-47)', () => {
         '.ui-placeholder::after',
         '.ui-spinner',
         ".ui-tooltip[data-state='delayed-open']",
+        '.whats-new-banner',
       ].sort(),
     );
     const documentView =

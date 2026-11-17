@@ -40,6 +40,8 @@ import { UnlockDialog } from '../features/protect/UnlockDialog';
 import { PasswordSecurityDialog } from '../features/protect/PasswordSecurityDialog';
 import { ExternalLinkDialog } from '../features/view/ExternalLinkDialog';
 import { TellMe } from '../features/tellMe/TellMe';
+import { WhatsNewBanner } from '../features/whatsNew/WhatsNew';
+import { startWhatsNew } from '../features/whatsNew/releases';
 import { RecoveryDialog } from '../features/recovery/RecoveryDialog';
 import { registerSaveCommands } from '../features/save/commands';
 import { registerFindCommands } from '../features/search/commands';
@@ -141,6 +143,10 @@ export function App() {
   useEffect(() => registerAnnotateCommands(), []);
   useEffect(() => registerFindCommands(), []);
   useEffect(() => installRecovery(), []);
+  // What's new (M10-08·O6): once after an update, a banner; always in File › About.
+  useEffect(() => {
+    startWhatsNew();
+  }, []);
   // §9: register the service worker; after the first render, precache the rest.
   useEffect(() => {
     void startOffline().then(() => {
@@ -237,6 +243,7 @@ export function App() {
         <BookmarkPropertiesDialog />
         <FileDialogs />
         <UpdateWaitDialog />
+        <WhatsNewBanner />
         <DropZone />
         {CrashProbe ? (
           <Suspense fallback={null}>
