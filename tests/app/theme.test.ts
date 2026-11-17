@@ -296,6 +296,8 @@ describe('where the theme is reached', () => {
       DENSITY_STORAGE_KEY,
       // What's new's record (M10-08·O6), not a look-and-feel choice.
       'pdftools.whatsNewSeen',
+      // The comment fonts chosen last (M11-07), not a look-and-feel choice either.
+      'pdftools.recentFonts',
     ]);
     expect(items.every((d) => d.cleared)).toBe(true);
   });

@@ -473,6 +473,53 @@
         }
       ]
     },
+    "comment-fonts": {
+      "title": "Fonts in comments",
+      "summary": "Text boxes, typewriters and callouts can use 26 font families that come with {{app}}, besides Helvetica, Times and Courier. They work offline, and other PDF viewers show them exactly.",
+      "body": [
+        {
+          "h": "To choose a font"
+        },
+        {
+          "steps": [
+            "Select a text box, typewriter or callout, or choose its tool on the <b>Comment</b> tab to set the font for new ones.",
+            "In the Properties pane, open <b>Font</b>. Every name is shown in its own font.",
+            "Type the first letters of a name to jump to it, or use the arrow keys, then press <kbd>Enter</kbd>."
+          ]
+        },
+        {
+          "p": "While you edit the text, the same list is in the right-click menu under <b>Text Style</b> › <b>Font</b>. The fonts you chose last are at the top, under <b>Recently used</b>. A style in <b>Comment Styles</b> can keep a font too."
+        },
+        {
+          "list": [
+            "<b>Office-compatible:</b> Arimo, Tinos, Cousine and Carlito take the same space as Arial, Times New Roman, Courier New and Calibri, so text fits as it does in Word and Excel.",
+            "<b>Sans-serif, narrow and technical:</b> Inter, Roboto, Open Sans, Noto Sans, IBM Plex Sans, Atkinson Hyperlegible, Roboto Condensed, Barlow Condensed, B612 and Overpass.",
+            "<b>Serif and monospace:</b> Noto Serif, Source Serif 4, Roboto Mono, JetBrains Mono and IBM Plex Mono.",
+            "<b>Handwriting:</b> Architects Daughter, Caveat and Kalam.",
+            "<b>Hindi and Chinese:</b> Noto Sans Devanagari, Noto Serif Devanagari and Noto Sans SC."
+          ]
+        },
+        {
+          "h": "Hindi, Chinese and symbols in any font"
+        },
+        {
+          "p": "If the font has no letter for a character, such as Hindi typed in Roboto, a Chinese name in Arimo or the diameter sign ⌀, that character is drawn in Noto Sans Devanagari, Noto Sans SC or a symbol font instead, so you never see empty boxes."
+        },
+        {
+          "h": "In other PDF viewers"
+        },
+        {
+          "list": [
+            "The characters a comment uses are saved in the file with it, so Acrobat Reader, PDF-XChange and other viewers show it exactly, and the text can still be searched and copied there, also after flattening.",
+            "If someone edits the comment in another viewer that does not have the font installed, that viewer draws it again in a font of its own. This is normal for any text comment. Viewing it never changes it.",
+            "Form fields keep Helvetica, Times and Courier."
+          ]
+        },
+        {
+          "tip": "<b>Bold</b> and <b>Italic</b> work with every font. A family without a bold or italic face, such as Caveat or Noto Sans SC, is drawn thicker or slanted instead."
+        }
+      ]
+    },
     "sticky-notes": {
       "title": "Sticky notes",
       "summary": "A sticky note is a small icon on the page with a note window for longer comments and replies.",

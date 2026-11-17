@@ -543,7 +543,7 @@ test('M7-07: v2 highlight presets move to 50 %, the user’s own values stay; th
   await expect(props.getByLabel('Opacity')).toHaveValue('80');
   if (SHOTS) await page.screenshot({ path: `${SHOTS}/03-window-highlight-area-user-80-1366.png` });
   await tools.getByRole('option', { name: 'Typewriter', exact: true }).click();
-  await expect(props.getByLabel('Font', { exact: true })).toHaveValue('courier');
+  await expect(props.getByLabel('Font', { exact: true })).toHaveAttribute('data-value', 'courier');
   if (SHOTS) await page.screenshot({ path: `${SHOTS}/04-window-typewriter-1366.png` });
 
   // Reset All: the shipped 50 % again, and Purple back to its preset.

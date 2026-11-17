@@ -19,6 +19,7 @@ import {
   type PackageInfo,
 } from './license-policy.ts';
 import { collectNotices, renderNotices } from './notices.ts';
+import { readFontManifest, verifyVendoredFonts } from './fonts/manifest.ts';
 
 const root = join(dirname(fileURLToPath(import.meta.url)), '..');
 const verbose = process.argv.includes('--verbose');
@@ -154,6 +155,25 @@ function main(): void {
         'entry to scripts/license-exceptions.json with the exact license string and a reason.',
     );
   }
+
+  // The comment font library (M11-07, D-52): vendored files, not npm packages. Each family's
+  // license must be allowed, and every file must be the one built from the pinned sources.
+  const fonts = readFontManifest();
+  for (const [id, fam] of Object.entries(fonts.families)) {
+    const { status, reason } = evaluateLicense(fam.license);
+    if (status !== 'allowed') {
+      console.error(`✖ Font ${fam.name} (${id}): ${fam.license} [${status}] ${reason}`);
+      failed = true;
+    }
+  }
+  for (const p of verifyVendoredFonts(fonts)) {
+    console.error(`✖ vendor/fonts: ${p}`);
+    failed = true;
+  }
+  console.log(
+    `  Font library: ${String(Object.keys(fonts.families).length)} families, ` +
+      `${String(Object.keys(fonts.files).length)} files (vendor/fonts, OFL-1.1)\n`,
+  );
 
   if (failed) process.exit(1);
   if (noticesFile) {

@@ -6,10 +6,10 @@
 import type { PdfAnnotationObject } from '@embedpdf/models';
 import type { ContextMenuEntry } from '../../ui/components/contextMenuModel';
 import {
-  FONT_FAMILIES,
+  isCommentFont,
   patchFor,
   readProps,
-  type FontFamily,
+  type CommentFont,
   type Plain,
   type Prop,
 } from './properties/model';
@@ -45,7 +45,8 @@ export const TEXT_PROPERTIES_ENTRIES: readonly ContextMenuEntry[] = [cmd('edit.p
 export const FONT_SIZES: readonly number[] = [8, 9, 10, 11, 12, 14, 16, 18, 20, 24, 28, 36, 48, 72];
 
 export interface TextStyle {
-  family: FontFamily;
+  /** A standard family or a font library family (M11-07). */
+  family: CommentFont;
   bold: boolean;
   italic: boolean;
   /** Points. */
@@ -70,9 +71,7 @@ export function textStyleOf(a: PdfAnnotationObject): TextStyle {
   const p = readProps([a]);
   const family = p.fontFamily;
   return {
-    family: FONT_FAMILIES.includes(family as FontFamily)
-      ? (family as FontFamily)
-      : DEFAULT_STYLE.family,
+    family: isCommentFont(family) ? family : DEFAULT_STYLE.family,
     bold: p.bold === true,
     italic: p.italic === true,
     size: typeof p.fontSize === 'number' ? p.fontSize : DEFAULT_STYLE.size,
@@ -83,7 +82,7 @@ export function textStyleOf(a: PdfAnnotationObject): TextStyle {
 
 /** One Text Style change. */
 export type StyleChange =
-  | { prop: 'fontFamily'; value: FontFamily }
+  | { prop: 'fontFamily'; value: CommentFont }
   | { prop: 'bold' | 'italic'; value: boolean }
   | { prop: 'fontSize'; value: number }
   | { prop: 'fontColor'; value: string }

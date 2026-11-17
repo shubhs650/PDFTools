@@ -13,12 +13,19 @@ import { reviewHistory, type HistoryEntry } from '../comments/thread';
 import { STATUS_KEYS } from '../comments/statusLabels';
 import { isStyleTool, type StyleTool } from '../tools/toolDefaults';
 import { resetToolDefaults, useToolDefaults } from '../tools/toolDefaultsStore';
-import { CheckField, ColorField, InfoField, NumberField, SelectField, TextProp } from './fields';
+import {
+  CheckField,
+  ColorField,
+  FontField,
+  InfoField,
+  NumberField,
+  SelectField,
+  TextProp,
+} from './fields';
 import { marksOf, setFlag, setMarked } from './flagActions';
 import { GridSection } from './GridSection';
 import {
   canBeCloudy,
-  FONT_FAMILIES,
   gateOf,
   MIXED,
   readFlag,
@@ -68,11 +75,6 @@ const BLENDS: readonly MessageKey[] = [
   msg('annotProps.blend.luminosity'),
 ];
 
-const FONT_KEYS: Record<(typeof FONT_FAMILIES)[number], MessageKey> = {
-  helvetica: msg('annotProps.font.helvetica'),
-  times: msg('annotProps.font.times'),
-  courier: msg('annotProps.font.courier'),
-};
 const ALIGN_KEYS: readonly MessageKey[] = [
   msg('annotProps.align.left'),
   msg('annotProps.align.center'),
@@ -237,11 +239,11 @@ export function StyleAndText({
         onCommit={set('lineEnd')}
       />
     ),
+    // The comment font list (M11-07, D-52): standard fonts and the font library.
     fontFamily: () => (
-      <SelectField
+      <FontField
         label={t('annotProps.font.label')}
         value={v('fontFamily')}
-        options={FONT_FAMILIES.map((f) => ({ value: f, label: t(FONT_KEYS[f]) }))}
         disabled={disabled}
         onCommit={set('fontFamily')}
       />

@@ -6,6 +6,7 @@
 import { ACCENT_STORAGE_KEY, DENSITY_STORAGE_KEY, THEME_STORAGE_KEY } from '../../app/theme';
 import { msg, type MessageKey } from '../../i18n';
 import { WHATS_NEW_STORAGE_KEY } from '../whatsNew/releases';
+import { RECENT_FONTS_STORAGE_KEY } from '../annotate/fonts/recentFonts';
 import { DB_NAME } from '../../storage/idb';
 import { RECOVERY_DIR } from '../../storage/recoveryTypes';
 
@@ -119,6 +120,14 @@ export const LOCAL_DATA: readonly LocalDataItem[] = [
     location: WHATS_NEW_STORAGE_KEY,
     store: WHATS_NEW_STORAGE_KEY,
     what: msg('privacy.data.whatsNew'),
+    cleared: true,
+  },
+  {
+    // The comment fonts chosen last (M11-07, D-52): "Recently used" on top of the font list.
+    kind: 'localStorage',
+    location: RECENT_FONTS_STORAGE_KEY,
+    store: RECENT_FONTS_STORAGE_KEY,
+    what: msg('privacy.data.recentFonts'),
     cleared: true,
   },
   {

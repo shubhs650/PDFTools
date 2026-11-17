@@ -104,6 +104,8 @@ export interface RenderApi {
       expected: DocDigest | null;
       /** Text comments since the last save whose text colour PDFium's appearance kept (ADR-024). */
       textColorFallbacks?: number;
+      /** Text comments since the last save whose library font PDFium's appearance replaced (M11-07). */
+      commentFontFallbacks?: number;
     }
   >;
   /** The tail of the last saveIncremental was written: it becomes the new base (M1-22). */

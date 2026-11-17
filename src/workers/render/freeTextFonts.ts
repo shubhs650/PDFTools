@@ -8,7 +8,9 @@
 // The text colour (ADR-024): EmbedPDF reads it from its own /TextColor, else
 // from /DA, which Acrobat and PDF-XChange use for the border; their text
 // colour is in /DS (`color:#0000FF`), read here when there is no /TextColor.
-import { colorFromDefaultStyle } from '../../model/freeTextStyle';
+// A library font's family (M11-07) is read from /DS too, as `libraryFont`.
+import { colorFromDefaultStyle, familyFromDefaultStyle } from '../../model/freeTextStyle';
+import { libraryFamilyByName } from '../../model/fonts/library';
 
 /** PdfStandardFont values by base font name and by the usual /DR resource names. */
 const FONTS: Readonly<Record<string, number>> = {
@@ -73,9 +75,13 @@ export function installFontReadback(native: unknown): void {
     n.readPdfFreeTextAnno = (doc, page, annot, index) => {
       const out = readFreeText(doc, page, annot, index);
       if (typeof out !== 'object' || out === null) return out;
-      if (n.getAnnotationColor(annot, TEXT_COLOR) !== undefined) return out;
-      const color = colorFromDefaultStyle(n.getAnnotString(annot, 'DS'));
-      return color ? { ...out, fontColor: color.toLowerCase() } : out;
+      const ds = n.getAnnotString(annot, 'DS');
+      // A library font (M11-07, D-52): /DS names the family; /DA keeps its standard fallback.
+      const lib = libraryFamilyByName(familyFromDefaultStyle(ds) ?? '');
+      const withFont = lib?.group ? { ...out, libraryFont: lib.id } : out;
+      if (n.getAnnotationColor(annot, TEXT_COLOR) !== undefined) return withFont;
+      const color = colorFromDefaultStyle(ds);
+      return color ? { ...withFont, fontColor: color.toLowerCase() } : withFont;
     };
   }
   if (typeof n.getAnnotationDefaultAppearance !== 'function') return;

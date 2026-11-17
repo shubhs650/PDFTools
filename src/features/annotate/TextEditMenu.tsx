@@ -24,7 +24,9 @@ import { msg, type MessageKey } from '../../i18n';
 import { ContextMenuItems } from '../../ui/components';
 import { gridMove, PALETTE_COLUMNS, STANDARD_COLORS } from '../../ui/components/colorPalette';
 import { CommandIcon } from '../../ui/icons/CommandIcon';
-import { FONT_FAMILIES, type FontFamily } from './properties/model';
+import { cssFontStack, registerCommentFonts } from './fonts/commentFonts';
+import { fontSections } from './fonts/fontList';
+import { noteFontUsed, recentFonts } from './fonts/recentFonts';
 import { inTextEditor, textEditSession } from './textEdit';
 
 const STYLE = 'text.style';
@@ -51,12 +53,6 @@ function caretPoint(el: HTMLElement): { x: number; y: number } {
   const box = el.getBoundingClientRect();
   return { x: box.left + 4, y: box.top + 4 };
 }
-
-const FONT_KEYS: Record<FontFamily, MessageKey> = {
-  helvetica: msg('annotProps.font.helvetica'),
-  times: msg('annotProps.font.times'),
-  courier: msg('annotProps.font.courier'),
-};
 
 const ALIGNS: readonly { value: number; key: MessageKey; icon: ReactNode }[] = [
   { value: 0, key: msg('textMenu.alignLeft'), icon: <TextAlignLeft20Regular aria-hidden /> },
@@ -154,11 +150,20 @@ function SubTrigger({
   );
 }
 
-function SubContent({ children, label }: { children: ReactNode; label: string }) {
+function SubContent({
+  children,
+  label,
+  scroll,
+}: {
+  children: ReactNode;
+  label: string;
+  /** A long list (the fonts): scrolls inside the window. */
+  scroll?: boolean;
+}) {
   return (
     <CM.Portal>
       <CM.SubContent
-        className="ui-menu ui-context-menu"
+        className={`ui-menu ui-context-menu${scroll ? ' ui-menu-scroll' : ''}`}
         aria-label={label}
         collisionPadding={8}
         loop
@@ -196,20 +201,8 @@ function TextStyleMenu() {
       <SubContent label={label}>
         <CM.Sub>
           <SubTrigger icon={<TextFont20Regular aria-hidden />} label={t('textMenu.font')} />
-          <SubContent label={t('textMenu.font')}>
-            <CM.RadioGroup
-              value={style.family}
-              onValueChange={(v) => {
-                setTextStyle({ prop: 'fontFamily', value: v as FontFamily });
-              }}
-            >
-              {FONT_FAMILIES.map((f) => (
-                <CM.RadioItem key={f} value={f} className="ui-menu-item" data-font={f}>
-                  <Tick on={style.family === f} />
-                  <span className="ui-menu-label">{t(FONT_KEYS[f])}</span>
-                </CM.RadioItem>
-              ))}
-            </CM.RadioGroup>
+          <SubContent label={t('textMenu.font')} scroll>
+            <FontMenuItems family={style.family} />
           </SubContent>
         </CM.Sub>
         <CM.Sub>
@@ -327,6 +320,53 @@ function ColorGrid({ value }: { value: string }) {
           />
         ))}
       </CM.RadioGroup>
+    </>
+  );
+}
+
+/**
+ * The Font submenu (M11-07, D-52): the same list as the Properties pane's —
+ * Recently used, Standard, then the library's groups — each name in its own
+ * face; the menu's own type-ahead jumps to a name. The same font may be
+ * listed in Recently used and in its group: one radio group per section.
+ */
+function FontMenuItems({ family }: { family: string }) {
+  const { t } = useTranslation();
+  useEffect(() => {
+    registerCommentFonts();
+  }, []);
+  const sections = fontSections(recentFonts());
+  const choose = (v: string): void => {
+    noteFontUsed(v);
+    setTextStyle({ prop: 'fontFamily', value: v });
+  };
+  return (
+    <>
+      {sections.map((s, i) => (
+        <CM.Group key={s.id} data-group={s.id}>
+          {i > 0 ? <CM.Separator className="ui-menu-separator" /> : null}
+          <CM.Label className="ui-menu-heading">{t(s.title)}</CM.Label>
+          <CM.RadioGroup value={family} onValueChange={choose}>
+            {s.options.map((o) => {
+              const name = 'text' in o.name ? o.name.text : t(o.name.key);
+              return (
+                <CM.RadioItem
+                  key={o.id}
+                  value={o.id}
+                  className="ui-menu-item"
+                  data-font={o.id}
+                  textValue={name}
+                >
+                  <Tick on={family === o.id} />
+                  <span className="ui-menu-label" style={{ fontFamily: cssFontStack(o.id) }}>
+                    {name}
+                  </span>
+                </CM.RadioItem>
+              );
+            })}
+          </CM.RadioGroup>
+        </CM.Group>
+      ))}
     </>
   );
 }

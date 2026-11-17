@@ -22,6 +22,9 @@ export function saveDeps(): SaveFlowDeps {
       // ADR-024: a text comment kept PDFium's appearance (its text in the border colour).
       if (r.textColorFallbacks)
         recordEvent('annotate', 'freetext-text-color-kept', { count: r.textColorFallbacks });
+      // M11-07: a text comment in a library font kept PDFium's appearance (its standard font).
+      if (r.commentFontFallbacks)
+        recordEvent('annotate', 'freetext-font-kept', { count: r.commentFontFallbacks });
       return r;
     },
     async verify(docId, piece, expected, signal) {

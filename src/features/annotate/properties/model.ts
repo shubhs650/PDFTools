@@ -11,6 +11,7 @@ import {
   type PdfAnnotationLineEnding,
   type PdfAnnotationObject,
 } from '@embedpdf/models';
+import { libraryFamily, standardFont } from '../../../model/fonts/library';
 
 /** In grid order: Style, then Text, then the General texts. */
 export const PROPS = [
@@ -55,8 +56,19 @@ export const SECTION_PROPS = {
 } as const satisfies Record<string, readonly Prop[]>;
 
 export type LineStyle = 'solid' | 'dashed' | 'cloudy';
+/** The standard families (form fields keep these, owner's Q3 in M11). */
 export type FontFamily = 'helvetica' | 'times' | 'courier';
 export const FONT_FAMILIES: readonly FontFamily[] = ['helvetica', 'times', 'courier'];
+const isFamily = (v: unknown): v is FontFamily => FONT_FAMILIES.includes(v as FontFamily);
+/**
+ * A text comment's font (M11-07, D-52): a standard family, or the id of a
+ * font library family (src/model/fonts/library.ts). The annotation keeps the
+ * library family in `libraryFont` ('' for none) and its standard fallback,
+ * with bold and italic, in `fontFamily` (/DA).
+ */
+export type CommentFont = string;
+export const isCommentFont = (v: unknown): v is CommentFont =>
+  isFamily(v) || (typeof v === 'string' && !!libraryFamily(v)?.group);
 
 /** A property whose value differs across the selection. */
 export const MIXED = Symbol('mixed');
@@ -164,6 +176,13 @@ export const fontOf = ({ family, bold, italic }: FontParts): F =>
 
 // ------------------------------------------------------------ values
 
+/** The library family a text comment is drawn in (M11-07), if any. */
+function libraryOf(a: PdfAnnotationObject) {
+  const id = (a as unknown as Loose)['libraryFont'];
+  const lib = typeof id === 'string' ? libraryFamily(id) : undefined;
+  return lib?.group ? lib : undefined;
+}
+
 /** One property's value on one annotation (undefined when it has none). */
 function valueOf(a: PdfAnnotationObject, p: Prop): Plain | undefined {
   const o = a as unknown as Loose;
@@ -193,7 +212,7 @@ function valueOf(a: PdfAnnotationObject, p: Prop): Plain | undefined {
     case 'lineEnd':
       return endings?.end ?? 0;
     case 'fontFamily':
-      return fontParts(num('fontFamily')).family;
+      return libraryOf(a)?.id ?? fontParts(num('fontFamily')).family;
     case 'bold':
       return fontParts(num('fontFamily')).bold;
     case 'italic':
@@ -235,8 +254,6 @@ function styleValue(a: PdfAnnotationObject, s: LineStyle): Loose {
   if (s === 'cloudy' && !canBeCloudy(a)) return {};
   return { strokeStyle: PdfAnnotationBorderStyle.SOLID, strokeDashArray: [], ...cloud };
 }
-
-const isFamily = (v: unknown): v is FontFamily => FONT_FAMILIES.includes(v as FontFamily);
 
 /** The patch setting `p` to `v` on `a`, or null when `a` has no such property. */
 export function patchFor(
@@ -283,10 +300,18 @@ export function patchFor(
     case 'lineEnd':
       out = { lineEndings: { ...ends, end: Number(v) } };
       break;
-    case 'fontFamily':
-      if (!isFamily(v)) return null;
-      out = { fontFamily: fontOf({ ...font, family: v }) };
+    case 'fontFamily': {
+      // A library family keeps its standard fallback (with bold and italic) in /DA.
+      const lib = typeof v === 'string' ? libraryFamily(v) : undefined;
+      if (lib?.group)
+        out = {
+          fontFamily: standardFont(lib.standard, font.bold, font.italic),
+          libraryFont: lib.id,
+        };
+      else if (isFamily(v)) out = { fontFamily: fontOf({ ...font, family: v }), libraryFont: '' };
+      else return null;
       break;
+    }
     case 'bold':
       out = { fontFamily: fontOf({ ...font, bold: v === true }) };
       break;

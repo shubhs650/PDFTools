@@ -7,6 +7,7 @@ import { format } from '../../../i18n';
 import { ColorPicker } from '../../../ui/components';
 import { parseLocaleNumber } from '../../../i18n/format';
 import { MIXED, type Value } from './model';
+import { FontPicker } from '../fonts/FontPicker';
 
 export function ColorField({
   label,
@@ -171,6 +172,37 @@ export function SelectField<T extends string | number>({
           </option>
         ))}
       </select>
+    </div>
+  );
+}
+
+/** A text comment's font (M11-07, D-52): the comment font list, "Mixed" when it differs. */
+export function FontField({
+  label,
+  value,
+  disabled,
+  onCommit,
+}: {
+  label: string;
+  value: Value;
+  disabled?: boolean;
+  onCommit: (v: string) => void;
+}) {
+  const id = useId();
+  const labelId = `${id}-label`;
+  return (
+    <div className="prop-field">
+      <label id={labelId} htmlFor={id}>
+        {label}
+      </label>
+      <FontPicker
+        id={id}
+        labelId={labelId}
+        label={label}
+        value={typeof value === 'string' ? value : null}
+        disabled={disabled ?? false}
+        onChange={onCommit}
+      />
     </div>
   );
 }

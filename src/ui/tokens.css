@@ -120,6 +120,8 @@
   --menu-min-width: 160px;
   --tell-me-width: 560px; /* Tell me's box (M10-08·O2) */
   --tell-me-list-height: 360px;
+  --font-list-width: 280px; /* the comment font list (M11-07, D-52) */
+  --font-list-height: 360px;
   --split-arrow-width: 10px; /* a split button's arrow part (M6-07) */
   --swatch-cell-size: 20px; /* a swatch of the colour picker's grid (M6-16) */
   --swatch-chip-width: 28px; /* the colour shown on a colour picker's button (M6-16) */

@@ -705,6 +705,14 @@
         "name": "Inter",
         "role": "The interface font"
       },
+      "fontLibrary": {
+        "name": "Google Fonts library",
+        "role": "26 font families for text comments"
+      },
+      "harfbuzz": {
+        "name": "HarfBuzz",
+        "role": "Text shaping and font subsetting for comment fonts"
+      },
       "noto": {
         "name": "Noto fonts",
         "role": "Fonts for text a PDF does not embed"
@@ -796,7 +804,8 @@
       "theme": "Light or dark theme",
       "accent": "Accent colour (Blue, Teal, Indigo or Graphite)",
       "density": "Density (Comfortable or Compact)",
-      "whatsNew": "Which version's What's new was last shown, so it shows once after each update"
+      "whatsNew": "Which version's What's new was last shown, so it shows once after each update",
+      "recentFonts": "Comment fonts you chose last (font names only), shown first in the font list"
     },
     "clearHint": "To delete this data, use File → Settings → Clear all local data."
   },
@@ -2692,5 +2701,20 @@
     "replyHint": "Ctrl+Enter posts. Esc cancels.",
     "post": "Post",
     "cancel": "Cancel"
+  },
+  "fonts": {
+    "group": {
+      "recent": "Recently used",
+      "standard": "Standard",
+      "office": "Office-compatible",
+      "sans": "Sans-serif",
+      "narrow": "Narrow",
+      "technical": "Technical",
+      "serif": "Serif",
+      "mono": "Monospace",
+      "hand": "Handwriting",
+      "hindi": "Hindi (Devanagari)",
+      "chinese": "Chinese (Simplified)"
+    }
   }
 }

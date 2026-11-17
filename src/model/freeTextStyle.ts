@@ -49,13 +49,45 @@ export function defaultStyleString(o: {
   fontSize?: number | undefined;
   textAlign?: number | undefined;
   color: string;
+  /**
+   * A library font's family name (M11-07, D-52), in place of the standard
+   * font's; quoted when it has a space (`'Open Sans'`), as Acrobat writes it.
+   */
+  family?: string | undefined;
 }): string {
-  const [family, bold, italic] = DS_FONTS[o.fontFamily ?? 4] ?? ['Helvetica', false, false];
+  const [standard, bold, italic] = DS_FONTS[o.fontFamily ?? 4] ?? ['Helvetica', false, false];
+  const named = o.family?.replace(/['";]/gu, '').trim();
+  const family = named ? (/\s/u.test(named) ? `'${named}'` : named) : standard;
   const weight = [bold ? 'bold' : '', italic ? 'italic' : ''].filter(Boolean).join(' ');
   const size = typeof o.fontSize === 'number' && o.fontSize > 0 ? o.fontSize : 12;
   const align = ALIGN[o.textAlign ?? 0] ?? 'left';
   const color = normalizeHex(o.color) ?? '#000000';
   return `font: ${weight ? `${weight} ` : ''}${family} ${fmt(size)}pt; text-align:${align}; color:${color}`;
+}
+
+/**
+ * The font family a `/DS` string names (`font: bold 'Open Sans' 12pt` →
+ * `Open Sans`), or null. A comma list gives its first family.
+ */
+export function familyFromDefaultStyle(ds: string | undefined): string | null {
+  if (!ds) return null;
+  const font = /(?:^|[;\s])font\s*:\s*([^;]*)/iu.exec(ds)?.[1];
+  const family = /(?:^|[;\s])font-family\s*:\s*([^;]*)/iu.exec(ds)?.[1];
+  let rest = family ?? font;
+  if (!rest) return null;
+  if (!family) {
+    // Drop style, weight and size words: what is left is the family list.
+    rest = rest
+      .replace(/(?:^|\s)(?:normal|bold|bolder|lighter|italic|oblique|\d{3})(?=\s|$)/giu, ' ')
+      .replace(/(?:^|\s)[\d.]+(?:pt|px|em|%)?(?:\/[\d.]+(?:pt|px|em|%)?)?(?=\s|$|,)/giu, ' ');
+  }
+  const first = rest
+    .split(',')[0]
+    ?.trim()
+    .replace(/^['"]|['"]$/gu, '')
+    .trim();
+  if (!first) return null;
+  return first;
 }
 
 /** The text colour in a `/DS` string (`color:#RRGGBB`), or null. */

@@ -28,6 +28,10 @@ const BACKGROUND = [
   // The Word builder (M4-07): docx and the Markdown parser, only for To Word.
   /(^|\/)assets\/docxBuild[\w.-]*\.js$/,
   /(^|\/)fonts\/(sc|tc|jp|kr)\//,
+  // The comment font library (M11-07, D-52): 26 families, only for text comments in them.
+  /(^|\/)fonts\/lib\//,
+  // HarfBuzz (shaping and subsetting comment fonts, M11-07): its chunk and both WASM files.
+  /(^|\/)assets\/harfbuzz[\w.-]*\.(js|wasm)$/,
   // Typed signatures' handwriting fonts (M6-13, ADR-022 d3): only for Sign Document.
   /(^|\/)fonts\/sig-[\w-]+\//,
   // OCR (M5, ADR-020 d2): the worker, Tesseract's WASM and the English data, only for OCR.

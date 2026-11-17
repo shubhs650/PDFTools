@@ -2,7 +2,8 @@
 // /fonts/<package>/<file>, each with its OFL-1.1 license text, in the build and
 // in the dev server (since M6-13 also the typed-signature fonts). Regular weight only; which fonts are core vs background
 // precache is decided in M1-25 (CORE_FONT_PACKAGES). Since M5 (ADR-020 d2) also
-// the OCR language data under /ocr/ (English in the background precache, the rest on demand).
+// the OCR language data under /ocr/ (English in the background precache, the rest on demand),
+// and since M11-07 (D-52) the comment font library under /fonts/lib/ from vendor/fonts/.
 import { readFileSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -15,6 +16,8 @@ import {
   type FontPackage,
 } from '../src/engine/fonts.ts';
 import { OCR_LANGUAGES, ocrDataPath } from '../src/model/ocr/languages.ts';
+import { FONT_LIBRARY, fontLibraryPath, libraryFiles } from '../src/model/fonts/library.ts';
+import { fontFile, fontLicense } from './fonts/manifest.ts';
 import { NOTICES_FILE, builtWith, collectNotices, licenseData, renderNotices } from './notices.ts';
 import { BUILT_WITH_PACKAGES } from '../src/app/about/components.ts';
 
@@ -34,6 +37,12 @@ export function selfHostedAssets(): Plugin {
     files.set(signatureFontPath(f), () => readFileSync(join(sigDir, 'fonts', f.file)));
     files.set(`fonts/${f.id}/LICENSE`, () => readFileSync(join(sigDir, 'licenses', f.license)));
   }
+  // The comment font library (M11-07, D-52): vendor/fonts/ (scripts/fonts/build.ts), each
+  // family's license next to its files; background precache (src/sw/precacheSplit.ts).
+  for (const file of libraryFiles())
+    files.set(fontLibraryPath(file), () => readFileSync(fontFile(file)));
+  for (const fam of FONT_LIBRARY)
+    files.set(`${fontLibraryPath(fam.id)}/LICENSE`, () => readFileSync(fontLicense(fam.id)));
   for (const { code } of OCR_LANGUAGES)
     files.set(ocrDataPath(code), () =>
       readFileSync(
