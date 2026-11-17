@@ -23,6 +23,13 @@ test('dragging and moving file tabs adds no long task', async ({ page, pdfs, gua
   await guard.startMeasuring();
 
   const list = page.locator('.tab-list');
+  // Motion is on here: wait for the tabs' slides to finish before reading their boxes.
+  const settled = () =>
+    page.waitForFunction(() =>
+      [...document.querySelectorAll('.tab-button, .tab-close')].every(
+        (el) => el.getAnimations().length === 0,
+      ),
+    );
   const rowBox = await list.boundingBox();
   const add = await page.locator('.tab-add').boundingBox();
   for (let round = 0; round < 3; round++) {
@@ -30,20 +37,30 @@ test('dragging and moving file tabs adds no long task', async ({ page, pdfs, gua
     await list.evaluate((el) => {
       el.scrollLeft = 0;
     });
+    await settled();
     const first = await tabs.nth(0).boundingBox();
     const y = (first?.y ?? 0) + (first?.height ?? 0) / 2;
     await page.mouse.move((first?.x ?? 0) + 20, y);
     await page.mouse.down();
     await page.mouse.move((add?.x ?? 0) - 10, y, { steps: 30 });
-    await page.waitForTimeout(1500);
+    // Held until the row has scrolled to its end (a slow runner takes longer).
+    await expect
+      .poll(
+        () => list.evaluate((el) => Math.ceil(el.scrollLeft + el.clientWidth) >= el.scrollWidth),
+        { timeout: 15_000 },
+      )
+      .toBe(true);
+    await page.waitForTimeout(200);
     await page.mouse.up();
     await page.waitForTimeout(300);
     await expect(tabs.nth(11)).toHaveAccessibleName('contract.pdf');
+    await settled();
     const last = await tabs.nth(11).boundingBox();
     await page.mouse.move((last?.x ?? 0) + 20, y);
     await page.mouse.down();
     await page.mouse.move((rowBox?.x ?? 0) + 4, y, { steps: 30 });
-    await page.waitForTimeout(1500);
+    await expect.poll(() => list.evaluate((el) => el.scrollLeft), { timeout: 15_000 }).toBe(0);
+    await page.waitForTimeout(200);
     await page.mouse.up();
     await page.waitForTimeout(300);
     await expect(tabs.nth(0)).toHaveAccessibleName('contract.pdf');
