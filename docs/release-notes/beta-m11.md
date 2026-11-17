@@ -74,3 +74,14 @@ _In progress: M11's tasks add their notes here as they land; M11-09 (acceptance)
   bookmark, and never replace a file already there. Where the browser can't save into a folder,
   they come in one ZIP file. Your unsaved changes go into the files; the open document is not
   changed.
+
+## Crop Pages
+
+- **Organize › Crop Pages** cuts margins off pages: type the top, bottom, left and right margins
+  in mm or inches, as the page is shown, for all pages, the current page, the selected pages or a
+  range. A preview outlines the area kept, and the dialog says the new page size.
+- **Organize › Crop Tool**: drag a rectangle around the part of a page to keep; Crop Pages opens
+  with its margins, for that page (change the pages there).
+- Only the page's crop box changes (one undo step): the content stays in the file, other PDF
+  readers show the page cropped too, and **Remove Crop** shows the whole page again.
+  Measurements and scales keep their values on a cropped page.

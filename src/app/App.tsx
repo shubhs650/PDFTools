@@ -30,6 +30,7 @@ import { ExpressExtractDialog } from '../features/tables/ExpressExtractDialog';
 import { TemplatesDialog } from '../features/tables/TemplatesDialog';
 import { registerPageCommands } from '../features/pages/commands';
 import { PageDialogs } from '../features/pages/PageDialogs';
+import { registerCropCommands } from '../features/pages/crop';
 import { registerBookmarkCommands } from '../features/bookmarks/commands';
 import { BookmarkPropertiesDialog } from '../features/bookmarks/BookmarkPropertiesDialog';
 import { FileDialogs } from '../features/pages/FileDialogs';
@@ -149,6 +150,7 @@ export function App() {
   useEffect(() => registerBookmarkCommands(), []);
   useEffect(() => registerOcrCommands(), []);
   useEffect(() => registerPageCommands(), []);
+  useEffect(() => registerCropCommands(), []);
   useEffect(() => registerReportCommands(), []);
   useEffect(() => registerSelectionCommands(), []);
   useEffect(() => registerAnnotateCommands(), []);

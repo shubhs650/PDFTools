@@ -20,6 +20,16 @@ export function registerPagesProbe(hook: TestHook): void {
         obj: p.objectNumber,
       }));
     },
+    /** Each page's crop box as the viewer has it, rounded (M11-08·O9). */
+    crop: (docId: string) => {
+      const doc = hostStore.getState().registry?.getStore().getState().core.documents[
+        docId
+      ]?.document;
+      return (doc?.pages ?? []).map((p) => {
+        const c = p.boxes?.crop;
+        return c ? [c.left, c.bottom, c.right, c.top].map((v) => Math.round(v)) : null;
+      });
+    },
     selection: (docId: string) => selectionOf(docId).selected,
     busy: () => pagesBusy(),
     version: (docId: string) => pagesStore.getState().version[docId] ?? 0,

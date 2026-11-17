@@ -154,7 +154,9 @@
       "split": "Split Document",
       "imagesToPdf": "Images to PDF",
       "rotateCw": "Rotate Clockwise",
-      "rotateCcw": "Rotate Counterclockwise"
+      "rotateCcw": "Rotate Counterclockwise",
+      "crop": "Crop Pages",
+      "cropTool": "Crop Tool"
     },
     "convert": {
       "text": "To Text",
@@ -2274,7 +2276,8 @@
       "rotateCcw": "Rotate Counterclockwise",
       "insertBefore": "Insert Blank Page Before",
       "insertAfter": "Insert Blank Page After",
-      "delete": "Delete Pages…"
+      "delete": "Delete Pages…",
+      "crop": "Crop Pages…"
     }
   },
   "split": {
@@ -2843,6 +2846,31 @@
       "hand": "Handwriting",
       "hindi": "Hindi (Devanagari)",
       "chinese": "Chinese (Simplified)"
+    }
+  },
+  "crop": {
+    "title": "Crop Pages",
+    "description": "Cuts margins off the pages as they are shown now. Only what the pages show changes: their content stays in the file, and Remove Crop or Undo shows it again.",
+    "margins": "Margins to cut off",
+    "top": "Top",
+    "bottom": "Bottom",
+    "left": "Left",
+    "right": "Right",
+    "scope": {
+      "all": "All pages ({{count}})",
+      "drawn": "The page you drew on ({{page}})"
+    },
+    "preview": "Page {{page}}: the area kept is outlined",
+    "summary": "Page {{page}} will be {{width}} × {{height}} {{unit}}.",
+    "confirm": "Crop",
+    "remove": "Remove Crop",
+    "cancel": "Cancel",
+    "cropping": "Cropping pages",
+    "removing": "Removing the crop",
+    "restricted": "This document's security settings don't allow changing it.",
+    "error": {
+      "number": "Type a number, 0 or more.",
+      "tooSmall": "These margins leave too little of page {{page}}."
     }
   }
 }

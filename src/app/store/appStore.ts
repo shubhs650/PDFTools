@@ -31,6 +31,8 @@ export type Tool =
   | 'attachFile'
   // Zoom to Area (M11-08·O4): a drag fills the window with its area, a click zooms in.
   | 'zoomArea'
+  // Crop Tool (M11-08·O9): a drag on a page draws the area to keep; Crop Pages opens.
+  | 'cropArea'
   // Select Fields (M6-14): form fields are selected, moved and resized; nothing is filled.
   | 'selectFields'
   // Note, text and drawing tools (M3-09): EmbedPDF tool ids.

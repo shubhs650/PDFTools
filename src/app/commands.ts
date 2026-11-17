@@ -1338,6 +1338,27 @@ export const COMMANDS: readonly CommandDef[] = [
     shipped: true, // M4-09
   },
   {
+    // Crop Pages (M11-08·O9, D-55): margins for a page range; sets /CropBox only.
+    id: 'organize.crop',
+    tab: 'organize',
+    group: 'transform',
+    size: 'large',
+    fluent: 'Crop',
+    milestone: 'M6',
+    shipped: true,
+  },
+  {
+    // Crop Tool (M11-08·O9): drag the area to keep on a page; Crop Pages opens with it.
+    id: 'organize.cropTool',
+    tab: 'organize',
+    group: 'transform',
+    size: 'large',
+    fluent: 'CropInterim',
+    milestone: 'M6',
+    toggle: true,
+    shipped: true,
+  },
+  {
     id: 'convert.text',
     tab: 'convert',
     group: 'export',

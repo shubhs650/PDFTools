@@ -1,6 +1,6 @@
 # Triya PDF — Progress
 
-_Last updated: 2026-11-17 (session 90: M11-08·O7 split document)_
+_Last updated: 2026-11-17 (session 91: M11-08·O9 crop pages)_
 
 **Current milestone:** M11 — file tabs, OCR text selection, a font library and comments in every
 pointer mode: plan [docs/plan/M11.md](plan/M11.md) and [ADR-028](adr/028-m11-tabs-fonts-select.md)
@@ -20,6 +20,33 @@ interop is in the M6 pack (CHECKLIST §M6 R1–R4). Rev 0 (M0–M4) is complete 
 
 ## Done
 
+- **Session 91 — M11-08·O9 crop pages (D-55, ADR-028, plan O9).** **Organize › Crop Pages**
+  (`organize.crop`, Fluent Crop) opens a dialog: the **margins to cut off** (top, bottom, left,
+  right, in mm or inches; a change of unit keeps the lengths typed), as each page is **shown**
+  (its /Rotate applied), cut off what the page shows **now** (so crops add up); the pages (all,
+  current, selected or a range); a **preview** of the first chosen page (its thumbnail, the area
+  kept outlined, the rest shaded) and its new size; margins that leave less than 3 pt of any
+  chosen page are refused naming the page. **Remove Crop** (enabled when a chosen page is
+  cropped) sets the /CropBox back to the /MediaBox. **Organize › Crop Tool**
+  (`organize.cropTool`, a toggle; tool `cropArea`; Esc ends it): a drag on a page
+  (`CropAreaLayer`, as Snapshot's layer; outside the area shaded) opens Crop Pages with the
+  margins that keep it, for that page ("The page you drew on"); the drag is in the stored page's
+  space (the viewer's pages are rotation-normalized), turned into margins as shown. Also on the
+  Thumbnails page menu. The crop is a page operation (`{ kind: 'crop', pages, margins | null }`
+  in `src/workers/render/pages.ts`): `FPDFPage_SetCropBox` only, content untouched, one undo
+  step, progress and Cancel; it needs **modify** (not assemble: a crop is not insert, rotate or
+  delete; `cropBlocked`, `crop.restricted`). Cropped pages lose their cached text geometry even
+  at the same size (`contentPages`). Saves are semantic narrow revisions (only the page
+  dictionaries). Pure maths in `src/model/cropBox.ts` (shown sides ↔ stored sides per /Rotate,
+  visible box = crop ∩ media). Measurement scales keep their user-space coordinates (frames use
+  the crop origin since M3), so values stay right on a cropped page (tested with a detail
+  viewport). Help: "Organizing pages" › "To crop pages". What's new: an item in `beta-m11`.
+  Tests: `tests/pages/crop.test.ts` (maths; real PDFium: what is shown moves by exactly the
+  margins at 0°/90°/180°/270°, crops add up, Remove Crop, refusals; saved narrow, verified,
+  qpdf-clean, undo); `e2e/crop-pages.spec.ts` (dialog with units, errors, preview, undo/redo,
+  save and reopen, axe light and dark; Crop Tool on upright and turned pages; Remove Crop; a
+  detail viewport's values before and after a crop; disabled without modify). Shots in project
+  files `m11-08-o9/`. Next: M11-08·O5 fonts installed on this computer.
 - **Session 90 — M11-08·O7 split document (D-55, ADR-028, plan O7).** **Organize › Split
   Document** (`organize.split`, Fluent DocumentSplitHint; refused without full access, as
   Extract Pages, M4-Q2) opens a dialog with three ways: **every few pages** (N, 1 to the page
@@ -3094,7 +3121,8 @@ rel="noopener noreferrer">`; the commands `app.home` / `app.reportIssue` open th
   (drag to reorder), M11-05 (tab menus), M11-06 (comments in every pointer mode), M11-07 (font
   library), M11-08·O1 (selected-text menu), M11-08·O3 (each file's last view), M11-08·O4 (Zoom
   to Area), M11-08·O6 (copy or save a page image), M11-08·O2 (pick up where you left off),
-  M11-08·O8 (images to PDF), M11-08·O7 (split document). Next: M11-08·O9 (crop pages).
+  M11-08·O8 (images to PDF), M11-08·O7 (split document), M11-08·O9 (crop pages). Next:
+  M11-08·O5 (fonts installed on this computer).
 - **Owner (M11-02):** open `m11-02/s26-interop.pdf` in Acrobat Reader and PDF-XChange: the
   eleven comments look as in the PNG beside it, Find finds their text in the flattened copy, and
   the font names show in the document's font list. This gates M11-07.

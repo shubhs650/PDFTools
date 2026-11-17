@@ -1069,7 +1069,7 @@
     },
     "organize-pages": {
       "title": "Organizing pages",
-      "summary": "Insert, delete, move, extract, rotate and merge pages, and split a document into several files.",
+      "summary": "Insert, delete, move, extract, rotate, crop and merge pages, and split a document into several files.",
       "body": [
         {
           "shot": "organize-pages-1",
@@ -1109,6 +1109,23 @@
             "The files are named after the document, with their pages or their bookmark. Files already in the folder are never replaced: a new file gets a number instead.",
             "Your unsaved changes go into the files, and the open document is not changed.",
             "Pages before the first bookmark go into the first file. Where the browser can't save into a folder, the files come in one ZIP file."
+          ]
+        },
+        {
+          "h": "To crop pages"
+        },
+        {
+          "steps": [
+            "Choose <b>Organize</b> › <b>Crop Pages</b>, or choose <b>Crop Tool</b> and drag a rectangle around the part of a page to keep.",
+            "Type the margins to cut off each side (in mm or inches), as the page is shown, and choose the pages: all, the current page, the selected pages or a range.",
+            "Check the preview, where the area kept is outlined, then choose <b>Crop</b>."
+          ]
+        },
+        {
+          "list": [
+            "Only the crop box changes: the content cut off stays in the file, and other PDF readers show the page cropped too.",
+            "To show the whole page again, open Crop Pages for those pages and choose <b>Remove Crop</b>, or press <kbd>{{undo}}</kbd>.",
+            "Measurements and scales keep working on a cropped page: their values do not change."
           ]
         },
         {

@@ -2,7 +2,7 @@ import * as Menu from '@radix-ui/react-dropdown-menu';
 import { useTranslation } from 'react-i18next';
 import { runCommand } from '../../app/commands/dispatch';
 import { openPageDialog } from '../pages/dialogStore';
-import { pageOpBlocked } from '../pages/pageOps';
+import { cropBlocked, pageOpBlocked } from '../pages/pageOps';
 
 /**
  * The Thumbnails pane's context menu (M4-09): the Organize commands for the
@@ -25,7 +25,9 @@ export function PageMenu({
 }) {
   const { t } = useTranslation();
   const disabled = pageOpBlocked(docId) !== null;
-  const items: { id: string; label: string; run: () => void }[] = [
+  // A crop needs modify, not assemble (M11-08·O9).
+  const cropDisabled = cropBlocked(docId) !== null;
+  const items: { id: string; label: string; run: () => void; disabled?: boolean }[] = [
     {
       id: 'rotateCw',
       label: t('pages.menu.rotateCw'),
@@ -58,6 +60,12 @@ export function PageMenu({
       },
     },
     {
+      id: 'crop',
+      label: t('pages.menu.crop'),
+      run: () => void runCommand('organize.crop'),
+      disabled: cropDisabled,
+    },
+    {
       id: 'delete',
       label: t('pages.menu.delete'),
       run: () => {
@@ -86,7 +94,7 @@ export function PageMenu({
             <Menu.Item
               key={it.id}
               className="ui-menu-item"
-              disabled={disabled}
+              disabled={it.disabled ?? disabled}
               onSelect={() => {
                 onClose();
                 it.run();

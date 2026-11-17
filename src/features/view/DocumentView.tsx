@@ -35,6 +35,7 @@ import { SnapMarker } from '../measure/SnapMarker';
 import { isMarkupTool } from '../annotate/tools/markupModel';
 import { LinkLayer } from './LinkLayer';
 import { SnapshotLayer } from '../snapshot/SnapshotLayer';
+import { CropAreaLayer } from '../pages/CropAreaLayer';
 import { AttachFileLayer } from '../attachments/AttachFileLayer';
 import { DocumentMenu } from './DocumentMenu';
 import { notePointerDown } from './pagePoint';
@@ -163,6 +164,8 @@ function Page({
               <FormLayer documentId={documentId} pageIndex={layout.pageIndex} scale={scale} />
               {/* The Snapshot tool (M6-09) takes the pointer over everything while it is on. */}
               <SnapshotLayer documentId={documentId} pageIndex={layout.pageIndex} scale={scale} />
+              {/* The Crop Tool (M11-08·O9): a drag draws the area to keep. */}
+              <CropAreaLayer documentId={documentId} pageIndex={layout.pageIndex} scale={scale} />
               {/* The Attach File tool (M6-10): a click picks the file to attach there. */}
               <AttachFileLayer documentId={documentId} pageIndex={layout.pageIndex} scale={scale} />
             </div>
