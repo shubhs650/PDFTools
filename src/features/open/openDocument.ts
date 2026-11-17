@@ -24,6 +24,7 @@ import { HEADER_WINDOW, OpenError, classifyOpenError, hasPdfHeader } from './err
 import { advance, openStore, startJob } from './openStore';
 import { forgetSaveState } from '../save/save';
 import { findDuplicate, originalBlob, sources } from './sources';
+import { rememberClosed } from './closedTabs';
 
 const newDocId = (): string => `doc-${crypto.randomUUID()}`;
 
@@ -195,6 +196,16 @@ async function releaseEngineDocument(docId: string): Promise<void> {
 /** Closes a document now, without asking (see requestClose). */
 export async function closeDocument(docId: string): Promise<void> {
   stopIndexing(docId);
+  const { docs, order } = documentStore.getState();
+  const doc = docs[docId];
+  // Reopen Closed Tab (M11-05) reopens it from its file, where it has one.
+  if (doc)
+    rememberClosed({
+      name: doc.meta.name,
+      handle: sources.get(docId)?.handle,
+      source: doc.meta.source,
+      index: order.indexOf(docId),
+    });
   documentStore.getState().close(docId);
   forgetSaveState(docId);
   sources.delete(docId);
@@ -208,8 +219,59 @@ export async function closeDocument(docId: string): Promise<void> {
 
 /** Close with the unsaved-changes prompt (§4.3, M1-13). */
 export function requestClose(docId: string): void {
-  const doc = documentStore.getState().docs[docId];
-  if (!doc) return;
-  if (doc.dirty) openStore.setState({ closePrompt: docId });
-  else void closeDocument(docId);
+  requestCloseMany([docId]);
+}
+
+/**
+ * Closes several documents (M11-05: Close Others, to the Right, All): the ones without
+ * unsaved changes at once, then the unsaved ones one by one through the same prompt as
+ * Close (Save, Don't Save, Cancel). Cancel keeps that one and every one after it open.
+ */
+export function requestCloseMany(ids: readonly string[]): void {
+  const { docs } = documentStore.getState();
+  const unsaved: string[] = [];
+  for (const id of ids) {
+    const doc = docs[id];
+    if (!doc) continue;
+    if (doc.dirty) unsaved.push(id);
+    else void closeDocument(id);
+  }
+  if (unsaved.length === 0) return;
+  const { closePrompt, closeQueue } = openStore.getState();
+  // A prompt already showing goes first; these join the queue after it.
+  if (closePrompt !== null) {
+    const queued = new Set([closePrompt, ...closeQueue]);
+    openStore.setState({ closeQueue: [...closeQueue, ...unsaved.filter((d) => !queued.has(d))] });
+    return;
+  }
+  const [first, ...rest] = unsaved;
+  openStore.setState({ closePrompt: first ?? null, closeQueue: rest });
+}
+
+/**
+ * The prompted document was saved and closed, or closed without saving: ask about the
+ * next one in the queue (closing any that are no longer unsaved).
+ */
+export function nextClosePrompt(): void {
+  const queue = [...openStore.getState().closeQueue];
+  for (;;) {
+    const id = queue.shift();
+    if (id === undefined) {
+      openStore.setState({ closePrompt: null, closeQueue: [] });
+      return;
+    }
+    const doc = documentStore.getState().docs[id];
+    if (!doc) continue;
+    if (!doc.dirty) {
+      void closeDocument(id);
+      continue;
+    }
+    openStore.setState({ closePrompt: id, closeQueue: queue });
+    return;
+  }
+}
+
+/** Cancel on the prompt (or a save that failed): nothing more closes. */
+export function cancelClosePrompts(): void {
+  openStore.setState({ closePrompt: null, closeQueue: [] });
 }

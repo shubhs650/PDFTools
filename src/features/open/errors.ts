@@ -4,7 +4,14 @@ import { PdfErrorCode } from '@embedpdf/models';
 import { msg, type MessageKey } from '../../i18n';
 
 export type OpenErrorKind =
-  'not-pdf' | 'damaged' | 'needs-password' | 'unreadable' | 'too-many' | 'unknown';
+  | 'not-pdf'
+  | 'damaged'
+  | 'needs-password'
+  | 'unreadable'
+  | 'too-many'
+  /** Reopen Closed Tab (M11-05): the browser was not allowed to read the file again. */
+  | 'denied'
+  | 'unknown';
 
 export const OPEN_ERROR_MESSAGE: Record<OpenErrorKind, MessageKey> = {
   'not-pdf': msg('open.error.notPdf'),
@@ -12,6 +19,7 @@ export const OPEN_ERROR_MESSAGE: Record<OpenErrorKind, MessageKey> = {
   'needs-password': msg('open.error.needsPassword'),
   unreadable: msg('open.error.unreadable'),
   'too-many': msg('open.error.tooMany'),
+  denied: msg('open.error.denied'),
   unknown: msg('open.error.unknown'),
 };
 

@@ -246,6 +246,18 @@
       "delete": "Delete",
       "selectAll": "Select All",
       "style": "Text Style"
+    },
+    "tab": {
+      "close": "Close",
+      "closeOthers": "Close Other Tabs",
+      "closeRight": "Close Tabs to the Right",
+      "closeAll": "Close All Tabs",
+      "reopenClosed": "Reopen Closed Tab",
+      "moveLeft": "Move Left",
+      "moveRight": "Move Right",
+      "sortByName": "Sort Tabs by Name",
+      "copyName": "Copy File Name",
+      "rename": "Rename File…"
     }
   },
   "ribbon": {
@@ -350,7 +362,38 @@
     "resizeProperties": "Resize the Properties pane",
     "openFile": "Open a file",
     "openFileTip": "Open a file ({{keys}})",
-    "tabMoved": "Moved to position {{position}} of {{count}}"
+    "tabMoved": "Moved to position {{position}} of {{count}}",
+    "tabsSorted": "Tabs sorted by name",
+    "nameCopied": "File name copied",
+    "nameCopyFailed": "Couldn't copy the file name",
+    "menu": {
+      "tabLabel": "{{name}} tab",
+      "stripLabel": "File tabs",
+      "createBlank": "Create Blank PDF…",
+      "nothingClosed": "No closed tab to reopen in this session",
+      "oneTab": "There is only one tab",
+      "sorted": "The tabs are already in name order",
+      "noneRight": "There are no tabs to the right",
+      "first": "This is the first tab",
+      "last": "This is the last tab",
+      "saving": "The file is being saved",
+      "cannotRename": "This browser can't rename the file on disk"
+    },
+    "rename": {
+      "title": "Rename File",
+      "description": "Renames the file on your device. It stays in the same folder.",
+      "label": "New file name",
+      "ok": "Rename",
+      "cancel": "Cancel",
+      "empty": "Type a file name.",
+      "chars": "A file name can't contain \\ / : * ? \" < > |",
+      "reserved": "That name is reserved by the system. Pick another name.",
+      "taken": "Another file you opened here already has this name. Pick another name.",
+      "denied": "The browser didn't allow changes to the file.",
+      "busy": "The file is in use. Try again when it is no longer being written.",
+      "failed": "Couldn't rename the file. It may have been moved, or the name may already be in use.",
+      "gone": "The file is no longer there."
+    }
   },
   "tabCard": {
     "source": {
@@ -462,7 +505,8 @@
       "needsPassword": "This PDF needs a password to open.",
       "unreadable": "The file could not be read. It may have been moved, deleted or changed.",
       "tooMany": "Too many documents are open. Close one and try again.",
-      "unknown": "Something went wrong while opening this file."
+      "unknown": "Something went wrong while opening this file.",
+      "denied": "The browser didn't allow the file to be read again. Open it from File → Open."
     },
     "dropHint": "Drop PDF files to open them",
     "close": {

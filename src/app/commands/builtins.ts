@@ -2,7 +2,7 @@
 // theirs (save M1-22, view M1-15/16, help M1-11/25/26; QAT Open and Check for
 // Updates M1-28).
 import { checkForUpdates } from '../../features/offline/offline';
-import { openFiles, requestClose } from '../../features/open/openDocument';
+import { openFiles } from '../../features/open/openDocument';
 import { pickPdfFiles } from '../../storage/fileAccess';
 import { canFullScreen, isFullScreen, subscribeFullScreen, toggleFullScreen } from '../fullScreen';
 import { msg, t } from '../../i18n';
@@ -17,7 +17,6 @@ import {
   toggleTheme,
 } from '../theme';
 import { documentStore } from '../store/documentStore';
-import { moveActiveTab } from '../tabMove';
 import { notify, registerCommand } from './dispatch';
 
 /** A link of the top bar from a command (keyboard, menus): a new tab, no opener (M6-01). */
@@ -123,13 +122,6 @@ export function registerBuiltinCommands(): () => void {
         await checkForUpdates();
       },
     }),
-    registerCommand('tab.close', {
-      requiresDocument: true,
-      run: () => {
-        const { activeId } = documentStore.getState();
-        if (activeId) requestClose(activeId);
-      },
-    }),
     registerCommand('tab.next', {
       requiresDocument: true,
       run: () => {
@@ -140,18 +132,6 @@ export function registerBuiltinCommands(): () => void {
       requiresDocument: true,
       run: () => {
         cycleTab(-1);
-      },
-    }),
-    registerCommand('tab.moveLeft', {
-      requiresDocument: true,
-      run: () => {
-        moveActiveTab(-1);
-      },
-    }),
-    registerCommand('tab.moveRight', {
-      requiresDocument: true,
-      run: () => {
-        moveActiveTab(1);
       },
     }),
   ];

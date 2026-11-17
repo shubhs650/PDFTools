@@ -103,7 +103,7 @@ test('the shortcut sheet opens from Help and lists every binding', async ({ page
   const dialog = page.getByRole('dialog', { name: 'Keyboard shortcuts' });
   await expect(dialog).toBeVisible();
   const rows = dialog.getByTestId('shortcut-sheet').locator('tbody tr');
-  await expect(rows).toHaveCount(77); // + undo, redo, 11 annotation keys (M3-05), 6 text markup tools (M3-08), 9 tools and Enter (M3-09), paste and paste to original pages (M4-21), full screen (M6-01), cut and the context menu (M6-02), 12 Bookmarks pane keys (M6-11), F2 on a text comment (M7-03), Dark Theme (M7-11), F1 for Help (M9-04), New (M10-08·O4), Tell Me (M10-08·O2), Move Tab Left/Right (M11-04)
+  await expect(rows).toHaveCount(78); // + undo, redo, 11 annotation keys (M3-05), 6 text markup tools (M3-08), 9 tools and Enter (M3-09), paste and paste to original pages (M4-21), full screen (M6-01), cut and the context menu (M6-02), 12 Bookmarks pane keys (M6-11), F2 on a text comment (M7-03), Dark Theme (M7-11), F1 for Help (M9-04), New (M10-08·O4), Tell Me (M10-08·O2), Move Tab Left/Right (M11-04), Reopen Closed Tab (M11-05)
   await expect(dialog.getByRole('row', { name: /^Help/ })).toContainText('F1');
   // The Bookmarks pane's own keys say where they work (M6-11).
   await expect(dialog.getByRole('row', { name: /^Rename \(Bookmarks pane\)/ })).toContainText('F2');
@@ -124,6 +124,10 @@ test('the shortcut sheet opens from Help and lists every binding', async ({ page
     'Delete',
   );
   await expect(dialog.getByRole('row', { name: /^Full Screen/ })).toContainText('Ctrl+Shift+F11');
+  // Reopen Closed Tab (M11-05): Chrome keeps Ctrl+Shift+T; the alternate works everywhere.
+  await expect(dialog.getByRole('row', { name: /^Reopen Closed Tab/ })).toContainText(
+    'Ctrl+Shift+Alt+T',
+  );
   // Moving a file tab works on a focused tab (M11-04).
   await expect(dialog.getByRole('row', { name: /^Move Tab Left \(on a file tab\)/ })).toContainText(
     'Ctrl+Shift+Left',

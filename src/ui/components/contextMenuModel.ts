@@ -16,9 +16,10 @@ export interface MenuChoice {
 export type ContextMenuEntry =
   /**
    * `keysOf`: the command whose keys are shown (M7-05: the text menu's Undo
-   * shows Undo's Ctrl+Z, which the editor itself handles).
+   * shows Undo's Ctrl+Z, which the editor itself handles). `label`: this menu's own
+   * wording for the command (M11-05: the strip menu's "Create Blank PDF…" is File → New).
    */
-  | { kind: 'command'; id: string; keysOf?: string }
+  | { kind: 'command'; id: string; keysOf?: string; label?: MessageKey }
   | { kind: 'separator'; key: string }
   /** The command's label opens a submenu; its state enables or disables it. */
   | { kind: 'submenu'; id: string; choices: readonly MenuChoice[] };
@@ -61,7 +62,7 @@ export function menuItems(
     out.push({
       kind: e.kind,
       id: e.id,
-      label: commandLabelKey(e.id),
+      label: (e.kind === 'command' ? e.label : undefined) ?? commandLabelKey(e.id),
       shortcut: e.kind === 'command' ? shortcutOf(e.keysOf ?? e.id) : '',
       enabled: st.enabled,
       toggle: e.kind === 'command' && TOGGLES.has(e.id),

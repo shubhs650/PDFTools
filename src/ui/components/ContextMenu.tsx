@@ -3,7 +3,7 @@ import * as CM from '@radix-ui/react-context-menu';
 import * as DM from '@radix-ui/react-dropdown-menu';
 import { useId, type ReactElement } from 'react';
 import { useTranslation } from 'react-i18next';
-import { runCommand, type CommandArgs } from '../../app/commands/dispatch';
+import { runCommand, type CommandArgs, type CommandState } from '../../app/commands/dispatch';
 import { useCommandStates } from '../../app/commands/useCommandState';
 import { shortcutText } from '../../app/keys/labels';
 import { msg } from '../../i18n';
@@ -20,6 +20,11 @@ export interface ContextMenuProps {
   entries: readonly ContextMenuEntry[];
   /** Passed to every command the menu runs: where it was opened (M6-02). */
   args?: CommandArgs;
+  /**
+   * This menu's own state for some commands (M11-05: a tab command's state for the tab
+   * the menu was opened on, not the active one); undefined: the command's own state.
+   */
+  stateOf?: (id: string) => CommandState | undefined;
   onOpenChange?: (open: boolean) => void;
   /** Where focus goes when the menu closes (default: back to where it was). */
   onCloseAutoFocus?: (e: Event) => void;
@@ -47,6 +52,7 @@ export function ContextMenu({
   label,
   entries,
   args,
+  stateOf,
   onOpenChange,
   onCloseAutoFocus,
 }: ContextMenuProps) {
@@ -61,7 +67,7 @@ export function ContextMenu({
           loop
           {...(onCloseAutoFocus ? { onCloseAutoFocus } : {})}
         >
-          <Body kit={CONTEXT_KIT} entries={entries} args={args} />
+          <Body kit={CONTEXT_KIT} entries={entries} args={args} stateOf={stateOf} />
         </CM.Content>
       </CM.Portal>
     </CM.Root>
@@ -123,16 +129,18 @@ function Body({
   kit,
   entries,
   args,
+  stateOf,
 }: {
   kit: MenuKit;
   entries: readonly ContextMenuEntry[];
   args: CommandArgs | undefined;
+  stateOf?: ((id: string) => CommandState | undefined) | undefined;
 }) {
   const { t } = useTranslation();
   const states = useCommandStates(entries.flatMap((e) => (e.kind === 'separator' ? [] : [e.id])));
   const items = menuItems(
     entries,
-    (id) => states[id] ?? NOT_READY,
+    (id) => stateOf?.(id) ?? states[id] ?? NOT_READY,
     (id) => shortcutText(id, t),
   );
   return items.map((item) =>

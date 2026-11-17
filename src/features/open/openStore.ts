@@ -21,12 +21,18 @@ interface OpenStoreState {
   failures: OpenFailure[];
   /** Document whose close is waiting on Save / Don't save / Cancel. */
   closePrompt: string | null;
+  /**
+   * Close Others / to the Right / All (M11-05): the unsaved documents still to ask
+   * about, one by one, after `closePrompt`. Cancel drops the rest.
+   */
+  closeQueue: string[];
 }
 
 export const openStore = createStore<OpenStoreState>()(() => ({
   jobs: [],
   failures: [],
   closePrompt: null,
+  closeQueue: [],
 }));
 
 export function useOpen<T>(selector: (s: OpenStoreState) => T): T {
@@ -61,6 +67,12 @@ export function advance(id: number, event: OpenEvent): OpenPhase {
     };
   });
   return result;
+}
+
+/** A failure outside the open pipeline (Reopen Closed Tab, M11-05): the same dialog. */
+export function reportFailure(name: string, kind: OpenErrorKind): void {
+  const id = nextId++;
+  openStore.setState((s) => ({ failures: [...s.failures, { id, name, kind }] }));
 }
 
 export function dismissFailure(id: number): void {

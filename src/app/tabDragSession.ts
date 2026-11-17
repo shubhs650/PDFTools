@@ -1,7 +1,8 @@
 // Drag to reorder the file tabs (M11-04, ADR-028 D-50): one press on a tab, from
 // pointerdown to pointerup. Mouse and pen lift the tab after a 4 px move; on touch,
 // holding the tab still for 300 ms lifts it and moving first scrolls the row (the tabs
-// take every touch gesture, `touch-action: none`). The lifted tab follows the pointer
+// take every touch gesture, `touch-action: none`); held until it lifts and let go
+// without moving, it opens the tab's menu instead (M11-05). The lifted tab follows the pointer
 // along the row, the others slide out of its way (CSS transitions on `transform`),
 // the row scrolls near its ends, Esc puts everything back. Positions are measured once
 // at the lift; each move only sets transforms (no layout per frame, rule 1).
@@ -38,6 +39,11 @@ export interface TabDragHost {
   activate(id: string): void;
   /** The click that follows this press is not a click on the tab. */
   swallowClick(): void;
+  /**
+   * Touch: the tab was held until it lifted and let go without moving (M11-05): open
+   * its menu, as a long press does in a touch browser's tab strip.
+   */
+  menu(id: string): void;
 }
 
 type Phase = 'pressed' | 'panning' | 'dragging' | 'done';
@@ -88,6 +94,9 @@ export function beginTabPress(
   let listLeft = 0;
   let raf = 0;
   let hold: ReturnType<typeof setTimeout> | undefined;
+  // Touch: did the lifted tab move (a drag), or was it held and let go (its menu)?
+  let liftX = 0;
+  let movedSinceLift = false;
 
   try {
     target.setPointerCapture(pointerId);
@@ -163,6 +172,8 @@ export function beginTabPress(
       for (const el of parts) el.style.transition = j === from ? 'none' : '';
     });
     phase = 'dragging';
+    liftX = lastX;
+    movedSinceLift = false;
     host.lift(id);
     place();
   };
@@ -191,6 +202,12 @@ export function beginTabPress(
     if (was === 'panning') host.swallowClick();
     if (was !== 'dragging') return;
     host.swallowClick();
+    if (drop && touch && !movedSinceLift) {
+      host.end();
+      putBack();
+      host.menu(id);
+      return;
+    }
     // The order changed under the drag (a file closed): nothing to drop into.
     const same = ids.join('\n') === host.order().join('\n');
     host.end();
@@ -219,6 +236,7 @@ export function beginTabPress(
     }
     if (phase !== 'dragging') return;
     ev.preventDefault();
+    if (Math.abs(ev.clientX - liftX) >= TOUCH_SLOP_PX) movedSinceLift = true;
     place();
     if (!raf) raf = requestAnimationFrame(tick);
   }

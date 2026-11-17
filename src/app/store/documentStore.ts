@@ -83,6 +83,8 @@ export interface DocumentsState {
   close(id: string): void;
   activate(id: string): void;
   move(id: string, toIndex: number): void;
+  /** A new order of the same tabs (Sort Tabs by Name, M11-05); ignored otherwise. */
+  reorder(order: readonly string[]): void;
   setView(id: string, view: Partial<ViewState>): void;
   markDirty(id: string): void;
   /** After Save Optimized wrote the document's file: nothing appended since (M1-23). */
@@ -165,6 +167,15 @@ export const createDocumentStore = () =>
         const order = s.order.filter((x) => x !== id);
         order.splice(Math.max(0, Math.min(toIndex, order.length)), 0, id);
         return { order };
+      });
+    },
+    reorder: (next) => {
+      set((s) => {
+        const same =
+          next.length === s.order.length &&
+          new Set(next).size === next.length &&
+          next.every((id) => s.docs[id]);
+        return same ? { order: [...next] } : {};
       });
     },
     setView: (id, view) => {
