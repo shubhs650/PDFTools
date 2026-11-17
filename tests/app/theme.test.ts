@@ -294,6 +294,8 @@ describe('where the theme is reached', () => {
       THEME_STORAGE_KEY,
       ACCENT_STORAGE_KEY,
       DENSITY_STORAGE_KEY,
+      // What's new's record (M10-08·O6), not a look-and-feel choice.
+      'pdftools.whatsNewSeen',
     ]);
     expect(items.every((d) => d.cleared)).toBe(true);
   });

@@ -5,6 +5,7 @@
 // only crash-recovery snapshots of unsaved changes go to OPFS (§4.3).
 import { ACCENT_STORAGE_KEY, DENSITY_STORAGE_KEY, THEME_STORAGE_KEY } from '../../app/theme';
 import { msg, type MessageKey } from '../../i18n';
+import { WHATS_NEW_STORAGE_KEY } from '../whatsNew/releases';
 import { DB_NAME } from '../../storage/idb';
 import { RECOVERY_DIR } from '../../storage/recoveryTypes';
 
@@ -110,6 +111,14 @@ export const LOCAL_DATA: readonly LocalDataItem[] = [
     location: DENSITY_STORAGE_KEY,
     store: DENSITY_STORAGE_KEY,
     what: msg('privacy.data.density'),
+    cleared: true,
+  },
+  {
+    // The last release "What's new" announced (M10-08·O6), so its banner shows once.
+    kind: 'localStorage',
+    location: WHATS_NEW_STORAGE_KEY,
+    store: WHATS_NEW_STORAGE_KEY,
+    what: msg('privacy.data.whatsNew'),
     cleared: true,
   },
   {
