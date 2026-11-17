@@ -229,6 +229,127 @@
   background: var(--color-border);
 }
 
+/* A menu's group heading (M11-07: the font groups in the text menu's Font submenu). */
+.ui-menu-heading {
+  padding: var(--space-1) var(--space-3);
+  color: var(--color-text-muted);
+  font-size: var(--font-size-s);
+  font-weight: var(--font-weight-semibold);
+}
+
+/* A long submenu scrolls inside the window (the Font submenu). */
+.ui-menu-scroll {
+  max-height: var(--font-list-height);
+  overflow-y: auto;
+}
+
+/* ------------------------------------------------------------ font list (M11-07, D-52) */
+
+.ui-font-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-2);
+  width: 100%;
+  min-width: var(--space-0);
+  text-align: start;
+  cursor: pointer;
+}
+
+.ui-font-button:hover:not(:disabled) {
+  background-color: var(--color-hover);
+}
+
+.ui-font-button-name {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.ui-font-popup {
+  z-index: var(--z-popover);
+  width: var(--font-list-width);
+  padding: var(--space-1);
+  border: var(--border-width) solid var(--color-border);
+  border-radius: var(--radius-l);
+  background: var(--color-surface-raised);
+  box-shadow: var(--elevation-2);
+  color: var(--color-text);
+  font-size: var(--font-size-m);
+}
+
+.ui-font-list {
+  max-height: var(--font-list-height);
+  overflow-y: auto;
+  outline: none;
+}
+
+.ui-font-list:focus-visible {
+  outline: var(--focus-width) solid var(--color-focus);
+  outline-offset: calc(-1 * var(--focus-width));
+}
+
+.ui-font-heading {
+  padding: var(--space-2) var(--space-3) var(--space-1);
+  color: var(--color-text-muted);
+  font-size: var(--font-size-s);
+  font-weight: var(--font-weight-semibold);
+}
+
+.ui-font-option {
+  display: flex;
+  align-items: baseline;
+  gap: var(--space-3);
+  min-height: var(--density-row-height);
+  padding: var(--space-1) var(--space-3);
+  border-radius: var(--radius-m);
+  cursor: pointer;
+  user-select: none;
+}
+
+.ui-font-option[data-active] {
+  background: var(--color-hover);
+}
+
+.ui-font-option[aria-selected='true'] {
+  background: var(--color-selected);
+  color: var(--color-selected-text);
+}
+
+.ui-font-option[aria-selected='true'][data-active] {
+  background: var(--color-selected-hover);
+}
+
+.ui-font-name {
+  overflow: hidden;
+  font-size: var(--font-size-l);
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.ui-font-sample {
+  flex: none;
+  margin-inline-start: auto;
+  color: var(--color-text-muted);
+}
+
+@media (forced-colors: active) {
+  .ui-font-popup {
+    border: var(--border-width) solid ButtonText;
+  }
+
+  .ui-font-option[data-active] {
+    outline: var(--border-width) dashed Highlight;
+    outline-offset: calc(-1 * var(--border-width));
+  }
+
+  .ui-font-option[aria-selected='true'] {
+    background: Highlight;
+    color: HighlightText;
+    forced-color-adjust: none;
+  }
+}
+
 /* ------------------------------------------------------------ dialog */
 
 .ui-dialog-backdrop {

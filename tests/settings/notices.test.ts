@@ -4,6 +4,7 @@ import { join } from 'node:path';
 import { describe, expect, it } from 'vitest';
 import {
   collectNotices,
+  fontLibraryNotice,
   renderNotices,
   runtimePaths,
   standardText,
@@ -31,7 +32,12 @@ describe('third-party notices (M1-26)', () => {
         // optional package not installed on this platform
       }
     }
+    // Plus the vendored comment font library (M11-07, D-52), which is not an npm package.
+    const font = fontLibraryNotice();
+    expected.add(`${font.name}@${font.version}`);
     expect(new Set(notices.map((p) => `${p.name}@${p.version}`))).toEqual(expected);
+    expect(font.texts).toHaveLength(26);
+    for (const t of font.texts) expect(t.text).toMatch(/SIL Open Font License, Version 1\.1/);
     for (const p of notices) {
       expect(p.texts.length, p.name).toBeGreaterThan(0);
       expect(text).toContain(`${p.name} ${p.version}\nLicense: ${p.license}`);

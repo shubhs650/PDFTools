@@ -9,7 +9,8 @@ import { RpcError } from '../engine/errors';
 import { Transfer } from '../engine/protocol';
 import { PDFIUM_ERROR_PREFIX, type RenderApi } from '../engine/renderApi';
 import { fromJson } from '../model/pdf/wire';
-import { serve } from './rpc-host';
+import { serve, type Handlers } from './rpc-host';
+import { CallOrder } from './render/callOrder';
 import {
   acquirePage,
   docPtrOf,
@@ -26,6 +27,14 @@ import { renderSnapshot } from './render/snapshot';
 import { dropCustom, keepAuthor, nameTargets, writeMarkupIntent } from './render/annotIds';
 import { installFontReadback } from './render/freeTextFonts';
 import { applyTextColors, takeTextColorFallbacks } from './render/freeTextColors';
+import subsetWasmUrl from 'harfbuzzjs/dist/harfbuzz-subset.wasm?url';
+import {
+  applyCommentFont,
+  commentFontOf,
+  prepareCommentFont,
+  takeCommentFontFallbacks,
+} from './render/commentFonts/apply';
+import { FaceStore, workerFontSource } from './render/commentFonts/faces';
 import { SaveTracker, isMutation } from './render/save/tracker';
 import {
   createFileAttachment,
@@ -46,6 +55,16 @@ let mod: WrappedPdfiumModule | undefined;
 let native: PdfiumNative | undefined;
 let tracker: SaveTracker | undefined;
 const annotBoxCache = new AnnotBoxCache();
+/** The font library's faces (M11-07, D-52), loaded on first use from our own origin. */
+const commentFaces = new FaceStore(
+  workerFontSource(self.location.origin, new URL(subsetWasmUrl, self.location.href).href),
+);
+
+/** An executor call that draws a text comment in a library font (its faces may load first). */
+function blocksForFont(args: unknown): boolean {
+  const { method, args: a } = args as { method?: unknown; args?: unknown };
+  return typeof method === 'string' && Array.isArray(a) && commentFontOf(method, a) !== null;
+}
 
 function ready(): { mod: WrappedPdfiumModule; native: PdfiumNative; tracker: SaveTracker } {
   if (!mod || !native || !tracker)
@@ -84,7 +103,7 @@ function toRpcError(err: unknown): RpcError {
   return new RpcError(`${PDFIUM_ERROR_PREFIX}${String(n)}`, `PDFium error ${String(n)}`);
 }
 
-serve<RenderApi>(self, {
+const handlers: Handlers<RenderApi> = {
   init: async ({ wasmUrl, fontFallback }) => {
     // Runtime guard: callers outside TypeScript's reach (tests, future code).
     if ((fontFallback as unknown) === undefined) {
@@ -130,6 +149,9 @@ serve<RenderApi>(self, {
       const id = (callArgs[2] as { id?: unknown } | undefined)?.id;
       if (typeof page === 'number' && typeof id === 'string') removePopupOf(m, n, docId, page, id);
     }
+    // A text comment in a library font (M11-07): its faces are loaded before PDFium draws it.
+    const faces =
+      typeof docId === 'string' ? await prepareCommentFont(commentFaces, method, callArgs) : null;
     let value: unknown;
     if (typeof docId === 'string' && isFileAttachmentCall(method, callArgs)) {
       // Attach File (M6-10, ADR-022 d1): EmbedPDF can't create or update this subtype.
@@ -155,6 +177,8 @@ serve<RenderApi>(self, {
       writeMarkupIntent(m, n, method, callArgs);
       // A text comment's own text colour, in /DS and its appearance (ADR-024).
       applyTextColors(m, n, method, callArgs);
+      // Its text in a library font, shaped and embedded (M11-07, D-52).
+      applyCommentFont(m, n, method, callArgs, faces);
     }
     // A reopen (page-operation undo) re-applies the owner unlock (ADR-016 d5).
     if (method === 'unlockOwnerPermissions' && value === true && typeof docId === 'string') {
@@ -187,7 +211,9 @@ serve<RenderApi>(self, {
     const tail = r.tail.buffer;
     // Text comments whose appearance kept PDFium's colours (ADR-024): a count for diagnostics.
     const textColorFallbacks = takeTextColorFallbacks(docId);
-    return new Transfer({ ...r, tail, textColorFallbacks }, [tail]);
+    // Text comments whose library font could not be drawn (M11-07): a count for diagnostics.
+    const commentFontFallbacks = takeCommentFontFallbacks(docId);
+    return new Transfer({ ...r, tail, textColorFallbacks, commentFontFallbacks }, [tail]);
   },
 
   commitSave: ({ docId, tailLength, rewrite }) => ({
@@ -429,4 +455,21 @@ serve<RenderApi>(self, {
     ready().tracker.dropSnapshots(tokens);
     return null;
   },
-});
+};
+
+/**
+ * Every call in arrival order across a comment font's loading (M11-07): a save
+ * or an edit sent after a comment in a library font never overtakes it.
+ */
+const order = new CallOrder();
+const inOrder = Object.fromEntries(
+  Object.entries(handlers).map(([name, h]) => [
+    name,
+    (args: unknown, ctx: unknown) =>
+      order.run(
+        () => (h as (a: unknown, c: unknown) => unknown)(args, ctx),
+        name === 'exec' && blocksForFont(args),
+      ),
+  ]),
+) as unknown as Handlers<RenderApi>;
+serve<RenderApi>(self, inOrder);

@@ -1,0 +1,510 @@
+{
+  "snapshot": "2026-11-17",
+  "families": {
+    "arimo": {
+      "name": "Arimo",
+      "version": "1.341",
+      "license": "OFL-1.1",
+      "source": "https://github.com/google/fonts/tree/main/ofl/arimo"
+    },
+    "tinos": {
+      "name": "Tinos",
+      "version": "1.340",
+      "license": "OFL-1.1",
+      "source": "https://github.com/google/fonts/tree/main/ofl/tinos"
+    },
+    "cousine": {
+      "name": "Cousine",
+      "version": "1.241",
+      "license": "OFL-1.1",
+      "source": "https://github.com/google/fonts/tree/main/ofl/cousine"
+    },
+    "carlito": {
+      "name": "Carlito",
+      "version": "1.104",
+      "license": "OFL-1.1",
+      "source": "https://github.com/google/fonts/tree/main/ofl/carlito",
+      "reservedName": "Carlito"
+    },
+    "inter": {
+      "name": "Inter",
+      "version": "4.001",
+      "license": "OFL-1.1",
+      "source": "https://github.com/google/fonts/tree/main/ofl/inter"
+    },
+    "roboto": {
+      "name": "Roboto",
+      "version": "3.015",
+      "license": "OFL-1.1",
+      "source": "https://github.com/google/fonts/tree/main/ofl/roboto"
+    },
+    "opensans": {
+      "name": "Open Sans",
+      "version": "3.003",
+      "license": "OFL-1.1",
+      "source": "https://github.com/google/fonts/tree/main/ofl/opensans"
+    },
+    "notosans": {
+      "name": "Noto Sans",
+      "version": "2.015",
+      "license": "OFL-1.1",
+      "source": "https://github.com/google/fonts/tree/main/ofl/notosans"
+    },
+    "ibmplexsans": {
+      "name": "IBM Plex Sans",
+      "version": "3.201",
+      "license": "OFL-1.1",
+      "source": "https://github.com/google/fonts/tree/main/ofl/ibmplexsans",
+      "reservedName": "Plex"
+    },
+    "atkinson": {
+      "name": "Atkinson Hyperlegible",
+      "version": "1.006",
+      "license": "OFL-1.1",
+      "source": "https://github.com/google/fonts/tree/main/ofl/atkinsonhyperlegible"
+    },
+    "robotocondensed": {
+      "name": "Roboto Condensed",
+      "version": "3.008",
+      "license": "OFL-1.1",
+      "source": "https://github.com/google/fonts/tree/main/ofl/robotocondensed"
+    },
+    "barlowcondensed": {
+      "name": "Barlow Condensed",
+      "version": "1.408",
+      "license": "OFL-1.1",
+      "source": "https://github.com/google/fonts/tree/main/ofl/barlowcondensed"
+    },
+    "b612": {
+      "name": "B612",
+      "version": "1.008",
+      "license": "OFL-1.1",
+      "source": "https://github.com/google/fonts/tree/main/ofl/b612"
+    },
+    "overpass": {
+      "name": "Overpass",
+      "version": "4.000",
+      "license": "OFL-1.1",
+      "source": "https://github.com/google/fonts/tree/main/ofl/overpass"
+    },
+    "notoserif": {
+      "name": "Noto Serif",
+      "version": "2.015",
+      "license": "OFL-1.1",
+      "source": "https://github.com/google/fonts/tree/main/ofl/notoserif"
+    },
+    "sourceserif4": {
+      "name": "Source Serif 4",
+      "version": "4.004",
+      "license": "OFL-1.1",
+      "source": "https://github.com/google/fonts/tree/main/ofl/sourceserif4"
+    },
+    "robotomono": {
+      "name": "Roboto Mono",
+      "version": "3.001",
+      "license": "OFL-1.1",
+      "source": "https://github.com/google/fonts/tree/main/ofl/robotomono"
+    },
+    "jetbrainsmono": {
+      "name": "JetBrains Mono",
+      "version": "2.211",
+      "license": "OFL-1.1",
+      "source": "https://github.com/google/fonts/tree/main/ofl/jetbrainsmono"
+    },
+    "ibmplexmono": {
+      "name": "IBM Plex Mono",
+      "version": "2.3",
+      "license": "OFL-1.1",
+      "source": "https://github.com/google/fonts/tree/main/ofl/ibmplexmono",
+      "reservedName": "Plex"
+    },
+    "architectsdaughter": {
+      "name": "Architects Daughter",
+      "version": "1.003",
+      "license": "OFL-1.1",
+      "source": "https://github.com/google/fonts/tree/main/ofl/architectsdaughter"
+    },
+    "caveat": {
+      "name": "Caveat",
+      "version": "2.000",
+      "license": "OFL-1.1",
+      "source": "https://github.com/google/fonts/tree/main/ofl/caveat"
+    },
+    "kalam": {
+      "name": "Kalam",
+      "version": "2.001",
+      "license": "OFL-1.1",
+      "source": "https://github.com/google/fonts/tree/main/ofl/kalam"
+    },
+    "notosansdeva": {
+      "name": "Noto Sans Devanagari",
+      "version": "2.007",
+      "license": "OFL-1.1",
+      "source": "https://github.com/google/fonts/tree/main/ofl/notosansdevanagari"
+    },
+    "notoserifdeva": {
+      "name": "Noto Serif Devanagari",
+      "version": "2.006",
+      "license": "OFL-1.1",
+      "source": "https://github.com/google/fonts/tree/main/ofl/notoserifdevanagari"
+    },
+    "notosanssc": {
+      "name": "Noto Sans SC",
+      "version": "2.004",
+      "license": "OFL-1.1",
+      "source": "https://github.com/google/fonts/tree/main/ofl/notosanssc"
+    },
+    "notosansmath": {
+      "name": "Noto Sans Math",
+      "version": "3.000",
+      "license": "OFL-1.1",
+      "source": "https://github.com/google/fonts/tree/main/ofl/notosansmath"
+    }
+  },
+  "files": {
+    "arimo-regular.ttf": {
+      "sha256": "58b6bc558be79c6624f3d661fabe03b14710719332f1527ed5092283f8186515",
+      "bytes": 129672
+    },
+    "arimo-bold.ttf": {
+      "sha256": "232653d3d0a84586d987e0620e3ad2b438cd6ee103e092009eeaf0debfced022",
+      "bytes": 129432
+    },
+    "arimo-italic.ttf": {
+      "sha256": "196ae772c797ccb24070ae6609d426ed855515f3ddb9748555cdff6696ab6145",
+      "bytes": 136832
+    },
+    "arimo-boldItalic.ttf": {
+      "sha256": "820dbf98f5bccb12f4c70e1580d6a541f6b45aac6cf1404a92ed08936d12a3db",
+      "bytes": 137192
+    },
+    "tinos-regular.ttf": {
+      "sha256": "bc8f098f98fa6440967b3e437e7a6b3f017e557218269358683e1b82d7ce2924",
+      "bytes": 120068
+    },
+    "tinos-bold.ttf": {
+      "sha256": "4f2f74d04ff2c455afd1c92dbb1472bd349bc3e708cce8ff0c1fac26d264f7cd",
+      "bytes": 139600
+    },
+    "tinos-italic.ttf": {
+      "sha256": "45e644683e4034a54390f1f439e85603c23e064df9ae0785e10eac0e33d771d4",
+      "bytes": 142976
+    },
+    "tinos-boldItalic.ttf": {
+      "sha256": "2cadf48078ed985f94102edbb4262a3fc63c6560478b72066df59911c8464554",
+      "bytes": 141948
+    },
+    "cousine-regular.ttf": {
+      "sha256": "11b20f9584e45269fd44e7d685c9517ccb76ca76e62b4698b7c825de9f4d9a57",
+      "bytes": 78784
+    },
+    "cousine-bold.ttf": {
+      "sha256": "cb2955dbfe1767a8f3c8984a209a9aaee489f19d9fd8eb3c09a9cfc8da9600c5",
+      "bytes": 78560
+    },
+    "cousine-italic.ttf": {
+      "sha256": "5d16f525f0c7b71a4705dd618d40568ec9853ba0265b3768fd9adbb0dff3e413",
+      "bytes": 82988
+    },
+    "cousine-boldItalic.ttf": {
+      "sha256": "29327bd99c367e112e153f00623dce12a73399bade4e6711d9339681bd72ba1d",
+      "bytes": 82200
+    },
+    "carlito-regular.ttf": {
+      "sha256": "f6418f708baede9789daef5d458c0f53d2a888af9820e8062934e504fedc6595",
+      "bytes": 628032
+    },
+    "carlito-bold.ttf": {
+      "sha256": "bb5d20f79b82599ec72983597437373a80f2d2085fa91fc144fd74e876a594db",
+      "bytes": 682468
+    },
+    "carlito-italic.ttf": {
+      "sha256": "0b019225e58d702bfedcbd35c21696769f8ee115cb6343f84c2f240312450d1c",
+      "bytes": 615236
+    },
+    "carlito-boldItalic.ttf": {
+      "sha256": "b32928186c119599e03ca6a1ffc680fdcb7fac95772f4b95d989cf6cd3861517",
+      "bytes": 808508
+    },
+    "inter-regular.ttf": {
+      "sha256": "4e73fc472db7022c7dc4efbde9573fbe6e954d006711d42867a1260e7f457ed7",
+      "bytes": 160400
+    },
+    "inter-bold.ttf": {
+      "sha256": "77659c055de097c67d88d1246515b82c1ed439765a76af23a41869c2b0a6b66d",
+      "bytes": 161092
+    },
+    "inter-italic.ttf": {
+      "sha256": "1cb3b547687725365373bd8ecd03f97e3dcc21bb2c61faee1705f1818980fd3b",
+      "bytes": 163448
+    },
+    "inter-boldItalic.ttf": {
+      "sha256": "74c422e3d195aaf4ede961cf8440a2d7ca2193208c0e393494ceb0b3278cb595",
+      "bytes": 164204
+    },
+    "roboto-regular.ttf": {
+      "sha256": "a8cedc5c3165e4ac6542f8760d7d8f964d775a1fe8c98522d64850e62f1bea92",
+      "bytes": 63496
+    },
+    "roboto-bold.ttf": {
+      "sha256": "56c38eaabbc1b0813b12374c4e22ffb5429837821e28894a1debd7f4391a61f9",
+      "bytes": 63748
+    },
+    "roboto-italic.ttf": {
+      "sha256": "a681c03fac718eee9ae9da8dc14f7fdc7049b9d1dba6b6d010df1acb6c51bcd2",
+      "bytes": 66080
+    },
+    "roboto-boldItalic.ttf": {
+      "sha256": "b33a3b135c6d6704d27f722b312f164afd5af580805a4d6da48129d61f39af1b",
+      "bytes": 66416
+    },
+    "opensans-regular.ttf": {
+      "sha256": "5c8be23416466e42ae5f6249753edca833cfc5ccd1e749e7048ad0e0eaeaf2fc",
+      "bytes": 50340
+    },
+    "opensans-bold.ttf": {
+      "sha256": "ec2edb3c1b2a11feed6f56239d9e1446bf868e4381682a0fdaa0564df67e343f",
+      "bytes": 50340
+    },
+    "opensans-italic.ttf": {
+      "sha256": "3af8b2b9975e7ea778ce7a0645a31b685b32c1d4025460c67c287f8ecf09d0a3",
+      "bytes": 52924
+    },
+    "opensans-boldItalic.ttf": {
+      "sha256": "02a9471132b7517a717e3f83323175bff1a429b4cca2ebcac6e63ec817065c66",
+      "bytes": 52760
+    },
+    "notosans-regular.ttf": {
+      "sha256": "db36bc57bedcf56219f975e47138fc07319ea2826462c39dbc9cd68101d153ba",
+      "bytes": 150796
+    },
+    "notosans-bold.ttf": {
+      "sha256": "8289633ca65afcb37f15da1ad6f5171f807fb07180a82769a58e8551507d98c6",
+      "bytes": 151460
+    },
+    "notosans-italic.ttf": {
+      "sha256": "39b7e9e29c9aaed23ac5d0a9492d6a3ff55976f8d2216334bc72ac2d77b5b84c",
+      "bytes": 151172
+    },
+    "notosans-boldItalic.ttf": {
+      "sha256": "00f74a23c18776068a2bc7f8047442aa58112e43fa9a5d11e6c223506e43ed3b",
+      "bytes": 151984
+    },
+    "ibmplexsans-upright.ttf": {
+      "sha256": "3b031aa4216174205bd8471f88a49b91f093169e9e87bd5262242bc5967fe2e3",
+      "bytes": 537244
+    },
+    "ibmplexsans-italic.ttf": {
+      "sha256": "0b94c5e981993764db32bf9c610ecc60cbd34ad77ec2f10ba03c64ab75124d8e",
+      "bytes": 599624
+    },
+    "atkinson-regular.ttf": {
+      "sha256": "c60bc6c144a585a3c5aaacc2834412369bc6ca8f5c9974192cb478653e9f95c7",
+      "bytes": 32988
+    },
+    "atkinson-bold.ttf": {
+      "sha256": "37fd01903a9a52b595afcc5a3712d32d6a9210e812f12cfec3d28a10f5c840c7",
+      "bytes": 33180
+    },
+    "atkinson-italic.ttf": {
+      "sha256": "80618e171866e65e9e5eaf81c1713c64bba2f4cd0491249749655cd28b4252fe",
+      "bytes": 33420
+    },
+    "atkinson-boldItalic.ttf": {
+      "sha256": "4570cd1ea21cc157f73f50b190d2ac4b45aff0d16887e7a7d5e4918d7615b283",
+      "bytes": 33748
+    },
+    "robotocondensed-regular.ttf": {
+      "sha256": "8de1e0a15d1f9495d1f8040b967adc07993e5964af54e36318c27f610a875235",
+      "bytes": 57244
+    },
+    "robotocondensed-bold.ttf": {
+      "sha256": "39bf18db7dbb8cb921b043d981d2b374d61c3e7b47a1125decb652c1c1194a00",
+      "bytes": 57468
+    },
+    "robotocondensed-italic.ttf": {
+      "sha256": "ee276e45530a22ef6f5e53e772f63be0e627607a47aab63ce1af0a3e552d874d",
+      "bytes": 59872
+    },
+    "robotocondensed-boldItalic.ttf": {
+      "sha256": "2662609bde01dd62829094648890145a9fb71e99d7576e7bea5bb7936014358f",
+      "bytes": 60100
+    },
+    "barlowcondensed-regular.ttf": {
+      "sha256": "743342ae0446d76f5b955e45cb0dbce2c5b6188019844be9adbbfa1f08381103",
+      "bytes": 53328
+    },
+    "barlowcondensed-bold.ttf": {
+      "sha256": "f7c322fc6f81f59bc26a4fcdf544152f69cd937837e91d06979799568d6764a4",
+      "bytes": 55436
+    },
+    "barlowcondensed-italic.ttf": {
+      "sha256": "a4932ecc59c86d5fae88d6c0ac71275cc9d2935d78c8e75490fc35b0e1d2f191",
+      "bytes": 57896
+    },
+    "barlowcondensed-boldItalic.ttf": {
+      "sha256": "a2209786a569deb3fb80fafb978c5f9892e3245dd55f0d53459665f8f365f890",
+      "bytes": 58420
+    },
+    "b612-regular.ttf": {
+      "sha256": "cf670264318e246e11c398249182703728506b9a5d4b8df46129df20685dd4f9",
+      "bytes": 60456
+    },
+    "b612-bold.ttf": {
+      "sha256": "fb58604f185cdd511f8cfb05004a67632a705376b4b14a476e803eaddf4c0882",
+      "bytes": 60100
+    },
+    "b612-italic.ttf": {
+      "sha256": "6a7a121f69ea0c69642ebaa2ef0f019212393a90509c8284d19f0c034d40ab5c",
+      "bytes": 63960
+    },
+    "b612-boldItalic.ttf": {
+      "sha256": "6b5812bcb4633b263d7e1c45d507fd850c77a7756a32c17f889a29439733bf73",
+      "bytes": 63152
+    },
+    "overpass-regular.ttf": {
+      "sha256": "0877d479c3dc956f89b24a02fdb0058605d1c23e1396b8b200b0a486a234b8a1",
+      "bytes": 87948
+    },
+    "overpass-bold.ttf": {
+      "sha256": "dd2fbc9624a9923da2936d359312b4cce351408e0f2251661bb3ddcc2e879912",
+      "bytes": 88164
+    },
+    "overpass-italic.ttf": {
+      "sha256": "610a4c2f3266ffef402e000817ea681e4922895763065dc18f26de8cf815eeec",
+      "bytes": 85956
+    },
+    "overpass-boldItalic.ttf": {
+      "sha256": "3333a3d5a4e34d05c7756fd41897bc04506bae353e0bbece461031dae9736222",
+      "bytes": 86120
+    },
+    "notoserif-regular.ttf": {
+      "sha256": "2e9d93db2fd0b7011d3f557b6c24abde1131233f29801ab97426105dbc291073",
+      "bytes": 172156
+    },
+    "notoserif-bold.ttf": {
+      "sha256": "c90dd6dbba660dbf67286c0672f07c3873cd9bb01ff320094380883eaf9f9c24",
+      "bytes": 172376
+    },
+    "notoserif-italic.ttf": {
+      "sha256": "95dd5dd545ef2173e0a56774a2485ba1ca6a5c590bdd43de4550fc6f42bd7739",
+      "bytes": 180688
+    },
+    "notoserif-boldItalic.ttf": {
+      "sha256": "17ff257a4d8799ed7353edf08e83f0a3f2d424ef65ad9be4a02e42f7b1011d73",
+      "bytes": 180680
+    },
+    "sourceserif4-regular.ttf": {
+      "sha256": "7cc815163ab0386e1dfff8f30b93cd1d392ee63f50a4f19af7c055d74713fc06",
+      "bytes": 116040
+    },
+    "sourceserif4-bold.ttf": {
+      "sha256": "746193184f50e769a9c327e1e95911ac4f298a84af3539dc39748c91d3d93839",
+      "bytes": 116048
+    },
+    "sourceserif4-italic.ttf": {
+      "sha256": "679cb8467494f93308147d7c1c419c6ef99b49b39a0b1c12c5635bf1d34fe7e7",
+      "bytes": 111928
+    },
+    "sourceserif4-boldItalic.ttf": {
+      "sha256": "da4b1bbd5ba7eccf1d9877efe57ce6a9f2c6fc49e99346e2529b50b88c7603aa",
+      "bytes": 111948
+    },
+    "robotomono-regular.ttf": {
+      "sha256": "04624e9f14139a3e44675db97146b4463c814bcbe2dad6d82c28362fe95daebd",
+      "bytes": 46064
+    },
+    "robotomono-bold.ttf": {
+      "sha256": "897d870957dab742d78faee357ca8004b6a8283b1947b877cabbf3610911c90e",
+      "bytes": 46108
+    },
+    "robotomono-italic.ttf": {
+      "sha256": "e3bcdaa5a112c017004aaf019a64951ce26f4870f1e2d099948a1801c6448714",
+      "bytes": 50032
+    },
+    "robotomono-boldItalic.ttf": {
+      "sha256": "5f7a6e1f6a9a9c655961902026b1732eed6cd489c84c3787f3ac275f3fafeccb",
+      "bytes": 50100
+    },
+    "jetbrainsmono-regular.ttf": {
+      "sha256": "d1e339d79c2ce0da1402e5ffc3883cdd206fb4b0b6d59788df90f83558d1b2b0",
+      "bytes": 82384
+    },
+    "jetbrainsmono-bold.ttf": {
+      "sha256": "d24e2cd553e30b02ad7d43784b0d70a14db96911b1a3dd22f51544ab03cddaf4",
+      "bytes": 82360
+    },
+    "jetbrainsmono-italic.ttf": {
+      "sha256": "48aeb83f9af8318118a4f463cb412272375fef70711c9afb13d645baca33ff44",
+      "bytes": 84540
+    },
+    "jetbrainsmono-boldItalic.ttf": {
+      "sha256": "07e8ff6b2f2cd47509db0a756fe4c471e94a92ac7c9cde42a1e9ecac6c042ba3",
+      "bytes": 84536
+    },
+    "ibmplexmono-regular.ttf": {
+      "sha256": "6a3412f058c7d8dfd9170c41e85ade48e5156ecb89356110ca57a0a27734af46",
+      "bytes": 135580
+    },
+    "ibmplexmono-bold.ttf": {
+      "sha256": "ac27abd6450a64dd94467580a02fe6235156d5b92f2926ebbc8e7489df64e0be",
+      "bytes": 137784
+    },
+    "ibmplexmono-italic.ttf": {
+      "sha256": "3362fc791b0652193328b862c1c5f23a789bc7288b1617fa63302f88689a2a34",
+      "bytes": 143920
+    },
+    "ibmplexmono-boldItalic.ttf": {
+      "sha256": "af4e05a761e98c1adf064c48a6352c9bec1a6ad70982cd2a544149323391f98e",
+      "bytes": 144512
+    },
+    "architectsdaughter-regular.ttf": {
+      "sha256": "787e94d651fa5a999472ec1894caecd83779e3083bf4216d9cf0ef9219f142f3",
+      "bytes": 26976
+    },
+    "caveat-regular.ttf": {
+      "sha256": "e53b5fbc278d97f2686d8c11052043c421ffb6c75468b42800b5abc48fa0926e",
+      "bytes": 143296
+    },
+    "caveat-bold.ttf": {
+      "sha256": "0a25cc93bbdbc481cc2c8a7366b0fab40c06dd92923e47aca27900c9c5faf8ac",
+      "bytes": 143424
+    },
+    "kalam-regular.ttf": {
+      "sha256": "e79dfba000f1d2aaa709e3a00c27d7007920e23c7c76b0d7bb8e0fd3a0730523",
+      "bytes": 218760
+    },
+    "kalam-bold.ttf": {
+      "sha256": "eff9acf3e922736e3cbd6be7dabdd272c9964dba2169e7a68966aa0c82129f86",
+      "bytes": 220864
+    },
+    "notosansdeva-regular.ttf": {
+      "sha256": "83a0b650cb214b269f97cb3749c1f5b46c7e8ccad303cd54cff92da081ca549e",
+      "bytes": 187648
+    },
+    "notosansdeva-bold.ttf": {
+      "sha256": "7858db30c826802af0da8e4695b6769bf033ffb48bdcbd23a85dc30aaf475076",
+      "bytes": 188200
+    },
+    "notoserifdeva-regular.ttf": {
+      "sha256": "ff0195db58f254a0f0d6f1061196ec269d86a5bc2cb4b91d2e2d200a12928e48",
+      "bytes": 202920
+    },
+    "notoserifdeva-bold.ttf": {
+      "sha256": "f3c0ec6cbef2ae299396c643f3a4f39d2ff17a33e956d9c4f5da855731ba75a9",
+      "bytes": 203400
+    },
+    "notosanssc-regular.ttf": {
+      "sha256": "92b92941c7a7ae0d12352111c11b22c51f4a340278cb37754ee47f68d773b39c",
+      "bytes": 2352852
+    },
+    "notosanssc-bold.ttf": {
+      "sha256": "da190dd9f384e6da54b95760a777f5b4c9f00183ef3c5c7a79e05a9e53f8817a",
+      "bytes": 2353916
+    },
+    "notosansmath-regular.ttf": {
+      "sha256": "3d03867d7ec6396812833b25697f42edbc5d3dac7e82243bdbe49869838987cb",
+      "bytes": 91656
+    }
+  }
+}

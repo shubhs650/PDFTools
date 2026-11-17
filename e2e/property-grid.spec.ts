@@ -138,7 +138,13 @@ test('General, Style and Text: every field round-trips through save and reopen @
   await cap(page, 'annotate', 'selectMany', id, [box]);
   await expect(sections).toHaveText(['General', 'Style', 'Text']);
   await expect(field(page, 'Created')).not.toHaveValue('');
-  await field(page, 'Font').selectOption({ label: 'Times' });
+  // The font list (M11-07): a button that opens the list of fonts.
+  await field(page, 'Font').click();
+  await page
+    .getByRole('listbox', { name: 'Font' })
+    .locator('[data-group="standard"]')
+    .getByRole('option', { name: 'Times', exact: true })
+    .click();
   await field(page, 'Bold').check();
   await field(page, 'Italic').check();
   await commit(field(page, 'Font size'), '14');
@@ -215,7 +221,7 @@ test('General, Style and Text: every field round-trips through save and reopen @
   });
   // The reopened grid reads the same.
   await cap(page, 'annotate', 'selectMany', again, [box]);
-  await expect(field(page, 'Font')).toHaveValue('times');
+  await expect(field(page, 'Font')).toHaveAttribute('data-value', 'times');
   await expect(field(page, 'Bold')).toBeChecked();
   await expect(field(page, 'Marked')).toBeChecked();
   await expect(field(page, 'Locked')).toBeChecked();

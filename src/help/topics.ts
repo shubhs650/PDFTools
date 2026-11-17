@@ -16,6 +16,7 @@ export const CHAPTERS = [
       'comment-tab',
       'text-markup',
       'text-comments',
+      'comment-fonts',
       'sticky-notes',
       'shapes',
       'stamps',

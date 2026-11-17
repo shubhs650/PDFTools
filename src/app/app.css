@@ -1946,6 +1946,13 @@ body {
   opacity: 1;
 }
 
+/* A text comment in a library font (M11-07, D-52): EmbedPDF's editor names the
+   standard fallback (/DA) inline; the editor draws the library face instead,
+   with the same fallbacks as the saved appearance (commentFonts.ts). */
+.annotation-body[data-comment-font] [contenteditable] {
+  font-family: var(--comment-font) !important;
+}
+
 /* Comments in every pointer mode (M11-06, D-51): a comment that a press and drag
    would move shows the move cursor (the plugin's own is a hand), with every
    pointer tool; a locked one keeps the plugin's. */

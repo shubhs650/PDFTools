@@ -10,6 +10,7 @@
 // to a shipped default reaches everyone who has not set that property.
 // Pure: no store, no plugin.
 import { PdfStandardFont } from '@embedpdf/models';
+import { libraryFamily } from '../../../model/fonts/library';
 
 /** Tools with a default style; the ids are the plugin's tool ids. */
 export const STYLE_TOOLS = [
@@ -64,6 +65,8 @@ export interface StyleProps {
   lineEndings?: { start: number; end: number };
   /** One of the standard 12 text fonts (PdfStandardFont 0 … 11). */
   fontFamily?: number;
+  /** A font library family id (M11-07, D-52), or '' for the standard font in `fontFamily`. */
+  libraryFont?: string;
   /** 0 left, 1 centre, 2 right. */
   textAlign?: number;
   /** 0 top, 1 middle, 2 bottom. */
@@ -186,6 +189,8 @@ export function cleanProps(raw: unknown): StyleProps {
     if (isInt(start, 0, 10) && isInt(end, 0, 10)) out.lineEndings = { start, end };
   }
   if (isInt(r['fontFamily'], 0, 11)) out.fontFamily = r['fontFamily'];
+  const lib = r['libraryFont'];
+  if (lib === '' || (typeof lib === 'string' && libraryFamily(lib)?.group)) out.libraryFont = lib;
   if (isInt(r['textAlign'], 0, 2)) out.textAlign = r['textAlign'];
   if (isInt(r['verticalAlign'], 0, 2)) out.verticalAlign = r['verticalAlign'];
   return out;

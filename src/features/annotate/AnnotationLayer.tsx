@@ -9,7 +9,16 @@ import {
   createRenderer,
   type CustomAnnotationRenderer,
 } from '@embedpdf/plugin-annotation/react';
-import { useLayoutEffect, useMemo, type PointerEvent, type ReactNode } from 'react';
+import {
+  useEffect,
+  useLayoutEffect,
+  useMemo,
+  type CSSProperties,
+  type PointerEvent,
+  type ReactNode,
+} from 'react';
+import { libraryFamily } from '../../model/fonts/library';
+import { cssFontStack, registerCommentFonts } from './fonts/commentFonts';
 import { documentStore, securityOf, useDocuments } from '../../app/store/documentStore';
 import { allows } from '../../model/permissions';
 import { ATTACH_DEFAULT_COLOR } from '../../model/attachFile';
@@ -19,6 +28,11 @@ import { TEXT_BODY_ATTR, textBodyUnmounted, useEditEpoch } from './textEdit';
 import { pressComment, type PageGeometry } from './textPointer';
 import { isTextMarkup } from './pointerModes';
 import { annotationCapability } from './selection';
+
+const readLibraryFont = (a: PdfAnnotationObject): string | undefined => {
+  const v = (a as unknown as { libraryFont?: unknown }).libraryFont;
+  return typeof v === 'string' ? v : undefined;
+};
 
 /**
  * A comment's body, marked with its id and page. A text box, typewriter or
@@ -43,6 +57,12 @@ function Body({
   const text = annotation.type === PdfAnnotationSubtype.FREETEXT;
   const markup = isTextMarkup(annotation);
   const { id } = annotation;
+  // A text comment in a library font (M11-07, D-52): its editor draws that face.
+  const lib = text ? libraryFamily(readLibraryFont(annotation)) : undefined;
+  const font = lib?.group ? lib.id : undefined;
+  useEffect(() => {
+    if (font) registerCommentFonts();
+  }, [font]);
   useLayoutEffect(
     () =>
       text
@@ -61,6 +81,8 @@ function Body({
       data-page-index={annotation.pageIndex}
       data-markup={markup || undefined}
       data-movable={(movable && !markup) || undefined}
+      data-comment-font={font}
+      style={font ? ({ '--comment-font': cssFontStack(font) } as CSSProperties) : undefined}
       {...(text ? { [TEXT_BODY_ATTR]: '' } : {})}
       // A press selects it and, dragged, moves it in every pointer mode
       // (M7-03 B5 for text comments, M11-06 D-51 for all); once selected,

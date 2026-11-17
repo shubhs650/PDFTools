@@ -229,8 +229,23 @@ describe('property grid (M6-06)', () => {
     expect(patchFor(a, 'bold', false)).toEqual({ fontFamily: PdfStandardFont.Times_Roman });
     expect(patchFor(a, 'fontFamily', 'courier')).toEqual({
       fontFamily: PdfStandardFont.Courier_Bold,
+      libraryFont: '',
     });
     expect(patchFor(a, 'fontFamily', 'comic')).toBeNull();
+    // The font library (M11-07, D-52): the family id, its standard fallback in /DA.
+    expect(patchFor(a, 'fontFamily', 'jetbrainsmono')).toEqual({
+      fontFamily: PdfStandardFont.Courier_Bold,
+      libraryFont: 'jetbrainsmono',
+    });
+    expect(patchFor(a, 'fontFamily', 'notosansmath')).toBeNull();
+    const lib = text({ fontFamily: PdfStandardFont.Helvetica_Oblique, libraryFont: 'caveat' });
+    expect(readProps([lib])).toMatchObject({ fontFamily: 'caveat', bold: false, italic: true });
+    expect(readProps([lib, text({ libraryFont: 'roboto' })]).fontFamily).toBe(MIXED);
+    expect(readProps([text({ libraryFont: '' })]).fontFamily).toBe('helvetica');
+    expect(patchFor(lib, 'bold', true)).toEqual({
+      fontFamily: PdfStandardFont.Helvetica_BoldOblique,
+    });
+    expect(applyStyle(styleOf(lib), text())).toMatchObject({ libraryFont: 'caveat' });
     expect(patchFor(a, 'textAlign', 2)).toEqual({ textAlign: 2 });
     expect(patchFor(a, 'verticalAlign', 7)).toEqual({ verticalAlign: 2 });
     // Mixed across a selection.
@@ -287,6 +302,7 @@ describe('property grid (M6-06)', () => {
       color: 'transparent',
       opacity: 1,
       fontFamily: PdfStandardFont.Courier_Bold,
+      libraryFont: '',
       fontSize: 9,
       fontColor: '#000000',
       textAlign: 0,

@@ -1,6 +1,6 @@
 # Triya PDF — Progress
 
-_Last updated: 2026-11-17 (session 82: M11-06 comments in every pointer mode)_
+_Last updated: 2026-11-17 (session 83: M11-07 font library for comments)_
 
 **Current milestone:** M11 — file tabs, OCR text selection, a font library and comments in every
 pointer mode: plan [docs/plan/M11.md](plan/M11.md) and [ADR-028](adr/028-m11-tabs-fonts-select.md)
@@ -20,6 +20,44 @@ interop is in the M6 pack (CHECKLIST §M6 R1–R4). Rev 0 (M0–M4) is complete 
 
 ## Done
 
+- **Session 83 — M11-07 font library for text comments (D-52, ADR-028 and its S26 amendment).**
+  **The files:** 26 OFL-1.1 families from the Google Fonts repository (`src/model/fonts/library.ts`:
+  four Office-compatible, six sans, two narrow, two technical, two serif, three mono, three
+  handwriting, two Hindi, Chinese, and Noto Sans Math as a hidden symbol fallback), built by
+  `node scripts/fonts/build.ts` (sources pinned by SHA-256 in `scripts/fonts/sources.ts`; each
+  face pinned to one instance and cut to its scripts; Carlito and IBM Plex, whose names are
+  reserved, ship unmodified with bold by `wght`) into **`vendor/fonts/`, committed** (86 files,
+  16.8 MB; `manifest.json` has every file's SHA-256 and size, each family's version and license),
+  so neither the build nor CI downloads fonts. Served at `/fonts/lib/` with each family's license
+  at `/fonts/lib/<id>/LICENSE` (`scripts/vite-assets.ts`), **background precache** (with the
+  HarfBuzz chunk and WASM). Measured: the library is 16.8 MB raw, 8.2 MB brotli; the install total
+  is now 78.7 MB (60 MB is a reference only, owner 2026-11-07). **Licenses:** `npm run licenses`
+  checks each family's license and every vendored file against the manifest; Third-party notices
+  list the library with all 26 license texts; About lists the font library and HarfBuzz
+  (harfbuzzjs moved to dependencies, MIT). **Drawing (Render worker, route R2):** a text comment
+  with a library font (`libraryFont` on the plugin object; `fontFamily` keeps the standard
+  fallback with bold and italic for /DA) is shaped with HarfBuzz and its text drawn as a Type0 /
+  CIDFontType2 subset (Identity-H, /W, ToUnicode, /ActualText per run) into PDFium's own
+  appearance, after its fill, border and callout (`src/workers/render/commentFonts/`). Characters
+  the face lacks come from Noto Sans Math, Noto Sans Devanagari, then Noto Sans SC; a missing
+  bold or italic face is drawn with a stroke or a slant. /DS names the family (`font: 'Open Sans'
+12pt; …`) and is read back on open. Fonts load before PDFium draws (`prepareCommentFont`);
+  moves keep the appearance; a comment that can't be drawn keeps its standard font and the save
+  records `freetext-font-kept`. **UI:** the Font field in the Properties pane, tool defaults and
+  Comment Styles is a list (`src/features/annotate/fonts/FontPicker.tsx`): Recently used (5,
+  `pdftools.recentFonts`, in Privacy and Clear), Standard, then the groups, each name in its own
+  face (loaded only when the list opens), keyboard (arrows, Home/End, Page Up/Down, type-ahead,
+  Enter/Space, Esc). The text menu's Text Style ▸ Font lists the same sections. The editor draws
+  in the chosen face (`--comment-font`). Form fields keep standard fonts (Q3). Help: new topic
+  "Fonts in comments" (what other viewers do when they edit such a comment). **Fixed on the way:**
+  the subset tag could contain characters other than A–Z (signed hash). Tests:
+  `tests/model/fontLibrary.test.ts`, `tests/annotate/fontList.test.ts`,
+  `tests/annotate/comment-fonts.test.ts` (real PDFium: embed, /DS, reopen, flatten, fallbacks,
+  synthetic bold, update/move), `tests/annotate/subsetTag.test.ts`; `e2e/comment-fonts.spec.ts`
+  (a comment in each group: embedded, fonts only from our origin, saved, reopened with its
+  family, flattened and found by Find, Hindi and Chinese included; the list's groups,
+  type-ahead, Recently used, axe, the editor's face). Shots in project files `m11-07/`. Next:
+  M11-08·O1 Selected-text menu.
 - **Session 82 — M11-06 comments in every pointer mode (D-51, ADR-028).** **Lock rules**
   (pure `src/features/annotate/pointerModes.ts`, `lockModeFor`, `picksComments`): Select,
   Select Comments, **Hand and Select Text** reach every comment but form fields (only Select

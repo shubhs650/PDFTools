@@ -49,6 +49,16 @@ export const BUILT_WITH: readonly BuiltWithItem[] = [
     role: msg('about.builtWith.inter.role'),
   },
   {
+    pkg: 'google-fonts',
+    name: msg('about.builtWith.fontLibrary.name'),
+    role: msg('about.builtWith.fontLibrary.role'),
+  },
+  {
+    pkg: 'harfbuzzjs',
+    name: msg('about.builtWith.harfbuzz.name'),
+    role: msg('about.builtWith.harfbuzz.role'),
+  },
+  {
     pkg: '@embedpdf/fonts-latin',
     name: msg('about.builtWith.noto.name'),
     role: msg('about.builtWith.noto.role'),

@@ -57,7 +57,7 @@ test(
 
     // Built with: the main components with their licenses.
     const components = about(page).getByTestId('about-components').getByRole('listitem');
-    await expect(components).toHaveCount(13);
+    await expect(components).toHaveCount(15);
     await expect(components.filter({ hasText: 'PDFium' })).toContainText(
       'BSD-3-Clause, Apache-2.0',
     );

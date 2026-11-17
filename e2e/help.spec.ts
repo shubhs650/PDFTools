@@ -87,7 +87,7 @@ test('the Help page: contents, pager, search on Enter only, screenshots and ligh
   test.setTimeout(90_000);
   await page.goto('/help#welcome');
   const nav = page.getByRole('navigation', { name: 'Contents' });
-  await expect(nav.getByRole('link')).toHaveCount(43);
+  await expect(nav.getByRole('link')).toHaveCount(44);
   await expect(topic(page).getByRole('heading', { level: 1 })).toHaveText('Welcome to Triya PDF');
 
   // Contents and the pager move between topics.

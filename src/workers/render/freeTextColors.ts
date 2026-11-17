@@ -33,6 +33,7 @@ import {
   type PdfValue,
 } from '../../model/pdf/objects';
 import { defaultStyleString, normalizeHex, recolorText } from '../../model/freeTextStyle';
+import { libraryFamily } from '../../model/fonts/library';
 import { acquirePage, rawCall, withWideString } from './pdfium';
 import { concatBytes, encodeLatin1, latin1 } from './save/bytes';
 import { FPDF_NO_INCREMENTAL, saveWithFlags } from './save/writer';
@@ -56,6 +57,7 @@ interface FreeTextArg {
   fontSize?: unknown;
   textAlign?: unknown;
   contents?: unknown;
+  libraryFont?: unknown;
 }
 
 interface Heap {
@@ -114,11 +116,14 @@ export function applyTextColors(
     );
     if (!a) return 'none';
     try {
+      // A library font (M11-07, D-52): its family name in /DS, where other viewers look for it.
+      const lib = libraryFamily(str(annot.libraryFont));
       const ds = defaultStyleString({
         fontFamily: num(annot.fontFamily),
         fontSize: num(annot.fontSize),
         textAlign: num(annot.textAlign),
         color: text,
+        family: lib?.group ? lib.name : undefined,
       });
       withWideString(mod, ds, (p) => rawCall(mod, 'FPDFAnnot_SetStringValue', a, 'DS', p));
       if (!border || border === text) {
@@ -126,6 +131,8 @@ export function applyTextColors(
         rawCall(mod, 'EPDFAnnot_ClearColor', a, PdfAnnotationColorType.TextColor);
         return 'style';
       }
+      // Our own appearance (commentFonts/apply.ts) draws the text in its colour.
+      if (lib?.group && str(annot.contents)?.trim()) return 'style';
       const outcome = recolorAppearance(mod, a, text);
       if (outcome === 'fallback' || (outcome === 'no-text' && str(annot.contents)?.trim())) {
         fallbacks.set(docId, (fallbacks.get(docId) ?? 0) + 1);
@@ -185,7 +192,7 @@ function recolorAppearance(mod: WrappedPdfiumModule, annot: number, hex: string)
 
 // ------------------------------------------------------------ the exported document
 
-interface Exported {
+export interface Exported {
   /** The page object (number, generation, dictionary). */
   page: { num: number; gen: number; dict: PdfDict };
   /** The appearance form's /Resources, /BBox and /Matrix. */
@@ -224,7 +231,7 @@ const numbers = (v: PdfValue | undefined, n: number): number[] | null =>
   Array.isArray(v) && v.length === n && v.every((x) => typeof x === 'number') ? v : null;
 
 /** PDFium's export: its one page, which draws the appearance form with `Do`. */
-function readExport(bytes: Uint8Array): Exported | null {
+export function readExport(bytes: Uint8Array): Exported | null {
   const xref = xrefTable(bytes);
   const objAt = (n: number): { value: PdfValue; parser: Parser; gen: number } | null => {
     const e = xref.get(n);

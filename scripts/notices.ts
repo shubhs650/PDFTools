@@ -14,6 +14,7 @@ import { existsSync, readFileSync, readdirSync } from 'node:fs';
 import { join } from 'node:path';
 import { licenseFromManifest, parseSpdx, type SpdxNode } from './license-policy.ts';
 import en from '../src/i18n/en.json' with { type: 'json' };
+import { fontLicense, readFontManifest } from './fonts/manifest.ts';
 
 export const NOTICES_FILE = 'third-party-notices.txt';
 
@@ -188,9 +189,36 @@ export function collectNotices(root: string): NoticePackage[] {
   if (missing.length) {
     throw new Error(`No license text for: ${missing.join(', ')}`);
   }
+  const fonts = fontLibraryNotice();
+  seen.set(`${fonts.name}@${fonts.version}`, fonts);
   return [...seen.values()].sort(
     (a, b) => a.name.localeCompare(b.name) || a.version.localeCompare(b.version),
   );
+}
+
+/** The comment font library's name in the notices and About's Built with (M11-07, D-52). */
+export const FONT_LIBRARY_NOTICE = 'google-fonts';
+
+/**
+ * The comment font library (M11-07, D-52): vendored files (vendor/fonts/),
+ * not an npm package, listed as one entry with each family's own license
+ * text (OFL-1.1 with its copyright line).
+ */
+export function fontLibraryNotice(): NoticePackage {
+  const m = readFontManifest();
+  const licenses = [...new Set(Object.values(m.families).map((f) => f.license))].sort();
+  return {
+    name: FONT_LIBRARY_NOTICE,
+    version: m.snapshot,
+    license: licenses.join(' AND '),
+    homepage: 'https://github.com/google/fonts',
+    texts: Object.entries(m.families)
+      .sort((a, b) => a[1].name.localeCompare(b[1].name))
+      .map(([id, f]) => ({
+        source: `${f.name} ${f.version} (${f.source})`,
+        text: readFileSync(fontLicense(id), 'utf8'),
+      })),
+  };
 }
 
 const RULE = '-'.repeat(78);

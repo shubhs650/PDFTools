@@ -112,6 +112,18 @@ describe('Text Style', () => {
     });
     expect(stylePatch(a, { prop: 'fontFamily', value: 'times' })).toEqual({
       fontFamily: F.Times_Bold,
+      libraryFont: '',
+    });
+    // A library family (M11-07): its standard fallback with the same bold and italic in /DA.
+    expect(stylePatch(a, { prop: 'fontFamily', value: 'notoserif' })).toEqual({
+      fontFamily: F.Times_Bold,
+      libraryFont: 'notoserif',
+    });
+    const lib = box({ fontFamily: F.Helvetica_Bold, libraryFont: 'roboto' });
+    expect(textStyleOf(lib).family).toBe('roboto');
+    expect(stylePatch(lib, { prop: 'fontFamily', value: 'roboto' })).toBeNull();
+    expect(stylePatch(lib, { prop: 'italic', value: true })).toEqual({
+      fontFamily: F.Helvetica_BoldOblique,
     });
     expect(stylePatch(a, { prop: 'bold', value: false })).toEqual({ fontFamily: F.Courier });
     expect(stylePatch(a, { prop: 'fontSize', value: 24 })).toEqual({ fontSize: 24 });

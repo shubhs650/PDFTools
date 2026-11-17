@@ -3,7 +3,14 @@
 import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { describe, expect, it } from 'vitest';
-import { builtWith, collectNotices, licenseData, renderNotices } from '../../scripts/notices.ts';
+import {
+  builtWith,
+  collectNotices,
+  FONT_LIBRARY_NOTICE,
+  licenseData,
+  renderNotices,
+} from '../../scripts/notices.ts';
+import { readFontManifest } from '../../scripts/fonts/manifest.ts';
 import { BUILT_WITH, BUILT_WITH_PACKAGES } from '../../src/app/about/components';
 import { filterPackages, NOTICES_URL } from '../../src/app/about/licenses';
 import { versionInfoText } from '../../src/app/about/versionInfo';
@@ -96,9 +103,13 @@ describe('Built with (M10-01)', () => {
   it('names only runtime packages, with their installed version and license', () => {
     const map = builtWith(collectNotices(root), BUILT_WITH_PACKAGES);
     for (const c of BUILT_WITH) {
-      const pkg = JSON.parse(
-        readFileSync(join(root, 'node_modules', c.pkg, 'package.json'), 'utf8'),
-      ) as { version: string };
+      // The comment font library (M11-07) is vendored, not an npm package: its snapshot date.
+      const pkg =
+        c.pkg === FONT_LIBRARY_NOTICE
+          ? { version: readFontManifest().snapshot }
+          : (JSON.parse(
+              readFileSync(join(root, 'node_modules', c.pkg, 'package.json'), 'utf8'),
+            ) as { version: string });
       expect(map[c.pkg]?.version, c.pkg).toBe(pkg.version);
       expect(t(c.name)).not.toBe(c.name);
       expect(t(c.role)).not.toBe(c.role);

@@ -11,6 +11,7 @@ import { resetAllToolDefaults } from '../annotate/tools/toolDefaultsStore';
 import { resetAllCommentStyles } from '../annotate/tools/commentStylesStore';
 import { resetSignatures } from '../sign/signStore';
 import { resetWhatsNew } from '../whatsNew/releases';
+import { resetRecentFonts } from '../annotate/fonts/recentFonts';
 import type { ClearDeps } from './clearAll';
 
 const hasCaches = (): boolean => typeof caches !== 'undefined';
@@ -39,5 +40,7 @@ export const appClearDeps: ClearDeps = {
     resetDensity();
     // Which release "What's new" last announced (M10-08·O6).
     resetWhatsNew();
+    // The comment fonts chosen last (M11-07).
+    resetRecentFonts();
   },
 };
