@@ -9,7 +9,9 @@ import {
   type FocusEvent,
   type KeyboardEvent,
   type MouseEvent,
+  type PointerEvent,
 } from 'react';
+import { flushSync } from 'react-dom';
 import { useTranslation } from 'react-i18next';
 import { requestClose } from '../features/open/openDocument';
 import { useOpen } from '../features/open/openStore';
@@ -20,15 +22,23 @@ import { shortcutText } from './keys/labels';
 import { documentStore, useDocuments } from './store/documentStore';
 import { TabCard } from './TabCard';
 import { tabCardText } from './tabCardText';
+import { beginTabPress, isTabDragging, type TabDragHost } from './tabDragSession';
+import { moveTab, onTabMoved, setTabAnimator } from './tabMove';
 
 /** A tab that keeps keyboard focus this long shows its hover card (D-50). */
 const CARD_FOCUS_DELAY_MS = 800;
 /** The pointer resting on a tab this long shows it (the app's tooltip delay). */
 const CARD_HOVER_DELAY_MS = 500;
 
+/** After a drag, the click that ends the press is not a click on the tab. */
+const SWALLOW_CLICK_MS = 400;
+
 const openFile = (): void => {
   void runCommand('file.open');
 };
+
+const parts = (...els: (HTMLElement | undefined)[]): HTMLElement[] =>
+  els.filter((el): el is HTMLElement => el !== undefined);
 
 /**
  * Document tabs (D-01; M11-03 look, hover card and + button, ADR-028 D-50): a tablist
@@ -39,6 +49,10 @@ const openFile = (): void => {
  * facts, which the tab's accessible description also gives. The + button after the
  * last tab, and a double-click on the empty strip, open a file. Files being opened
  * show as busy placeholders; the overflow menu lists every document.
+ *
+ * M11-04 (D-50): a tab is dragged along the row to reorder it, Chrome-like (see
+ * tabDragSession.ts); Ctrl+Shift+Left/Right moves the focused tab (keymap, scope
+ * `tabs`); every move slides into place and is announced. A middle-click closes a tab.
  */
 export function TabStrip() {
   const { t } = useTranslation();
@@ -47,6 +61,13 @@ export function TabStrip() {
   const docs = useDocuments((s) => s.docs);
   const jobs = useOpen((s) => s.jobs);
   const refs = useRef(new Map<string, HTMLButtonElement>());
+  const closeRefs = useRef(new Map<string, HTMLSpanElement>());
+  const listRef = useRef<HTMLDivElement>(null);
+  const addRef = useRef<HTMLSpanElement>(null);
+  // The tab being dragged (its lift), and the last move said aloud.
+  const [dragId, setDragId] = useState<string | null>(null);
+  const [moved, setMoved] = useState('');
+  const swallowing = useRef(false);
   // Tab and × are two elements: the hover tint spans both (D-50).
   const [hoverId, setHoverId] = useState<string | null>(null);
   const [cardId, setCardId] = useState<string | null>(null);
@@ -59,6 +80,54 @@ export function TabStrip() {
     },
     [],
   );
+  // Moves slide into place (FLIP: measured before and after the commit, then animated
+  // from the old place with a transform) and keep keyboard focus on the moved tab.
+  useEffect(() => {
+    const partsOf = (id: string): HTMLElement[] =>
+      parts(refs.current.get(id), closeRefs.current.get(id));
+    const offAnimator = setTabAnimator((commit, movedId) => {
+      const list = listRef.current;
+      const scroll = (): number => list?.scrollLeft ?? 0;
+      const ids = documentStore.getState().order;
+      const before = new Map<string, number>();
+      for (const id of ids) {
+        const left = refs.current.get(id)?.getBoundingClientRect().left;
+        if (left !== undefined) before.set(id, left + scroll());
+        for (const el of partsOf(id)) {
+          el.style.transition = 'none';
+          el.style.transform = '';
+        }
+      }
+      const focused = document.activeElement;
+      flushSync(commit);
+      // React moves the nodes; a moved node loses focus.
+      if (focused instanceof HTMLElement && focused !== document.activeElement)
+        focused.focus({ preventScroll: true });
+      refs.current.get(movedId)?.scrollIntoView({ block: 'nearest', inline: 'nearest' });
+      for (const id of documentStore.getState().order) {
+        const was = before.get(id);
+        const now = refs.current.get(id)?.getBoundingClientRect().left;
+        if (was === undefined || now === undefined) continue;
+        const dx = was - (now + scroll());
+        if (Math.abs(dx) >= 0.5)
+          for (const el of partsOf(id)) el.style.transform = `translateX(${String(dx)}px)`;
+      }
+      list?.getBoundingClientRect(); // the old places take effect before the slide starts
+      for (const id of ids)
+        for (const el of partsOf(id)) {
+          el.style.transition = '';
+          el.style.transform = '';
+        }
+    });
+    const offMoved = onTabMoved((position, count) => {
+      setMoved(t('frame.tabMoved', { position, count }));
+    });
+    return () => {
+      offAnimator();
+      offMoved();
+    };
+  }, [t]);
+
   // A closed document takes its card with it.
   const shownCard = cardId !== null && docs[cardId] ? cardId : null;
   // The selected tab scrolls into view in a long row (from the overflow menu, a new
@@ -93,6 +162,8 @@ export function TabStrip() {
   };
 
   const onKeyDown = (e: KeyboardEvent, i: number): void => {
+    // Ctrl+Shift+arrows move the tab (the keymap's tab.moveLeft/Right), not the focus.
+    if (e.ctrlKey || e.metaKey || e.altKey || e.shiftKey) return;
     const moves: Record<string, number> = {
       ArrowRight: i + 1,
       ArrowLeft: i - 1,
@@ -119,6 +190,48 @@ export function TabStrip() {
     clearTimeout(focusTimer.current);
   };
 
+  const dragHost: TabDragHost = {
+    list: () => listRef.current,
+    parts: (id) => parts(refs.current.get(id), closeRefs.current.get(id)),
+    addButton: () => addRef.current,
+    order: () => documentStore.getState().order,
+    lift: (id) => {
+      clearTimeout(focusTimer.current);
+      setCardId(null);
+      setDragId(id);
+    },
+    end: () => {
+      setDragId(null);
+    },
+    drop: (id, to) => {
+      moveTab(id, to);
+    },
+    activate: (id) => {
+      documentStore.getState().activate(id);
+    },
+    swallowClick: () => {
+      swallowing.current = true;
+      setTimeout(() => {
+        swallowing.current = false;
+      }, SWALLOW_CLICK_MS);
+    },
+  };
+  const onPress = (e: PointerEvent<HTMLElement>, id: string): void => {
+    // The × keeps its own press; the rest of its part of the tab drags the tab.
+    if ((e.target as HTMLElement).closest('.ui-button')) return;
+    beginTabPress(dragHost, e.nativeEvent, e.currentTarget, id);
+  };
+  // A middle-click closes the tab, as in Chrome (and never starts the browser's
+  // middle-button auto-scroll).
+  const onMiddleDown = (e: MouseEvent): void => {
+    if (e.button === 1) e.preventDefault();
+  };
+  const onMiddleClick = (e: MouseEvent, id: string): void => {
+    if (e.button !== 1) return;
+    e.preventDefault();
+    requestClose(id);
+  };
+
   // A double-click on the empty part of the strip opens a file, as in Chrome.
   const onStripDoubleClick = (e: MouseEvent<HTMLDivElement>): void => {
     const target = e.target as HTMLElement;
@@ -139,7 +252,11 @@ export function TabStrip() {
           button follows it in the DOM and is placed after its tab with CSS
           `order` (the tablist itself is `display: contents`). Keyboard: Tab
           from the active tab reaches its close button. */}
-      <div className="tab-list">
+      <div
+        className={`tab-list${dragId ? ' tab-list--dragging' : ''}`}
+        ref={listRef}
+        data-key-scope="tabs"
+      >
         <div role="tablist" aria-label={t('frame.tabs')} className="tab-tablist">
           {order.map((id, i) => {
             const d = docs[id];
@@ -149,10 +266,10 @@ export function TabStrip() {
             return (
               <RadixTooltip.Root
                 key={id}
-                open={shownCard === id}
+                open={shownCard === id && dragId === null}
                 delayDuration={CARD_HOVER_DELAY_MS}
                 onOpenChange={(open) => {
-                  if (open) setCardId(id);
+                  if (open && !isTabDragging()) setCardId(id);
                   else setCardId((cur) => (cur === id ? null : cur));
                 }}
               >
@@ -172,10 +289,18 @@ export function TabStrip() {
                     tabIndex={active ? 0 : -1}
                     className={`tab-button ui-focusable${active ? ' tab--active' : ''}${
                       hovered ? ' tab--hover' : ''
-                    }`}
+                    }${id === dragId ? ' tab--dragging' : ''}`}
                     style={{ order: 2 * i }}
                     onClick={() => {
+                      if (swallowing.current) return;
                       documentStore.getState().activate(id);
+                    }}
+                    onPointerDown={(e) => {
+                      onPress(e, id);
+                    }}
+                    onMouseDown={onMiddleDown}
+                    onAuxClick={(e) => {
+                      onMiddleClick(e, id);
                     }}
                     onKeyDown={(e) => {
                       onKeyDown(e, i);
@@ -216,12 +341,26 @@ export function TabStrip() {
           if (!d) return null;
           const active = id === activeId;
           return (
+            // The ×'s part of the tab drags and middle-click-closes like the tab itself;
+            // pointer only (the keyboard has Ctrl+Shift+arrows and the × button).
+            // eslint-disable-next-line jsx-a11y/no-static-element-interactions
             <span
               key={id}
+              ref={(el) => {
+                if (el) closeRefs.current.set(id, el);
+                else closeRefs.current.delete(id);
+              }}
               className={`tab-close${active ? ' tab--active' : ''}${
                 id === hoverId ? ' tab--hover' : ''
-              }`}
+              }${id === dragId ? ' tab--dragging' : ''}`}
               style={{ order: 2 * i + 1 }}
+              onPointerDown={(e) => {
+                onPress(e, id);
+              }}
+              onMouseDown={onMiddleDown}
+              onAuxClick={(e) => {
+                onMiddleClick(e, id);
+              }}
               onPointerEnter={() => {
                 setHoverId(id);
               }}
@@ -243,7 +382,7 @@ export function TabStrip() {
           );
         })}
         {/* After the last tab; it sticks to the row's end when the tabs scroll. */}
-        <span className="tab-add" style={{ order: 2 * order.length }}>
+        <span className="tab-add" ref={addRef} style={{ order: 2 * order.length }}>
           <Tooltip
             content={openKeys ? t('frame.openFileTip', { keys: openKeys }) : t('frame.openFile')}
           >
@@ -268,6 +407,10 @@ export function TabStrip() {
             </span>
           );
         })}
+      </div>
+      {/* Each move, by drag or keys, said once (D-50). */}
+      <div className="ui-visually-hidden" role="status" aria-live="polite">
+        {moved}
       </div>
       {opening}
       <div className="tab-strip-end">

@@ -1,5 +1,5 @@
 // @vitest-environment jsdom
-import { act, cleanup, render, screen } from '@testing-library/react';
+import { act, cleanup, fireEvent, render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { useState } from 'react';
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
@@ -7,6 +7,7 @@ import '../../src/i18n';
 import { diagnostics } from '../../src/app/diagnostics';
 import { ErrorBoundary } from '../../src/app/ErrorBoundary';
 import { TabStrip } from '../../src/app/TabStrip';
+import { moveActiveTab, moveTab } from '../../src/app/tabMove';
 import { documentStore, useDocuments } from '../../src/app/store/documentStore';
 import { UiProvider } from '../../src/ui/components';
 
@@ -138,5 +139,43 @@ describe('TabStrip', () => {
     const add = screen.getByRole('button', { name: 'Open a file' });
     // After the last tab's close button, in the row's order.
     expect(add.closest('.tab-add')?.getAttribute('style')).toContain('order: 4');
+  });
+
+  // M11-04 (D-50): moves keep focus on the moved tab and are announced; a middle-click
+  // closes a tab.
+  it('moves a tab, keeps its focus, says where it went; a middle-click closes', () => {
+    act(() => {
+      for (const id of ['a', 'b', 'c']) documentStore.getState().open(meta(id));
+      documentStore.getState().activate('a');
+    });
+    render(
+      <UiProvider>
+        <TabStrip />
+      </UiProvider>,
+    );
+    screen.getAllByRole('tab')[0]?.focus();
+    act(() => {
+      expect(moveActiveTab(1)).toBe(true);
+    });
+    expect(documentStore.getState().order).toEqual(['b', 'a', 'c']);
+    expect(document.activeElement?.id).toBe('tab-a');
+    expect(screen.getByText('Moved to position 2 of 3')).toBeTruthy();
+    // The row's order follows (the tab and its × side by side).
+    expect(screen.getAllByRole('tab').map((t) => t.id)).toEqual(['tab-b', 'tab-a', 'tab-c']);
+    act(() => {
+      expect(moveTab('a', 9)).toBe(true); // clamped to the end
+    });
+    expect(documentStore.getState().order).toEqual(['b', 'c', 'a']);
+    expect(screen.getByText('Moved to position 3 of 3')).toBeTruthy();
+    act(() => {
+      expect(moveActiveTab(1)).toBe(false); // already last
+    });
+    // The middle button: no auto-scroll, and the tab closes.
+    const b = screen.getByRole('tab', { name: 'b.pdf' });
+    expect(fireEvent.mouseDown(b, { button: 1 })).toBe(false);
+    act(() => {
+      fireEvent(b, new MouseEvent('auxclick', { button: 1, bubbles: true, cancelable: true }));
+    });
+    expect(documentStore.getState().order).toEqual(['c', 'a']);
   });
 });

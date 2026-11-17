@@ -30,11 +30,14 @@ export interface FocusContext {
   inDocument: boolean;
   /** Focus is in the Bookmarks pane's tree (M6-11). */
   inBookmarks?: boolean;
+  /** Focus is on a file tab or its × (M11-04). */
+  inTabs?: boolean;
 }
 
 function inScope(binding: Binding, focus: FocusContext): boolean {
   if (binding.scope === 'document') return focus.inDocument;
   if (binding.scope === 'bookmarks') return focus.inBookmarks === true;
+  if (binding.scope === 'tabs') return focus.inTabs === true;
   return true;
 }
 
@@ -74,6 +77,7 @@ export function useShortcuts(): void {
           editable: isEditable(active),
           inDocument: inDocumentScope(active),
           inBookmarks: Boolean(active?.closest('[data-key-scope="bookmarks"]')),
+          inTabs: Boolean(active?.closest('[data-key-scope="tabs"]')),
         },
         mac,
       );

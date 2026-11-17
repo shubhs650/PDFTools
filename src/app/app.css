@@ -76,12 +76,18 @@ body {
   padding-right: var(--space-2);
 }
 
-/* A tab is two elements, the tab and its ×: one shape, rounded at the top. */
+/* A tab is two elements, the tab and its ×: one shape, rounded at the top. They slide
+   (transform) when a move makes room or settles (M11-04); the tabs take every touch
+   gesture, so a press can become a drag (touch: moving first scrolls the row). */
 .tab-button,
 .tab-close {
   flex: none;
   color: var(--color-text);
-  transition: background-color var(--duration-fast) var(--ease-out);
+  transition:
+    background-color var(--duration-fast) var(--ease-out),
+    transform var(--duration-normal) var(--ease-out);
+  touch-action: none;
+  user-select: none;
 }
 
 .tab-button {
@@ -135,6 +141,45 @@ body {
   outline-color: var(--color-text-on-brand);
   box-shadow: inset var(--space-0) calc(-1 * var(--tab-line-width)) var(--space-0)
     var(--color-accent);
+}
+
+/* Drag to reorder (M11-04, D-50): the lifted tab is raised over its neighbours with a
+   shadow along each side (both elements, no seam between them), in the hover tint when
+   it is not the selected tab. */
+.tab-list--dragging,
+.tab-list--dragging .tab-button {
+  cursor: grabbing;
+}
+
+.tab-button.tab--dragging,
+.tab-close.tab--dragging {
+  position: relative;
+  z-index: 1;
+}
+
+.tab-button.tab--dragging:not(.tab--active),
+.tab-close.tab--dragging:not(.tab--active) {
+  background: var(--color-surface-raised);
+}
+
+.tab-button.tab--dragging {
+  box-shadow: var(--tab-lift-start);
+}
+
+.tab-close.tab--dragging {
+  box-shadow: var(--tab-lift-end);
+}
+
+.tab-button.tab--active.tab--dragging {
+  box-shadow:
+    inset var(--space-0) calc(-1 * var(--tab-line-width)) var(--space-0) var(--color-accent),
+    var(--tab-lift-start);
+}
+
+.tab-close.tab--active.tab--dragging {
+  box-shadow:
+    inset var(--space-0) calc(-1 * var(--tab-line-width)) var(--space-0) var(--color-accent),
+    var(--tab-lift-end);
 }
 
 /* The × is drawn in its tab's text colour: white on the selected tab (the shared
@@ -193,6 +238,8 @@ body {
 .tab-add {
   position: sticky;
   right: var(--space-0);
+  /* Over a lifted tab passing under it (M11-04). */
+  z-index: 2;
   display: inline-flex;
   flex: none;
   align-items: center;
@@ -308,6 +355,13 @@ body {
 
   .tab-close .ui-button {
     opacity: 1;
+  }
+
+  /* No shadows here: the lifted tab is outlined instead (M11-04). */
+  .tab-button.tab--dragging,
+  .tab-close.tab--dragging {
+    outline: var(--focus-width) solid CanvasText;
+    outline-offset: calc(-1 * var(--focus-width));
   }
 }
 

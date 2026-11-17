@@ -1,6 +1,6 @@
 # Triya PDF — Progress
 
-_Last updated: 2026-11-17 (session 79: M11-03 file tabs: look, hover card and + button)_
+_Last updated: 2026-11-17 (session 80: M11-04 file tabs: drag to reorder)_
 
 **Current milestone:** M11 — file tabs, OCR text selection, a font library and comments in every
 pointer mode: plan [docs/plan/M11.md](plan/M11.md) and [ADR-028](adr/028-m11-tabs-fonts-select.md)
@@ -20,6 +20,30 @@ interop is in the M6 pack (CHECKLIST §M6 R1–R4). Rev 0 (M0–M4) is complete 
 
 ## Done
 
+- **Session 80 — M11-04 file tabs: drag to reorder (D-50, ADR-028).** **Pointer drag**
+  (`src/app/tabDragSession.ts`, geometry in the pure `src/app/tabDrag.ts`): mouse and pen lift
+  a tab after 4 px; on touch, holding a tab 300 ms lifts it and moving first scrolls the row
+  (`touch-action: none` on the tabs; a long press never opens a menu over a lifted tab). The
+  lifted tab follows the pointer (shadow along each side, `--tab-lift-start/end`, an outline
+  in forced colours, z-index under the sticky +), the others slide out of its way
+  (`--duration-normal` transform, 0 under reduced motion), the row auto-scrolls within 40 px of
+  either end (to 14 px a frame), Esc or a lost pointer puts it back; a drop selects the
+  dragged tab. Measures are taken once at the lift; every move only sets transforms (perf
+  check `e2e/perf/tab-drag.spec.ts`: no task over 100 ms with a 200-page document and 12 tabs).
+  A tab passes a neighbour when its leading edge crosses the neighbour's centre, so held
+  against either end it always reaches that end. The hover card stays shut during a drag.
+  **Keys:** `tab.moveLeft/Right` (internal actions, new keymap scope `tabs`: focus on a file tab
+  or its ×) on Ctrl+Shift+Left/Right, and Ctrl+Shift+PageUp/PageDown first (Chrome keeps them
+  in a normal tab; the installed app gets them); listed in the shortcut sheet as "(on a file
+  tab)". **One move path** (`src/app/tabMove.ts`, `moveTab`, ready for M11-05's Move Left /
+  Right): the strip's FLIP animator slides moved tabs into place, keeps focus on the moved tab
+  (React's node move drops it) and scrolls it into view; a polite live region says "Moved to
+  position 2 of 4". **Middle-click** closes a tab (and never starts auto-scroll). Help "Open"
+  topic mentions dragging, the keys and middle-click. Tests: `tests/app/tabDrag.test.ts`,
+  `frame.test.tsx` (move, focus, announcement, middle-click), `keys.test.ts` (scope);
+  `e2e/tab-drag.spec.ts` (start, middle, end, Esc, wobble is a click, overflowed row
+  auto-scroll both ways, keys, middle-click, touch hold and swipe). Shots in project files
+  `m11-04/`.
 - **Session 79 — M11-03 file tabs: look, hover card and + button (D-50, ADR-028).** **Look:**
   the selected tab (tab and ×) is filled with `--color-brand` with a white semibold name and a
   2 px `--color-accent` line along its bottom (the line keeps 3:1 against the dark strip where
@@ -2792,8 +2816,10 @@ rel="noopener noreferrer">`; the commands `app.home` / `app.reportIssue` open th
 ## Next
 
 - **Agent (M11):** the 18 tasks in [docs/plan/M11.md](plan/M11.md) "Order of work", one thread
-  each. Done: M11-01, M11-10, M11-02 (spike S26), M11-03 (tabs: look, hover card, +). Next:
-  M11-04 (tabs: drag to reorder; the hover card must not show during a drag).
+  each. Done: M11-01, M11-10, M11-02 (spike S26), M11-03 (tabs: look, hover card, +), M11-04
+  (drag to reorder). Next: M11-05 (tab menus; Move Left / Right call `moveTab` in
+  `src/app/tabMove.ts`; on touch a long press on a tab lifts it after 300 ms, so the tab menu's
+  long-press must not fight the drag).
 - **Owner (M11-02):** open `m11-02/s26-interop.pdf` in Acrobat Reader and PDF-XChange: the
   eleven comments look as in the PNG beside it, Find finds their text in the flattened copy, and
   the font names show in the document's font list. This gates M11-07.

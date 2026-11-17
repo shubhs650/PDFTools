@@ -35,5 +35,7 @@ export function helpKeys(t: TFunction): Record<string, string> {
     hand: k('home.hand'),
     select: k('home.select'),
     editText: k('annotation.editText'),
+    tabLeft: k('tab.moveLeft'),
+    tabRight: k('tab.moveRight'),
   };
 }
