@@ -203,7 +203,7 @@ export async function recoverSnapshot(fp: string): Promise<string | undefined> {
     recordRecent: false,
     ...(handle ? { handle, pendingPrefix: { bytes: tail, at: original.byteLength } } : {}),
   };
-  const [id] = await openFiles([req]);
+  const [id] = await openFiles([req], 'recovered');
   dropOffer(fp);
   if (!id) return undefined;
   recoveredFrom.set(id, fp);

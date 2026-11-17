@@ -157,6 +157,48 @@ describe.each(SETS)('%s theme contrast (WCAG AA)', (_name, set) => {
   });
 });
 
+// M11-03 (ADR-028 D-50): the selected file tab is filled with the accent (--color-brand)
+// and has a 2 px --color-accent line along its bottom on the sunken strip. Its name and
+// × are --color-text-on-brand; the × hovers to --color-brand-hover. Other tabs hover to
+// --color-surface-raised and their × to --color-pressed. The hover card is a raised
+// surface with muted text and the "Unsaved changes" chip in the selected tint.
+describe.each(SETS)('%s file tabs (M11-03)', (_name, set) => {
+  const get = (t: string): string => {
+    const v = set.get(t);
+    if (!v) throw new Error(`missing ${t}`);
+    return v;
+  };
+  it('the selected tab name and × read on the fill (4.5:1), hovered too', () => {
+    expect(contrast(get('--color-text-on-brand'), get('--color-brand'))).toBeGreaterThanOrEqual(
+      4.5,
+    );
+    expect(
+      contrast(get('--color-text-on-brand'), get('--color-brand-hover')),
+    ).toBeGreaterThanOrEqual(4.5);
+  });
+  it('the selected tab stands out from the strip by 3:1: its line always does', () => {
+    expect(contrast(get('--color-accent'), get('--color-surface-sunken'))).toBeGreaterThanOrEqual(
+      3,
+    );
+  });
+  it('other tabs, the + and the hover card keep their text at 4.5:1', () => {
+    for (const bg of ['--color-surface-sunken', '--color-surface-raised', '--color-pressed'])
+      expect(contrast(get('--color-text'), get(bg)), bg).toBeGreaterThanOrEqual(4.5);
+    expect(
+      contrast(get('--color-text-muted'), get('--color-surface-raised')),
+    ).toBeGreaterThanOrEqual(4.5);
+    expect(contrast(get('--color-selected-text'), get('--color-selected'))).toBeGreaterThanOrEqual(
+      4.5,
+    );
+    for (const bg of ['--color-surface-sunken', '--color-surface-raised', '--color-pressed'])
+      expect(contrast(get('--color-icon'), get(bg)), bg).toBeGreaterThanOrEqual(3);
+  });
+  it('the unsaved dot shows on an unselected tab (3:1)', () => {
+    for (const bg of ['--color-surface-sunken', '--color-surface-raised'])
+      expect(contrast(get('--color-accent'), get(bg)), bg).toBeGreaterThanOrEqual(3);
+  });
+});
+
 describe('the page in dark (M7-11)', () => {
   it('keeps the light colours on the white page, outside forced-colors mode', () => {
     const at = tokens.indexOf('@media not (forced-colors: active)');

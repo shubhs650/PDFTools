@@ -86,13 +86,15 @@
         },
         {
           "steps": [
-            "Press <kbd>{{open}}</kbd>, or choose <b>Open</b> on the start screen or in the <b>File</b> tab.",
+            "Press <kbd>{{open}}</kbd>, choose <b>Open</b> on the start screen or in the <b>File</b> tab, or click <b>+</b> after the last document tab.",
             "Pick one or more PDF files and choose <b>Open</b>.",
             "Each file opens in its own tab in the top bar. Click a tab to switch documents, or close it with its <b>×</b>."
           ]
         },
         {
           "list": [
+            "Rest the pointer on a tab (or keep the keyboard focus on it) to see its full name, its first page, where it came from, its pages, size and last change, and whether it has unsaved changes. Browsers never tell a web app which folder a file is in, so the folder is not shown.",
+            "Double-click the empty part of the tab row to open a file, as in a web browser.",
             "You can also drag PDF files from your desktop or file manager and drop them on the window.",
             "<b>File</b> › <b>Recent</b> lists the files you opened on this device. Click one to open it again.",
             "A password-protected file asks for its password first. See [Protected and signed files](#protected-files)."
@@ -243,7 +245,7 @@
             "<b>View</b> › <b>Dark Theme</b> and <b>File</b> › <b>Settings</b> › <b>Appearance</b> do the same.",
             "Your choice is kept on this device only, and Help follows it.",
             "Form fields, sticky note windows and comment handles keep their light look, so they read well on the white page.",
-            "<b>File</b> › <b>Settings</b> › <b>Appearance</b> › <b>Accent colour</b> changes the blue of the File tab, buttons, selections and focus rings to Teal, Indigo or Graphite. Comment colours, yellow highlights and sticky notes never change.",
+            "<b>File</b> › <b>Settings</b> › <b>Appearance</b> › <b>Accent colour</b> changes the blue of the File tab, the selected document tab, buttons, selections and focus rings to Teal, Indigo or Graphite. Comment colours, yellow highlights and sticky notes never change.",
             "<b>View</b> › <b>Compact Density</b> (or <b>File</b> › <b>Settings</b> › <b>Appearance</b> › <b>Density</b>) fits more rows in panes, lists, menus and dialogs and tightens the ribbon. Nothing moves, and every button stays at least 24 pixels.",
             "<b>File</b> › <b>Settings</b> › <b>Clear all local data</b> goes back to the light theme, the blue accent and the comfortable density."
           ]

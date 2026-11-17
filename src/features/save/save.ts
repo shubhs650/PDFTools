@@ -11,7 +11,7 @@
 // leaves the file untouched.
 import { createStore, useStore } from 'zustand';
 import { recordError } from '../../app/diagnostics';
-import { documentStore } from '../../app/store/documentStore';
+import { documentStore, type DocumentSource } from '../../app/store/documentStore';
 import { isAbortError, RpcError } from '../../engine/errors';
 import { finishSave, prepareSave, SaveVerifyError, type PreparedSave } from '../../engine/saveFlow';
 import {
@@ -226,6 +226,7 @@ export async function save(docId: string, skipGrowthCheck = false): Promise<Save
         await appendToHandle(handle, p.baseLength, new Uint8Array(p.tail), signal);
       }
       src.written = true;
+      await noteWritten(docId, handle);
     },
     src.pendingPrefix !== undefined,
   );
@@ -246,13 +247,37 @@ async function pickTarget(name: string): Promise<FileSystemFileHandle | undefine
   }
 }
 
+/**
+ * The file's size and time after a write, for the tab's hover card (M11-03): metadata
+ * only (no bytes are read). Best effort: a failure leaves the facts as they were.
+ */
+async function noteWritten(
+  docId: string,
+  handle: FileSystemFileHandle,
+  source?: DocumentSource,
+): Promise<void> {
+  try {
+    const file = await handle.getFile();
+    documentStore.getState().setFileFacts(docId, {
+      ...(source ? { source } : {}),
+      fileSize: file.size,
+      modified: file.lastModified,
+    });
+  } catch {
+    if (source) documentStore.getState().setFileFacts(docId, { source });
+  }
+}
+
 /** The document now lives in `handle` (Save As, optimized copy). */
-function adoptHandle(docId: string, handle: FileSystemFileHandle): void {
+async function adoptHandle(docId: string, handle: FileSystemFileHandle): Promise<void> {
   const src = sources.get(docId);
   if (!src) return;
+  // Save Optimized over the document's own file keeps where it came from.
+  const moved = src.handle !== handle;
   src.handle = handle;
   src.written = true;
   documentStore.getState().rename(docId, handle.name);
+  await noteWritten(docId, handle, moved ? 'saved' : undefined);
 }
 
 /** Save As (§4.2): a full incremental copy to a new file, which becomes the document's file. */
@@ -276,7 +301,7 @@ export async function saveAs(docId: string): Promise<SavePhase> {
     docId,
     async (p, signal) => {
       await writeToHandle(handle, await wholeFile(docId, p?.tail), signal, reportProgress(docId));
-      adoptHandle(docId, handle);
+      await adoptHandle(docId, handle);
     },
     true,
   );
@@ -318,7 +343,7 @@ export async function saveOptimized(docId: string, target: OptimizeTarget): Prom
     await rpc.call('commitSave', { docId, tailLength: bytes.byteLength, rewrite: true }).promise;
     committed.set(docId, []);
     src.size = bytes.byteLength;
-    adoptHandle(docId, handle);
+    await adoptHandle(docId, handle);
     growth.forget(docId);
     const read = async () => (await originalBlob(docId)).arrayBuffer();
     await workClient()

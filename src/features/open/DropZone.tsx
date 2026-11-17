@@ -40,7 +40,7 @@ export function DropZone() {
       setOver(false);
       if (!e.dataTransfer || !hasFiles(e.dataTransfer)) return;
       e.preventDefault(); // never let the browser navigate to the file
-      void collectDropped(e.dataTransfer).then(openFiles);
+      void collectDropped(e.dataTransfer).then((files) => openFiles(files, 'dropped'));
     };
     window.addEventListener('dragenter', enter);
     window.addEventListener('dragover', overFn);
