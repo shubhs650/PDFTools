@@ -25,6 +25,7 @@ import { advance, openStore, startJob } from './openStore';
 import { forgetSaveState } from '../save/save';
 import { findDuplicate, originalBlob, sources } from './sources';
 import { rememberClosed } from './closedTabs';
+import { forgetView, readLastView, trackView } from '../view/lastView';
 
 const newDocId = (): string => `doc-${crypto.randomUUID()}`;
 
@@ -80,6 +81,8 @@ async function openOne(
   let docId: string | undefined;
   try {
     const fingerprint = await storageClient().call('fingerprint', { file }).promise;
+    // The file's last view (D-53), read while it opens; a recovered document has its own.
+    const lastView = recovered ? Promise.resolve(null) : readLastView(fingerprint);
     const dup = await findDuplicate({ ...(handle ? { handle } : {}), fingerprint });
     if (dup) {
       advance(job, { type: 'duplicate', docId: dup });
@@ -136,6 +139,7 @@ async function openOne(
       size: file.size,
       ...(recovered && req.pendingPrefix ? { pendingPrefix: req.pendingPrefix } : {}),
     });
+    trackView(id, fingerprint, await lastView, info.pageCount);
     documentStore.getState().open({
       id,
       name: file.name,
@@ -206,6 +210,7 @@ export async function closeDocument(docId: string): Promise<void> {
       source: doc.meta.source,
       index: order.indexOf(docId),
     });
+  forgetView(docId); // writes its last view first (D-53)
   documentStore.getState().close(docId);
   forgetSaveState(docId);
   sources.delete(docId);

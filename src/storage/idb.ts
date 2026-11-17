@@ -1,7 +1,8 @@
 // IndexedDB: small app data only (ARCHITECTURE §10.3, D-04). Settings, the
 // recent-files list (file handles + display metadata), the reviewer profile,
 // status schemes, table templates, the comment tools' default styles and the
-// user's own comment styles (style palette).
+// user's own comment styles (style palette), saved visual signatures and each
+// file's last view (by fingerprint).
 // Never document bytes:
 // those live in the user's file and, for recovery, in OPFS (§4.3).
 //
@@ -59,11 +60,19 @@ export const MIGRATIONS: readonly Migration[] = [
   (db) => {
     db.createObjectStore('visualSignatures');
   },
+  // v8 (M11-08·O3, D-53): each file's last view, document fingerprint → record
+  // (validate it: lastViewModel.ts), oldest dropped past MAX_LAST_VIEWS by `savedAt`.
+  (db) => {
+    db.createObjectStore('lastViews').createIndex('savedAt', 'savedAt');
+  },
 ];
 
 const PROFILE_KEY = 'reviewer';
 
 export const MAX_RECENT = 20;
+
+/** Files whose last view is kept (D-53); the least recently viewed go first. */
+export const MAX_LAST_VIEWS = 500;
 
 function request<T>(req: IDBRequest<T>): Promise<T> {
   return new Promise((resolve, reject) => {
@@ -242,6 +251,32 @@ export class AppDb {
   async deleteSignature(id: string): Promise<void> {
     const tx = this.db.transaction('visualSignatures', 'readwrite');
     tx.objectStore('visualSignatures').delete(id);
+    await done(tx);
+  }
+
+  /** A file's last view by document fingerprint, as stored (validate it: lastViewModel.ts). */
+  async getLastView(fp: string): Promise<unknown> {
+    const tx = this.db.transaction('lastViews', 'readonly');
+    return request(tx.objectStore('lastViews').get(fp));
+  }
+
+  /** Stores a file's last view, keeping at most `MAX_LAST_VIEWS` (oldest `savedAt` dropped). */
+  async putLastView(fp: string, value: { savedAt: number }, max = MAX_LAST_VIEWS): Promise<void> {
+    const tx = this.db.transaction('lastViews', 'readwrite');
+    const store = tx.objectStore('lastViews');
+    store.put(value, fp);
+    const count = await request(store.count());
+    if (count > max) {
+      let extra = count - max;
+      const cursor = store.index('savedAt').openCursor();
+      cursor.onsuccess = () => {
+        const c = cursor.result;
+        if (!c || extra <= 0) return;
+        c.delete();
+        extra--;
+        c.continue();
+      };
+    }
     await done(tx);
   }
 

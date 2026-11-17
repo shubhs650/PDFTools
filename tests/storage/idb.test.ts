@@ -2,6 +2,7 @@ import { IDBFactory } from 'fake-indexeddb';
 import { describe, expect, it } from 'vitest';
 import {
   AppDb,
+  MAX_LAST_VIEWS,
   MAX_RECENT,
   MIGRATIONS,
   type Migration,
@@ -21,6 +22,7 @@ describe('AppDb (M1-12)', () => {
     expect(db.db.version).toBe(MIGRATIONS.length);
     expect([...db.db.objectStoreNames].sort()).toEqual([
       'commentStyles',
+      'lastViews',
       'profile',
       'recent',
       'schemes',
@@ -206,7 +208,7 @@ describe('AppDb v7 (M6-13)', () => {
     const styles = { v: 1, styles: [] };
     await v6.putCommentStyles('square', styles);
     v6.close();
-    const db = await AppDb.open({ factory });
+    const db = await AppDb.open({ factory, migrations: MIGRATIONS.slice(0, 7) });
     expect(db.db.version).toBe(7);
     expect(await db.listCommentStyles()).toEqual([['square', styles]]);
     expect(await db.listSignatures()).toEqual([]);
@@ -217,6 +219,49 @@ describe('AppDb v7 (M6-13)', () => {
     expect(await db.listSignatures()).toEqual([rec('b')]);
     await db.clearAll();
     expect(await db.listSignatures()).toEqual([]);
+    db.close();
+  });
+});
+
+describe('AppDb v8 (M11-08·O3)', () => {
+  const view = (savedAt: number) => ({
+    v: 1,
+    page: 3,
+    zoom: 1.5,
+    mode: 'single',
+    rotation: 90,
+    savedAt,
+  });
+
+  it("stores each file's last view by fingerprint, keeping the signatures of v7", async () => {
+    const factory = new IDBFactory();
+    const v7 = await AppDb.open({ factory, migrations: MIGRATIONS.slice(0, 7) });
+    await v7.putSignature('a', { v: 1 });
+    v7.close();
+    const db = await AppDb.open({ factory });
+    expect(db.db.version).toBe(8);
+    expect(await db.listSignatures()).toEqual([{ v: 1 }]);
+    expect(await db.getLastView('fp-a')).toBeUndefined();
+    await db.putLastView('fp-a', view(1));
+    await db.putLastView('fp-a', view(2));
+    expect(await db.getLastView('fp-a')).toEqual(view(2));
+    await db.clearAll();
+    expect(await db.getLastView('fp-a')).toBeUndefined();
+    db.close();
+  });
+
+  it('keeps the most recently viewed files only, dropping the oldest', async () => {
+    const db = await AppDb.open({ factory: new IDBFactory() });
+    expect(MAX_LAST_VIEWS).toBe(500);
+    for (const [fp, at] of [
+      ['b', 20],
+      ['a', 10],
+      ['c', 30],
+    ] as const)
+      await db.putLastView(fp, view(at), 2);
+    expect(await db.getLastView('a')).toBeUndefined();
+    expect(await db.getLastView('b')).toEqual(view(20));
+    expect(await db.getLastView('c')).toEqual(view(30));
     db.close();
   });
 });

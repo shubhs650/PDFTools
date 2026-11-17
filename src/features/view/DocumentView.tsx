@@ -41,6 +41,7 @@ import { notePointerDown } from './pagePoint';
 import { capability, useHost } from './host';
 import { HAND_MODE, PAGE_GAP, POINTER_MODE, SELECT_COMMENTS_MODE } from './plugins';
 import { PreviewLayer } from './PreviewLayer';
+import { restorePending, useRestoringView } from './lastView';
 import { setViewFocus } from './tileScheduler';
 import {
   clampToRange,
@@ -218,6 +219,11 @@ export function DocumentView({ documentId }: { documentId: string }) {
   const host = useRef<HTMLDivElement>(null);
   const [panning, setPanning] = useState(false);
   const pan = useRef<{ x: number; y: number; id: number } | null>(null);
+  // The file's last view (D-53) is put in place once its pages are laid out.
+  const restoring = useRestoringView(documentId);
+  useEffect(() => {
+    if (registry) void restorePending(documentId);
+  }, [registry, documentId]);
 
   // Page and zoom state → the document store (status bar, commands, recovery).
   useEffect(() => {
@@ -451,6 +457,7 @@ export function DocumentView({ documentId }: { documentId: string }) {
         data-tool={tool}
         data-panning={panning || undefined}
         data-mode={mode}
+        data-restoring={restoring || undefined}
         // The page last clicked: Ctrl+V pastes there while it is in view (M6-02).
         onPointerDownCapture={(e) => {
           notePointerDown(documentId, e.target);
@@ -464,6 +471,7 @@ export function DocumentView({ documentId }: { documentId: string }) {
           data-doc-id={documentId}
           role={REGION}
           aria-label={name}
+          aria-busy={restoring || undefined}
           tabIndex={0}
           onKeyDown={onKeyDown}
           onPointerDown={onPointerDown}

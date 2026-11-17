@@ -802,6 +802,7 @@
       "toolDefaults": "Comment tool defaults you set (colours, line widths, font sizes); the shipped defaults are used until you change one",
       "commentStyles": "Comment styles you saved in the style palette (names, colours, line widths, font sizes)",
       "visualSignatures": "Visual signatures and initials you saved in Sign Document (drawn strokes or pictures)",
+      "lastViews": "Where you left each file: its page, zoom, layout and view rotation, kept under a code computed from the file (no file names or content), for the last 500 files",
       "theme": "Light or dark theme",
       "accent": "Accent colour (Blue, Teal, Indigo or Graphite)",
       "density": "Density (Comfortable or Compact)",

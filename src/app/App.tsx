@@ -8,6 +8,7 @@ import { startBackgroundPrecache, startOffline } from '../features/offline/offli
 import { OfflineStatus, UpdateWaitDialog } from '../features/offline/OfflineStatus';
 import { ToolHint } from '../features/annotate/tools/ToolHint';
 import { installRecovery } from '../features/recovery/recovery';
+import { installLastViews } from '../features/view/lastView';
 import { registerFormCommands } from '../features/forms/commands';
 import { registerPrintCommands } from '../features/print/commands';
 import { registerExtractCommands } from '../features/extract/commands';
@@ -149,6 +150,8 @@ export function App() {
   useEffect(() => registerAnnotateCommands(), []);
   useEffect(() => registerFindCommands(), []);
   useEffect(() => installRecovery(), []);
+  // Each file's last view (M11-08·O3, D-53).
+  useEffect(() => installLastViews(), []);
   // What's new (M10-08·O6): once after an update, a banner; always in File › About.
   useEffect(() => {
     startWhatsNew();

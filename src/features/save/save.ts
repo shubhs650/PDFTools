@@ -25,6 +25,7 @@ import {
 } from '../../storage/fileAccess';
 import { originalBlob, sources } from '../open/sources';
 import { renderEngine, workClient } from '../view/host';
+import { fileWritten } from '../view/lastView';
 import { saveDeps } from './deps';
 import { GrowthMemory, shouldOfferOptimize } from './growth';
 import {
@@ -258,6 +259,7 @@ async function noteWritten(
 ): Promise<void> {
   try {
     const file = await handle.getFile();
+    void fileWritten(docId, file); // its last view follows the file's new fingerprint (D-53)
     documentStore.getState().setFileFacts(docId, {
       ...(source ? { source } : {}),
       fileSize: file.size,

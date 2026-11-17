@@ -224,6 +224,12 @@
           "p": "<b>Home</b> › <b>Rotate View</b> and <b>View</b> › <b>Rotate View</b> turn the pages on screen only; the file does not change. To turn pages in the file itself, see [Organizing pages](#organize-pages)."
         },
         {
+          "h": "Opening a file where you left it"
+        },
+        {
+          "p": "When you open a file again, {{app}} shows it at the page, zoom, view mode and view rotation you left it at, even after you saved changes to it. This is kept on this device only, for the last 500 files; <b>File</b> › <b>Settings</b> › <b>Clear all local data</b> forgets it."
+        },
+        {
           "h": "Full screen"
         },
         {

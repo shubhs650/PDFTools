@@ -1,6 +1,6 @@
 # Triya PDF — Progress
 
-_Last updated: 2026-11-17 (session 84: M11-08·O1 selected-text menu)_
+_Last updated: 2026-11-17 (session 85: M11-08·O3 remember each file's last view)_
 
 **Current milestone:** M11 — file tabs, OCR text selection, a font library and comments in every
 pointer mode: plan [docs/plan/M11.md](plan/M11.md) and [ADR-028](adr/028-m11-tabs-fonts-select.md)
@@ -20,6 +20,27 @@ interop is in the M6 pack (CHECKLIST §M6 R1–R4). Rev 0 (M0–M4) is complete 
 
 ## Done
 
+- **Session 85 — M11-08·O3 remember each file's last view (D-53, ADR-028, plan O3).** A file
+  opens again at the page, zoom (factor or fit mode), view mode and view rotation it was left at.
+  **Kept** in IndexedDB `pdftools › lastViews` (schema v8), keyed by the document fingerprint
+  (§4.3: size, trailer `/ID`, first and last 64 KB; never the name or content), at most 500 files
+  (the least recently viewed dropped by `savedAt`). **Written** about a second after the view last
+  changes (`installLastViews` follows the document store; a fit mode's resolved scale alone does
+  not count), at once when the tab closes (`forgetView` in `closeDocument`) and on `pagehide` /
+  hidden. **A save moves it**: after Ctrl+S, Save As or Save Optimized writes the file,
+  `fileWritten` fingerprints the file on disk again (storage worker) and keeps the view under the
+  new key, so an edited and saved file still opens where it was left. **Restored** when the tab is
+  first shown (a file opened in a background tab waits for its tab): mode, rotation
+  (`setViewRotation`, new in the controller), zoom, then the page, re-asserted until it holds; the
+  pages stay transparent (`data-restoring`, `aria-busy` on the view) until then, so page 1 does
+  not flash first; a page past the end opens at the last page; a default view needs nothing;
+  recovered documents keep their own snapshot view. Privacy lists it; Clear all local data deletes
+  it with the database. Help: Zoom and pages, "Opening a file where you left it". Pure model
+  `src/features/view/lastViewModel.ts` (record, validation, clamping); side `lastView.ts`. Tests:
+  `tests/view/lastViewModel.test.ts`, `tests/storage/idb.test.ts` (v8, pruning);
+  `e2e/last-view.spec.ts` (close and reopen under another name, another file opens as usual, back
+  to default, reload, background tab, edited and saved file, Privacy and Clear all local data).
+  Shots in project files `m11-08-o3/`. Next: M11-08·O4 Zoom to Area.
 - **Session 84 — M11-08·O1 selected-text menu (ADR-028, plan O1).** A right click on selected
   text (or Shift+F10 / the Menu key while text is selected) opens a third document menu,
   **Selected Text**: Copy, Highlight, Underline, Strikeout, Squiggly, Mark for Redaction and
@@ -2944,7 +2965,8 @@ rel="noopener noreferrer">`; the commands `app.home` / `app.reportIssue` open th
 - **Agent (M11):** the 18 tasks in [docs/plan/M11.md](plan/M11.md) "Order of work", one thread
   each. Done: M11-01, M11-10, M11-02 (spike S26), M11-03 (tabs: look, hover card, +), M11-04
   (drag to reorder), M11-05 (tab menus), M11-06 (comments in every pointer mode), M11-07 (font
-  library), M11-08·O1 (selected-text menu). Next: M11-08·O3 (remember each file's last view).
+  library), M11-08·O1 (selected-text menu), M11-08·O3 (each file's last view). Next: M11-08·O4
+  (Zoom to Area).
 - **Owner (M11-02):** open `m11-02/s26-interop.pdf` in Acrobat Reader and PDF-XChange: the
   eleven comments look as in the PNG beside it, Find finds their text in the flattened copy, and
   the font names show in the document's font list. This gates M11-07.
