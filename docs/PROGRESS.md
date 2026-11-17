@@ -1,6 +1,6 @@
 # Triya PDF — Progress
 
-_Last updated: 2026-11-17 (session 81: M11-05 file tabs: right-click menus)_
+_Last updated: 2026-11-17 (session 82: M11-06 comments in every pointer mode)_
 
 **Current milestone:** M11 — file tabs, OCR text selection, a font library and comments in every
 pointer mode: plan [docs/plan/M11.md](plan/M11.md) and [ADR-028](adr/028-m11-tabs-fonts-select.md)
@@ -20,6 +20,36 @@ interop is in the M6 pack (CHECKLIST §M6 R1–R4). Rev 0 (M0–M4) is complete 
 
 ## Done
 
+- **Session 82 — M11-06 comments in every pointer mode (D-51, ADR-028).** **Lock rules**
+  (pure `src/features/annotate/pointerModes.ts`, `lockModeFor`, `picksComments`): Select,
+  Select Comments, **Hand and Select Text** reach every comment but form fields (only Select
+  Fields picks those up); field and text tools as before; any other tool none. This replaces
+  the M3-05 rule in `DocumentView.tsx`. **Press and drag** (`pressComment`, was
+  `pressTextComment`): a drag that starts on an unselected comment moves it, for every kind but
+  text markups and in every pointer mode (until now only text comments did, M7-03 B5); locked
+  comments and documents without annotate permission select but do not move. **Hand:** the
+  viewport's pan skips presses on comments, their frames, note windows, form fields and links
+  (`OWN_PRESS`), so a drag elsewhere still pans; double-click edits a text comment or opens a
+  sticky note as in Select; the hand cursor now shows over the page too (the interaction
+  manager's inline `auto` hid it). **Select Text and Hand on text markups**
+  (`markupPointer.ts`, CSS `[data-markup]`): the markup lets presses through, so a drag selects
+  the text under a highlight (Select Text, owner's Q6) or pans (Hand); a click without a drag
+  selects the markup by its line boxes (`markupAt`); a right press selects it first, so the
+  comment menu opens. **A click on empty page space deselects** the comments in every pointer
+  mode (`isPageBackground` in commentSelection.ts): the plugin only did so for a press on its
+  page element, which the tiles always cover, so it never happened before. **Cursors:** the
+  move cursor over an unselected comment that would move (`data-movable`), the plugin's own
+  over a locked one. **Tab** walks the comments in all pointer modes; redaction marks are picked
+  in all of them. **Page menu:** Select first, then Hand, Select Text, Select Comments, as one
+  radio group (`menuitemradio`; `radio` on context menu entries, `menuRuns`), the current tool
+  checked with the selected tint and a bold label (outline in forced colours). Help "Selecting
+  comments" updated. Tests: `tests/annotate/pointerModes.test.ts`; `e2e/pointer-modes.spec.ts`
+  (Select, Hand and Select Text × text box, highlight, ink, sticky note, image stamp: click
+  selects, drag moves, click on the page deselects, double-click edits; highlight drag selects
+  text or pans; Hand pans elsewhere, opens a note, Tab; locked comment and form fields; links;
+  page menu and comment menu on right-click); context-menus.spec expects the radio items. In
+  the container, form-fields "Form tab: draw the five field types…" fails about half the time on
+  `main` too (tooltip lost after reopen, timing). Shots in project files `m11-06/`.
 - **Session 81 — M11-05 file tabs: right-click menus (D-50, ADR-028).** **Tab menu**
   (pure model `src/app/tabMenu.ts`): Save, Save As · Close, Close Other Tabs, Close Tabs to the
   Right, Close All Tabs · Reopen Closed Tab · Move Left, Move Right, Sort Tabs by Name · Copy File
@@ -2853,7 +2883,8 @@ rel="noopener noreferrer">`; the commands `app.home` / `app.reportIssue` open th
 
 - **Agent (M11):** the 18 tasks in [docs/plan/M11.md](plan/M11.md) "Order of work", one thread
   each. Done: M11-01, M11-10, M11-02 (spike S26), M11-03 (tabs: look, hover card, +), M11-04
-  (drag to reorder), M11-05 (tab menus). Next: M11-06 (comments in every pointer mode).
+  (drag to reorder), M11-05 (tab menus), M11-06 (comments in every pointer mode). Next: M11-07
+  (font library).
 - **Owner (M11-02):** open `m11-02/s26-interop.pdf` in Acrobat Reader and PDF-XChange: the
   eleven comments look as in the PNG beside it, Find finds their text in the flattened copy, and
   the font names show in the document's font list. This gates M11-07.

@@ -15,6 +15,7 @@ import { installHistoryJoin } from '../annotate/historyJoin';
 import { installTextEdit } from '../annotate/textEdit';
 import { installNoteDoubleClick } from '../annotate/notes/openNote';
 import { installTextPointer } from '../annotate/textPointer';
+import { installMarkupPointer } from '../annotate/markupPointer';
 import { installCommentSelection } from '../annotate/commentSelection';
 import { installSelectAfterDraw } from '../annotate/selectAfterDraw';
 import { installCommitGuard } from '../annotate/commitGuard';
@@ -57,6 +58,8 @@ const onInitialized = (registry: Parameters<typeof setRegistry>[0]): Promise<voi
     if (!textEditInstalled) {
       installTextEdit();
       installTextPointer();
+      // Select Text on a highlight: a drag selects text, a click the markup (M11-06).
+      installMarkupPointer();
       // A double-click on a sticky note opens its window (M7-06).
       installNoteDoubleClick();
     }

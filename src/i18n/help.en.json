@@ -557,7 +557,8 @@
       "body": [
         {
           "list": [
-            "Click a comment with <b>Select</b> (<kbd>{{select}}</kbd>) or <b>Select Comments</b> to select it.",
+            "Click a comment to select it, with any pointer tool: <b>Select</b> (<kbd>{{select}}</kbd>), <b>Hand</b> (<kbd>{{hand}}</kbd>), <b>Select Text</b> or <b>Select Comments</b>. Drag a comment to move it, even if it was not selected.",
+            "With <b>Hand</b>, drag anywhere else to move the page. With <b>Select Text</b>, a drag across a highlight selects its text, and a click selects the highlight.",
             "Drag a rectangle on the page to select every comment it touches. With <b>Select</b>, start the drag beside the text.",
             "<kbd>Shift</kbd>+click or <kbd>{{mod}}</kbd>+click adds a comment to the selection or takes it out.",
             "<kbd>{{selectAll}}</kbd> with <b>Select Comments</b> selects every comment on the page."

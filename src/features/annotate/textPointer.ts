@@ -66,11 +66,12 @@ function selectedIds(docId: string): string[] {
 }
 
 /**
- * The press on a text comment's body that is not selected yet (AnnotationLayer,
+ * The press on a comment's body that is not selected yet (AnnotationLayer,
  * capture phase: the plugin's own handler selects it next). Moves it if the
- * pointer travels while pressed.
+ * pointer travels while pressed: text comments since M7-03 (B5), every comment
+ * but text markups, in every pointer mode, since M11-06 (D-51).
  */
-export function pressTextComment(
+export function pressComment(
   e: ReactPointerEvent<HTMLElement>,
   obj: PdfAnnotationObject,
   geometry: PageGeometry,
@@ -78,8 +79,8 @@ export function pressTextComment(
   if (e.button !== 0 || e.shiftKey || e.ctrlKey || e.metaKey || e.altKey) return;
   const docId = e.currentTarget.closest<HTMLElement>('[data-doc-id]')?.dataset['docId'];
   if (!docId) return;
-  // The hidden editor would take the focus (and the keys, B6) and the
-  // drag would select the page's text: the view keeps the focus instead.
+  // A text comment's hidden editor would take the focus (and the keys, B6)
+  // and the drag would select the page's text: the view keeps the focus instead.
   e.preventDefault();
   focusDocumentView(docId);
   const start = { x: e.clientX, y: e.clientY };

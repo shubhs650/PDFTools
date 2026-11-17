@@ -60,6 +60,7 @@ import {
 } from './transfer/copyPaste';
 import { flattenBlocked, transferBlocked } from '../pages/pageOps';
 import { flattenSelected, flattenSelectedBlocked, openFlatten } from './flatten/flatten';
+import { picksComments } from './pointerModes';
 
 const activeId = (): string | null => selectActive(documentStore.getState())?.meta.id ?? null;
 
@@ -155,8 +156,8 @@ export function registerAnnotateCommands(): () => void {
     disabledReason: () => {
       const id = activeId();
       if (!id) return msg('ribbon.needsDocument');
-      const t = appStore.getState().tool;
-      if (t !== 'select' && t !== 'selectObjects') return msg('annotate.noneSelected');
+      // Every pointer mode reaches the comments (M11-06, D-51).
+      if (!picksComments(appStore.getState().tool)) return msg('annotate.noneSelected');
       const page = documentStore.getState().docs[id]?.view.page ?? 0;
       const current = selectedOf(id)[0]?.object.id ?? null;
       // Past the last (or first) annotation, Tab leaves the document as usual (rule 12).

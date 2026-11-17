@@ -273,23 +273,25 @@ test('the page menu: tools, zoom and rotate run their commands; form fields keep
 
   await clickAt(page, 0, 300, 400, true);
   await expect(menu(page)).toHaveAccessibleName('Page');
-  await expect(menu(page).getByRole('menuitemcheckbox')).toHaveText([
+  // The pointer tools, the current one checked (M11-06: Select first, radio items).
+  await expect(menu(page).getByRole('menuitemradio')).toHaveText([
+    /^Select\s*V$/,
     /^Hand\s*H$/,
     'Select Text',
     'Select Comments',
   ]);
-  await expect(menu(page).getByRole('menuitemcheckbox', { name: 'Hand' })).toHaveAttribute(
+  await expect(menu(page).getByRole('menuitemradio', { name: 'Hand' })).toHaveAttribute(
     'aria-checked',
     'false',
   );
-  await menu(page).getByRole('menuitemcheckbox', { name: 'Hand' }).click();
+  await menu(page).getByRole('menuitemradio', { name: 'Hand' }).click();
   await expect(page.getByRole('button', { name: 'Hand' }).first()).toHaveAttribute(
     'aria-pressed',
     'true',
   );
 
   await clickAt(page, 0, 300, 400, true);
-  await expect(menu(page).getByRole('menuitemcheckbox', { name: 'Hand' })).toHaveAttribute(
+  await expect(menu(page).getByRole('menuitemradio', { name: 'Hand' })).toHaveAttribute(
     'aria-checked',
     'true',
   );

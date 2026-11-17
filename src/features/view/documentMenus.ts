@@ -24,6 +24,8 @@ const STATUSES = [
 
 const sep = (key: string): ContextMenuEntry => ({ kind: 'separator', key });
 const cmd = (id: string): ContextMenuEntry => ({ kind: 'command', id });
+/** A pointer tool: one of the page menu's radio group (M11-06). */
+const tool = (id: string): ContextMenuEntry => ({ kind: 'command', id, radio: 'tool' });
 
 /** A comment on the page (and its card). */
 export function commentMenu(docId: string): ContextMenuEntry[] {
@@ -63,9 +65,11 @@ export const PAGE_MENU: readonly ContextMenuEntry[] = [
   cmd('comment.pasteToOriginal'),
   cmd('edit.selectAll'),
   sep('tools'),
-  cmd('home.hand'),
-  cmd('home.selectText'),
-  cmd('home.selectAnnotations'),
+  // The pointer tools, the current one checked (M11-06, D-51): Select first.
+  tool('home.select'),
+  tool('home.hand'),
+  tool('home.selectText'),
+  tool('home.selectAnnotations'),
   sep('zoom'),
   cmd('view.zoomIn'),
   cmd('view.zoomOut'),
