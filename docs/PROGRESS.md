@@ -35,15 +35,22 @@ interop is in the M6 pack (CHECKLIST §M6 R1–R4). Rev 0 (M0–M4) is complete 
   left pane", "Hide/Show Properties pane", with `aria-expanded` and `aria-controls` (only while
   the pane exists); focus stays on the arrow, and the Properties pane's × now hands focus to it.
   The Properties pane's landmark (`aside` "Properties pane", `.properties-dock`) is always there
-  and holds the strip, then the pane (`section` "Properties", `#properties-pane`). **Deviation
-  from the plan:** the arrow is 12 px wide, not 24, to keep PDF-XChange's thin strip; it meets
-  WCAG 2.5.8 through the equivalent-control exception (the ribbon and rail buttons), and axe
-  (which runs the target-size rule) finds no violations. **Tests:** unit `tests/app/paneSize.test.ts`
+  and holds the strip, then the pane (`section` "Properties", `#properties-pane`). **Arrow width:** ADR-028 said 24 × 48 px; the owner chose 12 px
+  (tried 24 px in the build and found it too wide), recorded as an amendment note in ADR-028.
+  It meets WCAG 2.5.8 through the equivalent-control exception (the ribbon and rail buttons),
+  and axe finds no violations. **Reading place:** a fit-width view re-zooms when a pane changes
+  its width, so the same scroll offset landed on another page. `keepPlace()` in
+  `src/features/view/controller.ts`, called from `followPanes()` (`src/app/panePlace.ts`, an
+  app-store subscription), keeps the point at the top of the view through the change (a drag
+  keeps the place it started from; a jump such as Go to Page or a search hit cancels it).
+  **Tests:** unit `tests/app/paneSize.test.ts`
   and the store's Properties width; e2e `e2e/pane-edges.spec.ts` (keys and pointer within
   limits, both arrows with focus, ribbon and rail in step, last pane reopened, the document
-  stays on page 25 while the panes hide, show and resize, 1280 px with both panes at 480 px,
+  keeps page 25 at the top while the panes hide, show and resize, by drag too, 1280 px with both panes at 480 px,
   axe light and dark with both panes open and both hidden). Unscoped `'Properties Pane'`
   button locators in e2e now use `exact: true` ("Show Properties pane" contains the text).
+  An e2e text-comment drag test now starts a quarter into the first glyph, not on its edge
+  (the strip moved it by a sub-pixel; CI saw "eX").
   **Help:** side-panes text and the Properties paragraph mention the arrows and the
   Properties splitter; side-panes-1 has a third callout; Help screenshots regenerated (the
   arrows show in 31 of them). Screenshots: shared folder `m11-10/before` and `after`.

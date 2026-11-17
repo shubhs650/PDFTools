@@ -1,4 +1,5 @@
 import { lazy, Suspense, useEffect, useState } from 'react';
+import { followPanes } from './panePlace';
 import { CloseDocumentDialog, OpenErrorDialog } from '../features/open/dialogs';
 import { DocumentArea } from '../features/open/DocumentArea';
 import { DropZone } from '../features/open/DropZone';
@@ -101,6 +102,8 @@ export function App() {
   // Open, and at which section (Help → Clear All Local Data opens Settings, M1-26).
   const [backstage, setBackstage] = useState<{ section?: string } | null>(null);
   useEffect(() => registerBuiltinCommands(), []);
+  // A side pane shown, hidden or resized keeps the document's place (M11-10).
+  useEffect(() => followPanes(), []);
   useEffect(
     () =>
       registerCommand('help.clearData', {

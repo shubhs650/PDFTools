@@ -112,6 +112,7 @@ async function fitVisible(a: Active): Promise<void> {
 export function goToPage(index: number): void {
   const a = active();
   if (!a) return;
+  stopKeepingPlace(); // a jump wins over a pane's kept place
   // The store first: paged modes hold scrolling to the store's page.
   documentStore.getState().setView(a.docId, { page: index });
   a.scroll.scrollToPage({ pageNumber: index + 1, behavior: 'instant' });
@@ -124,6 +125,7 @@ export function goToPage(index: number): void {
 export function goToPoint(index: number, x: number, y: number, alignY = 30): void {
   const a = active();
   if (!a) return;
+  stopKeepingPlace();
   documentStore.getState().setView(a.docId, { page: index });
   a.scroll.scrollToPage({
     pageNumber: index + 1,
@@ -259,4 +261,79 @@ export function rotate(dir: 1 | -1): void {
   documentStore.getState().setView(a.docId, { rotation });
   a.rotate.forDocument(a.docId).setRotation(toQuarterTurns(rotation));
   keepPage(a, view.page);
+}
+
+/** A reading place: the point of a page at the top left of the view. */
+interface Place {
+  docId: string;
+  page: number;
+  x: number;
+  y: number;
+}
+
+/** Ends a kept place at once: a jump (a page, a search hit, a link) goes where it was sent. */
+function stopKeepingPlace(): void {
+  if (!keeping) return;
+  window.clearTimeout(keeping.timer);
+  keeping.off();
+  keeping = null;
+}
+
+/** How long a width change may take to reach the layout (the pane's re-render, the fit zoom). */
+const KEEP_PLACE_MS = 400;
+let keeping: { place: Place; until: number; off: () => void; timer: number } | null = null;
+
+/**
+ * Keeps the reading place while the view changes width: a side pane shown, hidden or
+ * resized (M11-10, D-56). Call it before the change. A fit-width view re-zooms when its
+ * width changes and its pages change height, so without this the same scroll offset lands
+ * on another page. During a drag, the place from the start of the drag is kept.
+ */
+export function keepPlace(): void {
+  const now = performance.now();
+  if (keeping && now < keeping.until) {
+    keeping.until = now + KEEP_PLACE_MS;
+    return;
+  }
+  const a = active();
+  if (!a) return;
+  const top = [...a.scroll.getMetrics().pageVisibilityMetrics].sort(
+    (p, q) => p.viewportY - q.viewportY,
+  )[0];
+  if (!top) return;
+  const place: Place = {
+    docId: a.docId,
+    page: top.pageNumber,
+    x: top.original.pageX,
+    y: top.original.pageY,
+  };
+  const restore = (): void => {
+    const b = active();
+    if (b?.docId !== place.docId) return;
+    // scrollToPage puts the point a viewport gap below the top; take it off again.
+    const gap = PAGE_GAP / b.zoom.getState().currentZoomLevel;
+    b.scroll.scrollToPage({
+      pageNumber: place.page,
+      pageCoordinates: { x: place.x, y: place.y - gap },
+      behavior: 'instant',
+    });
+  };
+  const off = a.scroll.onLayoutChange(() => {
+    requestAnimationFrame(restore);
+  });
+  const end = (): void => {
+    if (!keeping) return;
+    if (performance.now() < keeping.until) {
+      keeping.timer = window.setTimeout(end, KEEP_PLACE_MS);
+      return;
+    }
+    keeping.off();
+    keeping = null;
+  };
+  keeping = {
+    place,
+    until: now + KEEP_PLACE_MS,
+    off,
+    timer: window.setTimeout(end, KEEP_PLACE_MS),
+  };
 }

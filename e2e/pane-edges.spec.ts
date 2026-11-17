@@ -159,7 +159,7 @@ test('the right arrow hides and shows the Properties pane and agrees with the ri
   await expect(ribbonProperties(page)).toHaveAttribute('aria-pressed', 'false');
 });
 
-test('the document stays on its page while the panes hide, show and change width', async ({
+test('the document keeps its place while the panes hide, show and change width', async ({
   page,
   pdfs,
 }) => {
@@ -168,23 +168,49 @@ test('the document stays on its page while the panes hide, show and change width
   await pageBox(page).press('Enter');
   await expect(pageBox(page)).toHaveValue('25');
   await cap(page, 'view', 'settle');
+  // Page 25's top stays at the top of the view (fit width re-zooms on every width change,
+  // so a kept scroll offset alone would land on another page).
+  const topOf25 = () =>
+    page.evaluate(() => {
+      const main = document.getElementById('document-panel')?.getBoundingClientRect();
+      const p = document.querySelector('[data-page="24"]')?.getBoundingClientRect();
+      return main && p ? Math.round(p.top - main.top) : null;
+    });
+  const kept = async () => {
+    await cap(page, 'view', 'settle');
+    await expect.poll(topOf25).toBeGreaterThan(-40);
+    expect(await topOf25()).toBeLessThan(40);
+  };
+  await kept();
 
   await leftArrow(page).click();
-  await cap(page, 'view', 'settle');
+  await kept();
   await expect(pageBox(page)).toHaveValue('25');
   await rightArrow(page).click();
-  await cap(page, 'view', 'settle');
-  await expect(pageBox(page)).toHaveValue('25');
+  await kept();
   await page.getByRole('separator', { name: 'Resize the Properties pane' }).focus();
   await page.keyboard.press('End');
-  await cap(page, 'view', 'settle');
-  await expect(pageBox(page)).toHaveValue('25');
+  await kept();
   await leftArrow(page).click();
+  await kept();
   await page.getByRole('separator', { name: 'Resize the navigation pane' }).focus();
   await page.keyboard.press('End');
-  await cap(page, 'view', 'settle');
+  await kept();
+  await page.keyboard.press('Home');
+  await kept();
+  // A drag keeps the place it started from.
+  const splitter = page.getByRole('separator', { name: 'Resize the navigation pane' });
+  const box = await splitter.boundingBox();
+  if (!box) throw new Error('no splitter');
+  await page.mouse.move(box.x + box.width / 2, box.y + 100);
+  await page.mouse.down();
+  await page.mouse.move(box.x + box.width / 2 + 200, box.y + 100, { steps: 10 });
+  await page.mouse.up();
+  await kept();
+  await rightArrow(page).click();
+  await leftArrow(page).click();
+  await kept();
   await expect(pageBox(page)).toHaveValue('25');
-  await expect(page.locator('[data-page="24"]')).toBeInViewport();
 });
 
 test('1280 px with both panes open at their widest: nothing scrolls sideways, the arrows are visible @smoke', async ({

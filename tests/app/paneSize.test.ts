@@ -60,3 +60,32 @@ describe('widthForDrag', () => {
     expect(widthForDrag(260, 1000, 'right')).toBe(PANE_WIDTH_MIN);
   });
 });
+
+describe('panesChanged', () => {
+  it('is true only for a pane shown, hidden or resized', async () => {
+    const { createAppStore } = await import('../../src/app/store/appStore');
+    const { panesChanged } = await import('../../src/app/panePlace');
+    const s = createAppStore();
+    const a = s.getState();
+    s.getState().setTool('hand');
+    expect(panesChanged(a, s.getState())).toBe(false);
+    for (const change of [
+      () => {
+        s.getState().toggleLeftPane();
+      },
+      () => {
+        s.getState().setLeftPaneWidth(300);
+      },
+      () => {
+        s.getState().setProperties(true);
+      },
+      () => {
+        s.getState().setPropertiesWidth(300);
+      },
+    ]) {
+      const before = s.getState();
+      change();
+      expect(panesChanged(before, s.getState())).toBe(true);
+    }
+  });
+});
