@@ -39,6 +39,7 @@ import { SecurityInfoDialog } from '../features/protect/SecurityInfo';
 import { UnlockDialog } from '../features/protect/UnlockDialog';
 import { PasswordSecurityDialog } from '../features/protect/PasswordSecurityDialog';
 import { ExternalLinkDialog } from '../features/view/ExternalLinkDialog';
+import { TellMe } from '../features/tellMe/TellMe';
 import { RecoveryDialog } from '../features/recovery/RecoveryDialog';
 import { registerSaveCommands } from '../features/save/commands';
 import { registerFindCommands } from '../features/search/commands';
@@ -76,6 +77,15 @@ import { useShortcuts } from './keys/useShortcuts';
 import { Ribbon } from './ribbon/Ribbon';
 import './app.css';
 
+/** File's entries that are pages of the backstage rather than actions. */
+const BACKSTAGE_PAGES = [
+  'file.recent',
+  'file.properties',
+  'file.settings',
+  'file.about',
+  'file.privacy',
+] as const;
+
 const focusDocument = (): void => {
   document.getElementById('document-panel')?.focus();
 };
@@ -98,6 +108,20 @@ export function App() {
       }),
     [],
   );
+  // File's pages (Recent, Properties, Settings, About, Privacy) as commands, so Tell me
+  // (M10-08·O2) can open the backstage at them; the backstage itself shows them as pages.
+  useEffect(() => {
+    const offs = BACKSTAGE_PAGES.map((id) =>
+      registerCommand(id, {
+        run: () => {
+          setBackstage({ section: id });
+        },
+      }),
+    );
+    return () => {
+      for (const off of offs) off();
+    };
+  }, []);
   useEffect(() => registerViewCommands(), []);
   useEffect(() => registerSaveCommands(), []);
   useEffect(() => registerProtectCommands(), []);
@@ -172,6 +196,7 @@ export function App() {
           }}
         />
         <ShortcutSheet />
+        <TellMe />
         <CloseDocumentDialog />
         <OpenErrorDialog />
         <PasswordDialog />

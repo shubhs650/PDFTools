@@ -148,6 +148,7 @@ describe('motion (M10-07, D-47)', () => {
         '.offline-spinner',
         '.ribbon-toolbar > .ribbon-group',
         '.snapshot-toast',
+        ".tell-me[data-state='open']",
         '.thumb-img',
         ".ui-dialog-backdrop[data-state='open']",
         ".ui-dialog[data-state='open']",
@@ -176,7 +177,7 @@ describe('motion (M10-07, D-47)', () => {
     const radix = decls.filter(
       (d) =>
         d.property === 'animation' &&
-        /\.ui-(menu|tooltip|dialog|color-popup)|\.backstage/.test(d.selector),
+        /\.ui-(menu|tooltip|dialog|color-popup)|\.backstage|\.tell-me/.test(d.selector),
     );
     expect(radix.length).toBeGreaterThan(0);
     for (const d of radix)

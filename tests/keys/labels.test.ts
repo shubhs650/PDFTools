@@ -18,6 +18,11 @@ describe('shortcutText', () => {
     expect(shortcutText('view.prevView', t, true)).toBe('Option+Left Arrow');
   });
 
+  it('names Tell me Alt+Q, Option+Q on macOS (M10-08·O2)', () => {
+    expect(shortcutText('app.tellMe', t, false)).toBe('Alt+Q');
+    expect(shortcutText('app.tellMe', t, true)).toBe('Option+Q');
+  });
+
   it('skips a browser-reserved first chord; empty when unbound', () => {
     expect(shortcutText('tab.close', t, false)).toBe('Ctrl+Alt+W');
     expect(shortcutText('comment.reply', t, false)).toBe('');

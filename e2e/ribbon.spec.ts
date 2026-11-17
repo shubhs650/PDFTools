@@ -40,8 +40,10 @@ test('keyboard: arrows between tabs and controls, Tab into the toolbar, Esc to t
   await page.keyboard.press('ArrowRight');
   await expect(page.getByRole('tab', { name: 'View' })).toBeFocused();
   await expect(page.getByRole('tab', { name: 'View' })).toHaveAttribute('aria-selected', 'true');
-  // The top bar (M6-01, M7-11): Dark Theme, OpenEngTools Home, Report an Issue, Full Screen;
-  // then collapse.
+  // The top bar (M6-01, M7-11, M10-08·O2): Tell Me, Dark Theme, OpenEngTools Home, Report
+  // an Issue, Full Screen; then collapse.
+  await page.keyboard.press('Tab');
+  await expect(page.getByTestId('tell-me-button')).toBeFocused();
   await page.keyboard.press('Tab');
   await expect(page.getByTestId('theme-toggle')).toBeFocused();
   for (const name of ['OpenEngTools Home', 'Report an Issue on GitHub']) {

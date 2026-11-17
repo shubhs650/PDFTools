@@ -197,6 +197,7 @@
       "updateReady": "Update ready"
     },
     "app": {
+      "tellMe": "Tell Me",
       "home": "OpenEngTools Home",
       "reportIssue": "Report an Issue on GitHub"
     },
@@ -2391,6 +2392,23 @@
     "issue": {
       "title": "Problem: ",
       "body": "What happened?\n\n\nWhat did you expect?\n\n\nSteps to reproduce:\n1. \n\nPlease don't attach or paste confidential documents or their text.\n\n---\n{{app}} version: {{version}}\nBrowser: {{browser}}\nOS: {{os}}"
+    }
+  },
+  "tellMe": {
+    "title": "Tell me what you want to do",
+    "placeholder": "Tell me what you want to do",
+    "search": "Search",
+    "results": "Commands",
+    "hint": "Type a command, such as rotate or measure, then press Enter.",
+    "pending": "Press Enter to search.",
+    "count_one": "{{count}} command. Press Enter to run it.",
+    "count_other": "{{count}} commands. Choose one with the arrow keys, then press Enter.",
+    "none": "No commands match “{{query}}”. Try another word.",
+    "path": "{{tab}} › {{group}}",
+    "where": {
+      "quickAccess": "Quick Access",
+      "panes": "Side panes",
+      "topBar": "Top bar"
     }
   },
   "contextMenu": {

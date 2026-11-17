@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest';
 import { COMMANDS } from '../../src/app/commands';
 import { INTERNAL_ACTIONS } from '../../src/app/commands/dispatch';
 import { chordId, formatChord, matches, parseChord, type KeyLike } from '../../src/app/keys/chord';
-import { KEYMAP } from '../../src/app/keys/keymap';
+import { KEYMAP, chordsOn } from '../../src/app/keys/keymap';
 import { resolveBinding } from '../../src/app/keys/useShortcuts';
 
 const ev = (key: string, mods: Partial<Omit<KeyLike, 'key'>> = {}): KeyLike => ({
@@ -138,5 +138,38 @@ describe('resolveBinding: scopes and text fields', () => {
   });
   it('fires global keys anywhere', () => {
     expect(resolveBinding(ev('o', { ctrlKey: true }), focus, false)?.target).toBe('file.open');
+  });
+  it('opens Tell me with Alt+Q, Ctrl+Q off macOS and Option+Q on it (M10-08·O2)', () => {
+    expect(resolveBinding(ev('q', { altKey: true }), focus, false)?.target).toBe('app.tellMe');
+    expect(resolveBinding(ev('q', { ctrlKey: true }), focus, false)?.target).toBe('app.tellMe');
+    // Option+Q types "œ" on a Mac: the physical key matches.
+    expect(resolveBinding(ev('œ', { altKey: true, code: 'KeyQ' }), focus, true)?.target).toBe(
+      'app.tellMe',
+    );
+    // Cmd+Q is the browser's (quit): never bound on macOS.
+    expect(resolveBinding(ev('q', { metaKey: true }), focus, true)).toBeUndefined();
+    // Not while typing; and Q alone is still Squiggly in the document.
+    expect(resolveBinding(ev('q', { altKey: true }), { ...focus, editable: true }, false)).toBe(
+      undefined,
+    );
+    expect(resolveBinding(ev('q'), { ...focus, inDocument: true }, false)?.target).toBe(
+      'comment.squiggly',
+    );
+  });
+  it('matches a physical key only for Alt+letter on macOS', () => {
+    const altQ = parseChord('Alt+Q');
+    expect(matches(altQ, ev('œ', { altKey: true, code: 'KeyQ' }), false)).toBe(false);
+    expect(matches(altQ, ev('œ', { altKey: true, code: 'KeyW' }), true)).toBe(false);
+    expect(matches(parseChord('Q'), ev('œ', { code: 'KeyQ' }), true)).toBe(false);
+  });
+});
+
+describe('chordsOn', () => {
+  it('drops Ctrl chords on macOS only for bindings that ask', () => {
+    const tellMe = KEYMAP.find((b) => b.target === 'app.tellMe');
+    expect(tellMe && chordsOn(tellMe, false).map(chordId)).toEqual(['Alt+q', 'Ctrl+q']);
+    expect(tellMe && chordsOn(tellMe, true).map(chordId)).toEqual(['Alt+q']);
+    const save = KEYMAP.find((b) => b.target === 'file.save');
+    expect(save && chordsOn(save, true).map(chordId)).toEqual(['Ctrl+s']);
   });
 });

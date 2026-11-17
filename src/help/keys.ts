@@ -8,6 +8,7 @@ export function helpKeys(t: TFunction): Record<string, string> {
   return {
     mod: keyLabels(t).ctrl,
     help: k('help.help'),
+    tellMe: k('app.tellMe'),
     newDoc: k('file.new'),
     open: k('file.open'),
     save: k('file.save'),

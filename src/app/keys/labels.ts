@@ -4,7 +4,7 @@
 import type { TFunction } from 'i18next';
 import { msg, type MessageKey } from '../../i18n';
 import { formatChord, isMac, type KeyLabels } from './chord';
-import { KEYMAP } from './keymap';
+import { KEYMAP, chordsOn } from './keymap';
 
 const NAMED: Record<string, MessageKey> = {
   PageUp: msg('shortcuts.key.pageUp'),
@@ -44,9 +44,8 @@ export function keyLabels(t: TFunction, mac: boolean = isMac()): KeyLabels {
 export function shortcutText(target: string, t: TFunction, mac: boolean = isMac()): string {
   const binding = KEYMAP.find((b) => b.target === target);
   if (!binding) return '';
+  const chords = chordsOn(binding, mac);
   const chord =
-    binding.chords.find((c) => c.key === '+') ??
-    binding.chords[binding.reservedFirst ? 1 : 0] ??
-    binding.chords[0];
+    chords.find((c) => c.key === '+') ?? chords[binding.reservedFirst ? 1 : 0] ?? chords[0];
   return chord ? formatChord(chord, keyLabels(t, mac)) : '';
 }

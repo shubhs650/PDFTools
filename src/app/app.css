@@ -5121,6 +5121,151 @@ textarea.form-field {
   outline: var(--focus-width) solid var(--color-focus);
 }
 
+/* ------------------------------------------------------------ tell me (M10-08·O2) */
+/* A small search box under the header, centred like a command palette: no backdrop, so
+   the ribbon stays in view; a click outside or Esc closes it. Centred with margins, not
+   a translate, so its pop-in (motion.css) can scale from its top edge. */
+.tell-me {
+  position: fixed;
+  top: calc(var(--header-height) + var(--space-2));
+  right: var(--space-0);
+  left: var(--space-0);
+  z-index: var(--z-dialog);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  box-sizing: border-box;
+  width: min(var(--tell-me-width), calc(100vw - 2 * var(--space-4)));
+  max-height: calc(100vh - var(--header-height) - 2 * var(--space-4));
+  margin-inline: auto;
+  padding: var(--space-3);
+  border: var(--border-width) solid var(--color-border);
+  border-radius: var(--radius-xl);
+  background: var(--color-surface-raised);
+  box-shadow: var(--elevation-3);
+  color: var(--color-text);
+  font-size: var(--font-size-m);
+}
+
+.tell-me-form {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+}
+
+.tell-me-input {
+  flex: 1 1 auto;
+  min-width: 0;
+}
+
+.tell-me-status {
+  margin: var(--space-0);
+  padding: var(--space-0) var(--space-1);
+  color: var(--color-text-muted);
+  font-size: var(--font-size-s);
+}
+
+.tell-me-results {
+  min-height: 0;
+  max-height: var(--tell-me-list-height);
+  margin: var(--space-0);
+  padding: var(--space-0);
+  overflow-y: auto;
+  list-style: none;
+}
+
+.tell-me-option {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  min-height: var(--density-row-height);
+  padding: var(--density-pad-y) var(--space-3);
+  border-radius: var(--radius-m);
+  cursor: pointer;
+}
+
+.tell-me-option[aria-selected='true'] {
+  background: var(--color-selected);
+}
+
+.tell-me-option[aria-disabled='true'] {
+  color: var(--color-text-disabled);
+  cursor: default;
+}
+
+/* A disabled command when chosen: the neutral hover, as a disabled menu item, never the
+   blue of a command that runs. */
+.tell-me-option[aria-disabled='true'][aria-selected='true'] {
+  background: var(--color-hover);
+}
+
+.tell-me-icon {
+  flex: none;
+  width: var(--icon-size-m);
+  height: var(--icon-size-m);
+  color: var(--color-icon);
+}
+
+.tell-me-option[aria-disabled='true'] .tell-me-icon {
+  color: var(--color-text-disabled);
+}
+
+.tell-me-option:not([aria-disabled='true']) [data-icon-accent='markup'] {
+  color: var(--color-icon-markup);
+}
+
+.tell-me-option:not([aria-disabled='true']) [data-icon-accent='sign'] {
+  color: var(--color-icon-sign);
+}
+
+.tell-me-option:not([aria-disabled='true']) [data-icon-accent='convert'] {
+  color: var(--color-icon-convert);
+}
+
+.tell-me-option:not([aria-disabled='true']) [data-icon-accent='redact'] {
+  color: var(--color-icon-redact);
+}
+
+.tell-me-text {
+  display: flex;
+  flex: 1 1 auto;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.tell-me-where {
+  color: var(--color-text-muted);
+  font-size: var(--font-size-s);
+}
+
+.tell-me-option[aria-disabled='true'] .tell-me-where {
+  color: var(--color-text-disabled);
+}
+
+.tell-me-keys {
+  flex: none;
+  color: var(--color-text-muted);
+  font-family: inherit;
+  font-size: var(--font-size-s);
+}
+
+@media (forced-colors: active) {
+  .tell-me-option[aria-selected='true'] {
+    background: Highlight;
+    color: HighlightText;
+  }
+
+  .tell-me-option[aria-selected='true'] .tell-me-where,
+  .tell-me-option[aria-selected='true'] .tell-me-keys,
+  .tell-me-option[aria-selected='true'] .tell-me-icon {
+    color: HighlightText;
+  }
+
+  .tell-me-option[aria-disabled='true'] {
+    color: GrayText;
+  }
+}
+
 /* ------------------------------------------------------------ motion (M10-07) */
 /* ADR-027 D-47: the rules and keyframes are in src/ui/motion.css. Entrances only, opacity
    and transform only, token durations (0 ms under prefers-reduced-motion), and nothing
