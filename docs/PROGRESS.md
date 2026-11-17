@@ -5,7 +5,8 @@ _Last updated: 2026-11-17 (session 75: M11 plan accepted; M10 closed by the owne
 **Current milestone:** M11 — file tabs, OCR text selection, a font library and comments in every
 pointer mode: plan [docs/plan/M11.md](plan/M11.md) and [ADR-028](adr/028-m11-tabs-fonts-select.md)
 **accepted** by the owner (2026-11-17: recommended answers, fonts all shipped with the app, and
-all nine optional items O1–O9); ARCHITECTURE.md Rev 0.17 (D-50 … D-55). Tasks run one thread each
+all nine optional items O1–O9), plus task M11-10 (resizable Properties pane and pane edge arrows,
+D-56) added by the owner; ARCHITECTURE.md Rev 0.17 (D-50 … D-56). Tasks run one thread each
 in the plan's "Order of work", starting with M11-01 (OCR text selection). **M10 closed** by the
 owner on 2026-11-17 ("majority aspects of the tool are working good"). **Earlier:** M10 — modern
 look and feel (plan [docs/plan/M10.md](plan/M10.md),
@@ -2692,8 +2693,8 @@ rel="noopener noreferrer">`; the commands `app.home` / `app.reportIssue` open th
 
 ## Next
 
-- **Agent (M11):** the 17 tasks in [docs/plan/M11.md](plan/M11.md) "Order of work", one thread
-  each, starting with M11-01 (OCR text selection), then spike S26.
+- **Agent (M11):** the 18 tasks in [docs/plan/M11.md](plan/M11.md) "Order of work", one thread
+  each, starting with M11-01 (OCR text selection), then M11-10 (panes), then spike S26.
 - **Owner (M10):** done — the owner closed M10 on 2026-11-17.
 - **Owner (M9):** try Help on the deployed beta (F1 on a few tabs and dialogs, search, print,
   installed-app window, offline). Re-run `npm run help:screenshots` after visible UI changes.

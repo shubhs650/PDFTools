@@ -132,9 +132,16 @@ pages. **Crop** (drag on the page or type margins, for a page range) sets only `
 undo step through the page operations; Remove Crop restores it; measurement viewports keep their
 coordinates.
 
+**D-56 — Panes: resizable Properties pane and edge arrows (owner, 2026-11-17, added after
+acceptance).** The right Properties pane gets the left pane's window splitter (drag and keys,
+160–480 px, width kept while the app is open, as the left pane's). Each pane has a chevron button on its inner edge,
+always visible, that hides or shows it through the existing pane commands (the left one reopens
+the last pane); 24 × 48 px, keyboard-reachable, `aria-expanded`, never over the document's
+scrollbar.
+
 ### ARCHITECTURE.md changes (Rev 0.17, applied 2026-11-17)
 
-- §2: add D-50 … D-55.
+- §2: add D-50 … D-56.
 - §7.1: comments are selectable in every pointer mode (D-51; until now an unwritten M3-05 rule
   in `DocumentView.tsx` locked them in Hand and Select Text); the exceptions to "no custom
   appearance streams" gain text comments in a library font (D-52), and the font list for text
@@ -144,6 +151,7 @@ coordinates.
 - §8: the document tab strip (D-50): accent selected tab, hover card, + button, drag reorder,
   tab and strip menus; §8.1 adds Ctrl+Shift+Left/Right (move tab) and Reopen Closed Tab.
 - §7.8: split, images to PDF and crop (D-55).
+- §8: panes are resizable on both sides and have edge arrows (D-56).
 - §9: the background precache includes the font library.
 - §10.3: local data gains the start-up choice, each file's last view (by fingerprint) and the
   recently used fonts (D-52, D-53, D-54).
