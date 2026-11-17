@@ -408,8 +408,9 @@ export function TabStrip() {
           );
         })}
       </div>
-      {/* Each move, by drag or keys, said once (D-50). */}
-      <div className="ui-visually-hidden" role="status" aria-live="polite">
+      {/* Each move, by drag or keys, said once (D-50). A live region without the status
+          role, so it is not one more "status" beside the app's own announcements. */}
+      <div className="ui-visually-hidden tab-moved" aria-live="polite" aria-atomic="true">
         {moved}
       </div>
       {opening}

@@ -9,7 +9,7 @@ import { expect, test } from './support/fixtures.ts';
 const tabs = (page: Page) => page.getByRole('tablist', { name: 'Open documents' }).getByRole('tab');
 const names = (page: Page) =>
   tabs(page).evaluateAll((els) => els.map((el) => el.querySelector('.tab-name')?.textContent));
-const announced = (page: Page) => page.locator('.tab-strip [role="status"][aria-live="polite"]');
+const announced = (page: Page) => page.locator('.tab-strip .tab-moved[aria-live="polite"]');
 
 async function openTabs(page: Page, pdfs: { simple(n: number): Buffer }, list: string[]) {
   // One at a time, so the tabs are in this order (opens finish in any order); each a
