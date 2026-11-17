@@ -1,6 +1,6 @@
 # Triya PDF — Progress
 
-_Last updated: 2026-11-17 (session 80: M11-04 file tabs: drag to reorder)_
+_Last updated: 2026-11-17 (session 81: M11-05 file tabs: right-click menus)_
 
 **Current milestone:** M11 — file tabs, OCR text selection, a font library and comments in every
 pointer mode: plan [docs/plan/M11.md](plan/M11.md) and [ADR-028](adr/028-m11-tabs-fonts-select.md)
@@ -20,6 +20,42 @@ interop is in the M6 pack (CHECKLIST §M6 R1–R4). Rev 0 (M0–M4) is complete 
 
 ## Done
 
+- **Session 81 — M11-05 file tabs: right-click menus (D-50, ADR-028).** **Tab menu**
+  (pure model `src/app/tabMenu.ts`): Save, Save As · Close, Close Other Tabs, Close Tabs to the
+  Right, Close All Tabs · Reopen Closed Tab · Move Left, Move Right, Sort Tabs by Name · Copy File
+  Name, Rename File… · Document Properties. One Radix context menu on the strip: a right-click on
+  a tab or its × gives the tab menu, anywhere else the **strip menu** (Open, Create Blank PDF…,
+  Reopen Closed Tab, Close All Tabs). Opening the menu does not select the tab (Chrome); the tab
+  keeps the hover tint while its menu is open. Also **Shift+F10 / the Menu key** on a focused
+  tab (focus returns to it), and on **touch** a tab held until it lifts (300 ms) and let go
+  without moving opens its menu (`TabDragHost.menu`; Radix's own long press is stopped on tabs so
+  it never opens under a lifted tab). **Acting on that tab:** new menu commands `tab.*` in the
+  command table (icons, labels, keys) with `CommandArgs.tab`; `disabledReason(ctx, args)` and
+  `commandState(id, ctx, args)` take the args, and `ContextMenu` takes a `stateOf` override so
+  items are enabled for the menu's tab (Move Left disabled on the first tab, with its reason);
+  any non-tab command run with `args.tab` makes that tab active first (D-01). `tab.close`,
+  `tab.moveLeft/Right` moved from builtins to `src/app/tabCommands.ts`. **Closing several**
+  (`requestCloseMany`, `nextClosePrompt`, `cancelClosePrompts` in openDocument.ts,
+  `openStore.closeQueue`): saved documents close at once, unsaved ones are asked about one by
+  one with the existing prompt; Cancel (or a save that did not finish) keeps the rest open.
+  **Reopen Closed Tab** (`src/features/open/closedTabs.ts`): closing a document with a file
+  handle remembers name, handle, source and place (in memory, 25 at most); reopening asks for
+  read permission, opens it again at its old place, and reports a denied or missing file in the
+  open-error dialog (new kind `denied`). Keys Ctrl+Shift+T (Chrome keeps it) and
+  Ctrl+Shift+Alt+T. **Sort Tabs by Name:** natural order (`Intl.Collator`, numeric, base),
+  stable, animated via the move animator (`reorderTabs`, store `reorder`), announced.
+  **Copy File Name:** clipboard + announcement. **Rename File…** (`src/app/tabRename.ts`,
+  `RenameFileDialog.tsx`): listed only when the document's handle has `move()` (Chromium 111+
+  renames local files in place); asks for readwrite permission, `.pdf` added when missing,
+  forbidden characters and reserved names refused; because `move()` overwrites a file the app
+  may already write to, a name used by another open tab or a recent file is refused; after the
+  move the tab, the `sources` File (the old one can no longer be read) and the recent list
+  take the new name. Help "Open" topic updated. Tests: `tests/app/tabMenu.test.ts` (entries,
+  natural sort, states, tabs to close, rename names, close queue, commands on the menu's tab,
+  closed list); `e2e/tab-menu.spec.ts` (tab menu on a background tab, Shift+F10, Close All with
+  two unsaved, strip menu, touch hold, Reopen and Rename on OPFS handles, Ctrl+Shift+Alt+T);
+  keys.spec row count 78. The FSA e2e crashes locally on Chromium 153 as the other FSA tests do
+  (CI's 151 is the reference). Shots in project files `m11-05/`.
 - **Session 80 — M11-04 file tabs: drag to reorder (D-50, ADR-028).** **Pointer drag**
   (`src/app/tabDragSession.ts`, geometry in the pure `src/app/tabDrag.ts`): mouse and pen lift
   a tab after 4 px; on touch, holding a tab 300 ms lifts it and moving first scrolls the row
@@ -2817,9 +2853,7 @@ rel="noopener noreferrer">`; the commands `app.home` / `app.reportIssue` open th
 
 - **Agent (M11):** the 18 tasks in [docs/plan/M11.md](plan/M11.md) "Order of work", one thread
   each. Done: M11-01, M11-10, M11-02 (spike S26), M11-03 (tabs: look, hover card, +), M11-04
-  (drag to reorder). Next: M11-05 (tab menus; Move Left / Right call `moveTab` in
-  `src/app/tabMove.ts`; on touch a long press on a tab lifts it after 300 ms, so the tab menu's
-  long-press must not fight the drag).
+  (drag to reorder), M11-05 (tab menus). Next: M11-06 (comments in every pointer mode).
 - **Owner (M11-02):** open `m11-02/s26-interop.pdf` in Acrobat Reader and PDF-XChange: the
   eleven comments look as in the PNG beside it, Find finds their text in the flattened copy, and
   the font names show in the document's font list. This gates M11-07.

@@ -183,4 +183,6 @@ export const KEYMAP: readonly Binding[] = [
   // (its own Move Tab) in a normal tab; the installed app gets them.
   b('tab.moveLeft', ['Ctrl+Shift+PageUp', 'Ctrl+Shift+ArrowLeft'], 'tabs', true),
   b('tab.moveRight', ['Ctrl+Shift+PageDown', 'Ctrl+Shift+ArrowRight'], 'tabs', true),
+  // Reopen Closed Tab (M11-05, D-50): Chrome keeps Ctrl+Shift+T in a normal tab.
+  b('tab.reopenClosed', ['Ctrl+Shift+T', 'Ctrl+Alt+Shift+T'], 'global', true),
 ];

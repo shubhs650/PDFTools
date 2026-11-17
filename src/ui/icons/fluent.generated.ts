@@ -13,11 +13,13 @@ import { ArrowEnter20Regular } from '@fluentui/react-icons/svg/arrow-enter';
 import { ArrowExpandAll20Regular } from '@fluentui/react-icons/svg/arrow-expand-all';
 import { ArrowExport20Regular } from '@fluentui/react-icons/svg/arrow-export';
 import { ArrowImport20Regular } from '@fluentui/react-icons/svg/arrow-import';
+import { ArrowLeft20Regular } from '@fluentui/react-icons/svg/arrow-left';
 import { ArrowNext20Regular } from '@fluentui/react-icons/svg/arrow-next';
 import { ArrowPrevious20Regular } from '@fluentui/react-icons/svg/arrow-previous';
 import { ArrowRedo20Regular } from '@fluentui/react-icons/svg/arrow-redo';
 import { ArrowReply20Regular } from '@fluentui/react-icons/svg/arrow-reply';
 import { ArrowReset20Regular } from '@fluentui/react-icons/svg/arrow-reset';
+import { ArrowRight20Regular } from '@fluentui/react-icons/svg/arrow-right';
 import { ArrowRotateClockwise20Regular } from '@fluentui/react-icons/svg/arrow-rotate-clockwise';
 import { ArrowRotateCounterclockwise20Regular } from '@fluentui/react-icons/svg/arrow-rotate-counterclockwise';
 import { ArrowSync20Regular, ArrowSync24Regular } from '@fluentui/react-icons/svg/arrow-sync';
@@ -49,6 +51,8 @@ import { Delete20Regular, Delete32Regular } from '@fluentui/react-icons/svg/dele
 import { DeleteArrowBack20Regular } from '@fluentui/react-icons/svg/delete-arrow-back';
 import { DeleteLines20Regular } from '@fluentui/react-icons/svg/delete-lines';
 import { Dismiss20Filled, Dismiss20Regular } from '@fluentui/react-icons/svg/dismiss';
+import { DismissSquare20Regular } from '@fluentui/react-icons/svg/dismiss-square';
+import { DismissSquareMultiple20Regular } from '@fluentui/react-icons/svg/dismiss-square-multiple';
 import { DocumentAdd20Regular, DocumentAdd28Regular } from '@fluentui/react-icons/svg/document-add';
 import { DocumentArrowRight20Regular, DocumentArrowRight24Regular } from '@fluentui/react-icons/svg/document-arrow-right';
 import { DocumentBorderPrint20Regular, DocumentBorderPrint32Regular } from '@fluentui/react-icons/svg/document-border-print';
@@ -129,6 +133,8 @@ import { Square20Filled, Square20Regular } from '@fluentui/react-icons/svg/squar
 import { SquareHint20Filled, SquareHint20Regular } from '@fluentui/react-icons/svg/square-hint';
 import { StackVertical20Filled, StackVertical20Regular } from '@fluentui/react-icons/svg/stack-vertical';
 import { Status20Regular } from '@fluentui/react-icons/svg/status';
+import { TabDesktopArrowClockwise20Regular } from '@fluentui/react-icons/svg/tab-desktop-arrow-clockwise';
+import { TabDesktopMultiple20Regular } from '@fluentui/react-icons/svg/tab-desktop-multiple';
 import { TableEdit20Regular, TableEdit28Regular } from '@fluentui/react-icons/svg/table-edit';
 import { TableLightning20Regular, TableLightning28Regular } from '@fluentui/react-icons/svg/table-lightning';
 import { TableSettings20Regular, TableSettings28Regular } from '@fluentui/react-icons/svg/table-settings';
@@ -141,6 +147,7 @@ import { TextEditStyle20Filled, TextEditStyle20Regular } from '@fluentui/react-i
 import { TextField20Filled, TextField20Regular, TextField24Filled, TextField24Regular } from '@fluentui/react-icons/svg/text-field';
 import { TextIndentDecrease20Regular } from '@fluentui/react-icons/svg/text-indent-decrease';
 import { TextIndentIncrease20Regular } from '@fluentui/react-icons/svg/text-indent-increase';
+import { TextSortAscending20Regular } from '@fluentui/react-icons/svg/text-sort-ascending';
 import { TextStrikethrough20Filled, TextStrikethrough20Regular, TextStrikethrough24Filled, TextStrikethrough24Regular } from '@fluentui/react-icons/svg/text-strikethrough';
 import { TextT20Filled, TextT20Regular } from '@fluentui/react-icons/svg/text-t';
 import { TextUnderline20Filled, TextUnderline20Regular } from '@fluentui/react-icons/svg/text-underline';
@@ -348,6 +355,16 @@ export const FLUENT_GLYPHS: Record<string, FluentGlyphs> = {
   'bookmark.promote': { regular: { small: TextIndentDecrease20Regular } },
   'bookmark.demote': { regular: { small: TextIndentIncrease20Regular } },
   'bookmark.properties': { regular: { small: Info20Regular } },
+  'tab.close': { regular: { small: Dismiss20Regular } },
+  'tab.closeOthers': { regular: { small: TabDesktopMultiple20Regular } },
+  'tab.closeRight': { regular: { small: DismissSquare20Regular } },
+  'tab.closeAll': { regular: { small: DismissSquareMultiple20Regular } },
+  'tab.reopenClosed': { regular: { small: TabDesktopArrowClockwise20Regular } },
+  'tab.moveLeft': { regular: { small: ArrowLeft20Regular } },
+  'tab.moveRight': { regular: { small: ArrowRight20Regular } },
+  'tab.sortByName': { regular: { small: TextSortAscending20Regular } },
+  'tab.copyName': { regular: { small: Copy20Regular } },
+  'tab.rename': { regular: { small: Rename20Regular } },
   'status.readyOffline': { regular: { small: CloudCheckmark20Regular } },
   'status.preparingOffline': { regular: { small: ArrowDownload20Regular } },
   'status.updateReady': { regular: { small: ArrowSync20Regular } },

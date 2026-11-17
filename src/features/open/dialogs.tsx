@@ -5,8 +5,8 @@ import { commandState, runCommand, subscribeCommands } from '../../app/commands/
 import { documentStore, useDocuments } from '../../app/store/documentStore';
 import { Button, Dialog } from '../../ui/components';
 import { OPEN_ERROR_MESSAGE } from './errors';
-import { closeDocument } from './openDocument';
-import { dismissFailure, openStore, useOpen } from './openStore';
+import { cancelClosePrompts, closeDocument, nextClosePrompt } from './openDocument';
+import { dismissFailure, useOpen } from './openStore';
 
 const SAVE = 'file.save';
 
@@ -17,16 +17,20 @@ export function CloseDocumentDialog() {
   const name = useDocuments((s) => (id ? s.docs[id]?.meta.name : undefined));
   // Save arrives with M1-22; until then the button is disabled.
   const canSave = useSyncExternalStore(subscribeCommands, () => commandState(SAVE).enabled);
-  const dismiss = (): void => {
-    openStore.setState({ closePrompt: null });
-  };
+  // Cancel, Esc or ×: this one stays open, and so do any still queued (M11-05).
+  const dismiss = cancelClosePrompts;
 
   const save = async (): Promise<void> => {
     if (!id) return;
     documentStore.getState().activate(id);
     await runCommand(SAVE);
-    dismiss();
-    if (documentStore.getState().docs[id]?.dirty === false) await closeDocument(id);
+    // A save that did not finish (cancelled, failed) stops the closing there.
+    if (documentStore.getState().docs[id]?.dirty !== false) {
+      dismiss();
+      return;
+    }
+    await closeDocument(id);
+    nextClosePrompt();
   };
 
   return (
@@ -51,8 +55,8 @@ export function CloseDocumentDialog() {
           <Button
             label={t('open.close.discard')}
             onClick={() => {
-              dismiss();
               if (id) void closeDocument(id);
+              nextClosePrompt();
             }}
           />
           <Button label={t('open.close.cancel')} onClick={dismiss} />

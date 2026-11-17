@@ -72,6 +72,8 @@ import { UiProvider } from '../ui/components';
 import { AppFrame } from './AppFrame';
 import { Backstage } from './backstage/Backstage';
 import { registerBuiltinCommands } from './commands/builtins';
+import { registerTabCommands } from './tabCommands';
+import { RenameFileDialog } from './RenameFileDialog';
 import { registerCommand } from './commands/dispatch';
 import { BOUNDARY } from './diagnostics';
 import { ErrorBoundary } from './ErrorBoundary';
@@ -102,6 +104,7 @@ export function App() {
   // Open, and at which section (Help → Clear All Local Data opens Settings, M1-26).
   const [backstage, setBackstage] = useState<{ section?: string } | null>(null);
   useEffect(() => registerBuiltinCommands(), []);
+  useEffect(() => registerTabCommands(), []);
   // A side pane shown, hidden or resized keeps the document's place (M11-10).
   useEffect(() => followPanes(), []);
   useEffect(
@@ -207,6 +210,7 @@ export function App() {
         <ShortcutSheet />
         <TellMe />
         <CloseDocumentDialog />
+        <RenameFileDialog />
         <OpenErrorDialog />
         <PasswordDialog />
         <UnlockDialog />

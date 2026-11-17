@@ -26,6 +26,12 @@ export interface CommandArgs {
   at?: PagePoint;
   /** Ctrl+V (M7-08): what the browser's paste event carried, read while it ran. */
   clipboard?: { image: Blob | null };
+  /**
+   * A file tab's menu (M11-05, D-50): the document whose tab it was opened on. The tab
+   * commands (`tab.*`) act on that tab; any other command makes it the active
+   * document first (D-01: commands act on the active document).
+   */
+  tab?: string;
 }
 
 export interface CommandHandler {
@@ -37,8 +43,11 @@ export interface CommandHandler {
    * Disabled with "restricted by the document's security settings" otherwise.
    */
   requires?: Capability | readonly Capability[];
-  /** Any other reason the command is unavailable right now (null: enabled). */
-  disabledReason?(ctx: CommandContext): MessageKey | null;
+  /**
+   * Any other reason the command is unavailable right now (null: enabled). `args`: as
+   * the command would run (a tab menu's tab, M11-05).
+   */
+  disabledReason?(ctx: CommandContext, args?: CommandArgs): MessageKey | null;
   /** Pressed state for toggles (panes, tools, view modes). */
   isPressed?(): boolean;
 }
@@ -102,7 +111,11 @@ export function commandContext(): CommandContext {
   return { hasDocument: active !== null, security: active ? securityOf(active.meta) : null };
 }
 
-export function commandState(id: string, ctx: CommandContext = commandContext()): CommandState {
+export function commandState(
+  id: string,
+  ctx: CommandContext = commandContext(),
+  args?: CommandArgs,
+): CommandState {
   const h = handlers.get(id);
   const pressed = h?.isPressed?.() ?? false;
   if (!h) return { enabled: false, pressed, reason: msg('ribbon.notReady') };
@@ -112,7 +125,7 @@ export function commandState(id: string, ctx: CommandContext = commandContext())
     h.requires === undefined ? [] : typeof h.requires === 'string' ? [h.requires] : h.requires;
   if (ctx.security && needs.some((c) => ctx.security && !allows(ctx.security, c)))
     return { enabled: false, pressed, reason: msg('protect.restricted') };
-  const reason = h.disabledReason?.(ctx) ?? null;
+  const reason = h.disabledReason?.(ctx, args) ?? null;
   if (reason) return { enabled: false, pressed, reason };
   return { enabled: true, pressed };
 }
@@ -132,8 +145,12 @@ export function onBeforeCommand(fn: (id: string) => void): () => void {
 
 /** Runs a command if it is enabled; returns whether it ran. */
 export async function runCommand(id: string, args?: CommandArgs): Promise<boolean> {
+  if (args?.tab !== undefined && !id.startsWith('tab.')) {
+    if (!documentStore.getState().docs[args.tab]) return false;
+    documentStore.getState().activate(args.tab);
+  }
   const ctx = commandContext();
-  if (!commandState(id, ctx).enabled) return false;
+  if (!commandState(id, ctx, args).enabled) return false;
   for (const fn of beforeRun) fn(id);
   await handlers.get(id)?.run(ctx, args);
   notify();

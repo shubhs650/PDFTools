@@ -46,6 +46,15 @@ export function registerOpenProbe(hook: TestHook): void {
       const handle = await dir.getFileHandle(name);
       return openFiles([{ file: await handle.getFile(), handle }]);
     },
+    /** The names in the folder openHandles writes to (Rename File, M11-05). */
+    async fileNames() {
+      const root = await navigator.storage.getDirectory();
+      const dir = await root.getDirectoryHandle('e2e-files', { create: true });
+      const names: string[] = [];
+      for await (const key of (dir as unknown as { keys(): AsyncIterable<string> }).keys())
+        names.push(key);
+      return names.sort();
+    },
     /** Size of a file written by openHandles / openFromInput. */
     async fileSize(name: string) {
       const root = await navigator.storage.getDirectory();

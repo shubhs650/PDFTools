@@ -97,6 +97,10 @@
             "Double-click the empty part of the tab row to open a file, as in a web browser.",
             "Drag a tab along the row to change the order of your documents; the others slide out of the way, and <kbd>Esc</kbd> puts it back. With the keyboard, press <kbd>{{tabLeft}}</kbd> or <kbd>{{tabRight}}</kbd> on a tab. On a touch screen, hold the tab for a moment, then drag.",
             "Click a tab with the middle mouse button (the wheel) to close it.",
+            "Right-click a tab (or press <kbd>{{menu}}</kbd> on it, or on a touch screen hold it and let go) for its menu: <b>Save</b>, <b>Close</b>, <b>Close Other Tabs</b>, <b>Close Tabs to the Right</b>, <b>Close All Tabs</b>, <b>Reopen Closed Tab</b>, <b>Move Left</b> or <b>Move Right</b>, <b>Sort Tabs by Name</b>, <b>Copy File Name</b> and <b>Document Properties</b>. Each acts on that tab. Unsaved documents are asked about one by one, and <b>Cancel</b> keeps the rest open.",
+            "<b>Reopen Closed Tab</b> opens the last file you closed in this session again, from the file on your device (the browser may ask for permission again). New documents that were never saved can't be reopened.",
+            "<b>Rename File…</b> renames the file on your device, in the same folder. It appears only where the browser can rename a file in place (Chrome and Edge on a computer, for files opened from your device).",
+            "Right-click the empty part of the tab row for <b>Open</b>, <b>Create Blank PDF</b>, <b>Reopen Closed Tab</b> and <b>Close All Tabs</b>.",
             "You can also drag PDF files from your desktop or file manager and drop them on the window.",
             "<b>File</b> › <b>Recent</b> lists the files you opened on this device. Click one to open it again.",
             "A password-protected file asks for its password first. See [Protected and signed files](#protected-files)."

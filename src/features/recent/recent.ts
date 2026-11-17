@@ -69,6 +69,15 @@ export async function recordOpened(opened: {
   await loadRecent();
 }
 
+/** The file behind `handle` was renamed in place (M11-05): its entries show the new name. */
+export async function renameRecent(handle: FileSystemFileHandle, name: string): Promise<void> {
+  if (!recentSupported()) return;
+  const db = await appDb();
+  for (const e of await sameFileEntries(await db.listRecent(100), handle))
+    await db.putRecent({ ...e, name });
+  await loadRecent();
+}
+
 export async function removeRecent(id: string): Promise<void> {
   await (await appDb()).removeRecent(id);
   recentStore.setState((s) => ({ problem: s.problem?.id === id ? null : s.problem }));
