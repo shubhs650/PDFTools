@@ -35,7 +35,8 @@ interop is in the M6 pack (CHECKLIST §M6 R1–R4). Rev 0 (M0–M4) is complete 
   in no family); Carlito and IBM Plex ship unmodified (reserved font names). **Fixed on the
   way:** ADR-024's two-colour text boxes were squeezed when turned (`turnedBounds` in
   `freeTextColors.ts`; the unit test now writes a turned comment as the plugin does). Owner
-  interop file: shared folder `m11-02/s26-interop.pdf` (and a flattened copy).
+  interop file: shared folder `m11-02/s26-interop.pdf` (and a flattened copy). **The owner
+  accepted route R2 and the measured library on 2026-11-17** (no trimming).
 
 - **Session 77 — M11-10 panes (D-56, ADR-028).** The owner's two items: the right Properties
   pane could not be resized, and each side pane gets a PDF-XChange-style arrow that hides or
@@ -2954,10 +2955,6 @@ rel="noopener noreferrer">`; the commands `app.home` / `app.reportIssue` open th
   Drawings are supplied locally by the owner anyway (ADR-002).
 
 ## Decisions needed (owner)
-
-- **Font library (S26, ADR-028 amendment):** accept route R2 and the measured library (16.0 MB
-  background precache instead of the planned 8–10 MB; Chinese as Noto Sans SC TrueType Regular
-  and Bold cut to GB 2312; Noto Sans Math as a hidden fallback).
 
 - **Keyboard text selection (M2-04).** Caret-based selection (Shift+arrows) is not built; the
   keyboard path is Ctrl+A (page text) + Ctrl+C. Accept as an exception to the M2-04 criterion, or

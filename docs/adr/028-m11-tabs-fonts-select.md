@@ -108,8 +108,9 @@ is re-applied whenever EmbedPDF regenerates the appearance. This is the **third 
 finds a blocker, this ADR is amended with the fallback (Latin families first) before M11-07.
 
 _S26 result (2026-11-17, M11-02, `spikes/s26-freetext-fonts/`): **works, route R2**, with
-the changes below. **Proposed amendment, awaiting the owner** (the Chinese font and the size
-differ from the plan; the owner's interop check of the sample file gates M11-07):_
+the changes below. **Amendment accepted by the owner on 2026-11-17** (route R2 and the
+measured 16.0 MB library, Chinese Regular and Bold); the owner's interop check of the sample file
+still gates M11-07:_
 
 - **Route R2 is chosen.** HarfBuzz (`harfbuzzjs` 1.6.4, MIT; `harfbuzz.wasm` 444 KB for shaping,
   `harfbuzz-subset.wasm` 684 KB for subsetting, which needs no JavaScript glue) shapes the text
