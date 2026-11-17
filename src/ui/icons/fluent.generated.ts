@@ -158,6 +158,7 @@ import { Triangle20Filled, Triangle20Regular } from '@fluentui/react-icons/svg/t
 import { WeatherMoon20Filled, WeatherMoon20Regular } from '@fluentui/react-icons/svg/weather-moon';
 import { WebAsset20Regular, WebAsset24Regular } from '@fluentui/react-icons/svg/web-asset';
 import { WindowLocationTarget20Filled, WindowLocationTarget20Regular } from '@fluentui/react-icons/svg/window-location-target';
+import { ZoomFit20Filled, ZoomFit20Regular } from '@fluentui/react-icons/svg/zoom-fit';
 import { ZoomIn20Regular } from '@fluentui/react-icons/svg/zoom-in';
 import { ZoomOut20Regular } from '@fluentui/react-icons/svg/zoom-out';
 
@@ -199,6 +200,7 @@ export const FLUENT_GLYPHS: Record<string, FluentGlyphs> = {
   'view.fitVisible': { regular: { small: ArrowAutofitContent20Regular } },
   'view.zoomIn': { regular: { small: ZoomIn20Regular } },
   'view.zoomOut': { regular: { small: ZoomOut20Regular } },
+  'view.zoomToArea': { regular: { small: ZoomFit20Regular }, filled: { small: ZoomFit20Filled } },
   'view.loupe': { regular: { small: SearchSquare20Regular }, filled: { small: SearchSquare20Filled } },
   'view.panZoom': { regular: { small: WindowLocationTarget20Regular }, filled: { small: WindowLocationTarget20Filled } },
   'view.singlePage': { regular: { small: DocumentOnePage20Regular }, filled: { small: DocumentOnePage20Filled } },

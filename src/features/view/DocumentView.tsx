@@ -11,7 +11,7 @@ import { TilingLayer } from '@embedpdf/plugin-tiling/react';
 import { Viewport } from '@embedpdf/plugin-viewport/react';
 import { ZoomMode, type ZoomCapability, type ZoomDocumentState } from '@embedpdf/plugin-zoom';
 import { useEffect, useMemo, useRef, useState, type KeyboardEvent, type PointerEvent } from 'react';
-import { appStore, useApp } from '../../app/store/appStore';
+import { appStore, effectiveTool, useApp } from '../../app/store/appStore';
 import { isEditable } from '../../app/keys/useShortcuts';
 import { documentStore, useDocuments, type ZoomSetting } from '../../app/store/documentStore';
 import { HighlightLayer } from '../search/HighlightLayer';
@@ -41,6 +41,7 @@ import { notePointerDown } from './pagePoint';
 import { capability, useHost } from './host';
 import { HAND_MODE, PAGE_GAP, POINTER_MODE, SELECT_COMMENTS_MODE } from './plugins';
 import { PreviewLayer } from './PreviewLayer';
+import { ZoomAreaLayer } from './ZoomAreaLayer';
 import { restorePending, useRestoringView } from './lastView';
 import { setViewFocus } from './tileScheduler';
 import {
@@ -207,7 +208,7 @@ export function DocumentView({ documentId }: { documentId: string }) {
   const registry = useHost((s) => s.registry);
   const ready = useDocuments((s) => s.docs[documentId] !== undefined);
 
-  const tool = useApp((s) => (s.spaceHand ? 'hand' : s.tool));
+  const tool = useApp(effectiveTool);
   const mode = useDocuments((s) => s.docs[documentId]?.view.mode ?? 'continuous');
   const page = useDocuments((s) => s.docs[documentId]?.view.page ?? 0);
   const pageCount = useDocuments((s) => s.docs[documentId]?.meta.pageCount ?? 0);
@@ -309,7 +310,8 @@ export function DocumentView({ documentId }: { documentId: string }) {
       // No selection plugin: no marquee.
     }
     im.forDocument(documentId).activate(
-      tool === 'hand'
+      // Zoom to Area takes the pointer itself (ZoomAreaLayer): no text selection under it.
+      tool === 'hand' || tool === 'zoomArea'
         ? HAND_MODE
         : tool === 'selectObjects'
           ? SELECT_COMMENTS_MODE
@@ -389,13 +391,17 @@ export function DocumentView({ documentId }: { documentId: string }) {
     };
   }, [paged, page, documentId]);
 
-  // Space held = Hand until released (§8.1); released anywhere.
+  // Space held = Hand until released (§8.1); Z held with Hand = Zoom to Area
+  // until released (M11-08·O4); released anywhere.
   useEffect(() => {
     const up = (e: globalThis.KeyboardEvent): void => {
       if (e.key === ' ') appStore.getState().setSpaceHand(false);
+      if (e.key.toLowerCase() === 'z' && appStore.getState().zoomHold)
+        appStore.getState().setZoomHold(false);
     };
     const blur = (): void => {
       appStore.getState().setSpaceHand(false);
+      if (appStore.getState().zoomHold) appStore.getState().setZoomHold(false);
     };
     window.addEventListener('keyup', up);
     window.addEventListener('blur', blur);
@@ -418,6 +424,10 @@ export function DocumentView({ documentId }: { documentId: string }) {
       // Not on a control over the page (a link, a checkbox or radio field): Space presses it.
       e.preventDefault(); // no page-down scroll while Space means Hand
       if (!e.repeat) appStore.getState().setSpaceHand(true);
+    } else if (e.key.toLowerCase() === 'z' && !e.shiftKey && tool === 'hand') {
+      // Z held with Hand: Zoom to Area until Z is released (M11-08·O4).
+      e.preventDefault();
+      if (!e.repeat) appStore.getState().setZoomHold(true);
     }
   };
 
@@ -490,6 +500,7 @@ export function DocumentView({ documentId }: { documentId: string }) {
             )}
           />
         </Viewport>
+        {tool === 'zoomArea' ? <ZoomAreaLayer host={host} /> : null}
       </div>
     </DocumentMenu>
   );

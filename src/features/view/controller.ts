@@ -19,6 +19,14 @@ import { movePage, type PageMove } from './navigation';
 import { PAGE_GAP } from './plugins';
 import { isFacing, rotateView, spreadIndexOf, spreadsFor, toQuarterTurns } from './viewModes';
 import { clampZoom, fitVisibleZoom, rotateBox, stepZoom, type Box } from './zoom';
+import {
+  areaZoom,
+  distanceTo,
+  fractionIn,
+  scrollToPlace,
+  type Area,
+  type Point,
+} from './zoomAreaModel';
 
 interface Active {
   docId: string;
@@ -65,6 +73,90 @@ export function zoomTo(factor: number, center?: { vx: number; vy: number }): voi
 
 export function zoomStep(dir: 1 | -1): void {
   zoomTo(stepZoom(currentScale(), dir));
+}
+
+/** Zoom In / Zoom Out by one stop at a point of the view (a click with Zoom to Area). */
+export function zoomStepAt(dir: 1 | -1, at: { vx: number; vy: number }): void {
+  const vp = viewportElement();
+  if (!vp) return;
+  const view = viewBox(vp);
+  zoomAnchored(stepZoom(currentScale(), dir), at, { x: view.left + at.vx, y: view.top + at.vy });
+}
+
+/** The visible part of the scroller, in client pixels. */
+function viewBox(vp: HTMLElement): { left: number; top: number; width: number; height: number } {
+  const r = vp.getBoundingClientRect();
+  return {
+    left: r.left + vp.clientLeft,
+    top: r.top + vp.clientTop,
+    width: vp.clientWidth,
+    height: vp.clientHeight,
+  };
+}
+
+/** The page nearest a client point and where the point lies in it. */
+function pageAnchor(vp: HTMLElement, p: Point): { page: string; f: Point; width: number } | null {
+  let best: { page: string; f: Point; width: number } | null = null;
+  let bestD = Infinity;
+  for (const el of vp.querySelectorAll<HTMLElement>('.page[data-page]:not([data-hidden])')) {
+    const r = el.getBoundingClientRect();
+    const d = distanceTo(p, r);
+    if (d < bestD && el.dataset['page'] !== undefined) {
+      bestD = d;
+      best = { page: el.dataset['page'], f: fractionIn(p, r), width: r.width };
+    }
+  }
+  return best;
+}
+
+/** Frames to wait for the pages to take their new size after a zoom. */
+const SETTLE_FRAMES = 30;
+
+/**
+ * Zooms to `to` around the view point `at`, then, once the pages have their
+ * new size, scrolls the same point of the same page to `target` (client
+ * pixels). The zoom plugin keeps `at` only roughly (its gaps and centring
+ * drift by a few pixels), and Zoom to Area moves it to the middle anyway.
+ */
+function zoomAnchored(to: number, at: { vx: number; vy: number }, target: Point): void {
+  const a = active();
+  const vp = viewportElement();
+  if (!a || !vp) return;
+  const from = a.zoom.getState().currentZoomLevel;
+  const view = viewBox(vp);
+  const anchor = pageAnchor(vp, { x: view.left + at.vx, y: view.top + at.vy });
+  fitVisibleLevels.delete(a.docId);
+  a.zoom.requestZoom(clampZoom(to), at);
+  if (!anchor) return;
+  const docId = a.docId;
+  const expected = (anchor.width * a.zoom.getState().currentZoomLevel) / from;
+  let frames = 0;
+  const place = (): void => {
+    if (documentStore.getState().activeId !== docId) return;
+    const el = vp.querySelector<HTMLElement>(`.page[data-page="${anchor.page}"]`);
+    const r = el?.getBoundingClientRect();
+    if (!r || Math.abs(r.width - expected) > 2) {
+      if (++frames < SETTLE_FRAMES) requestAnimationFrame(place);
+      return;
+    }
+    const d = scrollToPlace(r, anchor.f, target);
+    vp.scrollLeft += d.x;
+    vp.scrollTop += d.y;
+  };
+  requestAnimationFrame(place);
+}
+
+/**
+ * Zoom to Area (M11-08·O4): the area (viewport pixels) fills the window, its
+ * middle in the middle of the view.
+ */
+export function zoomToArea(area: Area): void {
+  const vp = viewportElement();
+  if (!vp) return;
+  const view = viewBox(vp);
+  const to = areaZoom(area, { width: view.width, height: view.height }, currentScale(), PAGE_GAP);
+  const mid = { vx: area.left + area.width / 2, vy: area.top + area.height / 2 };
+  zoomAnchored(to, mid, { x: view.left + view.width / 2, y: view.top + view.height / 2 });
 }
 
 export async function setZoom(target: ZoomTarget): Promise<void> {

@@ -1,6 +1,6 @@
 # Triya PDF — Progress
 
-_Last updated: 2026-11-17 (session 85: M11-08·O3 remember each file's last view)_
+_Last updated: 2026-11-17 (session 86: M11-08·O4 Zoom to Area)_
 
 **Current milestone:** M11 — file tabs, OCR text selection, a font library and comments in every
 pointer mode: plan [docs/plan/M11.md](plan/M11.md) and [ADR-028](adr/028-m11-tabs-fonts-select.md)
@@ -20,6 +20,29 @@ interop is in the M6 pack (CHECKLIST §M6 R1–R4). Rev 0 (M0–M4) is complete 
 
 ## Done
 
+- **Session 86 — M11-08·O4 Zoom to Area (ADR-028, plan O4).** **View › Zoom to Area** (a
+  toggle in the Zoom group, icon Fluent `ZoomFit`; also in the page menu's zoom section) is a
+  pointer tool (`zoomArea`): a drag anywhere in the view draws a dashed accent rectangle, and on
+  release the area fills the window (the side that fits less decides; a side under 8 px does not
+  count, so a drag along a dimension line fits its length), its middle in the middle of the view;
+  a click zooms in one step at the pointer, Alt+click zooms out; the tool stays on until Esc or the
+  button; **Previous View** (Alt+Left) goes back (each area zoom records a jump). **Z held with
+  Hand** (`zoomHold` in the app store; `effectiveTool()` puts Z held over Space held over the
+  tool) is Zoom to Area until Z is released, then Hand pans again. The tool takes every press:
+  `ZoomAreaLayer` listens on the scroller in the capture phase (the wheel, scroll bars and the
+  right button keep their jobs; the click after a press is swallowed, so no link or field reacts),
+  the interaction mode is Hand's (no text selection) and every comment is locked
+  (`lockModeFor`); markupPointer's pass-through follows the effective tool. The rectangle is in
+  viewport pixels, so it may start in the grey, cross pages and works at any view rotation. The
+  zoom plugin keeps a point only roughly (8 px off from Fit Page), so `zoomAnchored` notes the
+  page and the fraction of it under the point, waits for the pages' new size and scrolls that
+  page point exactly where it belongs. Pure model `src/features/view/zoomAreaModel.ts`;
+  controller `zoomToArea`, `zoomStepAt`. Help: Zoom, pages and full screen › To zoom. Tests:
+  `tests/view/zoomAreaModel.test.ts`; `e2e/zoom-area.spec.ts` (area fills the window, also with
+  the view rotated 90°; nothing selected under the drag; Previous View; Esc; click and Alt+click;
+  page menu; Z held with Hand and Hand back after). The Help screenshot of the View tab
+  (`zoom-and-pages-1`) gains the button at M11-09's regeneration. Shots in project files
+  `m11-08-o4/`. Next: M11-08·O6 copy or save a page image.
 - **Session 85 — M11-08·O3 remember each file's last view (D-53, ADR-028, plan O3).** A file
   opens again at the page, zoom (factor or fit mode), view mode and view rotation it was left at.
   **Kept** in IndexedDB `pdftools › lastViews` (schema v8), keyed by the document fingerprint
@@ -2965,8 +2988,8 @@ rel="noopener noreferrer">`; the commands `app.home` / `app.reportIssue` open th
 - **Agent (M11):** the 18 tasks in [docs/plan/M11.md](plan/M11.md) "Order of work", one thread
   each. Done: M11-01, M11-10, M11-02 (spike S26), M11-03 (tabs: look, hover card, +), M11-04
   (drag to reorder), M11-05 (tab menus), M11-06 (comments in every pointer mode), M11-07 (font
-  library), M11-08·O1 (selected-text menu), M11-08·O3 (each file's last view). Next: M11-08·O4
-  (Zoom to Area).
+  library), M11-08·O1 (selected-text menu), M11-08·O3 (each file's last view), M11-08·O4 (Zoom
+  to Area). Next: M11-08·O6 (copy or save a page image).
 - **Owner (M11-02):** open `m11-02/s26-interop.pdf` in Acrobat Reader and PDF-XChange: the
   eleven comments look as in the PNG beside it, Find finds their text in the flattened copy, and
   the font names show in the document's font list. This gates M11-07.

@@ -6,7 +6,7 @@
 // to the page (app.css: `[data-markup]`) and the click is matched to a markup
 // here, by its line boxes. A right press selects it at once, so the comment
 // menu opens on it.
-import { appStore } from '../../app/store/appStore';
+import { appStore, effectiveTool } from '../../app/store/appStore';
 import { onTextSelectionAt } from '../select/textSelection';
 import { pagePointAt } from '../view/pagePoint';
 import { isClick, markupAt } from './pointerModes';
@@ -42,10 +42,10 @@ function select(docId: string, hit: { id: string; page: number }, toggle: boolea
   }
 }
 
-/** The tools whose presses pass through markups (Space held is Hand too). */
+/** The tools whose presses pass through markups (Space held is Hand too; Z held is not). */
 const passesMarkups = (): boolean => {
-  const s = appStore.getState();
-  return s.tool === 'selectText' || s.tool === 'hand' || s.spaceHand;
+  const tool = effectiveTool(appStore.getState());
+  return tool === 'selectText' || tool === 'hand';
 };
 
 /** Called once at startup (DocumentHost); returns the uninstall. */

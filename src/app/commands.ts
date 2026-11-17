@@ -517,6 +517,16 @@ export const COMMANDS: readonly CommandDef[] = [
     milestone: 'M1',
   },
   {
+    // M11-08·O4 (ADR-028): drag a rectangle and it fills the window; a click zooms in.
+    id: 'view.zoomToArea',
+    tab: 'view',
+    group: 'zoom',
+    size: 'small',
+    fluent: 'ZoomFit',
+    milestone: 'M1',
+    toggle: true,
+  },
+  {
     id: 'view.loupe',
     tab: 'view',
     group: 'zoom',

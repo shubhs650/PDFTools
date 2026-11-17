@@ -61,6 +61,7 @@
       "fitVisible": "Fit Visible",
       "zoomIn": "Zoom In",
       "zoomOut": "Zoom Out",
+      "zoomToArea": "Zoom to Area",
       "loupe": "Loupe",
       "panZoom": "Pan and Zoom Window",
       "singlePage": "Single Page",
