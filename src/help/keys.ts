@@ -19,6 +19,7 @@ export function helpKeys(t: TFunction): Record<string, string> {
     fitPage: k('view.fitPage'),
     fitWidth: k('view.fitWidth'),
     actualSize: k('view.actualSize'),
+    prevView: k('view.prevView'),
     fullScreen: k('view.fullScreen'),
     darkTheme: k('view.darkTheme'),
     find: k('home.find'),

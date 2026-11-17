@@ -75,6 +75,7 @@ export const PAGE_MENU: readonly ContextMenuEntry[] = [
   sep('zoom'),
   cmd('view.zoomIn'),
   cmd('view.zoomOut'),
+  cmd('view.zoomToArea'),
   cmd('view.fitPage'),
   cmd('view.fitWidth'),
   sep('rotate'),

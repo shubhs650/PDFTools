@@ -53,6 +53,21 @@ export function registerViewCommands(): () => void {
         zoomStep(-1);
       },
     }),
+    // Zoom to Area (M11-08·O4): a pointer tool; the toggle and Esc go back to Select.
+    registerCommand('view.zoomToArea', {
+      requiresDocument: true,
+      run: () => {
+        const s = appStore.getState();
+        if (s.tool === 'zoomArea') {
+          s.setTool('select');
+          return;
+        }
+        clearSelection();
+        deselectAnnotations();
+        s.setTool('zoomArea');
+      },
+      isPressed: () => appStore.getState().tool === 'zoomArea',
+    }),
     zoomCommand('view.fitPage', 'fitPage', () => zoomIs('fitPage')),
     zoomCommand('view.fitWidth', 'fitWidth', () => zoomIs('fitWidth')),
     zoomCommand('view.fitVisible', 'fitVisible', () => zoomIs('fitVisible')),

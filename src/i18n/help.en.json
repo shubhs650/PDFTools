@@ -199,6 +199,8 @@
           "list": [
             "<kbd>{{zoomIn}}</kbd> and <kbd>{{zoomOut}}</kbd>, or hold <kbd>{{mod}}</kbd> and turn the mouse wheel.",
             "<kbd>{{fitPage}}</kbd> fits the whole page, <kbd>{{fitWidth}}</kbd> fits its width and <kbd>{{actualSize}}</kbd> shows it at its actual size.",
+            "<b>View</b> › <b>Zoom to Area</b>: drag a rectangle around the part you want to see, and it fills the window. A click zooms in one step at that point and <kbd>Alt</kbd>+click zooms out. The tool stays on until you press <kbd>Esc</kbd>; <b>Previous View</b> (<kbd>{{prevView}}</kbd>) goes back to where you were.",
+            "With the Hand tool, hold <kbd>Z</kbd> and drag a rectangle to zoom to it; let go of <kbd>Z</kbd> to pan again.",
             "<b>View</b> › <b>Loupe</b> magnifies the area under the pointer, and <b>Pan and Zoom Window</b> shows where you are on a large drawing."
           ]
         },

@@ -29,6 +29,8 @@ export type Tool =
   | 'snapshot'
   // Attach File (M6-10): a click on a page picks the file to attach there.
   | 'attachFile'
+  // Zoom to Area (M11-08·O4): a drag fills the window with its area, a click zooms in.
+  | 'zoomArea'
   // Select Fields (M6-14): form fields are selected, moved and resized; nothing is filled.
   | 'selectFields'
   // Note, text and drawing tools (M3-09): EmbedPDF tool ids.
@@ -52,6 +54,8 @@ export interface AppState {
   tool: Tool;
   /** Space held: Hand until released (§8.1). */
   spaceHand: boolean;
+  /** Z held with Hand: Zoom to Area until released (M11-08·O4). */
+  zoomHold: boolean;
   toggleLeftPane(): void;
   /** Shows `pane`; choosing the pane already shown closes the pane area. */
   choosePane(pane: string): void;
@@ -64,6 +68,7 @@ export interface AppState {
   setShortcutsOpen(open: boolean): void;
   setTool(tool: Tool): void;
   setSpaceHand(on: boolean): void;
+  setZoomHold(on: boolean): void;
 }
 
 export const createAppStore = () =>
@@ -78,6 +83,7 @@ export const createAppStore = () =>
     shortcutsOpen: false,
     tool: 'select',
     spaceHand: false,
+    zoomHold: false,
     toggleLeftPane: () => {
       set((s) => ({ leftPaneOpen: !s.leftPaneOpen }));
     },
@@ -110,14 +116,23 @@ export const createAppStore = () =>
       set({ shortcutsOpen: open });
     },
     setTool: (tool) => {
-      set({ tool, spaceHand: false });
+      set({ tool, spaceHand: false, zoomHold: false });
     },
     setSpaceHand: (on) => {
       set({ spaceHand: on });
     },
+    setZoomHold: (on) => {
+      set({ zoomHold: on });
+    },
   }));
 
 export const appStore = createAppStore();
+
+/** The pointer tool in effect: Z held (Zoom to Area) and Space held (Hand) win over the tool. */
+export function effectiveTool(s: Pick<AppState, 'tool' | 'spaceHand' | 'zoomHold'>): Tool {
+  if (s.zoomHold) return 'zoomArea';
+  return s.spaceHand ? 'hand' : s.tool;
+}
 
 export function useApp<T>(selector: (s: AppState) => T): T {
   return useStore(appStore, selector);

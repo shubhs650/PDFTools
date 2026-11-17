@@ -2135,6 +2135,30 @@ body {
   cursor: grabbing;
 }
 
+/* Zoom to Area (M11-08·O4): the tool takes every press in the view, so its
+   cursor wins over the page layers' own (text, comments, links, fields). */
+.document-host[data-tool='zoomArea'] .viewport,
+.document-host[data-tool='zoomArea'] .viewport * {
+  cursor: zoom-in !important;
+}
+
+/* The rectangle being drawn, over the view (client pixels). */
+.zoom-area-rect {
+  position: fixed;
+  z-index: var(--z-banner); /* over the pages and their note windows, under menus */
+  box-sizing: border-box;
+  border: 1px dashed var(--color-accent);
+  background: color-mix(in srgb, var(--color-accent) 8%, transparent);
+  pointer-events: none;
+}
+
+@media (forced-colors: active) {
+  .zoom-area-rect {
+    border-color: Highlight;
+    background: transparent;
+  }
+}
+
 /* A file's last view being put in place (D-53): the pages wait, so page 1 does not flash first. */
 .document-host[data-restoring='true'] .page {
   opacity: 0;
