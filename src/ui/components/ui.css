@@ -327,10 +327,38 @@
   white-space: nowrap;
 }
 
-.ui-font-sample {
+.ui-font-sample,
+.ui-font-why {
   flex: none;
   margin-inline-start: auto;
   color: var(--color-text-muted);
+}
+
+.ui-font-why {
+  flex: 0 1 auto;
+  overflow: hidden;
+  font-size: var(--font-size-s);
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* Fonts on this computer (D-54): many entries, drawn only when scrolled to. */
+.ui-font-group[data-group='system'] .ui-font-option {
+  content-visibility: auto;
+  contain-intrinsic-size: auto var(--density-row-height);
+}
+
+.ui-font-option--disabled {
+  cursor: default;
+}
+
+.ui-font-option--disabled .ui-font-name {
+  color: var(--color-text-muted);
+}
+
+.ui-font-option--action .ui-font-name {
+  color: var(--color-link);
+  font-size: var(--font-size-m);
 }
 
 @media (forced-colors: active) {
@@ -347,6 +375,15 @@
     background: Highlight;
     color: HighlightText;
     forced-color-adjust: none;
+  }
+
+  .ui-font-option--disabled .ui-font-name,
+  .ui-font-why {
+    color: GrayText;
+  }
+
+  .ui-font-option--action .ui-font-name {
+    color: LinkText;
   }
 }
 

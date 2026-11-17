@@ -6,13 +6,16 @@
 import {
   FALLBACK_CHAIN,
   fontLibraryPath,
+  isSystemFontId,
   libraryFamily,
   resolveFace,
   type LibraryFace,
   type LibraryFamily,
 } from '../../../model/fonts/library';
+import { hasTable } from '../../../model/fonts/sfnt';
 import { Subsetter } from './hbsubset';
 import { loadFace, type Face, type Harfbuzz } from './layout';
+import type { SystemFontFiles } from './systemFonts';
 
 /** Where the bytes come from: fetch in the worker, files in Node tests. */
 export interface FontSource {
@@ -65,7 +68,14 @@ export class FaceStore {
     let p = this.faces.get(key);
     if (!p) {
       p = Promise.all([this.harfbuzz(), this.source.fontFile(f.file)]).then(([hb, bytes]) =>
-        loadFace(hb, key, bytes, f.wght),
+        // A weight is drawn only from a variable file (a font on this computer names
+        // one for each face, D-54; a static face is drawn as it is).
+        loadFace(
+          hb,
+          key,
+          bytes,
+          f.wght !== undefined && hasTable(bytes, 'fvar') ? f.wght : undefined,
+        ),
       );
       p.catch(() => this.faces.delete(key));
       this.faces.set(key, p);
@@ -120,8 +130,15 @@ export function missingIn(text: string, faces: readonly Face[]): Set<number> {
   return out;
 }
 
-/** In the Render worker: HarfBuzz and the font files from our own origin. */
-export function workerFontSource(origin: string, subsetUrl: string): FontSource {
+/**
+ * In the Render worker: HarfBuzz and the font files from our own origin; a
+ * font on this computer (`sys:` file, D-54) from the main thread.
+ */
+export function workerFontSource(
+  origin: string,
+  subsetUrl: string,
+  system: SystemFontFiles,
+): FontSource {
   return {
     harfbuzz: () => import('./harfbuzz'),
     subsetWasm: async () => {
@@ -130,6 +147,7 @@ export function workerFontSource(origin: string, subsetUrl: string): FontSource 
       return res.arrayBuffer();
     },
     fontFile: async (file) => {
+      if (isSystemFontId(file)) return system.bytes(file);
       const res = await fetch(new URL(fontLibraryPath(file), origin).href);
       if (!res.ok) throw new Error(`font: HTTP ${String(res.status)}`);
       return new Uint8Array(await res.arrayBuffer());

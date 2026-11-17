@@ -88,6 +88,8 @@ function executorWith(
       signatureCount: 0,
     }),
     memory: () => ({ wasmBytes: 0 }),
+    systemFonts: () => null,
+    inspectSystemFont: () => ({ use: 'ok' as const, standard: 'helvetica' as const }),
   });
   return createHostedExecutor(new RpcClient<RenderApi>(ch.port2, 'render'), onMutation);
 }

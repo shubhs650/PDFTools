@@ -4,6 +4,7 @@ import type { PdfAnnotationObject, PageTextSlice, PdfPageGeometry } from '@embed
 import type { DocDigest } from '../workers/render/save/digest';
 import type { AttachmentInfo, AttachmentRef } from '../workers/work/attachments';
 import type { FormFacts } from '../model/formFacts';
+import type { LibraryFamily } from '../model/fonts/library';
 import type { ImagePageSize } from '../model/imagePages';
 import type { PageVp } from '../workers/work/viewports';
 import type { Band, BandRequest } from '../workers/work/print';
@@ -54,6 +55,8 @@ export type WorkPriority = 'interactive' | 'save-verify' | 'geometry' | 'backgro
 
 export interface WorkApi {
   init: MethodSpec<{ wasmUrl: string }, { ms: number; wasmBytes: number }>;
+  /** Fonts on this computer (M11-08·O5, D-54): their names, so a comment's /DS reads back to one. */
+  systemFonts: MethodSpec<{ families: LibraryFamily[] }, null>;
   /** `original` is transferred (the worker keeps it); `tail` is the incremental tail so far. */
   open: MethodSpec<
     {
