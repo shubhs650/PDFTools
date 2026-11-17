@@ -357,7 +357,7 @@ test('Home (M7-09): names, tooltips with shortcuts, pane toggles, Rotate View, S
   await expect(
     page.getByRole('tablist', { name: 'Open documents' }).getByRole('tab'),
   ).not.toHaveAccessibleName(/unsaved/);
-  const pane = home.getByRole('button', { name: 'Properties Pane' });
+  const pane = home.getByRole('button', { name: 'Properties Pane', exact: true });
   const before = await pane.getAttribute('aria-pressed');
   await pane.click();
   await expect(pane).not.toHaveAttribute('aria-pressed', before ?? '');

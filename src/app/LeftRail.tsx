@@ -1,15 +1,18 @@
 import { Dismiss20Regular } from '@fluentui/react-icons/svg/dismiss';
-import { useEffect, useRef, type KeyboardEvent, type PointerEvent } from 'react';
+import { useEffect, useRef } from 'react';
 import { useTranslation } from 'react-i18next';
 import { IconButton, ToggleButton } from '../ui/components';
 import { CommandIcon } from '../ui/icons/CommandIcon';
 import { commandLabelKey } from './commandLabels';
 import { runCommand } from './commands/dispatch';
 import { PANES, paneById } from './panes';
-import { appStore, PANE_WIDTH_MAX, PANE_WIDTH_MIN, useApp } from './store/appStore';
+import { PaneEdge } from './PaneEdge';
+import { PaneSplitter } from './PaneSplitter';
+import { appStore, useApp } from './store/appStore';
 
-/** Arrow-key step of the pane resizer, in CSS px. */
-const RESIZE_STEP = 16;
+/** The pane's element id, for its edge arrow's aria-controls (M11-10). */
+const PANE_ID = 'left-pane';
+const SPLITTER_TEST_ID = 'pane-resizer';
 
 const railButton = (id: string): HTMLElement | null =>
   document.querySelector<HTMLElement>(`[data-rail="${id}"] button`);
@@ -17,8 +20,9 @@ const railButton = (id: string): HTMLElement | null =>
 /**
  * Left rail and pane area (§5, M2-08). The rail holds the pane area toggle and
  * one button per pane (panes.ts); the chosen pane shows beside it with a
- * title, a close button and a keyboard-operable resizer. Esc in a pane
- * returns to its rail button.
+ * title and a close button. The edge strip after it (M11-10, D-56) holds the
+ * keyboard-operable splitter and the arrow that hides or shows the pane. Esc
+ * in a pane returns to its rail button.
  */
 export function LeftRail() {
   const { t } = useTranslation();
@@ -65,39 +69,6 @@ export function LeftRail() {
     };
   }, [open, paneId]);
 
-  const onResizeKey = (e: KeyboardEvent): void => {
-    const steps: Record<string, number> = {
-      ArrowLeft: width - RESIZE_STEP,
-      ArrowRight: width + RESIZE_STEP,
-      Home: PANE_WIDTH_MIN,
-      End: PANE_WIDTH_MAX,
-    };
-    const to = steps[e.key];
-    if (to === undefined) return;
-    e.preventDefault();
-    appStore.getState().setLeftPaneWidth(to);
-  };
-
-  const onResizeDown = (e: PointerEvent<HTMLDivElement>): void => {
-    if (e.button !== 0) return;
-    e.preventDefault();
-    const el = e.currentTarget;
-    el.setPointerCapture(e.pointerId);
-    const x0 = e.clientX;
-    const w0 = width;
-    const move = (ev: globalThis.PointerEvent): void => {
-      appStore.getState().setLeftPaneWidth(w0 + ev.clientX - x0);
-    };
-    const up = (): void => {
-      el.removeEventListener('pointermove', move);
-      el.removeEventListener('pointerup', up);
-      el.removeEventListener('pointercancel', up);
-    };
-    el.addEventListener('pointermove', move);
-    el.addEventListener('pointerup', up);
-    el.addEventListener('pointercancel', up);
-  };
-
   const Pane = pane?.component;
   return (
     <aside
@@ -134,6 +105,7 @@ export function LeftRail() {
       {open ? (
         <section
           ref={section}
+          id={PANE_ID}
           className="left-pane"
           data-testid="left-pane"
           aria-labelledby="left-pane-title"
@@ -157,23 +129,21 @@ export function LeftRail() {
           <div ref={body} className="left-pane-body">
             {Pane ? <Pane /> : null}
           </div>
-          {/* eslint-disable-next-line jsx-a11y/no-noninteractive-element-interactions -- WAI-ARIA window splitter */}
-          <div
-            role="separator"
-            aria-orientation="vertical"
-            aria-label={t('frame.resizePane')}
-            aria-valuenow={width}
-            aria-valuemin={PANE_WIDTH_MIN}
-            aria-valuemax={PANE_WIDTH_MAX}
-            // eslint-disable-next-line jsx-a11y/no-noninteractive-tabindex -- a window splitter is focusable
-            tabIndex={0}
-            className="pane-resizer"
-            data-testid="pane-resizer"
-            onKeyDown={onResizeKey}
-            onPointerDown={onResizeDown}
-          />
         </section>
       ) : null}
+      <PaneEdge side="left" open={open} controls={PANE_ID}>
+        {open ? (
+          <PaneSplitter
+            side="left"
+            label={t('frame.resizePane')}
+            width={width}
+            onWidth={(px) => {
+              appStore.getState().setLeftPaneWidth(px);
+            }}
+            testId={SPLITTER_TEST_ID}
+          />
+        ) : null}
+      </PaneEdge>
     </aside>
   );
 }

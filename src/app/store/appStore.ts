@@ -3,6 +3,7 @@
 // through selectors (useApp) so a change re-renders only its readers.
 import { createStore, useStore } from 'zustand';
 import type { DrawTool } from '../../features/annotate/tools/drawModel';
+import { PANE_WIDTH_DEFAULT, clampPaneWidth } from '../paneSize';
 
 /**
  * Pointer tools: Select (V) selects text and annotations (M3-05); Select Text
@@ -33,9 +34,7 @@ export type Tool =
   // Note, text and drawing tools (M3-09): EmbedPDF tool ids.
   | DrawTool;
 
-export const PANE_WIDTH_MIN = 160;
-export const PANE_WIDTH_MAX = 480;
-export const PANE_WIDTH_DEFAULT = 260; // --pane-width
+export { PANE_WIDTH_DEFAULT, PANE_WIDTH_MAX, PANE_WIDTH_MIN } from '../paneSize';
 
 export interface AppState {
   leftPaneOpen: boolean;
@@ -44,6 +43,8 @@ export interface AppState {
   /** Width of the left pane in CSS px (resizable, M2-08). */
   leftPaneWidth: number;
   propertiesOpen: boolean;
+  /** Width of the Properties pane in CSS px (resizable, M11-10). */
+  propertiesWidth: number;
   ribbonCollapsed: boolean;
   /** The ribbon tab shown (M3-17: scale viewports show on the Measure tab). */
   ribbonTab: string;
@@ -57,6 +58,7 @@ export interface AppState {
   setLeftPaneWidth(px: number): void;
   toggleProperties(): void;
   setProperties(open: boolean): void;
+  setPropertiesWidth(px: number): void;
   toggleRibbon(): void;
   setRibbonTab(tab: string): void;
   setShortcutsOpen(open: boolean): void;
@@ -70,6 +72,7 @@ export const createAppStore = () =>
     leftPane: 'rail.thumbnails',
     leftPaneWidth: PANE_WIDTH_DEFAULT,
     propertiesOpen: false,
+    propertiesWidth: PANE_WIDTH_DEFAULT,
     ribbonCollapsed: false,
     ribbonTab: 'home',
     shortcutsOpen: false,
@@ -86,13 +89,16 @@ export const createAppStore = () =>
       );
     },
     setLeftPaneWidth: (px) => {
-      set({ leftPaneWidth: Math.round(Math.min(PANE_WIDTH_MAX, Math.max(PANE_WIDTH_MIN, px))) });
+      set({ leftPaneWidth: clampPaneWidth(px) });
     },
     toggleProperties: () => {
       set((s) => ({ propertiesOpen: !s.propertiesOpen }));
     },
     setProperties: (open) => {
       set({ propertiesOpen: open });
+    },
+    setPropertiesWidth: (px) => {
+      set({ propertiesWidth: clampPaneWidth(px) });
     },
     toggleRibbon: () => {
       set((s) => ({ ribbonCollapsed: !s.ribbonCollapsed }));

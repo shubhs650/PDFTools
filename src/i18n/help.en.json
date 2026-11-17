@@ -257,12 +257,13 @@
         {
           "shot": "side-panes-1",
           "alt": "The Thumbnails pane open on the left of a document",
-          "caption": "1 The rail · 2 The Thumbnails pane"
+          "caption": "1 The rail · 2 The Thumbnails pane · 3 The arrow that hides or shows the pane"
         },
         {
           "steps": [
             "Click an icon in the rail to open its pane. Click it again to close the pane.",
-            "Drag the pane's edge to make it wider or narrower.",
+            "Click the arrow on the pane's edge to hide the pane, and again to show it. It brings back the pane you used last. The Properties pane has an arrow too, on the right edge of the window.",
+            "Drag the pane's edge to make it wider or narrower, for the Properties pane too. Or Tab to the edge and press the arrow keys.",
             "Press <kbd>Esc</kbd> in a pane to go back to the rail."
           ]
         },
@@ -278,7 +279,7 @@
           ]
         },
         {
-          "p": "The <b>Properties pane</b> on the right (<b>Home</b> › <b>Properties Pane</b>) shows the selected comment, form field or tool. See [Comment properties](#comment-properties)."
+          "p": "The <b>Properties pane</b> on the right (<b>Home</b> › <b>Properties Pane</b>, or the arrow on the window's right edge) shows the selected comment, form field or tool. See [Comment properties](#comment-properties)."
         }
       ]
     },

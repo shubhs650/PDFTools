@@ -30,7 +30,7 @@ async function setup(page: Page) {
   const sq = (await cap(page, 'annotate', 'createSquare', id, 0, 60, 60)) as string;
   await expect.poll(async () => (await objects(page, id)).length).toBe(1);
   await page.getByRole('tab', { name: 'View' }).click();
-  await page.getByRole('button', { name: 'Properties Pane' }).click();
+  await page.getByRole('button', { name: 'Properties Pane', exact: true }).click();
   await cap(page, 'annotate', 'selectMany', id, [sq]);
   return { id, sq };
 }

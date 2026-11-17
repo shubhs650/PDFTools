@@ -138,6 +138,10 @@ acceptance).** The right Properties pane gets the left pane's window splitter (d
 always visible, that hides or shows it through the existing pane commands (the left one reopens
 the last pane); 24 × 48 px, keyboard-reachable, `aria-expanded`, never over the document's
 scrollbar.
+_Amended by the owner, 2026-11-17 (M11-10, PR #120):_ the arrows are **12 × 48 px** on a 12 px
+edge strip, like PDF-XChange's (the owner tried 24 px and found it too wide). They meet WCAG 2.5.8
+through its equivalent-control exception (the ribbon and rail buttons run the same commands),
+and axe passes. The document keeps its reading place when a pane is shown, hidden or resized.
 
 ### ARCHITECTURE.md changes (Rev 0.17, applied 2026-11-17)
 

@@ -377,7 +377,10 @@ for (const c of CASES) {
     const first = await charBox(page, 0);
     const third = await charBox(page, 2);
     if (!first || !third) throw new Error('no text');
-    await page.mouse.move(first.x + 0.5, first.y + first.h / 2);
+    // A quarter into "H", not on its edge: a Typewriter has no padding, so a point a
+    // sub-pixel left of the text (where a layout's fractional offset can round it) is
+    // outside the editor and starts no selection.
+    await page.mouse.move(first.x + first.w / 4, first.y + first.h / 2);
     await page.mouse.down();
     await page.mouse.move(third.x + third.w - 0.5, third.y + third.h / 2, { steps: 5 });
     await page.mouse.up();

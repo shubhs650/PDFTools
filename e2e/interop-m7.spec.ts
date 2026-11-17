@@ -341,7 +341,7 @@ test('M7 interop: a text box and a callout with blue text on a red border (ADR-0
 
   // The Properties pane: Text color Blue, Border color Red, for each one.
   await page.getByRole('tab', { name: 'View', exact: true }).click();
-  await page.getByRole('button', { name: 'Properties Pane' }).click();
+  await page.getByRole('button', { name: 'Properties Pane', exact: true }).click();
   await expect(pane(page)).toBeVisible();
   for (const c of [box, callout]) {
     const o = (await objects(page, id)).find((x) => x.id === c);

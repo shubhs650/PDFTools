@@ -171,21 +171,100 @@ body {
   overflow: hidden;
 }
 
+/* A side pane's edge strip (M11-10, D-56; PDF-XChange-style, layout only): a thin bar on the
+   pane's inner edge, always there, with the splitter while the pane is shown and, centred on
+   it, the arrow that hides or shows the pane. Its own column, so it never covers the
+   document or its scrollbar. */
+.pane-edge {
+  position: relative;
+  flex: none;
+  width: var(--pane-edge-width);
+  background: var(--color-bg);
+}
+
+.pane-edge--left.pane-edge--open {
+  border-left: var(--border-width) solid var(--color-border);
+}
+
+.pane-edge--right {
+  border-left: var(--border-width) solid var(--color-border);
+}
+
+/* The splitter fills the strip; hover or keyboard focus draws an accent line down it. */
 .pane-resizer {
   position: absolute;
-  top: var(--space-0);
-  right: calc(var(--space-1) * -1);
-  bottom: var(--space-0);
-  z-index: 1;
-  width: var(--space-2);
+  inset: var(--space-0);
   cursor: col-resize;
   touch-action: none;
 }
 
-.pane-resizer:hover,
-.pane-resizer:focus-visible {
+.pane-resizer::after {
+  position: absolute;
+  top: var(--space-0);
+  bottom: var(--space-0);
+  left: calc(50% - var(--space-1) / 2);
+  width: var(--space-1);
+  content: '';
+}
+
+.pane-resizer:hover::after,
+.pane-resizer:focus-visible::after {
   background: var(--color-accent);
-  outline: none;
+}
+
+.pane-resizer:focus-visible {
+  outline: var(--focus-width) solid var(--color-focus);
+  outline-offset: calc(-1 * var(--focus-width));
+}
+
+/* The arrow: the strip's width, 48 px tall, centred; the ring drawn inside, so the
+   neighbouring pane and the document never clip it. */
+.pane-edge-button {
+  position: absolute;
+  top: calc(50% - var(--pane-edge-button-height) / 2);
+  left: var(--space-0);
+  z-index: 1;
+  display: grid;
+  place-items: center;
+  width: 100%;
+  height: var(--pane-edge-button-height);
+  padding: var(--space-0);
+  border: var(--border-width) solid var(--color-border);
+  border-radius: var(--radius-s);
+  background: var(--color-surface);
+  color: var(--color-icon);
+  cursor: pointer;
+  transition: background-color var(--duration-fast) var(--ease-out);
+}
+
+.pane-edge-button > span {
+  display: flex;
+}
+
+.pane-edge-button:hover {
+  background: var(--color-hover);
+}
+
+.pane-edge-button:active {
+  background: var(--color-pressed);
+}
+
+.pane-edge-button.ui-focusable:focus-visible {
+  outline-offset: calc(-1 * var(--focus-width));
+  box-shadow: none;
+}
+
+@media (forced-colors: active) {
+  .pane-resizer:hover::after,
+  .pane-resizer:focus-visible::after {
+    background: Highlight;
+    forced-color-adjust: none;
+  }
+
+  .pane-edge-button {
+    border-color: ButtonText;
+    color: ButtonText;
+  }
 }
 
 .pane-empty {
@@ -301,8 +380,18 @@ body {
   background: var(--color-canvas);
 }
 
+/* The Properties pane's landmark: its edge strip, then the pane while it is shown (M11-10).
+   A row as tall as the body, so the pane scrolls inside itself. */
+.properties-dock {
+  display: flex;
+  min-height: var(--space-0);
+  overflow: hidden;
+}
+
 .properties-pane {
-  width: var(--pane-width);
+  flex: none;
+  box-sizing: border-box; /* its width, border included, is the splitter's value */
+  width: var(--pane-width); /* the Properties pane's resizable width is set inline (M11-10) */
   border-left: var(--border-width) solid var(--color-border);
   background: var(--color-surface);
 }

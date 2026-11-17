@@ -37,7 +37,7 @@ async function open(page: Page, bytes: Uint8Array): Promise<string> {
 /** View → Properties Pane, then back to Measure (the viewport list shows there). */
 async function propertiesPane(page: Page) {
   await page.getByRole('tab', { name: 'View' }).click();
-  await page.getByRole('button', { name: 'Properties Pane' }).click();
+  await page.getByRole('button', { name: 'Properties Pane', exact: true }).click();
   await page.getByRole('tab', { name: 'Measure' }).click();
 }
 

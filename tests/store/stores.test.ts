@@ -138,4 +138,17 @@ describe('app store', () => {
     s.getState().setLeftPaneWidth(250.4);
     expect(s.getState().leftPaneWidth).toBe(250);
   });
+
+  it('keeps and clamps the Properties pane width apart from the left pane (M11-10)', () => {
+    const s = createAppStore();
+    expect(s.getState().propertiesWidth).toBe(PANE_WIDTH_DEFAULT);
+    s.getState().setPropertiesWidth(9999);
+    expect(s.getState().propertiesWidth).toBe(PANE_WIDTH_MAX);
+    expect(s.getState().leftPaneWidth).toBe(PANE_WIDTH_DEFAULT);
+    s.getState().setProperties(false);
+    s.getState().setProperties(true);
+    expect(s.getState().propertiesWidth).toBe(PANE_WIDTH_MAX);
+    s.getState().setPropertiesWidth(10);
+    expect(s.getState().propertiesWidth).toBe(PANE_WIDTH_MIN);
+  });
 });

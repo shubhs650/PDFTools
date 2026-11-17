@@ -241,7 +241,7 @@ test('M6 interop: default styles, the property grid, an attached file; a flatten
   });
   // Marked (a hidden state reply) and Locked from the Properties pane.
   await page.getByRole('tab', { name: 'View' }).click();
-  await page.getByRole('button', { name: 'Properties Pane' }).click();
+  await page.getByRole('button', { name: 'Properties Pane', exact: true }).click();
   await cap(page, 'annotate', 'selectMany', id, [box]);
   const pane = page.getByTestId('properties-pane');
   await pane.getByLabel('Marked', { exact: true }).check();
