@@ -1,10 +1,13 @@
 # Triya PDF — Progress
 
-_Last updated: 2026-11-17 (session 74: M10-09 acceptance, M10 complete on the agent side)_
+_Last updated: 2026-11-17 (session 75: M11 plan proposed; M10 closed by the owner)_
 
-**Current milestone:** M10 — modern look and feel (plan [docs/plan/M10.md](plan/M10.md),
-[ADR-027](adr/027-m10-visual-refresh.md), ARCHITECTURE.md Rev 0.16): **complete on the agent
-side** ([acceptance](acceptance/M10.md)), waiting on the owner's look and feel review. M9 (Help
+**Current milestone:** M11 — file tabs, OCR text selection, a font library and comments in every
+pointer mode: plan [docs/plan/M11.md](plan/M11.md) and [ADR-028](adr/028-m11-tabs-fonts-select.md)
+**proposed**, waiting for the owner's review (Q1–Q8, optional items O1–O9). **M10 closed** by the
+owner on 2026-11-17 ("majority aspects of the tool are working good"). **Earlier:** M10 — modern
+look and feel (plan [docs/plan/M10.md](plan/M10.md),
+[ADR-027](adr/027-m10-visual-refresh.md), ARCHITECTURE.md Rev 0.16): **complete** ([acceptance](acceptance/M10.md)); the owner closed it on 2026-11-17. M9 (Help
 window) and M8 (JSON comments) are done. **Earlier:** M7 — second beta review (plan in [docs/plan/M7.md](plan/M7.md), scope in
 [ADR-023](adr/023-m7-second-beta-review.md), **Accepted** 2026-11-04 with the recommended
 answers Q1–Q7; ARCHITECTURE.md Rev 0.12 after [ADR-024](adr/024-freetext-text-and-border-colours.md)). M7-01 … M7-12 done, plus separate text and border colours (ADR-024): **M7 complete on the agent side** ([acceptance](acceptance/M7.md)); next: the owner's interop §M7 run, and **M8 — lossless JSON comment export and import (JSON v2)**, plan [docs/plan/M8.md](plan/M8.md) and [ADR-025](adr/025-m8-lossless-json-comments.md) (**Accepted** by the owner 2026-11-05, ARCHITECTURE.md Rev 0.13; M8-01 done in PR #94; XFDF/FDF deferred by the owner). **Previous milestone:** M6 — Beta review (plan in [docs/plan/M6.md](plan/M6.md), scope changes in
@@ -13,6 +16,18 @@ answers Q1–Q7; ARCHITECTURE.md Rev 0.12 after [ADR-024](adr/024-freetext-text-
 interop is in the M6 pack (CHECKLIST §M6 R1–R4). Rev 0 (M0–M4) is complete on the agent side.
 
 ## Done
+
+- **Session 75 — M11 plan (proposed).** From the owner's message of 2026-11-17 (users' tests of
+  the M10 build): [docs/plan/M11.md](plan/M11.md) and [ADR-028](adr/028-m11-tabs-fonts-select.md)
+  (Proposed: D-50 document tabs v2, D-51 comments in every pointer mode, D-52 font library for
+  text comments). **Root causes found:** OCR text not selectable until reopen = the selection
+  plugin's cached page geometry is never evicted after an `objects` change (`contentPages()` in
+  `pageOps.ts` lists only Flatten's pages); the faint selected tab = `.tab-button`'s transparent
+  background overriding `.tab--active` (same specificity, later rule). A web app cannot show a
+  file's folder path (File System Access), so the hover card shows where the file came from.
+  Tasks M11-01 … M11-09 (OCR fix first, spike S26 for fonts in FreeText appearances second),
+  optional items O1–O9 for the owner. Before shots and a rough tab preview in the shared folder
+  `m11-plan/`.
 
 - **Session 74 — M10-09 acceptance (ADR-027). M10 is complete on the agent side**
   ([acceptance](acceptance/M10.md)). Every review item maps to a task or the reason we did not
@@ -2675,9 +2690,9 @@ rel="noopener noreferrer">`; the commands `app.home` / `app.reportIssue` open th
 
 ## Next
 
-- **Owner (M10):** the look and feel review in [docs/acceptance/M10.md](acceptance/M10.md) §6 on
-  the deployed beta: light and dark, each accent, Compact, Windows High Contrast, the What's new
-  card after an update, Help's new screenshots.
+- **Owner (M11):** review the M11 plan PR: answers to Q1–Q8 and which optional items O1–O9 to
+  build. Nothing is coded before that.
+- **Owner (M10):** done — the owner closed M10 on 2026-11-17.
 - **Owner (M9):** try Help on the deployed beta (F1 on a few tabs and dialogs, search, print,
   installed-app window, offline). Re-run `npm run help:screenshots` after visible UI changes.
 - **Agent:** the queued task (owner, 2026-11-05), in its own thread: make comment export and
