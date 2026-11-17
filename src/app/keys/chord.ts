@@ -49,6 +49,8 @@ export const chordId = (c: Chord): string =>
 
 export interface KeyLike {
   key: string;
+  /** The physical key ("KeyQ"): Option+letter on macOS types a character ("œ"). */
+  code?: string;
   ctrlKey: boolean;
   metaKey: boolean;
   shiftKey: boolean;
@@ -63,7 +65,10 @@ export function matches(chord: Chord, e: KeyLike, mac: boolean): boolean {
   const ctrl = mac ? e.metaKey : e.ctrlKey;
   if (ctrl !== chord.ctrl || e.altKey !== chord.alt) return false;
   const key = normalizeKey(e.key);
-  if (key !== chord.key) return false;
+  // Option+Q on macOS types "œ": a letter chord with Alt matches its physical key there.
+  const optionLetter =
+    mac && chord.alt && /^[a-z]$/.test(chord.key) && e.code === `Key${chord.key.toUpperCase()}`;
+  if (key !== chord.key && !optionLetter) return false;
   const shiftInsensitive = key === '+' || key === '=' || key === '-';
   return shiftInsensitive || e.shiftKey === chord.shift;
 }

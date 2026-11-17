@@ -41,7 +41,16 @@ export interface Binding {
    * sheet and the menus' key hints.
    */
   browserEvent?: boolean;
+  /**
+   * Not its Ctrl chords on macOS, where Ctrl means Cmd and the browser keeps the
+   * chord (Cmd+Q quits it): the others are the keys there.
+   */
+  noCtrlOnMac?: boolean;
 }
+
+/** The chords a binding has on this platform (`noCtrlOnMac` leaves Cmd chords out). */
+export const chordsOn = (binding: Binding, mac: boolean): Chord[] =>
+  mac && binding.noCtrlOnMac ? binding.chords.filter((c) => !c.ctrl) : binding.chords;
 
 const b = (
   target: string,
@@ -76,6 +85,9 @@ export const KEYMAP: readonly Binding[] = [
   // Full screen (M6-01, D-35): F11 is the browser's own (page only); Esc leaves.
   b('view.fullScreen', ['Ctrl+Shift+F11']),
   b('view.darkTheme', ['Ctrl+Shift+D']), // M7-11 (D-42)
+  // Tell me (M10-08·O2): Alt+Q as in Microsoft 365, Ctrl+Q as an alternate except on
+  // macOS (Cmd+Q quits the browser). Not while typing: Alt+Q is a character on some layouts.
+  { ...b('app.tellMe', ['Alt+Q', 'Ctrl+Q']), noCtrlOnMac: true },
   // Quick Find (M2-07, §8.1): runs only on Enter in the bar; F3 walks the results.
   { ...b('home.find', ['Ctrl+F']), inText: true },
   b('find.next', ['F3']),

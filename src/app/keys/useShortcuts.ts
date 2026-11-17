@@ -1,7 +1,7 @@
 import { useEffect } from 'react';
 import { commandState, runCommand } from '../commands/dispatch';
 import { isMac, matches, type KeyLike } from './chord';
-import { KEYMAP, type Binding } from './keymap';
+import { KEYMAP, chordsOn, type Binding } from './keymap';
 
 /** Text fields where typed keys belong to the field, not to shortcuts. */
 export function isEditable(el: Element | null): boolean {
@@ -47,8 +47,9 @@ export function resolveBinding(
 ): Binding | undefined {
   // A chord can be bound once per scope (Delete in the document and in the bookmark tree).
   const binding =
-    keymap.find((bnd) => bnd.chords.some((c) => matches(c, e, mac)) && inScope(bnd, focus)) ??
-    keymap.find((bnd) => bnd.chords.some((c) => matches(c, e, mac)));
+    keymap.find(
+      (bnd) => chordsOn(bnd, mac).some((c) => matches(c, e, mac)) && inScope(bnd, focus),
+    ) ?? keymap.find((bnd) => chordsOn(bnd, mac).some((c) => matches(c, e, mac)));
   if (!binding) return undefined;
   const isEscape = e.key === 'Escape';
   if (focus.editable && !isEscape && binding.inText !== true) return undefined;

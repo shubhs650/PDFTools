@@ -1662,6 +1662,17 @@ export const COMMANDS: readonly CommandDef[] = [
   },
   // Top bar (M6-01, ADR-021 D-35): the OpenEngTools home link, the GitHub
   // issue link and full screen, at the right end of the ribbon's tab row.
+  // Tell me (M10-08·O2, ADR-027): find any command by name and run it (Alt+Q). First
+  // in the top bar's buttons; never in its own results.
+  {
+    id: 'app.tellMe',
+    tab: 'topBar',
+    group: 'topBar',
+    size: 'small',
+    fluent: 'Lightbulb',
+    milestone: 'M6',
+    shipped: true,
+  },
   {
     id: 'app.home',
     tab: 'topBar',

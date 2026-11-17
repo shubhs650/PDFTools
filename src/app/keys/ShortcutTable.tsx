@@ -5,9 +5,9 @@ import { useTranslation } from 'react-i18next';
 import { msg, type MessageKey } from '../../i18n';
 import { commandLabelKey } from '../commandLabels';
 import type { InternalAction } from '../commands/dispatch';
-import { formatChord } from './chord';
+import { formatChord, isMac } from './chord';
 import { keyLabels } from './labels';
-import { KEYMAP } from './keymap';
+import { KEYMAP, chordsOn } from './keymap';
 
 // The sheet's own wording where a command's label is too short to explain its keys.
 const ACTION_LABELS: Record<
@@ -40,7 +40,8 @@ const ACTION_LABELS: Record<
 
 export function ShortcutTable({ testId = 'shortcut-sheet' }: { testId?: string }) {
   const { t } = useTranslation();
-  const labels = keyLabels(t);
+  const mac = isMac();
+  const labels = keyLabels(t, mac);
   const label = (target: string): string =>
     t((ACTION_LABELS as Record<string, MessageKey | undefined>)[target] ?? commandLabelKey(target));
   return (
@@ -60,7 +61,7 @@ export function ShortcutTable({ testId = 'shortcut-sheet' }: { testId?: string }
                 : label(bnd.target)}
             </th>
             <td>
-              {bnd.chords.map((c, i) => (
+              {chordsOn(bnd, mac).map((c, i) => (
                 <span key={i}>
                   {i > 0 ? t('shortcuts.or') : null}
                   <kbd>{formatChord(c, labels)}</kbd>

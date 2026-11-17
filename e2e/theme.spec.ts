@@ -61,11 +61,18 @@ test('light by default; the top-bar toggle switches at once and is remembered ac
   const button = toggle(page);
   await expect(button).toHaveAccessibleName('Dark Theme');
   await expect(button).toHaveAttribute('aria-pressed', 'false');
-  // At the right end of the top bar, before OpenEngTools, the issue link and full screen.
+  // At the right end of the top bar, after Tell Me (M10-08·O2), before OpenEngTools, the
+  // issue link and full screen.
   const order = await page
     .locator('.top-bar-actions [data-command]')
     .evaluateAll((els) => els.map((e) => e.getAttribute('data-command')));
-  expect(order).toEqual(['view.darkTheme', 'app.home', 'app.reportIssue', 'view.fullScreen']);
+  expect(order).toEqual([
+    'app.tellMe',
+    'view.darkTheme',
+    'app.home',
+    'app.reportIssue',
+    'view.fullScreen',
+  ]);
 
   await guard.startMeasuring();
   await button.click();

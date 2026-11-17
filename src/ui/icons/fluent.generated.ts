@@ -79,6 +79,7 @@ import { InkingTool20Filled, InkingTool20Regular } from '@fluentui/react-icons/s
 import { Keyboard20Regular, Keyboard24Regular } from '@fluentui/react-icons/svg/keyboard';
 import { Layer20Filled, Layer20Regular } from '@fluentui/react-icons/svg/layer';
 import { LayerDiagonal20Regular } from '@fluentui/react-icons/svg/layer-diagonal';
+import { Lightbulb20Regular } from '@fluentui/react-icons/svg/lightbulb';
 import { Line20Filled, Line20Regular } from '@fluentui/react-icons/svg/line';
 import { LineFlowDiagonalUpRight20Filled, LineFlowDiagonalUpRight20Regular } from '@fluentui/react-icons/svg/line-flow-diagonal-up-right';
 import { Link20Filled, Link20Regular } from '@fluentui/react-icons/svg/link';
@@ -307,6 +308,7 @@ export const FLUENT_GLYPHS: Record<string, FluentGlyphs> = {
   'rail.signatures': { regular: { small: Signature20Regular }, filled: { small: Signature20Filled } },
   'rail.search': { regular: { small: Search20Regular }, filled: { small: Search20Filled } },
   'rail.layers': { regular: { small: Layer20Regular }, filled: { small: Layer20Filled } },
+  'app.tellMe': { regular: { small: Lightbulb20Regular } },
   'app.home': { regular: { small: Home20Regular } },
   'app.reportIssue': { regular: { small: Bug20Regular } },
   'view.fullScreen': { regular: { small: FullScreenMaximize20Regular } },

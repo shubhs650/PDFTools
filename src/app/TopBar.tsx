@@ -1,7 +1,7 @@
 // Top bar (M6-01, ADR-021 D-35): the product mark and name at the left of the
-// one header row (M10-08·O3, D-47), and at the right end of that row the theme
-// toggle (M7-11, ADR-023 D-42), the OpenEngTools home link, the GitHub issue
-// link and the full-screen button.
+// one header row (M10-08·O3, D-47), and at the right end of that row Tell me
+// (M10-08·O2), the theme toggle (M7-11, ADR-023 D-42), the OpenEngTools home
+// link, the GitHub issue link and the full-screen button.
 import { WeatherSunny20Regular } from '@fluentui/react-icons/svg/weather-sunny';
 import { useTranslation } from 'react-i18next';
 import { Tooltip } from '../ui/components';
@@ -135,11 +135,37 @@ function ThemeButton() {
   );
 }
 
-/** The right end of the ribbon's tab row: theme, home, report an issue, full screen. */
+/** Tell me (M10-08·O2): find a command by name and run it; Alt+Q from anywhere. */
+function TellMeButton() {
+  const { t } = useTranslation();
+  const label = t(commandLabelKey('app.tellMe'));
+  const keys = shortcutText('app.tellMe', t);
+  return (
+    <Tooltip content={keys ? t('ribbon.withShortcut', { label, keys }) : label}>
+      <button
+        type="button"
+        className="top-bar-button ui-focusable"
+        aria-label={label}
+        aria-haspopup="dialog"
+        {...(keys ? { 'aria-keyshortcuts': keys } : {})}
+        data-command="app.tellMe"
+        data-testid="tell-me-button"
+        onClick={() => {
+          void runCommand('app.tellMe');
+        }}
+      >
+        <CommandIcon id="app.tellMe" className="top-bar-icon" />
+      </button>
+    </Tooltip>
+  );
+}
+
+/** The right end of the ribbon's tab row: tell me, theme, home, report an issue, full screen. */
 export function TopBarActions() {
   const { t } = useTranslation();
   return (
     <div className="top-bar-actions" role="group" aria-label={t('topBar.label')}>
+      <TellMeButton />
       <ThemeButton />
       <TopBarLink id="app.home" href={OPENENGTOOLS_URL} />
       {/* Version, browser and OS only (rule 10); they do not change while the app runs. */}

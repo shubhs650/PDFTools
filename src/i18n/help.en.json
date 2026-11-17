@@ -57,6 +57,9 @@
           "tip": "Press <kbd>{{help}}</kbd> in {{app}} at any time to open Help at the topic for what you are doing."
         },
         {
+          "tip": "Can't find a command? Press <kbd>{{tellMe}}</kbd> or the lightbulb in the top bar (<b>Tell Me</b>), type what you want to do, such as “rotate” or “scale”, and press <kbd>Enter</kbd>. The list shows each command's tab and shortcut; choose one and press <kbd>Enter</kbd> again to run it."
+        },
+        {
           "h": "Where to start"
         },
         {

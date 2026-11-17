@@ -75,6 +75,12 @@
   animation: motion-dialog-in var(--duration-slow) var(--ease-out);
 }
 
+/* Tell me (M10-08·O2) drops from the header like a menu. */
+.tell-me[data-state='open'] {
+  transform-origin: top center;
+  animation: motion-pop-in var(--duration-normal) var(--ease-out);
+}
+
 /* Hover and press ease in (--duration-fast) on the rows and controls that did not yet:
    colour only, on small areas. Menu items stay instant: they follow the pointer and
    the arrow keys, where any lag reads as sluggish. */

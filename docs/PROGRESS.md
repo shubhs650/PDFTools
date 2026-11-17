@@ -1,6 +1,6 @@
 # Triya PDF — Progress
 
-_Last updated: 2026-11-16 (session 71: M10-08·O5 loading placeholders)_
+_Last updated: 2026-11-17 (session 72: M10-08·O2 command search, "Tell me")_
 
 **Current milestone:** M7 — second beta review (plan in [docs/plan/M7.md](plan/M7.md), scope in
 [ADR-023](adr/023-m7-second-beta-review.md), **Accepted** 2026-11-04 with the recommended
@@ -10,6 +10,41 @@ answers Q1–Q7; ARCHITECTURE.md Rev 0.12 after [ADR-024](adr/024-freetext-text-
 interop is in the M6 pack (CHECKLIST §M6 R1–R4). Rev 0 (M0–M4) is complete on the agent side.
 
 ## Done
+
+- **Session 72 — M10-08·O2 Command search, "Tell me" (ADR-027).** **Alt+Q** (Ctrl+Q too,
+  except on macOS, where Cmd+Q quits the browser; Option+Q there) or the new lightbulb at the
+  start of the top bar's buttons (**Tell Me**, `app.tellMe`, Fluent `Lightbulb`) opens a small
+  search box just under the header, centred, over the page (no backdrop, so **nothing in the
+  layout moves**; the header row keeps its spare room at 1280 px). Type what you want to do and
+  press **Enter** (or the Search button): the search runs then and never while typing
+  (rule 3; the status line says "Press Enter to search." until you do). The results list
+  every matching command with its icon, label, **where it lives** ("Comment › Text Markup",
+  "File", "Quick Access", "Side panes", "Top bar") and its **shortcut**; the first is chosen,
+  the arrow keys move the choice (`aria-activedescendant` on the combobox), and **Enter on
+  the same query runs it** (or a click). Commands that can't run now stay listed, softer,
+  with the reason ("Open a document to use this command") and do nothing. The box closes
+  first, focus returns to where it was, then the command runs, so a dialog it opens (Print)
+  takes focus and gives it back there. **Index** (`src/features/tellMe/commandSearch.ts`,
+  pure): every ribbon command once, at its own tab and group (Highlight at Comment, not its
+  Home copy; a copy-only command such as Select Text at its first copy), then File's
+  entries, Undo/Redo from Quick Access, the side panes the ribbon lacks and the top bar;
+  never itself, menu-only or status items. **Ranking:** exact label, label starting with the
+  query, word starts, inside the label, then through the place only ("measure" lists the
+  Measure tab); ties keep the ribbon's order; accents and case ignored. File's pages
+  (Recent, Properties, Settings, About, Privacy) became commands that open the backstage at
+  that page (`BACKSTAGE_PAGES` in App.tsx). Keymap: `Binding.noCtrlOnMac` with `chordsOn()`
+  (resolve, labels, shortcut sheet), and `matches()` takes an Alt+letter chord's physical
+  key on macOS (`code`). Help's welcome topic has a tip for it (`{{tellMe}}` key).
+  Motion: the box pops in from its top edge (180 ms, menu keyframes), none with reduced
+  motion. **Tests:** unit `tests/tellMe/commandSearch.test.ts` (index places, de-duplication,
+  exclusions, ranking), keys/labels tests (Alt+Q, Ctrl+Q, Option+Q, no Cmd+Q, not while
+  typing); e2e `tell-me.spec.ts` (@smoke: Enter-only search then Enter runs, header
+  unmoved, Ctrl+Q, fresh on reopen; disabled results with the reason; arrows wrap, click
+  runs Print and focus round-trips; File → About; axe in light and dark, fits at 1280 px);
+  perf `e2e/perf/motion.spec.ts` now opens Tell me and runs a search of "e" twice: no long
+  task. Updated: shortcut sheet count (75), top-bar order (theme.spec), Tab order
+  (ribbon.spec). Screenshots in the project's shared folder `m10-o2/`. Next: M10-08·O6
+  "What's new".
 
 - **Session 71 — M10-08·O5 Loading placeholders (ADR-027).** A page or thumbnail that is
   still rendering shows a soft paper tint (`--color-page-loading`, the same on the white page
