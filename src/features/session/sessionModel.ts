@@ -62,13 +62,16 @@ export interface OpenDoc {
 
 /**
  * The record for the documents open now, in tab order, followed by `waiting` (files from
- * last time not reopened yet: they stay in the record until reopened or dismissed).
+ * last time not reopened yet: they stay in the record until reopened or dismissed). When no
+ * open file is selected (none is open yet, or the selected tab has no file), `waitingActive`,
+ * the waiting file that was selected last time, stays the selected one.
  */
 export function sessionOf(
   docs: readonly OpenDoc[],
   activeId: string | null,
   waiting: readonly SessionEntry[],
   now: number,
+  waitingActive?: SessionEntry,
 ): SessionRecord {
   const entries: SessionEntry[] = [];
   let active = -1;
@@ -79,6 +82,7 @@ export function sessionOf(
   }
   for (const w of waiting) {
     if (entries.some((e) => e.handle === w.handle)) continue;
+    if (active === -1 && w === waitingActive) active = entries.length;
     entries.push(w);
   }
   return {

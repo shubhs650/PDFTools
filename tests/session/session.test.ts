@@ -215,6 +215,18 @@ describe('at start, with "reopen"', () => {
     off();
   });
 
+  it('keeps the selected tab in the record while every file waits', async () => {
+    const a = handle('a.pdf', { perm: 'prompt' });
+    const b = handle('b.pdf', { perm: 'prompt' });
+    settings.set(session.STARTUP_KEY, 'reopen');
+    stored = { entries: [entry(a), entry(b)], active: 1, savedAt: 1 };
+    const off = await launch();
+    expect(tabNames()).toEqual([]);
+    await session.sessionWritten();
+    expect(stored).toMatchObject({ active: 1 });
+    off();
+  });
+
   it('keeps a file waiting when the browser needs a fresh click to ask', async () => {
     const b = handle('b.pdf', { perm: 'prompt', request: 'throw' });
     settings.set(session.STARTUP_KEY, 'reopen');

@@ -88,6 +88,17 @@ describe('sessionOf', () => {
     expect(record.active).toBe(0);
   });
 
+  it('keeps the waiting file that was selected last time selected while none is open', () => {
+    const waitingA: SessionEntry = { name: 'a.pdf', handle: a, fp: 'fa', source: 'picked' };
+    const waitingB: SessionEntry = { name: 'b.pdf', handle: b, fp: 'fb', source: 'picked' };
+    expect(sessionOf([], null, [waitingA, waitingB], 0, waitingB).active).toBe(1);
+    // An open file that is selected wins.
+    expect(
+      sessionOf([{ id: 'd1', name: 'c.pdf', handle: c, fp: 'fc' }], 'd1', [waitingB], 0, waitingB)
+        .active,
+    ).toBe(0);
+  });
+
   it('keeps at most MAX_SESSION_FILES files', () => {
     const docs = Array.from({ length: MAX_SESSION_FILES + 5 }, (_, i) => ({
       id: `d${String(i)}`,

@@ -84,7 +84,7 @@ function currentRecord(): SessionRecord {
       ...(src ? { fp: src.fingerprint } : {}),
     };
   });
-  return sessionOf(open, activeId, sessionStore.getState().waiting, Date.now());
+  return sessionOf(open, activeId, sessionStore.getState().waiting, Date.now(), activeEntry);
 }
 
 /** Keeps the record in step with the tabs (only while "reopen" is chosen). */
