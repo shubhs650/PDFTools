@@ -11,6 +11,8 @@ import { STATUS_KEYS } from '../annotate/comments/statusLabels';
 import { setStatus } from '../annotate/comments/threadActions';
 import { annotationState } from '../annotate/selection';
 import { rootsOf } from '../annotate/transfer/copyPaste';
+import { selectionAnchor } from '../select/selectedText';
+import { textSelectionOf } from '../select/textSelection';
 import { clientPointOf, pageInView, viewOf, type Point } from './pagePoint';
 
 /** The statuses the menu sets (as the Comments pane's thread does). */
@@ -122,8 +124,17 @@ export function onSelectedComment(
   );
 }
 
-/** Where a keyboard-opened menu appears: on the selected comment in view, else mid-view. */
+/**
+ * Where a keyboard-opened menu appears: on the selected text in view (its
+ * menu, M11-08·O1), else on the selected comment in view, else mid-view.
+ */
 export function keyboardAnchor(docId: string): Point | null {
+  for (const s of textSelectionOf(docId)) {
+    const text = selectionAnchor([s]);
+    if (!text || !pageInView(docId, text.page)) continue;
+    const p = clientPointOf(docId, text.page, text);
+    if (p) return p;
+  }
   for (const a of selectedComments(docId)) {
     if (!pageInView(docId, a.pageIndex)) continue;
     const p = clientPointOf(docId, a.pageIndex, {

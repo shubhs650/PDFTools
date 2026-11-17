@@ -19,9 +19,19 @@ export type ContextMenuEntry =
    * shows Undo's Ctrl+Z, which the editor itself handles). `label`: this menu's own
    * wording for the command (M11-05: the strip menu's "Create Blank PDF…" is File → New).
    * `radio`: a group of toggles of which one is on (M11-06: the page menu's tools),
-   * shown as `menuitemradio`s.
+   * shown as `menuitemradio`s. `once`: a plain item even for a toggle command (M11-08·O1:
+   * the selected-text menu's Highlight marks the selection, it never turns the tool on).
+   * `values`: the label's interpolation values (the text menu's Search for "…").
    */
-  | { kind: 'command'; id: string; keysOf?: string; label?: MessageKey; radio?: string }
+  | {
+      kind: 'command';
+      id: string;
+      keysOf?: string;
+      label?: MessageKey;
+      radio?: string;
+      once?: boolean;
+      values?: Readonly<Record<string, string>>;
+    }
   | { kind: 'separator'; key: string }
   /** The command's label opens a submenu; its state enables or disables it. */
   | { kind: 'submenu'; id: string; choices: readonly MenuChoice[] };
@@ -31,6 +41,8 @@ export type MenuItemView =
       kind: 'command' | 'submenu';
       id: string;
       label: MessageKey;
+      /** The label's interpolation values (empty when none). */
+      values: Readonly<Record<string, string>>;
       /** Keys from the keymap ("Ctrl+C"), empty when none. */
       shortcut: string;
       enabled: boolean;
@@ -44,6 +56,8 @@ export type MenuItemView =
       choices: readonly MenuChoice[];
     }
   | { kind: 'separator'; key: string };
+
+const NO_VALUES: Readonly<Record<string, string>> = {};
 
 const TOGGLES = new Set(COMMANDS.filter((c) => c.toggle).map((c) => c.id));
 
@@ -67,9 +81,10 @@ export function menuItems(
       kind: e.kind,
       id: e.id,
       label: (e.kind === 'command' ? e.label : undefined) ?? commandLabelKey(e.id),
+      values: (e.kind === 'command' ? e.values : undefined) ?? NO_VALUES,
       shortcut: e.kind === 'command' ? shortcutOf(e.keysOf ?? e.id) : '',
       enabled: st.enabled,
-      toggle: e.kind === 'command' && TOGGLES.has(e.id),
+      toggle: e.kind === 'command' && !e.once && TOGGLES.has(e.id),
       radio: (e.kind === 'command' ? e.radio : undefined) ?? null,
       pressed: st.pressed,
       reason: st.enabled ? null : st.reason,

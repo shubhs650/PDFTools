@@ -325,6 +325,9 @@
           "alt": "The Search Results pane listing matches with their page numbers"
         },
         {
+          "tip": "Or select words on the page, right-click them and choose <b>Search for “…”</b>: the <b>Search Results</b> pane searches for them at once. The same menu has <b>Copy</b> and the text markups."
+        },
+        {
           "tip": "A scanned page has no text to find until you run [OCR](#ocr) on it."
         }
       ]
@@ -424,7 +427,7 @@
           "list": [
             "<b>Insert Text</b> marks where text should go, and <b>Replace Text</b> strikes text out and marks the replacement.",
             "<b>Highlight Area</b> highlights a rectangle, for drawings with no text. <b>Free Highlight</b> highlights freehand.",
-            "You can also select text first with <b>Select</b>, then right-click it and choose a markup."
+            "You can also select text first with <b>Select</b> or <b>Select Text</b>, then right-click it and choose <b>Highlight</b>, <b>Underline</b>, <b>Strikeout</b> or <b>Squiggly</b>."
           ]
         }
       ]
@@ -1121,7 +1124,7 @@
       "body": [
         {
           "steps": [
-            "Select text and choose <b>Protect</b> › <b>Mark for Redaction</b>, or choose <b>Mark Area for Redaction</b> and drag a rectangle.",
+            "Select text and choose <b>Protect</b> › <b>Mark for Redaction</b> (or right-click the selected text and choose it there), or choose <b>Mark Area for Redaction</b> and drag a rectangle.",
             "Check the marks in <b>Pending Redactions</b>. Remove any you don't want.",
             "Choose <b>Apply Redactions</b> and where to save the new file."
           ]

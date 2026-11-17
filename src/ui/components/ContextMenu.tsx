@@ -2,6 +2,7 @@ import { ChevronRight16Regular } from '@fluentui/react-icons/svg/chevron-right';
 import * as CM from '@radix-ui/react-context-menu';
 import * as DM from '@radix-ui/react-dropdown-menu';
 import { useId, type ReactElement } from 'react';
+import type { TOptions } from 'i18next';
 import { useTranslation } from 'react-i18next';
 import { runCommand, type CommandArgs, type CommandState } from '../../app/commands/dispatch';
 import { useCommandStates } from '../../app/commands/useCommandState';
@@ -196,7 +197,7 @@ function Item({
       <span className="ui-menu-icon">
         <CommandIcon id={item.id} pressed={item.pressed} />
       </span>
-      <span className="ui-menu-label">{t(item.label)}</span>
+      <span className="ui-menu-label">{t(item.label, item.values as TOptions)}</span>
       {item.shortcut ? (
         <span className="ui-menu-shortcut" aria-hidden="true">
           {item.shortcut}

@@ -1,6 +1,6 @@
 # Triya PDF — Progress
 
-_Last updated: 2026-11-17 (session 83: M11-07 font library for comments)_
+_Last updated: 2026-11-17 (session 84: M11-08·O1 selected-text menu)_
 
 **Current milestone:** M11 — file tabs, OCR text selection, a font library and comments in every
 pointer mode: plan [docs/plan/M11.md](plan/M11.md) and [ADR-028](adr/028-m11-tabs-fonts-select.md)
@@ -20,6 +20,28 @@ interop is in the M6 pack (CHECKLIST §M6 R1–R4). Rev 0 (M0–M4) is complete 
 
 ## Done
 
+- **Session 84 — M11-08·O1 selected-text menu (ADR-028, plan O1).** A right click on selected
+  text (or Shift+F10 / the Menu key while text is selected) opens a third document menu,
+  **Selected Text**: Copy, Highlight, Underline, Strikeout, Squiggly, Mark for Redaction and
+  **Search for “…”** (the text, cut to 32 characters, quoted in the label). Every item is the
+  ribbon's command, so its disabled reason (rule 9) and its way of acting on the selection are
+  the same; the markups and redaction run once (`once` on `ContextMenuEntry`: plain items, never
+  the tools' check boxes) and the tool does not stay on. **Before:** the right press cleared the
+  selection (the selection plugin's pointerdown) and the page menu opened. Now a capture
+  listener on the menu area stops a right press on the selected lines (`onTextSelectionAt`,
+  hit test on the segment rects with 2 pt of slack) before the page's handlers, and
+  markupPointer's right press over a highlight leaves it alone too; a right click elsewhere
+  still opens the page menu. **Search for “…”** (`edit.searchSelection`, registered with the
+  find commands; needs copy permission, so a copy-protected document's text is never quoted or
+  searched from here) puts the selected text (lines joined, white space collapsed, at most 256
+  characters) in the Search pane with regex and wildcards off, opens the pane and runs the
+  search at once (a click, rule 3). Labels take interpolation values (`values` on the entry).
+  Pure model `src/features/select/selectedText.ts`; plugin side `textSelection.ts`. Help:
+  Finding text (a tip), Text markup and Redaction mention the menu. Tests:
+  `tests/select/selectedText.test.ts`; `e2e/selected-text-menu.spec.ts` (menu and kept
+  selection, Copy, each markup and undo, Mark for Redaction, Search for, Shift+F10, Select Text
+  over a highlight, axe light and dark, a locked document). Shots in project files `m11-08-o1/`.
+  Next: M11-08·O3 Remember each file's last view.
 - **Session 83 — M11-07 font library for text comments (D-52, ADR-028 and its S26 amendment).**
   **The files:** 26 OFL-1.1 families from the Google Fonts repository (`src/model/fonts/library.ts`:
   four Office-compatible, six sans, two narrow, two technical, two serif, three mono, three
@@ -2921,8 +2943,8 @@ rel="noopener noreferrer">`; the commands `app.home` / `app.reportIssue` open th
 
 - **Agent (M11):** the 18 tasks in [docs/plan/M11.md](plan/M11.md) "Order of work", one thread
   each. Done: M11-01, M11-10, M11-02 (spike S26), M11-03 (tabs: look, hover card, +), M11-04
-  (drag to reorder), M11-05 (tab menus), M11-06 (comments in every pointer mode). Next: M11-07
-  (font library).
+  (drag to reorder), M11-05 (tab menus), M11-06 (comments in every pointer mode), M11-07 (font
+  library), M11-08·O1 (selected-text menu). Next: M11-08·O3 (remember each file's last view).
 - **Owner (M11-02):** open `m11-02/s26-interop.pdf` in Acrobat Reader and PDF-XChange: the
   eleven comments look as in the PNG beside it, Find finds their text in the flattened copy, and
   the font names show in the document's font list. This gates M11-07.
