@@ -178,8 +178,9 @@ test('Ctrl+X removes the comment with its replies (one undo step) and Ctrl+V pas
   // Pasted back where it was (cut: no offset), with the reply following the copy.
   await page.keyboard.press('ControlOrMeta+v');
   await expect(status(page, '1 comment pasted.')).toBeVisible();
+  // The status can come before the page's comment list is read again (empty meanwhile).
+  await expect.poll(async () => (await objects(page, id)).length).toBe(5);
   const all = await objects(page, id);
-  expect(all).toHaveLength(5);
   const square = all.find((o) => o.contents === 'Check weld size');
   expect(square?.id).not.toBe('src-square');
   expect(square?.pageIndex).toBe(0);

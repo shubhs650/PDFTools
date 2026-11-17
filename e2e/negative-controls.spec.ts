@@ -50,5 +50,10 @@ test('frames other than blob: stay blocked by frame-src (ADR-013 decision 7)', a
       return [...new Set(v.map((x) => `${x.directive} ${x.blockedURI || '(data)'}`))].sort();
     })
     .toEqual(['frame-src (data)', 'frame-src https://example.com']);
+  // The Report-Only copy's reports reach the server a moment later; acknowledged before
+  // they arrive, they would fail the test's own guard.
+  await expect
+    .poll(async () => (await guard.reportedCspViolations()).length)
+    .toBeGreaterThanOrEqual(2);
   await guard.acknowledge();
 });
