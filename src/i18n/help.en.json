@@ -1069,7 +1069,7 @@
     },
     "organize-pages": {
       "title": "Organizing pages",
-      "summary": "Insert, delete, move, extract, rotate and merge pages. These change the file itself.",
+      "summary": "Insert, delete, move, extract, rotate and merge pages, and split a document into several files.",
       "body": [
         {
           "shot": "organize-pages-1",
@@ -1078,7 +1078,7 @@
         {
           "steps": [
             "Select the pages: click thumbnails in the Thumbnails pane (<kbd>Shift</kbd> or <kbd>{{mod}}</kbd>+click for several), or stay on the current page.",
-            "Choose a command on the <b>Organize</b> tab: <b>Rotate</b>, <b>Delete Pages</b>, <b>Move Pages</b>, <b>Extract Pages</b>, <b>Insert Blank Page</b>, <b>Insert from File</b>, <b>Insert from Image</b>, <b>Merge Files</b> or <b>Images to PDF</b>.",
+            "Choose a command on the <b>Organize</b> tab: <b>Rotate</b>, <b>Delete Pages</b>, <b>Move Pages</b>, <b>Extract Pages</b>, <b>Insert Blank Page</b>, <b>Insert from File</b>, <b>Insert from Image</b>, <b>Merge Files</b>, <b>Split Document</b> or <b>Images to PDF</b>.",
             "Check the result, then press <kbd>{{save}}</kbd>. <kbd>{{undo}}</kbd> undoes a page change."
           ]
         },
@@ -1092,6 +1092,23 @@
             "Right-click a thumbnail for Cut, Copy and Paste of pages, also between documents.",
             "Extract Pages saves the chosen pages as a new PDF.",
             "Insert from Image adds JPG or PNG images as pages, one image per page, before or after the page you choose. See [Opening files](#opening-files) for the page sizes."
+          ]
+        },
+        {
+          "h": "To split a document into several files"
+        },
+        {
+          "steps": [
+            "Choose <b>Organize</b> › <b>Split Document</b>.",
+            "Choose how: <b>Every few pages</b> (type how many pages go in each file), <b>By page ranges</b> (type the ranges, such as 1-5, 6-12, 13-; each range is one file) or <b>By top-level bookmarks</b> (each file runs from its bookmark to the page before the next one).",
+            "Check the file names listed under the choices, then choose <b>Split</b> and the folder for the files."
+          ]
+        },
+        {
+          "list": [
+            "The files are named after the document, with their pages or their bookmark. Files already in the folder are never replaced: a new file gets a number instead.",
+            "Your unsaved changes go into the files, and the open document is not changed.",
+            "Pages before the first bookmark go into the first file. Where the browser can't save into a folder, the files come in one ZIP file."
           ]
         },
         {

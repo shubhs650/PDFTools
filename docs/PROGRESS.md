@@ -1,6 +1,6 @@
 # Triya PDF — Progress
 
-_Last updated: 2026-11-17 (session 89: M11-08·O8 images to PDF)_
+_Last updated: 2026-11-17 (session 90: M11-08·O7 split document)_
 
 **Current milestone:** M11 — file tabs, OCR text selection, a font library and comments in every
 pointer mode: plan [docs/plan/M11.md](plan/M11.md) and [ADR-028](adr/028-m11-tabs-fonts-select.md)
@@ -20,6 +20,30 @@ interop is in the M6 pack (CHECKLIST §M6 R1–R4). Rev 0 (M0–M4) is complete 
 
 ## Done
 
+- **Session 90 — M11-08·O7 split document (D-55, ADR-028, plan O7).** **Organize › Split
+  Document** (`organize.split`, Fluent DocumentSplitHint; refused without full access, as
+  Extract Pages, M4-Q2) opens a dialog with three ways: **every few pages** (N, 1 to the page
+  count), **by page ranges** (the print dialog's syntax; each item between commas or semicolons
+  is one file, e.g. `1-5, 6-12, 13-`) or **by top-level bookmarks** (read from the Work copy
+  with `readOutline`; one file from each bookmark's page to the page before the next, in page
+  order; pages before the first go into the first file; bookmarks to nowhere are skipped and
+  ones on the same page merge; disabled with a reason when there are none). The dialog lists the
+  file names before splitting: `<name> (pages 1-3).pdf` / `(page 7)`, or `<name> - 01 <bookmark
+title>.pdf` (title made safe for file systems, 80 characters, numbers padded so they sort);
+  at most 1000 files. Split asks for a **folder** first (Chromium; `writeFilesToFolder` writes
+  into it directly, never replacing a file: `name (2).pdf`), else one **ZIP** (save picker or
+  download). The Work worker's `split` (`src/workers/work/split.ts`) builds each part as Extract
+  does (`assemble`, not encrypted) from the copy with the unsaved changes, with progress over
+  every part's pages and Cancel; a toast says how many files went where. The choice is kept for
+  the session (falls back to every-N pages when the last choice was bookmarks and this document
+  has none). Pure plan in `src/features/pages/splitPlan.ts` (`rangeText` now shared with
+  Extract). Help: "Organizing pages" › "To split a document into several files". What's new: an
+  item in `beta-m11`. Tests: `tests/pages/split.test.ts` (plan, names, real PDFium parts with
+  qpdf check, progress, cancel); `e2e/split-document.spec.ts` (every N with a free name beside
+  an existing file and the parts reopened; ranges with an unsaved page deletion; bookmarks
+  numbered and the no-bookmark case; the ZIP fallback; axe light and dark). The folder stub in
+  `e2e/support/savePicker.ts` now keeps each file's bytes (`window.folderBlobs`). Shots in
+  project files `m11-08-o7/`. Next: M11-08·O9 crop pages.
 - **Session 89 — M11-08·O8 images to PDF (D-55, ADR-028, plan O8).** JPG and PNG files that
   are **opened** (File › Open and the Open picker now offer "PDF, JPG, PNG") or **dropped** go
   to the **Images to PDF** dialog instead of the open error (`openOrConvert` in
@@ -3070,7 +3094,7 @@ rel="noopener noreferrer">`; the commands `app.home` / `app.reportIssue` open th
   (drag to reorder), M11-05 (tab menus), M11-06 (comments in every pointer mode), M11-07 (font
   library), M11-08·O1 (selected-text menu), M11-08·O3 (each file's last view), M11-08·O4 (Zoom
   to Area), M11-08·O6 (copy or save a page image), M11-08·O2 (pick up where you left off),
-  M11-08·O8 (images to PDF). Next: M11-08·O7 (split document).
+  M11-08·O8 (images to PDF), M11-08·O7 (split document). Next: M11-08·O9 (crop pages).
 - **Owner (M11-02):** open `m11-02/s26-interop.pdf` in Acrobat Reader and PDF-XChange: the
   eleven comments look as in the PNG beside it, Find finds their text in the flattened copy, and
   the font names show in the document's font list. This gates M11-07.

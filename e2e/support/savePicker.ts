@@ -43,15 +43,18 @@ export const savedFiles = (page: Page): Promise<{ name: string; bytes: number }[
 /**
  * Replaces showDirectoryPicker with a fake folder that records every file
  * written into it (path from the chosen folder and byte count), including
- * sub-folders. Read the record with `folderFiles(page)`.
+ * sub-folders. Read the record with `folderFiles(page)`; each file's content
+ * stays in `window.folderBlobs[path]`.
  */
 export async function stubFolderPicker(page: Page, existing: string[] = []): Promise<void> {
   await page.evaluate((names) => {
     const w = window as unknown as {
       folderFiles: { path: string; bytes: number }[];
+      folderBlobs: Record<string, Blob>;
       showDirectoryPicker: () => Promise<unknown>;
     };
     w.folderFiles = [];
+    w.folderBlobs = {};
     const dir = (path: string, initial: string[]): unknown => {
       const entries = new Set(initial);
       return {
@@ -67,16 +70,19 @@ export async function stubFolderPicker(page: Page, existing: string[] = []): Pro
           entries.add(name);
           const full = path ? `${path}/${name}` : name;
           let bytes = 0;
+          const chunks: (Blob | BufferSource)[] = [];
           return Promise.resolve({
             name,
             createWritable: () =>
               Promise.resolve({
                 write: (chunk: Blob | BufferSource) => {
                   bytes += chunk instanceof Blob ? chunk.size : chunk.byteLength;
+                  chunks.push(chunk);
                   return Promise.resolve();
                 },
                 close: () => {
                   w.folderFiles.push({ path: full, bytes });
+                  w.folderBlobs[full] = new Blob(chunks);
                   return Promise.resolve();
                 },
                 abort: () => Promise.resolve(),

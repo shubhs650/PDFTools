@@ -108,6 +108,7 @@ function fakeSpawn(world: FakeWorld) {
       setLive: () => null,
       assemble: () => ({ bytes: new ArrayBuffer(0) }),
       createBlank: () => ({ bytes: new ArrayBuffer(0) }),
+      split: () => ({ files: [] }),
       imagesToPdf: () => ({ bytes: new ArrayBuffer(0) }),
       commentSource: () => ({ pages: 0, comments: [], copyAllowed: true, encrypted: false }),
       transferComments: () => ({

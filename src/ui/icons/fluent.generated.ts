@@ -64,6 +64,7 @@ import { DocumentOnePage20Filled, DocumentOnePage20Regular } from '@fluentui/rea
 import { DocumentOnePageAdd20Regular, DocumentOnePageAdd24Regular } from '@fluentui/react-icons/svg/document-one-page-add';
 import { DocumentSearch20Regular } from '@fluentui/react-icons/svg/document-search';
 import { DocumentSignature20Regular, DocumentSignature32Regular } from '@fluentui/react-icons/svg/document-signature';
+import { DocumentSplitHint20Regular, DocumentSplitHint24Regular } from '@fluentui/react-icons/svg/document-split-hint';
 import { DocumentTableArrowRight20Regular } from '@fluentui/react-icons/svg/document-table-arrow-right';
 import { DocumentText20Regular, DocumentText32Regular } from '@fluentui/react-icons/svg/document-text';
 import { DrawText20Filled, DrawText20Regular } from '@fluentui/react-icons/svg/draw-text';
@@ -279,6 +280,7 @@ export const FLUENT_GLYPHS: Record<string, FluentGlyphs> = {
   'organize.move': { regular: { small: ReOrder20Regular, large: ReOrder24Regular, largeNative: 24 } },
   'organize.extract': { regular: { small: DocumentArrowRight20Regular, large: DocumentArrowRight24Regular, largeNative: 24 } },
   'organize.merge': { regular: { small: DocumentMultiple20Regular, large: DocumentMultiple24Regular, largeNative: 24 } },
+  'organize.split': { regular: { small: DocumentSplitHint20Regular, large: DocumentSplitHint24Regular, largeNative: 24 } },
   'organize.imagesToPdf': { regular: { small: ImageMultiple20Regular, large: ImageMultiple32Regular, largeNative: 32 } },
   'organize.rotateCw': { regular: { small: RotateRight20Regular, large: RotateRight24Regular, largeNative: 24 } },
   'organize.rotateCcw': { regular: { small: RotateLeft20Regular, large: RotateLeft24Regular, largeNative: 24 } },

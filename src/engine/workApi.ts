@@ -94,6 +94,21 @@ export interface WorkApi {
     { done: number; total: number }
   >;
   /**
+   * Split Document (M11-08·O7, D-55): one new, unencrypted document per part
+   * of the Work copy (unsaved changes included); `zip` one archive of the
+   * files, `folder` the files for writing into a folder. Refused without full
+   * access (M4-Q2), as Extract Pages. Cancellable between slices.
+   */
+  split: MethodSpec<
+    {
+      docId: string;
+      parts: { pages: number[]; name: string }[];
+      packaging: 'zip' | 'folder';
+    },
+    { blob?: Blob; files?: { path: string; blob: Blob }[] },
+    { done: number; total: number }
+  >;
+  /**
    * Create Blank PDF (M10-08·O4, D-49): a new, unencrypted document of `count`
    * empty pages of `width` × `height` points. Refused outside the dialog's limits.
    */

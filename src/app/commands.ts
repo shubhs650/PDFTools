@@ -1300,6 +1300,16 @@ export const COMMANDS: readonly CommandDef[] = [
     shipped: true, // M4-11
   },
   {
+    // Split Document (M11-08·O7, D-55): every N pages, ranges or top-level bookmarks.
+    id: 'organize.split',
+    tab: 'organize',
+    group: 'pages',
+    size: 'large',
+    fluent: 'DocumentSplitHint',
+    milestone: 'M6',
+    shipped: true,
+  },
+  {
     // Images to PDF (M11-08·O8, D-55): JPG or PNG files as a new document; needs none open.
     id: 'organize.imagesToPdf',
     tab: 'organize',

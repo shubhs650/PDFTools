@@ -39,6 +39,7 @@ import { zipBlob } from './work/zip';
 import { exportImages } from './work/images';
 import { pageImagePng } from './work/pageImage';
 import { assemble, fullAccess, type AssemblePart } from './work/assemble';
+import { splitDocument } from './work/split';
 import { createBlank } from './work/blank';
 import { imagesToPdf } from './work/imagesPdf';
 import { commentSource, copyComments, transferComments } from './work/transferJobs';
@@ -211,6 +212,30 @@ serve<WorkApi>(self, {
         return new Transfer({ bytes: buf }, [buf]);
       } finally {
         for (const doc of opened) await n.closeDocument(doc).toPromise();
+        wasmBytes();
+      }
+    }),
+
+  split: ({ docId, parts, packaging }, ctx) =>
+    scheduler.run('interactive', ctx.signal, async (slice) => {
+      if (!mod) throw new RpcError('not-initialized', 'The work worker is not initialized');
+      const { doc } = await docs.get(docId);
+      const ptr = docPtrOf(need(), doc.id);
+      if (!fullAccess(mod, ptr))
+        throw new RpcError('permission-denied:assemble', 'The source file is restricted');
+      try {
+        const files = await splitDocument(mod, ptr, parts, slice, (p) => {
+          ctx.progress(p);
+        });
+        if (packaging === 'zip')
+          return { blob: zipBlob(files.map((f) => ({ name: f.name, data: f.bytes }))) };
+        return {
+          files: files.map((f) => ({
+            path: f.name,
+            blob: new Blob([f.bytes as BlobPart], { type: 'application/pdf' }),
+          })),
+        };
+      } finally {
         wasmBytes();
       }
     }),
