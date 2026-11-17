@@ -1,6 +1,7 @@
 // Which pages the viewer refreshes after a page operation or a comment
-// transfer (M4-09, M4-20).
+// transfer (M4-09, M4-20), or an OCR layer (M11-01).
 import type { PageInfo } from '../../engine/renderApi';
+import type { Change } from './pageOps';
 
 type Identity = Pick<PageInfo, 'objectNumber' | 'rotation' | 'size'>;
 
@@ -27,3 +28,16 @@ export function changedPages(before: readonly Identity[], after: readonly Identi
   });
   return [...out].sort((a, b) => a - b);
 }
+
+/**
+ * Pages whose content a change rewrites without changing their identity: a
+ * flatten, or objects that change page text (an OCR layer, M11-01). Without
+ * them, EmbedPDF's selection plugin keeps its cached text geometry, so new
+ * text could not be selected (or removed text still could) until reopening.
+ * Pure.
+ */
+export const contentPages = (change: Change): number[] => {
+  if (change.kind === 'op')
+    return change.op.kind === 'flatten' ? change.op.pages.map((p) => p.page) : [];
+  return change.content ?? [];
+};

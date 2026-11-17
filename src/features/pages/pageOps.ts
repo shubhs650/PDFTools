@@ -24,7 +24,7 @@ import { isActive } from '../save/saveMachine';
 import { editsSettled, setPageOpProbe } from '../save/pendingEdits';
 import { goToPage } from '../view/controller';
 import { capability, hostStore, renderEngine, startedWorkClient } from '../view/host';
-import { changedPages } from './changed';
+import { changedPages, contentPages } from './changed';
 import { invalidatePages } from './invalidate';
 import { remapPageSelection } from './selection';
 
@@ -39,6 +39,11 @@ export type Change =
       capability?: Capability;
       /** What they are, for the undo step (default: by capability). */
       tag?: 'bookmarks';
+      /**
+       * Pages (0-based) whose text the objects change in place (an OCR layer,
+       * M11-01): their cached text geometry is evicted on apply, undo and redo.
+       */
+      content?: number[];
     };
 
 export interface Busy {
@@ -164,10 +169,6 @@ interface Applied {
 /** A change that leaves the pages and the view alone (bookmark edits, M6-11). */
 const keepsView = (change: Change): boolean =>
   change.kind === 'objects' && change.tag === 'bookmarks';
-
-/** Pages whose content a change rewrites without changing their identity (a flatten). */
-const contentPages = (change: Change): number[] =>
-  change.kind === 'op' && change.op.kind === 'flatten' ? change.op.pages.map((p) => p.page) : [];
 
 function historyOf(docId: string) {
   const registry = hostStore.getState().registry;
@@ -297,6 +298,8 @@ export async function syncLive(docId: string): Promise<void> {
 export interface TransferProduct {
   objects: TransferObject[];
   firstNew: number;
+  /** Pages whose text the objects change (an OCR layer): see `Change.content`. */
+  content?: number[];
 }
 
 /**

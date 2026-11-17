@@ -188,7 +188,8 @@ export async function recognizePages(
         outcome.recognized = layer.pages.length;
         outcome.words = layer.words;
         outcome.replaced = layer.replaced;
-        return { objects: layer.objects, firstNew: layer.firstNew };
+        // The pages whose text changed: their selection geometry is refreshed (M11-01).
+        return { objects: layer.objects, firstNew: layer.firstNew, content: layer.pages };
       },
       { capability: 'modify', restricted: msg('ocr.restricted') },
     );
