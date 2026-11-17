@@ -4,6 +4,7 @@
 import type { SelectionCapability } from '@embedpdf/plugin-selection';
 import type { ZoomCapability } from '@embedpdf/plugin-zoom';
 import { documentStore } from '../app/store/documentStore';
+import { renderCallCounts } from '../engine/hostedEngine';
 import { capability, hostStore, renderEngine, tileCache } from '../features/view/host';
 import { renderStats, resetRenderStats, type KindStats } from '../features/view/renderStats';
 import { viewFocus } from '../features/view/tileScheduler';
@@ -79,6 +80,8 @@ export function registerViewProbe(hook: TestHook): void {
     reset: () => {
       resetRenderStats();
     },
+    /** Calls of an executor method sent to the Render worker since start (issue #59). */
+    renderCalls: (method: string) => renderCallCounts.get(method) ?? 0,
     /** The active document's engine id (M3-04: probes that take a docId). */
     /** Whether a document has unsaved changes (M7-06). */
     dirty: (docId: string) => documentStore.getState().docs[docId]?.dirty ?? null,

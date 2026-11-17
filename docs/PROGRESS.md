@@ -1,13 +1,14 @@
 # Triya PDF — Progress
 
-_Last updated: 2026-11-17 (session 92: M11-08·O5 fonts installed on this computer)_
+_Last updated: 2026-11-17 (session 93: M11-09 acceptance)_
 
 **Current milestone:** M11 — file tabs, OCR text selection, a font library and comments in every
 pointer mode: plan [docs/plan/M11.md](plan/M11.md) and [ADR-028](adr/028-m11-tabs-fonts-select.md)
 **accepted** by the owner (2026-11-17: recommended answers, fonts all shipped with the app, and
 all nine optional items O1–O9), plus task M11-10 (resizable Properties pane and pane edge arrows,
-D-56) added by the owner; ARCHITECTURE.md Rev 0.17 (D-50 … D-56). Tasks run one thread each
-in the plan's "Order of work", starting with M11-01 (OCR text selection). **M10 closed** by the
+D-56) added by the owner; ARCHITECTURE.md Rev 0.17 (D-50 … D-56). **M11 is complete on the agent side**
+([acceptance](acceptance/M11.md), session 93); waiting on the owner pack (§6: interop §M11, the O5
+start-up question). **M10 closed** by the
 owner on 2026-11-17 ("majority aspects of the tool are working good"). **Earlier:** M10 — modern
 look and feel (plan [docs/plan/M10.md](plan/M10.md),
 [ADR-027](adr/027-m10-visual-refresh.md), ARCHITECTURE.md Rev 0.16): **complete** ([acceptance](acceptance/M10.md)); the owner closed it on 2026-11-17. M9 (Help
@@ -20,6 +21,23 @@ interop is in the M6 pack (CHECKLIST §M6 R1–R4). Rev 0 (M0–M4) is complete 
 
 ## Done
 
+- **Session 93 — M11-09 acceptance (ADR-028).** [docs/acceptance/M11.md](acceptance/M11.md): the
+  owner's five points and the added panes task mapped to tasks, PRs and tests; all 17 earlier M11
+  PRs (#119 … #135) listed. New `e2e/a11y.spec.ts` "M11 tabs, font list, Crop, Split, Images to
+  PDF and Start-up" in light, dark, the pseudo-locale and dark + Indigo + Compact (no
+  violations). Screenshot set: 48 shots in project files `m11-09/` (tabs at 1280/1366/1920, card,
+  menu, drag; fonts; menus; Zoom to Area; Crop, Split, Images to PDF; Start-up; forced colours),
+  no defects found. Help screenshots regenerated: five updated (the old "two documents as tabs"
+  shot showed the wrong thumbnail), ten that differed only in a date or id left as they were.
+  Interop pack **§M11** (CHECKLIST X, Y, Z, AA) with files from `e2e/interop-m11.spec.ts`
+  (`npm run owner:interop:m11` → `e2e/fixtures/self-made/m11-interop/`: every font group, Hindi,
+  Chinese, symbols; cropped pages). Release notes `beta-m11` finished (fonts and fonts on this
+  computer sections). **Perf gate fixed (issue #59):** `e2e/perf/annotation-load.spec.ts` now
+  checks the route directly (no `getAnnotationsBatch` call reaches the Render worker, counted by
+  `renderCallCounts` in `src/engine/hostedEngine.ts`); its old tile-timing gate failed on busy
+  CI runners and, forced back onto the Render queue, still passed locally. Tile timing is kept
+  as a gross-slowdown bound (2 × baseline + 150 ms). Budget: core 8.33 / 9 MB, install 78.87 MB
+  (font library, accepted). Also noted: the S26 owner interop check passed on 2026-11-17.
 - **Session 92 — M11-08·O5 fonts installed on this computer (D-54, ADR-028, plan O5).** In
   Chromium (Chrome, Edge) the comment font list ends with **On this computer**: first the entry
   **Show fonts on this computer…** (an option of the list, so Enter or a click reaches it; other
@@ -3164,10 +3182,11 @@ rel="noopener noreferrer">`; the commands `app.home` / `app.reportIssue` open th
   library), M11-08·O1 (selected-text menu), M11-08·O3 (each file's last view), M11-08·O4 (Zoom
   to Area), M11-08·O6 (copy or save a page image), M11-08·O2 (pick up where you left off),
   M11-08·O8 (images to PDF), M11-08·O7 (split document), M11-08·O9 (crop pages), M11-08·O5
-  (fonts installed on this computer). Next: M11-09 (acceptance).
-- **Owner (M11-02):** open `m11-02/s26-interop.pdf` in Acrobat Reader and PDF-XChange: the
-  eleven comments look as in the PNG beside it, Find finds their text in the flattened copy, and
-  the font names show in the document's font list. This gates M11-07.
+  (fonts installed on this computer), M11-09 (acceptance). **M11 complete on the agent side.**
+- **Owner (M11):** the owner pack in [docs/acceptance/M11.md](acceptance/M11.md) §6: CHECKLIST
+  §M11 X (font library), Y (fonts on your computer), Z (crop), AA (split, images to PDF) in
+  Acrobat Reader and PDF-XChange; decide whether the font list may list your computer's fonts
+  again at start-up without a click (O5). The S26 interop check passed (owner, 2026-11-17).
 - **Owner (M10):** done — the owner closed M10 on 2026-11-17.
 - **Owner (M9):** try Help on the deployed beta (F1 on a few tabs and dialogs, search, print,
   installed-app window, offline). Re-run `npm run help:screenshots` after visible UI changes.

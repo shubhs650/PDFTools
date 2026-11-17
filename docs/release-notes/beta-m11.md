@@ -1,6 +1,9 @@
 # Triya PDF beta: what's new (November 2026, tabs, fonts and picking up where you left off)
 
-_In progress: M11's tasks add their notes here as they land; M11-09 (acceptance) finishes it._
+Better file tabs, a library of fonts for text comments, comments you can pick up with any tool,
+and nine everyday features beta users asked about: pick up where you left off, each file's last
+view, a selected-text menu, Zoom to Area, copying pictures, Images to PDF, Split Document, Crop
+Pages and the fonts installed on your computer. Nothing moved: every command is where it was.
 
 ## Pick up where you left off
 
@@ -41,8 +44,29 @@ _In progress: M11's tasks add their notes here as they land; M11-09 (acceptance)
   always opens its menu.
 - Right-click selected text for Copy, Highlight, Underline, Strikeout, Squiggly, Mark for
   Redaction and Search.
-- Text boxes, typewriter text and callouts can use a library of fonts that ships with the app
-  and works offline.
+
+## Fonts in text comments
+
+- Text boxes, typewriter text and callouts can use a **library of 26 font families** that ships
+  with the app and works offline: Office-compatible fonts with the same widths as Arial, Times
+  New Roman, Courier New and Calibri, sans and narrow fonts, technical and drawing fonts, serif,
+  monospaced and handwriting fonts, and Hindi (Devanagari) and Chinese.
+- The font list shows each name in its own face, groups the fonts, keeps your **Recently used**
+  fonts at the top, and jumps to a name as you type it.
+- The font is embedded in the saved file (only the letters used), so Acrobat Reader, PDF-XChange
+  and other readers show the comment as you wrote it. Symbols such as ⌀, °, ± and Ω are drawn even when a font lacks them.
+- Form fields keep the three standard fonts for now.
+
+## Fonts on this computer (Chrome and Edge)
+
+- At the end of the font list, **Show fonts on this computer…** lists the fonts installed on
+  your computer, such as Arial, Calibri or ISOCPEUR from a CAD install, after the browser asks
+  for your permission. Nothing is read before you choose it, and nothing leaves your computer.
+- A font whose license doesn't allow embedding is listed but can't be chosen, with the reason.
+  Fonts that can only be embedded for viewing and printing are embedded that way, as Acrobat
+  does.
+- Once you have allowed it, the list shows your fonts again the next time Triya PDF starts.
+  Other browsers don't show the section.
 
 ## Viewing
 
