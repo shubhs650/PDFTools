@@ -107,3 +107,10 @@ every command is where it was.
 
 - **File › About** now lists what's new in each version, newest first. After an update, a small
   card at the bottom right says so once; **See what's new** opens this list.
+
+## Help and Windows High Contrast
+
+- Every screenshot in **Help** now shows the new look.
+- Windows High Contrast: the current page's number in Thumbnails, the chosen result in Tell me
+  and the start screen's hint while you drag files are readable again (they showed blank).
+- The Comments pane no longer says "No comments in this document." twice.

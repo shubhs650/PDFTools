@@ -286,6 +286,15 @@ body {
   font-weight: var(--font-weight-semibold);
 }
 
+/* High contrast (M10-09): the selected-text token maps to HighlightText, meant for a
+   Highlight fill; the label sits on the plain pane, so it takes Highlight itself (it was
+   white on white: the current page had no number). */
+@media (forced-colors: active) {
+  .thumb--current .thumb-label {
+    color: Highlight;
+  }
+}
+
 .document-area {
   position: relative;
   overflow: hidden;
@@ -1303,6 +1312,18 @@ body {
 .start-drop[data-over] .start-hint {
   color: var(--color-selected-text);
   font-weight: var(--font-weight-semibold);
+}
+
+/* High contrast (M10-09): the card stays on Canvas with a Highlight border while files
+   are dragged over it, and its hint takes Highlight (HighlightText on Canvas was blank). */
+@media (forced-colors: active) {
+  .start-drop[data-over] {
+    background: Canvas;
+  }
+
+  .start-drop[data-over] .start-hint {
+    color: Highlight;
+  }
 }
 
 .start-open {
@@ -3447,6 +3468,11 @@ textarea.form-field {
   font-size: var(--font-size-s);
 }
 
+.comments-count[data-empty] {
+  padding: var(--space-0);
+  border-top: 0;
+}
+
 .comments-list-wrap {
   position: relative;
   flex: 1;
@@ -5377,9 +5403,12 @@ textarea.form-field {
 }
 
 @media (forced-colors: active) {
+  /* Keeps the Highlight pair as drawn (M10-09): left to the browser, its text backplate
+     (Canvas) hid the chosen result's HighlightText label: blank boxes. */
   .tell-me-option[aria-selected='true'] {
     background: Highlight;
     color: HighlightText;
+    forced-color-adjust: none;
   }
 
   .tell-me-option[aria-selected='true'] .tell-me-where,
