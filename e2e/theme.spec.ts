@@ -472,3 +472,38 @@ test('forced-colors: the focus ring stays, the halo goes, brand surfaces keep th
   expect(nav.adjust).toBe('none');
   expect(nav.color).not.toBe(nav.bg);
 });
+
+test('forced-colors: the current thumbnail number and the chosen Tell me result stay readable (M10-09)', async ({
+  page,
+}) => {
+  await page.emulateMedia({ forcedColors: 'active' });
+  await page.goto('/');
+  await drop(page, [{ name: 'fc.pdf', b64: Buffer.from(simplePdf(2)).toString('base64') }]);
+  await expect(page.locator('[data-page="0"] img.page-preview')).toBeVisible();
+
+  // The current page's number sits on the plain pane: it must not be HighlightText on Canvas.
+  const colours = (selector: string) =>
+    page.locator(selector).evaluate((el) => {
+      const probe = document.createElement('span');
+      probe.style.color = 'Canvas';
+      document.body.append(probe);
+      const canvas = getComputedStyle(probe).color;
+      probe.remove();
+      return { color: getComputedStyle(el).color, canvas };
+    });
+  const label = await colours('.thumb--current .thumb-label');
+  expect(label.color).not.toBe(label.canvas);
+
+  // The chosen result keeps its Highlight pair (no Canvas backplate behind its text).
+  await page.keyboard.press('Alt+q');
+  await page.keyboard.type('save');
+  await page.keyboard.press('Enter');
+  const chosen = page.locator('.tell-me-option[aria-selected="true"]');
+  await expect(chosen).toBeVisible();
+  const pair = await chosen.evaluate((el) => {
+    const s = getComputedStyle(el);
+    return { adjust: s.forcedColorAdjust, color: s.color, bg: s.backgroundColor };
+  });
+  expect(pair.adjust).toBe('none');
+  expect(pair.color).not.toBe(pair.bg);
+});

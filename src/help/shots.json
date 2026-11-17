@@ -8,12 +8,12 @@
     "h": 301
   },
   "bookmarks-2": {
-    "w": 455,
+    "w": 451,
     "h": 530
   },
   "comment-properties-1": {
     "w": 261,
-    "h": 574
+    "h": 595
   },
   "comment-properties-2": {
     "w": 224,
@@ -21,7 +21,7 @@
   },
   "comment-styles-1": {
     "w": 1066,
-    "h": 561
+    "h": 560
   },
   "comment-tab-1": {
     "w": 1318,
@@ -29,15 +29,15 @@
   },
   "comment-transfer-1": {
     "w": 576,
-    "h": 376
+    "h": 396
   },
   "creating-fields-1": {
     "w": 1006,
     "h": 126
   },
   "creating-fields-2": {
-    "w": 834,
-    "h": 578
+    "w": 841,
+    "h": 598
   },
   "export-documents-1": {
     "w": 1006,
@@ -45,15 +45,15 @@
   },
   "extract-tables-1": {
     "w": 1064,
-    "h": 580
+    "h": 601
   },
   "field-order-1": {
     "w": 260,
-    "h": 374
+    "h": 387
   },
   "filling-forms-1": {
-    "w": 312,
-    "h": 342
+    "w": 324,
+    "h": 356
   },
   "finding-text-1": {
     "w": 1064,
@@ -65,39 +65,39 @@
   },
   "flatten-snapshot-1": {
     "w": 576,
-    "h": 530
+    "h": 556
   },
   "home-tab-1": {
     "w": 1006,
     "h": 167
   },
   "measure-scale-1": {
-    "w": 552,
-    "h": 502
+    "w": 536,
+    "h": 524
   },
   "measure-tools-1": {
     "w": 1006,
     "h": 167
   },
   "measure-tools-2": {
-    "w": 474,
-    "h": 345
+    "w": 492,
+    "h": 359
   },
   "ocr-1": {
     "w": 576,
-    "h": 622
+    "h": 640
   },
   "offline-1": {
     "w": 240,
     "h": 33
   },
   "opening-files-1": {
-    "w": 492,
-    "h": 284
+    "w": 551,
+    "h": 444
   },
   "opening-files-2": {
     "w": 900,
-    "h": 352
+    "h": 331
   },
   "organize-pages-1": {
     "w": 1006,
@@ -105,19 +105,19 @@
   },
   "organize-pages-2": {
     "w": 302,
-    "h": 574
+    "h": 595
   },
   "passwords-1": {
     "w": 576,
-    "h": 512
+    "h": 520
   },
   "pasting-pictures-1": {
     "w": 1064,
-    "h": 574
+    "h": 595
   },
   "printing-1": {
     "w": 576,
-    "h": 766
+    "h": 768
   },
   "privacy-1": {
     "w": 1106,
@@ -133,27 +133,27 @@
   },
   "redaction-1": {
     "w": 1064,
-    "h": 580
+    "h": 601
   },
   "reporting-problems-1": {
     "w": 576,
-    "h": 570
+    "h": 602
   },
   "reviewing-comments-1": {
     "w": 260,
-    "h": 538
+    "h": 559
   },
   "saving-1": {
     "w": 260,
-    "h": 412
+    "h": 511
   },
   "selecting-comments-1": {
-    "w": 394,
-    "h": 207
+    "w": 410,
+    "h": 215
   },
   "shapes-1": {
-    "w": 470,
-    "h": 296
+    "w": 488,
+    "h": 308
   },
   "side-panes-1": {
     "w": 462,
@@ -161,23 +161,23 @@
   },
   "signing-1": {
     "w": 576,
-    "h": 684
+    "h": 706
   },
   "snapping-1": {
-    "w": 462,
+    "w": 460,
     "h": 119
   },
   "stamps-1": {
     "w": 576,
-    "h": 594
+    "h": 562
   },
   "sticky-notes-1": {
     "w": 409,
     "h": 212
   },
   "text-comments-1": {
-    "w": 264,
-    "h": 145
+    "w": 274,
+    "h": 151
   },
   "text-comments-2": {
     "w": 387,
@@ -196,7 +196,7 @@
     "h": 800
   },
   "zoom-and-pages-1": {
-    "w": 1009,
+    "w": 1038,
     "h": 133
   },
   "zoom-and-pages-2": {

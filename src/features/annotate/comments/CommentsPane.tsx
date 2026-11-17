@@ -139,9 +139,11 @@ export function CommentsPane() {
           {comments.length === 0 ? t('comments.none') : t('comments.noMatch')}
         </p>
       )}
-      <p className="comments-count" role="status">
+      {/* With no comments the list already says so: the footer stays mounted (a live
+          region) but empty and borderless, instead of repeating it (M10-09). */}
+      <p className="comments-count" role="status" data-empty={comments.length === 0 || undefined}>
         {comments.length === 0
-          ? t('comments.none')
+          ? ''
           : t('comments.count', {
               shown: format.number(layout.shown, 0),
               total: format.number(comments.length, 0),

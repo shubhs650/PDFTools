@@ -673,3 +673,90 @@ for (const [variant, url] of [
     },
   );
 }
+
+// M10-09 (ADR-027): the M10 surfaces in light, dark, the pseudo-locale (longer strings,
+// accents) and the dark theme with a non-default accent and Compact density: the one-row
+// header with a document, the What's new banner, Create Blank PDF, Tell me with results,
+// File › About (What's new, Built with) and File › Settings (Accent colour, Density).
+// Reached by keys, command ids and test ids, so the same steps work in every language.
+for (const [variant, url] of [
+  ['light', '/'],
+  ['dark', '/'],
+  ['pseudo-locale', '/?locale=pseudo'],
+  ['dark, indigo accent, compact', '/'],
+] as const) {
+  test(
+    `M10 header, banner, Create Blank, Tell me, About and Settings (${variant})`,
+    {
+      tag: '@a11y',
+    },
+    async ({ page }) => {
+      test.setTimeout(120_000);
+      const { simplePdf } = await import('./fixtures/generate.ts');
+      if (variant.startsWith('dark')) await darkTheme(page);
+      if (variant.includes('compact'))
+        await page.addInitScript(() => {
+          localStorage.setItem('pdftools.accent', 'indigo');
+          localStorage.setItem('pdftools.density', 'compact');
+        });
+      // An older release seen on this device, so the What's new banner shows (once).
+      await page.addInitScript(() => {
+        if (!sessionStorage.getItem('seeded')) {
+          sessionStorage.setItem('seeded', '1');
+          localStorage.setItem('pdftools.whatsNewSeen', 'beta-m9');
+        }
+      });
+      await page.goto(url);
+      const banner = page.getByTestId('whats-new-banner');
+      await expect(banner).toBeVisible();
+      await axe(page, "What's new banner on the start screen");
+      await banner.getByRole('button').last().click();
+      await expect(banner).toHaveCount(0);
+      await cap(page, 'annotate', 'setProfile', 'Ana de Vries');
+      await drop(page, [{ name: 'm10.pdf', b64: Buffer.from(simplePdf(2)).toString('base64') }]);
+      await expect(page.locator('[data-page="0"] img.page-preview')).toBeVisible();
+      await axe(page, 'one-row header with a document');
+      const run = (cmd: string) =>
+        page.evaluate(
+          (c) =>
+            (
+              window as unknown as {
+                __pdftoolsTest: {
+                  capabilities: { commands: { run(id: string): Promise<boolean> } };
+                };
+              }
+            ).__pdftoolsTest.capabilities.commands.run(c),
+          cmd,
+        );
+
+      // Create Blank PDF (O4).
+      await page.getByTestId('document-view').focus();
+      await page.keyboard.press('Control+Alt+n');
+      const blank = page.getByRole('dialog');
+      await expect(blank).toBeVisible();
+      await axe(page, 'Create Blank PDF');
+      await page.keyboard.press('Escape');
+      await expect(blank).toHaveCount(0);
+
+      // Tell me (O2), with results listed.
+      await page.keyboard.press('Alt+q');
+      const tell = page.getByTestId('tell-me');
+      await expect(tell).toBeVisible();
+      await page.keyboard.type('e');
+      await page.keyboard.press('Enter');
+      await expect(tell.getByRole('option').first()).toBeVisible();
+      await axe(page, 'Tell me with results', '[data-testid="tell-me"]');
+      await page.keyboard.press('Escape');
+      await expect(tell).toHaveCount(0);
+
+      // File › About (M10-01, O6) and File › Settings (O7, O9).
+      const backstage = page.getByTestId('backstage');
+      expect(await run('file.about')).toBe(true);
+      await expect(backstage.getByTestId('whats-new')).toBeVisible();
+      await axe(page, "About with What's new");
+      expect(await run('file.settings')).toBe(true);
+      await expect(backstage.getByTestId('appearance-section')).toBeVisible();
+      await axe(page, 'Settings with Accent colour and Density');
+    },
+  );
+}
