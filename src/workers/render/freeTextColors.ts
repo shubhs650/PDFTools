@@ -290,25 +290,53 @@ function readExport(bytes: Uint8Array): Exported | null {
  */
 const WRAP_NAME = 'EPDFWRAP';
 
+/** The bounds of `bbox` after `matrix` (what PDFium maps onto the comment's /Rect). */
+export function turnedBounds(
+  bbox: readonly [number, number, number, number],
+  matrix: readonly number[],
+): { minX: number; minY: number; width: number; height: number } {
+  const [x0, y0, x1, y1] = bbox;
+  const [a = 1, b = 0, c = 0, d = 1, e = 0, f = 0] = matrix;
+  const xs: number[] = [];
+  const ys: number[] = [];
+  for (const [x, y] of [
+    [x0, y0],
+    [x1, y0],
+    [x0, y1],
+    [x1, y1],
+  ] as const) {
+    xs.push(a * x + c * y + e);
+    ys.push(b * x + d * y + f);
+  }
+  const minX = Math.min(...xs);
+  const minY = Math.min(...ys);
+  return { minX, minY, width: Math.max(...xs) - minX, height: Math.max(...ys) - minY };
+}
+
 /**
  * `bytes` with an incremental update: the page draws `content` as the form
  * XObject `/EPDFWRAP` (the appearance form's /BBox and /Resources), placed as
  * the export placed PDFium's form. The page's content is the bare `Do` (the
  * appearance runs it twice, once in its own content and once in the copied
  * page), so the placement is all in the form's /Matrix: PDFium's matrix,
- * then the move of the box's corner to the origin.
+ * then the move of the corner of its turned bounds to the origin.
  */
 function pageDrawing(bytes: Uint8Array, ex: Exported, content: Uint8Array): Uint8Array {
-  const [x0, y0, x1, y1] = ex.bbox;
+  // The page's MediaBox becomes the appearance's /BBox (no /Matrix), and viewers
+  // fit it to /Rect, which is the bounds of PDFium's box after its matrix: larger
+  // than the box when the comment is turned (spike S26). So the page is that
+  // size, and the form keeps PDFium's matrix, moved to the bounds' corner.
+  const { minX, minY, width, height } = turnedBounds(ex.bbox, ex.matrix);
   const [a = 1, b = 0, c = 0, d = 1, e = 0, f = 0] = ex.matrix;
-  const matrix = [a, b, c, d, e - Math.min(x0, x1), f - Math.min(y0, y1)].map(
-    (v) => Math.round(v * 10000) / 10000,
-  );
+  const round = (v: number): number => Math.round(v * 10000) / 10000;
+  const matrix = [a, b, c, d, e - minX, f - minY].map(round);
   const pageContent = encodeLatin1(`/${WRAP_NAME} Do\n`);
   const size = trailerSize(bytes);
   const contentNum = size;
   const formNum = size + 1;
   const page: PdfDict = new Map(ex.page.dict);
+  page.set('MediaBox', [0, 0, round(width), round(height)]);
+  page.delete('CropBox');
   page.set('Resources', new Map([['XObject', new Map([[WRAP_NAME, new PdfRef(formNum, 0)]])]]));
   page.set('Contents', new PdfRef(contentNum, 0));
   const form: PdfDict = new Map<string, PdfValue>([

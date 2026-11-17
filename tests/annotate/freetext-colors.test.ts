@@ -7,6 +7,7 @@ import { readFileSync } from 'node:fs';
 import { createRequire } from 'node:module';
 import { PdfiumNative } from '@embedpdf/engines/pdfium';
 import {
+  calculateRotatedRectAABB,
   PdfAnnotationSubtype,
   PdfStandardFont,
   PdfTextAlignment,
@@ -241,11 +242,19 @@ describe('text and border colours (ADR-024)', () => {
   });
 
   it('draws exactly where PDFium drew, turned or not', async () => {
-    for (const rotation of [0, 30]) {
+    for (const rotation of [0, 30, 90]) {
       const doc = await open(simplePdf(1));
       const page = doc.pages[0];
       if (!page) throw new Error('no page');
-      const a = box({ rotation });
+      // As the annotation plugin writes a turned comment: /Rect is the turned
+      // box's bounds and the box itself is kept (spike S26 found the bounds
+      // were squeezed into the box's size before).
+      const rect = { origin: { x: 100, y: 200 }, size: { width: 200, height: 60 } };
+      const a = box(
+        rotation
+          ? { rotation, rect: calculateRotatedRectAABB(rect, rotation), unrotatedRect: rect }
+          : { rect },
+      );
       await native.createPageAnnotation(doc, page, a as never).toPromise();
       const before = inkBox(doc.id);
       expect(applyTextColors(mod, native, 'createPageAnnotation', [doc, page, a])).toBe(

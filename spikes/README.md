@@ -23,6 +23,7 @@ Throwaway spike code for [docs/plan/M0.md](../docs/plan/M0.md) (S1–S8) and M1-
 | S18–S22 | [`s18-s22-m6/`](s18-s22-m6/) (M6-04)                     | [ADR-022](../docs/adr/022-m6-spikes-s18-s22.md)                | Works with workaround |
 | S23     | [`s23-popup/`](s23-popup/) (M7-06)                       | [ADR-023](../docs/adr/023-m7-second-beta-review.md)            | Works                 |
 | S25     | [`s25-freetext-colors/`](s25-freetext-colors/) (M7)      | [ADR-024](../docs/adr/024-freetext-text-and-border-colours.md) | Works with workaround |
+| S26     | [`s26-freetext-fonts/`](s26-freetext-fonts/) (M11-02)    | [ADR-028](../docs/adr/028-m11-tabs-fonts-select.md)            | Works (route R2)      |
 
 ## Shared pieces (`shared/`)
 
@@ -55,6 +56,11 @@ npm run typecheck:spikes
 node spikes/s1-save/make-fixtures.ts && node spikes/s1-save/run-node.ts   # → spikes/s1-save/out/
 SPIKE=s1 npm run spikes -- --project=s1   # browser timings → test-results/s1-results.json
 npx vitest run spikes                     # unit tests (narrow-tail writer, search core)
+
+# S26 fonts in text comments (M11-02): the tests use fixtures/; the library build and the
+# interop file need the upstream fonts (network) and write to spikes/s26-freetext-fonts/out/
+node spikes/s26-freetext-fonts/fetch-fonts.ts && node spikes/s26-freetext-fonts/build-library.ts
+npx vitest run spikes/s26-freetext-fonts   # → out/s26-interop.pdf, out/results.json
 
 # S2 measurement structures (needs qpdf): writes, reads back, builds the interop pack
 node spikes/s2-measure/run-node.ts
