@@ -3,6 +3,7 @@ import type { Page } from '@playwright/test';
 import { encryptedVariants, hasQpdf, USER_PW } from './fixtures/encrypted.ts';
 import { SCANNED_NEEDLE, TEXT_PAGE_LINE } from './fixtures/scanned.ts';
 import { cap, drop } from './support/app.ts';
+import { stubSavePicker } from './support/savePicker.ts';
 import { expect, test } from './support/fixtures.ts';
 
 // M5-04 (ADR-020): Convert → Recognize Text (OCR) on a self-made scanned
@@ -251,4 +252,94 @@ test('English + French: the French data is fetched on first use; re-recognizing 
   await dialog.getByRole('button', { name: 'Recognize' }).click();
   await waitDone(page);
   expect(await last(page)).toMatchObject({ recognized: 0, skipped: 1 });
+});
+
+// M11-01 (owner's bug, 2026-11-17): after OCR and Ctrl+S, Select Text could
+// not select the new text until the file was reopened (Find worked). The
+// selection plugin cached page 1's "no text" geometry, and the OCR change
+// named no pages to evict. The user's steps: page 1 shown (and a drag tried),
+// OCR, Ctrl+S, select; then undo (no text) and redo (text again).
+const selectionRects = (page: Page) =>
+  page.locator('[data-page="0"] .page-content div[style*="mix-blend-mode"] > div');
+
+async function clipboard(page: Page, set?: string): Promise<string> {
+  await page.context().grantPermissions(['clipboard-read', 'clipboard-write']);
+  if (set !== undefined) await page.evaluate((t) => navigator.clipboard.writeText(t), set);
+  return page.evaluate(() => navigator.clipboard.readText());
+}
+
+/** Drags over the datasheet title on page 1 (PDF space: baseline y 770, 20 pt), then Ctrl+C. */
+async function selectTitle(page: Page): Promise<void> {
+  const box = await page.locator('[data-page="0"] .page-content').boundingBox();
+  if (!box) throw new Error('page not laid out');
+  const s = box.width / 595;
+  const y = box.y + (842 - 777) * s;
+  await page.mouse.move(box.x + 64 * s, y);
+  await page.mouse.down();
+  await page.mouse.move(box.x + 430 * s, y, { steps: 10 });
+  await page.mouse.up();
+  await page.getByTestId('document-view').focus();
+  await page.keyboard.press('Control+C');
+}
+
+test('OCR text can be selected and copied at once, after Ctrl+S, after undo (none) and redo @smoke', async ({
+  page,
+  pdfs,
+}) => {
+  test.setTimeout(180_000);
+  // Dropped, not opened through a handle: Chromium 153 crashes headless on handles (see
+  // playwright.config.ts); Ctrl+S then saves through the (stubbed) save picker.
+  await open(page, await pdfs.scanned());
+  await stubSavePicker(page);
+  // Before OCR: page 1 is an image, so a drag selects nothing (its geometry is cached as empty).
+  await clipboard(page, 'before');
+  await selectTitle(page);
+  await expect(selectionRects(page)).toHaveCount(0);
+  expect(await clipboard(page)).toBe('before');
+
+  const dialog = await openDialog(page);
+  await dialog.getByRole('radio', { name: /^Current page/ }).check();
+  await dialog.getByRole('button', { name: 'Recognize' }).click();
+  await waitDone(page);
+  expect(await last(page)).toMatchObject({ recognized: 1, skipped: 0 });
+
+  // At once, without reopening.
+  await selectTitle(page);
+  await expect(selectionRects(page).first()).toBeVisible();
+  await expect.poll(() => clipboard(page)).toContain(SCANNED_NEEDLE);
+
+  // After Ctrl+S (the user's steps): drag, and Ctrl+A on the page.
+  await page.keyboard.press('Escape');
+  await page.keyboard.press('Control+S');
+  await expect(page.getByRole('tab', { name: /scan\.pdf/ })).not.toHaveAccessibleName(
+    /unsaved changes/,
+    { timeout: 30_000 },
+  );
+  await clipboard(page, 'before');
+  await selectTitle(page);
+  await expect(selectionRects(page).first()).toBeVisible();
+  await expect.poll(() => clipboard(page)).toContain(SCANNED_NEEDLE);
+  await clipboard(page, 'before');
+  await page.keyboard.press('Escape');
+  await page.getByTestId('document-view').focus();
+  await page.keyboard.press('Control+A');
+  await expect(selectionRects(page).first()).toBeVisible();
+  await page.keyboard.press('Control+C');
+  await expect.poll(() => clipboard(page)).toContain('Rated flow');
+  await page.keyboard.press('Escape');
+
+  // Undo takes the layer away: nothing to select.
+  await page.getByRole('button', { name: 'Undo' }).first().click();
+  await expect.poll(() => cap(page, 'pages', 'busy')).toBe(false);
+  await clipboard(page, 'before');
+  await selectTitle(page);
+  await expect(selectionRects(page)).toHaveCount(0);
+  expect(await clipboard(page)).toBe('before');
+
+  // Redo brings it back, selectable again.
+  await page.getByRole('button', { name: 'Redo' }).first().click();
+  await expect.poll(() => cap(page, 'pages', 'busy')).toBe(false);
+  await selectTitle(page);
+  await expect(selectionRects(page).first()).toBeVisible();
+  await expect.poll(() => clipboard(page)).toContain(SCANNED_NEEDLE);
 });

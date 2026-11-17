@@ -1,6 +1,6 @@
 # Triya PDF — Progress
 
-_Last updated: 2026-11-17 (session 75: M11 plan accepted; M10 closed by the owner)_
+_Last updated: 2026-11-17 (session 76: M11-01 OCR text selection fixed)_
 
 **Current milestone:** M11 — file tabs, OCR text selection, a font library and comments in every
 pointer mode: plan [docs/plan/M11.md](plan/M11.md) and [ADR-028](adr/028-m11-tabs-fonts-select.md)
@@ -19,6 +19,23 @@ answers Q1–Q7; ARCHITECTURE.md Rev 0.12 after [ADR-024](adr/024-freetext-text-
 interop is in the M6 pack (CHECKLIST §M6 R1–R4). Rev 0 (M0–M4) is complete on the agent side.
 
 ## Done
+
+- **Session 76 — M11-01 OCR text selection (D-50 plan, ADR-028).** The owner's bug: after
+  Recognize Text and Ctrl+S, Select Text could not select the new text until the file was
+  reopened, though Find found it. **Fix:** an `objects` change can now name its **content pages**
+  (`Change.content`, filled by OCR from the layer's recognized and replaced pages);
+  `contentPages()` (moved to the pure `src/features/pages/changed.ts`) returns them, so
+  `afterChange` evicts the selection plugin's cached geometry for those pages and refreshes the
+  visible ones on **apply, undo and redo** (undo no longer leaves selectable text behind).
+  **Tests:** e2e `ocr.spec.ts` "OCR text can be selected and copied at once, after Ctrl+S, after
+  undo (none) and redo" (a drag tried before OCR caches the empty geometry; fails without the
+  fix, passes with it; drag + Ctrl+C and Ctrl+A + Ctrl+C); unit `tests/pages/changed.test.ts`
+  `contentPages`. **Audit** of other routes that change a document without changing page
+  identity: comment paste, comment import (both routes) and bookmarks go through the same
+  `objects` route but write annotations or the outline, never page text; `stageObjects`
+  (scales, measurements, form fields) writes dictionaries only; Attach File is an annotation;
+  page rotation and size changes are already caught by `changedPages`; flatten already listed
+  its pages. OCR was the only route that changed page text in place unseen.
 
 - **Session 75 — M11 plan (accepted the same day; ARCHITECTURE.md Rev 0.17).** From the owner's message of 2026-11-17 (users' tests of
   the M10 build): [docs/plan/M11.md](plan/M11.md) and [ADR-028](adr/028-m11-tabs-fonts-select.md)
