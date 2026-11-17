@@ -18,13 +18,13 @@ import { HighlightLayer } from '../search/HighlightLayer';
 import { reportActivity } from '../search/indexing';
 import { fitVisibleLevels, move, zoomTo } from './controller';
 import { FormLayer } from '../forms/FormLayer';
-import { LockModeType } from '@embedpdf/plugin-annotation';
 import { AnnotationLayer } from '../annotate/AnnotationLayer';
 import { AnnotationTileLayer } from '../annotate/AnnotationTileLayer';
 import { SelectionAnnouncer } from '../annotate/SelectionAnnouncer';
 import { CommentMarquee } from '../annotate/CommentMarquee';
 import { annotationCapability } from '../annotate/selection';
-import { isDrawTool, isTextTool, TEXT_COMMENT_CATEGORY } from '../annotate/tools/drawModel';
+import { isDrawTool } from '../annotate/tools/drawModel';
+import { lockModeFor } from '../annotate/pointerModes';
 import { NumberOverlay } from '../annotate/comments/NumberOverlay';
 import { NotePopupLayer } from '../annotate/notes/NotePopupLayer';
 import { MeasureOverlay } from '../measure/MeasureOverlay';
@@ -40,7 +40,6 @@ import { DocumentMenu } from './DocumentMenu';
 import { notePointerDown } from './pagePoint';
 import { capability, useHost } from './host';
 import { HAND_MODE, PAGE_GAP, POINTER_MODE, SELECT_COMMENTS_MODE } from './plugins';
-import { isDesignTool } from '../forms/fieldModel';
 import { PreviewLayer } from './PreviewLayer';
 import { setViewFocus } from './tileScheduler';
 import {
@@ -69,6 +68,13 @@ function zoomSetting(docId: string, state: ZoomDocumentState): ZoomSetting {
 }
 
 const VIEW_TEST_ID = 'document-view';
+/**
+ * With Hand, presses here never pan: comments, their frames and note windows
+ * (M11-06, D-51), and form fields and links, which are filled and followed in
+ * every pointer mode.
+ */
+const OWN_PRESS =
+  '.annotation-layer [data-no-interaction], [data-note-popup], input, textarea, select, button, [contenteditable="true"]';
 /** Selected text: a token, drawn with multiply over the page (rules 11–12: no literal colors). */
 const SELECTION_COLOR = 'var(--color-text-selection)';
 const REGION = 'region';
@@ -305,22 +311,11 @@ export function DocumentView({ documentId }: { documentId: string }) {
             ? tool
             : POINTER_MODE,
     );
-    // Select Text and Hand never pick up annotations (M3-05); Select and Select
-    // Objects do, except form fields, which only Select Fields picks up (M6-14).
+    // Comments in every pointer mode (M11-06, D-51): Select, Select Comments,
+    // Hand and Select Text pick comments up, never form fields (only Select
+    // Fields does, M6-14); a drawing tool none (pointerModes.ts).
     try {
-      annotationCapability()
-        ?.forDocument(documentId)
-        .setLocked(
-          tool === 'select' || tool === 'selectObjects'
-            ? { type: LockModeType.Include, categories: ['form'] }
-            : // With a field tool on too: the field just drawn is selected (Field Properties).
-              isDesignTool(tool)
-              ? { type: LockModeType.Exclude, categories: ['form'] }
-              : // A text tool: the text comment just made is selected and edited (M7-02).
-                isTextTool(tool)
-                ? { type: LockModeType.Exclude, categories: [TEXT_COMMENT_CATEGORY] }
-                : { type: LockModeType.All },
-        );
+      annotationCapability()?.forDocument(documentId).setLocked(lockModeFor(tool));
     } catch {
       // The plugin's document state comes with the document's load.
     }
@@ -425,6 +420,9 @@ export function DocumentView({ documentId }: { documentId: string }) {
 
   const onPointerDown = (e: PointerEvent<HTMLDivElement>): void => {
     if (tool !== 'hand' || e.button !== 0) return;
+    // A press on a comment (its body, selection frame or handles), a sticky
+    // note window, a form field or a link is theirs (M11-06, D-51).
+    if (e.target instanceof Element && e.target.closest(OWN_PRESS)) return;
     e.preventDefault();
     e.currentTarget.setPointerCapture(e.pointerId);
     pan.current = { x: e.clientX, y: e.clientY, id: e.pointerId };

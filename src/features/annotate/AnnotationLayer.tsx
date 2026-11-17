@@ -9,30 +9,39 @@ import {
   createRenderer,
   type CustomAnnotationRenderer,
 } from '@embedpdf/plugin-annotation/react';
-import { useLayoutEffect, type PointerEvent, type ReactNode } from 'react';
+import { useLayoutEffect, useMemo, type PointerEvent, type ReactNode } from 'react';
+import { documentStore, securityOf, useDocuments } from '../../app/store/documentStore';
+import { allows } from '../../model/permissions';
 import { ATTACH_DEFAULT_COLOR } from '../../model/attachFile';
 import { saveAttachmentById } from '../attachments/attachFile';
 import { FIELD_RENDERER } from '../forms/fieldDesign';
 import { TEXT_BODY_ATTR, textBodyUnmounted, useEditEpoch } from './textEdit';
-import { pressTextComment, type PageGeometry } from './textPointer';
+import { pressComment, type PageGeometry } from './textPointer';
+import { isTextMarkup } from './pointerModes';
+import { annotationCapability } from './selection';
 
 /**
  * A comment's body, marked with its id and page. A text box, typewriter or
  * callout is marked so its editor is found (textEdit.ts, M7-02), and its text
- * is written if the body unmounts while it is being edited.
+ * is written if the body unmounts while it is being edited. A text markup is
+ * marked so Select Text lets presses through to the text under it (M11-06).
  */
 function Body({
   annotation,
   isSelected,
   geometry,
+  movable,
   children,
 }: {
   annotation: PdfAnnotationObject;
   isSelected: boolean;
   geometry: PageGeometry;
+  /** A press and drag would move it: the move cursor (M11-06, D-51). */
+  movable: boolean;
   children: ReactNode;
 }) {
   const text = annotation.type === PdfAnnotationSubtype.FREETEXT;
+  const markup = isTextMarkup(annotation);
   const { id } = annotation;
   useLayoutEffect(
     () =>
@@ -50,53 +59,61 @@ function Body({
       // Which comment a Shift or Ctrl press is on (commentSelection.ts, M7-04).
       data-annotation-id={id}
       data-page-index={annotation.pageIndex}
-      {...(text
-        ? {
-            [TEXT_BODY_ATTR]: '',
-            // A press selects it and, dragged, moves it (M7-03, B5); once
-            // selected, the plugin's frame over it takes the presses.
-            ...(isSelected
-              ? {}
-              : {
-                  onPointerDownCapture: (e: PointerEvent<HTMLDivElement>) => {
-                    pressTextComment(e, annotation, geometry);
-                  },
-                }),
-          }
-        : {})}
+      data-markup={markup || undefined}
+      data-movable={(movable && !markup) || undefined}
+      {...(text ? { [TEXT_BODY_ATTR]: '' } : {})}
+      // A press selects it and, dragged, moves it in every pointer mode
+      // (M7-03 B5 for text comments, M11-06 D-51 for all); once selected,
+      // the plugin's frame over it takes the presses. Markups never move.
+      {...(isSelected || markup
+        ? {}
+        : {
+            onPointerDownCapture: (e: PointerEvent<HTMLDivElement>) => {
+              pressComment(e, annotation, geometry);
+            },
+          })}
     >
       {children}
     </div>
   );
 }
 
-const renderBody: CustomAnnotationRenderer<PdfAnnotationObject> = ({
-  annotation,
-  children,
-  isSelected,
-  scale,
-  rotation,
-  pageWidth,
-  pageHeight,
-}) =>
-  // Form fields: the field box (fieldDesign.tsx), which is empty unless fields
-  // are designed; the form layer fills them (M2-14, M6-14).
-  annotation.type === PdfAnnotationSubtype.WIDGET ? (
-    <>{children}</>
-  ) : // Links have their own layer (M2-10); replies (/IRT notes, M3-12) are
-  // shown in the thread, never on the page.
-  annotation.type === PdfAnnotationSubtype.LINK ||
-    (annotation.type === PdfAnnotationSubtype.TEXT && annotation.inReplyToId) ? (
-    <></>
-  ) : (
-    <Body
-      annotation={annotation}
-      isSelected={isSelected}
-      geometry={{ scale, rotation, pageWidth, pageHeight }}
-    >
-      {children}
-    </Body>
-  );
+/**
+ * Whether a comment may move: the document allows annotating (rule 9) and the
+ * comment is not locked or read only (M6-06).
+ */
+function canMove(docId: string, annotation: PdfAnnotationObject): boolean {
+  const meta = documentStore.getState().docs[docId]?.meta;
+  if (!meta || !allows(securityOf(meta), 'annotate')) return false;
+  try {
+    return !annotationCapability()?.forDocument(docId).isAnnotationStructurallyLocked(annotation);
+  } catch {
+    return false;
+  }
+}
+
+const bodyRenderer =
+  (docId: string): CustomAnnotationRenderer<PdfAnnotationObject> =>
+  ({ annotation, children, isSelected, scale, rotation, pageWidth, pageHeight }) =>
+    // Form fields: the field box (fieldDesign.tsx), which is empty unless fields
+    // are designed; the form layer fills them (M2-14, M6-14).
+    annotation.type === PdfAnnotationSubtype.WIDGET ? (
+      <>{children}</>
+    ) : // Links have their own layer (M2-10); replies (/IRT notes, M3-12) are
+    // shown in the thread, never on the page.
+    annotation.type === PdfAnnotationSubtype.LINK ||
+      (annotation.type === PdfAnnotationSubtype.TEXT && annotation.inReplyToId) ? (
+      <></>
+    ) : (
+      <Body
+        annotation={annotation}
+        isSelected={isSelected}
+        geometry={{ scale, rotation, pageWidth, pageHeight }}
+        movable={canMove(docId, annotation)}
+      >
+        {children}
+      </Body>
+    );
 
 /**
  * File attachments (M6-10): the plugin has no renderer for the subtype, so it
@@ -171,6 +188,12 @@ export function AnnotationLayer({
 }) {
   // Remounted when a text comment's editing has to end (textEdit.ts).
   const epoch = useEditEpoch(documentId, pageIndex);
+  // Read only or protected: no move cursor (the security comes with the document).
+  const annotate = useDocuments((s) => {
+    const meta = s.docs[documentId]?.meta;
+    return meta ? allows(securityOf(meta), 'annotate') : false;
+  });
+  const renderBody = useMemo(() => bodyRenderer(documentId), [documentId, annotate]); // eslint-disable-line react-hooks/exhaustive-deps
   return (
     <PluginLayer
       key={epoch}

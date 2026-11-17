@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState, type KeyboardEvent } from 'react';
 import { useTranslation } from 'react-i18next';
 import { appStore, useApp } from '../../app/store/appStore';
+import { picksComments } from '../annotate/pointerModes';
 import type { Rect } from '@embedpdf/models';
 import { markAreas, rectFrom } from './markModel';
 import { cancelKeyRect, commitKeyRect, markArea, nudgeKeyRect, useKeyRect } from './markTools';
@@ -37,8 +38,9 @@ export function RedactionLayer({
   const { t } = useTranslation();
   const marks = useMarks(documentId);
   const area = useApp((s) => s.tool === 'redactArea');
-  // Marks take the pointer (hover shows the fill, a click selects) with the Select tools.
-  const pick = useApp((s) => s.tool === 'select' || s.tool === 'selectObjects');
+  // Marks take the pointer (hover shows the fill, a click selects) with the
+  // pointer tools: Select, Select Comments, Hand and Select Text (M11-06, D-51).
+  const pick = useApp((s) => picksComments(s.tool));
   const selected = useSelectedIds(documentId);
   const keyRect = useKeyRect((s) =>
     s.docId === documentId && s.page === pageIndex ? s.rect : null,

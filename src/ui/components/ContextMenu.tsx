@@ -8,7 +8,7 @@ import { useCommandStates } from '../../app/commands/useCommandState';
 import { shortcutText } from '../../app/keys/labels';
 import { msg } from '../../i18n';
 import { CommandIcon } from '../icons/CommandIcon';
-import { menuItems, type ContextMenuEntry, type MenuItemView } from './contextMenuModel';
+import { menuItems, menuRuns, type ContextMenuEntry, type MenuItemView } from './contextMenuModel';
 
 export type { ContextMenuEntry, MenuChoice } from './contextMenuModel';
 
@@ -35,7 +35,15 @@ const NOT_READY = { enabled: false, pressed: false, reason: msg('ribbon.notReady
 /** The Radix parts a command menu is drawn with: a context menu's or a dropdown's (same API). */
 type MenuKit = Pick<
   typeof CM,
-  'Item' | 'CheckboxItem' | 'Sub' | 'SubTrigger' | 'SubContent' | 'Portal' | 'Separator'
+  | 'Item'
+  | 'CheckboxItem'
+  | 'RadioGroup'
+  | 'RadioItem'
+  | 'Sub'
+  | 'SubTrigger'
+  | 'SubContent'
+  | 'Portal'
+  | 'Separator'
 >;
 const CONTEXT_KIT: MenuKit = CM;
 const DROPDOWN_KIT: MenuKit = DM;
@@ -143,11 +151,18 @@ function Body({
     (id) => stateOf?.(id) ?? states[id] ?? NOT_READY,
     (id) => shortcutText(id, t),
   );
-  return items.map((item) =>
-    item.kind === 'separator' ? (
-      <kit.Separator key={item.key} className="ui-menu-separator" />
+  return menuRuns(items).map((run) =>
+    run.kind === 'radio' ? (
+      // One of a group (the page menu's tools, M11-06): the current one checked.
+      <kit.RadioGroup key={`radio-${run.group}`} value={run.items.find((i) => i.pressed)?.id ?? ''}>
+        {run.items.map((item) => (
+          <Item key={item.id} kit={kit} item={item} args={args} />
+        ))}
+      </kit.RadioGroup>
+    ) : run.item.kind === 'separator' ? (
+      <kit.Separator key={run.item.key} className="ui-menu-separator" />
     ) : (
-      <Item key={item.id} kit={kit} item={item} args={args} />
+      <Item key={run.item.id} kit={kit} item={run.item} args={args} />
     ),
   );
 }
@@ -225,7 +240,11 @@ function Item({
     );
   return (
     <>
-      {item.toggle ? (
+      {item.radio ? (
+        <M.RadioItem {...props} value={item.id} onSelect={onSelect}>
+          {content}
+        </M.RadioItem>
+      ) : item.toggle ? (
         <M.CheckboxItem {...props} checked={item.pressed} onSelect={onSelect}>
           {content}
         </M.CheckboxItem>

@@ -1946,6 +1946,26 @@ body {
   opacity: 1;
 }
 
+/* Comments in every pointer mode (M11-06, D-51): a comment that a press and drag
+   would move shows the move cursor (the plugin's own is a hand), with every
+   pointer tool; a locked one keeps the plugin's. */
+.annotation-body[data-movable]:not([data-selected]) * {
+  cursor: move !important;
+}
+
+/* Select Text (Q6) and Hand: a text markup lets presses through to the page, so
+   a drag selects the text under it or pans; a click selects the markup
+   (markupPointer.ts). */
+.document-host:is([data-tool='selectText'], [data-tool='hand'])
+  .annotation-layer
+  [data-no-interaction]:has(.annotation-body[data-markup]),
+.document-host:is([data-tool='selectText'], [data-tool='hand'])
+  .annotation-layer
+  [data-no-interaction]:has(.annotation-body[data-markup])
+  * {
+  pointer-events: none !important;
+}
+
 .page-preview {
   display: block;
   width: 100%;
@@ -2096,6 +2116,15 @@ body {
 }
 
 .document-host[data-panning='true'] .viewport {
+  cursor: grabbing;
+}
+
+/* Over the page too (the interaction manager sets the page's own cursor). */
+.document-host[data-tool='hand'] .page-content {
+  cursor: grab;
+}
+
+.document-host[data-panning='true'] .page-content {
   cursor: grabbing;
 }
 

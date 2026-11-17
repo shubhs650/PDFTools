@@ -161,6 +161,28 @@
   padding-inline-end: var(--space-4);
 }
 
+/* The current one of a group (M11-06: the page menu's tools): the pressed tint and
+   brand icon of the ribbon and rail, and a bold label, besides the Filled icon. */
+.ui-menu-item[role='menuitemradio'][data-state='checked'] {
+  background: var(--color-selected);
+  font-weight: var(--font-weight-semibold);
+}
+
+.ui-menu-item[role='menuitemradio'][data-state='checked'][data-highlighted] {
+  background: var(--color-selected-hover);
+}
+
+.ui-menu-item[role='menuitemradio'][data-state='checked'] .ui-menu-icon {
+  color: var(--color-selected-text);
+}
+
+@media (forced-colors: active) {
+  .ui-menu-item[role='menuitemradio'][data-state='checked'] {
+    outline: var(--border-width) solid Highlight;
+    outline-offset: calc(-1 * var(--border-width));
+  }
+}
+
 .ui-menu-icon {
   display: inline-flex;
   flex: none;

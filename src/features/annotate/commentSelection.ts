@@ -15,11 +15,11 @@ import { appStore, type Tool } from '../../app/store/appStore';
 import { capability } from '../view/host';
 import { POINTER_MODE, SELECT_COMMENTS_MODE } from '../view/plugins';
 import { addIds, marqueeHits, pageAnnotations, withGroupMembers } from './model';
+import { picksComments } from './pointerModes';
 import { annotationCapability, annotationState } from './selection';
 
-/** The tools that pick up comments with the pointer (M3-05). */
-export const isCommentPicker = (tool: Tool): boolean =>
-  tool === 'select' || tool === 'selectObjects';
+/** The tools that pick up comments with the pointer (M3-05; Hand and Select Text since M11-06). */
+export const isCommentPicker = (tool: Tool): boolean => picksComments(tool);
 
 const scope = (docId: string) => {
   try {
@@ -52,6 +52,12 @@ function docOf(target: EventTarget | null): string | null {
     ? (target.closest<HTMLElement>('[data-doc-id]')?.dataset['docId'] ?? null)
     : null;
 }
+
+/** The page itself under a press: its picture, not a comment, link, field or overlay. */
+export const isPageBackground = (el: Element): boolean =>
+  el.classList.contains('page-content') ||
+  el.classList.contains('annotation-layer') ||
+  el.closest('.page-tiles, .page-preview') !== null;
 
 /** A resize, vertex or rotation handle of the selection: a modifier there is the plugin's. */
 const isHandle = (el: Element): boolean =>
@@ -111,6 +117,13 @@ function onPressCapture(e: PointerEvent): void {
   const additive = e.shiftKey || e.ctrlKey || e.metaKey;
   kept = additive ? { docId, ids: scope(docId)?.getSelectedAnnotationIds() ?? [] } : null;
   const target = e.target;
+  // A press on empty page space ends the comment selection, in every pointer
+  // mode (M11-06, D-51): the plugin only does so for a press on its own page
+  // element, which the page's tiles always cover.
+  if (!additive && target instanceof Element && isPageBackground(target)) {
+    const s = scope(docId);
+    if (s && s.getSelectedAnnotationIds().length > 0) s.deselectAnnotation();
+  }
   if (!additive || e.altKey || !(target instanceof Element) || isHandle(target)) return;
   if (!target.closest('.annotation-layer [data-no-interaction]')) return;
   const hit = commentAt(target, e.clientX, e.clientY);

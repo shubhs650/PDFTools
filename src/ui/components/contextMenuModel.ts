@@ -18,8 +18,10 @@ export type ContextMenuEntry =
    * `keysOf`: the command whose keys are shown (M7-05: the text menu's Undo
    * shows Undo's Ctrl+Z, which the editor itself handles). `label`: this menu's own
    * wording for the command (M11-05: the strip menu's "Create Blank PDF…" is File → New).
+   * `radio`: a group of toggles of which one is on (M11-06: the page menu's tools),
+   * shown as `menuitemradio`s.
    */
-  | { kind: 'command'; id: string; keysOf?: string; label?: MessageKey }
+  | { kind: 'command'; id: string; keysOf?: string; label?: MessageKey; radio?: string }
   | { kind: 'separator'; key: string }
   /** The command's label opens a submenu; its state enables or disables it. */
   | { kind: 'submenu'; id: string; choices: readonly MenuChoice[] };
@@ -34,6 +36,8 @@ export type MenuItemView =
       enabled: boolean;
       /** A toggle (tool, mode): shown checked while pressed. */
       toggle: boolean;
+      /** One of a group of toggles (its name): a radio item. */
+      radio: string | null;
       pressed: boolean;
       /** Why it is disabled (rule 9 and the command's own reason), null when enabled. */
       reason: MessageKey | null;
@@ -66,11 +70,35 @@ export function menuItems(
       shortcut: e.kind === 'command' ? shortcutOf(e.keysOf ?? e.id) : '',
       enabled: st.enabled,
       toggle: e.kind === 'command' && TOGGLES.has(e.id),
+      radio: (e.kind === 'command' ? e.radio : undefined) ?? null,
       pressed: st.pressed,
       reason: st.enabled ? null : st.reason,
       choices: e.kind === 'submenu' ? e.choices : [],
     });
   }
   while (out.at(-1)?.kind === 'separator') out.pop();
+  return out;
+}
+
+/** A run of items: one item, or the consecutive items of one radio group. */
+export type MenuRun =
+  | { kind: 'item'; item: MenuItemView }
+  | {
+      kind: 'radio';
+      group: string;
+      items: Extract<MenuItemView, { kind: 'command' | 'submenu' }>[];
+    };
+
+/** The items with each radio group's consecutive items gathered into one run. Pure. */
+export function menuRuns(items: readonly MenuItemView[]): MenuRun[] {
+  const out: MenuRun[] = [];
+  for (const item of items) {
+    const group = item.kind === 'separator' ? null : item.radio;
+    const last = out.at(-1);
+    if (group && item.kind !== 'separator') {
+      if (last?.kind === 'radio' && last.group === group) last.items.push(item);
+      else out.push({ kind: 'radio', group, items: [item] });
+    } else out.push({ kind: 'item', item });
+  }
   return out;
 }
