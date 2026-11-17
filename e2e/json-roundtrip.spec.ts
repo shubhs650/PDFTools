@@ -38,6 +38,19 @@ const b64 = (b: Uint8Array) => Buffer.from(b).toString('base64');
 
 async function open(page: Page, bytes: Uint8Array, name: string): Promise<string> {
   await drop(page, [{ name, b64: b64(bytes) }]);
+  // The new tab first: with a document already open, its page preview is visible at once
+  // and the active id could still be the earlier document's (the import then went to
+  // target.pdf while the save read source.pdf: "nothing to save").
+  await expect
+    .poll(async () => {
+      const s = (await cap(page, 'open', 'state')) as {
+        active: string | null;
+        activeId: string | null;
+        engineActive: string | null;
+      };
+      return s.active === name && s.engineActive === s.activeId;
+    })
+    .toBe(true);
   await expect(page.locator('[data-page="0"] img.page-preview').first()).toBeVisible();
   const id = (await cap(page, 'view', 'activeDocId')) as string;
   await expect.poll(() => cap(page, 'annotate', 'list', id)).not.toBeNull();
