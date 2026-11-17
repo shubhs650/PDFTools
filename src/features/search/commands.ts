@@ -2,6 +2,8 @@
 // results (or open the bar when there are none).
 import { registerCommand } from '../../app/commands/dispatch';
 import { appStore } from '../../app/store/appStore';
+import { documentStore } from '../../app/store/documentStore';
+import { searchSelectedText } from '../select/textSelection';
 import { findNext, findStore, openFind } from './findStore';
 import { requestSearchFocus } from './searchStore';
 
@@ -21,6 +23,15 @@ export function registerFindCommands(): () => void {
         const app = appStore.getState();
         if (!app.leftPaneOpen || app.leftPane !== 'rail.search') app.choosePane('rail.search');
         requestSearchFocus();
+      },
+    }),
+    // The selected-text menu's Search for "…" (M11-08·O1): the Search pane runs
+    // the selected text. Its text is handed out only where copying is (rule 9).
+    registerCommand('edit.searchSelection', {
+      requires: 'copy',
+      run: async () => {
+        const id = documentStore.getState().activeId;
+        if (id) await searchSelectedText(id);
       },
     }),
     registerCommand('find.next', { requiresDocument: true, run: step(1) }),

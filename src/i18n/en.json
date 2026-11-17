@@ -206,6 +206,7 @@
       "copy": "Copy",
       "paste": "Paste",
       "selectAll": "Select All",
+      "searchSelection": "Search for Selected Text",
       "properties": "Properties"
     },
     "bookmark": {
@@ -2513,7 +2514,9 @@
   },
   "contextMenu": {
     "comment": "Comment",
-    "page": "Page"
+    "page": "Page",
+    "text": "Selected Text",
+    "searchFor": "Search for “{{text}}”"
   },
   "textMenu": {
     "label": "Text",

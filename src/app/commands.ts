@@ -1748,6 +1748,16 @@ export const COMMANDS: readonly CommandDef[] = [
     milestone: 'M6',
     shipped: true, // M6-02: Ctrl+A, the page menu
   },
+  // The selected-text menu (M11-08·O1, ADR-028): the selected text into the Search pane.
+  {
+    id: 'edit.searchSelection',
+    tab: 'menu',
+    group: 'menu',
+    size: 'small',
+    fluent: 'Search',
+    milestone: 'M6',
+    shipped: true, // M11-08·O1: the selected-text menu
+  },
   {
     id: 'edit.properties',
     tab: 'menu',

@@ -7,6 +7,7 @@
 // here, by its line boxes. A right press selects it at once, so the comment
 // menu opens on it.
 import { appStore } from '../../app/store/appStore';
+import { onTextSelectionAt } from '../select/textSelection';
 import { pagePointAt } from '../view/pagePoint';
 import { isClick, markupAt } from './pointerModes';
 import { annotationCapability, annotationState } from './selection';
@@ -57,6 +58,8 @@ export function installMarkupPointer(): () => void {
     const docId = docOf(e.target);
     if (!docId) return;
     if (e.button === 2) {
+      // On selected text, the selected-text menu opens instead (M11-08·O1).
+      if (onTextSelectionAt(docId, e.clientX, e.clientY)) return;
       // Before the contextmenu event: the comment menu opens on the markup.
       const hit = markupUnder(docId, e.clientX, e.clientY);
       const selected = annotationCapability()?.forDocument(docId).getSelectedAnnotationIds();

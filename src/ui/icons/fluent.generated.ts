@@ -324,6 +324,7 @@ export const FLUENT_GLYPHS: Record<string, FluentGlyphs> = {
   'edit.copy': { regular: { small: Copy20Regular } },
   'edit.paste': { regular: { small: ClipboardPaste20Regular } },
   'edit.selectAll': { regular: { small: SelectAllOn20Regular } },
+  'edit.searchSelection': { regular: { small: Search20Regular } },
   'edit.properties': { regular: { small: Info20Regular } },
   'text.undo': { regular: { small: ArrowUndo20Regular } },
   'text.redo': { regular: { small: ArrowRedo20Regular } },
