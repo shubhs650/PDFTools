@@ -177,7 +177,7 @@ test('welcome-1: the window at a glance', async ({ page }) => {
   await fitPage(page);
   await markUpDrawing(page);
   await ribbonTab(page, 'Home').click();
-  await page.getByRole('button', { name: 'Properties Pane' }).click();
+  await page.getByRole('button', { name: 'Properties Pane', exact: true }).click();
   // Select the rectangle so the Properties pane has something to show.
   const p = await at(page, DRAWING, 290, 320);
   await page.mouse.click(p.x, p.y);
@@ -288,6 +288,7 @@ test('side-panes-1: the Thumbnails pane', async ({ page }) => {
     callouts: [
       { n: 1, target: pane.getByRole('button', { name: 'Thumbnails' }), at: 'r' },
       { n: 2, target: pane.getByRole('region', { name: 'Thumbnails' }), at: 't' },
+      { n: 3, target: pane.getByRole('button', { name: 'Hide left pane' }), at: 'b', dy: 8 },
     ],
   });
 });
@@ -585,7 +586,7 @@ test('comment-properties-1: the Properties pane', async ({ page }) => {
   if (!rect) throw new Error('no comment');
   await cap(page, 'annotate', 'select', id, 0, rect.id);
   await ribbonTab(page, 'Home').click();
-  await page.getByRole('button', { name: 'Properties Pane' }).click();
+  await page.getByRole('button', { name: 'Properties Pane', exact: true }).click();
   const pane = page.getByTestId('properties-pane');
   await expect(pane).toBeVisible();
   await shoot(page, 'comment-properties-1', {
@@ -604,7 +605,7 @@ test('comment-properties-2: Standard colors', async ({ page }) => {
   if (!rect) throw new Error('no comment');
   await cap(page, 'annotate', 'select', id, 0, rect.id);
   await ribbonTab(page, 'Home').click();
-  await page.getByRole('button', { name: 'Properties Pane' }).click();
+  await page.getByRole('button', { name: 'Properties Pane', exact: true }).click();
   const pane = page.getByTestId('properties-pane');
   const button = pane.getByRole('button', { name: 'Stroke color', exact: true });
   await button.scrollIntoViewIfNeeded();

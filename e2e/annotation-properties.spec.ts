@@ -34,7 +34,7 @@ async function setup(page: Page): Promise<{ id: string; a: string; b: string; by
   const b = (await cap(page, 'annotate', 'createSquare', id, 0, 260, 60)) as string;
   await expect.poll(async () => (await objects(page, id)).length).toBe(2);
   await page.getByRole('tab', { name: 'View' }).click();
-  await page.getByRole('button', { name: 'Properties Pane' }).click();
+  await page.getByRole('button', { name: 'Properties Pane', exact: true }).click();
   return { id, a, b, bytes };
 }
 
@@ -144,7 +144,7 @@ test('read-only without the annotate permission (rule 9)', async ({ page }) => {
   const id = (await cap(page, 'view', 'activeDocId')) as string;
   await expect.poll(async () => (await objects(page, id)).length).toBe(1);
   await page.getByRole('tab', { name: 'View' }).click();
-  await page.getByRole('button', { name: 'Properties Pane' }).click();
+  await page.getByRole('button', { name: 'Properties Pane', exact: true }).click();
   await cap(page, 'annotate', 'selectMany', id, ['sq-1']);
   await expect(pane(page)).toContainText("doesn't allow changes to comments");
   await expect(pane(page).getByLabel('Line width')).toBeDisabled();

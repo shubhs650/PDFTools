@@ -260,7 +260,7 @@ test('M3 interop: measurements at 1:100, with and without a scale viewport', asy
   const id2 = await open(page, original, 'detail.pdf');
   await setScale(page, '100', 'Metres', '2');
   await page.getByRole('tab', { name: 'View' }).click();
-  await page.getByRole('button', { name: 'Properties Pane' }).click();
+  await page.getByRole('button', { name: 'Properties Pane', exact: true }).click();
   await page.getByRole('tab', { name: 'Measure' }).click();
   await page.getByTestId('properties-pane').getByRole('button', { name: 'Add viewport' }).click();
   const dialog = page.getByRole('dialog', { name: 'Scale viewport' });

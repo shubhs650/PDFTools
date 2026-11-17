@@ -341,7 +341,13 @@
     "closeProperties": "Close the Properties pane",
     "statusBar": "Status bar",
     "closePane": "Close the navigation pane",
-    "resizePane": "Resize the navigation pane"
+    "resizePane": "Resize the navigation pane",
+    "hideLeftPane": "Hide left pane",
+    "showLeftPane": "Show left pane",
+    "hidePropertiesPane": "Hide Properties pane",
+    "showPropertiesPane": "Show Properties pane",
+    "propertiesDock": "Properties pane",
+    "resizeProperties": "Resize the Properties pane"
   },
   "error": {
     "title": "Something went wrong",

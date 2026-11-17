@@ -1,6 +1,6 @@
 # Triya PDF — Progress
 
-_Last updated: 2026-11-17 (session 76: M11-01 OCR text selection fixed)_
+_Last updated: 2026-11-17 (session 77: M11-10 resizable Properties pane and pane edge arrows)_
 
 **Current milestone:** M11 — file tabs, OCR text selection, a font library and comments in every
 pointer mode: plan [docs/plan/M11.md](plan/M11.md) and [ADR-028](adr/028-m11-tabs-fonts-select.md)
@@ -19,6 +19,34 @@ answers Q1–Q7; ARCHITECTURE.md Rev 0.12 after [ADR-024](adr/024-freetext-text-
 interop is in the M6 pack (CHECKLIST §M6 R1–R4). Rev 0 (M0–M4) is complete on the agent side.
 
 ## Done
+
+- **Session 77 — M11-10 panes (D-56, ADR-028).** The owner's two items: the right Properties
+  pane could not be resized, and each side pane gets a PDF-XChange-style arrow that hides or
+  shows it. **Splitter:** one `PaneSplitter` (`src/app/PaneSplitter.tsx`) for both panes, with
+  the arithmetic in the pure `src/app/paneSize.ts` (`clampPaneWidth`, `widthForKey`,
+  `widthForDrag`; the Properties splitter is on the pane's left edge, so ArrowLeft widens it);
+  drag with mouse, pen or touch, arrows in 16 px steps, Home and End; 160–480 px; the
+  Properties width (`propertiesWidth` in the app store) is kept while the app is open, like the
+  left pane's. **Edge arrows:** `PaneEdge` (`src/app/PaneEdge.tsx`) is a 12 px strip on each
+  pane's inner edge in its own layout column (so it never covers the document or its
+  scrollbar) holding the splitter while the pane is shown and a 12 × 48 px chevron button
+  centred on it. The buttons run `view.leftPanes` and `view.propertiesPane`, so the ribbon, the
+  rail and the arrows always agree; the left arrow reopens the last pane. Names: "Hide/Show
+  left pane", "Hide/Show Properties pane", with `aria-expanded` and `aria-controls` (only while
+  the pane exists); focus stays on the arrow, and the Properties pane's × now hands focus to it.
+  The Properties pane's landmark (`aside` "Properties pane", `.properties-dock`) is always there
+  and holds the strip, then the pane (`section` "Properties", `#properties-pane`). **Deviation
+  from the plan:** the arrow is 12 px wide, not 24, to keep PDF-XChange's thin strip; it meets
+  WCAG 2.5.8 through the equivalent-control exception (the ribbon and rail buttons), and axe
+  (which runs the target-size rule) finds no violations. **Tests:** unit `tests/app/paneSize.test.ts`
+  and the store's Properties width; e2e `e2e/pane-edges.spec.ts` (keys and pointer within
+  limits, both arrows with focus, ribbon and rail in step, last pane reopened, the document
+  stays on page 25 while the panes hide, show and resize, 1280 px with both panes at 480 px,
+  axe light and dark with both panes open and both hidden). Unscoped `'Properties Pane'`
+  button locators in e2e now use `exact: true` ("Show Properties pane" contains the text).
+  **Help:** side-panes text and the Properties paragraph mention the arrows and the
+  Properties splitter; side-panes-1 has a third callout; Help screenshots regenerated (the
+  arrows show in 31 of them). Screenshots: shared folder `m11-10/before` and `after`.
 
 - **Session 76 — M11-01 OCR text selection (D-50 plan, ADR-028).** The owner's bug: after
   Recognize Text and Ctrl+S, Select Text could not select the new text until the file was

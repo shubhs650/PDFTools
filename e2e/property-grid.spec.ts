@@ -72,7 +72,7 @@ async function setup(page: Page) {
   })) as string;
   await expect.poll(async () => (await objects(page, id)).length).toBe(2);
   await page.getByRole('tab', { name: 'View' }).click();
-  await page.getByRole('button', { name: 'Properties Pane' }).click();
+  await page.getByRole('button', { name: 'Properties Pane', exact: true }).click();
   return { id, sq, box, bytes };
 }
 
@@ -422,7 +422,7 @@ test('a text box has its own Text color and Border color, saved as Acrobat reads
   });
   await expect.poll(async () => (await objects(page, id)).length).toBe(2);
   await page.getByRole('tab', { name: 'View' }).click();
-  await page.getByRole('button', { name: 'Properties Pane' }).click();
+  await page.getByRole('button', { name: 'Properties Pane', exact: true }).click();
 
   await cap(page, 'annotate', 'selectMany', id, [typewriter]);
   await expect(pane(page).getByRole('button', { name: 'Text color', exact: true })).toBeVisible();
