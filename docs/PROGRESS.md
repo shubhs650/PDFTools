@@ -1,6 +1,6 @@
 # Triya PDF — Progress
 
-_Last updated: 2026-11-17 (session 91: M11-08·O9 crop pages)_
+_Last updated: 2026-11-17 (session 92: M11-08·O5 fonts installed on this computer)_
 
 **Current milestone:** M11 — file tabs, OCR text selection, a font library and comments in every
 pointer mode: plan [docs/plan/M11.md](plan/M11.md) and [ADR-028](adr/028-m11-tabs-fonts-select.md)
@@ -20,6 +20,48 @@ interop is in the M6 pack (CHECKLIST §M6 R1–R4). Rev 0 (M0–M4) is complete 
 
 ## Done
 
+- **Session 92 — M11-08·O5 fonts installed on this computer (D-54, ADR-028, plan O5).** In
+  Chromium (Chrome, Edge) the comment font list ends with **On this computer**: first the entry
+  **Show fonts on this computer…** (an option of the list, so Enter or a click reaches it; other
+  browsers do not show the section). Choosing it calls Local Font Access (`queryLocalFonts()`)
+  behind the browser's prompt; nothing is read before. The faces are grouped into families
+  (`groupLocalFonts`, `src/model/fonts/systemFamilies.ts`: regular, bold, italic, bold italic by
+  style name, normal width first; names starting with "." left out; sorted by the UI locale)
+  and registered at runtime in the library's registry (`setSystemFamilies` in
+  `src/model/fonts/library.ts`) on both sides: ids `sys:<family>`, face files
+  `sys:<PostScript name>`, group `system`. An unregistered `sys:` id (another browser, permission
+  taken back) is a family with no faces, so it draws in its standard fallback, as another viewer
+  would. The **Render worker** asks the main thread for a face's file over a MessagePort
+  (`SystemFontFiles`, `src/workers/render/commentFonts/systemFonts.ts`; RPC `systemFonts` sends
+  the families and, once, the port; the main thread answers with `FontData.blob()`, read off the
+  main thread by the browser) and reads it with `sfnt.ts` (pure): the OS/2 **embedding bits**
+  (restricted → never embedded; preview-and-print and editable → embedded for viewing; bitmap-only
+  and no-subsetting → refused), **TrueType outlines only** (CFF/`OTTO` refused: its subsets embed
+  badly elsewhere, S26), a face of a **collection** (.ttc) cut out by its PostScript name
+  (`extractFace`), the standard fallback for /DA (post isFixedPitch or PANOSE → Courier; IBM
+  class or PANOSE serif → Times; else Helvetica), and a `wght` only for variable files. The list
+  checks each family as it scrolls into view (IntersectionObserver, RPC `inspectSystemFont`, one
+  at a time, reading only the table directory and a few small tables) and before it is used; a
+  family that cannot be used stays listed, **disabled with the reason** (aria-disabled,
+  aria-describedby). Then the comment is drawn by M11-07's appearance writer (subset, Type0,
+  ActualText, fallbacks), /DS names the family, and a reopen reads it back as `sys:<family>`
+  while the fonts are listed. Only the family name is kept (Recently used); files are never
+  stored or sent. **Start-up:** when the browser already has the permission (the user allowed it
+  before), the fonts are listed again without a click or prompt (`restoreSystemFonts`), so tool
+  defaults and reopened comments keep their font; the Render worker gets them when it starts (it
+  is never started for this). Also fixed: a text comment whose font faces could not be loaded
+  kept PDFium's appearance with the text in the border colour; it now gets the text colour
+  (`applyTextColors(…, fontFaces)`). Privacy page: a promise line about installed fonts. Help:
+  "Fonts in comments" › "Fonts on this computer". What's new: an item in `beta-m11`. Tests:
+  `tests/model/systemFonts.test.ts` (embedding bits, fallback, collection cut, CFF, grouping,
+  registry, list section, CSS), `tests/annotate/comment-fonts.test.ts` (real PDFium: drawn,
+  embedded, /DS, read back only while listed, a collection's face, a restricted font never
+  embedded, a preview-and-print font embedded, missing fonts fall back in the text colour),
+  `e2e/system-fonts.spec.ts` (Local Font Access stubbed with self-made fonts built from the
+  vendored library, `e2e/fixtures/fonts.ts`: nothing read before the click, keyboard, disabled
+  reasons, axe light and dark, chosen, saved, a collection face, restart lists them again and an
+  edit is drawn in the font; refused by the browser). Shots in project files `m11-08-o5/`.
+  Next: M11-09 acceptance.
 - **Session 91 — M11-08·O9 crop pages (D-55, ADR-028, plan O9).** **Organize › Crop Pages**
   (`organize.crop`, Fluent Crop) opens a dialog: the **margins to cut off** (top, bottom, left,
   right, in mm or inches; a change of unit keeps the lengths typed), as each page is **shown**
@@ -3121,8 +3163,8 @@ rel="noopener noreferrer">`; the commands `app.home` / `app.reportIssue` open th
   (drag to reorder), M11-05 (tab menus), M11-06 (comments in every pointer mode), M11-07 (font
   library), M11-08·O1 (selected-text menu), M11-08·O3 (each file's last view), M11-08·O4 (Zoom
   to Area), M11-08·O6 (copy or save a page image), M11-08·O2 (pick up where you left off),
-  M11-08·O8 (images to PDF), M11-08·O7 (split document), M11-08·O9 (crop pages). Next:
-  M11-08·O5 (fonts installed on this computer).
+  M11-08·O8 (images to PDF), M11-08·O7 (split document), M11-08·O9 (crop pages), M11-08·O5
+  (fonts installed on this computer). Next: M11-09 (acceptance).
 - **Owner (M11-02):** open `m11-02/s26-interop.pdf` in Acrobat Reader and PDF-XChange: the
   eleven comments look as in the PNG beside it, Find finds their text in the flattened copy, and
   the font names show in the document's font list. This gates M11-07.

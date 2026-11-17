@@ -2,6 +2,8 @@
 // executor behind our typed RPC, plus direct PDFium calls EmbedPDF does not
 // expose (ADR-001 B14).
 import type { FontFallbackConfig } from '@embedpdf/engines/pdfium';
+import type { LibraryFamily, StandardFamily } from '../model/fonts/library';
+import type { FontUse } from '../model/fonts/sfnt';
 import type { PdfJson } from '../model/pdf/wire';
 import type { Capability } from '../model/permissions';
 import type { PageImageHit } from '../model/pageImageHit';
@@ -207,6 +209,15 @@ export interface RenderApi {
    * Progressive render of a whole page at `scale` (M1-17): RGBA pixels,
    * transferred. Cancellable between slices; progress = slices done.
    */
+  /**
+   * The fonts installed on this computer (M11-08·O5, D-54), once the user has
+   * allowed the browser to list them: the families (names and faces, no bytes)
+   * and, the first time, the port the worker asks the main thread for a face's
+   * file on (Local Font Access exists on the main thread only).
+   */
+  systemFonts: MethodSpec<{ families: LibraryFamily[]; port?: MessagePort }, null>;
+  /** What one face on this computer allows (its embedding flags and outlines) and its fallback. */
+  inspectSystemFont: MethodSpec<{ file: string }, { use: FontUse; standard: StandardFamily }>;
   renderProgressive: MethodSpec<
     { docId: string; pageIndex: number; scale: number; sliceMs?: number },
     {

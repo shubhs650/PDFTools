@@ -48,6 +48,7 @@ import { detectTables, exportTables, tableCells, type TableSources } from './wor
 import { applyRedactions } from './work/redact/apply';
 import type { PdfDocumentObject } from '@embedpdf/models';
 import { installFontReadback } from './render/freeTextFonts';
+import { setSystemFamilies } from '../model/fonts/library';
 import { copyItems, editObjects, OutlineError, readOutline } from './work/outline';
 import { popupStates } from './work/popups';
 
@@ -154,6 +155,12 @@ const search = new SearchEngine(() => {
 }, need);
 
 serve<WorkApi>(self, {
+  // Fonts on this computer (M11-08·O5, D-54): names only, read back from a comment's /DS.
+  systemFonts: ({ families }) => {
+    setSystemFamilies(families);
+    return null;
+  },
+
   init: async ({ wasmUrl }) => {
     const t0 = performance.now();
     const wasmBinary = await (await fetch(wasmUrl)).arrayBuffer();

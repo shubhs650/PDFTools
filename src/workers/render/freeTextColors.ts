@@ -98,6 +98,8 @@ export function applyTextColors(
   native: PdfiumNative,
   method: string,
   args: readonly unknown[],
+  /** The comment font's faces are loaded, so its appearance draws the text (M11-07). */
+  fontFaces = true,
 ): TextColorOutcome {
   if (method !== 'createPageAnnotation' && method !== 'updatePageAnnotation') return 'none';
   const annot = args[2] as FreeTextArg | undefined;
@@ -131,8 +133,9 @@ export function applyTextColors(
         rawCall(mod, 'EPDFAnnot_ClearColor', a, PdfAnnotationColorType.TextColor);
         return 'style';
       }
-      // Our own appearance (commentFonts/apply.ts) draws the text in its colour.
-      if (lib?.group && str(annot.contents)?.trim()) return 'style';
+      // Our own appearance (commentFonts/apply.ts) draws the text in its colour, unless
+      // its faces could not be loaded (a font on this computer not listed now, D-54).
+      if (lib?.group && fontFaces && str(annot.contents)?.trim()) return 'style';
       const outcome = recolorAppearance(mod, a, text);
       if (outcome === 'fallback' || (outcome === 'no-text' && str(annot.contents)?.trim())) {
         fallbacks.set(docId, (fallbacks.get(docId) ?? 0) + 1);

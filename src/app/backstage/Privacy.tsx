@@ -16,6 +16,8 @@ const PROMISES: MessageKey[] = [
   msg('privacy.promise.network'),
   msg('privacy.promise.reports'),
   msg('privacy.promise.links'),
+  // Fonts on this computer (M11-08·O5, D-54).
+  msg('privacy.promise.fonts'),
 ];
 
 /**

@@ -520,7 +520,7 @@
     },
     "comment-fonts": {
       "title": "Fonts in comments",
-      "summary": "Text boxes, typewriters and callouts can use 26 font families that come with {{app}}, besides Helvetica, Times and Courier. They work offline, and other PDF viewers show them exactly.",
+      "summary": "Text boxes, typewriters and callouts can use 26 font families that come with {{app}}, besides Helvetica, Times and Courier, and in Chrome and Edge the fonts installed on your computer. They work offline, and other PDF viewers show them exactly.",
       "body": [
         {
           "h": "To choose a font"
@@ -542,6 +542,28 @@
             "<b>Serif and monospace:</b> Noto Serif, Source Serif 4, Roboto Mono, JetBrains Mono and IBM Plex Mono.",
             "<b>Handwriting:</b> Architects Daughter, Caveat and Kalam.",
             "<b>Hindi and Chinese:</b> Noto Sans Devanagari, Noto Serif Devanagari and Noto Sans SC."
+          ]
+        },
+        {
+          "h": "Fonts on this computer"
+        },
+        {
+          "p": "In Chrome and Edge, the fonts installed on your computer can be used too, such as Arial and Calibri, or ISOCPEUR from a CAD program."
+        },
+        {
+          "steps": [
+            "Open <b>Font</b> and choose <b>Show fonts on this computer…</b> at the end of the list.",
+            "Your browser asks once whether {{app}} may see your fonts. Choose <b>Allow</b>.",
+            "The fonts are listed under <b>On this computer</b>, each in its own font. Choose one as any other."
+          ]
+        },
+        {
+          "list": [
+            "A font is used only when its license allows it to be embedded in a PDF. A font that doesn't allow it, or one with PostScript outlines, is shown greyed out with the reason, and can't be chosen.",
+            "The characters a comment uses are saved in the file, so the comment looks the same on computers without the font.",
+            "Your browser remembers that you allowed it, so the fonts are listed again next time. You can take the permission back in the browser's site settings.",
+            "The fonts never leave your computer and are never copied: only the name of a font you chose is kept, under <b>Recently used</b>.",
+            "If you edit such a comment where the font isn't available (in another browser, or after taking the permission back), its text is drawn again in Helvetica, Times or Courier."
           ]
         },
         {

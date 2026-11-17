@@ -13,6 +13,9 @@
 export type FontGroup =
   'office' | 'sans' | 'narrow' | 'technical' | 'serif' | 'mono' | 'hand' | 'hindi' | 'chinese';
 
+/** A family installed on this computer (M11-08·O5, D-54): its own section after the library's. */
+export type SystemGroup = 'system';
+
 /** The picker's group order (the plan's table). */
 export const FONT_GROUPS: readonly FontGroup[] = [
   'office',
@@ -43,13 +46,22 @@ export interface LibraryFamily {
   id: string;
   /** The family name, also written to /DS (other viewers use it when they redraw). */
   name: string;
-  /** Picker group; `null` for the hidden symbol fallback. */
-  group: FontGroup | null;
+  /** Picker group; `null` for the hidden symbol fallback; 'system' for a font on this computer. */
+  group: FontGroup | SystemGroup | null;
   standard: StandardFamily;
   faces: Partial<Record<FaceKey, LibraryFace>>;
   /** A few characters of its own script, shown after the name in the list. */
   sample?: string;
+  /**
+   * A font on this computer that cannot be used (D-54): its license forbids
+   * embedding, it has PostScript outlines, or it is not installed here.
+   */
+  blocked?: SystemFontBlock;
 }
+
+/** Why a font on this computer cannot be used in a comment. */
+export type SystemFontBlock =
+  'restricted' | 'bitmap' | 'noSubset' | 'outlines' | 'unreadable' | 'missing';
 
 const cut = (id: string, keys: readonly FaceKey[]): LibraryFamily['faces'] =>
   Object.fromEntries(keys.map((k) => [k, { file: `${id}-${k}.ttf` }]));
@@ -136,23 +148,87 @@ export const fontLibraryPath = (file: string): string => `${FONT_LIBRARY_DIR}/${
 const BY_ID = new Map(FONT_LIBRARY.map((f) => [f.id, f]));
 const BY_NAME = new Map(FONT_LIBRARY.map((f) => [f.name.toLowerCase(), f]));
 
-export const libraryFamily = (id: string | undefined): LibraryFamily | undefined =>
-  id ? BY_ID.get(id) : undefined;
+// ------------------------------------------------------------ fonts on this computer (D-54)
+//
+// A family installed on this computer has the id `sys:<family name>`; only
+// that name is ever stored (Recently used, tool defaults, styles). Its faces
+// name files `sys:<PostScript name>`, which the Render worker asks the main
+// thread for (Local Font Access gives the bytes only there). The families
+// are registered at runtime, on each side, once the user has allowed the
+// browser to list them; until then a `sys:` id stands for a family with no
+// faces, which draws in its standard fallback (as another viewer would).
+
+export const SYSTEM_FONT_PREFIX = 'sys:';
+export const isSystemFontId = (id: string): boolean =>
+  id.startsWith(SYSTEM_FONT_PREFIX) && id.length > SYSTEM_FONT_PREFIX.length;
+export const systemFontId = (family: string): string => `${SYSTEM_FONT_PREFIX}${family}`;
+export const systemFontFile = (postscriptName: string): string =>
+  `${SYSTEM_FONT_PREFIX}${postscriptName}`;
+
+const SYSTEM = new Map<string, LibraryFamily>();
+const SYSTEM_BY_NAME = new Map<string, LibraryFamily>();
+
+/** The families on this computer, replacing any registered before. */
+export function setSystemFamilies(families: readonly LibraryFamily[]): void {
+  SYSTEM.clear();
+  SYSTEM_BY_NAME.clear();
+  for (const f of families) {
+    SYSTEM.set(f.id, f);
+    SYSTEM_BY_NAME.set(f.name.toLowerCase(), f);
+  }
+}
+
+/** What a check of one family found: its standard fallback, or why it cannot be used. */
+export function updateSystemFamily(
+  id: string,
+  patch: { standard?: StandardFamily; blocked?: SystemFontBlock | undefined },
+): void {
+  const f = SYSTEM.get(id);
+  if (!f) return;
+  const next: LibraryFamily = { ...f, ...(patch.standard ? { standard: patch.standard } : {}) };
+  if ('blocked' in patch) {
+    if (patch.blocked) next.blocked = patch.blocked;
+    else delete next.blocked;
+  }
+  SYSTEM.set(id, next);
+  SYSTEM_BY_NAME.set(next.name.toLowerCase(), next);
+}
+
+/** The registered families on this computer, in list order. */
+export const systemFamilies = (): LibraryFamily[] => [...SYSTEM.values()];
+
+/** A `sys:` id that is not registered: a family with no faces, drawn in its standard fallback. */
+const unregistered = (id: string): LibraryFamily => ({
+  id,
+  name: id.slice(SYSTEM_FONT_PREFIX.length),
+  group: 'system',
+  standard: 'helvetica',
+  faces: {},
+});
+
+export const libraryFamily = (id: string | undefined): LibraryFamily | undefined => {
+  if (!id) return undefined;
+  const lib = BY_ID.get(id);
+  if (lib) return lib;
+  return isSystemFontId(id) ? (SYSTEM.get(id) ?? unregistered(id)) : undefined;
+};
 
 /** Families the picker lists, in group order. */
 export const PICKER_FAMILIES: readonly LibraryFamily[] = FONT_GROUPS.flatMap((g) =>
   FONT_LIBRARY.filter((f) => f.group === g),
 );
 
-/** A library family by the family name /DS gives (quotes and case ignored), or undefined. */
+/**
+ * A library family by the family name /DS gives (quotes and case ignored),
+ * else a registered family on this computer with that name (D-54), or undefined.
+ */
 export function libraryFamilyByName(name: string): LibraryFamily | undefined {
-  return BY_NAME.get(
-    name
-      .trim()
-      .replace(/^['"]|['"]$/gu, '')
-      .trim()
-      .toLowerCase(),
-  );
+  const key = name
+    .trim()
+    .replace(/^['"]|['"]$/gu, '')
+    .trim()
+    .toLowerCase();
+  return BY_NAME.get(key) ?? SYSTEM_BY_NAME.get(key);
 }
 
 export interface ResolvedFace {
