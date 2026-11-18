@@ -97,13 +97,15 @@ export function SearchPane() {
             n: format.number(total, 0),
             percent: format.percent(Math.min(1, progress), 0),
           })
-        : status === 'cancelled'
-          ? t('search.status.cancelled', { n: format.number(total, 0) })
-          : status === 'done'
-            ? total > 0
-              ? t('search.status.count', { count: total, n: format.number(total, 0) })
-              : t('find.status.none')
-            : '';
+        : status === 'outdated'
+          ? t('search.status.outdated')
+          : status === 'cancelled'
+            ? t('search.status.cancelled', { n: format.number(total, 0) })
+            : status === 'done'
+              ? total > 0
+                ? t('search.status.count', { count: total, n: format.number(total, 0) })
+                : t('find.status.none')
+              : '';
 
   return (
     <div className="search-pane">

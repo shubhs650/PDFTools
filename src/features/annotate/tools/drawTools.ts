@@ -16,6 +16,8 @@ import type {
   AnnotationTool,
   HandlerFactory,
 } from '@embedpdf/plugin-annotation';
+import { appStore } from '../../../app/store/appStore';
+import { documentStore } from '../../../app/store/documentStore';
 import { t } from '../../../i18n';
 import { capability } from '../../view/host';
 import { dropPopups, openNotePopup, saveOpenPopup } from '../notes/notePopupStore';
@@ -401,9 +403,20 @@ export function installDrawTools(registry: PluginRegistry): () => void {
     } else if (a.type === PdfAnnotationSubtype.LINK && !a.target)
       openLinkEdit(e.documentId, a.pageIndex, a.id);
   });
+  // Another tool or another tab while a polyline, polygon, cloud, perimeter or area is
+  // half drawn: it is dropped as Esc drops it, so no preview is left on the page that
+  // looks like a comment but is never saved (pre-release audit bugs 3 and 8).
+  const stopTool = appStore.subscribe((s, prev) => {
+    if (s.tool !== prev.tool) cancelDrawing();
+  });
+  const stopTab = documentStore.subscribe((s, prev) => {
+    if (s.activeId !== prev.activeId) cancelDrawing();
+  });
   return () => {
     stopDefaults();
     stopEvents();
+    stopTool();
+    stopTab();
   };
 }
 

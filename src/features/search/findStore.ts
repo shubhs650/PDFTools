@@ -28,6 +28,11 @@ export interface FindState {
   open: boolean;
   /** Hits are drawn: the bar is open, or Advanced Search jumped to a hit (M2-09). */
   highlights: boolean;
+  /**
+   * The results shown came from an Advanced Search result: the Search pane owns their
+   * highlights, which go when the pane closes or searches again (pre-release audit bug 1).
+   */
+  fromSearch: boolean;
   /** Document the results belong to. */
   docId: string | null;
   query: string;
@@ -50,6 +55,7 @@ export interface FindState {
 const initial = (): FindState => ({
   open: false,
   highlights: false,
+  fromSearch: false,
   docId: null,
   query: '',
   options: {},
@@ -86,6 +92,7 @@ export function openFind(): void {
   findStore.setState((cur) => ({
     open: true,
     highlights: true,
+    fromSearch: false,
     docId,
     focusRequest: cur.focusRequest + 1,
   }));
@@ -93,7 +100,17 @@ export function openFind(): void {
 
 export function closeFind(): void {
   cancelFind();
-  findStore.setState({ open: false, highlights: false });
+  findStore.setState({ open: false, highlights: false, fromSearch: false });
+}
+
+/**
+ * The Search pane closed or runs a new search: the highlights of the result it opened
+ * go, unless the Find bar is open and shows them (pre-release audit bug 1).
+ */
+export function clearSearchHighlights(): void {
+  const s = findStore.getState();
+  if (!s.fromSearch || s.open) return;
+  findStore.setState({ highlights: false, fromSearch: false });
 }
 
 export function setQuery(query: string): void {
@@ -155,6 +172,7 @@ async function runSearch(docId: string): Promise<void> {
   const from = documentStore.getState().docs[docId]?.view.page ?? 0;
   findStore.setState({
     status: 'searching',
+    fromSearch: false,
     ran: { query: query.trim(), options: { ...options } },
   });
   const { promise } = sessionFor().start({ docId, query, options, visible: [from] }, (batch) => {
@@ -251,6 +269,7 @@ export async function showResults(
   rectCache.clear();
   findStore.setState((s) => ({
     highlights: true,
+    fromSearch: true,
     docId,
     query: ran.query,
     options: { matchCase: !!ran.options.matchCase, wholeWord: !!ran.options.wholeWord },

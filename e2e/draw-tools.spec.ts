@@ -211,6 +211,33 @@ test('polyline: Enter finishes, Esc drops the one in progress and keeps the tool
   await expect(page.locator('.document-host')).toHaveAttribute('data-tool', 'select');
 });
 
+// Pre-release audit bug 3: another tool drops a half-drawn shape like Esc, leaving no preview.
+test('another tool while a polyline, polygon or cloud is half drawn drops it with its preview', async ({
+  page,
+}) => {
+  const id = await open(page);
+  for (const name of ['Polyline', 'Polygon', 'Cloud']) {
+    await tool(page, name);
+    await clicks(
+      page,
+      [
+        [100, 100],
+        [200, 160],
+      ],
+      false,
+    );
+    const p = await at(page, 300, 100);
+    await page.mouse.move(p.x, p.y, { steps: 5 });
+    const preview = page.locator(
+      '[data-page="0"] svg polyline, [data-page="0"] svg polygon, [data-page="0"] svg path',
+    );
+    await expect(preview.first()).toBeVisible();
+    await tool(page, 'Rectangle');
+    await expect(preview).toHaveCount(0);
+    expect(await list(page, id)).toEqual([]);
+  }
+});
+
 test('keyboard: N then Enter places a note, T then Enter a text box (M3-Q6) @smoke', async ({
   page,
 }) => {

@@ -98,6 +98,7 @@ interface Heap {
   wasmExports: { malloc(n: number): number; free(p: number): void };
   HEAPU8: Uint8Array;
   HEAPF64: Float64Array;
+  HEAPF32: Float32Array;
 }
 
 /** Page text per document, for the session only (ADR-006 decision 4: never persisted). */
@@ -319,10 +320,17 @@ export class SearchEngine {
   ): HitRect[][] {
     const mod = this.mod();
     return withTextPage(mod, this.native(), doc, pageIndex, (tp, pagePtr) => {
-      const height = rawCall(mod, 'FPDF_GetPageHeightF', pagePtr);
       const heap = mod.pdfium as unknown as Heap;
       const box = heap.wasmExports.malloc(32);
       try {
+        // The view's top-left origin is the visible page area's (crop box ∩ media box),
+        // which need not start at 0,0 (a cropped page, a CAD plot): not the page height.
+        let left = 0;
+        let top = rawCall(mod, 'FPDF_GetPageHeightF', pagePtr);
+        if (rawCall(mod, 'FPDF_GetPageBoundingBox', pagePtr, box)) {
+          left = heap.HEAPF32[box >> 2] ?? 0;
+          top = heap.HEAPF32[(box >> 2) + 1] ?? top;
+        }
         return hits.map((h) => {
           // Text (UTF-16) index → PDFium char index, as PDFium defines it: this
           // build indexes UTF-16 code units even for non-BMP characters, so
@@ -346,7 +354,7 @@ export class SearchEngine {
               number,
               number,
             ];
-            rs.push({ x: l, y: height - t, width: r - l, height: t - b });
+            rs.push({ x: l - left, y: top - t, width: r - l, height: t - b });
           }
           return rs;
         });

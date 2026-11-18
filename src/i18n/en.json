@@ -918,6 +918,7 @@
     "status": {
       "searching": "Searching… {{percent}}, {{n}} found",
       "cancelled": "Stopped: {{n}} found",
+      "outdated": "The pages changed. Search again to update the results.",
       "count_one": "{{n}} result",
       "count_other": "{{n}} results"
     },

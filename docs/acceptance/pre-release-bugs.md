@@ -1,7 +1,11 @@
 # Pre-release bug audit
 
 _Date: 2026-11-18 · Build: `main` at d24086a (after M11, ARCHITECTURE.md Rev 0.18) · Requested by
-the owner before the full release. Findings only: nothing is fixed here; fixes come afterwards._
+the owner before the full release._
+
+> **Fix status (2026-11-18):** the owner asked to fix bugs 1–4 first, then the others. Bugs 1–4
+> are fixed (bug 8 with bug 3, the same cause); see "Fixes" at the end. Bug 11: the owner chose
+> to keep PDF-XChange's behaviour (the tool stays on across tabs), so it is not changed.
 
 The owner reported one bug (Advanced Search leaves its highlight after the pane is closed) and asked
 for a thorough recheck for similar behaviour and other major UI and feature bugs, each rated 1–5 for
@@ -258,3 +262,12 @@ These scenarios were driven in the browser and behaved correctly:
 - Firefox and Safari were not run (the container has Chromium only).
 - Recent files, Pick up where you left off and Reopen Closed Tab read file handles back, which
   crashes headless Chromium 153 in the container (known); they rely on their CI tests.
+
+## Fixes
+
+| #   | Fix                                                                                                                                                                                                                                                                                                                                                             | Tests                                                                                                                                                 |
+| --- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------- |
+| 1   | The Find store remembers when its results came from an Advanced Search result (`fromSearch`). Closing the Search pane (×, rail, another pane) or running a new Advanced Search takes those highlights off (`clearSearchHighlights`), unless the Find bar is open and shows them. The Find bar's own highlights are unchanged. Esc in the document is unchanged. | `e2e/search-pane.spec.ts` "closing the pane, choosing another pane or searching again takes the result highlight off"                                 |
+| 2   | Hit rectangles are measured from the visible page area's top-left corner (`FPDF_GetPageBoundingBox`, crop box ∩ media box), as the image-under-pointer code already does, instead of the page height.                                                                                                                                                           | `tests/search/search-pdfium.test.ts` "hit rectangles follow the visible page area" (fails before the fix by 42 pt)                                    |
+| 3   | Choosing another tool, or showing another tab, drops a half-drawn Polyline, Polygon, Cloud, Perimeter or Area as Esc does (`cancelDrawing`), with its preview and live value. Also fixes bug 8.                                                                                                                                                                 | `e2e/draw-tools.spec.ts` "another tool while a polyline, polygon or cloud is half drawn…", `e2e/measure.spec.ts` "another tool or another tab drops…" |
+| 4   | A page change marks the results out of date (status `outdated`: "The pages changed. Search again to update the results.") instead of "No results"; a running search of that document stops. When the last searched document closes, the pane starts over (empty status).                                                                                        | `e2e/search-pane.spec.ts` "after a page change the pane asks for a new search…"                                                                       |
