@@ -1,0 +1,34 @@
+name: Bug report
+description: Something in Triya PDF doesn't work as it should.
+labels: ['bug']
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for reporting. **Never attach confidential, company or client documents.** If a
+        file is needed, attach a small PDF you made yourself that shows the problem.
+  - type: textarea
+    id: what
+    attributes:
+      label: What happened
+      description: What you did, what you expected, and what happened instead.
+    validations:
+      required: true
+  - type: textarea
+    id: steps
+    attributes:
+      label: Steps to reproduce
+      placeholder: |
+        1. Open a PDF with …
+        2. Choose …
+        3. …
+  - type: input
+    id: version
+    attributes:
+      label: Version
+      description: File › About › Copy version info, or the version and commit shown there.
+  - type: input
+    id: browser
+    attributes:
+      label: Browser and OS
+      placeholder: Chrome 151 on Windows 11

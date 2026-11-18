@@ -43,6 +43,11 @@ export interface ShootOptions {
   cover?: Box[];
   /** Moves the mouse to a corner first so no tooltip or hover shows (default true; false keeps an open menu's hover). */
   mouseAway?: boolean;
+  /**
+   * Writes `<dir>/<id>.webp` instead of Help's folder, and leaves src/help/shots.json alone
+   * (the README's pictures, docs/images; ADR-029).
+   */
+  dir?: string;
 }
 
 async function boxOf(t: Target): Promise<Box> {
@@ -184,8 +189,10 @@ export async function shoot(page: Page, id: string, opts: ShootOptions = {}): Pr
     return btoa(s);
   }, png.toString('base64'));
 
-  mkdirSync(IMG_DIR, { recursive: true });
-  writeFileSync(join(IMG_DIR, `${id}.webp`), Buffer.from(webp, 'base64'));
+  const dir = opts.dir ?? IMG_DIR;
+  mkdirSync(dir, { recursive: true });
+  writeFileSync(join(dir, `${id}.webp`), Buffer.from(webp, 'base64'));
+  if (opts.dir !== undefined) return;
   const sizes = JSON.parse(readFileSync(SHOTS_JSON, 'utf8')) as Record<
     string,
     { w: number; h: number }
