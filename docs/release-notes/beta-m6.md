@@ -61,7 +61,7 @@ works offline, and your documents never leave your device.
 - Styles, saved signatures and your reviewer profile stay on this device. File → Settings →
   Clear all local data removes them.
 - Form fields and comments made here are standard PDF objects. We are checking them in Adobe
-  Acrobat Reader and PDF-XChange; if something looks different there, please report it.
+  Acrobat Reader and a second desktop PDF editor; if something looks different there, please report it.
 - Known limits: a comment's rotation and a text box's vertical alignment may be lost if another
   viewer redraws the comment; with an open password only, anyone who opens the file can change
   its security.

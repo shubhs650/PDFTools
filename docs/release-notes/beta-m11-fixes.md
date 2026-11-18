@@ -23,7 +23,7 @@ command is where it was.
 - Choosing another tool or another tab drops a half-drawn Polyline, Polygon, Cloud, Perimeter or
   Area, as **Esc** does, with its live measurement value.
 - The snap marker goes away when you choose another tool or tab.
-- The tool you chose stays on when you switch tabs, as in PDF-XChange (unchanged).
+- The tool you chose stays on when you switch tabs, as in desktop editors (unchanged).
 
 ## Bookmarks and files
 

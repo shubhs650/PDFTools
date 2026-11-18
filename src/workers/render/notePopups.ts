@@ -1,6 +1,6 @@
 // Sticky note pop-ups in the Render worker (M7-06, ADR-023 D-44, spike S23).
 // A note's pop-up window is saved as a standard /Popup annotation, as Acrobat
-// and PDF-XChange write it: /Parent → the note, the note's /Popup → it, /Rect
+// and desktop editors write it: /Parent → the note, the note's /Popup → it, /Rect
 // where the window is, /Open whether it is open. EmbedPDF 2.15.1 neither reads
 // nor writes /Popup, so this is direct PDFium (ADR-001 B14): PDFium creates
 // the annotation, links both ways and (in an encrypted file) encrypts its /NM;

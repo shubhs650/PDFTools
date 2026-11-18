@@ -11,7 +11,7 @@ import { expect, test } from './support/fixtures.ts';
 // in library fonts; and a drawing with its pages cropped (O9). Each file is
 // saved with Ctrl+S's narrow save, checked here (fonts embedded as subsets, /DS
 // names the family, /CropBox written) and reopened. With M11_INTEROP_OUT=1 they
-// are written to OUT for the owner's run in Acrobat Reader and PDF-XChange:
+// are written to OUT for the owner's run in Acrobat Reader and a second desktop PDF editor:
 // `npm run owner:interop:m11`.
 
 const OUT = 'e2e/fixtures/self-made/m11-interop';

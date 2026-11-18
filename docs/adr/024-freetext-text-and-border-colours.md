@@ -11,7 +11,7 @@
 ## Context
 
 The owner asked (2026-11-05) for **separate options for the text colour and the border colour**
-of a text box and a callout, as PDF-XChange has, keeping interop with other viewers.
+of a text box and a callout, as desktop editors have, keeping interop with other viewers.
 
 What happens today (EmbedPDF 2.15.1 and its PDFium build, found in M7-05):
 
@@ -23,7 +23,7 @@ What happens today (EmbedPDF 2.15.1 and its PDFium build, found in M7-05):
   border colour shows while the comment is selected (the editor's CSS) and reverts on the page,
   in the saved file and in every other viewer. M7-05 (PR #85) works around it by making the text
   colour set the border colour too.
-- Acrobat's convention (also followed by PDF-XChange and by PDFBox's appearance handler) is the
+- Acrobat's convention (also followed by desktop editors and by PDFBox's appearance handler) is the
   same split as EmbedPDF's: `/DA`'s `rg` is the **border and callout line colour**, and the
   **text colour is in `/DS`** (`color:#0000FF`) and in the rich text `/RC`, when present.
 
@@ -83,7 +83,7 @@ text colour operator. Layout, wrapping, fonts, alignment and the border stay PDF
    else from `/DS` `color:`, else from `/DA`.
    - Today EmbedPDF reads `/TextColor` or `/DA`, so a `/DS` reader is added beside our font
      readback (`freeTextFonts.ts`).
-   - Opening an Acrobat or PDF-XChange file then shows its text colour.
+   - Opening an Acrobat or desktop editors file then shows its text colour.
 
 ## Implementation notes (2026-11-05)
 
@@ -122,7 +122,7 @@ text colour operator. Layout, wrapping, fonts, alignment and the border stay PDF
   the expected cost is well under 10 ms per comment. Measured in the follow-up's perf check.
 - An EmbedPDF upgrade (3.x) must re-run S25's test. If its generator honours `/TextColor`, the
   workaround is dropped.
-- Interop rows join the owner checklist. In Acrobat Reader and PDF-XChange:
+- Interop rows join the owner checklist. In Acrobat Reader and a second desktop PDF editor:
   - a text box and a callout with blue text on a red border display correctly;
   - editing their text there keeps both colours (`/DS`);
   - their own two-colour comments open here with both colours.

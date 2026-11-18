@@ -26,7 +26,7 @@
 
 §7.4 already allows "a narrow low-level writer in the Render worker" if EmbedPDF/PDFium cannot
 write these. B7 forbids custom appearance-stream code. See
-[M0 plan §S2](../plan/M0.md#s2--measureviewport-dictionaries-read-back-in-acrobat-reader--pdf-xchange).
+[M0 plan §S2](../plan/M0.md#s2--measureviewport-dictionaries-read-back-in-acrobat-reader--a-second-desktop-pdf-editor).
 
 ## Findings
 
@@ -75,7 +75,7 @@ write these. B7 forbids custom appearance-stream code. See
      show the text.
    - Inside PDFTools, labels can be a UI overlay computed from `/Measure`, with no appearance-stream
      code.
-   - How Acrobat and PDF-XChange treat `/Cap`, groups, and annotations without an appearance is for
+   - How Acrobat and other desktop editors treat `/Cap`, groups, and annotations without an appearance is for
      the owner's checklist (§D1–D4).
 6. **Reader robustness:** our reader agrees with qpdf on page counts for every unencrypted file in
    `corpus/` and the S1 fixtures, including object-stream and xref-stream files. Annotations there

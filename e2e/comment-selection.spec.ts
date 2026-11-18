@@ -364,7 +364,7 @@ test('on a rotated page the marquee selects the comments under it', async ({ pag
   expect(await selected(page, id)).not.toContain(b);
 });
 
-test('hollow shapes select by their border, filled ones anywhere (B14, as PDF-XChange)', async ({
+test('hollow shapes select by their border, filled ones anywhere (B14, as desktop editors do)', async ({
   page,
 }) => {
   const id = await open(page);

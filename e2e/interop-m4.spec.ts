@@ -17,7 +17,7 @@ import { stubSavePicker } from './support/savePicker.ts';
 // /Redact marks, redacted outputs (plain and AES-256), a Word export, table
 // and annotation workbooks, and comments transferred from Rev A to Rev B —
 // each checked with qpdf where it is a PDF. With M4_INTEROP_OUT=1 they are
-// written to OUT for the owner's run in Acrobat Reader and PDF-XChange.
+// written to OUT for the owner's run in Acrobat Reader and a second desktop PDF editor.
 
 const OUT = 'e2e/fixtures/self-made/m4-interop';
 const REDACT = 28;

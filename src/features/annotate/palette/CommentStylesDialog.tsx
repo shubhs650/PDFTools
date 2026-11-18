@@ -1,4 +1,4 @@
-// Comment → Comment Styles Palette (M6-07; rebuilt as a PDF-XChange-style
+// Comment → Comment Styles Palette (M6-07; rebuilt as a desktop-editor-style
 // window in M6-17, D-37): the comment tools in groups on the left; the
 // selected tool's Current Style (its defaults, M6-03 store) and its Custom
 // Styles (the presets and the user's own, one ordered list) as tiles in the

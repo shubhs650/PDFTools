@@ -1,6 +1,6 @@
 // A text comment's text colour apart from its border colour (ADR-024). Pure.
 //
-// Storage follows Acrobat and PDF-XChange: `/DA`'s `rg` is the border (and
+// Storage follows Acrobat and other desktop editors: `/DA`'s `rg` is the border (and
 // callout line) colour, the text colour is in the `/DS` default style string
 // (`color:#0000FF`). PDFium draws the text in `/DA`'s colour, so the Render
 // worker recolours the text in PDFium's own appearance: `recolorText` changes

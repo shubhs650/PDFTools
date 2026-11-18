@@ -1,6 +1,6 @@
 # Triya PDF
 
-A free, offline, private, PDF-XChange-style PDF editor PWA for engineers (formerly PDFTools; the repository keeps its name).
+A free, offline, private, desktop-editor-style PDF editor PWA for engineers (formerly PDFTools; the repository keeps its name).
 
 - Specification: [`ARCHITECTURE.md`](ARCHITECTURE.md) (source of truth)
 - Agent rules: [`CLAUDE.md`](CLAUDE.md)

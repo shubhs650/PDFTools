@@ -3,7 +3,7 @@
 // quad per selected line (EmbedPDF writes /QuadPoints from the segment rects
 // and PDFium the appearance, B7) — or a Caret for inserted text, and a Caret
 // grouped with a StrikeOut (/IRT + /RT /Group) for replaced text, as Acrobat
-// and PDF-XChange make them. Pure: the plugin and the selection are wired in
+// and desktop editors make them. Pure: the plugin and the selection are wired in
 // textMarkup.ts.
 import {
   PdfAnnotationReplyType,

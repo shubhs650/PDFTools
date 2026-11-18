@@ -34,7 +34,7 @@ const box = (extra: Record<string, unknown> = {}): PdfAnnotationObject =>
   }) as unknown as PdfAnnotationObject;
 
 describe('text menu items', () => {
-  it('are known commands with labels, in PDF-XChange’s order, Properties last', () => {
+  it('are known commands with labels, in desktop editors’ order, Properties last', () => {
     const ids = [...TEXT_EDIT_ENTRIES, ...TEXT_PROPERTIES_ENTRIES].flatMap((e) =>
       e.kind === 'separator' ? [] : [e.id],
     );

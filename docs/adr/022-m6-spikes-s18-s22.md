@@ -113,7 +113,7 @@ by reopening in PDFium and with `qpdf --check` / `qpdf --json`.
   §7.11 the bundled handwriting font; §7.12 the copy route, the owner-rights gate and the
   127-byte limit; §7.15 the bookmark route B (our own outline writer).
 - Risks: all three EmbedPDF additions are on the pinned 2.15.1; an upgrade must re-run these
-  spikes. The fonts package is a prerelease (pinned). Interop with Acrobat / PDF-XChange
+  spikes. The fonts package is a prerelease (pinned). Interop with Acrobat / desktop editors
   (forms, signatures, attach file, edited outlines) joins the owner's M6-15 checklist.
 
 ## Evidence

@@ -1,7 +1,7 @@
 // M0-S6 command inventory (ARCHITECTURE §5–§8, D-20). One entry per Rev 0
 // command that needs an icon. The §8 tab list is authoritative; out-of-scope
-// commands are omitted, not listed as disabled (ADR-001 B6). docs/ui-reference
-// was used for grouping only; no PDF-XChange artwork is referenced (rule 15).
+// commands are omitted, not listed as disabled (ADR-001 B6). Layout references
+// were used for grouping only (removed in V1, D-57); no other products' artwork is referenced (rule 15).
 //
 // `fluent` is the chosen Fluent UI System Icons base name (without size or
 // style suffix). `custom` means we draw our own icon; `fluent` is then the

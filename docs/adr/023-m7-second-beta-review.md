@@ -25,7 +25,7 @@ code (CLAUDE.md: "Never change ARCHITECTURE.md without an approved ADR"):
 | 3c, 3d — Home groups icon-only at every width           | D-36 / §8: groups show full labels on wide windows and step down only when space runs out                                        |
 | 4b — text comments: one click moves, double-click edits | §7.1 does not describe text-comment interaction; EmbedPDF's free-text editor commits only on blur (bugs B1, B2 in the plan)      |
 | 4b-ii — typewriter Courier Prime, black                 | D-37: shipped defaults are red for every text tool; §7.1 "no custom appearance-stream generation" and only PDF standard fonts    |
-| 4c — PDF-XChange-like sticky note popup                 | M6 plan "Not in M6: pop-up note windows (the Comments pane card is the note)"; EmbedPDF 2.15.1 neither reads nor writes `/Popup` |
+| 4c — desktop-editor-like sticky note popup              | M6 plan "Not in M6: pop-up note windows (the Comments pane card is the note)"; EmbedPDF 2.15.1 neither reads nor writes `/Popup` |
 | 4d — highlights at 50 % opacity                         | D-37 shipped defaults (opacity 1)                                                                                                |
 | 4e — paste an image onto the page                       | §7.1 Paste (D-38 b) is our in-app comment clipboard only (ADR-018 d5); §7.3 image stamps come only from a chosen file            |
 
@@ -91,7 +91,7 @@ comment it touches; Shift+click and Ctrl+click toggle; a newly drawn comment is 
 this is built in our wrapper and configuration around `plugin-annotation` 2.15.1, not a fork.
 
 **D-44 — Sticky note popup.** A sticky note (`/Text`) has a **popup window on the page**
-(PDF-XChange layout, our own drawing): header with "Sticky Note", author and date; a multi-line
+(desktop-editor layout, our own drawing): header with "Sticky Note", author and date; a multi-line
 text area (Enter = new line); a footer with a menu, status, lock and **Reply**; draggable,
 resizable, attached to the note by a leader, following scroll and zoom; opened on creation and on
 double-click. It replaces the modal "Note" dialog. This reverses the M6 plan's "no pop-up note
@@ -115,7 +115,7 @@ opacity** (`/CA 0.5`, still multiplied and yellow); their palette presets too; s
 the user never changed are migrated, the user's own values are kept. Typewriter defaults to
 **black text in Courier** (the standard PDF font, so it round-trips with PDFium's appearances
 — owner's answer Q4). If the owner chooses Courier Prime instead, spike S24 (embedding the
-OFL-1.1 font, our own appearance stream, Acrobat / PDF-XChange display and editing, file and
+OFL-1.1 font, our own appearance stream, Acrobat / desktop editors display and editing, file and
 install size) comes first and a follow-up ADR records its verdict.
 
 **D-36 amendment — Home tab.** Home's groups are Tools › Zoom › View › Comments › Measure ›
@@ -155,7 +155,7 @@ groups and fold any group into a dropdown on a very narrow window.
 - The rename touches many strings but no stored data: users keep their settings, styles,
   signatures and recent files; installed apps update in place.
 - Interop: multi-line notes with popups, edited/moved callouts, 50 % highlights, the Courier
-  typewriter and pasted images join the owner's Acrobat Reader / PDF-XChange checklist (D-33).
+  typewriter and pasted images join the owner's Acrobat Reader / desktop editors checklist (D-33).
 
 ## Evidence
 
@@ -167,7 +167,7 @@ plan §"Comment selection and editing bugs" (B1 – B14).
 **Spike S23 (2026-11-05, M7-06): works.** `spikes/s23-popup/popup.test.ts` (real PDFium and our
 save tracker in Node, runs with the unit tests; qpdf checks every saved file):
 
-- Files laid out as Acrobat and PDF-XChange write them (a `/Text` note with `/Popup`, a `/Popup`
+- Files laid out as Acrobat and other desktop editors write them (a `/Text` note with `/Popup`, a `/Popup`
   with `/Parent`, `/Rect`, `/Open true`) keep the pop-up, its rect and `/Open` when the note is
   edited and moved and saved with Ctrl+S — also in an AES-256 copy.
 - PDFium creates a pop-up and links both ways (`EPDFPage_CreateAnnot` subtype 16,

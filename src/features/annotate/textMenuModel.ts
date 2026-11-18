@@ -22,7 +22,7 @@ const cmd = (id: string, keysOf?: string): ContextMenuEntry => ({
 const sep = (key: string): ContextMenuEntry => ({ kind: 'separator', key });
 
 /**
- * The edit commands, in PDF-XChange's order. Their keys are the editor's own
+ * The edit commands, in desktop editors' order. Their keys are the editor's own
  * (the browser's, as in any text field), shown with the document commands'
  * labels for them: one keymap entry per chord.
  */

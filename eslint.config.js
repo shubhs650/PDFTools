@@ -17,7 +17,7 @@ export default defineConfig(
       'test-results',
       'playwright-report',
       'node_modules',
-      'corpus/files',
+      'corpus',
       'spikes/**/dist',
       'spikes/**/dist-frame',
       'spikes/**/out',

@@ -13,8 +13,8 @@ playwright/.cache/
 .env*
 .DS_Store
 
-# Public test corpus is downloaded by script, never committed (§11, CLAUDE.md rule 13)
-corpus/files/
+# Local test PDFs live only on the owner's machine, never committed (CLAUDE.md rule 13, D-57)
+corpus/
 *.pdf
 !e2e/fixtures/self-made/**/*.pdf
 

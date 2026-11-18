@@ -5,7 +5,7 @@ the owner before the full release._
 
 > **Fix status (2026-11-18):** the owner asked to fix bugs 1–4 first, then the others. All are
 > now fixed except bug 11 (bug 8 with bug 3, the same cause; bug 7 was already fixed in M7-04);
-> see "Fixes" at the end. Bug 11: the owner chose to keep PDF-XChange's behaviour (the tool
+> see "Fixes" at the end. Bug 11: the owner chose to keep desktop editors' behaviour (the tool
 > stays on across tabs), so it is not changed.
 
 The owner reported one bug (Advanced Search leaves its highlight after the pane is closed) and asked
@@ -196,7 +196,7 @@ or a marked entry would help.
 
 ### 11. The pointer tool stays armed across tabs and into the next opened file
 
-**Severity 2 · Occurrence 2.** Needs an owner decision: PDF-XChange also keeps the tool across
+**Severity 2 · Occurrence 2.** Needs an owner decision: desktop editors also keep the tool across
 tabs, so this may be wanted for some tools.
 
 **Steps:** turn on the Crop Tool (or Mark Area for Redaction, Select Fields, Zoom to Area,
@@ -258,7 +258,7 @@ These scenarios were driven in the browser and behaved correctly:
 
 ## Not covered
 
-- Owner-only checks (Acrobat Reader and PDF-XChange round trips, Windows fonts, real files) are in
+- Owner-only checks (Acrobat Reader and a second desktop PDF editor round trips, Windows fonts, real files) are in
   the M11 owner pack and were done by the owner on 2026-11-18.
 - Firefox and Safari were not run (the container has Chromium only).
 - Recent files, Pick up where you left off and Reopen Closed Tab read file handles back, which
@@ -278,6 +278,6 @@ These scenarios were driven in the browser and behaved correctly:
 | 8   | Fixed with bug 3 (`cancelDrawing` on a tab change drops the live value).                                                                                                                                                                                                                                                                                        | `e2e/measure.spec.ts` "another tool or another tab drops…"                                                                                            |
 | 9   | An "All open documents" search skips a document closed while it runs (counted as done) instead of stopping with an error.                                                                                                                                                                                                                                       | `e2e/search-pane.spec.ts` "closing a document while all open documents are searched skips it"                                                         |
 | 10  | A bookmark whose page no longer exists shows "This bookmark doesn't lead to a page in this document. Its page may have been deleted." (`followBookmark`), from the pane and from Go To.                                                                                                                                                                         | `e2e/bookmark-editing.spec.ts` "a bookmark whose page was deleted says so…"                                                                           |
-| 11  | No change, by the owner's decision: the tool stays armed across tabs, as in PDF-XChange.                                                                                                                                                                                                                                                                        | —                                                                                                                                                     |
+| 11  | No change, by the owner's decision: the tool stays armed across tabs, as in desktop editors.                                                                                                                                                                                                                                                                    | —                                                                                                                                                     |
 | 12  | Opening an Advanced Search result no longer writes its query and options into the Find bar. F3 / Shift+F3 walk the result's hits while the bar is closed; Ctrl+F opens the bar afresh with its own query.                                                                                                                                                       | `e2e/find.spec.ts` "an Advanced Search result keeps the bar query; F3 walks its hits; Ctrl+F starts afresh"                                           |
 | 13  | Opening a file whose content is already open under another name selects that tab and says "The same file is already open as …".                                                                                                                                                                                                                                 | `e2e/open.spec.ts` "dropping a copy of an open file under another name…"                                                                              |

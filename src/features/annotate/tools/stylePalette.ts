@@ -37,7 +37,7 @@ export const PALETTE_TOOLS: readonly StyleTool[] = STYLE_TOOLS;
 
 /**
  * The Comment Styles Palette window's tool list (M6-17), in groups as
- * PDF-XChange shows them. Every style tool is in exactly one group.
+ * desktop editors show them. Every style tool is in exactly one group.
  */
 export const TOOL_GROUPS: readonly { id: string; tools: readonly StyleTool[] }[] = [
   {

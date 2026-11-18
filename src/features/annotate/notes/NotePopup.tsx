@@ -1,5 +1,5 @@
 // A sticky note's pop-up window on the page (M7-06, ADR-023 D-44; review 4c,
-// bug B12), in PDF-XChange's layout, drawn by us: a header ("Sticky Note",
+// bug B12), in desktop editors' layout, drawn by us: a header ("Sticky Note",
 // author, date, Close) that drags the window; the note's text, several lines
 // (Enter = new line; Ctrl+Enter or a click outside saves; Esc saves and
 // closes); its replies; a footer with a menu (Set Status ▸, Delete,

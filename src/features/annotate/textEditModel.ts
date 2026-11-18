@@ -77,7 +77,7 @@ const round = (v: number): number => Math.round(v * 1000) / 1000;
 /**
  * The geometry of a text comment whose text needs `grow` more points (width
  * for a typewriter, which does not wrap; height for all three) to show all of
- * it, as PDF-XChange grows them while typing. Only ever grows, and stays on
+ * it, as desktop editors grow them while typing. Only ever grows, and stays on
  * the page (`page` is its size in points). A callout's text box grows; its
  * line stays where it points, the rect and /RD follow. A turned comment is
  * left as it is. Null when nothing changes.

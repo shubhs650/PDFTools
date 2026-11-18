@@ -464,7 +464,7 @@ body {
   overflow: hidden;
 }
 
-/* A side pane's edge strip (M11-10, D-56; PDF-XChange-style, layout only): a thin bar on the
+/* A side pane's edge strip (M11-10, D-56; desktop-editor-style, layout only): a thin bar on the
    pane's inner edge, always there, with the splitter while the pane is shown and, centred on
    it, the arrow that hides or shows the pane. Its own column, so it never covers the
    document or its scrollbar. */
@@ -5396,7 +5396,7 @@ textarea.form-field {
 }
 
 /* ------------------------------------------------------------ comment styles palette (M6-07, M6-17) */
-/* A wide window: tools | tiles | properties, as PDF-XChange lays it out. */
+/* A wide window: tools | tiles | properties, as desktop editors lay it out. */
 .ui-dialog.styles-window {
   display: flex;
   flex-direction: column;

@@ -18,7 +18,7 @@ After testing the M10 build, users reported (owner, 2026-11-17): OCR text that F
 Select Text cannot select until the file is reopened; too few fonts ("include the Google Fonts
 library", enough for every profession and supported language, not infinite); a selected file tab
 that is hard to see; no hover information, drag reordering, right-click menu or + button on the
-tabs (PDF-XChange shown as reference); and comments that cannot be clicked in Hand or Select
+tabs (desktop editors shown as reference); and comments that cannot be clicked in Hand or Select
 Text. The owner also asked for obvious missing features.
 
 Relevant facts from the code (details in the plan):
@@ -29,7 +29,7 @@ Relevant facts from the code (details in the plan):
   is needed; it is a bug fix (M11-01).
 - The faint selected tab is a CSS order bug (`.tab-button`'s transparent background overrides
   `.tab--active`) on top of a weak white-on-grey cue.
-- **A web app cannot know a file's folder path** (File System Access API), so PDF-XChange's
+- **A web app cannot know a file's folder path** (File System Access API), so desktop editors'
   "full path" tooltip and its folder and trash commands cannot be copied.
 - Annotations are locked in Hand and Select Text since M3-05 (so drags there always pan or select
   text).
@@ -48,7 +48,7 @@ Relevant facts from the code (details in the plan):
 3. **A curated library of Google Fonts families (OFL-1.1 / Apache-2.0) shipped from our own
    origin**, embedded as subsets in standard FreeText appearance streams that we generate
    (chosen, subject to spike S26). Offline, private, interoperable for display; Acrobat and
-   PDF-XChange redraw with their own fonts only when the comment is edited there and the font is
+   desktop editors redraw with their own fonts only when the comment is edited there and the font is
    not installed (as for any FreeText).
 4. **Fonts installed on the user's computer** (Local Font Access). Useful (Arial, Calibri,
    ISOCPEUR), but Chromium-only, permission-gated and subject to each font's embedding license.
@@ -162,7 +162,7 @@ still gates M11-07:_
   ADR-024's blue text on a red border; a callout; Ctrl+S's incremental save (the original bytes
   untouched); reopened pixels identical; flattened, the text is found exactly. poppler and MuPDF
   draw the saved files the same and extract the text from the flattened ones, except MuPDF
-  1.23's Devanagari (it ignores `/ActualText`; Acrobat, PDF-XChange, PDFium and poppler use it).
+  1.23's Devanagari (it ignores `/ActualText`; Acrobat, other desktop editors, PDFium and poppler use it).
   Cost about 3–7 ms per comment write (median, Node). A saved comment grows by 6–9.5 KB.
 - **Re-applying:** EmbedPDF regenerates a Helvetica appearance on a resize or any change with
   `regenerateAppearance` (the default); ours must be applied again after it, as ADR-024 does.
@@ -214,7 +214,7 @@ always visible, that hides or shows it through the existing pane commands (the l
 the last pane); 24 × 48 px, keyboard-reachable, `aria-expanded`, never over the document's
 scrollbar.
 _Amended by the owner, 2026-11-17 (M11-10, PR #120):_ the arrows are **12 × 48 px** on a 12 px
-edge strip, like PDF-XChange's (the owner tried 24 px and found it too wide). They meet WCAG 2.5.8
+edge strip, like desktop editors' (the owner tried 24 px and found it too wide). They meet WCAG 2.5.8
 through its equivalent-control exception (the ribbon and rail buttons run the same commands),
 and axe passes. The document keeps its reading place when a pane is shown, hidden or resized.
 
@@ -241,7 +241,7 @@ and axe passes. The document keeps its reading place when a pane is shown, hidde
 - The tabs and the pointer-mode change are UI and interaction work on existing stores and
   commands; no new dependency.
 - The font library is the largest piece: new files in the precache (about 8–10 MB, measured in
-  S26), a new appearance writer, and an owner interop check in Acrobat Reader and PDF-XChange.
+  S26), a new appearance writer, and an owner interop check in Acrobat Reader and a second desktop PDF editor.
   Saved files grow by the embedded subsets (typically tens of KB per font used).
 - Editing one of our text comments in another viewer that lacks the font redraws it in that
   viewer's font: expected PDF behaviour, documented in Help.

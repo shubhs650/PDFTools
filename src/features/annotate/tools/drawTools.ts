@@ -158,7 +158,7 @@ const CALLOUT_CLICK = 5;
 /**
  * The Callout tool (M7-03, ADR-023 D-43 f; B11). The plugin's callout takes
  * three clicks (arrow tip, knee, then the box). A drag from the arrow tip to
- * where the box goes makes one too (the PDF-XChange gesture): the knee is
+ * where the box goes makes one too (the desktop-editor gesture): the knee is
  * placed automatically (`calloutFromDrag`), and the plugin is handed the three
  * clicks, so its own commit makes the callout (and opens its editor). The
  * three-click route is unchanged. `phase` follows the plugin's own steps.

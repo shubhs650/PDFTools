@@ -932,7 +932,7 @@ textarea.ui-field-input {
   outline-offset: var(--border-width);
 }
 
-/* The current colour: a ring, as in PDF-XChange's grid. */
+/* The current colour: a ring, as in desktop editors' grid. */
 .ui-color-cell[aria-pressed='true'] {
   outline: var(--focus-width) solid var(--color-text);
   outline-offset: var(--border-width);

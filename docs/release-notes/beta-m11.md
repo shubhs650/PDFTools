@@ -53,7 +53,7 @@ Pages. Nothing moved: every command is where it was.
   monospaced and handwriting fonts, and Hindi (Devanagari) and Chinese.
 - The font list shows each name in its own face, groups the fonts, keeps your **Recently used**
   fonts at the top, and jumps to a name as you type it.
-- The font is embedded in the saved file (only the letters used), so Acrobat Reader, PDF-XChange
+- The font is embedded in the saved file (only the letters used), so Acrobat Reader, desktop editors
   and other readers show the comment as you wrote it. Symbols such as ⌀, °, ± and Ω are drawn even when a font lacks them.
 - Only the fonts that come with Triya PDF are offered, so a comment looks the same on every
   computer. Tell us which fonts you miss and we may add them in a later version.
