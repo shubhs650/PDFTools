@@ -1,8 +1,12 @@
 # Triya PDF — Progress
 
-_Last updated: 2026-11-18 (session 96: pre-release bug fixes)_
+_Last updated: 2026-11-18 (session 97: V1, version 1.0.0 release prep)_
 
-**Current milestone:** M11 — file tabs, OCR text selection, a font library and comments in every
+**Current milestone:** V1 — version 1.0.0, the first public release: plan
+[docs/plan/V1.md](plan/V1.md) and [ADR-029](adr/029-v1-public-release.md) **accepted** by the owner
+(2026-11-18), ARCHITECTURE.md Rev 0.19 (D-28 release domains and deploy from a tag, D-35 no home
+button, D-57 clean public tree). V1-01 … V1-04 built; V1-05 is the owner's one-time Cloudflare and
+GitHub setup ([docs/deploy/release.md](deploy/release.md)) and the `v1.0.0` tag. **Previous:** M11 — file tabs, OCR text selection, a font library and comments in every
 pointer mode: plan [docs/plan/M11.md](plan/M11.md) and [ADR-028](adr/028-m11-tabs-fonts-select.md)
 **accepted** by the owner (2026-11-17: recommended answers, fonts all shipped with the app, and
 all nine optional items O1–O9), plus task M11-10 (resizable Properties pane and pane edge arrows,
@@ -20,6 +24,20 @@ answers Q1–Q7; ARCHITECTURE.md Rev 0.12 after [ADR-024](adr/024-freetext-text-
 interop is in the M6 pack (CHECKLIST §M6 R1–R4). Rev 0 (M0–M4) is complete on the agent side.
 
 ## Done
+
+- **Session 97 — V1, version 1.0.0 release prep (PRs #139–#143).** The owner asked for the
+  first public release on `app.triyapdf.com` and `triya-pdf.openengtools.com`. Plan and ADR-029
+  accepted with the owner's answers (both domains serve the app; the beta keeps deploying `main`;
+  one-click approval before each release deploy; git history left as it is; one What's new
+  entry; licence holder unchanged). V1-01 (#140): every mention of the desktop editor the layout
+  was modelled on reworded, `corpus/` (now git-ignored) and `docs/ui-reference/` deleted, a unit
+  test guards the name (D-57). V1-02 (#141): version 1.0.0, no home button, About links the
+  source code, What's new `v1.0.0` with `docs/release-notes/v1.0.0.md`, Help screenshots
+  regenerated. V1-03 (#142): `wrangler.jsonc` env `production` (Worker `triya-pdf`, both Custom
+  Domains) and `.github/workflows/release.yml` (tag `vX.Y.Z` → checks → approval → deploy →
+  GitHub Release); owner setup in `docs/deploy/release.md`. V1-04 (#143): README rewritten with
+  screenshots (`npm run readme:screenshots` → `docs/images/`; Help's scenes shared in
+  `e2e/help-shots/scenes.ts`), `CONTRIBUTING.md`, a bug-report issue form.
 
 - **Session 96 — pre-release bug fixes (PR #138).** The owner asked to fix bugs 1–4 first, then
   the others. Fixed: 1 (Advanced Search highlight cleared when the pane closes), 2 (search hit
