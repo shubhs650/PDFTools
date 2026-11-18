@@ -1,6 +1,6 @@
 // Page scales (M3-15, ADR-007): each page's /VP viewports and MediaBox, read
 // with our own object reader (PDFium can't read nested dictionaries) from the
-// file as saved so far. Viewer-made /VP (Acrobat, PDF-XChange) read the same way,
+// file as saved so far. Viewer-made /VP (Acrobat, other desktop editors) read the same way,
 // and so are measurement annotations' own /IT and /Measure (M3-16).
 import {
   isDict,

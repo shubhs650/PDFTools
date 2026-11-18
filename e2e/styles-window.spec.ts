@@ -5,7 +5,7 @@ import { cap, drop } from './support/app.ts';
 import { expect, test } from './support/fixtures.ts';
 
 // M6-17 (D-37; owner request 2026-11-03): the Comment Styles Palette is a
-// PDF-XChange-style window. Tools in groups on the left; the tool's Current
+// desktop-editor-style window. Tools in groups on the left; the tool's Current
 // Style and its Custom Styles (presets and the user's own, one list) as tiles;
 // the selected tile's properties on the right. Clone, Rename, Reset, Delete,
 // Set Current, Reset All; every change is saved on the device at once.

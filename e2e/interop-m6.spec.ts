@@ -19,7 +19,7 @@ import { encodePng } from '../src/workers/work/png.ts';
 // filled), visual signatures, password-protected and unprotected copies and
 // an English OCR layer — each saved with Ctrl+S (or written as a new file by
 // the feature) and checked with qpdf. With M6_INTEROP_OUT=1 they are written
-// to OUT for the owner's run in Acrobat Reader and PDF-XChange.
+// to OUT for the owner's run in Acrobat Reader and a second desktop PDF editor.
 
 const OUT = 'e2e/fixtures/self-made/m6-interop';
 const AUTHOR = 'PDFTools Interop';

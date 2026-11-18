@@ -1,7 +1,7 @@
 // Redaction marks (M4-16, §7.9 step 1, M4-Q3): standard /Redact annotations —
 // /QuadPoints with one quad per selected line for text, one quad for an area —
 // with /IC the fill that Apply paints (black) and /C the outline shown while
-// pending, as Acrobat and PDF-XChange make them, so their marks load here as
+// pending, as Acrobat and other desktop editors make them, so their marks load here as
 // pending and ours there. Pure: the tools are wired in markTools.ts.
 // Coordinates are EmbedPDF's: points from the unrotated page's top-left.
 import { PdfAnnotationSubtype, type PdfRedactAnnoObject, type Rect } from '@embedpdf/models';

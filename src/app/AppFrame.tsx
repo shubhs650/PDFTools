@@ -18,7 +18,7 @@ export interface AppFrameProps {
 }
 
 /**
- * PDF-XChange-style layout (D-01, §8; layout only, no artwork): the banner holds
+ * desktop-editor-style layout (D-01, §8; layout only, no artwork): the banner holds
  * the ribbon, whose one header row has the product mark and name, quick access,
  * File, the tabs and the top bar buttons (D-35, M10-08·O3), then the document
  * tabs; below, the left rail + panes, document area, Properties pane, status bar.

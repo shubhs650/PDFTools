@@ -10,7 +10,7 @@ const sep = (key: string): ContextMenuEntry => ({ kind: 'separator', key });
 const cmd = (id: string): ContextMenuEntry => ({ kind: 'command', id });
 
 /**
- * A tab's menu, PDF-XChange style (D-50). Rename File is listed only where the browser
+ * A tab's menu, desktop-editor style (D-50). Rename File is listed only where the browser
  * can rename the original file in place (`canRename`): never a fake rename.
  */
 export function tabMenuEntries(canRename: boolean): ContextMenuEntry[] {

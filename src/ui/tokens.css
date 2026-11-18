@@ -130,7 +130,7 @@
   --tooltip-max-width: 280px;
   --app-min-width: 1280px; /* §8 */
   --pane-width: 260px;
-  /* A side pane's edge strip and its hide/show arrow (M11-10, D-56; PDF-XChange-style). */
+  /* A side pane's edge strip and its hide/show arrow (M11-10, D-56; desktop-editor-style). */
   --pane-edge-width: 12px;
   --pane-edge-button-height: 48px;
   --tab-max-width: 240px;

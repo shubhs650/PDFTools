@@ -57,7 +57,7 @@ Free to everyone. No login. No cookies. Private. Works offline after first load.
 Engineers and technical professionals in EPC / mechanical / civil work who review drawings, datasheets, vendor documents and contracts. General users benefit as a side effect; they are not the design target.
 
 ### 1.3 Interaction model (D-01)
-Document-centric desktop editor in the style of PDF-XChange Editor / Acrobat: PDFs open into **tabs**, every ribbon command acts on the **active document**, multi-file jobs (e.g. merge) open as dialogs.
+Document-centric editor in the style of classic desktop PDF editors: PDFs open into **tabs**, every ribbon command acts on the **active document**, multi-file jobs (e.g. merge) open as dialogs.
 
 ### 1.4 Two reference document profiles (D-02)
 All performance work and acceptance tests target both:
@@ -76,9 +76,9 @@ Tablet/phone UI · Safari parity · PDF text/content editing · form design beyo
 
 | ID | Decision |
 |---|---|
-| D-01 | Document-centric editor, PDF-XChange-style layout (ribbon, tabs, left rail + panes, right Properties pane, status bar) |
+| D-01 | Document-centric editor, desktop-editor-style layout (ribbon, tabs, left rail + panes, right Properties pane, status bar) |
 | D-02 | Two reference document profiles — **Contract** and **Drawing** — drive all performance work and acceptance tests (§1.4) |
-| D-03 | **Full annotation round-trip**: standard PDF annotation objects, readable/editable by Acrobat and PDF-XChange, and theirs by us |
+| D-03 | **Full annotation round-trip**: standard PDF annotation objects, readable/editable by Acrobat and other desktop editors, and theirs by us |
 | D-04 | Save in place via File System Access API (Chromium); download fallback elsewhere |
 | D-05 | Crash-recovery autosave to **OPFS** ~5 s after last change; never touches the original file |
 | D-06 | Ctrl+S = **incremental** save. "Save Optimized" = full rewrite, warns if signed. Offer optimize when unsigned file's incremental growth > 30 % |
@@ -104,11 +104,11 @@ Tablet/phone UI · Safari parity · PDF text/content editing · form design beyo
 | D-26 | Fill & save AcroForms; XFA → banner |
 | D-27 | Acceptance targets in §12 are contractual for typical files; **heavy files are measure-and-report for Rev 0** (ADR-002) |
 | D-28 | Release domains `app.triyapdf.com` and `triya-pdf.openengtools.com`, both serving the app from one Worker (`triya-pdf`), deployed only from a tag `vX.Y.Z` matching `package.json` on `main`, after one-click approval (ADR-029); the beta Worker keeps deploying `main` |
-| D-29 | Acrobat/PDF-XChange shortcut conventions; Windows alternates for browser-reserved keys |
+| D-29 | Acrobat and desktop-editor shortcut conventions; Windows alternates for browser-reserved keys |
 | D-30 | English only at launch, fully i18n-ready; baseline keyboard + screen-reader accessibility |
 | D-31 | Redaction in Rev 0 with strict safety rules (§7.9), using EmbedPDF's redaction engine (ADR-001 B8) |
 | D-32 | Public beta only after M1–M4 complete; solo internal testing with **public or self-made PDFs only** |
-| D-33 | Interop verified against **Acrobat Reader + PDF-XChange**. Bluebeam "expected, not verified" — never claimed publicly until confirmed |
+| D-33 | Interop verified against **Acrobat Reader + a second desktop PDF editor**. Bluebeam "expected, not verified" — never claimed publicly until confirmed |
 | D-35 | App shell (ADR-021): product mark and name in the banner; **Report an issue on GitHub** opens in a new tab (the OpenEngTools home button was removed for the two release domains, ADR-029) (user navigations, no app request, no document content); **Full screen** of the whole app; status-bar snapping is a magnet toggle |
 | D-36 | **Adaptive ribbon** (ADR-021): groups step down from full labels to icons to a group dropdown so every tab fits 1280 px; ribbon tabs gain **Form** |
 | D-37 | **Comment styles** (ADR-021): per-tool defaults (red, 10 pt text, 1 pt lines; highlight and sticky note yellow; highlights at 50 % opacity and the typewriter black Courier — ADR-023) and style palettes, stored on the device |
@@ -230,8 +230,8 @@ Rules:
 /functions/api    Cloudflare Pages Function: error-report endpoint
 /tests            unit tests (Vitest)
 /e2e              Playwright: functional, perf, offline, interop-prep
-/corpus           manifest + download script for PUBLIC test PDFs (files git-ignored); owner-supplied local files
-/scripts          tooling (license gate, corpus download)
+/corpus           git-ignored, local only: the owner's test PDFs (never committed, D-57)
+/scripts          tooling (license gate, checks)
 /spikes           throwaway M0 spike code — never imported by /src, never shipped
 /docs/adr         architecture decision records (one per D-xx change)
 ```
@@ -317,7 +317,7 @@ Types: **every annotation type/tool supported by EmbedPDF** (ADR-001 B7). No cus
 - **Paste an image** (D-45, ADR-023): Ctrl+V or the page menu's Paste with an image on the system clipboard places an Image Stamp, scaled to fit inside the page (90 %, aspect kept, never enlarged); one undo step; needs annotate.
 - **Comments in every pointer mode** (D-51, ADR-028): a comment is selected by clicking in Select, Select Comments, Hand and Select Text. Hand: a drag that starts on a comment moves it, elsewhere it pans. Select Text: on a text markup a drag selects the text under it and a click selects the markup; on other comments a drag moves them. Form fields are filled in every mode except Select Fields. Locked comments and documents without annotate permission select but do not move.
 - **Fonts** (D-52, ADR-028): text boxes, typewriters and callouts use the three standard families or the self-hosted font library (§3.2). With a library font the comment stays a standard FreeText (`/Contents`, `/DA`, `/DS`, `/RC` naming the family) and its appearance stream is ours: the used glyphs embedded as a subset (CIDFontType2, Identity-H, ToUnicode), shaped for complex scripts, missing characters falling back by script (Noto Sans Devanagari, Noto Sans SC), generated in a worker and re-applied whenever EmbedPDF regenerates the appearance — the third exception to "no custom appearance streams". Another viewer that edits the comment without the font redraws it in its own. Only the fonts that ship with the app are offered; fonts installed on the user's computer are not (D-54 withdrawn).
-- **Text and border colours** (ADR-024): a text box and a callout have a Text color and a Border color (Properties pane, tool defaults, Comment Styles). The border colour is `/DA`'s `rg`, the text colour `/DS` `color:` (and EmbedPDF's `/TextColor`), as Acrobat and PDF-XChange store them; another viewer's `/DS` colour is read back. PDFium draws the text in `/DA`'s colour, so after each write the Render worker changes only the text colour operator of PDFium's own appearance and sets it back with `EPDFAnnot_SetAppearanceFromPage` — the second exception to "no custom appearance streams", after Attach File. If the appearance doesn't have the expected shape, PDFium's is kept and a diagnostics event is recorded (spike S25).
+- **Text and border colours** (ADR-024): a text box and a callout have a Text color and a Border color (Properties pane, tool defaults, Comment Styles). The border colour is `/DA`'s `rg`, the text colour `/DS` `color:` (and EmbedPDF's `/TextColor`), as Acrobat and other desktop editors store them; another viewer's `/DS` colour is read back. PDFium draws the text in `/DA`'s colour, so after each write the Render worker changes only the text colour operator of PDFium's own appearance and sets it back with `EPDFAnnot_SetAppearanceFromPage` — the second exception to "no custom appearance streams", after Attach File. If the appearance doesn't have the expected shape, PDFium's is kept and a diagnostics event is recorded (spike S25).
 - **Context menus and clipboard** (D-38, ADR-021): right-click (or Shift+F10 / Menu key) on a comment on the page, a comment card, the page background, bookmarks and thumbnails; every item is a command-table command. Cut/Copy/Paste of comments on the page (Ctrl+X/C/V; Paste from the page menu lands at the pointer).
 - **Flatten** selected or all comments (page range) into page content in the Render worker; one undo step; capability **modify**; marks the document "optimize recommended".
 - **Attach File**: a standard `/FileAttachment` annotation with an embedded file and a paperclip appearance drawn by us — the first exception to "no custom appearance streams" (the second: text colours, ADR-024) — created by **direct PDFium calls in the Render worker** (`FPDFAnnot_AddFileAttachment`, `FPDFAttachment_SetFile`, `FPDFAnnot_SetAP`, …), not by our object layer; move / resize use their own Render call (`FPDFAnnot_SetRect`), delete uses the engine; saved in the narrow tail (spike S22, ADR-022 decision 1).
@@ -393,7 +393,7 @@ Open-password prompt; read permission flags; disable restricted commands with an
 Own dialog: range (all, current page, current view, selected area, custom), fit / actual / custom %, markups on / off / only, quality (standard / high DPI for drawings), orientation auto. Renders pages in the Work worker (refreshed to the current revision first, annotations included) at the chosen DPI into a print iframe. **Export Print-Ready PDF**: copy with annotations flattened (vector-quality elsewhere). For large/high-DPI jobs, printing the flattened print-ready PDF through the browser's built-in PDF viewer is acceptable; the required narrowly scoped `frame-src blob:` CSP addition is designed in M2 (ADR-001 B13).
 
 ### 7.14 OCR (D-34)
-Convert → **Recognize Text (OCR)** (ADR-020). Dialog: pages (all / current / selected / custom), **languages** as tick boxes (English, Chinese Simplified, Hindi, Spanish, French — several at once; English precached, the others downloaded on first use and kept for offline use, said in the dialog), and **"Also recognize pages that already have text"** (off by default: such pages are skipped and counted). The Work worker renders each page as displayed (8-bit gray, 300 dpi, the document as it is now); the OCR worker (Tesseract LSTM, SIMD build) returns words with boxes and lines with baselines; the Work worker writes the **text layer** with our object layer: per page one invisible text stream (render mode 3) appended to `/Contents` behind a `q`/`Q` wrap of the untouched original streams, words on their baselines in any direction and stretched to their boxes, one embedded **glyphless font** per document (Tesseract's `pdf.ttf`: CIDFontType2, Identity-H, identity ToUnicode) so every script round-trips in Acrobat, PDF-XChange and here; a layer this app wrote before is replaced, other text stays. Applied by the Render worker as one undo step (the comment-transfer route, capability **modify**, rule 9); Ctrl+S stays a narrow verified revision. Progress per page with Cancel (between pages, or the worker terminated mid-page). Search, selection, copy, exports and table detection then see the text like any text page (§6, §7.6, §7.7). Limits: BMP characters; no orientation detection or deskew; a foreign OCR layer is never removed.
+Convert → **Recognize Text (OCR)** (ADR-020). Dialog: pages (all / current / selected / custom), **languages** as tick boxes (English, Chinese Simplified, Hindi, Spanish, French — several at once; English precached, the others downloaded on first use and kept for offline use, said in the dialog), and **"Also recognize pages that already have text"** (off by default: such pages are skipped and counted). The Work worker renders each page as displayed (8-bit gray, 300 dpi, the document as it is now); the OCR worker (Tesseract LSTM, SIMD build) returns words with boxes and lines with baselines; the Work worker writes the **text layer** with our object layer: per page one invisible text stream (render mode 3) appended to `/Contents` behind a `q`/`Q` wrap of the untouched original streams, words on their baselines in any direction and stretched to their boxes, one embedded **glyphless font** per document (Tesseract's `pdf.ttf`: CIDFontType2, Identity-H, identity ToUnicode) so every script round-trips in Acrobat, other desktop editors and here; a layer this app wrote before is replaced, other text stays. Applied by the Render worker as one undo step (the comment-transfer route, capability **modify**, rule 9); Ctrl+S stays a narrow verified revision. Progress per page with Cancel (between pages, or the worker terminated mid-page). Search, selection, copy, exports and table detection then see the text like any text page (§6, §7.6, §7.7). Limits: BMP characters; no orientation detection or deskew; a foreign OCR layer is never removed.
 
 ### 7.15 Bookmark editing (D-38)
 New (from the current view), rename (F2), delete / delete but keep children / delete only children, set destination, cut/copy/paste within the document, drag to reorder and nest, expand/collapse all — from the Bookmarks pane toolbar and context menu. Edits go through **our own outline writer** (ADR-022 decision 5, route B; the engine's `setBookmarks` loses colour, style and open state and truncates outlines with actions it cannot write): the Work worker reads the outline, applies the edit and writes fresh outline objects keeping every key of every item; the Render worker applies them with the reopen route (`applyObjects`) as one undo step each (capability **modify**); Ctrl+S saves them in the narrow tail with the catalog and outline root marked dirty; encrypted files use the object layer's string encryption (ADR-021, spike S21).
@@ -402,7 +402,7 @@ New (from the current view), rename (F2), delete / delete but keep children / de
 
 ## 8. UI specification
 
-- Ribbon tabs (Rev 0) — this list is authoritative; `docs/ui-reference/` images are layout-only, and out-of-scope commands are omitted rather than shown disabled (ADR-001 B6): **File** (backstage: open, recent, save, save as, save optimized, print, properties, settings, about (version, open-source licenses, D-48)/privacy), **Home**, **View**, **Comment**, **Form** (ADR-021), **Measure**, **Organize**, **Convert**, **Protect** (redact, security info, signatures), **Help**.
+- Ribbon tabs (Rev 0) — this list is authoritative, and out-of-scope commands are omitted rather than shown disabled (ADR-001 B6): **File** (backstage: open, recent, save, save as, save optimized, print, properties, settings, about (version, open-source licenses, D-48)/privacy), **Home**, **View**, **Comment**, **Form** (ADR-021), **Measure**, **Organize**, **Convert**, **Protect** (redact, security info, signatures), **Help**.
 - **Top bar** (D-35, ADR-021): **one row** (D-47) holding the product mark and "Triya PDF" at the left (D-41), Quick Access, File and the ribbon tabs; a **light/dark theme** toggle (D-42), **OpenEngTools** (standard Home icon), **Report an issue** (GitHub, new tab, version/browser/OS only) and **Full screen** (the whole app; Esc leaves) at the right.
 - Large (32 px) and small (16/20 px) buttons, groups with labels, split buttons and dropdowns, collapsible ribbon, keyboard access (Alt key tips — nice-to-have).
 - **Adaptive ribbon** (D-36, ADR-021): when a tab does not fit, groups step down by priority — full labels → icons with short labels → icon-only grid → one group button opening a dropdown — so every tab fits 1280 px and every command keeps its accessible name and keyboard path. Home's rotate buttons rotate the **view**; Organize rotates pages.
@@ -412,7 +412,7 @@ New (from the current view), rename (F2), delete / delete but keep children / de
 - **Document tabs** (D-50, ADR-028): the selected tab is filled with the accent; a hover card shows the page 1 thumbnail, full name, where the file came from (no folder path: browsers do not expose it), pages, size, modified time and status; a **+** button opens a file; tabs reorder by dragging (Chrome-like), Ctrl+Shift+Left/Right or the tab menu; middle-click closes; a tab menu (Save, Save As, Close, Close Others, Close to the Right, Close All, Reopen Closed Tab, Move Left/Right, Sort by Name, Copy File Name, Rename File where the browser can rename in place, Document Properties) and a strip menu (Open, Create Blank PDF, Reopen Closed Tab, Close All).
 - Layout minimum 1280 px wide.
 - Start screen: open file, drop zone, recent files (clearable).
-- **Do not copy PDF-XChange artwork or proprietary visual assets.** Layout conventions only.
+- **Do not copy other PDF products' artwork or proprietary visual assets.** Layout conventions only.
 
 ### 8.1 Keyboard (D-29)
 Ctrl+O/S/P, Ctrl+Shift+S, Ctrl+Z/Y, Ctrl+F, Ctrl+Shift+F, Ctrl+0/1/2 (fit page / actual / fit width), Ctrl+= / Ctrl+-, H (hand), V (select), single-letter tool keys, **Ctrl+F4** close tab, **Ctrl+PageUp/PageDown** switch tabs, Esc cancels tool. **F1** opens Help (ADR-026). **Ctrl+Shift+Left/Right** moves the focused document tab and **Reopen Closed Tab** is on the tab menu (D-50). Help → printable shortcut sheet. Ctrl+F4 and Ctrl+PageUp/PageDown are reserved by Chrome in a normal tab (may work in the installed PWA window); alternates are defined in M1 (ADR-001 B5).
@@ -464,7 +464,7 @@ IndexedDB: profile, schemes, settings, recent-file handles, table templates, com
 - **E2E (Playwright, Chromium):** open/save/recover flows, annotation create/edit/delete/reply, measurement, CRS export, extraction, redaction verification, forms, protected PDFs, print dialog.
 - **Performance (Playwright + `PerformanceObserver` longtask):** runs the §12 targets on the corpus; **any long task > 100 ms fails the build** for scripted scenarios (scroll, zoom, search, save). Exempt: cold app boot (bundle evaluation) and the browser's native print dialog (ADR-001 B4). Heavy-file scenarios are measured and reported, not gating (ADR-002).
 - **Offline test:** context offline after first load → every Rev 0 feature must work; assert zero outbound requests during document work.
-- **Round-trip (manual checklist, per milestone):** files created here opened/edited in Acrobat Reader and PDF-XChange (free mode), and vice versa. Checklist lives in `/e2e/interop/CHECKLIST.md`. The agent prepares files and checklists; the owner runs them on Windows (ADR-001 B16).
+- **Round-trip (manual checklist, per milestone):** files created here opened/edited in Acrobat Reader and a second desktop PDF editor, and vice versa. Checklist lives in `/e2e/interop/CHECKLIST.md`. The agent prepares files and checklists; the owner runs them on Windows (ADR-001 B16).
 - **Corpus:** public-domain sources (e.g. the US Federal Acquisition Regulation for the Contract profile; pdf.js test PDFs, veraPDF corpus, DARPA SafeDocs, checked per file) plus self-made files. Copyrighted standards (ASME, ISO) are never used. No synthetic generation of heavy files: the ~500 MB contract, dense drawings and P&IDs are **owner-supplied local files**, never committed and not listed by URL (ADR-001 B15, ADR-002). **Never company documents.** Large files are git-ignored and fetched by script.
 
 ---
@@ -484,7 +484,7 @@ Reference machine: Core i5-class, 16 GB RAM, Edge, installed PWA.
 | Dense A0 drawing | first view < 2 s; instant preview on pan/zoom; sharp tiles < 0.5 s; up to 6400 % |
 | Save (incremental, 100 markups) | < 1 s |
 | Memory (5 heavy tabs) | < 2 GB total |
-| Round-trip | standard markups interoperate with Acrobat Reader + PDF-XChange, both directions |
+| Round-trip | standard markups interoperate with Acrobat Reader + a second desktop PDF editor, both directions |
 | Offline proof | network off → all Rev 0 features work; zero outbound requests during document work |
 
 ---
@@ -494,7 +494,7 @@ Reference machine: Core i5-class, 16 GB RAM, Edge, installed PWA.
 ### M0 — Spikes (de-risk before building UI)
 Each spike ends with a short ADR: works / workaround / blocker.
 - **S1** Incremental save + full-rewrite save through EmbedPDF/PDFium.
-- **S2** Writing Measure/Viewport dictionaries and reading them back in Acrobat Reader & PDF-XChange.
+- **S2** Writing Measure/Viewport dictionaries and reading them back in Acrobat Reader & a second desktop PDF editor.
 - **S3** Two EmbedPDF/PDFium engine instances in two workers; memory with a 500 MB contract.
 - **S4** PDF Oxide WASM: size, markdown/HTML/table quality on corpus, API availability in WASM build.
 - **S5** Search in Work worker on a ~2,000-page public-domain doc (FAR) while scrolling — confirm no main-thread long tasks.

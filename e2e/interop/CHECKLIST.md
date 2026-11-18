@@ -1,7 +1,7 @@
 # Interop checklist (owner-run, Windows)
 
 ARCHITECTURE.md §11 and ADR-001 B16: the agent prepares the files and this checklist, and the owner
-runs it in **Adobe Acrobat Reader** (free) and **PDF-XChange Editor** (free mode). Record the
+runs it in **Adobe Acrobat Reader** (free) and **a second desktop PDF editor** (its free mode). Record the
 result per viewer as ✅ (works), ⚠️ (works with a prompt or cosmetic issue) or ❌ (broken), and add
 notes.
 
@@ -43,27 +43,27 @@ The `form` variants also change the text field to "Edited by S1" and uncheck the
 
 ### A. For every `__narrow.pdf` (both viewers)
 
-| #   | Check                                                                                                                | Acrobat | PDF-XChange |
-| --- | -------------------------------------------------------------------------------------------------------------------- | ------- | ----------- |
-| A1  | Opens without a repair message, and closing without edits does **not** ask "Save changes?" (a sign of repair).       |         |             |
-| A2  | Page 1 shows all 21 annotations above, positioned and coloured sensibly.                                             |         |             |
-| A3  | The Comments list shows each one with author "PDFTools S1" and the correct type name.                                |         |             |
-| A4  | Clouds render with scalloped borders; the arrow has an open arrowhead; the callout has a leader line.                |         |             |
-| A5  | Edit: move one annotation, change a colour, add a reply → Save → close → reopen: the changes persist.                |         |             |
-| A6  | Open the re-saved file in PDFTools (later milestone) or send it back to the agent: our annotations are still intact. |         |             |
+| #   | Check                                                                                                                | Acrobat | Other editor |
+| --- | -------------------------------------------------------------------------------------------------------------------- | ------- | ------------ |
+| A1  | Opens without a repair message, and closing without edits does **not** ask "Save changes?" (a sign of repair).       |         |              |
+| A2  | Page 1 shows all 21 annotations above, positioned and coloured sensibly.                                             |         |              |
+| A3  | The Comments list shows each one with author "PDFTools S1" and the correct type name.                                |         |              |
+| A4  | Clouds render with scalloped borders; the arrow has an open arrowhead; the callout has a leader line.                |         |              |
+| A5  | Edit: move one annotation, change a colour, add a reply → Save → close → reopen: the changes persist.                |         |              |
+| A6  | Open the re-saved file in PDFTools (later milestone) or send it back to the agent: our annotations are still intact. |         |              |
 
 ### B. Specific files
 
-| #   | File                                                            | Check                                                                                                                                                                                                                                                                                                        | Acrobat | PDF-XChange |
-| --- | --------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | ------- | ----------- |
-| B1  | `signed__narrow.pdf`                                            | The signature panel reports the signature as intact ("document has not been modified since this signature was applied", or "changes have been made **after** signing" for later revisions). It must **not** say the signature is invalid or corrupted. The unknown-identity warning is expected (test cert). |         |             |
-| B2  | `signed__rewrite.pdf`                                           | Expected to show the signature as **invalid/broken** (full rewrite). This confirms the D-06 warning is needed.                                                                                                                                                                                               |         |             |
-| B3  | `encrypted-aes256__narrow.pdf`, `encrypted-rc4-128__narrow.pdf` | Opens without a password. Document Properties → Security still shows printing and content copying **not allowed**, and commenting allowed.                                                                                                                                                                   |         |             |
-| B4  | `encrypted-noannotate__narrow.pdf`                              | No annotations were added; restrictions are unchanged.                                                                                                                                                                                                                                                       |         |             |
-| B5  | `form__narrow.pdf`                                              | The text field shows "Edited by S1" and the checkbox is unchecked; both are still editable.                                                                                                                                                                                                                  |         |             |
-| B6  | `objstm__narrow.pdf`                                            | Opens cleanly (A1).                                                                                                                                                                                                                                                                                          |         |             |
-| B7  | `objstm__incremental.pdf` (PDFium raw)                          | For information: does the viewer repair it or prompt to save on close? (qpdf reports a damaged xref stream.)                                                                                                                                                                                                 |         |             |
-| B8  | `*__rewrite.pdf`                                                | A1–A3 pass (Save Optimized output).                                                                                                                                                                                                                                                                          |         |             |
+| #   | File                                                            | Check                                                                                                                                                                                                                                                                                                        | Acrobat | Other editor |
+| --- | --------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | ------- | ------------ |
+| B1  | `signed__narrow.pdf`                                            | The signature panel reports the signature as intact ("document has not been modified since this signature was applied", or "changes have been made **after** signing" for later revisions). It must **not** say the signature is invalid or corrupted. The unknown-identity warning is expected (test cert). |         |              |
+| B2  | `signed__rewrite.pdf`                                           | Expected to show the signature as **invalid/broken** (full rewrite). This confirms the D-06 warning is needed.                                                                                                                                                                                               |         |              |
+| B3  | `encrypted-aes256__narrow.pdf`, `encrypted-rc4-128__narrow.pdf` | Opens without a password. Document Properties → Security still shows printing and content copying **not allowed**, and commenting allowed.                                                                                                                                                                   |         |              |
+| B4  | `encrypted-noannotate__narrow.pdf`                              | No annotations were added; restrictions are unchanged.                                                                                                                                                                                                                                                       |         |              |
+| B5  | `form__narrow.pdf`                                              | The text field shows "Edited by S1" and the checkbox is unchecked; both are still editable.                                                                                                                                                                                                                  |         |              |
+| B6  | `objstm__narrow.pdf`                                            | Opens cleanly (A1).                                                                                                                                                                                                                                                                                          |         |              |
+| B7  | `objstm__incremental.pdf` (PDFium raw)                          | For information: does the viewer repair it or prompt to save on close? (qpdf reports a damaged xref stream.)                                                                                                                                                                                                 |         |              |
+| B8  | `*__rewrite.pdf`                                                | A1–A3 pass (Save Optimized output).                                                                                                                                                                                                                                                                          |         |              |
 
 ### C. Reverse direction (their annotations, our save)
 
@@ -108,17 +108,17 @@ Files:
 
 ### D. Viewer checks (both viewers)
 
-| #   | File / action                                                                                                                                                                           | Acrobat | PDF-XChange |
-| --- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------- | ----------- |
-| D1  | `s2-cap.pdf`: are the 7 annotations listed as **measurements** (Distance / Perimeter / Area) in the comments list or properties, with the expected value and unit?                      |         |             |
-| D2  | `s2-cap.pdf`: is any value **visible on the page** without selecting the annotation?                                                                                                    |         |             |
-| D3  | `s2-freetext.pdf`: labels visible; does moving a measurement also move its label (group)?                                                                                               |         |             |
-| D4  | `s2-noap.pdf`: are the measurements drawn at all? With a value/caption? Any repair prompt when closing?                                                                                 |         |             |
-| D5  | `s2-vp-only.pdf`: with the viewer's **distance tool**, measure the building's long side (outside Detail A). Does it show **20.00 m** without setting a scale (page viewport used)?      |         |             |
-| D6  | `s2-vp-only.pdf`: measure the plate's long side **inside Detail A**. Does it show **400 mm** (Detail A 1:5 used)?                                                                       |         |             |
-| D7  | `s2-vp-only.pdf`: measure from the building corner into Detail A. Which scale does the viewer use? Any warning?                                                                         |         |             |
-| D8  | `s2-cap.pdf`: move one measurement's end point and save. Run `node spikes/s2-measure/read-measure.ts <saved.pdf>`: is `/Measure` kept, and does our value match the viewer's new value? |         |             |
-| D9  | `s2-cap-edited-by-embedpdf.pdf`: same as D1. Our later edit must not have removed the measurement data.                                                                                 |         |             |
+| #   | File / action                                                                                                                                                                           | Acrobat | Other editor |
+| --- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------- | ------------ |
+| D1  | `s2-cap.pdf`: are the 7 annotations listed as **measurements** (Distance / Perimeter / Area) in the comments list or properties, with the expected value and unit?                      |         |              |
+| D2  | `s2-cap.pdf`: is any value **visible on the page** without selecting the annotation?                                                                                                    |         |              |
+| D3  | `s2-freetext.pdf`: labels visible; does moving a measurement also move its label (group)?                                                                                               |         |              |
+| D4  | `s2-noap.pdf`: are the measurements drawn at all? With a value/caption? Any repair prompt when closing?                                                                                 |         |              |
+| D5  | `s2-vp-only.pdf`: with the viewer's **distance tool**, measure the building's long side (outside Detail A). Does it show **20.00 m** without setting a scale (page viewport used)?      |         |              |
+| D6  | `s2-vp-only.pdf`: measure the plate's long side **inside Detail A**. Does it show **400 mm** (Detail A 1:5 used)?                                                                       |         |              |
+| D7  | `s2-vp-only.pdf`: measure from the building corner into Detail A. Which scale does the viewer use? Any warning?                                                                         |         |              |
+| D8  | `s2-cap.pdf`: move one measurement's end point and save. Run `node spikes/s2-measure/read-measure.ts <saved.pdf>`: is `/Measure` kept, and does our value match the viewer's new value? |         |              |
+| D9  | `s2-cap-edited-by-embedpdf.pdf`: same as D1. Our later edit must not have removed the measurement data.                                                                                 |         |              |
 
 ### F. Reverse direction (their measurements, our reader)
 
@@ -152,22 +152,22 @@ app refuses to add annotations to it (rule 9; checked by the same spec).
 
 ### G. For every file (both viewers)
 
-| #   | Check                                                                                                                   | Acrobat | PDF-XChange |
-| --- | ----------------------------------------------------------------------------------------------------------------------- | ------- | ----------- |
-| G1  | Opens without a repair message, and closing without edits does **not** ask "Save changes?".                             |         |             |
-| G2  | Page 1 shows the red squares (3 in `__ctrl-s`, 4 in the others) along the bottom-left edge, plus any original content.  |         |             |
-| G3  | The squares are ordinary Square comments in the Comments list: they can be selected, moved, deleted and the file saved. |         |             |
+| #   | Check                                                                                                                   | Acrobat | Other editor |
+| --- | ----------------------------------------------------------------------------------------------------------------------- | ------- | ------------ |
+| G1  | Opens without a repair message, and closing without edits does **not** ask "Save changes?".                             |         |              |
+| G2  | Page 1 shows the red squares (3 in `__ctrl-s`, 4 in the others) along the bottom-left edge, plus any original content.  |         |              |
+| G3  | The squares are ordinary Square comments in the Comments list: they can be selected, moved, deleted and the file saved. |         |              |
 
 ### H. Specific files
 
-| #   | File                                                                                               | Check                                                                                                                                             | Acrobat | PDF-XChange |
-| --- | -------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------- | ------- | ----------- |
-| H1  | `signed__ctrl-s.pdf`, `signed__save-as.pdf`                                                        | The signature is intact ("changes have been made after signing" is expected). It must **not** be reported invalid. Test cert warning is expected. |         |             |
-| H2  | `signed__optimized.pdf`                                                                            | The signature is reported **invalid/broken** — the app warned about this before saving (D-06).                                                    |         |             |
-| H3  | `encrypted-*__ctrl-s.pdf`, `encrypted-*__optimized.pdf`                                            | Opens without a password; Security still shows printing and copying **not allowed**, commenting allowed.                                          |         |             |
-| H4  | `form__*.pdf`                                                                                      | The text field shows "Edited by M1" and can still be edited.                                                                                      |         |             |
-| H5  | `annotated__*.pdf`                                                                                 | The original annotations are unchanged (count, text, author) next to the new squares.                                                             |         |             |
-| H6  | `X__ctrl-s.pdf` in Acrobat: File → Properties or the signature panel's revision list (signed only) | Two revisions after the original are listed or recoverable (for information).                                                                     |         |             |
+| #   | File                                                                                               | Check                                                                                                                                             | Acrobat | Other editor |
+| --- | -------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------- | ------- | ------------ |
+| H1  | `signed__ctrl-s.pdf`, `signed__save-as.pdf`                                                        | The signature is intact ("changes have been made after signing" is expected). It must **not** be reported invalid. Test cert warning is expected. |         |              |
+| H2  | `signed__optimized.pdf`                                                                            | The signature is reported **invalid/broken** — the app warned about this before saving (D-06).                                                    |         |              |
+| H3  | `encrypted-*__ctrl-s.pdf`, `encrypted-*__optimized.pdf`                                            | Opens without a password; Security still shows printing and copying **not allowed**, commenting allowed.                                          |         |              |
+| H4  | `form__*.pdf`                                                                                      | The text field shows "Edited by M1" and can still be edited.                                                                                      |         |              |
+| H5  | `annotated__*.pdf`                                                                                 | The original annotations are unchanged (count, text, author) next to the new squares.                                                             |         |              |
+| H6  | `X__ctrl-s.pdf` in Acrobat: File → Properties or the signature panel's revision list (signed only) | Two revisions after the original are listed or recoverable (for information).                                                                     |         |              |
 
 ## M2 — form filling (D-26, §7.10, M2-14)
 
@@ -180,13 +180,13 @@ in", Agree checked, the second Choice button on, Size = DN100, Material = Duplex
 
 ### I. Form files (both viewers)
 
-| #   | File                 | Check                                                                                                                | Acrobat | PDF-XChange |
-| --- | -------------------- | -------------------------------------------------------------------------------------------------------------------- | ------- | ----------- |
-| I1  | `form__filled.pdf`   | Opens without a repair message; the values above are shown, and closing without edits doesn't ask "Save changes?".   |         |             |
-| I2  | `form__filled.pdf`   | The values are real field values: change one, save, reopen in the other viewer — it shows the change.                |         |             |
-| I3  | `form__filled.pdf`   | "readonly field" still shows "Fixed" and can't be edited; "required field" is marked required.                       |         |             |
-| I4  | `form__original.pdf` | Tab moves through the fields in row order (first, name, readonly, required, Agree, Choice, Size, Material), as here. |         |             |
-| I5  | `form__filled.pdf`   | The viewer's Reset Form gives: name "Default", first empty, Agree checked, Choice B, Size DN50 (the file's `/DV`s).  |         |             |
+| #   | File                 | Check                                                                                                                | Acrobat | Other editor |
+| --- | -------------------- | -------------------------------------------------------------------------------------------------------------------- | ------- | ------------ |
+| I1  | `form__filled.pdf`   | Opens without a repair message; the values above are shown, and closing without edits doesn't ask "Save changes?".   |         |              |
+| I2  | `form__filled.pdf`   | The values are real field values: change one, save, reopen in the other viewer — it shows the change.                |         |              |
+| I3  | `form__filled.pdf`   | "readonly field" still shows "Fixed" and can't be edited; "required field" is marked required.                       |         |              |
+| I4  | `form__original.pdf` | Tab moves through the fields in row order (first, name, readonly, required, Agree, Choice, Size, Material), as here. |         |              |
+| I5  | `form__filled.pdf`   | The viewer's Reset Form gives: name "Default", first empty, Agree checked, Choice B, Size DN50 (the file's `/DV`s).  |         |              |
 
 ### J. Printing (M2-15, owner: real print dialogs)
 
@@ -207,12 +207,12 @@ printer once.
 Open `form__filled.pdf` in the app, add nothing, then File → Export Print-Ready PDF, and save the
 copy. Then Ctrl+P → "Print with: The browser's PDF viewer" → Print.
 
-| #   | Check                                                                                                                               | Acrobat / Chrome-Edge | PDF-XChange / Firefox |
-| --- | ----------------------------------------------------------------------------------------------------------------------------------- | --------------------- | --------------------- |
-| K1  | The exported copy opens without a repair message in both viewers, shows the filled values, and has no form fields or comments left. |                       |                       |
-| K2  | Zoomed to 800 % the copy's text and lines stay sharp (vector, not an image).                                                        |                       |                       |
-| K3  | Viewer route: the browser's own print dialog opens with the chosen pages; printing to a PDF printer gives sharp lines.              |                       |                       |
-| K4  | Viewer route in a browser without a built-in PDF viewer (or with it turned off): note what happens; the raster route still works.   |                       |                       |
+| #   | Check                                                                                                                               | Acrobat / Chrome-Edge | Other editor / Firefox |
+| --- | ----------------------------------------------------------------------------------------------------------------------------------- | --------------------- | ---------------------- |
+| K1  | The exported copy opens without a repair message in both viewers, shows the filled values, and has no form fields or comments left. |                       |                        |
+| K2  | Zoomed to 800 % the copy's text and lines stay sharp (vector, not an image).                                                        |                       |                        |
+| K3  | Viewer route: the browser's own print dialog opens with the chosen pages; printing to a PDF printer gives sharp lines.              |                       |                        |
+| K4  | Viewer route in a browser without a built-in PDF viewer (or with it turned off): note what happens; the raster route still works.   |                       |                        |
 
 ## M3 — review: comments, stamps, measurements (D-03, D-14, D-23; [M3 acceptance](../../docs/acceptance/M3.md))
 
@@ -232,17 +232,17 @@ Files: [`e2e/fixtures/self-made/m3-interop/`](../fixtures/self-made/m3-interop/)
 
 ### L. Ours → theirs (both viewers)
 
-| #   | File                           | Check                                                                                                                                              | Acrobat | PDF-XChange |
-| --- | ------------------------------ | -------------------------------------------------------------------------------------------------------------------------------------------------- | ------- | ----------- |
-| L1  | all                            | Opens without a repair message; closing without edits does not ask "Save changes?".                                                                |         |             |
-| L2  | `types__ctrl-s.pdf`            | All 15 are listed in the comments list with their type, author and text; each draws as it does in PDFTools.                                        |         |             |
-| L3  | `types__ctrl-s.pdf`            | The stamp shows "AP", the label, reviewer and date; its comment text says the same (searchable).                                                   |         |             |
-| L4  | `replies-states__ctrl-s.pdf`   | The thread shows both replies nested under the square, and the review status per reviewer (Bo Vendor: Rejected; PDFTools Interop: Accepted).       |         |             |
-| L5  | `measure-page__ctrl-s.pdf`     | The three are listed as **measurements** with 20.00 m / 60.00 m / 200.00 m²; the labels show the values on the page.                               |         |             |
-| L6  | `measure-page__ctrl-s.pdf`     | With the viewer's distance tool (no scale set), the rectangle's long side measures 20.00 m (our page `/VP` used).                                  |         |             |
-| L7  | `measure-viewport__ctrl-s.pdf` | The viewer's distance tool inside Detail A measures the plate's long side as 400 mm; outside it uses 1:100.                                        |         |             |
-| L8  | `measure-*__ctrl-s.pdf`        | Move a measurement's vertex and save: the value updates in the viewer; reopen in PDFTools — the value matches, the label follows on the next edit. |         |             |
-| L9  | `encrypted-*__ctrl-s.pdf`      | Opens without a password; measurements and the stamp as in L3/L5; File → Properties shows the same encryption as before.                           |         |             |
+| #   | File                           | Check                                                                                                                                              | Acrobat | Other editor |
+| --- | ------------------------------ | -------------------------------------------------------------------------------------------------------------------------------------------------- | ------- | ------------ |
+| L1  | all                            | Opens without a repair message; closing without edits does not ask "Save changes?".                                                                |         |              |
+| L2  | `types__ctrl-s.pdf`            | All 15 are listed in the comments list with their type, author and text; each draws as it does in PDFTools.                                        |         |              |
+| L3  | `types__ctrl-s.pdf`            | The stamp shows "AP", the label, reviewer and date; its comment text says the same (searchable).                                                   |         |              |
+| L4  | `replies-states__ctrl-s.pdf`   | The thread shows both replies nested under the square, and the review status per reviewer (Bo Vendor: Rejected; PDFTools Interop: Accepted).       |         |              |
+| L5  | `measure-page__ctrl-s.pdf`     | The three are listed as **measurements** with 20.00 m / 60.00 m / 200.00 m²; the labels show the values on the page.                               |         |              |
+| L6  | `measure-page__ctrl-s.pdf`     | With the viewer's distance tool (no scale set), the rectangle's long side measures 20.00 m (our page `/VP` used).                                  |         |              |
+| L7  | `measure-viewport__ctrl-s.pdf` | The viewer's distance tool inside Detail A measures the plate's long side as 400 mm; outside it uses 1:100.                                        |         |              |
+| L8  | `measure-*__ctrl-s.pdf`        | Move a measurement's vertex and save: the value updates in the viewer; reopen in PDFTools — the value matches, the label follows on the next edit. |         |              |
+| L9  | `encrypted-*__ctrl-s.pdf`      | Opens without a password; measurements and the stamp as in L3/L5; File → Properties shows the same encryption as before.                           |         |              |
 
 ### M. Theirs → ours
 
@@ -251,12 +251,12 @@ Files: [`e2e/fixtures/self-made/m3-interop/`](../fixtures/self-made/m3-interop/)
    measurement with the viewer's own scale (for example 1:50). Save.
 2. Open the saved file in PDFTools and record:
 
-| #   | Check                                                                                                                                                                             | Acrobat | PDF-XChange |
-| --- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------- | ----------- |
-| M1  | Every added comment is in the Comments pane with the viewer's author, text, date; the reply and status appear in the thread.                                                      |         |             |
-| M2  | The viewer's measurements keep **their own** values (their `/Measure`, ADR-007 d3), even though the page says 1:100; select one: the Properties pane says "Scale: from the file". |         |             |
-| M3  | Our own measurements still show 20.00 m / 60.00 m / 200.00 m²; Ctrl+S, reopen in the viewer: nothing of theirs was lost.                                                          |         |             |
-| M4  | Comment → Export CRS: every comment of theirs and ours is a row, with replies and statuses.                                                                                       |         |             |
+| #   | Check                                                                                                                                                                             | Acrobat | Other editor |
+| --- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------- | ------------ |
+| M1  | Every added comment is in the Comments pane with the viewer's author, text, date; the reply and status appear in the thread.                                                      |         |              |
+| M2  | The viewer's measurements keep **their own** values (their `/Measure`, ADR-007 d3), even though the page says 1:100; select one: the Properties pane says "Scale: from the file". |         |              |
+| M3  | Our own measurements still show 20.00 m / 60.00 m / 200.00 m²; Ctrl+S, reopen in the viewer: nothing of theirs was lost.                                                          |         |              |
+| M4  | Comment → Export CRS: every comment of theirs and ours is a row, with replies and statuses.                                                                                       |         |              |
 
 ## M4 — page operations, redaction, exports, comment transfer (D-06, D-27, D-31; [M4 acceptance](../../docs/acceptance/M4.md))
 
@@ -279,16 +279,16 @@ passes `qpdf --check`. Passwords of the encrypted file: user `user-pw`, owner `o
 
 ### N. Ours → theirs (both viewers)
 
-| #   | File                         | Check                                                                                                                                                        | Acrobat | PDF-XChange |
-| --- | ---------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------ | ------- | ----------- |
-| N1  | all PDFs                     | Opens without a repair message; closing without edits does not ask "Save changes?".                                                                          |         |             |
-| N2  | `pages__ctrl-s.pdf`          | Four pages in the order above; page 1 is rotated; thumbnails agree.                                                                                          |         |             |
-| N3  | `merged.pdf`                 | Four pages A 1, A 2, B 1, B 2; bookmarks "a" and "b" jump to A 1 and B 1.                                                                                    |         |             |
-| N4  | `redact-marks__ctrl-s.pdf`   | Both marks show as **pending redactions** (Acrobat: Redact tool; PDF-XChange: Redaction list), with a black fill when applied there.                         |         |             |
-| N5  | `redacted.pdf`               | No marks left. Search for SECRETALPHA, UNDERMIKE, ROTATEDNOVEMBER, FORMDELTA: **not found**; PUBLICLEFT and REPEATKILO found. Select-all copy has no secret. |         |             |
-| N6  | `redacted.pdf`               | File → Properties: no title, author or keywords; no attachments, no bookmark "OUTLINEINDIA"; no JavaScript prompt.                                           |         |             |
-| N7  | `redacted-aes256.pdf`        | Asks for a password; `user-pw` opens it; Properties show AES-256; checks as N5.                                                                              |         |             |
-| N8  | `transfer-rev-b__ctrl-s.pdf` | The square with Bo Vendor's reply on page 1 and the highlight on page 2, with authors, dates and text as in Rev A.                                           |         |             |
+| #   | File                         | Check                                                                                                                                                        | Acrobat | Other editor |
+| --- | ---------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------ | ------- | ------------ |
+| N1  | all PDFs                     | Opens without a repair message; closing without edits does not ask "Save changes?".                                                                          |         |              |
+| N2  | `pages__ctrl-s.pdf`          | Four pages in the order above; page 1 is rotated; thumbnails agree.                                                                                          |         |              |
+| N3  | `merged.pdf`                 | Four pages A 1, A 2, B 1, B 2; bookmarks "a" and "b" jump to A 1 and B 1.                                                                                    |         |              |
+| N4  | `redact-marks__ctrl-s.pdf`   | Both marks show as **pending redactions** (Acrobat: Redact tool; the other editor: its redaction list), with a black fill when applied there.                |         |              |
+| N5  | `redacted.pdf`               | No marks left. Search for SECRETALPHA, UNDERMIKE, ROTATEDNOVEMBER, FORMDELTA: **not found**; PUBLICLEFT and REPEATKILO found. Select-all copy has no secret. |         |              |
+| N6  | `redacted.pdf`               | File → Properties: no title, author or keywords; no attachments, no bookmark "OUTLINEINDIA"; no JavaScript prompt.                                           |         |              |
+| N7  | `redacted-aes256.pdf`        | Asks for a password; `user-pw` opens it; Properties show AES-256; checks as N5.                                                                              |         |              |
+| N8  | `transfer-rev-b__ctrl-s.pdf` | The square with Bo Vendor's reply on page 1 and the highlight on page 2, with authors, dates and text as in Rev A.                                           |         |              |
 
 | #   | File               | Check (Word / LibreOffice / Excel)                                                                                        | Result |
 | --- | ------------------ | ------------------------------------------------------------------------------------------------------------------------- | ------ |
@@ -302,12 +302,12 @@ passes `qpdf --check`. Passwords of the encrypted file: user `user-pw`, owner `o
    not apply), and add a sticky note and a highlight. Save.
 2. Open the saved file in PDFTools and record:
 
-| #   | Check                                                                                                                                                                             | Acrobat | PDF-XChange |
-| --- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------- | ----------- |
-| O1  | Their marks appear in Pending Redactions (status bar count) and as outlines on the page.                                                                                          |         |             |
-| O2  | Protect → Apply Redactions on their marks: "Every check passed"; the new file opens in their viewer with the areas blacked out and the text not searchable.                       |         |             |
-| O3  | Comment → Import Comments from their saved file into `transfer-rev-b__ctrl-s.pdf`: their note and highlight come in with their author and text (Rev A → Rev B from their viewer). |         |             |
-| O4  | Organize → rotate and delete a page of their file, Ctrl+S, reopen in their viewer: their comments are still on the right pages.                                                   |         |             |
+| #   | Check                                                                                                                                                                             | Acrobat | Other editor |
+| --- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------- | ------------ |
+| O1  | Their marks appear in Pending Redactions (status bar count) and as outlines on the page.                                                                                          |         |              |
+| O2  | Protect → Apply Redactions on their marks: "Every check passed"; the new file opens in their viewer with the areas blacked out and the text not searchable.                       |         |              |
+| O3  | Comment → Import Comments from their saved file into `transfer-rev-b__ctrl-s.pdf`: their note and highlight come in with their author and text (Rev A → Rev B from their viewer). |         |              |
+| O4  | Organize → rotate and delete a page of their file, Ctrl+S, reopen in their viewer: their comments are still on the right pages.                                                   |         |              |
 
 ## M6 — beta review: comments, bookmarks, forms, signatures, passwords; M5 OCR (D-35 … D-40; [M6 acceptance](../../docs/acceptance/M6.md))
 
@@ -332,27 +332,27 @@ passes `qpdf --check`. Author of everything: "PDFTools Interop". Passwords: open
 
 ### P. Ours → theirs (both viewers)
 
-| #   | File                                 | Check                                                                                                                                                                                                                                       | Acrobat | PDF-XChange |
-| --- | ------------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------- | ----------- |
-| P1  | all                                  | Opens without a repair message; closing without edits does not ask "Save changes?".                                                                                                                                                         |         |             |
-| P2  | `comments-m6__ctrl-s.pdf`            | The four drawn comments are red with 1 pt lines; the text box and callout text is 10 pt red Helvetica. Comments list: 7 comments + the file attachment, author "PDFTools Interop".                                                          |         |             |
-| P3  | `comments-m6__ctrl-s.pdf`            | The blue square shows **rotated 30°**, dashed, half transparent, multiplied over the page. Move it in the viewer and save: note whether it stays rotated (our rotation is an EmbedPDF-private key, `/EPDFRotate`; the picture is standard). |         |             |
-| P4  | `comments-m6__ctrl-s.pdf`            | The Times text box is bold italic, centred and **vertically in the middle**. Edit its text in the viewer: note whether it stays in the middle (`/EPDF:VerticalAlignment` is private too).                                                   |         |             |
-| P5  | `comments-m6__ctrl-s.pdf`            | The Times text box is **locked** (cannot be moved or deleted until unlocked) and shows as **Marked** (Acrobat: checkmark / "Marked"; PDF-XChange: Marked state).                                                                            |         |             |
-| P6  | `comments-m6__ctrl-s.pdf`            | The square with Printable off is on screen but not in print preview.                                                                                                                                                                        |         |             |
-| P7  | `comments-m6__ctrl-s.pdf`            | The paperclip opens / saves `calc.csv` (2 lines: `tag,size`, `P-101,DN150`); it is listed in the viewer's attachments.                                                                                                                      |         |             |
-| P8  | `flattened__ctrl-s.pdf`              | The four flattened comments are part of the page (not in the comments list, not selectable); the link, the redaction mark, the locked and the hidden comment are still annotations.                                                         |         |             |
-| P9  | `bookmarks__ctrl-s.pdf`              | The bookmark tree matches the table above; "Section 2 (new)" is blue and bold and goes to page 2 at Fit Width; "Website — Δ" shows the Δ and still opens the web link; nothing asks to run a script.                                        |         |             |
-| P10 | `forms__ctrl-s.pdf`                  | Five fields fill: text, check box, the two radio buttons (one excludes the other), the dropdown's three items, the list box's three items. Hovering shows the tooltips.                                                                     |         |             |
-| P11 | `forms__ctrl-s.pdf`                  | Tab goes customer → check box → radios → dropdown → list box (row order). The text field is marked required.                                                                                                                                |         |             |
-| P12 | `forms__ctrl-s.pdf`                  | Fill something, then the viewer's Reset Form: the text field shows "n/a" again. No error about a missing or empty field (a deleted radio button and the radio group's join leave entries in `/AcroForm /Fields`, M6-14).                    |         |             |
-| P13 | `forms-filled__ctrl-s.pdf`           | Opens with Ada Lovelace, the check box checked, Choice2 and DN80.                                                                                                                                                                           |         |             |
-| P14 | `signatures__ctrl-s.pdf`             | The image signature is part of the page (not a comment). The typed signature, the initials and the drawn signature show, and move and resize as comments (subject "Signature"); they print.                                                 |         |             |
-| P15 | `protected-open-and-permissions.pdf` | Asks for a password; wrong password refused. `open-pw`: Document Properties → Security shows AES-256 and Printing / Copying / Changing **not allowed**, comments and form filling allowed. `perm-pw` opens with no restrictions.            |         |             |
-| P16 | `protected-permissions-only.pdf`     | Opens without a password; only printing is allowed (no comments, form filling, copying). The viewer's own "remove security" asks for `perm-pw`.                                                                                             |         |             |
-| P17 | `protected-open-only.pdf`            | Asks for `open-pw`; then nothing is restricted.                                                                                                                                                                                             |         |             |
-| P18 | `unprotected.pdf`                    | Opens without a password; Security: no security; the comments and bookmarks of the original are there.                                                                                                                                      |         |             |
-| P19 | `ocr-english__ctrl-s.pdf`            | (M5-05) Search "Datasheet": 3 hits (pages 1–3); select a line of the datasheet and copy: the text comes out; the text layer is **invisible** (the page looks like the scan).                                                                |         |             |
+| #   | File                                 | Check                                                                                                                                                                                                                                       | Acrobat | Other editor |
+| --- | ------------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------- | ------------ |
+| P1  | all                                  | Opens without a repair message; closing without edits does not ask "Save changes?".                                                                                                                                                         |         |              |
+| P2  | `comments-m6__ctrl-s.pdf`            | The four drawn comments are red with 1 pt lines; the text box and callout text is 10 pt red Helvetica. Comments list: 7 comments + the file attachment, author "PDFTools Interop".                                                          |         |              |
+| P3  | `comments-m6__ctrl-s.pdf`            | The blue square shows **rotated 30°**, dashed, half transparent, multiplied over the page. Move it in the viewer and save: note whether it stays rotated (our rotation is an EmbedPDF-private key, `/EPDFRotate`; the picture is standard). |         |              |
+| P4  | `comments-m6__ctrl-s.pdf`            | The Times text box is bold italic, centred and **vertically in the middle**. Edit its text in the viewer: note whether it stays in the middle (`/EPDF:VerticalAlignment` is private too).                                                   |         |              |
+| P5  | `comments-m6__ctrl-s.pdf`            | The Times text box is **locked** (cannot be moved or deleted until unlocked) and shows as **Marked** (Acrobat: checkmark / "Marked"; the other editor: Marked state).                                                                       |         |              |
+| P6  | `comments-m6__ctrl-s.pdf`            | The square with Printable off is on screen but not in print preview.                                                                                                                                                                        |         |              |
+| P7  | `comments-m6__ctrl-s.pdf`            | The paperclip opens / saves `calc.csv` (2 lines: `tag,size`, `P-101,DN150`); it is listed in the viewer's attachments.                                                                                                                      |         |              |
+| P8  | `flattened__ctrl-s.pdf`              | The four flattened comments are part of the page (not in the comments list, not selectable); the link, the redaction mark, the locked and the hidden comment are still annotations.                                                         |         |              |
+| P9  | `bookmarks__ctrl-s.pdf`              | The bookmark tree matches the table above; "Section 2 (new)" is blue and bold and goes to page 2 at Fit Width; "Website — Δ" shows the Δ and still opens the web link; nothing asks to run a script.                                        |         |              |
+| P10 | `forms__ctrl-s.pdf`                  | Five fields fill: text, check box, the two radio buttons (one excludes the other), the dropdown's three items, the list box's three items. Hovering shows the tooltips.                                                                     |         |              |
+| P11 | `forms__ctrl-s.pdf`                  | Tab goes customer → check box → radios → dropdown → list box (row order). The text field is marked required.                                                                                                                                |         |              |
+| P12 | `forms__ctrl-s.pdf`                  | Fill something, then the viewer's Reset Form: the text field shows "n/a" again. No error about a missing or empty field (a deleted radio button and the radio group's join leave entries in `/AcroForm /Fields`, M6-14).                    |         |              |
+| P13 | `forms-filled__ctrl-s.pdf`           | Opens with Ada Lovelace, the check box checked, Choice2 and DN80.                                                                                                                                                                           |         |              |
+| P14 | `signatures__ctrl-s.pdf`             | The image signature is part of the page (not a comment). The typed signature, the initials and the drawn signature show, and move and resize as comments (subject "Signature"); they print.                                                 |         |              |
+| P15 | `protected-open-and-permissions.pdf` | Asks for a password; wrong password refused. `open-pw`: Document Properties → Security shows AES-256 and Printing / Copying / Changing **not allowed**, comments and form filling allowed. `perm-pw` opens with no restrictions.            |         |              |
+| P16 | `protected-permissions-only.pdf`     | Opens without a password; only printing is allowed (no comments, form filling, copying). The viewer's own "remove security" asks for `perm-pw`.                                                                                             |         |              |
+| P17 | `protected-open-only.pdf`            | Asks for `open-pw`; then nothing is restricted.                                                                                                                                                                                             |         |              |
+| P18 | `unprotected.pdf`                    | Opens without a password; Security: no security; the comments and bookmarks of the original are there.                                                                                                                                      |         |              |
+| P19 | `ocr-english__ctrl-s.pdf`            | (M5-05) Search "Datasheet": 3 hits (pages 1–3); select a line of the datasheet and copy: the text comes out; the text layer is **invisible** (the page looks like the scan).                                                                |         |              |
 
 ### Q. Theirs → ours
 
@@ -363,12 +363,12 @@ passes `qpdf --check`. Author of everything: "PDFTools Interop". Passwords: open
 3. On a copy of `bookmarks__ctrl-s.pdf`: add a bookmark, rename one, change one's colour. Save.
 4. Open the saved files in PDFTools and record:
 
-| #   | Check                                                                                                                                                                                          | Acrobat | PDF-XChange |
-| --- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------- | ----------- |
-| Q1  | Their filled values show in our fields; their new text field fills here and shows its tooltip; Form → Select Fields lists it in the tab order panel; Ctrl+S then reopen in their viewer: fine. |         |             |
-| Q2  | The square and text box keep what their viewer did (note whether the rotation and middle alignment survived their edit); their attachment opens with Save Attachment… here.                    |         |             |
-| Q3  | The Bookmarks pane shows their changes (title, colour); rename one here, Ctrl+S, reopen in their viewer: nothing of theirs is lost.                                                            |         |             |
-| Q4  | Protect → Password Security on their saved copy of `forms__ctrl-s.pdf` (open password only): their viewer asks for it and opens the file with their comment and field.                         |         |             |
+| #   | Check                                                                                                                                                                                          | Acrobat | Other editor |
+| --- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------- | ------------ |
+| Q1  | Their filled values show in our fields; their new text field fills here and shows its tooltip; Form → Select Fields lists it in the tab order panel; Ctrl+S then reopen in their viewer: fine. |         |              |
+| Q2  | The square and text box keep what their viewer did (note whether the rotation and middle alignment survived their edit); their attachment opens with Save Attachment… here.                    |         |              |
+| Q3  | The Bookmarks pane shows their changes (title, colour); rename one here, Ctrl+S, reopen in their viewer: nothing of theirs is lost.                                                            |         |              |
+| Q4  | Protect → Password Security on their saved copy of `forms__ctrl-s.pdf` (open password only): their viewer asks for it and opens the file with their comment and field.                         |         |              |
 
 ### R. OCR on real scans (M5-05, owner's own files)
 
@@ -376,12 +376,12 @@ These need real scans (an English, a Hindi and a Chinese one) that never enter t
 (rule 13). In PDFTools: Convert → Recognize Text (OCR) with the right language ticked, then
 Ctrl+S, then open the file in each viewer.
 
-| #   | Check                                                                                                                       | Acrobat | PDF-XChange |
-| --- | --------------------------------------------------------------------------------------------------------------------------- | ------- | ----------- |
-| R1  | English scan: words are found by search and select line by line; the layer is invisible; the page looks unchanged.          |         |             |
-| R2  | Hindi scan: copied words paste as Devanagari (not boxes or Latin letters); search finds a Hindi word.                       |         |             |
-| R3  | Chinese (Simplified) scan: copied text pastes as Chinese characters; search finds a two-character word.                     |         |             |
-| R4  | In PDFTools after reopening: Quick Find finds the same words; a second OCR run skips the recognized pages ("already text"). |         |             |
+| #   | Check                                                                                                                       | Acrobat | Other editor |
+| --- | --------------------------------------------------------------------------------------------------------------------------- | ------- | ------------ |
+| R1  | English scan: words are found by search and select line by line; the layer is invisible; the page looks unchanged.          |         |              |
+| R2  | Hindi scan: copied words paste as Devanagari (not boxes or Latin letters); search finds a Hindi word.                       |         |              |
+| R3  | Chinese (Simplified) scan: copied text pastes as Chinese characters; search finds a two-character word.                     |         |              |
+| R4  | In PDFTools after reopening: Quick Find finds the same words; a second OCR run skips the recognized pages ("already text"). |         |              |
 
 ## M7 — sticky note pop-ups (D-44), text and border colours (ADR-024), default styles (M7-07), pasted images (D-45), text comment editing (D-43)
 
@@ -398,11 +398,11 @@ no text. Fixed; please confirm S1 shows the text.)
 1. Open the file in each viewer for S1 and S2.
 2. In each viewer, make a text box of their own with blue text on a red border. Save.
 
-| #   | Check                                                                                                                                 | Acrobat | PDF-XChange |
-| --- | ------------------------------------------------------------------------------------------------------------------------------------- | ------- | ----------- |
-| S1  | Ours open in their viewer: the text is blue and the border (and the callout's line) red, in both comments.                            |         |             |
-| S2  | Edit our text box's text in their viewer and save: it is still blue on red there, and again after reopening in Triya PDF.             |         |             |
-| S3  | Their own text box opens in Triya PDF with blue text on a red border; its Properties pane shows Text color Blue and Border color Red. |         |             |
+| #   | Check                                                                                                                                 | Acrobat | Other editor |
+| --- | ------------------------------------------------------------------------------------------------------------------------------------- | ------- | ------------ |
+| S1  | Ours open in their viewer: the text is blue and the border (and the callout's line) red, in both comments.                            |         |              |
+| S2  | Edit our text box's text in their viewer and save: it is still blue on red there, and again after reopening in Triya PDF.             |         |              |
+| S3  | Their own text box opens in Triya PDF with blue text on a red border; its Properties pane shows Text color Blue and Border color Red. |         |              |
 
 ### T. Sticky note pop-ups (M7-06, D-44, spike S23)
 
@@ -410,12 +410,12 @@ File: `e2e/fixtures/self-made/m7-interop/sticky-note-popups__ctrl-s.pdf` (made b
 saved with Ctrl+S): a note with three lines, a reply and the status Accepted, its window moved
 and left open; a second note, "Closed note", its window closed.
 
-| #   | Check                                                                                                                                    | Acrobat | PDF-XChange |
-| --- | ---------------------------------------------------------------------------------------------------------------------------------------- | ------- | ----------- |
-| T1  | Opened in their viewer: the first note's pop-up is open, below-right of the note where Triya PDF had it, with the three lines.           |         |             |
-| T2  | The second note's pop-up is closed; opening it shows "Closed note". The reply and the Accepted status show in their comments list.       |         |             |
-| T3  | Move a pop-up, type a fourth line, close the other one and save; reopen in Triya PDF: the windows are where and as they were left there. |         |             |
-| T4  | A note of their own with a multi-line pop-up left open: Triya PDF opens its window at the same place, with every line.                   |         |             |
+| #   | Check                                                                                                                                    | Acrobat | Other editor |
+| --- | ---------------------------------------------------------------------------------------------------------------------------------------- | ------- | ------------ |
+| T1  | Opened in their viewer: the first note's pop-up is open, below-right of the note where Triya PDF had it, with the three lines.           |         |              |
+| T2  | The second note's pop-up is closed; opening it shows "Closed note". The reply and the Accepted status show in their comments list.       |         |              |
+| T3  | Move a pop-up, type a fourth line, close the other one and save; reopen in Triya PDF: the windows are where and as they were left there. |         |              |
+| T4  | A note of their own with a multi-line pop-up left open: Triya PDF opens its window at the same place, with every line.                   |         |              |
 
 ### U. Default styles: 50 % highlights, black Courier typewriter (M7-07, D-37 amendment)
 
@@ -423,11 +423,11 @@ File: `e2e/fixtures/self-made/m7-interop/default-styles__ctrl-s.pdf` (made by th
 shipped defaults and saved with Ctrl+S): a Highlight over "Page 1", a Highlight Area, a Free
 Highlight stroke and a typewriter "Typewriter: black Courier".
 
-| #   | Check                                                                                                                                             | Acrobat | PDF-XChange |
-| --- | ------------------------------------------------------------------------------------------------------------------------------------------------- | ------- | ----------- |
-| U1  | Opened in their viewer: the three highlights are yellow and see-through (opacity 50 %, as their Properties show); "Page 1" is easy to read.       |         |             |
-| U2  | The typewriter text is black Courier, 10 pt; editing it there keeps Courier and black.                                                            |         |             |
-| U3  | A new Highlight, Highlight Area and Free Highlight in Triya PDF look the same as in the file; Reset All in the Comment Styles Palette keeps 50 %. |         |             |
+| #   | Check                                                                                                                                             | Acrobat | Other editor |
+| --- | ------------------------------------------------------------------------------------------------------------------------------------------------- | ------- | ------------ |
+| U1  | Opened in their viewer: the three highlights are yellow and see-through (opacity 50 %, as their Properties show); "Page 1" is easy to read.       |         |              |
+| U2  | The typewriter text is black Courier, 10 pt; editing it there keeps Courier and black.                                                            |         |              |
+| U3  | A new Highlight, Highlight Area and Free Highlight in Triya PDF look the same as in the file; Reset All in the Comment Styles Palette keeps 50 %. |         |              |
 
 ### V. A pasted image (M7-08, D-45)
 
@@ -435,10 +435,10 @@ File: `e2e/fixtures/self-made/m7-interop/paste-image__ctrl-s.pdf` (made by the a
 with Ctrl+S): a 4000 × 3000 picture (blue with a yellow block) pasted with Ctrl+V onto an A4
 page, scaled down to 90 % of the page's width.
 
-| #   | Check                                                                                                                                                                                                                        | Acrobat | PDF-XChange |
-| --- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------- | ----------- |
-| V1  | Opened in their viewer: the picture shows inside the page's margins, its proportions kept, and is listed as a stamp ("Pasted image") that can be moved and resized.                                                          |         |             |
-| V2  | In Triya PDF, a screenshot taken with the system's tool and pasted with Ctrl+V, and an image copied in a browser and pasted from the right-click menu, both land fitted on the page; after Ctrl+S both show in their viewer. |         |             |
+| #   | Check                                                                                                                                                                                                                        | Acrobat | Other editor |
+| --- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------- | ------------ |
+| V1  | Opened in their viewer: the picture shows inside the page's margins, its proportions kept, and is listed as a stamp ("Pasted image") that can be moved and resized.                                                          |         |              |
+| V2  | In Triya PDF, a screenshot taken with the system's tool and pasted with Ctrl+V, and an image copied in a browser and pasted from the right-click menu, both land fitted on the page; after Ctrl+S both show in their viewer. |         |              |
 
 ### W. Text comments edited and moved (M7-02 … M7-04, D-43; B15)
 
@@ -447,11 +447,11 @@ with Esc, a typewriter, and a callout drawn in one drag and left with a click el
 moved by a drag on its box, then edited again with a double-click (", moved" added). The
 typewriter grew to hold its one line (B15).
 
-| #   | Check                                                                                                                                                               | Acrobat | PDF-XChange |
-| --- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------- | ----------- |
-| W1  | Opened in their viewer: the three comments show their full, edited text ("…, moved") where they were moved to; the callout's arrow still points where it was drawn. |         |             |
-| W2  | The typewriter reads "Typewriter: black Courier, moved" on one line, black Courier, nothing cut off; the text box and callout are red, 10 pt.                       |         |             |
-| W3  | Edit each one's text there and save; reopened in Triya PDF, the new text shows, and a double-click edits it with the caret where you clicked.                       |         |             |
+| #   | Check                                                                                                                                                               | Acrobat | Other editor |
+| --- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------- | ------------ |
+| W1  | Opened in their viewer: the three comments show their full, edited text ("…, moved") where they were moved to; the callout's arrow still points where it was drawn. |         |              |
+| W2  | The typewriter reads "Typewriter: black Courier, moved" on one line, black Courier, nothing cut off; the text box and callout are red, 10 pt.                       |         |              |
+| W3  | Edit each one's text there and save; reopened in Triya PDF, the new text shows, and a double-click edits it with the caret where you clicked.                       |         |              |
 
 ## M11 — fonts in text comments (D-52), crop, split and images to PDF (D-55; [M11 acceptance](../../docs/acceptance/M11.md))
 
@@ -468,27 +468,27 @@ Serif 4, JetBrains Mono, Caveat, Noto Sans Devanagari (नमस्ते: प�
 (中文：二层结构计算), and a line of symbols (⌀ ± ° Ω ² Δ µ) in Carlito. Each line names its font.
 (The S26 sample passed this check on 2026-11-17; this is the shipped library.)
 
-| #   | Check                                                                                                                                                    | Acrobat | PDF-XChange |
-| --- | -------------------------------------------------------------------------------------------------------------------------------------------------------- | ------- | ----------- |
-| X1  | Each line shows in the face it names (Caveat handwritten, JetBrains Mono monospaced, Barlow Condensed narrow), with no missing-font prompt or boxes.     |         |             |
-| X2  | The Hindi line's letters join as in Triya PDF (the conjuncts in स्ते and शो), the Chinese line shows its characters, and the X2 line shows every symbol. |         |             |
-| X3  | Their comments list shows each comment's text as written (the Hindi and Chinese too).                                                                    |         |             |
-| X4  | Edit the Carlito comment's text there and save; reopened in Triya PDF, the new text shows (in Carlito, or in the font their viewer chose: note which).   |         |             |
+| #   | Check                                                                                                                                                    | Acrobat | Other editor |
+| --- | -------------------------------------------------------------------------------------------------------------------------------------------------------- | ------- | ------------ |
+| X1  | Each line shows in the face it names (Caveat handwritten, JetBrains Mono monospaced, Barlow Condensed narrow), with no missing-font prompt or boxes.     |         |              |
+| X2  | The Hindi line's letters join as in Triya PDF (the conjuncts in स्ते and शो), the Chinese line shows its characters, and the X2 line shows every symbol. |         |              |
+| X3  | Their comments list shows each comment's text as written (the Hindi and Chinese too).                                                                    |         |              |
+| X4  | Edit the Carlito comment's text there and save; reopened in Triya PDF, the new text shows (in Carlito, or in the font their viewer chose: note which).   |         |              |
 
 ### Z. Cropped pages (M11-08·O9, D-55)
 
 File: `cropped__ctrl-s.pdf`: three pages, each cropped with **Crop Pages** by 20 mm top and
 bottom and 10 mm left and right (A4 becomes 189.9 × 257 mm).
 
-| #   | Check                                                                                                                                          | Acrobat | PDF-XChange |
-| --- | ---------------------------------------------------------------------------------------------------------------------------------------------- | ------- | ----------- |
-| Z1  | Each page shows cropped, and the page size in their document properties is 189.9 × 257 mm (about 7.48 × 10.13 in).                             |         |             |
-| Z2  | Printing (or Print to PDF) from their viewer prints the cropped area only.                                                                     |         |             |
-| Z3  | Their own crop of a page (Acrobat: Edit PDF › Crop Pages; PDF-XChange: Organize › Crop) opens cropped in Triya PDF, and Remove Crop undoes it. |         |             |
+| #   | Check                                                                                                                                                | Acrobat | Other editor |
+| --- | ---------------------------------------------------------------------------------------------------------------------------------------------------- | ------- | ------------ |
+| Z1  | Each page shows cropped, and the page size in their document properties is 189.9 × 257 mm (about 7.48 × 10.13 in).                                   |         |              |
+| Z2  | Printing (or Print to PDF) from their viewer prints the cropped area only.                                                                           |         |              |
+| Z3  | Their own crop of a page (Acrobat: Edit PDF › Crop Pages; the other editor: its crop command) opens cropped in Triya PDF, and Remove Crop undoes it. |         |              |
 
 ### AA. Split Document and Images to PDF (M11-08·O7, O8; your own files)
 
-| #   | Check                                                                                                                                                                   | Acrobat | PDF-XChange |
-| --- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------- | ----------- |
-| AA1 | **Organize › Split Document** on a real drawing set, by top-level bookmarks: each part opens in their viewer with the right pages, in order, and its comments.          |         |             |
-| AA2 | **Images to PDF** from phone photos (some taken with the phone turned) and a scan, A4: in their viewer every photo is upright, sharp and inside the page, one per page. |         |             |
+| #   | Check                                                                                                                                                                   | Acrobat | Other editor |
+| --- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------- | ------------ |
+| AA1 | **Organize › Split Document** on a real drawing set, by top-level bookmarks: each part opens in their viewer with the right pages, in order, and its comments.          |         |              |
+| AA2 | **Images to PDF** from phone photos (some taken with the phone turned) and a scan, A4: in their viewer every photo is upright, sharp and inside the page, one per page. |         |              |

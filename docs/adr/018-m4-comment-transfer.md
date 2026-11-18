@@ -17,7 +17,7 @@
 
 In EPC document control, comments made on one revision of a document (Rev A) are routinely carried
 to the next revision (Rev B) so that the reviewer can check whether each one was addressed.
-PDF-XChange Editor has a dedicated **Import** button in Comment → Manage Comments for this, and
+a desktop PDF editor has a dedicated **Import** button in Comment → Manage Comments for this, and
 lets comments be copied and pasted from the Comments pane; Acrobat has "Import Comments".
 
 ARCHITECTURE.md Rev 0.4 has only the **export** half:
@@ -35,7 +35,7 @@ The owner asked (2026-09-29, M4 plan review) for three routes in M4:
    tabs.
 
 Constraints: annotations stay standard PDF objects with appearance streams that round-trip with
-Acrobat Reader and PDF-XChange (D-03, rule 6); no custom appearance-stream generation (ADR-001 B7);
+Acrobat Reader and a second desktop PDF editor (D-03, rule 6); no custom appearance-stream generation (ADR-001 B7);
 Ctrl+S stays one narrow incremental revision (ADR-005, rule 7); no parsing or file building on the
 main thread (rule 1); permissions are honoured in both documents (D-19, rule 9); one undo step per
 user action (§7.1).
@@ -130,7 +130,7 @@ and cannot yet add new objects that the Render worker's PDFium instance knows ab
   qpdf cross-checks as in M3-03.
 - **Save/verify:** ADR-005's verification must cover imported annotations (compare the target's
   annotation set after save with the Render worker's state).
-- **Interop:** the M4 pack adds Rev A → Rev B transfers of Acrobat- and PDF-XChange-made comments,
+- **Interop:** the M4 pack adds Rev A → Rev B transfers of Acrobat- and other-editor-made comments,
   checked in both viewers.
 - **Not solved here:** telling the reviewer whether a carried-over comment still points at the
   right content in the new revision. That is revision compare, **parked** (§14, rule 14).
@@ -236,7 +236,7 @@ checkpoint per page for cancel and progress, rule 2); a stream writer and
 folded into the next save and into recovery snapshots; the import verification of finding 4; JSON
 import by re-creation plus object-layer patches for `/Measure`, `/IT`, `/LL`, `/LLE`, `/Cap` (keys
 the patch layer already allows) and `/RT` (to be added), accepting that `/RC` and `/DS` are
-regenerated. **Owner check (M4-22):** real Acrobat- and PDF-XChange-made Rev A files, transferred
+regenerated. **Owner check (M4-22):** real Acrobat- and other-editor-made Rev A files, transferred
 and opened in both viewers — the spike only imitates their structures.
 
 ## Implementation notes (M4-20, M4-21)

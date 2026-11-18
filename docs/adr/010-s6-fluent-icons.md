@@ -28,8 +28,9 @@ measure the bundle cost. See
     Protect and Help;
   - the §5 left-rail panes and status bar.
 
-  It is built from §5–§8. Out-of-scope commands are omitted (ADR-001 B6). `docs/ui-reference/`
-  was used for grouping only, and no PDF-XChange artwork is referenced (rule 15).
+  It is built from §5–§8. Out-of-scope commands are omitted (ADR-001 B6). Layout
+  references were used for grouping only (removed from the repository in V1, D-57), and no other
+  products' artwork is referenced (rule 15).
 
 - **Catalog:** `catalog.ts` reads the installed package's per-icon type files. It found 2,897 base
   icons.
@@ -119,7 +120,7 @@ measure the bundle cost. See
    icon can show the current annotation colour.
    - For: 100 % coverage and a consistent look; High Contrast and dark themes work for free; not
      deprecated.
-   - Against: a more monochrome look than PDF-XChange or Office.
+   - Against: a more monochrome look than desktop editors or Office.
 4. **Option 3 plus two-tone accents.** Layer the Filled glyph in an accent token at low opacity
    under the Regular glyph, as the package README describes, on a few large buttons.
    - For: some warmth without Color icons.

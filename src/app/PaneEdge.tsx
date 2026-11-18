@@ -23,7 +23,7 @@ const COMMAND: Record<PaneSide, string> = {
 };
 
 /**
- * A pane's edge strip (M11-10, ADR-028 D-56; PDF-XChange-style, layout only): a thin bar on
+ * A pane's edge strip (M11-10, ADR-028 D-56; desktop-editor-style, layout only): a thin bar on
  * the pane's inner edge, always there, holding the pane's splitter while it is shown and a
  * chevron that hides or shows it. The chevron runs the same command as the ribbon and the
  * rail (View › Left Panes, View › Properties Pane), so they always agree; it stays mounted

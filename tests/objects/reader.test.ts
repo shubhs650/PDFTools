@@ -135,7 +135,7 @@ const hasQpdf = spawnSync('qpdf', ['--version']).status === 0;
 const FIXTURE_DIRS = [
   'e2e/fixtures/self-made/s1-interop',
   'e2e/fixtures/self-made/s2-interop',
-  // Public PDFs in corpus/ (whether they stay in git is an open owner decision).
+  // Local test PDFs in the git-ignored corpus/, when present (D-57).
   'corpus',
 ].filter((d) => existsSync(d));
 const fixtures = FIXTURE_DIRS.flatMap((d) =>

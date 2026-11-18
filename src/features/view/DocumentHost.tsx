@@ -54,7 +54,7 @@ const onInitialized = (registry: Parameters<typeof setRegistry>[0]): Promise<voi
     installSelectAfterDraw(registry);
     installCommitGuard(registry);
     // Text comment edits are written on every way out of the editor (M7-02).
-    // … and pressed, dragged or double-clicked like PDF-XChange's (M7-03).
+    // … and pressed, dragged or double-clicked like desktop editors' (M7-03).
     if (!textEditInstalled) {
       installTextEdit();
       installTextPointer();

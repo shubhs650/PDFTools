@@ -6,8 +6,7 @@ coverage
 test-results
 playwright-report
 package-lock.json
-corpus/files
-docs/ui-reference
+corpus
 ARCHITECTURE.md
 CLAUDE.md
 src/ui/icons/fluent.generated.ts

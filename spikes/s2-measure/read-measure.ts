@@ -1,5 +1,5 @@
 // M0-S2: read measurement annotations and scale viewports from any PDF (ours,
-// Acrobat's, PDF-XChange's) into our model, and recompute their values.
+// Acrobat's, other editors') into our model, and recompute their values.
 //
 // CLI (owner runs on files saved by the viewers):
 //   node spikes/s2-measure/read-measure.ts <file.pdf> [--json]

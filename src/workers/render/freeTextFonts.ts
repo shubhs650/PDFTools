@@ -3,10 +3,10 @@
 // own reader knows only Helvetica's `/Helv`: every other standard font came
 // back as Unknown, so a reopened Times or Courier text box showed Helvetica in
 // the Properties pane, and the next edit rewrote it as Helvetica. Acrobat and
-// PDF-XChange write their own short names (`/TiBo`, `/Cour`). Here an Unknown
+// desktop editors write their own short names (`/TiBo`, `/Cour`). Here an Unknown
 // font is looked up by the name in /DA. The appearance stream is not touched.
 // The text colour (ADR-024): EmbedPDF reads it from its own /TextColor, else
-// from /DA, which Acrobat and PDF-XChange use for the border; their text
+// from /DA, which Acrobat and other desktop editors use for the border; their text
 // colour is in /DS (`color:#0000FF`), read here when there is no /TextColor.
 // A library font's family (M11-07) is read from /DS too, as `libraryFont`.
 import { colorFromDefaultStyle, familyFromDefaultStyle } from '../../model/freeTextStyle';
@@ -28,7 +28,7 @@ const FONTS: Readonly<Record<string, number>> = {
   'Times-Italic': 11,
   Symbol: 12,
   ZapfDingbats: 13,
-  // Short resource names (Acrobat, PDF-XChange, PDFium's own /Helv).
+  // Short resource names (Acrobat, other desktop editors, PDFium's own /Helv).
   Cour: 0,
   CoBo: 1,
   CoBO: 2,

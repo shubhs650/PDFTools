@@ -177,7 +177,7 @@ export interface CalloutPlacement {
 }
 
 /**
- * A callout drawn with one drag (M7-03, ADR-023 D-43 f; the PDF-XChange
+ * A callout drawn with one drag (M7-03, ADR-023 D-43 f; the desktop editors
  * gesture): the arrow tip where the drag started, the text box beside where it
  * ended (on the far side from the tip, its middle at the pointer's height),
  * kept on the page, and the knee placed automatically a short way before the

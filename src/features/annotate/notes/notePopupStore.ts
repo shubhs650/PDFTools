@@ -114,7 +114,7 @@ const WORK_COPY_WAIT_MS = 10_000;
 
 /**
  * Reads a page's pop-ups once per document: their rects, and the windows the
- * file has open (Acrobat and PDF-XChange save /Open) open here too.
+ * file has open (Acrobat and other desktop editors save /Open) open here too.
  */
 export function readPagePopups(docId: string, pageIndex: number): Promise<void> {
   if (popupsOf(notePopupStore.getState(), docId).read[pageIndex]) return Promise.resolve();

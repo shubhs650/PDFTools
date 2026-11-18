@@ -714,7 +714,7 @@ describe('S26 route R2: HarfBuzz shaping and subsetting, our appearance stream',
 });
 
 describe('S26: the owner interop file', () => {
-  // out/s26-interop.pdf (and a flattened copy): every case on one page, for Acrobat Reader and PDF-XChange.
+  // out/s26-interop.pdf (and a flattened copy): every case on one page, for Acrobat Reader and a second desktop PDF editor.
   it('writes the sample', async () => {
     const original = simplePdf(1);
     const doc = await open(original);
@@ -951,7 +951,7 @@ describe('S26: other readers of the saved files (local only)', () => {
       writeFileSync(join(OUT, 'other-readers.json'), JSON.stringify(report, null, 2));
       // Findings (ADR-028, S26): the CFF font ('cjk') is not drawn whole by poppler or MuPDF, so it is
       // not used; MuPDF 1.23 ignores /ActualText, so its Devanagari text has gaps (Acrobat,
-      // PDF-XChange, PDFium and poppler use it).
+      // desktop editors, PDFium and poppler use it).
       for (const [id, r] of Object.entries(report)) {
         const rr = r as { popText: boolean; muText: boolean; popInk: number; muInk: number };
         if (id === 'cjk') continue;

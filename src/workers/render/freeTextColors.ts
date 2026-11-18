@@ -5,7 +5,7 @@
 // but in the editor. After EmbedPDF has created or updated a FreeText and
 // PDFium has generated its appearance, this:
 //   - writes /DS (font, size, alignment and `color:` the text colour), where
-//     Acrobat and PDF-XChange read the text colour;
+//     Acrobat and other desktop editors read the text colour;
 //   - when the comment has a border of another colour, changes only the
 //     fill colour operator inside the appearance's `BT … ET` blocks to the
 //     text colour, and sets that back as the appearance;

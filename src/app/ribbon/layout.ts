@@ -97,7 +97,7 @@ export function ribbonLayout(
 /**
  * A group's buttons in cells: each large button is a cell of its own; a run of
  * small buttons is one cell that flows down three rows, column by column (the
- * Office/PDF-XChange ribbon density), so a group mixing one large and many
+ * Office/desktop-editor ribbon density), so a group mixing one large and many
  * small buttons never becomes a single long row (preview review UI01).
  */
 export function groupCells(commands: readonly CommandDef[]): CommandDef[][] {

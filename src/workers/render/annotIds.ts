@@ -147,7 +147,7 @@ const TEXT_MARKUP_SUBTYPES = new Set([9, 10, 11, 12]);
 
 /**
  * EmbedPDF writes /IT for most annotations but not for text markups; Replace
- * Text's StrikeOut needs /IT /StrikeOutTextEdit (as Acrobat and PDF-XChange
+ * Text's StrikeOut needs /IT /StrikeOutTextEdit (as Acrobat and other desktop editors
  * write it, M3-08). Called after the engine made or changed the annotation.
  */
 export function writeMarkupIntent(

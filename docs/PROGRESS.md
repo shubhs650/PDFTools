@@ -28,7 +28,7 @@ interop is in the M6 pack (CHECKLIST §M6 R1–R4). Rev 0 (M0–M4) is complete 
   5 (Find bar follows the selected tab), 6 (snap marker cleared), 9 (all-documents search skips a
   closed document), 10 (message for a bookmark to a deleted page), 12 (Advanced results keep the
   Find bar's query), 13 (message when the same file is already open). Bug 7 was already fixed in
-  M7-04; bug 11 kept as PDF-XChange does (owner's call). Each fix has a unit or e2e test; see the
+  M7-04; bug 11 kept as desktop editors do (owner's call). Each fix has a unit or e2e test; see the
   Fixes table in [docs/acceptance/pre-release-bugs.md](acceptance/pre-release-bugs.md). What's
   new entry `beta-m11-fixes`.
 - **Session 95 — pre-release bug audit (findings only, nothing fixed).** The owner asked for a
@@ -490,7 +490,7 @@ title>.pdf` (title made safe for file systems, 80 characters, numbers padded so 
   accepted route R2 and the measured library on 2026-11-17** (no trimming).
 
 - **Session 77 — M11-10 panes (D-56, ADR-028).** The owner's two items: the right Properties
-  pane could not be resized, and each side pane gets a PDF-XChange-style arrow that hides or
+  pane could not be resized, and each side pane gets a desktop-editor-style arrow that hides or
   shows it. **Splitter:** one `PaneSplitter` (`src/app/PaneSplitter.tsx`) for both panes, with
   the arithmetic in the pure `src/app/paneSize.ts` (`clampPaneWidth`, `widthForKey`,
   `widthForDrag`; the Properties splitter is on the pane's left edge, so ArrowLeft widens it);
@@ -1292,7 +1292,7 @@ title>.pdf` (title made safe for file systems, 80 characters, numbers padded so 
 - **Session 47 — M7-06 sticky note pop-up windows (ADR-023 D-44; review 4c; bug B12; spike
   S23).** Spike S23 (`spikes/s23-popup/`, runs with the unit tests, needs qpdf) **works**: a
   note's window is saved as a standard `/Popup` (`/Parent`, `/Rect`, `/Open`; the note's
-  `/Popup`), as Acrobat and PDF-XChange write it, in one narrow revision, also in AES-256 and
+  `/Popup`), as Acrobat and other desktop editors write it, in one narrow revision, also in AES-256 and
   RC4-128 files; files from those viewers keep their pop-ups through our edits and saves; PDFium
   draws no pop-up; EmbedPDF left an orphan pop-up when a note was deleted, so ours goes first
   (evidence in ADR-023). Render worker `notePopups.ts` (direct PDFium, ADR-001 B14): list a
@@ -1326,7 +1326,7 @@ title>.pdf` (title made safe for file systems, 80 characters, numbers padded so 
   keeping interop. Spike S25 (`spikes/s25-freetext-colors/`, runs with the unit tests) showed
   PDFium draws the text in `/DA`'s colour (EmbedPDF's border colour) and ignores EmbedPDF's
   `/TextColor`; ADR-024 accepted the same day, ARCHITECTURE.md Rev 0.12 (§7.1's second
-  exception to "no custom appearance streams"). Storage as Acrobat and PDF-XChange: `/DA` the
+  exception to "no custom appearance streams"). Storage as Acrobat and other desktop editors: `/DA` the
   border, `/DS` `color:` the text. `freeTextColors.ts` (Render worker, after each FreeText create
   and update): writes `/DS`; with two colours, exports PDFium's appearance as a one-page document,
   changes only the fill colour operator inside each `BT … ET` (`recolorText` in
@@ -1403,7 +1403,7 @@ title>.pdf` (title made safe for file systems, 80 characters, numbers padded so 
   objects it sent; when it ends, a comment whose object changed meanwhile is marked changed again
   (the plugin's own move/patch action), so its commit loop writes it and saves wait for it.
   **B14:** a click inside a hollow rectangle selects nothing, its border does, a filled one
-  anywhere — as PDF-XChange (owner to confirm), so unchanged. Tests:
+  anywhere — as desktop editors (owner to confirm), so unchanged. Tests:
   `e2e/comment-selection.spec.ts` (9: marquee touch rule and the group box, starting over text,
   Select vs Select Text, form fields, Shift/Ctrl, Ctrl+A, Esc, group drag/nudge/delete undo and
   saved /Rect, ten quick nudges saved, new rectangle selected and the tool on, rotated view,
@@ -1500,7 +1500,7 @@ title>.pdf` (title made safe for file systems, 80 characters, numbers padded so 
 
 - **Session 39 — M6-17 Comment Styles Palette window (D-37; owner request 2026-11-03; plan in
   [M6.md](plan/M6.md#m6-17--comment-styles-palette-window-post-m6-owner-request-2026-11-03)).**
-  The dialog is now a PDF-XChange-style window (`palette/CommentStylesDialog.tsx`): grouped
+  The dialog is now a desktop-editor-style window (`palette/CommentStylesDialog.tsx`): grouped
   tool list with Reset All; Current Style + Custom Styles tiles (previews drawn from the style
   over the current one); the selected tile's properties in the Properties pane's
   `StyleAndText` rows (`palette/styleSample.ts` builds the object they read, with a fallback
@@ -2076,7 +2076,7 @@ rel="noopener noreferrer">`; the commands `app.home` / `app.reportIssue` open th
   more comment tools), magnet snapping toggle; B — Comments pane (filters crowd out comments; card
   list with selection sync), right-click menus everywhere with **copy/paste of comments from the
   page (non-negotiable)**, a property grid, a style palette, red/10 pt/1 pt defaults, a
-  PDF-XChange-like Comment ribbon with Select Comments, Attach File and Flatten; C — sign document,
+  desktop-editor-like Comment ribbon with Select Comments, Attach File and Flatten; C — sign document,
   password protection, form field creation. Checked against EmbedPDF 2.15.1 (the pinned stable):
   `plugin-form` (five field types), `plugin-signature` (visual), engine
   `setDocumentEncryption`/`removeEncryption`, `flattenAnnotation`, `setBookmarks` — no 3.0 upgrade
@@ -3029,7 +3029,7 @@ rel="noopener noreferrer">`; the commands `app.home` / `app.reportIssue` open th
 - **M5 OCR (session 20):** M5-01 … M5-04 done on the agent side on branch `m5/ocr`, for the
   next PR. [ADR-020](adr/020-m5-ocr.md) accepted with amendments; ARCHITECTURE.md Rev 0.8
   applied. Open: M5-05 (acceptance table, interop pack §M5 — a file recognized here searchable
-  and selectable in Acrobat Reader and PDF-XChange, a Hindi and a Chinese scan among them; their
+  and selectable in Acrobat Reader and a second desktop PDF editor, a Hindi and a Chinese scan among them; their
   OCR output searchable here).
 - **M3 done on the agent side (session 17):** M3-16 … M3-20 as one commit each on
   `claude/m3-tasks-16-20-vdqo8q`, merged into `main` as PR #47. Waiting on the owner pack
@@ -3223,7 +3223,7 @@ rel="noopener noreferrer">`; the commands `app.home` / `app.reportIssue` open th
   (fonts installed on this computer), M11-09 (acceptance). **M11 complete on the agent side.**
 - **Owner (M11):** the owner pack in [docs/acceptance/M11.md](acceptance/M11.md) §6: CHECKLIST
   §M11 X (font library), Y (fonts on your computer), Z (crop), AA (split, images to PDF) in
-  Acrobat Reader and PDF-XChange; decide whether the font list may list your computer's fonts
+  Acrobat Reader and a second desktop PDF editor; decide whether the font list may list your computer's fonts
   again at start-up without a click (O5). The S26 interop check passed (owner, 2026-11-17).
 - **Owner (M10):** done — the owner closed M10 on 2026-11-17.
 - **Owner (M9):** try Help on the deployed beta (F1 on a few tabs and dialogs, search, print,
@@ -3231,7 +3231,7 @@ rel="noopener noreferrer">`; the commands `app.home` / `app.reportIssue` open th
 - **Agent:** the queued task (owner, 2026-11-05), in its own thread: make comment export and
   import round-trip every property as XFDF does, pop-ups (`/Rect`, `/Open`) included.
 - **Owner (M7 interop pack):** [docs/acceptance/M7.md](acceptance/M7.md) §5 — CHECKLIST §M7
-  S1–S3, T1–T4, U1–U3, V1–V2 and W1–W3 in Acrobat Reader and PDF-XChange with the files in
+  S1–S3, T1–T4, U1–U3, V1–V2 and W1–W3 in Acrobat Reader and a second desktop PDF editor with the files in
   `e2e/fixtures/self-made/m7-interop/`; spot-check the dark theme, a long typewriter line and
   Help on the deployed beta.
 - **Owner (M6 interop pack):** done — the owner ran the M6 interop check on 2026-11-03 and
@@ -3241,7 +3241,7 @@ rel="noopener noreferrer">`; the commands `app.home` / `app.reportIssue` open th
    recognition quality could not be checked in the container (no Devanagari font to make a
    fixture). M5-05's agent side (interop file `ocr-english__ctrl-s.pdf`) is done in M6-15.
 1. **Owner:** the M3 owner pack in [docs/acceptance/M3.md](acceptance/M3.md) §4 — interop §M3
-   (L/M) and the still-open §D/§F in Acrobat Reader and PDF-XChange (they decide ADR-007
+   (L/M) and the still-open §D/§F in Acrobat Reader and a second desktop PDF editor (they decide ADR-007
    decisions 2 and 3: the grouped measurement label and viewport semantics), snapping on the local
    P&ID and CAD drawings (`npm run owner:timings`), the CRS in Excel.
 2. **Owner:** the M4 owner pack in [docs/acceptance/M4.md](acceptance/M4.md) §4 (interop §M4,
@@ -3310,7 +3310,7 @@ rel="noopener noreferrer">`; the commands `app.home` / `app.reportIssue` open th
 - **Comment transfer (M4-20/21):** JSON-imported measurements come in as plain markups (v1 carries
   the value, not `/Measure`; ADR-018's object-layer patches for JSON are not built yet — importing
   from the PDF keeps them); no context menu for Copy/Paste yet (ribbon and keys only); the owner
-  check with real Acrobat/PDF-XChange Rev A files is in the M4-22 pack.
+  check with real Acrobat and desktop-editor Rev A files is in the M4-22 pack.
 
 - **Page operations, deferred parts of ADR-016 decision 7 (M4-09):** after deleting pages, form
   fields whose widgets were all on them stay in `/AcroForm /Fields` (valid PDF; the object layer

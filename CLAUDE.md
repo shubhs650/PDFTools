@@ -1,6 +1,6 @@
 # CLAUDE.md — Triya PDF
 
-You are building **Triya PDF** (formerly PDFTools; `pdf-tools.openengtools.com`, D-41): a free, offline, private, PDF-XChange-style PDF editor PWA for engineers. **`ARCHITECTURE.md` is the source of truth** — read the relevant section before starting any task, and reference decision IDs (D-xx) in commit messages.
+You are building **Triya PDF** (formerly PDFTools; `app.triyapdf.com` and `triya-pdf.openengtools.com`, D-28, D-41): a free, offline, private PDF editor PWA for engineers, with a classic desktop PDF editor layout (ribbon, document tabs, side panes). **`ARCHITECTURE.md` is the source of truth** — read the relevant section before starting any task, and reference decision IDs (D-xx) in commit messages.
 
 ## Non-negotiable rules
 
@@ -8,8 +8,8 @@ You are building **Triya PDF** (formerly PDFTools; `pdf-tools.openengtools.com`,
 2. **Every long job is cancellable and reports progress** (> 300 ms).
 3. **Search runs only on Enter/click.** Never search-as-you-type.
 4. **No network calls** except same-origin update checks and the opt-in `/api/report`. No CDNs at runtime, no analytics SDKs, no telemetry. EmbedPDF font CDN fallback must stay disabled.
-5. **Permissive licenses only** (MIT, Apache-2.0, BSD, ISC). Never add GPL/LGPL/AGPL/SSPL/non-commercial packages. Never copy code from BentoPDF, PyMuPDF, Ghostscript, CoherentPDF or PDF-XChange. Run the license check after adding any dependency. The full allowlist is in `scripts/license-policy.ts` (ADR-002): it also includes OFL-1.1 for fonts, and MPL-2.0 only for dev-only tooling that is never bundled.
-6. **Annotations are standard PDF objects with appearance streams** — they must round-trip with Acrobat Reader and PDF-XChange. No app-private annotation formats.
+5. **Permissive licenses only** (MIT, Apache-2.0, BSD, ISC). Never add GPL/LGPL/AGPL/SSPL/non-commercial packages. Never copy code from BentoPDF, PyMuPDF, Ghostscript, CoherentPDF or any other PDF product. Run the license check after adding any dependency. The full allowlist is in `scripts/license-policy.ts` (ADR-002): it also includes OFL-1.1 for fonts, and MPL-2.0 only for dev-only tooling that is never bundled.
+6. **Annotations are standard PDF objects with appearance streams** — they must round-trip with Acrobat Reader and other desktop PDF editors. No app-private annotation formats.
 7. **Ctrl+S is incremental.** Full rewrite only via Save Optimized or redaction. Never autosave to the user's original file — recovery goes to OPFS only.
 8. **Redaction** always outputs a new, fully rewritten, sanitized file and must pass post-redaction verification before reporting success.
 9. **Honor PDF permission flags.** Never bypass document restrictions.
@@ -18,7 +18,7 @@ You are building **Triya PDF** (formerly PDFTools; `pdf-tools.openengtools.com`,
 12. **Every interactive control is keyboard-reachable with an accessible name.**
 13. **Test data is public or self-made PDFs only.** Never add company or client documents.
 14. **Do not work on revision compare** — parked pending IP clearance.
-15. **Do not copy PDF-XChange icons or artwork.** Use Fluent UI System Icons (Regular; Filled for active states — ADR-010); draw missing icons in the same style.
+15. **Do not copy other PDF products' icons or artwork, and never name another product as the model for the UI** (D-57; a unit test checks). Use Fluent UI System Icons (Regular; Filled for active states — ADR-010); draw missing icons in the same style.
 
 ## Stack
 React + TypeScript (strict) + Vite · Zustand · Radix UI primitives · EmbedPDF headless (`@embedpdf/*`) · PDF Oxide WASM · ExcelJS · docx · remark · PKI.js · i18next · vite-plugin-pwa · Vitest · Playwright · Cloudflare Pages (+ Pages Functions for `/api/report`).
@@ -39,5 +39,4 @@ React + TypeScript (strict) + Vite · Zustand · Radix UI primitives · EmbedPDF
 ## Session protocol
 - At session start: read `docs/PROGRESS.md`, then the current milestone plan in `docs/plan/`.
 - At session end: update `docs/PROGRESS.md` (done / in progress / next / open issues / decisions needed) and commit.
-- UI layout references are in `docs/ui-reference/` (layout only; never copy artwork).
 - Never change `ARCHITECTURE.md` without an approved ADR.

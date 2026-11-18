@@ -54,4 +54,4 @@ your device.
 
 - A text comment has one style for all of its text (no styles for single words).
 - Comments made here are standard PDF objects. We are checking them in Adobe Acrobat Reader and
-  PDF-XChange; if something looks different there, please report it with the Report an Issue on GitHub button at the top right.
+  desktop editors; if something looks different there, please report it with the Report an Issue on GitHub button at the top right.

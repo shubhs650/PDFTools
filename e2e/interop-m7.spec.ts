@@ -18,7 +18,7 @@ import { expect, test } from './support/fixtures.ts';
 // a callout with blue text on a red border, set in the Properties pane. Each
 // file is saved with Ctrl+S, checked with qpdf and reopened here. With
 // M7_INTEROP_OUT=1 they are written to OUT for the owner's run in Acrobat
-// Reader and PDF-XChange. The pack's other §M7 files (sticky note pop-ups,
+// Reader and desktop editors. The pack's other §M7 files (sticky note pop-ups,
 // default styles, a pasted image) are made by their own specs; `npm run
 // owner:interop:m7` runs all of them.
 

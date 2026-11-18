@@ -1,5 +1,5 @@
 // The colour picker (M6-16, beta follow-up): a swatch button that opens a
-// "Standard colors" grid, like PDF-XChange's, with "More colors…" for the
+// "Standard colors" grid, like desktop editors', with "More colors…" for the
 // system's own custom picker. Used wherever the user picks a colour.
 // Keyboard: Enter/Space/ArrowDown open it; arrows move in the grid,
 // Home/End to a row's ends, Enter picks, Esc closes (back to the button).

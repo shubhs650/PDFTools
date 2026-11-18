@@ -446,7 +446,7 @@
           ]
         },
         {
-          "tip": "Comments are standard PDF comments: they show in Adobe Acrobat Reader, PDF-XChange and other PDF viewers."
+          "tip": "Comments are standard PDF comments: they show in Adobe Acrobat Reader and other PDF viewers."
         }
       ]
     },
@@ -555,7 +555,7 @@
         },
         {
           "list": [
-            "The characters a comment uses are saved in the file with it, so Acrobat Reader, PDF-XChange and other viewers show it exactly, and the text can still be searched and copied there, also after flattening.",
+            "The characters a comment uses are saved in the file with it, so Acrobat Reader and other viewers show it exactly, and the text can still be searched and copied there, also after flattening.",
             "If someone edits the comment in another viewer that does not have the font installed, that viewer draws it again in a font of its own. This is normal for any text comment. Viewing it never changes it.",
             "Form fields keep Helvetica, Times and Courier."
           ]

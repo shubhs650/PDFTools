@@ -1,6 +1,6 @@
 // Spike S25 (M7 follow-up to M7-05): a text comment (FreeText) with a text
 // colour and a border colour of its own, drawn right by PDFium and stored so
-// Acrobat and PDF-XChange read both. Route under test:
+// Acrobat and other desktop editors read both. Route under test:
 //  1. EmbedPDF writes the comment (border colour in /DA, text colour in its
 //     private /TextColor); PDFium's appearance draws text AND border in /DA's.
 //  2. Ours: PDFium's appearance content (FPDFAnnot_GetAP) with the colour

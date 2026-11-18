@@ -9,7 +9,7 @@ import { tabCardText } from './tabCardText';
 const THUMB_WIDTH = 64;
 
 /**
- * The file tab's hover card (M11-03, ADR-028 D-50), PDF-XChange style: page 1, the
+ * The file tab's hover card (M11-03, ADR-028 D-50), desktop-editor style: page 1, the
  * full file name (wrapped, never cut), where the file came from (browsers never tell
  * a web app its folder), pages · size · modified, and status chips. The tab's
  * accessible description carries the same text (TabStrip).

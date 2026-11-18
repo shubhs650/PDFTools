@@ -18,13 +18,13 @@ any code is written (CLAUDE.md: "Never change ARCHITECTURE.md without an approve
 
 | Observation                                                      | Conflict in Rev 0.8                                                                                                                    |
 | ---------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------- |
-| C3 — add form fields (PDF-XChange Form tab)                      | §1.5 non-goal "form design"; §14 Rev 2+ "form design"; §8 tab list has no **Form** tab                                                 |
+| C3 — add form fields (desktop-editor Form tab)                   | §1.5 non-goal "form design"; §14 Rev 2+ "form design"; §8 tab list has no **Form** tab                                                 |
 | C2 — password protect a PDF                                      | §1.5 non-goal "applying passwords"; §14 Rev 1 item 3                                                                                   |
 | C1 — sign a document                                             | §1.5 non-goal "creating signatures"; §14 Rev 1 item 3                                                                                  |
 | B7 — Attach File comment                                         | §7.1 "No custom appearance-stream generation in Rev 0" (EmbedPDF 2.15.1 cannot create a FileAttachment annotation)                     |
 | A1 — brand, Home link to openengtools.com, GitHub issue button   | §10.2 has only the opt-in `/api/report`; rule 4 / D-22 must stay intact                                                                |
 | A1 — maximize like a video player                                | not specified                                                                                                                          |
-| B7, A2 — PDF-XChange-like Comment and Home ribbons at 1280 px    | §8 minimum width 1280 px; the requested Comment ribbon is ~1,850 px wide at full labels                                                |
+| B7, A2 — desktop-editor-like Comment and Home ribbons at 1280 px | §8 minimum width 1280 px; the requested Comment ribbon is ~1,850 px wide at full labels                                                |
 | B5, B6 — style palette, new default styles                       | §7.1 lists styles only as per-annotation properties; no per-tool defaults or palettes; §10.3 local data list                           |
 | B3 — right-click menus everywhere, copy/paste comments from page | §7.1 already has copy/paste (ADR-018) — needs context menus and a pointer paste position; a new Radix primitive (`react-context-menu`) |
 
@@ -136,7 +136,7 @@ set, page count and annotation count unchanged) before success is reported. The 
 AES-256 (spike S18; if the engine only writes RC4/AES-128, stop and report). Passwords are never
 stored. (b) **Protect → Sign Document**: visual signatures and initials (draw, type, image) via
 `@embedpdf/plugin-signature`, placed as standard Stamp/Ink annotations (round-trip with Acrobat
-and PDF-XChange, D-03), optionally flattened on placement; saved signatures live in IndexedDB on
+and desktop editors, D-03), optionally flattened on placement; saved signatures live in IndexedDB on
 this device only (Privacy page and Clear all local data cover them). The UI says plainly that this
 is **not** a certificate-based digital signature. Certificate signing (PKCS#12, CMS) stays Rev 1
 item 3.
@@ -172,7 +172,7 @@ item 3.
 - Password security and flatten are new content-changing paths: both have verification or undo,
   and both honor permission flags (rules 8, 9 spirit).
 - Interop: forms, flattened comments, attach-file annotations and visual signatures join the
-  owner's Acrobat / PDF-XChange checklist (`e2e/interop/CHECKLIST.md`, D-33).
+  owner's Acrobat / desktop editors checklist (`e2e/interop/CHECKLIST.md`, D-33).
 - Risks: spike results may narrow D-38 (d) and D-40 (a); the plan says what happens then.
 
 ## Evidence

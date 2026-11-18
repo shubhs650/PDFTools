@@ -458,7 +458,7 @@ test('a text box has its own Text color and Border color, saved as Acrobat reads
   expect(saved).toMatchObject({ mode: 'narrow', fellBack: false });
   const tailBytes = Buffer.from(saved.tail, 'base64');
   const tail = tailBytes.toString('latin1');
-  // /DA: the border colour; /DS: the text colour (Acrobat, PDF-XChange).
+  // /DA: the border colour; /DS: the text colour (Acrobat, other desktop editors).
   expect(tail).toMatch(/\/DA\s*\(0\s+0?\.50\d*\s+0\s+rg[^)]*\)/); // Green #008000
   expect(tail).toMatch(/\/DS\s*\([^)]*color:#0000FF[^)]*\)/);
   // The appearance draws the text blue.

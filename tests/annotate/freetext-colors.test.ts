@@ -342,7 +342,7 @@ describe('text and border colours (ADR-024)', () => {
     expect(ft.strokeColor).toBe(RED);
   });
 
-  it('reads the text colour from /DS when there is no /TextColor (Acrobat, PDF-XChange)', async () => {
+  it('reads the text colour from /DS when there is no /TextColor (Acrobat, other desktop editors)', async () => {
     const original = simplePdf(1);
     const doc = await open(original);
     // A file as Acrobat writes it: /DA red (the border), the text colour only in /DS.

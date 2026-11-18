@@ -1,7 +1,7 @@
 // Spike S23 (M7-06, ADR-023 D-44): can a sticky note's pop-up window be saved
 // as a standard /Popup annotation? Real PDFium, the SaveTracker as the Render
 // worker drives it, our reader for what the saved file holds. Questions:
-//  a. Acrobat's and PDF-XChange's /Popup objects (self-made in their layout)
+//  a. Acrobat's and desktop editors' /Popup objects (self-made in their layout)
 //     survive our edits of the note and Ctrl+S, plain and encrypted;
 //  b. we can write a /Popup (/Parent, /Rect, /Open) and the note's /Popup in
 //     the narrow tail, also in encrypted files, and move it later;
@@ -204,15 +204,15 @@ const acrobatPdf = (): Uint8Array =>
     '<< /Type /Annot /Subtype /Popup /Rect [130 600 330 720] /P 3 0 R /Parent 5 0 R /Open true /F 28 >>',
   ]);
 
-/** PDF-XChange's layout: the pop-up first in /Annots, /NM on both, /Open false, no /F. */
-const xchangePdf = (): Uint8Array =>
+/** Another desktop editor's layout: the pop-up first in /Annots, /NM on both, /Open false, no /F. */
+const otherEditorPdf = (): Uint8Array =>
   buildPdf([
     '<< /Type /Catalog /Pages 2 0 R >>',
     '<< /Type /Pages /Kids [3 0 R] /Count 1 >>',
     '<< /Type /Page /Parent 2 0 R /MediaBox [0 0 595 842] /Annots [6 0 R 5 0 R] /Contents 4 0 R >>',
     { dict: '<< >>', stream: '' },
-    '<< /Type /Annot /Subtype /Text /Rect [300 500 320 520] /Name /Note /Contents (x) /T (Bo) /NM (pxce-note) /Popup 6 0 R /C [1 0.8 0] /F 4 /CreationDate (D:20260102) >>',
-    '<< /Type /Annot /Subtype /Popup /Rect [330 380 530 500] /Parent 5 0 R /Open false /NM (pxce-popup) >>',
+    '<< /Type /Annot /Subtype /Text /Rect [300 500 320 520] /Name /Note /Contents (x) /T (Bo) /NM (other-note) /Popup 6 0 R /C [1 0.8 0] /F 4 /CreationDate (D:20260102) >>',
+    '<< /Type /Annot /Subtype /Popup /Rect [330 380 530 500] /Parent 5 0 R /Open false /NM (other-popup) >>',
   ]);
 
 const noteObject = (id: string, contents: string): PdfAnnotationObject =>
@@ -270,7 +270,7 @@ function inked(docId: string, rect: DeviceRectLike, printing: boolean): number {
 describe('S23 a: other viewers’ pop-ups survive our edits and Ctrl+S', () => {
   for (const [name, make, noteId, isOpen] of [
     ['Acrobat', acrobatPdf, 'acro-note', true],
-    ['PDF-XChange', xchangePdf, 'pxce-note', false],
+    ['desktop editors', otherEditorPdf, 'other-note', false],
   ] as const) {
     it(`${name}: edit the note's text and move it; the pop-up keeps /Parent, /Rect, /Open`, async () => {
       const original = make();

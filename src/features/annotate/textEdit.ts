@@ -13,7 +13,7 @@
 // While editing, the editor shows all of its text (M7-12, bug B15): it grows
 // past its box instead of clipping (a typewriter also stops wrapping), and
 // the commit grows the comment to fit in the same undo step
-// (`grownTextGeometry`), as PDF-XChange does while typing.
+// (`grownTextGeometry`), as desktop editors do while typing.
 //
 // The plugin keeps "which comment is being edited" in its page layer's React
 // state and has no call to clear it, so when editing has to end without the
