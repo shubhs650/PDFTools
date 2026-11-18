@@ -1,0 +1,159 @@
+name: Release
+
+# Deploys a version tag to the release domains (ADR-029, D-28):
+# app.triyapdf.com and triya-pdf.openengtools.com, served by the Cloudflare
+# Worker `triya-pdf` (wrangler.jsonc → env.production). `main` keeps deploying
+# only the beta Worker through Cloudflare Workers Builds.
+#
+# - Push a tag vMAJOR.MINOR.PATCH (for example v1.0.0) whose commit is on main
+#   and whose version matches package.json. Creating a release on GitHub with a
+#   new tag pushes it too.
+# - Run workflow with a tag name redeploys that tag (or rolls back to an older one).
+#
+# The deploy job waits in the `production` environment until the owner approves
+# it (Settings → Environments → production → Required reviewers). Setup, secrets
+# and rollback: docs/deploy/release.md.
+
+on:
+  push:
+    tags: ['v[0-9]+.[0-9]+.[0-9]+']
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: 'Tag to deploy, for example v1.0.0 (redeploy or roll back)'
+        required: true
+        type: string
+
+permissions:
+  contents: read
+
+concurrency:
+  group: release-production
+  cancel-in-progress: false
+
+env:
+  TAG: ${{ github.event_name == 'workflow_dispatch' && inputs.tag || github.ref_name }}
+  # wrangler runs only here and in Cloudflare's own build (ADR-003): pinned, not a dependency.
+  WRANGLER: wrangler@4.156.2
+
+jobs:
+  build:
+    name: Verify the tag · checks · build
+    runs-on: ubuntu-24.04
+    outputs:
+      version: ${{ steps.tag.outputs.version }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: refs/tags/${{ env.TAG }}
+          fetch-depth: 0
+      - name: The tag is vX.Y.Z, matches package.json and is on main
+        id: tag
+        run: |
+          set -euo pipefail
+          if ! [[ "$TAG" =~ ^v[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
+            echo "::error::Tag '$TAG' is not vMAJOR.MINOR.PATCH"; exit 1
+          fi
+          version="${TAG#v}"
+          pkg="$(node -p "require('./package.json').version")"
+          if [ "$version" != "$pkg" ]; then
+            echo "::error::Tag $TAG does not match package.json version $pkg"; exit 1
+          fi
+          git fetch --no-tags origin main
+          if ! git merge-base --is-ancestor HEAD origin/main; then
+            echo "::error::The commit of $TAG is not on main"; exit 1
+          fi
+          if [ ! -f "docs/release-notes/$TAG.md" ]; then
+            echo "::error::docs/release-notes/$TAG.md is missing"; exit 1
+          fi
+          echo "version=$version" >> "$GITHUB_OUTPUT"
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: .nvmrc
+          cache: npm
+      - run: npm ci
+      - name: Install qpdf (the save matrix checks every saved file; not a dependency)
+        run: sudo apt-get install -y qpdf
+      - name: Typecheck
+        run: npm run typecheck
+      - name: Lint
+        run: npm run lint
+      - name: Format
+        run: npm run format:check
+      - name: Unit tests
+        run: npm run test
+      - name: License gate (D-12)
+        run: npm run licenses
+      - name: Build
+        run: npm run build
+      - name: No test hook or other forbidden strings in the build (M1-02)
+        run: npm run check:dist
+      - name: Static asset limits and root files (D-11)
+        run: npm run check:pages
+      - uses: actions/upload-artifact@v4
+        with:
+          name: dist
+          path: dist/
+          include-hidden-files: true
+          retention-days: 30
+
+  deploy:
+    name: Deploy to app.triyapdf.com and triya-pdf.openengtools.com
+    needs: build
+    runs-on: ubuntu-24.04
+    environment:
+      name: production
+      url: https://app.triyapdf.com
+    permissions:
+      contents: write # the GitHub Release
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: refs/tags/${{ env.TAG }}
+      - uses: actions/download-artifact@v4
+        with:
+          name: dist
+          path: dist/
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: .nvmrc
+      - name: Deploy the Worker `triya-pdf` (env production)
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          WRANGLER_SEND_METRICS: 'false'
+        run: |
+          set -euo pipefail
+          if [ -z "$CLOUDFLARE_API_TOKEN" ] || [ -z "$CLOUDFLARE_ACCOUNT_ID" ]; then
+            echo "::error::Add the CLOUDFLARE_API_TOKEN and CLOUDFLARE_ACCOUNT_ID secrets (docs/deploy/release.md)"
+            exit 1
+          fi
+          npx --yes "$WRANGLER" deploy --env production --message "$TAG"
+      - name: Both domains answer with the app and its security headers
+        run: |
+          set -uo pipefail
+          for host in app.triyapdf.com triya-pdf.openengtools.com; do
+            ok=""
+            # A new Custom Domain can take a few minutes for its certificate.
+            for i in $(seq 1 20); do
+              headers="$(curl -sS -D - -o /dev/null "https://$host/" || true)"
+              if echo "$headers" | grep -qi '^HTTP/[0-9.]* 200' \
+                && echo "$headers" | grep -qi '^content-security-policy:' \
+                && echo "$headers" | grep -qi '^cross-origin-embedder-policy:'; then
+                ok=1; break
+              fi
+              sleep 30
+            done
+            if [ -n "$ok" ]; then echo "$host: OK"; else echo "::warning::$host did not answer with the app yet; check it by hand"; fi
+          done
+      - name: GitHub Release with the release notes
+        env:
+          GH_TOKEN: ${{ github.token }}
+          VERSION: ${{ needs.build.outputs.version }}
+        run: |
+          if gh release view "$TAG" >/dev/null 2>&1; then
+            echo "Release $TAG already exists; left as it is."
+          else
+            gh release create "$TAG" --verify-tag --title "Triya PDF $VERSION" \
+              --notes-file "docs/release-notes/$TAG.md"
+          fi

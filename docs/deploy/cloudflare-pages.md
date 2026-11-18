@@ -1,5 +1,9 @@
 # Deploying to Cloudflare Pages — owner setup
 
+> **Superseded (V1, ADR-029):** the app is deployed as Cloudflare Workers, the beta from `main`
+> and the release from a version tag. See [release.md](release.md). The per-host settings in
+> step 4 below still apply to both release domains.
+
 PDFTools is a static single-page PWA (D-11) served by Cloudflare Pages at
 `pdf-tools.openengtools.com`, with one Pages Function, `POST /api/report` (D-22). Pages builds
 the site from this GitHub repository: every push to `main` deploys production, every other
