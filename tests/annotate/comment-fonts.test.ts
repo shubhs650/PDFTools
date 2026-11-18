@@ -33,13 +33,6 @@ import { docPtrOf, rawCall } from '../../src/workers/render/pdfium';
 import { concatBytes } from '../../src/workers/render/save/bytes';
 import { FPDF_NO_INCREMENTAL, saveWithFlags } from '../../src/workers/render/save/writer';
 import { SaveTracker } from '../../src/workers/render/save/tracker';
-import {
-  SystemFontFiles,
-  type SystemFontRequest,
-} from '../../src/workers/render/commentFonts/systemFonts';
-import { setSystemFamilies } from '../../src/model/fonts/library';
-import { groupLocalFonts } from '../../src/model/fonts/systemFamilies';
-import { buildCollection, withFsType } from '../../e2e/fixtures/fonts';
 
 const require = createRequire(import.meta.url);
 const VENDOR = join(import.meta.dirname, '..', '..', 'vendor', 'fonts', 'files');
@@ -100,12 +93,11 @@ async function write(
   method: 'createPageAnnotation' | 'updatePageAnnotation',
   annot: Record<string, unknown>,
   opts?: Record<string, unknown>,
-  faceStore: FaceStore = store,
 ): Promise<string> {
   const page = doc.pages[0];
   if (!page) throw new Error('no page');
   const args: unknown[] = [doc, page, annot, ...(opts ? [opts] : [])];
-  const faces = await prepareCommentFont(faceStore, method, args);
+  const faces = await prepareCommentFont(store, method, args);
   const fn = native[method].bind(native) as (...a: unknown[]) => { toPromise(): Promise<unknown> };
   await fn(...args).toPromise();
   applyTextColors(mod, native, method, args, faces !== null);
@@ -336,151 +328,5 @@ describe('comment fonts (M11-07, D-52)', () => {
     );
     expect(faces.fallbacks).toEqual([]);
     expect([...missingIn('a ⌀ b\nक', [faces.primary])]).toEqual([0x2300, 0x915]);
-  });
-});
-
-// M11-08·O5 (D-54): a font installed on this computer is drawn the same way;
-// its file comes from the main thread (Local Font Access) over a port.
-describe('fonts on this computer (M11-08·O5, D-54)', () => {
-  const vendor = (f: string) => new Uint8Array(readFileSync(join(VENDOR, f)));
-  const arimo = vendor('arimo-regular.ttf');
-  const cousine = vendor('cousine-regular.ttf');
-  /** The computer's fonts by PostScript name; what the main thread answers with. */
-  const computer = new Map<string, Uint8Array>([
-    ['Arimo-Regular', arimo],
-    ['Locked-Regular', withFsType(arimo, 0x0002)],
-    ['Preview-Regular', withFsType(arimo, 0x0004)],
-    // A collection: the second face is the one named.
-    ['Cousine-Regular', buildCollection([arimo, cousine])],
-  ]);
-  const asked: string[] = [];
-  const files = new SystemFontFiles();
-  let listener: ((ev: MessageEvent) => void) | null = null;
-  files.connect({
-    addEventListener: (_t, l) => {
-      listener = l as (ev: MessageEvent) => void;
-    },
-    postMessage: ({ id, file }: SystemFontRequest) => {
-      asked.push(file);
-      const bytes = computer.get(file.slice('sys:'.length));
-      setTimeout(() => {
-        listener?.({
-          data: { id, blob: bytes ? new Blob([bytes.slice()]) : null },
-        } as MessageEvent);
-      }, 1);
-    },
-  });
-  const sysStore = new FaceStore({
-    harfbuzz: () => import('harfbuzzjs'),
-    subsetWasm: () =>
-      Promise.resolve(readFileSync(require.resolve('harfbuzzjs/dist/harfbuzz-subset.wasm'))),
-    fontFile: (file) =>
-      file.startsWith('sys:')
-        ? files.bytes(file)
-        : Promise.resolve(new Uint8Array(readFileSync(join(VENDOR, file)))),
-  });
-  const families = groupLocalFonts([
-    { family: 'Plant Sans', style: 'Regular', postscriptName: 'Arimo-Regular' },
-    { family: 'Locked Font', style: 'Regular', postscriptName: 'Locked-Regular' },
-    { family: 'Preview Font', style: 'Regular', postscriptName: 'Preview-Regular' },
-    { family: 'Plant Mono', style: 'Regular', postscriptName: 'Cousine-Regular' },
-    { family: 'Gone Font', style: 'Regular', postscriptName: 'Gone-Regular' },
-  ]);
-
-  it('draws, embeds, saves and reads back a comment in a font on this computer', async () => {
-    setSystemFamilies(families);
-    const original = simplePdf(1);
-    const doc = await open(original);
-    const a = box({ libraryFont: 'sys:Plant Sans', contents: 'Plant 42 mm' });
-    expect(await write(doc, 'createPageAnnotation', a, undefined, sysStore)).toBe('applied');
-    expect(asked).toContain('sys:Arimo-Regular');
-    expect(ink(doc.id, blue)).toBeGreaterThan(150);
-    // /DS names the family as the computer does, where other viewers look for it.
-    expect(withAnnot(doc.id, (x) => readAnnotString(mod, x, 'DS'))).toBe(
-      "font: 'Plant Sans' 14pt; text-align:left; color:#0000FF",
-    );
-    const s = await tracker.save(doc.id);
-    const tail = inflated(s.tail);
-    expect(tail).toMatch(/\/Subtype\s*\/Type0/u);
-    expect(tail).toMatch(/\/FontFile2/u);
-    expect(tail).toMatch(/\/BaseFont\s*\/[A-Z]{6}\+Arimo-Regular/u);
-    // Reopened while the fonts are listed: the comment keeps its family.
-    const back = await open(concatBytes([original, s.tail]));
-    const page = back.pages[0];
-    if (!page) throw new Error('no page');
-    const anns = (await native.getPageAnnotations(back, page).toPromise()) as Record<
-      string,
-      unknown
-    >[];
-    expect(anns[0]?.libraryFont).toBe('sys:Plant Sans');
-    // Not listed (another session before the user allowed it): read as before, no family.
-    setSystemFamilies([]);
-    const plain = await open(concatBytes([original, s.tail]));
-    const p2 = plain.pages[0];
-    if (!p2) throw new Error('no page');
-    const anns2 = (await native.getPageAnnotations(plain, p2).toPromise()) as Record<
-      string,
-      unknown
-    >[];
-    expect(anns2[0]?.libraryFont).toBeUndefined();
-    expect(ink(plain.id, blue)).toBeGreaterThan(150);
-  });
-
-  it('draws the named face of a collection', async () => {
-    setSystemFamilies(families);
-    const doc = await open(simplePdf(1));
-    const a = box({ libraryFont: 'sys:Plant Mono', contents: 'Mono 42' });
-    expect(await write(doc, 'createPageAnnotation', a, undefined, sysStore)).toBe('applied');
-    const ap = inflated(saveWithFlags(mod, docPtrOf(native, doc.id), FPDF_NO_INCREMENTAL));
-    expect(ap).toMatch(/\+Cousine-Regular/u);
-    expect(ap).not.toMatch(/\+Arimo/u);
-  });
-
-  it('never embeds a font whose license forbids it; preview-and-print fonts are embedded', async () => {
-    setSystemFamilies(families);
-    const doc = await open(simplePdf(1));
-    const locked = box({ libraryFont: 'sys:Locked Font', contents: 'Locked 42' });
-    expect(await write(doc, 'createPageAnnotation', locked, undefined, sysStore)).toBe('fallback');
-    expect(takeCommentFontFallbacks(doc.id)).toBe(1);
-    expect(inflated(saveWithFlags(mod, docPtrOf(native, doc.id), FPDF_NO_INCREMENTAL))).not.toMatch(
-      /\/FontFile2/u,
-    );
-    // PDFium's own appearance in the standard fallback, the family still named in /DS.
-    expect(ink(doc.id, blue)).toBeGreaterThan(100);
-    expect(withAnnot(doc.id, (x) => readAnnotString(mod, x, 'DS'))).toMatch(
-      /^font: 'Locked Font'/u,
-    );
-    const doc2 = await open(simplePdf(1));
-    const preview = box({ libraryFont: 'sys:Preview Font', contents: 'Preview 42' });
-    expect(await write(doc2, 'createPageAnnotation', preview, undefined, sysStore)).toBe('applied');
-  });
-
-  it('falls back to the standard font when the font is not on this computer or not listed', async () => {
-    setSystemFamilies(families);
-    const doc = await open(simplePdf(1));
-    const gone = box({ libraryFont: 'sys:Gone Font', contents: 'Gone 42' });
-    expect(await write(doc, 'createPageAnnotation', gone, undefined, sysStore)).toBe('fallback');
-    setSystemFamilies([]);
-    const doc2 = await open(simplePdf(1));
-    const unlisted = box({ libraryFont: 'sys:Plant Sans', contents: 'Unlisted 42' });
-    expect(await write(doc2, 'createPageAnnotation', unlisted, undefined, sysStore)).toBe(
-      'fallback',
-    );
-    expect(withAnnot(doc2.id, (x) => readAnnotString(mod, x, 'DS'))).toMatch(
-      /^font: 'Plant Sans'/u,
-    );
-    takeCommentFontFallbacks(doc.id);
-    takeCommentFontFallbacks(doc2.id);
-  });
-
-  it('inspects a face from a few small reads', async () => {
-    expect(await files.inspect('sys:Locked-Regular')).toMatchObject({ use: 'restricted' });
-    expect(await files.inspect('sys:Cousine-Regular')).toMatchObject({
-      use: 'ok',
-      collection: true,
-      index: 1,
-      standard: 'courier',
-    });
-    expect(await files.inspect('sys:Nothing')).toMatchObject({ use: 'unreadable' });
   });
 });

@@ -10,9 +10,7 @@ import { RpcClient } from './rpc';
 import { WorkerLostError } from './errors';
 import type { ArgsOf, ProgressOf, ResultOf } from './protocol';
 import type { WorkApi } from './workApi';
-import type { LibraryFamily } from '../model/fonts/library';
 import { WORK_RESPAWN_BYTES, shouldRespawnWork } from './workerLifecycle';
-import { systemFamilies } from '../model/fonts/library';
 
 export interface WorkDocSource {
   /**
@@ -136,14 +134,6 @@ export class WorkClient {
     this.worker = this.spawnWorker();
     this.rpc = new RpcClient<WorkApi>(this.worker, 'work');
     this.ready = this.rpc.call('init', { wasmUrl: this.wasmUrl }).promise;
-    // Fonts on this computer listed before this worker started (or respawned), D-54.
-    const families = systemFamilies();
-    if (families.length) void this.rpc.call('systemFonts', { families }).promise.catch(() => null);
-  }
-
-  /** Fonts on this computer (D-54): their names, for reading comments back. */
-  setSystemFonts(families: LibraryFamily[]): Promise<unknown> {
-    return this.rpc.call('systemFonts', { families }).promise;
   }
 
   /** Opens a document; `bytes` is transferred to the worker. */

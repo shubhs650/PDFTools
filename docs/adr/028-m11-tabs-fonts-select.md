@@ -1,7 +1,8 @@
 # ADR-028: M11 — document tabs v2, comments in every pointer mode, and a font library for text comments
 
 - **Status:** Accepted (owner, 2026-11-17, with the plan's recommended answers Q1–Q6 and Q8, and
-  all nine optional items O1–O9 for Q7). Applied: ARCHITECTURE.md Rev 0.17.
+  all nine optional items O1–O9 for Q7). Applied: ARCHITECTURE.md Rev 0.17. **D-54 withdrawn**
+  by the owner on 2026-11-18 (see its amendment); applied: ARCHITECTURE.md Rev 0.18.
 - **Date:** 2026-11-17
 - **Deciders:** owner (Shubham) / agent (M11 planning thread)
 - **Related decisions:** D-01 (layout), D-12 (licenses), D-17 (offline), D-22 (no network),
@@ -189,6 +190,14 @@ the browser's permission prompt. A system font is used through D-52's appearance
 its OS/2 embedding flags allow embedding; restricted fonts are listed but disabled with the reason.
 Only the family name is remembered (Recently used); font files are never stored or sent. Built
 after the library and its interop check.
+_Withdrawn by the owner, 2026-11-18 (after PR #135 had merged; removed in the next PR):_ fonts
+on the user's computer are avoided altogether as a major cross-compatibility risk; only fonts
+shipped with the app are supported, and the library may grow in future versions only after user
+requests. A font installed on one computer differs in version, license and coverage
+from the same name elsewhere, and a file whose comments name it reads differently on the next
+computer. Triya PDF supports only the fonts it ships (D-52); the library may grow in later
+versions when users ask for a family. Local Font Access, the `sys:` font ids, the font list's
+"On this computer" section and the start-up listing are removed.
 
 **D-55 — Page tools: split, images to PDF, crop (O7, O8, O9).** Organize → **Split** (every N
 pages, page ranges, top-level bookmarks) writes the parts in the Work worker into a folder the
@@ -209,7 +218,7 @@ edge strip, like PDF-XChange's (the owner tried 24 px and found it too wide). Th
 through its equivalent-control exception (the ribbon and rail buttons run the same commands),
 and axe passes. The document keeps its reading place when a pane is shown, hidden or resized.
 
-### ARCHITECTURE.md changes (Rev 0.17, applied 2026-11-17)
+### ARCHITECTURE.md changes (Rev 0.17, applied 2026-11-17; Rev 0.18, 2026-11-18, withdraws D-54)
 
 - §2: add D-50 … D-56.
 - §7.1: comments are selectable in every pointer mode (D-51; until now an unwritten M3-05 rule

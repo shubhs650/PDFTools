@@ -134,7 +134,7 @@ export function applyTextColors(
         return 'style';
       }
       // Our own appearance (commentFonts/apply.ts) draws the text in its colour, unless
-      // its faces could not be loaded (a font on this computer not listed now, D-54).
+      // its faces could not be loaded (a font file failed to load).
       if (lib?.group && fontFaces && str(annot.contents)?.trim()) return 'style';
       const outcome = recolorAppearance(mod, a, text);
       if (outcome === 'fallback' || (outcome === 'no-text' && str(annot.contents)?.trim())) {

@@ -25,7 +25,6 @@ function fakeSpawn(world: FakeWorld) {
     ports.push(ch.port1, ch.port2);
     serve<WorkApi>(ch.port1, {
       init: () => ({ ms: 1, wasmBytes: 1 }),
-      systemFonts: () => null,
       open: async ({ docId, original, tail, ownerPassword }) => {
         await new Promise((r) => setTimeout(r, world.openDelayMs ?? 0));
         world.jobsSeen.push(`open:${docId}`);

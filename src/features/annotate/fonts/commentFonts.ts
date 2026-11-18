@@ -65,11 +65,5 @@ export function cssFontStack(font: string): string {
   const chain = FALLBACK_CHAIN.map((id) => libraryFamily(id))
     .filter((f): f is LibraryFamily => !!f && f.id !== lib.id)
     .map(quoted);
-  // A font on this computer (D-54): the browser draws it by its own name.
-  const first = lib.group === 'system' ? cssString(lib.name) : quoted(lib);
-  return [first, ...chain, STANDARD_CSS[lib.standard] ?? 'sans-serif'].join(', ');
+  return [quoted(lib), ...chain, STANDARD_CSS[lib.standard] ?? 'sans-serif'].join(', ');
 }
-
-/** A family name as a CSS string. */
-export const cssString = (name: string): string =>
-  `"${name.replace(/[\\"]/gu, (c) => `\\${c}`).replace(/[\n\r\f]/gu, ' ')}"`;

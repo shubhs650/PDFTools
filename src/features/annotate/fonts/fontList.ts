@@ -6,15 +6,13 @@
 import { msg, type MessageKey } from '../../../i18n/keys';
 import {
   FONT_GROUPS,
-  isSystemFontId,
   libraryFamily,
   PICKER_FAMILIES,
   type FontGroup,
-  type SystemFontBlock,
 } from '../../../model/fonts/library';
 import { FONT_FAMILIES, isCommentFont, type FontFamily } from '../properties/model';
 
-export type SectionId = 'recent' | 'standard' | FontGroup | 'system';
+export type SectionId = 'recent' | 'standard' | FontGroup;
 
 export interface FontOption {
   id: string;
@@ -22,34 +20,7 @@ export interface FontOption {
   name: { text: string } | { key: MessageKey };
   /** A few characters of its script, after the name. */
   sample?: string;
-  /** A font on this computer (D-54): checked before it is used. */
-  system?: true;
-  /** Shown but not usable, with the reason. */
-  disabled?: MessageKey;
-  /** Not a font: "Show fonts on this computer…" (D-54). */
-  action?: 'showSystem';
 }
-
-/** The fonts on this computer as the list shows them (D-54; src/features/annotate/fonts/systemFonts.ts). */
-export interface SystemFontsView {
-  /** Chromium with Local Font Access. */
-  supported: boolean;
-  state: 'off' | 'loading' | 'on' | 'denied' | 'error';
-  ids: readonly string[];
-  checks: Readonly<Record<string, string>>;
-}
-
-/** The action entry's id (never a font id: those are standard, library or `sys:` ids). */
-export const SHOW_SYSTEM_ID = 'action:showSystem';
-
-export const BLOCK_KEYS: Record<SystemFontBlock, MessageKey> = {
-  restricted: msg('fonts.system.blocked.restricted'),
-  bitmap: msg('fonts.system.blocked.bitmap'),
-  noSubset: msg('fonts.system.blocked.noSubset'),
-  outlines: msg('fonts.system.blocked.outlines'),
-  unreadable: msg('fonts.system.blocked.unreadable'),
-  missing: msg('fonts.system.blocked.missing'),
-};
 
 export interface FontSection {
   id: SectionId;
@@ -75,7 +46,6 @@ export const SECTION_TITLES: Record<SectionId, MessageKey> = {
   hand: msg('fonts.group.hand'),
   hindi: msg('fonts.group.hindi'),
   chinese: msg('fonts.group.chinese'),
-  system: msg('fonts.group.system'),
 };
 
 /** One option for a font id (standard or library), or null. */
@@ -84,66 +54,11 @@ export function fontOption(id: string): FontOption | null {
     return { id, name: { key: STANDARD_NAME_KEYS[id as FontFamily] } };
   const lib = libraryFamily(id);
   if (!lib?.group) return null;
-  if (lib.group === 'system')
-    return {
-      id,
-      name: { text: lib.name },
-      system: true,
-      ...(lib.blocked ? { disabled: BLOCK_KEYS[lib.blocked] } : {}),
-    };
   return { id, name: { text: lib.name }, ...(lib.sample ? { sample: lib.sample } : {}) };
 }
 
-const ACTION_KEYS: Record<SystemFontsView['state'], MessageKey> = {
-  off: msg('fonts.system.show'),
-  loading: msg('fonts.system.loading'),
-  on: msg('fonts.system.show'),
-  denied: msg('fonts.system.denied'),
-  error: msg('fonts.system.error'),
-};
-
-/** The "On this computer" section (D-54): the action until the fonts are listed, then the fonts. */
-function systemSection(view: SystemFontsView | undefined): FontSection | null {
-  if (!view?.supported) return null;
-  if (view.state !== 'on')
-    return {
-      id: 'system',
-      title: SECTION_TITLES.system,
-      options: [
-        { id: SHOW_SYSTEM_ID, name: { key: ACTION_KEYS[view.state] }, action: 'showSystem' },
-      ],
-    };
-  const options = view.ids
-    .map((id) => {
-      const o = fontOption(id);
-      if (!o) return null;
-      const check = view.checks[id];
-      const blocked = check && check !== 'ok' && check !== 'checking' ? check : undefined;
-      return blocked && blocked in BLOCK_KEYS
-        ? { ...o, disabled: BLOCK_KEYS[blocked as SystemFontBlock] }
-        : o;
-    })
-    .filter((o): o is FontOption => !!o);
-  return {
-    id: 'system',
-    title: SECTION_TITLES.system,
-    options: options.length
-      ? options
-      : [
-          {
-            id: SHOW_SYSTEM_ID,
-            name: { key: msg('fonts.system.none') },
-            disabled: msg('fonts.system.none'),
-          },
-        ],
-  };
-}
-
-/**
- * The list's sections: Recently used (if any), Standard, the library's
- * groups, then the fonts on this computer (D-54) where the browser can list them.
- */
-export function fontSections(recent: readonly string[], system?: SystemFontsView): FontSection[] {
+/** The list's sections: Recently used (if any), Standard, then the library's groups. */
+export function fontSections(recent: readonly string[]): FontSection[] {
   const out: FontSection[] = [];
   const rec = recent
     .filter(isCommentFont)
@@ -161,13 +76,8 @@ export function fontSections(recent: readonly string[], system?: SystemFontsView
       .filter((o): o is FontOption => !!o);
     if (options.length) out.push({ id: g, title: SECTION_TITLES[g], options });
   }
-  const sys = systemSection(system);
-  if (sys) out.push(sys);
   return out;
 }
-
-/** Whether a font id is one on this computer (checked before it is used). */
-export const isSystemOption = (o: FontOption): boolean => !!o.system && isSystemFontId(o.id);
 
 /**
  * Type-ahead: the first option after `from` (wrapping) whose name starts with

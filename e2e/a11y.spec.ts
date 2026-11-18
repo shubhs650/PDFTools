@@ -801,7 +801,7 @@ for (const [variant, url] of [
       await page.keyboard.press('Escape');
       await expect(menu).toHaveCount(0);
 
-      // The comment font list (M11-07, O5's "On this computer" section in Chromium).
+      // The comment font list (M11-07).
       const id = (await cap(page, 'view', 'activeDocId')) as string;
       const box = (await cap(page, 'annotate', 'create', id, 0, {
         type: 3,

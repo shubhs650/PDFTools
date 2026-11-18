@@ -1,7 +1,7 @@
-# Triya PDF — Architecture & Product Specification (Rev 0.17)
+# Triya PDF — Architecture & Product Specification (Rev 0.18)
 
 **App:** Triya PDF (formerly PDFTools, D-41) · **URL:** `pdf-tools.openengtools.com` · **Platform:** Open Engineering Tools (OET)
-**Status:** Approved for implementation · **Last updated:** 17-Nov-2026 (Rev 0.17)
+**Status:** Approved for implementation · **Last updated:** 18-Nov-2026 (Rev 0.18)
 **Companion file:** `CLAUDE.md` (standing rules for the coding agent — read it first)
 
 > This document is the single source of truth. Where code and this document disagree, this document wins until it is deliberately amended. Decisions are numbered (D-xx) so commits, issues and ADRs can reference them.
@@ -23,6 +23,8 @@
 > **Rev 0.14 amendment** — [ADR-026](docs/adr/026-m9-help-page.md) (owner-approved 2026-11-07): **M9 — Help in its own window** with generated screenshots, offline (D-46, §8, §8.2, §9, §13 M9); the ~60 MB install size is a reference, not a limit (§9).
 
 > **Rev 0.17 amendment** — [ADR-028](docs/adr/028-m11-tabs-fonts-select.md) (owner-approved 2026-11-17, all optional items accepted): **M11** — document tabs v2 (D-50), comments selectable in every pointer mode (D-51), a self-hosted font library for text comments with our own appearance streams (D-52), pick up where you left off (D-53), fonts installed on the computer (D-54), split, images to PDF and crop (D-55), resizable panes with edge arrows (D-56) (§2, §3.2, §7.1, §7.8, §8, §8.1, §9, §10.3, §13 M11).
+
+> **Rev 0.18 amendment** — [ADR-028](docs/adr/028-m11-tabs-fonts-select.md) amendment (owner, 2026-11-18): **D-54 withdrawn** — fonts installed on the user's computer are not supported (a cross-compatibility risk); text comments use only the fonts that ship with the app (D-52), and the library may grow later on user request (§2, §7.1, §10.3, §13 M11).
 
 > **Rev 0.16 amendment** — [ADR-027](docs/adr/027-m10-visual-refresh.md) amendment (owner-approved 2026-11-16, all optional items accepted): one-row header, bundled Inter font, accent colour and density choices (D-47), Create Blank PDF (D-49) (§2, §3.2, §7.8, §8, §10.3).
 
@@ -124,7 +126,7 @@ Tablet/phone UI · Safari parity · PDF text/content editing · form design beyo
 | D-51 | **Comments in every pointer mode** (ADR-028): comments are selected in Select, Select Comments, Hand and Select Text; Hand: click selects, a drag on a comment moves it, elsewhere pans; Select Text: on a text markup a drag selects text and a click selects the markup; form fields unchanged; the page menu lists Select and checks the current tool |
 | D-52 | **Font library for text comments** (ADR-028): about 26 Google Fonts families (OFL-1.1 / Apache-2.0) shipped with the app from our origin and precached in the background, never fetched from Google; text boxes, typewriters and callouts drawn by **our appearance stream** with a subset embedded font, shaping and per-script fallback, generated in a worker on the route of spike S26; form fields keep the standard fonts |
 | D-53 | **Pick up where you left off** (ADR-028): on start, the start screen or last session's files (saved handles); each file's last page, zoom, layout and view rotation kept on the device by file fingerprint |
-| D-54 | **Fonts installed on this computer** (ADR-028): Chromium Local Font Access on the user's click behind the permission prompt; usable only when the font's embedding flags allow it; only family names are remembered |
+| D-54 | ~~Fonts installed on this computer~~ — **withdrawn** by the owner 2026-11-18 (ADR-028 amendment, Rev 0.18): a cross-compatibility risk; only the fonts that ship with the app are supported (D-52), and the library may grow later on user request |
 | D-55 | **Page tools** (ADR-028): Split (every N pages, ranges, top-level bookmarks) into a chosen folder; Images to PDF (JPG/PNG, new document or inserted pages); Crop (sets `/CropBox` only, one undo step) |
 | D-56 | **Panes** (ADR-028): the right Properties pane is resizable like the left pane (splitter, drag and keys); a chevron on each pane's inner edge, always visible, hides or shows it through the existing pane commands |
 | D-34 | **OCR** (Rev 1 item 1, ADR-020): Tesseract WASM core in its own worker, five languages (English precached, the rest on first use), invisible text layer written by our object layer with a glyphless font, pages with text skipped unless asked; needs the modify permission |
@@ -311,7 +313,7 @@ Types: **every annotation type/tool supported by EmbedPDF** (ADR-001 B7). No cus
 - **Sticky note popup** (D-44, ADR-023): a popup window on the page for `/Text` notes — header (author, date), multi-line text, menu, status, lock, Reply; draggable and resizable; opened on creation and double-click. Its position and open state are saved as a standard `/Popup` by our object layer only if spike S23 passes.
 - **Paste an image** (D-45, ADR-023): Ctrl+V or the page menu's Paste with an image on the system clipboard places an Image Stamp, scaled to fit inside the page (90 %, aspect kept, never enlarged); one undo step; needs annotate.
 - **Comments in every pointer mode** (D-51, ADR-028): a comment is selected by clicking in Select, Select Comments, Hand and Select Text. Hand: a drag that starts on a comment moves it, elsewhere it pans. Select Text: on a text markup a drag selects the text under it and a click selects the markup; on other comments a drag moves them. Form fields are filled in every mode except Select Fields. Locked comments and documents without annotate permission select but do not move.
-- **Fonts** (D-52, ADR-028): text boxes, typewriters and callouts use the three standard families or the self-hosted font library (§3.2). With a library font the comment stays a standard FreeText (`/Contents`, `/DA`, `/DS`, `/RC` naming the family) and its appearance stream is ours: the used glyphs embedded as a subset (CIDFontType2, Identity-H, ToUnicode), shaped for complex scripts, missing characters falling back by script (Noto Sans Devanagari, Noto Sans SC), generated in a worker and re-applied whenever EmbedPDF regenerates the appearance — the third exception to "no custom appearance streams". Another viewer that edits the comment without the font redraws it in its own. Fonts installed on the computer can join the list (D-54).
+- **Fonts** (D-52, ADR-028): text boxes, typewriters and callouts use the three standard families or the self-hosted font library (§3.2). With a library font the comment stays a standard FreeText (`/Contents`, `/DA`, `/DS`, `/RC` naming the family) and its appearance stream is ours: the used glyphs embedded as a subset (CIDFontType2, Identity-H, ToUnicode), shaped for complex scripts, missing characters falling back by script (Noto Sans Devanagari, Noto Sans SC), generated in a worker and re-applied whenever EmbedPDF regenerates the appearance — the third exception to "no custom appearance streams". Another viewer that edits the comment without the font redraws it in its own. Only the fonts that ship with the app are offered; fonts installed on the user's computer are not (D-54 withdrawn).
 - **Text and border colours** (ADR-024): a text box and a callout have a Text color and a Border color (Properties pane, tool defaults, Comment Styles). The border colour is `/DA`'s `rg`, the text colour `/DS` `color:` (and EmbedPDF's `/TextColor`), as Acrobat and PDF-XChange store them; another viewer's `/DS` colour is read back. PDFium draws the text in `/DA`'s colour, so after each write the Render worker changes only the text colour operator of PDFium's own appearance and sets it back with `EPDFAnnot_SetAppearanceFromPage` — the second exception to "no custom appearance streams", after Attach File. If the appearance doesn't have the expected shape, PDFium's is kept and a diagnostics event is recorded (spike S25).
 - **Context menus and clipboard** (D-38, ADR-021): right-click (or Shift+F10 / Menu key) on a comment on the page, a comment card, the page background, bookmarks and thumbnails; every item is a command-table command. Cut/Copy/Paste of comments on the page (Ctrl+X/C/V; Paste from the page menu lands at the pointer).
 - **Flatten** selected or all comments (page range) into page content in the Render worker; one undo step; capability **modify**; marks the document "optimize recommended".
@@ -449,7 +451,7 @@ Analytics uses **Cloudflare's server-side request analytics only**. No beacon sc
 - The top bar's **Report an issue** opens the repository's GitHub new-issue page in a new tab, prefilled with app version, commit, browser and OS only; the app itself sends nothing (D-35, ADR-021).
 
 ### 10.3 Local data
-IndexedDB: profile, schemes, settings, recent-file handles, table templates, comment tool defaults and styles, saved visual signatures (ADR-021); the theme, accent colour and density choices (ADR-023, ADR-027, stored before first paint); the start-up choice and each file's last view by fingerprint (D-53); recently used comment fonts (D-52, D-54). OPFS: recovery snapshots. Privacy page lists all of it; Settings → "Clear all local data".
+IndexedDB: profile, schemes, settings, recent-file handles, table templates, comment tool defaults and styles, saved visual signatures (ADR-021); the theme, accent colour and density choices (ADR-023, ADR-027, stored before first paint); the start-up choice and each file's last view by fingerprint (D-53); recently used comment fonts (D-52). OPFS: recovery snapshots. Privacy page lists all of it; Settings → "Clear all local data".
 
 ---
 
@@ -530,7 +532,7 @@ Help becomes a separate page in its own window (`/help`): rewritten step-by-step
 The "solid tool but basic UI" feedback (2026-11-16): design language v2 inside the existing layout (tokens, styled controls, ribbon, start screen, panes, dialogs, motion), the About page with in-app open-source licenses and the notices link fixed; command search, icon accents, loading placeholders and "What's new"; Help screenshots regenerated (`docs/plan/M10.md`).
 
 ### M11 — Tabs, fonts, comments in every mode (ADR-028)
-The OCR text-selection fix; document tabs v2 (D-50); comments in every pointer mode (D-51); spike S26 and the font library for text comments (D-52); the selected-text menu, last view and session restore (D-53), Zoom to Area, copy page images, split, images to PDF, crop (D-55) and system fonts (D-54) (`docs/plan/M11.md`).
+The OCR text-selection fix; document tabs v2 (D-50); comments in every pointer mode (D-51); spike S26 and the font library for text comments (D-52); the selected-text menu, last view and session restore (D-53), Zoom to Area, copy page images, split, images to PDF, crop (D-55) (`docs/plan/M11.md`; system fonts, D-54, were withdrawn on 2026-11-18).
 
 ---
 
