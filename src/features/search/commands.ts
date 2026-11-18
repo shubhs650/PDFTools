@@ -11,7 +11,7 @@ export function registerFindCommands(): () => void {
   const step = (dir: 1 | -1) => () => {
     const s = findStore.getState();
     // The bar's query, or the results Advanced Search is showing (M2-09).
-    if ((s.open || s.highlights) && s.query.trim()) return findNext(dir);
+    if ((s.open && s.query.trim()) || (s.highlights && s.fromSearch)) return findNext(dir);
     openFind();
     return undefined;
   };

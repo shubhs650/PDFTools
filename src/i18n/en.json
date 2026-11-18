@@ -507,6 +507,7 @@
   },
   "open": {
     "opening": "Opening {{name}}…",
+    "alreadyOpen": "The same file is already open as {{name}}.",
     "failedTitle": "Couldn't open {{name}}",
     "error": {
       "notPdf": "This file is not a PDF.",
@@ -951,6 +952,7 @@
     "notReady": "The bookmarks are still loading.",
     "noneSelected": "Select a bookmark first.",
     "noChildren": "This bookmark has no children.",
+    "noDestination": "This bookmark doesn't lead to a page in this document. Its page may have been deleted.",
     "nothingToPaste": "Copy or cut bookmarks in this document first.",
     "cannotMove": "The bookmark can't move that way.",
     "restricted": "The document's security settings don't allow changing bookmarks.",

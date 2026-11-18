@@ -229,3 +229,27 @@ test('after a page change the pane asks for a new search instead of saying "No r
     .click();
   await expect(status(page)).toHaveText('');
 });
+
+// Pre-release audit bug 9: a document closed during an "All open documents" search is skipped.
+test('closing a document while all open documents are searched skips it', async ({
+  page,
+  pdfs,
+}) => {
+  await page.goto('/');
+  await drop(page, [
+    { name: 'big.pdf', b64: pdfs.contract(1500).toString('base64') },
+    { name: 'last.pdf', b64: pdfs.simple(2).toString('base64') },
+    { name: 'small.pdf', b64: pdfs.simple(3).toString('base64') },
+  ]);
+  await expect(tabs(page)).toHaveCount(3);
+  await page.locator('[data-page="0"] img.page-preview').first().waitFor();
+  await openSearch(page);
+  await field(page).fill('e');
+  await pane(page).getByRole('radio', { name: 'All open documents' }).check();
+  await field(page).press('Enter');
+  await expect(status(page)).toHaveText(/^Searching/);
+  await page.getByRole('button', { name: 'Close big.pdf' }).click();
+  // small.pdf (active, 3 × "Page") and last.pdf (2), searched after the closed one.
+  await expect(status(page)).toHaveText('5 results', { timeout: 20_000 });
+  await expect(results(page).getByRole('option', { name: 'last.pdf (2)' })).toBeVisible();
+});

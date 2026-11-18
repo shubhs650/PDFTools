@@ -7,6 +7,7 @@
 // converts coordinates (rule 1). Alt held: no snapping for that move.
 import { createStore, useStore } from 'zustand';
 import { recordError } from '../../app/diagnostics';
+import { appStore } from '../../app/store/appStore';
 import { documentStore } from '../../app/store/documentStore';
 import type { SnapApi } from '../../engine/snapApi';
 import { RpcClient } from '../../engine/rpc';
@@ -109,6 +110,9 @@ let last: { q: Query; at: Pt | null; r: number } | null = null;
 /** Round trips (ms), for the perf scenario (probe). */
 export const rtts: number[] = [];
 
+/** Bumped when the marker is taken off, so an answer already on its way is not shown. */
+let cleared = 0;
+
 function fire(): void {
   frame = 0;
   const q = pending;
@@ -119,6 +123,7 @@ function fire(): void {
   const f = frameOf(q.docId, q.page);
   const r = RADIUS_PX / zoomOf(q.docId);
   inFlight = true;
+  const clearedAtStart = cleared;
   const t0 = performance.now();
   snapClient()
     .call('snap', {
@@ -131,6 +136,7 @@ function fire(): void {
     .promise.then(
       (s: Snap | null) => {
         rtts.push(performance.now() - t0);
+        if (cleared !== clearedAtStart) return; // the marker was taken off meanwhile
         if (rtts.length > 2000) rtts.splice(0, 1000);
         const at = s ? { x: s.x - f.originX, y: f.originY + f.height - s.y } : null;
         last = { q, at, r };
@@ -183,6 +189,16 @@ export function snapPoint(page: number, pos: Pt, evt: unknown): Pt {
   return pos;
 }
 
+/**
+ * Takes the snap marker off the page: another tool or another tab (pre-release audit
+ * bug 6). The next pointer move with a snapping tool asks again.
+ */
+export function clearSnapMarker(): void {
+  cleared++;
+  last = null;
+  if (snapStore.getState().marker) snapStore.setState({ marker: null });
+}
+
 // ---- switches ---------------------------------------------------------------------
 
 export async function setSnapping(on: boolean): Promise<void> {
@@ -219,7 +235,11 @@ export function installSnapping(): () => void {
       recordError('snap.settings', err);
     }
   })();
+  const offTool = appStore.subscribe((s, prev) => {
+    if (s.tool !== prev.tool) clearSnapMarker();
+  });
   const off = documentStore.subscribe((s, prev) => {
+    if (s.activeId !== prev.activeId) clearSnapMarker();
     // Follow the current page; forget closed documents (their indexes too).
     const id = s.activeId;
     if (id && snapStore.getState().enabled) {
@@ -239,6 +259,7 @@ export function installSnapping(): () => void {
   });
   return () => {
     off();
+    offTool();
     setSnapper(null);
   };
 }

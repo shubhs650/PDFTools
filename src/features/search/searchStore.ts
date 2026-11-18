@@ -165,28 +165,46 @@ export async function runAdvancedSearch(): Promise<void> {
   try {
     for (const docId of ids) {
       if (!live()) return;
-      const from = documentStore.getState().docs[docId]?.view.page ?? 0;
-      const { promise } = sessionFor().start(
-        { docId, query, options: textOptions(ran.options), visible: [from] },
-        (batch) => {
+      // A document closed while the others are searched is skipped (pre-release audit bug 9).
+      const isOpen = (): boolean => docId in documentStore.getState().docs;
+      const skip = (): void => {
+        searchStore.setState((cur) => ({ docsDone: cur.docsDone + 1 }));
+      };
+      if (!isOpen()) {
+        skip();
+        continue;
+      }
+      try {
+        const from = documentStore.getState().docs[docId]?.view.page ?? 0;
+        const { promise } = sessionFor().start(
+          { docId, query, options: textOptions(ran.options), visible: [from] },
+          (batch) => {
+            if (!live()) return;
+            update(docId, (g) => ({
+              ...g,
+              results: addBatch(g.results, batch.hits, batch.counts),
+            }));
+            searchStore.setState({ pagesDone: batch.pagesDone, pageCount: batch.pageCount });
+          },
+        );
+        await promise;
+        if (ran.options.annotations || ran.options.bookmarks) {
+          const job = workClient().run('searchExtras', {
+            docId,
+            query,
+            options: textOptions(ran.options),
+            annotations: ran.options.annotations,
+            bookmarks: ran.options.bookmarks,
+          });
+          extrasJob = job;
+          const extras = await job.promise;
           if (!live()) return;
-          update(docId, (g) => ({ ...g, results: addBatch(g.results, batch.hits, batch.counts) }));
-          searchStore.setState({ pagesDone: batch.pagesDone, pageCount: batch.pageCount });
-        },
-      );
-      await promise;
-      if (ran.options.annotations || ran.options.bookmarks) {
-        const job = workClient().run('searchExtras', {
-          docId,
-          query,
-          options: textOptions(ran.options),
-          annotations: ran.options.annotations,
-          bookmarks: ran.options.bookmarks,
-        });
-        extrasJob = job;
-        const extras = await job.promise;
-        if (!live()) return;
-        update(docId, (g) => ({ ...g, extras: sortExtras(extras) }));
+          update(docId, (g) => ({ ...g, extras: sortExtras(extras) }));
+        }
+      } catch (err) {
+        if (!live() || isOpen()) throw err;
+        skip();
+        continue;
       }
       if (live()) searchStore.setState((cur) => ({ docsDone: cur.docsDone + 1 }));
     }

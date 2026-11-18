@@ -88,7 +88,9 @@ const activeDocId = (): string | null => documentStore.getState().activeId;
 export function openFind(): void {
   const docId = activeDocId();
   const s = findStore.getState();
-  if (docId !== s.docId) resetResults(docId);
+  // An Advanced Search result's hits are the pane's: the bar starts afresh with its own
+  // query (pre-release audit bug 12).
+  if (docId !== s.docId || s.fromSearch) resetResults(docId);
   findStore.setState((cur) => ({
     open: true,
     highlights: true,
@@ -151,6 +153,11 @@ const sameRun = (s: FindState): boolean =>
 export async function findNext(dir: 1 | -1 = 1): Promise<void> {
   const s = findStore.getState();
   const docId = activeDocId();
+  // F3 with the bar closed walks the hits of the Advanced Search result shown (M2-09).
+  if (s.fromSearch && !s.open && docId === s.docId) {
+    await move(dir);
+    return;
+  }
   if (!docId || !s.query.trim()) return;
   if (docId === s.docId && sameRun(s) && s.status !== 'error') {
     await move(dir);
@@ -271,8 +278,7 @@ export async function showResults(
     highlights: true,
     fromSearch: true,
     docId,
-    query: ran.query,
-    options: { matchCase: !!ran.options.matchCase, wholeWord: !!ran.options.wholeWord },
+    // The bar's own query and options stay as the user left them (pre-release audit bug 12).
     ran,
     status: 'done',
     error: null,
@@ -284,6 +290,21 @@ export async function showResults(
   }));
   await show(cursor);
 }
+
+// The Find bar belongs to the document shown (pre-release audit bug 5): another tab
+// starts it afresh (the query stays; Enter searches this document), and with no
+// document left it closes, so a later file never shows an old count.
+documentStore.subscribe((d, prev) => {
+  if (d.activeId === prev.activeId) return;
+  const s = findStore.getState();
+  if (d.activeId === null) {
+    if (s.open || s.highlights) closeFind();
+    resetResults(null);
+  } else if (s.open && s.docId !== d.activeId) {
+    cancelFind();
+    resetResults(d.activeId);
+  }
+});
 
 /** 1-based position of the current hit ("n" of "n of N"; the total is results.total). */
 export function currentOrdinal(s: FindState): number {

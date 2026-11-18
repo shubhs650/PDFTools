@@ -50,17 +50,35 @@ function pageHeight(page: number): number {
   );
 }
 
+/**
+ * What following a target did: jumped or asked about an address ('followed'), found
+ * no page to go to ('missing': no destination, or its page was deleted), or left it
+ * (another file, a script: never followed).
+ */
+export type FollowResult = 'followed' | 'missing' | 'other';
+
 /** Follows a bookmark's or link's target in the active document. */
-export function followTarget(t: PdfLinkTarget | undefined): void {
+export function followTarget(t: PdfLinkTarget | undefined): FollowResult {
+  if (!t) return 'missing';
   const dest = internalDestination(t);
   if (dest) {
-    if (dest.pageIndex < 0) return;
+    const pages = pageCount();
+    if (dest.pageIndex < 0 || (pages > 0 && dest.pageIndex >= pages)) return 'missing';
     recordJump();
     goToTarget(destinationView(dest, pageHeight(dest.pageIndex)));
-    return;
+    return 'followed';
   }
   const url = externalUrl(t);
-  if (url) linkStore.setState({ pendingUrl: url });
+  if (url) {
+    linkStore.setState({ pendingUrl: url });
+    return 'followed';
+  }
+  return 'other';
+}
+
+function pageCount(): number {
+  const d = documentStore.getState();
+  return d.activeId ? (d.docs[d.activeId]?.meta.pageCount ?? 0) : 0;
 }
 
 export function closeLinkDialog(): void {

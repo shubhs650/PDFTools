@@ -44,8 +44,8 @@ describe('release list', () => {
     expect(notes).toContain(`${LATEST_RELEASE_ID}.md`);
   });
 
-  it('the newest release covers M11 so far (tabs, fonts, last view, start-up)', () => {
-    const text = list[0]?.items.join(' ') ?? '';
+  it('the M11 release covers tabs, fonts, last view and start-up', () => {
+    const text = list.find((r) => r.id === 'beta-m11')?.items.join(' ') ?? '';
     for (const words of [
       'Start-up',
       'last time',
@@ -57,6 +57,13 @@ describe('release list', () => {
       'Split Document',
       'Crop Pages',
     ])
+      expect(text, words).toContain(words);
+  });
+
+  it('the newest release lists the pre-release bug fixes', () => {
+    expect(list[0]?.id).toBe('beta-m11-fixes');
+    const text = list[0]?.items.join(' ') ?? '';
+    for (const words of ['Search pane', 'cropped pages', 'half-drawn', 'Find bar', 'bookmark'])
       expect(text, words).toContain(words);
   });
 

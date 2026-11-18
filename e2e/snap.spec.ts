@@ -92,3 +92,31 @@ test('snapped distance: exact value between two known endpoints; Alt turns snapp
   await endpoint.click();
   await expect(endpoint).toHaveAttribute('aria-pressed', 'false');
 });
+
+// Pre-release audit bug 6: the snap marker goes with the snapping tool.
+test('the snap marker goes when another tool is chosen', async ({ page }) => {
+  await page.goto('/');
+  await cap(page, 'annotate', 'setProfile', 'Ana de Vries');
+  await drop(page, [{ name: 'snap.pdf', b64: Buffer.from(snapSheet()).toString('base64') }]);
+  await expect(page.locator('[data-page="0"] img.page-preview')).toBeVisible();
+  const id = (await cap(page, 'view', 'activeDocId')) as string;
+  await page.getByRole('tab', { name: 'Measure' }).click();
+  const toggle = page.getByTestId('snap-toggle');
+  if ((await toggle.getAttribute('aria-pressed')) !== 'true') await toggle.click();
+  await expect
+    .poll(
+      async () =>
+        ((await cap(page, 'annotate', 'snap')) as { pages: Record<string, string> }).pages[
+          `${id}/0`
+        ],
+    )
+    .toBe('ready');
+  await measureTab(page).getByRole('button', { name: 'Distance', exact: true }).click();
+  const a = await at(page, 403, 447);
+  await page.mouse.move(a.x - 20, a.y - 20);
+  await page.mouse.move(a.x, a.y, { steps: 4 });
+  await expect(page.getByTestId('snap-marker')).toBeVisible();
+  await page.getByRole('tab', { name: 'Home' }).click();
+  await page.getByRole('button', { name: 'Select', exact: true }).click();
+  await expect(page.getByTestId('snap-marker')).toHaveCount(0);
+});

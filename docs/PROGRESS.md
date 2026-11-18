@@ -1,6 +1,6 @@
 # Triya PDF — Progress
 
-_Last updated: 2026-11-18 (session 95: pre-release bug audit, findings only)_
+_Last updated: 2026-11-18 (session 96: pre-release bug fixes)_
 
 **Current milestone:** M11 — file tabs, OCR text selection, a font library and comments in every
 pointer mode: plan [docs/plan/M11.md](plan/M11.md) and [ADR-028](adr/028-m11-tabs-fonts-select.md)
@@ -21,6 +21,16 @@ interop is in the M6 pack (CHECKLIST §M6 R1–R4). Rev 0 (M0–M4) is complete 
 
 ## Done
 
+- **Session 96 — pre-release bug fixes (PR #138).** The owner asked to fix bugs 1–4 first, then
+  the others. Fixed: 1 (Advanced Search highlight cleared when the pane closes), 2 (search hit
+  rectangles measured from the visible page area), 3 and 8 (half-drawn vertex shapes and their
+  live value dropped on a tool or tab change), 4 (page changes mark search results out of date),
+  5 (Find bar follows the selected tab), 6 (snap marker cleared), 9 (all-documents search skips a
+  closed document), 10 (message for a bookmark to a deleted page), 12 (Advanced results keep the
+  Find bar's query), 13 (message when the same file is already open). Bug 7 was already fixed in
+  M7-04; bug 11 kept as PDF-XChange does (owner's call). Each fix has a unit or e2e test; see the
+  Fixes table in [docs/acceptance/pre-release-bugs.md](acceptance/pre-release-bugs.md). What's
+  new entry `beta-m11-fixes`.
 - **Session 95 — pre-release bug audit (findings only, nothing fixed).** The owner asked for a
   last recheck for major UI and feature bugs before the full release, starting from their report
   that Advanced Search's highlight stays after the pane closes. 13 bugs, each rated 1–5 for
@@ -3262,14 +3272,6 @@ rel="noopener noreferrer">`; the commands `app.home` / `app.reportIssue` open th
   tests that open files through the `open.openHandles` probe crash the pre-installed Chromium
   (SIGTRAP) on `main` too: `forms.spec.ts` (3 tests) and two `ribbon.spec.ts` tests. CI's
   Playwright Chromium is not affected. Tests that drop files are fine.
-
-- **Rapid moves can lose the last one (seen 2026-11-02, M6-10).** Five quick arrow-key nudges
-  on one comment sometimes saved 4 pt instead of 5: EmbedPDF's commit marks the annotation
-  synced by uid after a batch, so a move made while that batch was in flight looks committed
-  but never reaches PDFium. Suspected for every type, not only attachments; the M6-10 e2e uses
-  one Shift+Arrow nudge. Not taken on in M6-15 (acceptance only); to confirm and work around
-  (re-commit when the object changed during the batch) in its own task. The
-  `e2e/context-menus.spec.ts:193` flake is fixed (M6-15: the arrows waited for the menu's focus).
 
 - **CI pinned to `ubuntu-24.04` (2026-11-01).** `ubuntu-latest` became 26.04 (apt qpdf 12.3.2) and
   7 unit tests failed. Both were test-side, not output problems: qpdf 12's `--check` warns on a
