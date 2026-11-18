@@ -45,7 +45,7 @@
         },
         {
           "steps": [
-            "The <b>top bar</b> has the quick commands (Open, Save, Print, Undo, Redo), your open documents as tabs, the dark theme switch, full screen and the links to OpenEngTools and GitHub.",
+            "The <b>top bar</b> has the quick commands (Open, Save, Print, Undo, Redo), your open documents as tabs, the dark theme switch, full screen and the link to report an issue on GitHub.",
             "The <b>ribbon</b> has the commands, grouped in tabs: <b>File</b>, <b>Home</b>, <b>View</b>, <b>Comment</b>, <b>Form</b>, <b>Measure</b>, <b>Organize</b>, <b>Convert</b>, <b>Protect</b> and <b>Help</b>. Point at any button to see its name and shortcut.",
             "The <b>side panes</b> on the left show thumbnails, bookmarks, attachments, layers, signatures, comments and search results.",
             "The <b>document</b> area shows the pages. Scroll, zoom and work on them here.",

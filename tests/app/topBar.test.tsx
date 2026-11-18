@@ -8,13 +8,7 @@ import { afterEach, describe, expect, it } from 'vitest';
 import { t } from '../../src/i18n';
 import { KEYMAP } from '../../src/app/keys/keymap';
 import { parseChord } from '../../src/app/keys/chord';
-import {
-  EXTERNAL_LINK,
-  NEW_ISSUE_URL,
-  OPENENGTOOLS_URL,
-  currentIssueUrl,
-  issueUrl,
-} from '../../src/app/links';
+import { EXTERNAL_LINK, NEW_ISSUE_URL, currentIssueUrl, issueUrl } from '../../src/app/links';
 import { AppMark, Brand, TopBarActions } from '../../src/app/TopBar';
 import { documentStore } from '../../src/app/store/documentStore';
 import { UiProvider } from '../../src/ui/components';
@@ -94,20 +88,17 @@ describe('top bar', () => {
     expect(inline).toContain('aria-hidden="true"');
   });
 
-  it('opens both links in a new tab without opener or referrer, with accessible names', () => {
+  it('opens the issue link in a new tab without opener or referrer; no home link (ADR-029)', () => {
     render(
       <UiProvider>
         <TopBarActions />
       </UiProvider>,
     );
-    const home = screen.getByRole('link', { name: 'OpenEngTools Home' });
-    expect(home.getAttribute('href')).toBe(OPENENGTOOLS_URL);
+    expect(screen.getAllByRole('link')).toHaveLength(1);
     const issue = screen.getByRole('link', { name: 'Report an Issue on GitHub' });
     expect(issue.getAttribute('href')?.startsWith(`${NEW_ISSUE_URL}?`)).toBe(true);
-    for (const a of [home, issue]) {
-      expect(a.getAttribute('target')).toBe(EXTERNAL_LINK.target);
-      expect(a.getAttribute('rel')).toBe('noopener noreferrer');
-    }
+    expect(issue.getAttribute('target')).toBe(EXTERNAL_LINK.target);
+    expect(issue.getAttribute('rel')).toBe('noopener noreferrer');
     expect(screen.getByRole('button', { name: 'Full Screen' })).toBeTruthy();
   });
 });

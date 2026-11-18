@@ -1721,7 +1721,7 @@ export const COMMANDS: readonly CommandDef[] = [
     toggle: true,
     shipped: true, // M2-11 (list only, ADR-012 d5)
   },
-  // Top bar (M6-01, ADR-021 D-35): the OpenEngTools home link, the GitHub
+  // Top bar (M6-01, ADR-021 D-35; no home link since V1, ADR-029): the GitHub
   // issue link and full screen, at the right end of the ribbon's tab row.
   // Tell me (M10-08·O2, ADR-027): find any command by name and run it (Alt+Q). First
   // in the top bar's buttons; never in its own results.
@@ -1733,15 +1733,6 @@ export const COMMANDS: readonly CommandDef[] = [
     fluent: 'Lightbulb',
     milestone: 'M6',
     shipped: true,
-  },
-  {
-    id: 'app.home',
-    tab: 'topBar',
-    group: 'topBar',
-    size: 'small',
-    fluent: 'Home',
-    milestone: 'M6',
-    shipped: true, // M6-01
   },
   {
     id: 'app.reportIssue',

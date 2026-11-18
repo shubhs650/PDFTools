@@ -966,7 +966,7 @@ body {
   min-height: var(--control-height-toolbar);
 }
 
-/* OpenEngTools home, report an issue, full screen (M6-01, D-35). */
+/* Tell me, theme, report an issue, full screen (M6-01, D-35). */
 .top-bar-actions {
   display: flex;
   align-items: center;

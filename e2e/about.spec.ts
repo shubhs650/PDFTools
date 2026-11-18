@@ -33,6 +33,11 @@ test(
 
     await expect(about(page).getByText('Triya PDF', { exact: true })).toBeVisible();
     await expect(about(page).getByTestId('app-version')).toHaveText(/^\d+\.\d+\.\d+/);
+    // The source code link (ADR-029): the repository, in a new tab, no opener or referrer.
+    const source = about(page).getByRole('link', { name: 'Source code on GitHub' });
+    await expect(source).toHaveAttribute('href', 'https://github.com/shubhs650/PDFTools');
+    await expect(source).toHaveAttribute('target', '_blank');
+    await expect(source).toHaveAttribute('rel', 'noopener noreferrer');
     await expect(about(page).getByTestId('app-commit')).toHaveText(/^[0-9a-f]{7,}$/);
     await expect(about(page).getByTestId('app-built')).not.toHaveText('Unknown');
     // The e2e build registers no service worker without ?sw.

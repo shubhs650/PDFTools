@@ -1,11 +1,12 @@
 // File → About (M1-26; rebuilt in M10-01, ADR-027 D-48): the product, its
 // version, build and offline state, Copy version info for bug reports, links
-// to Help, Report an issue and Privacy, What's new (M10-08·O6), the main
+// to Help, Report an issue, the source code (ADR-029) and Privacy, What's new (M10-08·O6), the main
 // components it is built with, and every open-source package with its license text.
 import { ArrowDownload20Regular } from '@fluentui/react-icons/svg/arrow-download';
 import { Bug20Regular } from '@fluentui/react-icons/svg/bug';
 import { CheckmarkCircle20Regular } from '@fluentui/react-icons/svg/checkmark-circle';
 import { CloudOff20Regular } from '@fluentui/react-icons/svg/cloud-off';
+import { Code20Regular } from '@fluentui/react-icons/svg/code';
 import { Copy20Regular } from '@fluentui/react-icons/svg/copy';
 import { Open20Regular } from '@fluentui/react-icons/svg/open';
 import { QuestionCircle20Regular } from '@fluentui/react-icons/svg/question-circle';
@@ -19,7 +20,7 @@ import { useOffline, type OfflinePhase } from '../../features/offline/offline';
 import { format, msg, type MessageKey } from '../../i18n';
 import { Button } from '../../ui/components';
 import { buttonClass } from '../../ui/components/buttonClass';
-import { EXTERNAL_LINK, currentIssueUrl } from '../links';
+import { EXTERNAL_LINK, REPO_URL, currentIssueUrl } from '../links';
 import { AppMark } from '../TopBar';
 import { APP_VERSION, BUILD_DATE, versionParts } from '../version';
 import { BUILT_WITH } from './components';
@@ -127,6 +128,17 @@ export function About({ onShowSection }: AboutProps) {
             <Bug20Regular />
           </span>
           <span>{t('about.reportIssue')}</span>
+        </a>
+        <a
+          className={buttonClass('default', 'medium', 'ui-focusable')}
+          href={REPO_URL}
+          data-testid="about-source"
+          {...EXTERNAL_LINK}
+        >
+          <span aria-hidden="true">
+            <Code20Regular />
+          </span>
+          <span>{t('about.source')}</span>
         </a>
         <Button
           label={t('about.privacy')}

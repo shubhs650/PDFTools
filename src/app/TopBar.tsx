@@ -1,7 +1,7 @@
 // Top bar (M6-01, ADR-021 D-35): the product mark and name at the left of the
 // one header row (M10-08·O3, D-47), and at the right end of that row Tell me
-// (M10-08·O2), the theme toggle (M7-11, ADR-023 D-42), the OpenEngTools home
-// link, the GitHub issue link and the full-screen button.
+// (M10-08·O2), the theme toggle (M7-11, ADR-023 D-42), the GitHub issue
+// link and the full-screen button (no home link since V1, ADR-029: two release domains).
 import { WeatherSunny20Regular } from '@fluentui/react-icons/svg/weather-sunny';
 import { useTranslation } from 'react-i18next';
 import { Tooltip } from '../ui/components';
@@ -10,7 +10,7 @@ import { commandLabelKey } from './commandLabels';
 import { runCommand } from './commands/dispatch';
 import { useCommandState } from './commands/useCommandState';
 import { useFullScreen } from './fullScreen';
-import { EXTERNAL_LINK, OPENENGTOOLS_URL, currentIssueUrl } from './links';
+import { EXTERNAL_LINK, currentIssueUrl } from './links';
 import { shortcutText } from './keys/labels';
 import { useTheme } from './theme';
 
@@ -160,14 +160,13 @@ function TellMeButton() {
   );
 }
 
-/** The right end of the ribbon's tab row: tell me, theme, home, report an issue, full screen. */
+/** The right end of the ribbon's tab row: tell me, theme, report an issue, full screen. */
 export function TopBarActions() {
   const { t } = useTranslation();
   return (
     <div className="top-bar-actions" role="group" aria-label={t('topBar.label')}>
       <TellMeButton />
       <ThemeButton />
-      <TopBarLink id="app.home" href={OPENENGTOOLS_URL} />
       {/* Version, browser and OS only (rule 10); they do not change while the app runs. */}
       <TopBarLink id="app.reportIssue" href={currentIssueUrl(t)} />
       <FullScreenButton />

@@ -1,4 +1,4 @@
-// External links of the top bar (M6-01, ADR-021 D-35). Both open in a new tab
+// External links of the top bar and About (M6-01, ADR-021 D-35; ADR-029). They open in a new tab
 // as user-initiated top-level navigations: the app itself makes no request
 // (rule 4, D-22; the CSP's connect-src stays 'self').
 //
@@ -10,11 +10,11 @@ import type { TFunction } from 'i18next';
 import { browserOf, osOf, type UaSource } from '../features/report/payload';
 import { APP_VERSION } from './version';
 
-/** The OpenEngTools home page. */
-export const OPENENGTOOLS_URL = 'https://www.openengtools.com';
+/** The source code repository (File › About, ADR-029). */
+export const REPO_URL = 'https://github.com/shubhs650/PDFTools';
 
 /** The repository's new-issue page. */
-export const NEW_ISSUE_URL = 'https://github.com/shubhs650/PDFTools/issues/new';
+export const NEW_ISSUE_URL = `${REPO_URL}/issues/new`;
 
 /** Link attributes for both (a new tab, no opener, no referrer). */
 export const EXTERNAL_LINK = { target: '_blank', rel: 'noopener noreferrer' } as const;
