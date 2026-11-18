@@ -25,7 +25,7 @@ describe('release list', () => {
   const list = releases('en');
 
   it('is newest first, with unique ids, real dates and some notes each', () => {
-    expect(list.length).toBeGreaterThan(1);
+    expect(list.length).toBeGreaterThan(0);
     expect(new Set(list.map((r) => r.id)).size).toBe(list.length);
     for (const r of list) {
       expect(r.date, r.id).toMatch(/^\d{4}-\d{2}-\d{2}$/);
@@ -44,42 +44,10 @@ describe('release list', () => {
     expect(notes).toContain(`${LATEST_RELEASE_ID}.md`);
   });
 
-  it('the M11 release covers tabs, fonts, last view and start-up', () => {
-    const text = list.find((r) => r.id === 'beta-m11')?.items.join(' ') ?? '';
-    for (const words of [
-      'Start-up',
-      'last time',
-      'tabs',
-      'OCR',
-      'fonts',
-      'Zoom to Area',
-      'Images to PDF',
-      'Split Document',
-      'Crop Pages',
-    ])
-      expect(text, words).toContain(words);
-  });
-
-  it('the newest release lists the pre-release bug fixes', () => {
-    expect(list[0]?.id).toBe('beta-m11-fixes');
+  it('1.0.0, the first public release, is the only entry (ADR-029)', () => {
+    expect(list.map((r) => r.id)).toEqual(['v1.0.0']);
     const text = list[0]?.items.join(' ') ?? '';
-    for (const words of ['Search pane', 'cropped pages', 'half-drawn', 'Find bar', 'bookmark'])
-      expect(text, words).toContain(words);
-  });
-
-  it('the M10 release covers the look-and-feel work', () => {
-    const text = list.find((r) => r.id === 'beta-m10')?.items.join(' ') ?? '';
-    for (const words of [
-      'Inter',
-      'accent colour',
-      'Compact',
-      'one row',
-      'start screen',
-      'blank PDF',
-      'Tell me',
-      'placeholder',
-      'About',
-    ])
+    for (const words of ['tabs', 'Comment', 'Measure', 'forms', 'redact', 'OCR', 'offline'])
       expect(text, words).toContain(words);
   });
 

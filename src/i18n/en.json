@@ -204,7 +204,6 @@
     },
     "app": {
       "tellMe": "Tell Me",
-      "home": "OpenEngTools Home",
       "reportIssue": "Report an Issue on GitHub"
     },
     "edit": {
@@ -709,6 +708,7 @@
     },
     "help": "Open Help",
     "reportIssue": "Report an issue on GitHub",
+    "source": "Source code on GitHub",
     "privacy": "Privacy and your data",
     "builtWith": {
       "title": "Built with",
@@ -808,7 +808,7 @@
       "telemetry": "No analytics scripts, no tracking and no telemetry.",
       "network": "On its own, {{app}} only loads its program files and checks for app updates from its own website. Nothing about you or your documents is sent.",
       "reports": "If you choose Help → Send Error Report, {{app}} sends the description you typed and the diagnostic details shown in the report dialog to its own website, and nothing else: no documents, file names or document text.",
-      "links": "The OpenEngTools Home and Report an Issue on GitHub buttons at the top right, and Report an issue on GitHub in File › About, open those websites in a new tab, and only when you click them. They send nothing by themselves; the GitHub issue page is prefilled only with the app version, browser and OS."
+      "links": "The Report an Issue on GitHub button at the top right, and Report an issue on GitHub and Source code on GitHub in File › About, open GitHub in a new tab, and only when you click them. They send nothing by themselves; the GitHub issue page is prefilled only with the app version, browser and OS."
     },
     "kind": {
       "indexedDB": "IndexedDB",

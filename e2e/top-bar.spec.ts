@@ -4,9 +4,9 @@ import { drop } from './support/app.ts';
 import { isThirdParty } from './support/probes.ts';
 import { expect, test, type Guard } from './support/fixtures.ts';
 
-// M6-01 (ADR-021 D-35): brand, the OpenEngTools and GitHub links (new tabs, no
+// M6-01 (ADR-021 D-35): brand, the GitHub issue link (a new tab, no
 // request by the app, no document content), full screen of the whole app, and
-// the magnet snapping toggle in the status bar. M10-08·O3 (ADR-027 D-47): the
+// the magnet snapping toggle in the status bar. V1 (ADR-029): no home link. M10-08·O3 (ADR-027 D-47): the
 // brand, Quick Access, File, the tabs and the top bar share one header row.
 
 const FILE = 'Q3-budget-ZEBRA.pdf';
@@ -17,7 +17,7 @@ async function openDoc(page: Page, pdfs: { simple(n?: number): Buffer }) {
 }
 
 /**
- * The two external sites are stubbed so nothing leaves the machine. Their
+ * GitHub is stubbed so nothing leaves the machine. Their
  * requests come from the new tabs (a top-level navigation the user asked for),
  * not from the app: they are checked here and then taken off the guard's list,
  * which keeps failing the test for anything the app page itself requests.
@@ -27,18 +27,16 @@ async function stubExternalSites(page: Page, guard: Guard, origin: string) {
   page.on('request', (r: Request) => {
     if (isThirdParty(r.url(), origin)) fromApp.push(r.url());
   });
-  for (const host of ['https://www.openengtools.com/**', 'https://github.com/**'])
-    await page
-      .context()
-      .route(host, (route) =>
-        route.fulfill({ status: 200, contentType: 'text/html', body: '<title>stub</title>' }),
-      );
+  await page
+    .context()
+    .route('https://github.com/**', (route) =>
+      route.fulfill({ status: 200, contentType: 'text/html', body: '<title>stub</title>' }),
+    );
   return {
     fromApp,
     /** Drops the new tabs' own requests from the guard (they are not the app's). */
     forgetPopups(): void {
-      const external = (u: string) =>
-        u.startsWith('https://www.openengtools.com/') || u.startsWith('https://github.com/');
+      const external = (u: string) => u.startsWith('https://github.com/');
       const keep = guard.thirdPartyRequests.filter((u) => !external(u));
       guard.thirdPartyRequests.length = 0;
       guard.thirdPartyRequests.push(...keep);
@@ -89,8 +87,9 @@ test('one header row: brand, Quick Access, File, the tabs and the top bar fit at
   const wrap = page.locator('.ribbon-tablist-wrap');
   expect(await wrap.evaluate((el) => el.scrollWidth - el.clientWidth)).toBe(0);
   await expect(wrap).not.toHaveAttribute('data-more-end');
-  for (const name of ['OpenEngTools Home', 'Report an Issue on GitHub'])
-    await expect(page.getByRole('link', { name })).toBeVisible();
+  await expect(page.getByRole('link', { name: 'Report an Issue on GitHub' })).toBeVisible();
+  // V1 (ADR-029): no home link; the app lives on two domains.
+  await expect(page.locator('.top-bar-actions a')).toHaveCount(1);
   await expect(page.getByRole('button', { name: 'Full Screen' })).toBeVisible();
 });
 
@@ -137,7 +136,7 @@ test('a long language at 1280 px: only the tab list scrolls; the top bar stays o
   await expect(wrap).not.toHaveAttribute('data-more-start');
 });
 
-test('the two links open new tabs; the issue page has version, browser and OS only', async ({
+test('the issue link opens a new tab with version, browser and OS only', async ({
   page,
   pdfs,
   guard,
@@ -147,16 +146,6 @@ test('the two links open new tabs; the issue page has version, browser and OS on
   await page.goto('/');
   await openDoc(page, pdfs);
 
-  const [home] = await Promise.all([
-    page.context().waitForEvent('page'),
-    page.getByRole('link', { name: 'OpenEngTools Home' }).click(),
-  ]);
-  await home.waitForLoadState();
-  expect(home.url()).toBe('https://www.openengtools.com/');
-  // No opener: the new tab cannot reach the app.
-  expect(await home.evaluate(() => window.opener === null)).toBe(true);
-  await home.close();
-
   // Keyboard: the issue link opens with Enter.
   const issueLink = page.getByRole('link', { name: 'Report an Issue on GitHub' });
   await issueLink.focus();
@@ -165,6 +154,8 @@ test('the two links open new tabs; the issue page has version, browser and OS on
     page.keyboard.press('Enter'),
   ]);
   await issue.waitForLoadState();
+  // No opener: the new tab cannot reach the app.
+  expect(await issue.evaluate(() => window.opener === null)).toBe(true);
   const url = new URL(issue.url());
   expect(`${url.origin}${url.pathname}`).toBe('https://github.com/shubhs650/PDFTools/issues/new');
   const body = url.searchParams.get('body') ?? '';

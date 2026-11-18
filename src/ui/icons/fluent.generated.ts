@@ -78,7 +78,6 @@ import { FullScreenMinimize20Regular } from '@fluentui/react-icons/svg/full-scre
 import { HandLeft20Filled, HandLeft20Regular } from '@fluentui/react-icons/svg/hand-left';
 import { Highlight20Filled, Highlight20Regular, Highlight24Filled, Highlight24Regular } from '@fluentui/react-icons/svg/highlight';
 import { History20Regular, History32Regular } from '@fluentui/react-icons/svg/history';
-import { Home20Regular } from '@fluentui/react-icons/svg/home';
 import { ImageAdd20Regular, ImageAdd32Regular } from '@fluentui/react-icons/svg/image-add';
 import { ImageCopy20Regular } from '@fluentui/react-icons/svg/image-copy';
 import { ImageMultiple20Regular, ImageMultiple32Regular } from '@fluentui/react-icons/svg/image-multiple';
@@ -327,7 +326,6 @@ export const FLUENT_GLYPHS: Record<string, FluentGlyphs> = {
   'rail.search': { regular: { small: Search20Regular }, filled: { small: Search20Filled } },
   'rail.layers': { regular: { small: Layer20Regular }, filled: { small: Layer20Filled } },
   'app.tellMe': { regular: { small: Lightbulb20Regular } },
-  'app.home': { regular: { small: Home20Regular } },
   'app.reportIssue': { regular: { small: Bug20Regular } },
   'view.fullScreen': { regular: { small: FullScreenMaximize20Regular } },
   'view.exitFullScreen': { regular: { small: FullScreenMinimize20Regular } },

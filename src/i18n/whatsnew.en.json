@@ -1,100 +1,15 @@
 {
   "releases": [
     {
-      "id": "beta-m11-fixes",
+      "id": "v1.0.0",
       "date": "2026-11-18",
-      "title": "Search, measuring and tab fixes",
+      "title": "Version 1.0.0, the first public release",
       "items": [
-        "Closing the Search pane now takes a result's highlight off the page.",
-        "Search highlights sit on the right words on cropped pages and on pages whose boxes don't start at the corner.",
-        "Choosing another tool or tab drops a half-drawn polyline, polygon, cloud, perimeter or area, as Esc does, with its live value and snap marker.",
-        "After pages are deleted, rotated, moved or cropped, Advanced Search asks you to search again instead of saying there are no results.",
-        "The Find bar starts afresh on another tab, keeps its own words when you open an Advanced Search result, and closing one file no longer stops a search of all open files.",
-        "A bookmark whose page was deleted now says so, and opening a file that is already open under another name tells you which tab it is."
-      ]
-    },
-    {
-      "id": "beta-m11",
-      "date": "2026-11-17",
-      "title": "Better tabs, more fonts and picking up where you left off",
-      "items": [
-        "Pick up where you left off: in File › Settings › Start-up, choose to reopen the files that were open last time, in the same tabs with the same one selected.",
-        "Each file opens again at the page, zoom, layout and rotation you left it at.",
-        "Document tabs are easier to tell apart: the selected tab stands out, resting on a tab shows the file's details, and + opens more files.",
-        "Drag tabs to reorder them, and right-click a tab for Close Others, Close Tabs to the Right, Reopen Closed Tab, Sort by Name, Copy File Name, Rename File and more.",
-        "Text recognised with OCR can be selected and copied straight away, without reopening the file.",
-        "The Properties pane can be resized like the left pane, and the arrows on the pane edges hide or show either pane.",
-        "Comments can be selected and moved with Hand and Select Text too, and right-clicking a comment always opens its menu.",
-        "Text boxes, typewriter text and callouts can use a library of fonts that ships with the app and works offline.",
-        "Right-click selected text to copy, highlight, underline, strike out, mark it for redaction or search for it.",
-        "View › Zoom to Area: drag a rectangle and it fills the window (or hold Z while using Hand).",
-        "Right-click a picture on the page to copy it or save it as a PNG.",
-        "Images to PDF: open or drop JPG and PNG files, such as site photos or scans, to make a PDF with one image per page (each page fits its image, or A4 or Letter). Organize › Insert from Image adds images as pages to an open document.",
-        "Organize › Split Document saves parts of a document as separate PDFs: every few pages, by page ranges, or one file per top-level bookmark, into a folder you choose.",
-        "Organize › Crop Pages cuts margins off pages (typed in mm or inches, or drawn with the Crop Tool), for all pages or a range. Only the crop box changes, so Remove Crop shows the whole page again and measurements keep their values."
-      ]
-    },
-    {
-      "id": "beta-m10",
-      "date": "2026-11-17",
-      "title": "A fresher look, Tell me and blank PDFs",
-      "items": [
-        "A fresher look in light and dark: cool slate greys, a brighter blue and one interface font, Inter, on every computer. Every colour still meets WCAG AA contrast, and pages, highlights and sticky notes keep their colours.",
-        "Pick an accent colour (Blue, Teal, Indigo or Graphite) and a density (Comfortable or Compact) in File › Settings › Appearance. Compact is also on the View tab.",
-        "More room for the document: the product name, Quick Access, File, the tabs and the top-bar buttons now share one row.",
-        "A calmer ribbon: rounded tabs with a sliding marker, softer pressed and disabled buttons, and coloured icons for key tools such as Highlight, Sign Document, OCR and Mark for Redaction.",
-        "Check boxes, radio buttons, text boxes and lists look the same in every dialog and pane, and text areas show all their lines.",
-        "A new start screen: drop or open a PDF on the card, use a quick action, or reopen a recent file. The empty tab strip is hidden until a file is open.",
-        "Create a blank PDF from File › New, the start screen or Ctrl+Alt+N: choose the page size, orientation and number of pages.",
-        "Tell me (Alt+Q, or the lightbulb at the top right) finds any command by name. Press Enter to search, then Enter again to run it.",
-        "Tidier panes, File menu, dialogs and status bar. Long dialogs keep their buttons in view.",
-        "Pages and thumbnails show a soft placeholder while they load, and menus, dialogs and panes open with short, calm animations (none when your system asks for reduced motion). Thumbnails now appear for drawings with a very heavy first page.",
-        "File › About shows the version and build, Copy version info for bug reports, the components Triya PDF is built with and every open-source license, and this list of what's new. Third-party notices open correctly again."
-      ]
-    },
-    {
-      "id": "beta-m9",
-      "date": "2026-11-07",
-      "title": "Help in its own window",
-      "items": [
-        "Help opens in its own window, with step-by-step instructions and screenshots of the real app.",
-        "F1 opens Help at the topic for what you are doing, and the main dialogs have a ? button.",
-        "Search Help with Enter, print a topic, or print every topic as a manual.",
-        "Help works offline and follows the light or dark theme."
-      ]
-    },
-    {
-      "id": "beta-m8",
-      "date": "2026-11-05",
-      "title": "Comment export keeps everything",
-      "items": [
-        "Exporting comments to JSON keeps every comment exactly, including stamps, attached files and sticky-note pop-ups.",
-        "Importing that file brings every comment back as it was, in one undo step. Older JSON files still import."
-      ]
-    },
-    {
-      "id": "beta-m7",
-      "date": "2026-11-05",
-      "title": "Dark theme and easier text comments",
-      "items": [
-        "A dark theme: the moon button at the top right, Ctrl+Shift+D, or File › Settings.",
-        "Move a text box or callout by dragging it, and draw a callout in one drag.",
-        "Text boxes and callouts grow as you type, and you can style the selected text.",
-        "Drag a rectangle on the page to select every comment it touches; Shift+click adds or removes one.",
-        "Sticky notes open as pop-ups you can move, resize and reply in.",
-        "Paste a screenshot onto the page with Ctrl+V."
-      ]
-    },
-    {
-      "id": "beta-m6",
-      "date": "2026-11-03",
-      "title": "Forms, bookmarks, signatures and a new ribbon",
-      "items": [
-        "The ribbon adapts to the window: full labels, then icons only, then group menus.",
-        "Right-click menus, a style palette for each comment tool, and comments as cards in the Comments pane.",
-        "Edit bookmarks, make forms with the new Form tab, and add a password to a copy of a document.",
-        "Sign Document places a signature you draw, type or pick from a picture.",
-        "Attach File, Flatten Comments and Snapshot."
+        "Open PDFs of any size in tabs, read, search and print them, all in your browser.",
+        "Comment and mark up: highlights, sticky notes, text boxes, callouts, shapes, stamps and signatures, saved as standard PDF comments that other PDF viewers show.",
+        "Measure drawings to scale: distance, perimeter and area, with snapping to the lines of the drawing.",
+        "Organize pages, fill and create forms, protect files with a password, redact for good, and recognise the text in scans (OCR).",
+        "Free, with no account: your documents stay on this device, and the app works offline once it has loaded."
       ]
     }
   ]

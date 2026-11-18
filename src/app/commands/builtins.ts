@@ -6,7 +6,7 @@ import { openOrConvert } from '../../features/pages/images';
 import { pickPdfFiles } from '../../storage/fileAccess';
 import { canFullScreen, isFullScreen, subscribeFullScreen, toggleFullScreen } from '../fullScreen';
 import { msg, t } from '../../i18n';
-import { currentIssueUrl, OPENENGTOOLS_URL } from '../links';
+import { currentIssueUrl } from '../links';
 import { appStore } from '../store/appStore';
 import {
   getDensity,
@@ -71,11 +71,6 @@ export function registerBuiltinCommands(): () => void {
       isPressed: () => appStore.getState().ribbonCollapsed,
     }),
     // Top bar (M6-01, ADR-021 D-35).
-    registerCommand('app.home', {
-      run: () => {
-        openTab(OPENENGTOOLS_URL);
-      },
-    }),
     registerCommand('app.reportIssue', {
       run: () => {
         openTab(currentIssueUrl(t));
