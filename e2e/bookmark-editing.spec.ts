@@ -255,3 +255,33 @@ test('a document that forbids changes disables bookmark editing (rule 9)', async
   // Going to a bookmark still works.
   await page.keyboard.press('Enter');
 });
+
+// Pre-release audit bug 10: a bookmark whose page was deleted says so when followed.
+test('a bookmark whose page was deleted says so instead of doing nothing', async ({ page }) => {
+  await page.goto('/');
+  const { simplePdf } = await import('./fixtures/generate.ts');
+  await open(page, simplePdf(4), 'four.pdf');
+  await rail(page).click(); // no bookmarks yet: the pane shows its empty text, not the tree
+  await expect(tools(page)).toBeVisible();
+  await pageBox(page).fill('3');
+  await pageBox(page).press('Enter');
+  await tools(page).getByRole('button', { name: 'New Bookmark' }).click();
+  await rename(page, 'Third');
+  await page.getByRole('tab', { name: 'Organize' }).click();
+  await page
+    .getByRole('toolbar', { name: 'Organize commands' })
+    .getByRole('button', { name: 'Delete Pages' })
+    .click();
+  await page
+    .getByRole('dialog', { name: 'Delete Pages' })
+    .getByRole('button', { name: 'Delete' })
+    .click();
+  await expect(pageBox(page)).toHaveValue('3');
+  await pageBox(page).fill('1');
+  await pageBox(page).press('Enter');
+  await item(page, 'Third').click();
+  await expect(page.getByTestId('snapshot-toast')).toHaveText(
+    "This bookmark doesn't lead to a page in this document. Its page may have been deleted.",
+  );
+  await expect(pageBox(page)).toHaveValue('1');
+});

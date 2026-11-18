@@ -24,7 +24,7 @@ import { itemAt, keyPath, type OutlineItem } from '../../model/outline';
 import { CommandDropdown, ContextMenu, type ContextMenuEntry } from '../../ui/components';
 import { CommandToolButton, ToolButton } from '../annotate/comments/CommentsToolbar';
 import { usePages } from '../pages/pageOps';
-import { followTarget } from '../view/links';
+import { followBookmark } from './followBookmark';
 import { parseHex, readableOn, type Rgb } from './readableColor';
 import {
   clearError,
@@ -234,7 +234,7 @@ export function BookmarksPane() {
     setExpanded(documentId, next);
   };
   const activate = (row: OutlineRow | undefined): void => {
-    if (row) followTarget(row.target);
+    if (row) followBookmark(row.target);
   };
   const openMenuAt = (id: string): void => {
     const el = tree.current?.querySelector<HTMLElement>(`[data-id="${id}"]`);

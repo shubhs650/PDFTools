@@ -157,6 +157,42 @@ describe('search on real PDFium (ADR-006)', () => {
     }
   });
 
+  it('hit rectangles follow the visible page area: a CropBox or MediaBox not at 0,0', async () => {
+    // Pre-release audit bug 2: rectangles were measured from the page height in user
+    // space, so on these pages the highlight was drawn off the word.
+    const boxes: [string, number][] = [
+      ['/MediaBox [0 0 595 842] /CropBox [40 40 555 802]', 0],
+      ['/MediaBox [100 100 695 942]', 100],
+    ];
+    for (const [box, off] of boxes) {
+      const doc = await open(
+        buildPdf([
+          '<< /Type /Catalog /Pages 2 0 R >>',
+          '<< /Type /Pages /Kids [3 0 R] /Count 1 >>',
+          `<< /Type /Page /Parent 2 0 R ${box} /Resources << /Font << /F1 5 0 R >> >> /Contents 4 0 R >>`,
+          {
+            dict: '<< >>',
+            stream: `BT /F1 24 Tf ${String(72 + off)} ${String(700 + off)} Td (Needle here) Tj ET`,
+          },
+          '<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica >>',
+        ]),
+      );
+      const { batches } = await run(doc, 'Needle');
+      const hit = batches.flatMap((b) => b.hits)[0];
+      if (!hit) throw new Error('no hit');
+      const [rects] = engine.rects(doc.id, doc, 0, [hit]);
+      const page = doc.pages[0];
+      if (!page) throw new Error('no page');
+      const geo = await native.getPageGeometry(doc, page).toPromise();
+      const run0 = geo.runs[0];
+      if (!run0 || !rects?.[0]) throw new Error('no rect');
+      // The text layer (selection) is in the viewer's space: the hit starts where the run does.
+      expect(Math.abs(rects[0].x - run0.rect.x)).toBeLessThan(2);
+      expect(Math.abs(rects[0].y - run0.rect.y)).toBeLessThan(6);
+      await native.closeDocument(doc).toPromise();
+    }
+  });
+
   it('maps hits after a non-BMP character to the right PDFium chars', async () => {
     // "BAB" in Helvetica, where /ToUnicode maps A to U+1D400 (a surrogate pair in UTF-16).
     const cmap = [

@@ -97,3 +97,64 @@ test('whole word and match case; no results; a bad regex-like query is literal',
   const { violations } = await new AxeBuilder({ page }).include('.find-bar').analyze();
   expect(violations.map((v) => v.id)).toEqual([]);
 });
+
+// Pre-release audit bug 5: the bar belongs to the document shown.
+test('another tab starts the bar afresh; with no document left it closes', async ({
+  page,
+  pdfs,
+}) => {
+  await page.goto('/');
+  await drop(page, [
+    { name: 'three.pdf', b64: pdfs.simple(3).toString('base64') },
+    { name: 'two.pdf', b64: pdfs.simple(2).toString('base64') },
+  ]);
+  const docTabs = page.getByRole('tablist', { name: 'Open documents' });
+  await expect(docTabs.getByRole('tab')).toHaveCount(2);
+  await docTabs.getByRole('tab', { name: /^three\.pdf/ }).click();
+  await page.locator('[data-page="0"] img.page-preview').first().waitFor();
+  await page.getByTestId('document-view').focus();
+  await page.keyboard.press('Control+F');
+  await field(page).fill('Page');
+  await field(page).press('Enter');
+  await expect(status(page)).toHaveText('1 of 3');
+  await docTabs.getByRole('tab', { name: /^two\.pdf/ }).click();
+  await expect(status(page)).toHaveText('');
+  await expect(field(page)).toHaveValue('Page');
+  await field(page).press('Enter');
+  await expect(status(page)).toHaveText('1 of 2');
+
+  for (const name of ['two.pdf', 'three.pdf'])
+    await page.getByRole('button', { name: `Close ${name}` }).click();
+  await drop(page, [{ name: 'one.pdf', b64: pdfs.simple(1).toString('base64') }]);
+  await page.locator('[data-page="0"] img.page-preview').first().waitFor();
+  await expect(bar(page)).toBeHidden();
+});
+
+// Pre-release audit bug 12: an Advanced Search result leaves the bar's own query alone; F3 still walks it.
+test('an Advanced Search result keeps the bar query; F3 walks its hits; Ctrl+F starts afresh', async ({
+  page,
+  pdfs,
+}) => {
+  await page.goto('/');
+  await drop(page, [{ name: 'three.pdf', b64: pdfs.simple(3).toString('base64') }]);
+  await page.locator('[data-page="0"] img.page-preview').first().waitFor();
+  await page.getByTestId('document-view').focus();
+  await page.keyboard.press('Control+F');
+  await field(page).fill('mine');
+  await field(page).press('Escape');
+  await page.getByTestId('document-view').focus();
+  await page.keyboard.press('Control+Shift+F');
+  const pane = page.getByRole('region', { name: 'Search Results' });
+  await pane.getByRole('searchbox', { name: 'Search for' }).fill('Page');
+  await pane.getByRole('searchbox', { name: 'Search for' }).press('Enter');
+  await expect(pane.getByRole('status')).toHaveText('3 results');
+  await pane.getByRole('listbox', { name: 'Search results' }).locator('[data-row="1"]').click();
+  await expect(page.locator('[data-page="0"] .find-hit--current')).toBeVisible();
+  await page.getByTestId('document-view').focus();
+  await page.keyboard.press('F3');
+  await expect(pageBox(page)).toHaveValue('2');
+  await expect(page.locator('[data-page="1"] .find-hit--current')).toBeVisible();
+  await page.keyboard.press('Control+F');
+  await expect(field(page)).toHaveValue('mine');
+  await expect(status(page)).toHaveText('');
+});

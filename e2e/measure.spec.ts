@@ -212,6 +212,40 @@ test('Perimeter and Area: click, Enter finishes; exact S2 values; a new scale re
   expect(tail).toMatch(/\/Contents\s*\(3,000\.0 mm\)/);
 });
 
+// Pre-release audit bugs 3 and 8: a half-drawn perimeter is dropped, with its live value,
+// when another tool is chosen or another tab is shown.
+test('another tool or another tab drops a half-drawn perimeter and its live value', async ({
+  page,
+}) => {
+  const id = await open(page);
+  const live = page.getByTestId('measure-live');
+  const halfDrawn = async () => {
+    await tool(page, 'Perimeter');
+    const a = await at(page, 100, 200);
+    const b = await at(page, 200, 250);
+    const c = await at(page, 300, 200);
+    await page.mouse.click(a.x, a.y);
+    await page.mouse.click(b.x, b.y);
+    await page.mouse.move(c.x, c.y, { steps: 4 });
+    await expect(live).toBeVisible();
+  };
+  await halfDrawn();
+  await tool(page, 'Area');
+  await expect(live).toHaveCount(0);
+  await expect(page.locator('[data-page="0"] svg polyline')).toHaveCount(0);
+
+  await drop(page, [{ name: 'other.pdf', b64: Buffer.from(simplePdf(2)).toString('base64') }]);
+  await expect(page.getByRole('tablist', { name: 'Open documents' }).getByRole('tab')).toHaveCount(
+    2,
+  );
+  const docTabs = page.getByRole('tablist', { name: 'Open documents' });
+  await docTabs.getByRole('tab', { name: /^sheet\.pdf/ }).click();
+  await halfDrawn();
+  await docTabs.getByRole('tab', { name: /^other\.pdf/ }).click();
+  await expect(live).toHaveCount(0);
+  expect(await cap(page, 'annotate', 'list', id)).toEqual([]);
+});
+
 test('without a scale the value is marked uncalibrated and no /Measure is written', async ({
   page,
 }) => {

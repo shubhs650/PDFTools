@@ -1,6 +1,19 @@
 {
   "releases": [
     {
+      "id": "beta-m11-fixes",
+      "date": "2026-11-18",
+      "title": "Search, measuring and tab fixes",
+      "items": [
+        "Closing the Search pane now takes a result's highlight off the page.",
+        "Search highlights sit on the right words on cropped pages and on pages whose boxes don't start at the corner.",
+        "Choosing another tool or tab drops a half-drawn polyline, polygon, cloud, perimeter or area, as Esc does, with its live value and snap marker.",
+        "After pages are deleted, rotated, moved or cropped, Advanced Search asks you to search again instead of saying there are no results.",
+        "The Find bar starts afresh on another tab, keeps its own words when you open an Advanced Search result, and closing one file no longer stops a search of all open files.",
+        "A bookmark whose page was deleted now says so, and opening a file that is already open under another name tells you which tab it is."
+      ]
+    },
+    {
       "id": "beta-m11",
       "date": "2026-11-17",
       "title": "Better tabs, more fonts and picking up where you left off",

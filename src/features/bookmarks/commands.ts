@@ -5,7 +5,7 @@
 import { registerCommand, type CommandHandler } from '../../app/commands/dispatch';
 import { msg, t, type MessageKey } from '../../i18n';
 import { pathKey, type OutlineEdit, type OutlinePath } from '../../model/outline';
-import { followTarget } from '../view/links';
+import { followBookmark } from './followBookmark';
 import {
   activeDoc,
   bookmarksStore,
@@ -113,7 +113,7 @@ export function registerBookmarkCommands(): () => void {
         requiresDocument: true,
         disabledReason: () => needFocus(false),
         run: () => {
-          followTarget(focused()?.item.target);
+          followBookmark(focused()?.item.target);
         },
       },
     ],

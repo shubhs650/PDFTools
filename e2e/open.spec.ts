@@ -200,3 +200,20 @@ test('opening the 2,000-page stand-in writes nothing to OPFS (§4.3)', async ({ 
   const entries = (await cap(page, 'storage', 'opfsEntries')) as string[];
   expect(entries).not.toContain('recovery');
 });
+
+// Pre-release audit bug 13: a copy of an open file under another name says why no tab opened.
+test('dropping a copy of an open file under another name focuses it and says so', async ({
+  page,
+  pdfs,
+}) => {
+  await page.goto('/');
+  const bytes = pdfs.simple(2).toString('base64');
+  await drop(page, [{ name: 'sheet.pdf', b64: bytes }]);
+  await expect(tabs(page)).toHaveCount(1);
+  await page.locator('[data-page="0"] img.page-preview').first().waitFor();
+  await drop(page, [{ name: 'sheet - Copy.pdf', b64: bytes }]);
+  await expect(page.getByTestId('snapshot-toast')).toHaveText(
+    'The same file is already open as sheet.pdf.',
+  );
+  await expect(tabs(page)).toHaveCount(1);
+});

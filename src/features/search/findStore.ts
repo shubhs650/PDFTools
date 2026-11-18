@@ -28,6 +28,11 @@ export interface FindState {
   open: boolean;
   /** Hits are drawn: the bar is open, or Advanced Search jumped to a hit (M2-09). */
   highlights: boolean;
+  /**
+   * The results shown came from an Advanced Search result: the Search pane owns their
+   * highlights, which go when the pane closes or searches again (pre-release audit bug 1).
+   */
+  fromSearch: boolean;
   /** Document the results belong to. */
   docId: string | null;
   query: string;
@@ -50,6 +55,7 @@ export interface FindState {
 const initial = (): FindState => ({
   open: false,
   highlights: false,
+  fromSearch: false,
   docId: null,
   query: '',
   options: {},
@@ -82,10 +88,13 @@ const activeDocId = (): string | null => documentStore.getState().activeId;
 export function openFind(): void {
   const docId = activeDocId();
   const s = findStore.getState();
-  if (docId !== s.docId) resetResults(docId);
+  // An Advanced Search result's hits are the pane's: the bar starts afresh with its own
+  // query (pre-release audit bug 12).
+  if (docId !== s.docId || s.fromSearch) resetResults(docId);
   findStore.setState((cur) => ({
     open: true,
     highlights: true,
+    fromSearch: false,
     docId,
     focusRequest: cur.focusRequest + 1,
   }));
@@ -93,7 +102,17 @@ export function openFind(): void {
 
 export function closeFind(): void {
   cancelFind();
-  findStore.setState({ open: false, highlights: false });
+  findStore.setState({ open: false, highlights: false, fromSearch: false });
+}
+
+/**
+ * The Search pane closed or runs a new search: the highlights of the result it opened
+ * go, unless the Find bar is open and shows them (pre-release audit bug 1).
+ */
+export function clearSearchHighlights(): void {
+  const s = findStore.getState();
+  if (!s.fromSearch || s.open) return;
+  findStore.setState({ highlights: false, fromSearch: false });
 }
 
 export function setQuery(query: string): void {
@@ -134,6 +153,11 @@ const sameRun = (s: FindState): boolean =>
 export async function findNext(dir: 1 | -1 = 1): Promise<void> {
   const s = findStore.getState();
   const docId = activeDocId();
+  // F3 with the bar closed walks the hits of the Advanced Search result shown (M2-09).
+  if (s.fromSearch && !s.open && docId === s.docId) {
+    await move(dir);
+    return;
+  }
   if (!docId || !s.query.trim()) return;
   if (docId === s.docId && sameRun(s) && s.status !== 'error') {
     await move(dir);
@@ -155,6 +179,7 @@ async function runSearch(docId: string): Promise<void> {
   const from = documentStore.getState().docs[docId]?.view.page ?? 0;
   findStore.setState({
     status: 'searching',
+    fromSearch: false,
     ran: { query: query.trim(), options: { ...options } },
   });
   const { promise } = sessionFor().start({ docId, query, options, visible: [from] }, (batch) => {
@@ -251,9 +276,9 @@ export async function showResults(
   rectCache.clear();
   findStore.setState((s) => ({
     highlights: true,
+    fromSearch: true,
     docId,
-    query: ran.query,
-    options: { matchCase: !!ran.options.matchCase, wholeWord: !!ran.options.wholeWord },
+    // The bar's own query and options stay as the user left them (pre-release audit bug 12).
     ran,
     status: 'done',
     error: null,
@@ -265,6 +290,21 @@ export async function showResults(
   }));
   await show(cursor);
 }
+
+// The Find bar belongs to the document shown (pre-release audit bug 5): another tab
+// starts it afresh (the query stays; Enter searches this document), and with no
+// document left it closes, so a later file never shows an old count.
+documentStore.subscribe((d, prev) => {
+  if (d.activeId === prev.activeId) return;
+  const s = findStore.getState();
+  if (d.activeId === null) {
+    if (s.open || s.highlights) closeFind();
+    resetResults(null);
+  } else if (s.open && s.docId !== d.activeId) {
+    cancelFind();
+    resetResults(d.activeId);
+  }
+});
 
 /** 1-based position of the current hit ("n" of "n of N"; the total is results.total). */
 export function currentOrdinal(s: FindState): number {

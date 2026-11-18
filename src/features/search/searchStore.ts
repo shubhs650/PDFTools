@@ -5,6 +5,7 @@
 // after another (the current one first); a new search cancels the running
 // one. Results stay while other panes are shown.
 import { createStore, useStore } from 'zustand';
+import { appStore, type AppState } from '../../app/store/appStore';
 import { documentStore } from '../../app/store/documentStore';
 import { isAbortError } from '../../engine/errors';
 import { SearchSession } from '../../engine/searchSession';
@@ -14,11 +15,16 @@ import { goToPage, goToPoint } from '../view/controller';
 import { recordJump } from '../view/viewHistory';
 import { workClient } from '../view/host';
 import { addBatch, emptyResults, fillPage } from './findModel';
-import { showResults } from './findStore';
+import { clearSearchHighlights, showResults } from './findStore';
 import type { DocGroup } from './resultRows';
 
 export type SearchScope = 'document' | 'all';
-export type SearchStatus = 'idle' | 'searching' | 'done' | 'cancelled' | 'error';
+/**
+ * 'outdated': a searched document's pages changed, so its results were dropped (their
+ * page indexes no longer hold); the pane asks for a new search instead of saying
+ * nothing was found (pre-release audit bug 4).
+ */
+export type SearchStatus = 'idle' | 'searching' | 'done' | 'cancelled' | 'error' | 'outdated';
 
 export interface AdvancedOptions extends Required<SearchOptions> {
   annotations: boolean;
@@ -131,6 +137,7 @@ export async function runAdvancedSearch(): Promise<void> {
   const docs = documentStore.getState();
   if (!query || !docs.activeId) return;
   stop();
+  clearSearchHighlights(); // the last search's highlighted hit goes with its results
   const active = docs.activeId;
   const ids = s.scope === 'all' ? [active, ...docs.order.filter((id) => id !== active)] : [active];
   const generation = s.generation + 1;
@@ -158,28 +165,46 @@ export async function runAdvancedSearch(): Promise<void> {
   try {
     for (const docId of ids) {
       if (!live()) return;
-      const from = documentStore.getState().docs[docId]?.view.page ?? 0;
-      const { promise } = sessionFor().start(
-        { docId, query, options: textOptions(ran.options), visible: [from] },
-        (batch) => {
+      // A document closed while the others are searched is skipped (pre-release audit bug 9).
+      const isOpen = (): boolean => docId in documentStore.getState().docs;
+      const skip = (): void => {
+        searchStore.setState((cur) => ({ docsDone: cur.docsDone + 1 }));
+      };
+      if (!isOpen()) {
+        skip();
+        continue;
+      }
+      try {
+        const from = documentStore.getState().docs[docId]?.view.page ?? 0;
+        const { promise } = sessionFor().start(
+          { docId, query, options: textOptions(ran.options), visible: [from] },
+          (batch) => {
+            if (!live()) return;
+            update(docId, (g) => ({
+              ...g,
+              results: addBatch(g.results, batch.hits, batch.counts),
+            }));
+            searchStore.setState({ pagesDone: batch.pagesDone, pageCount: batch.pageCount });
+          },
+        );
+        await promise;
+        if (ran.options.annotations || ran.options.bookmarks) {
+          const job = workClient().run('searchExtras', {
+            docId,
+            query,
+            options: textOptions(ran.options),
+            annotations: ran.options.annotations,
+            bookmarks: ran.options.bookmarks,
+          });
+          extrasJob = job;
+          const extras = await job.promise;
           if (!live()) return;
-          update(docId, (g) => ({ ...g, results: addBatch(g.results, batch.hits, batch.counts) }));
-          searchStore.setState({ pagesDone: batch.pagesDone, pageCount: batch.pageCount });
-        },
-      );
-      await promise;
-      if (ran.options.annotations || ran.options.bookmarks) {
-        const job = workClient().run('searchExtras', {
-          docId,
-          query,
-          options: textOptions(ran.options),
-          annotations: ran.options.annotations,
-          bookmarks: ran.options.bookmarks,
-        });
-        extrasJob = job;
-        const extras = await job.promise;
-        if (!live()) return;
-        update(docId, (g) => ({ ...g, extras: sortExtras(extras) }));
+          update(docId, (g) => ({ ...g, extras: sortExtras(extras) }));
+        }
+      } catch (err) {
+        if (!live() || isOpen()) throw err;
+        skip();
+        continue;
       }
       if (live()) searchStore.setState((cur) => ({ docsDone: cur.docsDone + 1 }));
     }
@@ -283,16 +308,50 @@ export async function openExtra(docId: string, extra: ExtraHit): Promise<void> {
   else goToPage(extra.page);
 }
 
+/** The Search pane is shown (it lives in the left pane area, M2-08). */
+const paneShown = (s: AppState): boolean => s.leftPaneOpen && s.leftPane === 'rail.search';
+
+// Closing the pane (its ×, the rail, another pane) takes the highlight of the
+// result it opened off the page (pre-release audit bug 1).
+appStore.subscribe((s, prev) => {
+  if (paneShown(prev) && !paneShown(s)) clearSearchHighlights();
+});
+
 documentStore.subscribe((s, prev) => {
   if (s.docs === prev.docs) return;
   for (const id of Object.keys(prev.docs)) if (!(id in s.docs)) dropDocument(id);
 });
 
-/** A closed document's results go (its rows would lead nowhere). */
-export function dropDocument(docId: string): void {
-  searchStore.setState((cur) => {
-    const groups = cur.groups.filter((g) => g.docId !== docId);
-    if (groups.length === cur.groups.length) return {};
-    return { groups, total: groups.reduce((n, g) => n + g.results.total + g.extras.length, 0) };
-  });
+/**
+ * A closed document's results go (its rows would lead nowhere); with no document
+ * left the pane starts over. After a page change (`changed`) the document's results
+ * go too, and the pane says they are out of date (pre-release audit bug 4).
+ */
+export function dropDocument(docId: string, why: 'closed' | 'changed' = 'closed'): void {
+  const cur = searchStore.getState();
+  const had = cur.groups.some((g) => g.docId === docId);
+  if (!had) return;
+  const groups = cur.groups.filter((g) => g.docId !== docId);
+  if (cur.status === 'searching' && (why === 'changed' || groups.length === 0)) stop();
+  const total = groups.reduce((n, g) => n + g.results.total + g.extras.length, 0);
+  if (why === 'changed') {
+    searchStore.setState((s) => ({
+      groups,
+      total,
+      status: 'outdated',
+      error: null,
+      generation: s.generation + 1,
+    }));
+  } else if (groups.length === 0) {
+    searchStore.setState((s) => ({
+      groups,
+      total: 0,
+      ran: null,
+      status: 'idle',
+      error: null,
+      generation: s.generation + 1,
+    }));
+  } else {
+    searchStore.setState({ groups, total });
+  }
 }

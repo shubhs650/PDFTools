@@ -33,7 +33,7 @@ export function invalidatePages(docId: string): void {
   dropLinks(docId);
   dropOutline(docId);
   dropFormCaches(docId);
-  dropSearchResults(docId);
+  dropSearchResults(docId, 'changed');
   dropFindResults(docId);
   clearSelection();
   void reloadScales(docId);

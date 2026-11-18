@@ -147,3 +147,109 @@ test('a new search cancels the running one; results survive switching panes; axe
   const { violations } = await new AxeBuilder({ page }).analyze();
   expect(violations.map((v) => v.id)).toEqual([]);
 });
+
+// Pre-release audit bug 1: the highlight of an opened result belongs to the pane.
+test('closing the pane, choosing another pane or searching again takes the result highlight off', async ({
+  page,
+  pdfs,
+}) => {
+  await page.goto('/');
+  await drop(page, [{ name: 'pages.pdf', b64: pdfs.simple(3).toString('base64') }]);
+  await page.locator('[data-page="0"] img.page-preview').waitFor();
+  const hits = page.locator('.find-hit');
+  const openFirst = async () => {
+    await field(page).fill('Page');
+    await field(page).press('Enter');
+    await expect(status(page)).toHaveText('3 results');
+    await results(page).locator('[data-row="1"]').click();
+    await expect(hits.first()).toBeVisible();
+  };
+  const rail = page.getByRole('complementary', { name: 'Navigation panes' });
+
+  await openSearch(page);
+  await openFirst();
+  await page.getByRole('button', { name: 'Close the navigation pane' }).click();
+  await expect(pane(page)).toBeHidden();
+  await expect(hits).toHaveCount(0);
+
+  await openSearch(page);
+  await openFirst();
+  await rail.getByRole('button', { name: 'Thumbnails' }).click();
+  await expect(hits).toHaveCount(0);
+
+  await openSearch(page);
+  await openFirst();
+  await field(page).fill('nothing like this');
+  await field(page).press('Enter');
+  await expect(status(page)).toHaveText('No results');
+  await expect(hits).toHaveCount(0);
+
+  // The Find bar's own highlights are not the pane's: they stay until the bar closes.
+  await page.getByTestId('document-view').focus();
+  await page.keyboard.press('Control+F');
+  const bar = page.getByRole('region', { name: 'Find in document' });
+  await bar.getByRole('searchbox').fill('Page');
+  await bar.getByRole('searchbox').press('Enter');
+  await expect(hits.first()).toBeVisible();
+  await rail.getByRole('button', { name: 'Thumbnails' }).click();
+  await expect(hits.first()).toBeVisible();
+});
+
+// Pre-release audit bug 4: a page change drops the results, and the pane says so.
+test('after a page change the pane asks for a new search instead of saying "No results"', async ({
+  page,
+  pdfs,
+}) => {
+  await page.goto('/');
+  await drop(page, [{ name: 'pages.pdf', b64: pdfs.simple(4).toString('base64') }]);
+  await page.locator('[data-page="0"] img.page-preview').waitFor();
+  await openSearch(page);
+  await field(page).fill('Page');
+  await field(page).press('Enter');
+  await expect(status(page)).toHaveText('4 results');
+  await page.getByRole('tab', { name: 'Organize' }).click();
+  await page
+    .getByRole('toolbar', { name: 'Organize commands' })
+    .getByRole('button', { name: 'Delete Pages' })
+    .click();
+  await page
+    .getByRole('dialog', { name: 'Delete Pages' })
+    .getByRole('button', { name: 'Delete' })
+    .click();
+  await expect(status(page)).toHaveText('The pages changed. Search again to update the results.');
+  await expect(results(page).getByRole('option')).toHaveCount(0);
+  await field(page).press('Enter');
+  await expect(status(page)).toHaveText('3 results');
+
+  // With the last document closed, the pane starts over.
+  await page.getByRole('button', { name: 'Close pages.pdf' }).click();
+  await page
+    .getByRole('dialog', { name: 'Save changes to pages.pdf?' })
+    .getByRole('button', { name: "Don't save" })
+    .click();
+  await expect(status(page)).toHaveText('');
+});
+
+// Pre-release audit bug 9: a document closed during an "All open documents" search is skipped.
+test('closing a document while all open documents are searched skips it', async ({
+  page,
+  pdfs,
+}) => {
+  await page.goto('/');
+  await drop(page, [
+    { name: 'big.pdf', b64: pdfs.contract(1500).toString('base64') },
+    { name: 'last.pdf', b64: pdfs.simple(2).toString('base64') },
+    { name: 'small.pdf', b64: pdfs.simple(3).toString('base64') },
+  ]);
+  await expect(tabs(page)).toHaveCount(3);
+  await page.locator('[data-page="0"] img.page-preview').first().waitFor();
+  await openSearch(page);
+  await field(page).fill('e');
+  await pane(page).getByRole('radio', { name: 'All open documents' }).check();
+  await field(page).press('Enter');
+  await expect(status(page)).toHaveText(/^Searching/);
+  await page.getByRole('button', { name: 'Close big.pdf' }).click();
+  // small.pdf (active, 3 × "Page") and last.pdf (2), searched after the closed one.
+  await expect(status(page)).toHaveText('5 results', { timeout: 20_000 });
+  await expect(results(page).getByRole('option', { name: 'last.pdf (2)' })).toBeVisible();
+});

@@ -26,6 +26,8 @@ import { forgetSaveState } from '../save/save';
 import { findDuplicate, originalBlob, sources } from './sources';
 import { rememberClosed } from './closedTabs';
 import { forgetView, readLastView, trackView } from '../view/lastView';
+import { showStatusToast } from '../snapshot/snapshot';
+import { t } from '../../i18n';
 
 const newDocId = (): string => `doc-${crypto.randomUUID()}`;
 
@@ -87,6 +89,10 @@ async function openOne(
     if (dup) {
       advance(job, { type: 'duplicate', docId: dup });
       documentStore.getState().activate(dup);
+      // A copy under another name: say why no new tab opened (pre-release audit bug 13).
+      const openName = documentStore.getState().docs[dup]?.meta.name;
+      if (openName && openName !== file.name)
+        showStatusToast(dup, t('open.alreadyOpen', { name: openName }), true);
       return dup;
     }
     if (documentStore.getState().order.length >= MAX_DOCUMENTS) throw new OpenError('too-many');
