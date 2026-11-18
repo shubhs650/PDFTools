@@ -1,7 +1,7 @@
-# Triya PDF — Architecture & Product Specification (Rev 0.18)
+# Triya PDF — Architecture & Product Specification (Rev 0.19)
 
-**App:** Triya PDF (formerly PDFTools, D-41) · **URL:** `pdf-tools.openengtools.com` · **Platform:** Open Engineering Tools (OET)
-**Status:** Approved for implementation · **Last updated:** 18-Nov-2026 (Rev 0.18)
+**App:** Triya PDF (formerly PDFTools, D-41) · **URL:** `app.triyapdf.com` and `triya-pdf.openengtools.com` (D-28) · **Platform:** Open Engineering Tools (OET)
+**Status:** Approved for implementation · **Last updated:** 18-Nov-2026 (Rev 0.19)
 **Companion file:** `CLAUDE.md` (standing rules for the coding agent — read it first)
 
 > This document is the single source of truth. Where code and this document disagree, this document wins until it is deliberately amended. Decisions are numbered (D-xx) so commits, issues and ADRs can reference them.
@@ -25,6 +25,8 @@
 > **Rev 0.17 amendment** — [ADR-028](docs/adr/028-m11-tabs-fonts-select.md) (owner-approved 2026-11-17, all optional items accepted): **M11** — document tabs v2 (D-50), comments selectable in every pointer mode (D-51), a self-hosted font library for text comments with our own appearance streams (D-52), pick up where you left off (D-53), fonts installed on the computer (D-54), split, images to PDF and crop (D-55), resizable panes with edge arrows (D-56) (§2, §3.2, §7.1, §7.8, §8, §8.1, §9, §10.3, §13 M11).
 
 > **Rev 0.18 amendment** — [ADR-028](docs/adr/028-m11-tabs-fonts-select.md) amendment (owner, 2026-11-18): **D-54 withdrawn** — fonts installed on the user's computer are not supported (a cross-compatibility risk); text comments use only the fonts that ship with the app (D-52), and the library may grow later on user request (§2, §7.1, §10.3, §13 M11).
+
+> **Rev 0.19 amendment** — [ADR-029](docs/adr/029-v1-public-release.md) (owner-approved 2026-11-18): **V1 — version 1.0.0, the first public release** — release domains `app.triyapdf.com` and `triya-pdf.openengtools.com`, deployed from a version tag after approval; the beta keeps deploying `main` (D-28); no home button in the top bar, a repository link in About (D-35); the public tree names no other PDF product as a model and holds no third-party artwork or documents (D-57).
 
 > **Rev 0.16 amendment** — [ADR-027](docs/adr/027-m10-visual-refresh.md) amendment (owner-approved 2026-11-16, all optional items accepted): one-row header, bundled Inter font, accent colour and density choices (D-47), Create Blank PDF (D-49) (§2, §3.2, §7.8, §8, §10.3).
 
@@ -101,19 +103,19 @@ Tablet/phone UI · Safari parity · PDF text/content editing · form design beyo
 | D-25 | Custom print dialog + "Export Print-Ready PDF" (flattened) |
 | D-26 | Fill & save AcroForms; XFA → banner |
 | D-27 | Acceptance targets in §12 are contractual for typical files; **heavy files are measure-and-report for Rev 0** (ADR-002) |
-| D-28 | Standalone subdomain `pdf-tools.openengtools.com` |
+| D-28 | Release domains `app.triyapdf.com` and `triya-pdf.openengtools.com`, both serving the app from one Worker (`triya-pdf`), deployed only from a tag `vX.Y.Z` matching `package.json` on `main`, after one-click approval (ADR-029); the beta Worker keeps deploying `main` |
 | D-29 | Acrobat/PDF-XChange shortcut conventions; Windows alternates for browser-reserved keys |
 | D-30 | English only at launch, fully i18n-ready; baseline keyboard + screen-reader accessibility |
 | D-31 | Redaction in Rev 0 with strict safety rules (§7.9), using EmbedPDF's redaction engine (ADR-001 B8) |
 | D-32 | Public beta only after M1–M4 complete; solo internal testing with **public or self-made PDFs only** |
 | D-33 | Interop verified against **Acrobat Reader + PDF-XChange**. Bluebeam "expected, not verified" — never claimed publicly until confirmed |
-| D-35 | App shell (ADR-021): product mark and name in the banner; **OpenEngTools home** and **Report an issue on GitHub** open in a new tab (user navigations, no app request, no document content); **Full screen** of the whole app; status-bar snapping is a magnet toggle |
+| D-35 | App shell (ADR-021): product mark and name in the banner; **Report an issue on GitHub** opens in a new tab (the OpenEngTools home button was removed for the two release domains, ADR-029) (user navigations, no app request, no document content); **Full screen** of the whole app; status-bar snapping is a magnet toggle |
 | D-36 | **Adaptive ribbon** (ADR-021): groups step down from full labels to icons to a group dropdown so every tab fits 1280 px; ribbon tabs gain **Form** |
 | D-37 | **Comment styles** (ADR-021): per-tool defaults (red, 10 pt text, 1 pt lines; highlight and sticky note yellow; highlights at 50 % opacity and the typewriter black Courier — ADR-023) and style palettes, stored on the device |
 | D-38 | **Comment workflow** (ADR-021): context menus; cut/copy/paste of comments on the page; flatten; Attach File; Snapshot; Locked/Printable/Marked flags and review history; bookmark editing |
 | D-39 | **Form field creation** (ADR-021): Text, Check Box, Radio, List, Dropdown via EmbedPDF's form plugin; no JavaScript |
 | D-40 | **Password security** (apply/remove, new file, full rewrite, verified, AES-256) and **visual signatures** (draw/type/image as standard annotations; not certificate signing) (ADR-021) |
-| D-41 | **Product name Triya PDF** (ADR-023): every user-visible place; the domain (D-28), repository, storage names, PWA `id` and internal ids are unchanged |
+| D-41 | **Product name Triya PDF** (ADR-023): every user-visible place; the repository, storage names, PWA `id` and internal ids are unchanged; the release domains are in D-28 |
 | D-42 | **Dark theme** (ADR-023): light/dark toggle in the top bar, light default, stored on the device, pages stay white; tokens only |
 | D-43 | **Text comment interaction** (ADR-023): a new text comment starts editing with its placeholder selected; one click selects and drags; double-click edits; every exit commits the edit; our own text-editing menu; marquee, Ctrl+ and Shift+click selection; a new comment is selected |
 | D-44 | **Sticky note popup** (ADR-023): a multi-line popup window on the page (author, date, menu, status, lock, Reply); `/Popup` saved by our object layer if spike S23 passes |
@@ -129,6 +131,7 @@ Tablet/phone UI · Safari parity · PDF text/content editing · form design beyo
 | D-54 | ~~Fonts installed on this computer~~ — **withdrawn** by the owner 2026-11-18 (ADR-028 amendment, Rev 0.18): a cross-compatibility risk; only the fonts that ship with the app are supported (D-52), and the library may grow later on user request |
 | D-55 | **Page tools** (ADR-028): Split (every N pages, ranges, top-level bookmarks) into a chosen folder; Images to PDF (JPG/PNG, new document or inserted pages); Crop (sets `/CropBox` only, one undo step) |
 | D-56 | **Panes** (ADR-028): the right Properties pane is resizable like the left pane (splitter, drag and keys); a chevron on each pane's inner edge, always visible, hides or shows it through the existing pane commands |
+| D-57 | **Clean public tree** (ADR-029): the repository names no other PDF product as a model for its UI and holds no third-party artwork or documents; interop is described as "Acrobat Reader and other viewers"; a unit test fails if the name returns |
 | D-34 | **OCR** (Rev 1 item 1, ADR-020): Tesseract WASM core in its own worker, five languages (English precached, the rest on first use), invisible text layer written by our object layer with a glyphless font, pages with text skipped unless asked; needs the modify permission |
 
 ---
