@@ -36,8 +36,6 @@ import {
   takeCommentFontFallbacks,
 } from './render/commentFonts/apply';
 import { FaceStore, workerFontSource } from './render/commentFonts/faces';
-import { SystemFontFiles } from './render/commentFonts/systemFonts';
-import { setSystemFamilies } from '../model/fonts/library';
 import { SaveTracker, isMutation } from './render/save/tracker';
 import {
   createFileAttachment,
@@ -58,15 +56,9 @@ let mod: WrappedPdfiumModule | undefined;
 let native: PdfiumNative | undefined;
 let tracker: SaveTracker | undefined;
 const annotBoxCache = new AnnotBoxCache();
-/** Fonts on this computer (M11-08·O5, D-54): their files come from the main thread. */
-const systemFontFiles = new SystemFontFiles();
 /** The font library's faces (M11-07, D-52), loaded on first use from our own origin. */
 const commentFaces = new FaceStore(
-  workerFontSource(
-    self.location.origin,
-    new URL(subsetWasmUrl, self.location.href).href,
-    systemFontFiles,
-  ),
+  workerFontSource(self.location.origin, new URL(subsetWasmUrl, self.location.href).href),
 );
 
 /** An executor call that draws a text comment in a library font (its faces may load first). */
@@ -113,18 +105,6 @@ function toRpcError(err: unknown): RpcError {
 }
 
 const handlers: Handlers<RenderApi> = {
-  // Fonts on this computer (M11-08·O5, D-54): their names (read back from /DS) and files.
-  systemFonts: ({ families, port }) => {
-    setSystemFamilies(families);
-    if (port) systemFontFiles.connect(port);
-    return null;
-  },
-
-  inspectSystemFont: async ({ file }) => {
-    const { use, standard } = await systemFontFiles.inspect(file);
-    return { use, standard };
-  },
-
   init: async ({ wasmUrl, fontFallback }) => {
     // Runtime guard: callers outside TypeScript's reach (tests, future code).
     if ((fontFallback as unknown) === undefined) {

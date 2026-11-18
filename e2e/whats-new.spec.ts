@@ -40,7 +40,7 @@ test(
     const latest = section.getByTestId('whats-new-latest');
     await expect(latest.getByRole('heading', { name: LATEST_TITLE })).toBeVisible();
     await expect(latest).toContainText(/Released \w+ \d+, \d{4}|Released \d+/);
-    await expect(latest.getByRole('listitem')).toHaveCount(15);
+    await expect(latest.getByRole('listitem')).toHaveCount(14);
     await expect(latest).toContainText('View › Zoom to Area');
 
     // Earlier versions are folded until asked for.

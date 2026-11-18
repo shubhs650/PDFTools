@@ -187,8 +187,6 @@ test('the font list: groups, type-ahead, Recently used; the editor draws in the 
     'hand',
     'hindi',
     'chinese',
-    // Fonts on this computer (M11-08·O5, D-54): Chromium can list them.
-    'system',
   ]);
   await expect(listbox.getByRole('option', { name: 'Helvetica' })).toHaveAttribute(
     'aria-selected',

@@ -5,11 +5,6 @@
 // Styles window (all through the property grid). Keyboard: Enter, Space or
 // Down opens it; Up/Down, Home/End, Page Up/Down move; typing a name jumps to
 // it; Enter or Space chooses; Esc closes (back to the button).
-//
-// Fonts on this computer (M11-08·O5, D-54): in Chromium the last section is
-// "Show fonts on this computer…" until the browser lists them; a family is
-// checked (embedding flags, outlines) as it scrolls into view and before it is
-// used, and one that cannot be used stays listed, disabled, with the reason.
 import { ChevronDown12Regular } from '@fluentui/react-icons/svg/chevron-down';
 import * as Popover from '@radix-ui/react-popover';
 import { useEffect, useId, useMemo, useRef, useState, type KeyboardEvent } from 'react';
@@ -17,12 +12,6 @@ import { useTranslation } from 'react-i18next';
 import { cssFontStack, registerCommentFonts } from './commentFonts';
 import { fontOption, fontSections, typeahead, type FontOption } from './fontList';
 import { noteFontUsed, useRecentFonts } from './recentFonts';
-import {
-  checkSystemFamily,
-  showSystemFonts,
-  systemFontsSupported,
-  useSystemFonts,
-} from './systemFonts';
 
 export interface FontPickerProps {
   /** The field's label element id: the button is named "‹label› ‹font›" (rule 12). */
@@ -48,19 +37,7 @@ export function FontPicker({ labelId, label, value, onChange, disabled, id }: Fo
   const valueId = `${buttonId}-value`;
   const recent = useRecentFonts();
   const [open, setOpen] = useState(false);
-  const sysState = useSystemFonts((s) => s.state);
-  const sysIds = useSystemFonts((s) => s.ids);
-  const sysChecks = useSystemFonts((s) => s.checks);
-  const sections = useMemo(
-    () =>
-      fontSections(recent, {
-        supported: systemFontsSupported(),
-        state: sysState,
-        ids: sysIds,
-        checks: sysChecks,
-      }),
-    [recent, sysState, sysIds, sysChecks],
-  );
+  const sections = useMemo(() => fontSections(recent), [recent]);
   const flat = useMemo(
     () => sections.flatMap((s) => s.options.map((o) => ({ section: s.id, option: o }))),
     [sections],
@@ -75,8 +52,6 @@ export function FontPicker({ labelId, label, value, onChange, disabled, id }: Fo
   const [active, setActive] = useState(currentIndex);
   const list = useRef<HTMLDivElement>(null);
   const typed = useRef({ text: '', at: 0 });
-  /** A font on this computer being checked before it is used (D-54); dropped if the list closes. */
-  const pending = useRef<string | null>(null);
 
   useEffect(() => {
     if (!open) return;
@@ -85,60 +60,12 @@ export function FontPicker({ labelId, label, value, onChange, disabled, id }: Fo
       ?.scrollIntoView({ block: 'nearest' });
   }, [open, active]);
 
-  // Fonts on this computer are checked as they come into view (D-54), one at a time.
-  useEffect(() => {
-    const root = list.current;
-    if (!open || sysState !== 'on' || !root || typeof IntersectionObserver === 'undefined') return;
-    const seen = new IntersectionObserver(
-      (entries) => {
-        for (const en of entries) {
-          const font = en.isIntersecting ? (en.target as HTMLElement).dataset['font'] : undefined;
-          if (font) {
-            seen.unobserve(en.target);
-            void checkSystemFamily(font);
-          }
-        }
-      },
-      { root },
-    );
-    for (const el of root.querySelectorAll('[data-system]')) seen.observe(el);
-    return () => {
-      seen.disconnect();
-    };
-  }, [open, sysState, sysIds]);
-
-  const pickFont = (id: string): void => {
-    setOpen(false);
-    noteFontUsed(id);
-    if (id !== value) onChange(id);
-  };
-
   const choose = (i: number): void => {
     const e = flat[i];
-    if (!e) {
-      setOpen(false);
-      return;
-    }
-    const o = e.option;
-    if (o.action === 'showSystem') {
-      // On this click (or key) only, behind the browser's permission prompt (D-54). The
-      // fonts then take the entry's place, so the first of them becomes the active one.
-      void showSystemFonts();
-      return;
-    }
-    if (o.disabled) return;
-    if (!o.system) {
-      pickFont(o.id);
-      return;
-    }
-    pending.current = o.id;
-    void (async () => {
-      if (sysState !== 'on') await showSystemFonts();
-      const check = await checkSystemFamily(o.id);
-      if (pending.current !== o.id) return;
-      pending.current = null;
-      if (check === 'ok') pickFont(o.id);
-    })();
+    setOpen(false);
+    if (!e) return;
+    noteFontUsed(e.option.id);
+    if (e.option.id !== value) onChange(e.option.id);
   };
 
   const onListKey = (e: KeyboardEvent<HTMLDivElement>): void => {
@@ -201,7 +128,6 @@ export function FontPicker({ labelId, label, value, onChange, disabled, id }: Fo
     <Popover.Root
       open={open}
       onOpenChange={(o) => {
-        if (!o) pending.current = null;
         if (o) {
           registerCommentFonts();
           setActive(currentIndex);
@@ -279,8 +205,6 @@ export function FontPicker({ labelId, label, value, onChange, disabled, id }: Fo
                   index++;
                   const i = index;
                   const selected = o.id === value;
-                  // Why a font on this computer cannot be used (D-54), after its name.
-                  const reason = o.disabled && o.system ? t(o.disabled) : undefined;
                   return (
                     // Keyboard: the list moves the choice (aria-activedescendant).
                     // eslint-disable-next-line jsx-a11y/click-events-have-key-events
@@ -290,20 +214,10 @@ export function FontPicker({ labelId, label, value, onChange, disabled, id }: Fo
                       id={optionId(i)}
                       role="option"
                       aria-selected={selected}
-                      aria-disabled={o.disabled ? true : undefined}
-                      aria-describedby={reason ? `${optionId(i)}-why` : undefined}
                       data-index={i}
-                      data-font={o.action ? undefined : o.id}
-                      data-system={o.system && !o.disabled && s.id === 'system' ? '' : undefined}
-                      data-action={o.action}
+                      data-font={o.id}
                       data-active={i === active || undefined}
-                      className={
-                        o.action
-                          ? 'ui-font-option ui-font-option--action'
-                          : o.disabled
-                            ? 'ui-font-option ui-font-option--disabled'
-                            : 'ui-font-option'
-                      }
+                      className="ui-font-option"
                       onPointerMove={() => {
                         if (i !== active) setActive(i);
                       }}
@@ -311,17 +225,9 @@ export function FontPicker({ labelId, label, value, onChange, disabled, id }: Fo
                         choose(i);
                       }}
                     >
-                      <span
-                        className="ui-font-name"
-                        style={o.action ? undefined : { fontFamily: cssFontStack(o.id) }}
-                      >
+                      <span className="ui-font-name" style={{ fontFamily: cssFontStack(o.id) }}>
                         {nameOf(o)}
                       </span>
-                      {reason ? (
-                        <span id={`${optionId(i)}-why`} className="ui-font-why">
-                          {reason}
-                        </span>
-                      ) : null}
                       {o.sample ? (
                         <span
                           className="ui-font-sample"

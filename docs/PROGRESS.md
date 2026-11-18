@@ -1,14 +1,14 @@
 # Triya PDF — Progress
 
-_Last updated: 2026-11-17 (session 93: M11-09 acceptance)_
+_Last updated: 2026-11-18 (session 94: fonts on this computer withdrawn, D-54)_
 
 **Current milestone:** M11 — file tabs, OCR text selection, a font library and comments in every
 pointer mode: plan [docs/plan/M11.md](plan/M11.md) and [ADR-028](adr/028-m11-tabs-fonts-select.md)
 **accepted** by the owner (2026-11-17: recommended answers, fonts all shipped with the app, and
 all nine optional items O1–O9), plus task M11-10 (resizable Properties pane and pane edge arrows,
-D-56) added by the owner; ARCHITECTURE.md Rev 0.17 (D-50 … D-56). **M11 is complete on the agent side**
-([acceptance](acceptance/M11.md), session 93); waiting on the owner pack (§6: interop §M11, the O5
-start-up question). **M10 closed** by the
+D-56) added by the owner; ARCHITECTURE.md Rev 0.17 (D-50 … D-56), Rev 0.18 (D-54 withdrawn by the
+owner on 2026-11-18: only the fonts that ship with the app). **M11 is complete on the agent side**
+([acceptance](acceptance/M11.md), session 93); waiting on the owner pack (§6: interop §M11). **M10 closed** by the
 owner on 2026-11-17 ("majority aspects of the tool are working good"). **Earlier:** M10 — modern
 look and feel (plan [docs/plan/M10.md](plan/M10.md),
 [ADR-027](adr/027-m10-visual-refresh.md), ARCHITECTURE.md Rev 0.16): **complete** ([acceptance](acceptance/M10.md)); the owner closed it on 2026-11-17. M9 (Help
@@ -20,6 +20,22 @@ answers Q1–Q7; ARCHITECTURE.md Rev 0.12 after [ADR-024](adr/024-freetext-text-
 interop is in the M6 pack (CHECKLIST §M6 R1–R4). Rev 0 (M0–M4) is complete on the agent side.
 
 ## Done
+
+- **Session 94 — fonts on this computer withdrawn (D-54, ADR-028 amendment, Rev 0.18).** The
+  owner (2026-11-18): avoid fonts installed on the user's computer altogether, a major
+  cross-compatibility risk; support only the fonts that ship with the app, and grow the library
+  later only on user request. M11-08·O5 (PR #135) is removed: Local Font Access, the `sys:` ids
+  and runtime registry (`library.ts`), `sfnt.ts`, `systemFamilies.ts`, the Render worker's font
+  port and the Work worker's names (`systemFonts`, `inspectSystemFont` RPCs), the font list's
+  "On this computer" section and its start-up listing, the Help section, the Privacy promise, the
+  What's new item (beta-m11 back to 14 items) and their tests (`e2e/system-fonts.spec.ts`,
+  `tests/model/systemFonts.test.ts`, `e2e/fixtures/fonts.ts`). Kept from #135: a comment whose
+  font faces fail to load keeps its text colour (`applyTextColors(..., fontFaces)`), and the Crop
+  Tool e2e race fix. Docs: ADR-028 (D-54 amendment), ARCHITECTURE.md Rev 0.18 (§2 D-54, §7.1,
+  §10.3, §13), plan M11 status, acceptance M11 (update note, §5 limits, §6 owner pack without Y
+  and the O5 question), CHECKLIST §M11 (Y withdrawn), release notes beta-m11. Help screenshot
+  `privacy-1` regenerated. Checks: typecheck, lint, format, 1,816 unit tests (203 files),
+  comment-fonts, whats-new, help and the M11 a11y specs pass locally.
 
 - **Session 93 — M11-09 acceptance (ADR-028).** [docs/acceptance/M11.md](acceptance/M11.md): the
   owner's five points and the added panes task mapped to tasks, PRs and tests; all 17 earlier M11

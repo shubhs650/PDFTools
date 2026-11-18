@@ -453,11 +453,12 @@ typewriter grew to hold its one line (B15).
 | W2  | The typewriter reads "Typewriter: black Courier, moved" on one line, black Courier, nothing cut off; the text box and callout are red, 10 pt.                       |         |             |
 | W3  | Edit each one's text there and save; reopened in Triya PDF, the new text shows, and a double-click edits it with the caret where you clicked.                       |         |             |
 
-## M11 — fonts in text comments (D-52, D-54), crop, split and images to PDF (D-55; [M11 acceptance](../../docs/acceptance/M11.md))
+## M11 — fonts in text comments (D-52), crop, split and images to PDF (D-55; [M11 acceptance](../../docs/acceptance/M11.md))
 
 Files X and Z are in `e2e/fixtures/self-made/m11-interop/`, made by the app and saved with Ctrl+S
-(regenerate them with `M11_INTEROP_OUT=1 npm run owner:interop:m11`). Y and AA use your own
-computer's fonts and your own files, on the deployed beta.
+(regenerate them with `M11_INTEROP_OUT=1 npm run owner:interop:m11`). AA uses your own files, on
+the deployed beta. (Check Y, fonts on this computer, was withdrawn with D-54 on 2026-11-18: only
+the fonts that ship with the app are supported.)
 
 ### X. Text comments in library fonts (M11-07, D-52)
 
@@ -473,19 +474,6 @@ Serif 4, JetBrains Mono, Caveat, Noto Sans Devanagari (नमस्ते: प�
 | X2  | The Hindi line's letters join as in Triya PDF (the conjuncts in स्ते and शो), the Chinese line shows its characters, and the X2 line shows every symbol. |         |             |
 | X3  | Their comments list shows each comment's text as written (the Hindi and Chinese too).                                                                    |         |             |
 | X4  | Edit the Carlito comment's text there and save; reopened in Triya PDF, the new text shows (in Carlito, or in the font their viewer chose: note which).   |         |             |
-
-### Y. Fonts on this computer (M11-08·O5, D-54; Chrome or Edge on your computer)
-
-1. In Triya PDF, add a text box, open the Font list, choose **Show fonts on this computer…** and
-   allow the browser's prompt.
-2. Choose a font that came with Windows or Office (Calibri, Arial, Segoe UI) and one from your
-   CAD install if you have one (ISOCPEUR). Type a line in each, with ⌀ 150 ± 0.5. Ctrl+S.
-
-| #   | Check                                                                                                                                                        | Acrobat | PDF-XChange |
-| --- | ------------------------------------------------------------------------------------------------------------------------------------------------------------ | ------- | ----------- |
-| Y1  | The saved file shows each line in its font in their viewer; if you can, also on a second computer that doesn't have the font (it is embedded).               |         |             |
-| Y2  | A font the list shows greyed out gives a reason (its license doesn't allow embedding); note the font's name.                                                 |         |             |
-| Y3  | After closing and reopening the browser, the font list shows your computer's fonts again without a new prompt (tell us if you would rather click each time). | n/a     | n/a         |
 
 ### Z. Cropped pages (M11-08·O9, D-55)
 

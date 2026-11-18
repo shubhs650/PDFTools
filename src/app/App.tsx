@@ -10,7 +10,6 @@ import { ToolHint } from '../features/annotate/tools/ToolHint';
 import { installRecovery } from '../features/recovery/recovery';
 import { installLastViews } from '../features/view/lastView';
 import { installSession } from '../features/session/session';
-import { restoreSystemFonts } from '../features/annotate/fonts/systemFonts';
 import { registerFormCommands } from '../features/forms/commands';
 import { registerPrintCommands } from '../features/print/commands';
 import { registerExtractCommands } from '../features/extract/commands';
@@ -170,10 +169,6 @@ export function App() {
         void startBackgroundPrecache();
       }, 1000);
     });
-  }, []);
-  // Fonts on this computer (M11-08·O5, D-54): listed again only if the user allowed it before.
-  useEffect(() => {
-    void restoreSystemFonts();
   }, []);
   // Pick up where you left off (M11-08·O2, D-53): last session's files, if so chosen.
   useEffect(() => installSession(), []);

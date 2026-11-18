@@ -1,9 +1,9 @@
 # Triya PDF beta: what's new (November 2026, tabs, fonts and picking up where you left off)
 
 Better file tabs, a library of fonts for text comments, comments you can pick up with any tool,
-and nine everyday features beta users asked about: pick up where you left off, each file's last
-view, a selected-text menu, Zoom to Area, copying pictures, Images to PDF, Split Document, Crop
-Pages and the fonts installed on your computer. Nothing moved: every command is where it was.
+and eight everyday features beta users asked about: pick up where you left off, each file's last
+view, a selected-text menu, Zoom to Area, copying pictures, Images to PDF, Split Document and Crop
+Pages. Nothing moved: every command is where it was.
 
 ## Pick up where you left off
 
@@ -55,18 +55,9 @@ Pages and the fonts installed on your computer. Nothing moved: every command is 
   fonts at the top, and jumps to a name as you type it.
 - The font is embedded in the saved file (only the letters used), so Acrobat Reader, PDF-XChange
   and other readers show the comment as you wrote it. Symbols such as ⌀, °, ± and Ω are drawn even when a font lacks them.
+- Only the fonts that come with Triya PDF are offered, so a comment looks the same on every
+  computer. Tell us which fonts you miss and we may add them in a later version.
 - Form fields keep the three standard fonts for now.
-
-## Fonts on this computer (Chrome and Edge)
-
-- At the end of the font list, **Show fonts on this computer…** lists the fonts installed on
-  your computer, such as Arial, Calibri or ISOCPEUR from a CAD install, after the browser asks
-  for your permission. Nothing is read before you choose it, and nothing leaves your computer.
-- A font whose license doesn't allow embedding is listed but can't be chosen, with the reason.
-  Fonts that can only be embedded for viewing and printing are embedded that way, as Acrobat
-  does.
-- Once you have allowed it, the list shows your fonts again the next time Triya PDF starts.
-  Other browsers don't show the section.
 
 ## Viewing
 
