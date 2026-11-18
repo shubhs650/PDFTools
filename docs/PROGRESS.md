@@ -1,6 +1,6 @@
 # Triya PDF — Progress
 
-_Last updated: 2026-11-18 (session 94: fonts on this computer withdrawn, D-54)_
+_Last updated: 2026-11-18 (session 95: pre-release bug audit, findings only)_
 
 **Current milestone:** M11 — file tabs, OCR text selection, a font library and comments in every
 pointer mode: plan [docs/plan/M11.md](plan/M11.md) and [ADR-028](adr/028-m11-tabs-fonts-select.md)
@@ -20,6 +20,18 @@ answers Q1–Q7; ARCHITECTURE.md Rev 0.12 after [ADR-024](adr/024-freetext-text-
 interop is in the M6 pack (CHECKLIST §M6 R1–R4). Rev 0 (M0–M4) is complete on the agent side.
 
 ## Done
+
+- **Session 95 — pre-release bug audit (findings only, nothing fixed).** The owner asked for a
+  last recheck for major UI and feature bugs before the full release, starting from their report
+  that Advanced Search's highlight stays after the pane closes. 13 bugs, each rated 1–5 for
+  severity and occurrence with steps and likely cause, in
+  [docs/acceptance/pre-release-bugs.md](acceptance/pre-release-bugs.md); the top ones: the
+  Advanced Search highlight (3 × 5), search highlights shifted on cropped pages and pages whose
+  CropBox or MediaBox does not start at 0,0 (4 × 3), half-drawn Polyline, Polygon, Cloud,
+  Perimeter and Area shapes left as ghosts when the tool changes (3 × 3), and Advanced Search
+  saying "No results" after any page change (3 × 3). No data loss or crash found. Scratch specs
+  and screenshots are in the project files under `pre-release-audit/`. Next: the owner chooses
+  which to fix before release.
 
 - **Session 94 — fonts on this computer withdrawn (D-54, ADR-028 amendment, Rev 0.18).** The
   owner (2026-11-18): avoid fonts installed on the user's computer altogether, a major
