@@ -30,6 +30,19 @@ interop is in the M6 pack (CHECKLIST §M6 R1–R4). Rev 0 (M0–M4) is complete 
 
 ## Done
 
+- **CI for two parallel PRs (M12 autodrive).** `.github/workflows/ci.yml`: the PR e2e set no
+  longer runs as one 13–15 min job; the smoke flows with the perf smoke scenarios run on one
+  runner and the axe gate on two (`--shard=N/2`, the offline flow on part 2), beside the checks
+  job: PR runs took 6.5–11 min instead of 13–15 (runner speed varies). Shared set-up in
+  `.github/actions/setup-e2e` (Chromium files cached per `package-lock.json`). A "CI result" job
+  fails when any job failed or was cancelled: the one check to read. Rules for two PRs at once
+  in [docs/deploy/ci.md](deploy/ci.md): when another PR merges first, update from `main` and get
+  a new green run before merging. Tried and dropped: sharding the smoke flows, which made
+  `e2e/paste-image.spec.ts` the first test on a fresh worker and its long-task check saw a cold
+  first-paste task of 110–117 ms in 2 of 3 runs (logged on #59). Open: `e2e/perf/open.spec.ts`
+  @smoke fails intermittently (134 ms task on a PR run; red in main's perf job since
+  2026-11-22), `bookmark-editing.spec.ts:260` and `comment-copy-paste.spec.ts:33` fail now and
+  then in full shard 1/3.
 - **M12-01 — comparison corpus additions (Q37, D-66).** A self-made generator in
   `e2e/fixtures/comparison-corpus/` (Node, no new dependency: its own small PDF writer,
   standard 14 fonts, its own stroke font for text as curves) rebuilds every new pair with
