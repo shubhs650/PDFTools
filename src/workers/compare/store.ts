@@ -26,11 +26,17 @@ import {
 } from '../../model/compare/align/aligner';
 import type { Ink } from '../../model/compare/align/ink';
 import { pairPages, type PairingResult, type PairingSide } from '../../model/compare/pairing';
+import { buildDoc } from '../../model/compare/text/document';
+import { layoutBytes, pageLayout, type PageLayout } from '../../model/compare/text/layout';
+import { matchText, type TextComparison } from '../../model/compare/text/match';
+import { Interner } from '../../model/compare/text/myers';
 import { SheetAccumulator } from './sheetFacts';
 
 interface Side {
   signatures: Map<number, PageSignature>;
   texts: Map<number, PageText>;
+  /** Pages of a text comparison: words in reading order (M12-17). */
+  layouts: Map<number, PageLayout>;
   /** Feature points per page for alignment (M12-10): x, y, … in displayed pt. */
   features: Map<number, Float64Array>;
 }
@@ -43,9 +49,11 @@ interface AlignRaster {
 
 class Comparison {
   readonly sides: Record<CompareSide, Side> = {
-    a: { signatures: new Map(), texts: new Map(), features: new Map() },
-    b: { signatures: new Map(), texts: new Map(), features: new Map() },
+    a: { signatures: new Map(), texts: new Map(), layouts: new Map(), features: new Map() },
+    b: { signatures: new Map(), texts: new Map(), layouts: new Map(), features: new Map() },
   };
+  /** Token and paragraph keys of a text comparison, shared by both sides. */
+  readonly words = new Interner();
   readonly sheets = new Map<number, SheetAccumulator>();
   /** Each sheet's alignment (M12-10, D-60). */
   readonly alignments = new Map<number, SheetAlignment>();
@@ -79,13 +87,69 @@ export class CompareStore {
     return c.bytes;
   }
 
-  putText(cmpId: string, side: CompareSide, page: number, text: PageText): number {
+  /**
+   * Keeps a page's positioned text; with `layout`, only its words in reading
+   * order (a text comparison, M12-17): the characters are dropped.
+   */
+  putText(cmpId: string, side: CompareSide, page: number, text: PageText, layout = false): number {
     const c = this.get(cmpId);
-    const old = c.sides[side].texts.get(page);
+    const s = c.sides[side];
+    if (layout) {
+      const old = s.layouts.get(page);
+      if (old) c.bytes -= layoutBytes(old);
+      const l = pageLayout(text);
+      s.layouts.set(page, l);
+      c.bytes += layoutBytes(l);
+      return c.bytes;
+    }
+    const old = s.texts.get(page);
     if (old) c.bytes -= textBytes(old);
-    c.sides[side].texts.set(page, text);
+    s.texts.set(page, text);
     c.bytes += textBytes(text);
     return c.bytes;
+  }
+
+  /**
+   * Compares the text of both sides (M12-17, D-63) on their first pages:
+   * `pages` of each, or every page up to the first one not put yet.
+   */
+  matchText(
+    cmpId: string,
+    pages?: { a: number; b: number },
+    moves?: boolean,
+    tick?: (stage: 'read' | 'match', done: number, total: number) => void,
+  ): TextComparison {
+    const c = this.get(cmpId);
+    const prefix = (side: CompareSide, want?: number): PageLayout[] => {
+      const out: PageLayout[] = [];
+      const m = c.sides[side].layouts;
+      for (let p = 0; want === undefined || p < want; p++) {
+        const l = m.get(p);
+        if (!l) {
+          if (want !== undefined) throw new Error('page text missing');
+          break;
+        }
+        out.push(l);
+      }
+      return out;
+    };
+    const la = prefix('a', pages?.a);
+    const lb = prefix('b', pages?.b);
+    const total = la.length + lb.length;
+    let read = 0;
+    const step = (): void => {
+      tick?.('read', Math.min(++read, total), total);
+    };
+    const docA = buildDoc(la, c.words, { checkpoint: step });
+    const docB = buildDoc(lb, c.words, { checkpoint: step });
+    tick?.('read', total, total);
+    let gaps = 0;
+    return matchText(docA, docB, {
+      ...(moves === false ? { moves: false } : {}),
+      checkpoint: () => {
+        tick?.('match', ++gaps, 0);
+      },
+    });
   }
 
   signature(cmpId: string, side: CompareSide, page: number): PageSignature | undefined {
@@ -251,7 +315,10 @@ export class CompareStore {
     const c = this.get(cmpId);
     return {
       signatures: { a: c.sides.a.signatures.size, b: c.sides.b.signatures.size },
-      texts: { a: c.sides.a.texts.size, b: c.sides.b.texts.size },
+      texts: {
+        a: c.sides.a.texts.size + c.sides.a.layouts.size,
+        b: c.sides.b.texts.size + c.sides.b.layouts.size,
+      },
       sheets: c.sheets.size,
       bytes: c.bytes,
     };

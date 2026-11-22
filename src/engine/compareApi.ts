@@ -1,6 +1,7 @@
 import type { PageSignature, PageText, RasterBand } from '../model/compare/material';
 import type { AsIsCheck, SheetAlignment } from '../model/compare/align/aligner';
 import type { PairingResult } from '../model/compare/pairing';
+import type { TextComparison } from '../model/compare/text/match';
 import type { MethodSpec } from './protocol';
 
 /**
@@ -12,6 +13,11 @@ import type { MethodSpec } from './protocol';
  * rasters are never kept whole (S28): each band pair is folded into its
  * sheet's running state and dropped. Later tasks add alignment (M12-10),
  * detection (M12-14) and text matching (M12-17) as further methods.
+ *
+ * A text comparison (M12-17, D-63) puts each page's text with `layout`: the
+ * worker reads the page's words in reading order at once and keeps that
+ * (typed arrays, about a fifth of the characters' size) instead of the
+ * characters; `matchText` then compares the pages put so far.
  *
  * `cmpId` names one comparison; `release` drops everything it holds.
  */
@@ -62,6 +68,16 @@ export interface PairingLayout {
   names: string[];
 }
 
+/**
+ * A text comparison's progress: pages read into paragraphs, then the
+ * stretches compared (their number is not known before: total 0).
+ */
+export interface TextMatchProgress {
+  stage: 'read' | 'match';
+  done: number;
+  total: number;
+}
+
 /** Rows of the similarity matrix done so far. */
 export interface PairingProgress {
   done: number;
@@ -76,8 +92,19 @@ export interface CompareApi {
     { bytes: number }
   >;
   putText: MethodSpec<
-    { cmpId: string; side: CompareSide; page: number; text: PageText },
+    { cmpId: string; side: CompareSide; page: number; text: PageText; layout?: boolean },
     { bytes: number }
+  >;
+  /**
+   * Compares the text of the two sides (M12-17, D-63) on the pages put with
+   * `layout`: side pages 0 … `pages.a` − 1 of A against 0 … `pages.b` − 1 of
+   * B (default: every page up to the first one missing). Progress counts
+   * pages read into paragraphs, then the stretches compared.
+   */
+  matchText: MethodSpec<
+    { cmpId: string; pages?: { a: number; b: number }; moves?: boolean },
+    TextComparison,
+    TextMatchProgress
   >;
   /**
    * The same rows of both analysis rasters of sheet `sheet` (A already drawn

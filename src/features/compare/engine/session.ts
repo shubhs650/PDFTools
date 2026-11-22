@@ -26,6 +26,7 @@
 // the signatures already read.
 import type {
   CompareSide,
+  TextMatchProgress,
   PairingLayout,
   PairingProgress,
   SheetFacts,
@@ -54,6 +55,7 @@ import {
   type RasterBand,
 } from '../../../model/compare/material';
 import type { PairingResult } from '../../../model/compare/pairing';
+import type { TextComparison } from '../../../model/compare/text/match';
 import { CompareQueue, type QueueProgress, type QueueTask } from './jobQueue';
 
 /** One file of a side. */
@@ -123,6 +125,19 @@ export interface SessionOptions {
   concurrency?: number;
   /** Align the sheets automatically (D-60; default true): an overlay aligns, a text comparison does not. */
   align?: boolean;
+  /**
+   * A text comparison (M12-17, D-63): each page's text is read into words in
+   * reading order and the two sides are matched, first on their first pages
+   * (1, 2, 4, 8, … as they arrive) and then whole. No signatures, no
+   * alignment, no rasters.
+   */
+  text?: boolean;
+  /** Detect moves in a text comparison (default true). */
+  moves?: boolean;
+  /** A text comparison's result: on the first pages while it runs, then complete. */
+  onText?: (result: TextComparison, state: TextState) => void;
+  /** Text matching progress (pages read into paragraphs, then stretches compared). */
+  onTextProgress?: (progress: TextMatchProgress) => void;
   onSheet?: (sheet: number, facts: SheetFacts) => void;
   /** A sheet's alignment and its status, as soon as it is known. */
   onAlign?: (sheet: number, alignment: SheetAlignment) => void;
@@ -130,6 +145,25 @@ export interface SessionOptions {
   onPairing?: (progress: PairingProgress & { stage: 'read' | 'match' }) => void;
   onProgress?: (progress: QueueProgress) => void;
   onError?: (key: string, error: Error) => void;
+}
+
+/** Which pages a text result covers; `complete` when it covers both documents. */
+export interface TextState {
+  complete: boolean;
+  pages: { a: number; b: number };
+  /**
+   * Pages whose changes are final: S30 found that matching the first n
+   * pages gives the whole comparison's changes for all but the last two
+   * (moves are settled only when complete).
+   */
+  settled: { a: number; b: number };
+}
+
+/** Prefix sizes of the early text results: 1, 2, 4, 8, … below `n`. */
+export function textCheckpoints(n: number): number[] {
+  const out: number[] = [];
+  for (let k = 1; k < n; k *= 2) out.push(k);
+  return out;
 }
 
 let seq = 0;
@@ -161,6 +195,7 @@ export class CompareSession {
   private readonly alignWatchers = new Set<(sheet: number, alignment: SheetAlignment) => void>();
   private closed = false;
   private started = false;
+  private text: { result: TextComparison; state: TextState } | null = null;
 
   constructor(a: CompareInput, b: CompareInput, opts: SessionOptions) {
     this.a = a;
@@ -323,7 +358,72 @@ export class CompareSession {
     return out;
   }
 
+  /** The latest text result (M12-17), or null before the first. */
+  textResult(): { result: TextComparison; state: TextState } | null {
+    return this.text;
+  }
+
+  /** A text comparison's tasks: every page's text, then matching on growing prefixes. */
+  private textTasks(): QueueTask[] {
+    const out: QueueTask[] = [];
+    for (const side of ['a', 'b'] as const)
+      this.pages[side].forEach((p, k) => {
+        out.push({
+          key: `text:${side}:${String(k)}`,
+          sheet: k,
+          phase: 0,
+          run: (signal) => this.readText(side, p, k, signal, true),
+        });
+      });
+    const na = this.pages.a.length;
+    const nb = this.pages.b.length;
+    const upTo = (n: number): string[] => {
+      const keys: string[] = [];
+      for (let k = 0; k < Math.min(n, na); k++) keys.push(`text:a:${String(k)}`);
+      for (let k = 0; k < Math.min(n, nb); k++) keys.push(`text:b:${String(k)}`);
+      return keys;
+    };
+    for (const n of [...textCheckpoints(Math.max(na, nb)), Math.max(na, nb)]) {
+      const pages = { a: Math.min(n, na), b: Math.min(n, nb) };
+      const complete = pages.a === na && pages.b === nb;
+      out.push({
+        key: complete ? 'match' : `match:${String(n)}`,
+        sheet: null,
+        phase: 1,
+        after: upTo(n),
+        run: (signal) => this.matchText(pages, complete, signal),
+      });
+    }
+    return out;
+  }
+
+  private async matchText(
+    pages: { a: number; b: number },
+    complete: boolean,
+    signal: AbortSignal,
+  ): Promise<void> {
+    // An early result is worth nothing once a larger one is in.
+    const have = this.text?.state.pages;
+    if (have && have.a >= pages.a && have.b >= pages.b) return;
+    const result = await this.opts.compare.call(
+      'matchText',
+      { cmpId: this.id, pages, ...(this.opts.moves === false ? { moves: false } : {}) },
+      { signal, ...(this.opts.onTextProgress ? { onProgress: this.opts.onTextProgress } : {}) },
+    ).promise;
+    if (signal.aborted) return;
+    const now = this.text?.state.pages;
+    if (now && now.a >= pages.a && now.b >= pages.b) return;
+    const state: TextState = {
+      complete,
+      pages,
+      settled: complete ? pages : { a: Math.max(0, pages.a - 2), b: Math.max(0, pages.b - 2) },
+    };
+    this.text = { result, state };
+    this.opts.onText?.(result, state);
+  }
+
   private tasks(): QueueTask[] {
+    if (this.opts.text) return this.textTasks();
     const out: QueueTask[] = [];
     const sigs = new Map(this.signatureTasks().map((t) => [t.key, t]));
     for (const side of ['a', 'b'] as const)
@@ -385,6 +485,7 @@ export class CompareSession {
     from: SidePage,
     page: number,
     signal: AbortSignal,
+    layout = false,
   ): Promise<void> {
     const text: PageText = await this.opts.work.run(
       'compareText',
@@ -393,7 +494,7 @@ export class CompareSession {
     ).promise;
     await this.opts.compare.call(
       'putText',
-      { cmpId: this.id, side, page, text },
+      { cmpId: this.id, side, page, text, ...(layout ? { layout } : {}) },
       { signal, transfer: textBuffers(text) },
     ).promise;
   }

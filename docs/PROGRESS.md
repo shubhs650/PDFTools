@@ -1,6 +1,6 @@
 # Triya PDF — Progress
 
-_Last updated: 2026-11-22 (M12-11: the overlay view)_
+_Last updated: 2026-11-22 (M12-17: text comparison engine)_
 
 **Current milestone:** M12 — PDF comparison (PDF overlay for drawings, text comparison for
 documents), version 1.1.0: plan [docs/plan/M12.md](plan/M12.md) and
@@ -30,6 +30,33 @@ interop is in the M6 pack (CHECKLIST §M6 R1–R4). Rev 0 (M0–M4) is complete 
 
 ## Done
 
+- **M12-17 — text comparison engine (D-63).** Spike S30's method as app code in
+  `src/model/compare/text/` (our own code, no new dependency): `tokens.ts` (engineering values,
+  tags and dates kept whole, scripts without spaces one token per character, NFKC keys, percent
+  change), `myers.ts` (linear-space Myers, unique anchors, numbers never anchors), `layout.ts`
+  (words from the Work worker's characters: gaps, baseline, size, right to left back to logical
+  order, combining marks kept, generated and rotated characters left out; recursive XY-cut; the
+  page kept as a typed `PageLayout`), `headers.ts` (running headers and footers found, left out
+  and reported once with `{n}` for page numbers; experimental), `document.ts` (paragraphs
+  across columns and pages, line-end hyphens joined, flat typed arrays per document) and
+  `match.ts` (paragraphs matched whole first, then word by word in the gaps; a stretch of up to
+  6,000 words compared exactly; a replacement across paragraphs split per paragraph; moves of
+  blocks and of long runs with the edits inside them, never a block that stays in its own gap;
+  percent change for a number against a number; marks as one rectangle a line, a character of a
+  no-space script by its share of the word; content sync points; "limited support" pages). The
+  Compare worker keeps a text comparison's page as its layout (`putText` with `layout`, about a
+  fifth of the characters) and `matchText` compares the pages put so far, with progress and
+  cancel. `CompareSession` with `text: true` reads only text and matches on 1, 2, 4, 8, … pages
+  as they arrive, then whole (`onText`, `textResult()`, `TextState.settled` = all but the last
+  two pages, S30). **Moved forward from M12-18:** header and footer detection, because page
+  furniture landing between paragraphs wherever page breaks fall gave false moves on pairs 04 and
+  06; M12-18 keeps the switch in the window, hand-drawn bands, tables, renumbering, figures and
+  OCR. Tests: `tests/compare/text-engine.test.ts` (35, self-made text) and
+  `tests/compare/text-corpus.test.ts` (pairs 01, 03, 04, 06, 09, 11 through the session on real
+  PDFium: every manifest item found and every change explained; figures and table rows marked
+  for M12-18). Pair 17 (500 pages): about 0.6 s a side to build and 25 ms to match in Node;
+  without M12-18's renumbering the 38 shifted clause numbers of its article are listed one by one.
+  Not yet: no window starts a text comparison (M12-19).
 - **M12-11 — the overlay view (D-59).** The comparison tab's result for overlay comparisons
   (`src/features/compare/overlay/`). **Render worker** (`src/workers/render/overlayTiles.ts`,
   jobs `overlayFrame`, `overlayTile`, `overlayRelease`): each revision's page content (no
