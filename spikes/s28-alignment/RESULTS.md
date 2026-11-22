@@ -254,7 +254,12 @@ The independent truth found two bugs in the M12-01 generator (`e2e/fixtures/comp
 3. **Scans:** the scan setting was checked on one real pair (06). Real scans with folds, stamps
    and handwriting will report more; ignore zones and the minimum size are the answer the plan
    already has.
-4. **Sheets with no geometry and no text** (pure images) only have the image method; very
+4. **Scans turned by a quarter turn.** The coarse step searches ±10° (and 180°); a sheet scanned
+   sideways (90°) without a matching /Rotate would fail. ORB is rotation-invariant, but trying
+   the two quarter-turns in the coarse step is the cheap fix (M12-10, with a test). ORB stays a
+   fallback to revisit only if the owner's hand check on real scans (M12-23) shows the image
+   method falling short; a sheet aligned with low confidence goes to manual alignment (M12-13).
+5. **Sheets with no geometry and no text** (pure images) only have the image method; very
    sparse pages may get few agreeing tiles, which the low-confidence state covers.
-5. **Pairing scanned sets** relies on ink and order only (no text); a swapped pair of
+6. **Pairing scanned sets** relies on ink and order only (no text); a swapped pair of
    near-identical scanned sheets will need the pairing table.
