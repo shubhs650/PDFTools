@@ -5,7 +5,7 @@ import { checkForUpdates } from '../../features/offline/offline';
 import { openOrConvert } from '../../features/pages/images';
 import { pickPdfFiles } from '../../storage/fileAccess';
 import { canFullScreen, isFullScreen, subscribeFullScreen, toggleFullScreen } from '../fullScreen';
-import { msg, t } from '../../i18n';
+import { msg, t, type MessageKey } from '../../i18n';
 import { currentIssueUrl } from '../links';
 import { appStore } from '../store/appStore';
 import {
@@ -117,14 +117,15 @@ export function registerBuiltinCommands(): () => void {
         await checkForUpdates();
       },
     }),
+    // Any tab, a comparison's too (M12-08).
     registerCommand('tab.next', {
-      requiresDocument: true,
+      disabledReason: noTabs,
       run: () => {
         cycleTab(1);
       },
     }),
     registerCommand('tab.prev', {
-      requiresDocument: true,
+      disabledReason: noTabs,
       run: () => {
         cycleTab(-1);
       },
@@ -135,11 +136,14 @@ export function registerBuiltinCommands(): () => void {
   };
 }
 
+const noTabs = (): MessageKey | null =>
+  documentStore.getState().order.length > 0 ? null : msg('ribbon.needsDocument');
+
 /** Activates the next/previous tab, wrapping around (Ctrl+PageDown/PageUp). */
 function cycleTab(step: number): void {
   const s = documentStore.getState();
   if (s.order.length === 0) return;
-  const i = s.activeId ? s.order.indexOf(s.activeId) : -1;
+  const i = s.activeTab ? s.order.indexOf(s.activeTab) : -1;
   const next = s.order[(i + step + s.order.length) % s.order.length];
   if (next) s.activate(next);
 }

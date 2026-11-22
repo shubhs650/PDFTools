@@ -57,6 +57,7 @@ for (const theme of THEMES) {
         'Measure',
         'Organize',
         'Convert',
+        'Compare',
         'Protect',
         'Help',
       ]) {

@@ -23,6 +23,8 @@ export type CommandTab =
   | 'measure'
   | 'organize'
   | 'convert'
+  /** Compare (M12-08, D-58): PDF Overlay and Text Comparison; behind the build switch. */
+  | 'compare'
   | 'protect'
   | 'help'
   | 'rail'
@@ -61,7 +63,20 @@ export interface CommandDef {
    * Comments and Reset Form left Home but kept their ids and handlers.
    */
   reuseOnly?: true;
+  /**
+   * Behind the Compare build switch (M12-08, D-58, plan question 3): shown in the beta
+   * site, PR previews and tests, left out of release builds until M12-23 turns it on.
+   */
+  preview?: true;
 }
+
+/**
+ * The Compare build switch (M12 plan question 3): on unless the build sets
+ * `VITE_COMPARE=off`, as the release workflow does. Read without an import, so the
+ * table stays plain data for the Node scripts (where it is on).
+ */
+export const PREVIEWS_ON: boolean =
+  (import.meta as { env?: Record<string, string | undefined> }).env?.['VITE_COMPARE'] !== 'off';
 
 /** Milestones whose commands are shown. Extend as milestones land. */
 export const AVAILABLE_MILESTONES: readonly Milestone[] = ['M1', 'M2', 'M3', 'M4', 'M5'];
@@ -77,6 +92,8 @@ export const RIBBON_TABS = [
   'measure',
   'organize',
   'convert',
+  // Compare (M12-08, D-58): between Convert and Protect.
+  'compare',
   'protect',
   'help',
 ] as const satisfies readonly CommandTab[];
@@ -1439,6 +1456,27 @@ export const COMMANDS: readonly CommandDef[] = [
     fluent: 'ScanText',
     milestone: 'M5', // ADR-020, M5-04
   },
+  // Compare (M12-08, D-58): each opens a comparison tab on its input window.
+  {
+    id: 'compare.overlay',
+    tab: 'compare',
+    group: 'compare',
+    size: 'large',
+    fluent: 'SquareMultiple',
+    milestone: 'M6',
+    shipped: true,
+    preview: true,
+  },
+  {
+    id: 'compare.text',
+    tab: 'compare',
+    group: 'compare',
+    size: 'large',
+    fluent: 'DocumentLandscapeSplit',
+    milestone: 'M6',
+    shipped: true,
+    preview: true,
+  },
   {
     id: 'protect.markRedaction',
     tab: 'protect',
@@ -2154,6 +2192,17 @@ export const COMMANDS: readonly CommandDef[] = [
     milestone: 'M6',
     shipped: true,
   },
+  // Compare with… (M12-08, D-58): a comparison with this tab's document as Document A.
+  {
+    id: 'tab.compareWith',
+    tab: 'menu',
+    group: 'menu',
+    size: 'small',
+    fluent: 'SquareMultiple',
+    milestone: 'M6',
+    shipped: true,
+    preview: true,
+  },
   {
     id: 'tab.reopenClosed',
     tab: 'menu',
@@ -2234,5 +2283,9 @@ export const COMMANDS: readonly CommandDef[] = [
   },
 ];
 
-export const isAvailable = (c: CommandDef): boolean =>
-  AVAILABLE_MILESTONES.includes(c.milestone) || c.shipped === true;
+/** Whether a command is shown in a build with the Compare switch `previews` (M12-08). */
+export const availableIn = (c: CommandDef, previews: boolean): boolean =>
+  (AVAILABLE_MILESTONES.includes(c.milestone) || c.shipped === true) &&
+  (c.preview !== true || previews);
+
+export const isAvailable = (c: CommandDef): boolean => availableIn(c, PREVIEWS_ON);

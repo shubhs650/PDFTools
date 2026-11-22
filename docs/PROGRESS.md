@@ -1,6 +1,6 @@
 # Triya PDF — Progress
 
-_Last updated: 2026-11-22 (M12-07: the Compare worker and its jobs)_
+_Last updated: 2026-11-22 (M12-08: the comparison tab and input window)_
 
 **Current milestone:** M12 — PDF comparison (PDF overlay for drawings, text comparison for
 documents), version 1.1.0: plan [docs/plan/M12.md](plan/M12.md) and
@@ -29,6 +29,27 @@ answers Q1–Q7; ARCHITECTURE.md Rev 0.12 after [ADR-024](adr/024-freetext-text-
 interop is in the M6 pack (CHECKLIST §M6 R1–R4). Rev 0 (M0–M4) is complete on the agent side.
 
 ## Done
+
+- **M12-08 — the comparison tab and its input window (D-58).** Compare → PDF Overlay and Text
+  Comparison (a new **Compare** ribbon tab) and **Compare with…** on a document tab's menu open a
+  comparison tab. The store now keeps the selected tab (`activeTab`) apart from the document
+  commands act on (`activeId`); a comparison is `comparisons[id]` (`src/features/compare/model.ts`:
+  type, stage, sides `a`/`b` of `{ docId, range }`). Files dropped or picked onto a side open
+  **without a tab of their own** (`openFiles(…, { tab: false })`, `openWithoutTab`); a file already
+  open is the same document (one document, two places). Closing a comparison closes the documents
+  nothing else shows; closing a document's tab while a comparison shows it only removes the tab.
+  The input window: both sides (drop, Add files…/Choose file…, Use an open file), thumbnails (up to
+  six per file) and a page range per file, swap, several files per overlay side with move up/down,
+  the password prompt as for a tab, and a notice per file of what its restrictions turn off (with
+  Unlock…). Permission rules per action are pure in `permissions.ts` (`blockFor`): viewing always,
+  comments follow the target file, copying/Export Overlay/change register/Save comparison need
+  copying on every file. Session restore keeps open comparisons' inputs (`comparisons`,
+  `activeComparison` in the session record). **Build switch:** commands flagged `preview` show only
+  when `VITE_COMPARE !== 'off'`; the release workflow builds with `VITE_COMPARE=off` until the owner
+  accepts M12. Pressing Compare shows a placeholder result stage; the result views, pairing (M12-09)
+  and tile rendering come in later tasks. Tests: `tests/compare/*`, session and tab-menu tests,
+  `e2e/compare-input.spec.ts` (smoke, sets, Compare with…, password and owner unlock, keyboard
+  path, axe light and dark).
 
 - **M12-07 — the Compare worker and its jobs (D-66).** `src/workers/compare.worker.ts` (our own
   code, no PDFium) with its typed, cancellable client `src/engine/compareClient.ts`: the worker

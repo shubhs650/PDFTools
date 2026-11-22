@@ -15,7 +15,7 @@ test('the ribbon, its tabs and the backstage pass axe', async ({ page }) => {
   expect((await new AxeBuilder({ page }).analyze()).violations.map((v) => v.id)).toEqual([]);
 });
 
-test('shows File, Home, View, Comment (from M3-07), Form (from M6-14), Measure (from M3-15), Organize (from M4-09), Convert (from M4-05), Protect (from M2-03) and Help only (M1-Q2)', async ({
+test('shows File, Home, View, Comment (from M3-07), Form (from M6-14), Measure (from M3-15), Organize (from M4-09), Convert (from M4-05), Compare (M12-08, preview builds), Protect (from M2-03) and Help only (M1-Q2)', async ({
   page,
 }) => {
   await page.goto('/');
@@ -27,6 +27,7 @@ test('shows File, Home, View, Comment (from M3-07), Form (from M6-14), Measure (
     'Measure',
     'Organize',
     'Convert',
+    'Compare',
     'Protect',
     'Help',
   ]);
@@ -167,6 +168,7 @@ test('every command M1 … M4 show has a handler: none says "Not available yet" 
     'Form',
     'Organize',
     'Convert',
+    'Compare',
     'Measure',
     'Protect',
     'Help',
@@ -262,6 +264,7 @@ const TABS = [
   'Measure',
   'Organize',
   'Convert',
+  'Compare',
   'Protect',
   'Help',
 ];

@@ -6208,3 +6208,307 @@ textarea.form-field {
 .comment-group {
   transition: color var(--duration-fast) var(--ease-out);
 }
+
+/* ------------------------------------------------------------ comparison tab (M12-08, D-58) */
+
+/* A comparison tab's icon (its type), before the name. */
+.tab-icon {
+  display: inline-flex;
+  flex: none;
+  color: var(--color-icon);
+}
+
+.tab-icon svg {
+  width: var(--icon-size-s);
+  height: var(--icon-size-s);
+}
+
+.tab--active .tab-icon {
+  color: inherit;
+}
+
+/* The input window: a column like the start screen's, both sides next to each other. */
+.compare {
+  flex: 1;
+  min-height: 0;
+  box-sizing: border-box;
+  overflow: auto;
+  padding: var(--space-6);
+  background: var(--color-bg);
+  color: var(--color-text);
+}
+
+.compare-column {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-5);
+  max-width: 1120px;
+  margin-inline: auto;
+}
+
+.compare-head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-start;
+  gap: var(--space-4);
+}
+
+.compare-head-text {
+  flex: 1;
+  min-width: 240px;
+}
+
+.compare-title {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  margin: var(--space-0);
+  font-size: var(--font-size-xl);
+  font-weight: var(--font-weight-semibold);
+}
+
+/* "Preview": Compare is on in the beta and previews only (M12 plan question 3). */
+.compare-preview {
+  padding: var(--space-1) var(--space-3);
+  border: var(--border-width) solid var(--color-accent);
+  border-radius: var(--radius-round);
+  color: var(--color-selected-text);
+  font-size: var(--font-size-xs);
+  font-weight: var(--font-weight-semibold);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.compare-intro {
+  margin: var(--space-2) var(--space-0) var(--space-0);
+  color: var(--color-text-muted);
+  font-size: var(--font-size-m);
+}
+
+/* The type switch: two radio buttons drawn as one segmented control. */
+.compare-type {
+  display: inline-flex;
+  margin: var(--space-0);
+  padding: var(--space-1);
+  border: var(--border-width) solid var(--color-border-strong);
+  border-radius: var(--radius-l);
+  background: var(--color-surface);
+}
+
+.compare-type-option {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  padding: var(--space-2) var(--space-4);
+  border-radius: var(--radius-m);
+  font-size: var(--font-size-m);
+  cursor: pointer;
+}
+
+.compare-type-option input {
+  position: absolute;
+  inset: var(--space-0);
+  margin: var(--space-0);
+  border-radius: inherit;
+  opacity: 0;
+  cursor: pointer;
+}
+
+.compare-type-option:has(input:checked) {
+  background: var(--color-selected);
+  color: var(--color-selected-text);
+  font-weight: var(--font-weight-semibold);
+}
+
+.compare-type-option:has(input:focus-visible) {
+  outline: var(--focus-width) solid var(--color-focus);
+  outline-offset: var(--focus-offset);
+}
+
+.compare-sides {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
+  align-items: stretch;
+  gap: var(--space-4);
+}
+
+.compare-swap {
+  display: flex;
+  align-items: center;
+}
+
+.compare-side {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+  min-height: 220px;
+  padding: var(--space-5);
+  border: var(--focus-width) dashed var(--color-drop-border);
+  border-radius: var(--radius-xl);
+  background: var(--color-surface);
+  transition:
+    border-color var(--duration-normal) var(--ease-out),
+    background-color var(--duration-normal) var(--ease-out);
+}
+
+/* Files are dragged over this side. */
+.compare-side[data-over] {
+  border-color: var(--color-accent);
+  background: var(--color-selected);
+}
+
+.compare-side-title {
+  margin: var(--space-0);
+  font-size: var(--font-size-l);
+  font-weight: var(--font-weight-semibold);
+}
+
+.compare-side-hint {
+  flex: 1;
+  margin: var(--space-0);
+  color: var(--color-text-muted);
+  font-size: var(--font-size-m);
+}
+
+.compare-side-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-3);
+  margin-top: auto;
+}
+
+.compare-files {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+  margin: var(--space-0);
+  padding: var(--space-0);
+  list-style: none;
+}
+
+.compare-file {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+  padding: var(--space-4);
+  border: var(--border-width) solid var(--color-border);
+  border-radius: var(--radius-l);
+  background: var(--color-surface-raised);
+}
+
+.compare-file-head {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+}
+
+.compare-file-name {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  font-weight: var(--font-weight-semibold);
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.compare-file-pages {
+  color: var(--color-text-muted);
+  font-size: var(--font-size-s);
+  white-space: nowrap;
+}
+
+.compare-thumbs {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  gap: var(--space-3);
+}
+
+.compare-thumb {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--space-1);
+  margin: var(--space-0);
+  color: var(--color-text-muted);
+  font-size: var(--font-size-xs);
+}
+
+.compare-thumb-page {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 72px;
+  min-height: 48px;
+  background: var(--color-page);
+  box-shadow: var(--elevation-1);
+}
+
+.compare-thumbs-more {
+  align-self: center;
+  color: var(--color-text-muted);
+  font-size: var(--font-size-s);
+}
+
+.compare-limits {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-3);
+  padding: var(--space-3);
+  border-left: var(--tab-indicator-height) solid var(--color-accent);
+  border-radius: var(--radius-m);
+  background: var(--color-surface-subtle);
+}
+
+.compare-limits-text {
+  flex: 1;
+  min-width: 200px;
+  margin: var(--space-0);
+  font-size: var(--font-size-s);
+}
+
+.compare-opening {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  margin: var(--space-0);
+  color: var(--color-text-muted);
+  font-size: var(--font-size-m);
+}
+
+.compare-foot {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: flex-end;
+  gap: var(--space-4);
+}
+
+.compare-status {
+  flex: 1;
+  min-width: 200px;
+  margin: var(--space-0);
+  color: var(--color-text-muted);
+  font-size: var(--font-size-m);
+}
+
+@media (max-width: 900px) {
+  .compare-sides {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .compare-swap {
+    justify-content: center;
+  }
+}
+
+@media (forced-colors: active) {
+  .compare-side[data-over] {
+    border-color: Highlight;
+  }
+
+  .compare-type-option:has(input:checked) {
+    outline: var(--border-width) solid Highlight;
+  }
+}

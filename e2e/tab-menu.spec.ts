@@ -56,6 +56,7 @@ test('the tab menu acts on the tab it was opened on @smoke', async ({ page, pdfs
   expect(await labels(menu)).toEqual([
     'Save',
     'Save As',
+    'Compare with…',
     'Close',
     'Close Other Tabs',
     'Close Tabs to the Right',

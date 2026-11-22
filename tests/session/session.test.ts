@@ -43,7 +43,11 @@ const { sources } = await import('../../src/features/open/sources');
 const opened: { name: string; source: string }[] = [];
 let nextId = 0;
 vi.mock('../../src/features/open/openDocument', () => ({
-  openFiles: (files: { file: File; handle?: FileSystemFileHandle }[], source: string) => {
+  openFiles: (
+    files: { file: File; handle?: FileSystemFileHandle }[],
+    source: string,
+    options: { tab?: boolean } = {},
+  ) => {
     const ids = files.map(({ file, handle }) => {
       const id = `doc-${String(++nextId)}`;
       opened.push({ name: file.name, source });
@@ -53,14 +57,16 @@ vi.mock('../../src/features/open/openDocument', () => ({
         fingerprint: `fp-${file.name}`,
         size: file.size,
       });
-      documentStore.getState().open({
+      const meta = {
         id,
         name: file.name,
         pageCount: 1,
         permissions: -1,
         signatureCount: 0,
         source: source as 'picked',
-      });
+      };
+      if (options.tab === false) documentStore.getState().openWithoutTab(meta);
+      else documentStore.getState().open(meta);
       return id;
     });
     return Promise.resolve(ids);
@@ -125,7 +131,13 @@ beforeEach(() => {
   snapshots = [];
   failures.length = 0;
   opened.length = 0;
-  for (const id of [...documentStore.getState().order]) documentStore.getState().close(id);
+  documentStore.setState({
+    docs: {},
+    order: [],
+    activeId: null,
+    activeTab: null,
+    comparisons: {},
+  });
   sources.clear();
   session.resetSessionForTests();
 });
@@ -285,6 +297,103 @@ describe('at start, with "reopen"', () => {
     expect(session.sessionStore.getState().choice).toBe('reopen');
     session.resetSession();
     expect(session.sessionStore.getState().choice).toBe('start');
+    off();
+  });
+});
+
+describe('comparisons (M12-08, D-58)', () => {
+  const side = (h: FileSystemFileHandle, range = '') => ({ ...entry(h), range });
+
+  it("keeps an open comparison's inputs: type, files, ranges and its place", async () => {
+    const off = await launch();
+    session.setStartupChoice('reopen');
+    const { openFiles } = await import('../../src/features/open/openDocument');
+    const a = handle('a.pdf');
+    const old = handle('rev-a.pdf');
+    await openFiles([{ file: new File(['%PDF'], 'a.pdf'), handle: a }], 'picked');
+    const [oldId] = await openFiles(
+      [{ file: new File(['%PDF'], 'rev-a.pdf'), handle: old }],
+      'dropped',
+      { tab: false },
+    );
+    const aId = documentStore.getState().order[0] ?? '';
+    documentStore.getState().openComparison(
+      {
+        id: 'cmp-1',
+        type: 'overlay',
+        stage: 'input',
+        a: [{ docId: oldId ?? '', range: '2-3' }],
+        b: [{ docId: aId, range: '' }],
+      },
+      0,
+    );
+    await session.sessionWritten();
+    expect(stored).toMatchObject({
+      entries: [{ name: 'a.pdf' }],
+      active: -1,
+      comparisons: [
+        {
+          type: 'overlay',
+          index: 0,
+          a: [{ name: 'rev-a.pdf', handle: old, range: '2-3', source: 'dropped' }],
+          b: [{ name: 'a.pdf', handle: a, range: '' }],
+        },
+      ],
+      activeComparison: 0,
+    });
+    off();
+  });
+
+  it('reopens a comparison on its input window, at its place, selected again', async () => {
+    const a = handle('a.pdf');
+    const ra = handle('rev-a.pdf');
+    const rb = handle('rev-b.pdf');
+    settings.set(session.STARTUP_KEY, 'reopen');
+    stored = {
+      entries: [entry(a)],
+      active: -1,
+      comparisons: [{ type: 'text', index: 0, a: [side(ra, '1-2')], b: [side(rb)] }],
+      activeComparison: 0,
+      savedAt: 1,
+    };
+    const off = await launch();
+    const s = documentStore.getState();
+    expect(s.order).toHaveLength(2);
+    const id = s.order[0] ?? '';
+    expect(s.activeTab).toBe(id);
+    expect(s.activeId).toBeNull();
+    const c = s.comparisons[id];
+    expect(c).toMatchObject({ type: 'text', stage: 'input' });
+    expect(c?.a.map((f) => [s.docs[f.docId]?.meta.name, f.range])).toEqual([['rev-a.pdf', '1-2']]);
+    expect(c?.b.map((f) => s.docs[f.docId]?.meta.name)).toEqual(['rev-b.pdf']);
+    // The comparison's files have no tabs of their own.
+    expect(tabNames()).toEqual([undefined, 'a.pdf']);
+    off();
+  });
+
+  it('a comparison with a file that needs permission waits, and reopens on the click', async () => {
+    const ra = handle('rev-a.pdf');
+    const rb = handle('rev-b.pdf', { perm: 'prompt', request: 'granted' });
+    settings.set(session.STARTUP_KEY, 'reopen');
+    stored = {
+      entries: [],
+      active: -1,
+      comparisons: [{ type: 'overlay', index: 0, a: [side(ra)], b: [side(rb)] }],
+      activeComparison: 0,
+      savedAt: 1,
+    };
+    const off = await launch();
+    expect(documentStore.getState().order).toEqual([]);
+    expect(session.waitingNames(session.sessionStore.getState())).toEqual([
+      'rev-a.pdf',
+      'rev-b.pdf',
+    ]);
+    await session.reopenWaiting();
+    const s = documentStore.getState();
+    const c = s.comparisons[s.order[0] ?? ''];
+    expect(c?.a.map((f) => s.docs[f.docId]?.meta.name)).toEqual(['rev-a.pdf']);
+    expect(c?.b.map((f) => s.docs[f.docId]?.meta.name)).toEqual(['rev-b.pdf']);
+    expect(session.sessionStore.getState().waitingComparisons).toEqual([]);
     off();
   });
 });

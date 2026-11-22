@@ -4,6 +4,7 @@
 // open/save pipelines (M1-13, M1-22) call them.
 import { createStore, useStore } from 'zustand';
 import type { Security } from '../../model/permissions';
+import type { Comparison } from '../../features/compare/model';
 
 export type ViewMode = 'single' | 'continuous' | 'facing' | 'continuousFacing';
 export type Rotation = 0 | 90 | 180 | 270;
@@ -77,11 +78,40 @@ export interface DocumentSlice {
 
 export interface DocumentsState {
   docs: Record<string, DocumentSlice>;
+  /**
+   * The tabs in order: a document's id for a document tab, a comparison's id for a
+   * comparison tab (M12-08, D-58). A document dropped into a comparison is open (in
+   * `docs`) without a tab of its own.
+   */
   order: string[];
+  /**
+   * The document commands act on (S27: "active tab" and "active document" are two
+   * things). With a document tab selected it is that document; with a comparison tab
+   * selected it is the comparison window in use, or null (the input window).
+   */
   activeId: string | null;
+  /** The tab shown: a document's or a comparison's id (M12-08, D-58). */
+  activeTab: string | null;
+  /** Comparison tabs by id (M12-08, D-58); their inputs, in features/compare. */
+  comparisons: Record<string, Comparison>;
   open(meta: DocumentMeta): void;
+  /** A document without a tab of its own (dropped or picked into a comparison, D-58). */
+  openWithoutTab(meta: DocumentMeta): void;
+  /** A document open without a tab gets one, at the end, and is selected. */
+  showTab(id: string): void;
+  /** Takes a document's tab away and keeps the document open (a comparison shows it). */
+  removeTab(id: string): void;
   close(id: string): void;
   activate(id: string): void;
+  /**
+   * Makes `id` the document commands act on without changing the tab shown (a window of
+   * the comparison tab in use, S27 change 3); for a document tab, the same as activate.
+   */
+  focusDocument(id: string): void;
+  /** A new comparison tab after the selected one (or at `at`), selected (D-58). */
+  openComparison(comparison: Comparison, at?: number): void;
+  updateComparison(id: string, fn: (c: Comparison) => Comparison): void;
+  closeComparison(id: string): void;
   move(id: string, toIndex: number): void;
   /** A new order of the same tabs (Sort Tabs by Name, M11-05); ignored otherwise. */
   reorder(order: readonly string[]): void;
@@ -122,48 +152,151 @@ function update(
   return { docs: { ...s.docs, [id]: { ...d, ...fn(d) } } };
 }
 
+const newSlice = (meta: DocumentMeta): DocumentSlice => ({
+  meta,
+  view: { ...DEFAULT_VIEW },
+  dirty: false,
+  edits: 0,
+  save: 'idle',
+  appendedBytes: 0,
+});
+
+/** Whether `id` is a tab (a document's or a comparison's). */
+const isTab = (s: Pick<DocumentsState, 'docs' | 'comparisons'>, id: string): boolean =>
+  s.docs[id] !== undefined || s.comparisons[id] !== undefined;
+
+/** Selecting tab `id` (or none): a document tab is also the document commands act on. */
+const select = (
+  docs: Record<string, DocumentSlice>,
+  id: string | null,
+): Pick<DocumentsState, 'activeTab' | 'activeId'> => ({
+  activeTab: id,
+  activeId: id !== null && docs[id] ? id : null,
+});
+
+/**
+ * Tab `id` leaves the strip: the selected tab's right neighbour is selected, else the
+ * left one; a document that is gone is no longer the one commands act on.
+ */
+function withoutTab(
+  s: DocumentsState,
+  id: string,
+  docs: Record<string, DocumentSlice>,
+): Pick<DocumentsState, 'order' | 'activeTab' | 'activeId'> {
+  const i = s.order.indexOf(id);
+  const order = s.order.filter((x) => x !== id);
+  if (s.activeTab === id) return { order, ...select(docs, order[i] ?? order[i - 1] ?? null) };
+  return {
+    order,
+    activeTab: s.activeTab,
+    activeId: s.activeId !== null && docs[s.activeId] ? s.activeId : null,
+  };
+}
+
+/** Every comparison without `docId` on either side (it was closed). */
+function withoutDocument(
+  comparisons: Record<string, Comparison>,
+  docId: string,
+): Record<string, Comparison> {
+  let changed = false;
+  const next: Record<string, Comparison> = {};
+  for (const [id, c] of Object.entries(comparisons)) {
+    const a = c.a.filter((f) => f.docId !== docId);
+    const b = c.b.filter((f) => f.docId !== docId);
+    if (a.length !== c.a.length || b.length !== c.b.length) {
+      changed = true;
+      next[id] = { ...c, a, b };
+    } else next[id] = c;
+  }
+  return changed ? next : comparisons;
+}
+
 export const createDocumentStore = () =>
   createStore<DocumentsState>()((set) => ({
     docs: {},
     order: [],
     activeId: null,
+    activeTab: null,
+    comparisons: {},
     open: (meta) => {
       set((s) => {
-        if (s.docs[meta.id]) return { activeId: meta.id };
-        return {
-          docs: {
-            ...s.docs,
-            [meta.id]: {
-              meta,
-              view: { ...DEFAULT_VIEW },
-              dirty: false,
-              edits: 0,
-              save: 'idle',
-              appendedBytes: 0,
-            },
-          },
-          order: [...s.order, meta.id],
-          activeId: meta.id,
-        };
+        if (s.docs[meta.id])
+          return {
+            ...(s.order.includes(meta.id) ? {} : { order: [...s.order, meta.id] }),
+            ...select(s.docs, meta.id),
+          };
+        const docs = { ...s.docs, [meta.id]: newSlice(meta) };
+        return { docs, order: [...s.order, meta.id], ...select(docs, meta.id) };
       });
+    },
+    openWithoutTab: (meta) => {
+      set((s) => (s.docs[meta.id] ? {} : { docs: { ...s.docs, [meta.id]: newSlice(meta) } }));
+    },
+    showTab: (id) => {
+      set((s) => {
+        if (!s.docs[id]) return {};
+        const order = s.order.includes(id) ? s.order : [...s.order, id];
+        return { order, ...select(s.docs, id) };
+      });
+    },
+    removeTab: (id) => {
+      set((s) => (s.docs[id] && s.order.includes(id) ? withoutTab(s, id, s.docs) : {}));
     },
     close: (id) => {
       set((s) => {
         if (!s.docs[id]) return {};
         const docs = Object.fromEntries(Object.entries(s.docs).filter(([k]) => k !== id));
-        const i = s.order.indexOf(id);
-        const order = s.order.filter((x) => x !== id);
-        // Closing the active tab activates its right neighbour, else the left one.
-        const activeId = s.activeId === id ? (order[i] ?? order[i - 1] ?? null) : s.activeId;
-        return { docs, order, activeId };
+        return {
+          docs,
+          ...withoutTab(s, id, docs),
+          comparisons: withoutDocument(s.comparisons, id),
+        };
       });
     },
     activate: (id) => {
-      set((s) => (s.docs[id] ? { activeId: id } : {}));
+      set((s) =>
+        (s.docs[id] && s.order.includes(id)) || s.comparisons[id] ? select(s.docs, id) : {},
+      );
+    },
+    focusDocument: (id) => {
+      set((s) => {
+        if (!s.docs[id]) return {};
+        if (s.order.includes(id) && !s.comparisons[s.activeTab ?? '']) return select(s.docs, id);
+        return { activeId: id };
+      });
+    },
+    openComparison: (comparison, at) => {
+      set((s) => {
+        if (isTab(s, comparison.id)) return {};
+        const after = s.activeTab ? s.order.indexOf(s.activeTab) + 1 : s.order.length;
+        const i = Math.max(0, Math.min(at ?? after, s.order.length));
+        const order = [...s.order];
+        order.splice(i, 0, comparison.id);
+        return {
+          comparisons: { ...s.comparisons, [comparison.id]: comparison },
+          order,
+          ...select(s.docs, comparison.id),
+        };
+      });
+    },
+    updateComparison: (id, fn) => {
+      set((s) => {
+        const c = s.comparisons[id];
+        return c ? { comparisons: { ...s.comparisons, [id]: fn(c) } } : {};
+      });
+    },
+    closeComparison: (id) => {
+      set((s) => {
+        if (!s.comparisons[id]) return {};
+        const comparisons = Object.fromEntries(
+          Object.entries(s.comparisons).filter(([k]) => k !== id),
+        );
+        return { comparisons, ...withoutTab(s, id, s.docs) };
+      });
     },
     move: (id, toIndex) => {
       set((s) => {
-        if (!s.docs[id]) return {};
+        if (!s.order.includes(id)) return {};
         const order = s.order.filter((x) => x !== id);
         order.splice(Math.max(0, Math.min(toIndex, order.length)), 0, id);
         return { order };
@@ -174,7 +307,7 @@ export const createDocumentStore = () =>
         const same =
           next.length === s.order.length &&
           new Set(next).size === next.length &&
-          next.every((id) => s.docs[id]);
+          next.every((id) => s.order.includes(id));
         return same ? { order: [...next] } : {};
       });
     },
@@ -232,6 +365,12 @@ export const documentStore = createDocumentStore();
 export function useDocuments<T>(selector: (s: DocumentsState) => T): T {
   return useStore(documentStore, selector);
 }
+
+/** Whether a comparison has `docId` on either side (M12-08, D-58). */
+export const inComparison = (s: Pick<DocumentsState, 'comparisons'>, docId: string): boolean =>
+  Object.values(s.comparisons).some(
+    (c) => c.a.some((f) => f.docId === docId) || c.b.some((f) => f.docId === docId),
+  );
 
 /** The active document's slice, or null. */
 export const selectActive = (s: DocumentsState): DocumentSlice | null =>

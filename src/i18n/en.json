@@ -169,6 +169,10 @@
       "tableTemplates": "Table Templates",
       "ocr": "Recognize Text (OCR)"
     },
+    "compare": {
+      "overlay": "PDF Overlay",
+      "text": "Text Comparison"
+    },
     "protect": {
       "markRedaction": "Mark for Redaction",
       "markRedactionArea": "Mark Area for Redaction",
@@ -260,6 +264,7 @@
       "closeOthers": "Close Other Tabs",
       "closeRight": "Close Tabs to the Right",
       "closeAll": "Close All Tabs",
+      "compareWith": "Compare with…",
       "reopenClosed": "Reopen Closed Tab",
       "moveLeft": "Move Left",
       "moveRight": "Move Right",
@@ -278,6 +283,7 @@
       "measure": "Measure",
       "organize": "Organize",
       "convert": "Convert",
+      "compare": "Compare",
       "protect": "Protect",
       "help": "Help"
     },
@@ -329,6 +335,9 @@
         "export": "Export",
         "tablesBeta": "Tables (Beta)",
         "ocr": "OCR"
+      },
+      "compare": {
+        "compare": "Compare"
       },
       "protect": {
         "redact": "Redact",
@@ -2874,6 +2883,71 @@
     "error": {
       "number": "Type a number, 0 or more.",
       "tooSmall": "These margins leave too little of page {{page}}."
+    }
+  },
+  "compare": {
+    "type": {
+      "overlay": "PDF Overlay",
+      "text": "Text Comparison"
+    },
+    "typeLabel": "Comparison type",
+    "preview": "Preview",
+    "intro": {
+      "overlay": "Lay a new revision of a drawing over the old one: old in red, new in green, what is the same in black. Each side takes one file or a set of files.",
+      "text": "Compare the words, numbers and table rows of an old and a new revision of a document, side by side. Each side takes one file."
+    },
+    "tab": {
+      "name": "{{a}} ↔ {{b}}",
+      "more_one": "{{name}} +{{count}}",
+      "more_other": "{{name}} +{{count}}",
+      "description": "{{type}}, a comparison of two revisions"
+    },
+    "side": {
+      "a": "Document A (old)",
+      "b": "Document B (new)"
+    },
+    "filesOf": "Files of {{side}}",
+    "hint": {
+      "overlay": "Drop PDF files here, or choose them. Several files are compared as one set.",
+      "text": "Drop a PDF file here, or choose one."
+    },
+    "opening_one": "Opening {{count}} file…",
+    "opening_other": "Opening {{count}} files…",
+    "add": "Add files…",
+    "choose": "Choose file…",
+    "replace": "Choose another file…",
+    "openTab": "Use an open file",
+    "moveUp": "Move {{name}} up",
+    "moveDown": "Move {{name}} down",
+    "remove": "Remove {{name}}",
+    "pages_one": "{{count}} page",
+    "pages_other": "{{count}} pages",
+    "morePages_one": "+ {{count}} more page",
+    "morePages_other": "+ {{count}} more pages",
+    "range": {
+      "label": "Pages of {{name}}",
+      "all": "All pages",
+      "empty": "Enter the pages to compare, or leave the field empty for all pages.",
+      "syntax": "Enter pages such as 1-3, 8.",
+      "outOfRange": "A page in this range is not in the file."
+    },
+    "limits": {
+      "comment": "{{name}} doesn't allow comments, so comments can't be added to it in this comparison.",
+      "copy": "{{name}} doesn't allow copying content, so copying text, Export Overlay, the change register and Save comparison are off for this comparison.",
+      "both": "{{name}} doesn't allow comments or copying content: comments can't be added to it, and copying text, Export Overlay, the change register and Save comparison are off for this comparison.",
+      "unlock": "Unlock {{name}}…"
+    },
+    "swap": "Swap Document A and Document B",
+    "run": "Compare",
+    "ready": "Ready: {{a}} against {{b}}.",
+    "block": {
+      "empty": "Add a file to {{side}}.",
+      "opening": "Opening files…",
+      "range": "Check the pages of {{name}}."
+    },
+    "result": {
+      "pending": "{{a}} against {{b}}. The comparison result arrives in a later preview build; you can change the inputs meanwhile.",
+      "inputs": "Change inputs"
     }
   }
 }

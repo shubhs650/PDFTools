@@ -4,6 +4,7 @@
 // Only documents with a handle to a file on disk can be reopened, so only they are kept:
 // a new document that was never saved, a download or a recovered copy is not.
 import type { DocumentSource } from '../../app/store/documentStore';
+import type { CompareType, SideId } from '../compare/model';
 
 /** What happens when Triya PDF starts: the start screen, or last session's files. */
 export type StartupChoice = 'start' | 'reopen';
@@ -27,14 +28,38 @@ export interface SessionEntry {
   source: DocumentSource;
 }
 
+/** A file on one side of a comparison (M12-08), with its page range as typed. */
+export interface SessionSideFile extends SessionEntry {
+  range: string;
+}
+
+/**
+ * An open comparison's inputs (M12-08, D-58): its type and the files of each side, never
+ * its result. It reopens on its input window at its old place among the tabs.
+ */
+export interface SessionComparison {
+  type: CompareType;
+  /** Its place in the tab strip (0-based, among every tab). */
+  index: number;
+  a: SessionSideFile[];
+  b: SessionSideFile[];
+}
+
 export interface SessionRecord {
   /** In tab order. */
   entries: SessionEntry[];
   /** Index in `entries` of the selected tab; -1 when it was not one of them. */
   active: number;
+  /** Open comparisons in tab order (M12-08); absent in records from before. */
+  comparisons?: SessionComparison[];
+  /** Index in `comparisons` of the selected tab; -1 or absent when it was not one. */
+  activeComparison?: number;
   /** Epoch ms. */
   savedAt: number;
 }
+
+/** The most comparisons a session keeps. */
+export const MAX_SESSION_COMPARISONS = 10;
 
 /** The most files a session keeps (the app opens at most MAX_DOCUMENTS anyway). */
 export const MAX_SESSION_FILES = 50;
@@ -92,41 +117,145 @@ export function sessionOf(
   };
 }
 
-/** Same files, names, sources, order and selected tab (the time is not compared). */
+/** What the record needs to know about one open comparison (M12-08). */
+export interface OpenComparison {
+  type: CompareType;
+  index: number;
+  a: readonly (OpenDoc & { range: string })[];
+  b: readonly (OpenDoc & { range: string })[];
+  active: boolean;
+}
+
+/**
+ * The comparisons to keep (M12-08): each with the files of its sides that can be reopened
+ * (a handle to a file on disk); a comparison with no such file is not kept.
+ */
+export function comparisonsOf(open: readonly OpenComparison[]): {
+  comparisons: SessionComparison[];
+  activeComparison: number;
+} {
+  const comparisons: SessionComparison[] = [];
+  let activeComparison = -1;
+  const side = (files: OpenComparison['a']): SessionSideFile[] =>
+    files.flatMap((d) =>
+      d.handle && d.fp !== undefined
+        ? [
+            {
+              name: d.name,
+              handle: d.handle,
+              fp: d.fp,
+              source: keptSource(d.source),
+              range: d.range,
+            },
+          ]
+        : [],
+    );
+  for (const c of open) {
+    const a = side(c.a);
+    const b = side(c.b);
+    if (a.length + b.length === 0 || comparisons.length >= MAX_SESSION_COMPARISONS) continue;
+    if (c.active) activeComparison = comparisons.length;
+    comparisons.push({ type: c.type, index: c.index, a, b });
+  }
+  return { comparisons, activeComparison };
+}
+
+const sameEntry = (e: SessionEntry, o: SessionEntry | undefined): boolean =>
+  e.handle === o?.handle && e.name === o.name && e.fp === o.fp && e.source === o.source;
+
+const sameFiles = (a: readonly SessionSideFile[], b: readonly SessionSideFile[]): boolean =>
+  a.length === b.length && a.every((f, i) => sameEntry(f, b[i]) && f.range === b[i]?.range);
+
+/** Same files, names, sources, order, comparisons and selected tab (the time is not compared). */
 export function sameSession(a: SessionRecord | null, b: SessionRecord | null): boolean {
   if (a === null || b === null) return a === b;
   if (a.active !== b.active || a.entries.length !== b.entries.length) return false;
-  return a.entries.every((e, i) => {
-    const o = b.entries[i];
-    return e.handle === o?.handle && e.name === o.name && e.fp === o.fp && e.source === o.source;
+  const ca = a.comparisons ?? [];
+  const cb = b.comparisons ?? [];
+  if ((a.activeComparison ?? -1) !== (b.activeComparison ?? -1) || ca.length !== cb.length)
+    return false;
+  const comparisonsSame = ca.every((c, i) => {
+    const o = cb[i];
+    return c.type === o?.type && c.index === o.index && sameFiles(c.a, o.a) && sameFiles(c.b, o.b);
   });
+  return comparisonsSame && a.entries.every((e, i) => sameEntry(e, b.entries[i]));
 }
 
 const isObject = (v: unknown): v is Record<string, unknown> => typeof v === 'object' && v !== null;
+
+function parseEntry(e: unknown): SessionEntry | null {
+  if (!isObject(e)) return null;
+  const { name, handle, fp, source } = e;
+  if (typeof name !== 'string' || typeof fp !== 'string') return null;
+  if (!isObject(handle) || handle['kind'] !== 'file') return null;
+  return {
+    name,
+    handle: handle as unknown as FileSystemFileHandle,
+    fp,
+    source: keptSource(source as DocumentSource | undefined),
+  };
+}
+
+function parseSide(value: unknown): SessionSideFile[] {
+  if (!Array.isArray(value)) return [];
+  return (value as unknown[]).flatMap((f) => {
+    const entry = parseEntry(f);
+    if (!entry || !isObject(f)) return [];
+    return [{ ...entry, range: typeof f['range'] === 'string' ? f['range'] : '' }];
+  });
+}
+
+function parseComparisons(value: unknown): SessionComparison[] {
+  if (!Array.isArray(value)) return [];
+  const out: SessionComparison[] = [];
+  for (const c of value as unknown[]) {
+    if (!isObject(c) || (c['type'] !== 'overlay' && c['type'] !== 'text')) continue;
+    const index = c['index'];
+    const type: CompareType = c['type'];
+    const sides: Record<SideId, SessionSideFile[]> = {
+      a: parseSide(c['a']),
+      b: parseSide(c['b']),
+    };
+    // A text comparison has one file per side.
+    if (type === 'text') for (const s of ['a', 'b'] as const) sides[s] = sides[s].slice(0, 1);
+    if (sides.a.length + sides.b.length === 0) continue;
+    out.push({
+      type,
+      index: typeof index === 'number' && Number.isInteger(index) && index >= 0 ? index : 0,
+      ...sides,
+    });
+  }
+  return out.slice(0, MAX_SESSION_COMPARISONS);
+}
 
 /** A stored record, validated; null when there is none or it is not one. */
 export function parseSession(value: unknown): SessionRecord | null {
   if (!isObject(value) || !Array.isArray(value['entries'])) return null;
   const entries: SessionEntry[] = [];
   for (const e of value['entries'] as unknown[]) {
-    if (!isObject(e)) continue;
-    const { name, handle, fp, source } = e;
-    if (typeof name !== 'string' || typeof fp !== 'string') continue;
-    if (!isObject(handle) || handle['kind'] !== 'file') continue;
-    entries.push({
-      name,
-      handle: handle as unknown as FileSystemFileHandle,
-      fp,
-      source: keptSource(source as DocumentSource | undefined),
-    });
+    const entry = parseEntry(e);
+    if (entry) entries.push(entry);
   }
+  const comparisons = parseComparisons(value['comparisons']);
+  const rawComparison = value['activeComparison'];
+  const activeComparison =
+    typeof rawComparison === 'number' &&
+    Number.isInteger(rawComparison) &&
+    rawComparison < comparisons.length
+      ? Math.max(-1, rawComparison)
+      : -1;
   const rawActive = value['active'];
   const active =
     typeof rawActive === 'number' && Number.isInteger(rawActive) && rawActive < entries.length
       ? Math.max(-1, rawActive)
       : -1;
   const savedAt = typeof value['savedAt'] === 'number' ? value['savedAt'] : 0;
-  return { entries: entries.slice(0, MAX_SESSION_FILES), active, savedAt };
+  return {
+    entries: entries.slice(0, MAX_SESSION_FILES),
+    active,
+    ...(comparisons.length > 0 ? { comparisons, activeComparison } : {}),
+    savedAt,
+  };
 }
 
 /**
@@ -140,9 +269,18 @@ export function withoutRecoverable(
 ): SessionRecord {
   const activeEntry = record.entries[record.active];
   const entries = record.entries.filter((e) => !snapshotFps.has(e.fp));
+  const comparisons = record.comparisons?.map((c) => ({
+    ...c,
+    a: c.a.filter((f) => !snapshotFps.has(f.fp)),
+    b: c.b.filter((f) => !snapshotFps.has(f.fp)),
+  }));
   return {
     ...record,
     entries,
     active: activeEntry ? entries.indexOf(activeEntry) : -1,
+    ...(comparisons ? { comparisons } : {}),
   };
 }
+
+/** Every file of a comparison, A's then B's (M12-08). */
+export const comparisonFiles = (c: SessionComparison): SessionSideFile[] => [...c.a, ...c.b];
