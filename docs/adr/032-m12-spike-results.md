@@ -1,11 +1,11 @@
 # ADR-032: M12 spike results (S27 – S31)
 
-- **Status:** Proposed, for the owner's acceptance (the second owner gate of M12: nothing of the
-  comparison feature is built before this ADR is accepted, plan "Order of work" step 2). The
-  owner also checks two sample packs in Acrobat Reader and a second desktop PDF editor: the
-  vector overlay (S29, `/mnt/project-files/m12-04/`) and the comparison files (S31,
-  `/mnt/project-files/m12-06/`).
-- **Date:** 2026-11-22
+- **Status:** **Accepted** by the owner on 2026-11-22, with the recommended answer to each of
+  the four decisions below. The owner also checked both sample packs in Acrobat Reader and a
+  second desktop PDF editor and reports that they work perfectly: the vector overlay (S29,
+  `/mnt/project-files/m12-04/`) and the comparison files (S31, `/mnt/project-files/m12-06/`).
+  This was the second owner gate of M12; the feature tasks (M12-07 onwards) may now start.
+- **Date:** 2026-11-22 (proposed and accepted)
 - **Deciders:** owner (Shubham) / agent (M12-06 thread)
 - **Related decisions:** D-58 … D-66 ([ADR-031](031-m12-pdf-comparison.md)); D-06 (incremental
   save), D-09 (direct PDFium calls), D-19 (protected PDFs); [ADR-005](005-s1-incremental-save.md),
@@ -175,6 +175,16 @@ so they are the owner's:
    Approval signatures and `/P 3` keep the prefix route. _Recommended._ Alternative: refuse the
    text comparison file for such a B.
 
+### The owner's answers (2026-11-22)
+
+| #   | Decision                                  | Answer                                                                                      |
+| --- | ----------------------------------------- | ------------------------------------------------------------------------------------------- |
+| 1   | Protected input                           | **Recommended:** the comparison file gets an open password (AES-256, Password Security)     |
+| 2   | Deleted text in the text comparison file  | **Recommended:** a red caret at its place with "Deleted: …" in the note, not a strike-out   |
+| 3   | Save review in a reopened comparison file | **Recommended:** A and B incremental; the wrapper compacted (overlay) or rebuilt (text)     |
+| 4   | Certified Document B forbidding comments  | **Recommended:** the "unsigned copy" with B attached unchanged and its certification intact |
+| —   | Interop: S29 and S31 sample packs         | **Passed:** both packs work perfectly in Acrobat Reader and a second desktop PDF editor     |
+
 ## The acceptance numbers (D-66)
 
 The plan's table with the numbers fixed by the spikes. "Reference machine" times are checked in
@@ -203,7 +213,7 @@ CI's perf job and on the owner's machine; the spike numbers are one core in a cl
   cache (M12-11); the "as is" rule, quarter turns and banded detection (M12-10, M12-14); the
   vector overlay builder on route 2 in the Work worker (M12-16); the comparison file per the
   spec, with decisions 1 – 4 (M12-20).
-- **ARCHITECTURE.md** gets, on acceptance, a short amendment in §7.16 (D-59, D-65): route 2 for
+- **ARCHITECTURE.md** gets, on acceptance, a short amendment (done: Rev 0.22) in §7.16 (D-59, D-65): route 2 for
   the vector overlay; the comparison file per `docs/formats/triya-comparison-v1.md`; "highlights,
   carets and notes" instead of "highlights, strike-outs and notes"; the protected-input rule; the
   unsigned copy for certified B; and §2's D-65 row to match. It is not edited before.
@@ -213,9 +223,11 @@ CI's perf job and on the owner's machine; the spike numbers are one core in a cl
 ## Risks
 
 1. **Acrobat Reader and other desktop editors** are not checked by any spike: the owner's two
-   sample packs (S29, S31) are the check. If a reader draws the vector overlay wrongly or rejects
-   the comparison file, the plan's fallbacks apply (image overlay for export; for the comparison
-   file, attaching both documents and plain pages).
+   sample packs (S29, S31) are the check. **The owner checked both packs on 2026-11-22: they work
+   perfectly in Acrobat Reader and a second desktop editor.** The M12-23 interop checklist
+   repeats the check on the built feature; if a reader then draws the vector overlay wrongly or
+   rejects the comparison file, the plan's fallbacks apply (image overlay for export; for the
+   comparison file, attaching both documents and plain pages).
 2. **Readers that rewrite on save** lose Document B's exact bytes in a text comparison file. It
    is detected (SHA-256), and the comparison then opens read-only.
 3. **Internals of EmbedPDF** (the tiling workaround, the render queue ranker) are pinned and

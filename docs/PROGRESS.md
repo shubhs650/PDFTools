@@ -1,6 +1,6 @@
 # Triya PDF — Progress
 
-_Last updated: 2026-11-22 (M12-05: spike S30, text matching; ADR-032 complete)_
+_Last updated: 2026-11-22 (ADR-032 accepted by the owner; ARCHITECTURE.md Rev 0.22)_
 
 **Current milestone:** M12 — PDF comparison (PDF overlay for drawings, text comparison for
 documents), version 1.1.0: plan [docs/plan/M12.md](plan/M12.md) and
@@ -3400,8 +3400,9 @@ rel="noopener noreferrer">`; the commands `app.home` / `app.reportIssue` open th
   route 1 with a tiling workaround), M12-03 (spike S28, alignment route 1), M12-04 (spike S29:
   worker overlay, vector overlay route 2 with masks), M12-05 (spike S30, text matching with our
   own code), M12-06 (spike S31, the comparison file; ADR-032 written, S30 section filled by
-  M12-05). Next: the owner accepts ADR-032 and checks the S29 and S31 sample packs. **No feature
-  code before that.**
+  M12-05). **ADR-032 accepted** by the owner (2026-11-22, the four recommended answers; both
+  sample packs work in Acrobat Reader and a second desktop editor); ARCHITECTURE.md Rev 0.22.
+  Next: the feature tasks from M12-07 (Compare worker and jobs).
 - **Agent (M11):** the 18 tasks in [docs/plan/M11.md](plan/M11.md) "Order of work", one thread
   each. Done: M11-01, M11-10, M11-02 (spike S26), M11-03 (tabs: look, hover card, +), M11-04
   (drag to reorder), M11-05 (tab menus), M11-06 (comments in every pointer mode), M11-07 (font
@@ -3593,12 +3594,8 @@ rel="noopener noreferrer">`; the commands `app.home` / `app.reportIssue` open th
 
 ## Decisions needed (owner)
 
-- **M12 (PDF comparison).** Accept [ADR-032](adr/032-m12-spike-results.md) (spike results S27 –
-  S31, the acceptance numbers, and four decisions on the comparison file: a protected input locks
-  it; carets for deleted text; Save review rewrites its wrapper; an unsigned copy for a certified
-  B), and check the sample packs in `/mnt/project-files/m12-04/` (vector overlay) and
-  `/mnt/project-files/m12-06/` (comparison files) in Acrobat Reader and a second desktop PDF
-  editor. No feature code before.
+- **M12 (PDF comparison).** None now: ADR-032 accepted on 2026-11-22. The next owner gate is
+  the M12-23 owner pack (hand check on real files, interop checklist).
 
 - **Keyboard text selection (M2-04).** Caret-based selection (Shift+arrows) is not built; the
   keyboard path is Ctrl+A (page text) + Ctrl+C. Accept as an exception to the M2-04 criterion, or
@@ -3655,3 +3652,4 @@ rel="noopener noreferrer">`; the commands `app.home` / `app.reportIssue` open th
 | 2026-11-01 | CI cadence       | Owner approved. CI runs once per PR commit (`push` only on `main`). PRs: checks, e2e tagged `@smoke` (22 critical flows) plus `@offline` and `@a11y`, and `@smoke` perf. Docs-only PRs skip e2e. `main`, nightly, Run workflow and the `full-e2e` PR label: full e2e in 3 shards plus offline, perf and acceptance. No test removed. Tag new critical flows `@smoke`; run the e2e specs a change touches locally.                                         |
 | 2026-11-22 | ADR-030          | Comparison unblocked by the owner (PDF overlay for drawings, text comparison for documents); the hold in §14 and rule 14 is lifted, the clean-room condition stays as rule 14. **Accepted**; ARCHITECTURE.md Rev 0.20.                                                                                                                                                                                                                                    |
 | 2026-11-22 | ADR-031          | M12 — PDF comparison: PDF overlay and text comparison, D-58 … D-66, plan `docs/plan/M12.md`, spikes S27 – S31 then ADR-032. Owner's answers: close-out = Completed plus a reply; the text comparison file shows Document B; Compare off in release builds until acceptance; F8 / Shift+F8 and hold X; optional O1 and O4. **Accepted** with the merge of PR #146; ARCHITECTURE.md Rev 0.21.                                                               |
+| 2026-11-22 | ADR-032          | M12 spike results S27 – S31, acceptance numbers. Owner's answers: protected input → password on the comparison file; carets for deleted text; Save review compacts or rebuilds the wrapper (A, B incremental); unsigned copy for a certified B. Both sample packs pass in Acrobat Reader and a second editor. **Accepted**; ARCHITECTURE.md Rev 0.22.                                                                                                     |
