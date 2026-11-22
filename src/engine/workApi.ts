@@ -48,9 +48,10 @@ import type { RecutReport } from '../workers/work/redact/pathRecut';
 import type { Leak } from '../workers/work/redact/verify';
 import type { PageTables } from '../workers/work/tables/detect';
 import type { TableExportResult, TableFormat, TablePackaging } from '../workers/work/tables/job';
+import type { PageSignature, PageText, RasterBand, Affine } from '../model/compare/material';
 import type { MethodSpec } from './protocol';
 
-export type WorkPriority = 'interactive' | 'save-verify' | 'geometry' | 'background';
+export type WorkPriority = 'interactive' | 'save-verify' | 'geometry' | 'compare' | 'background';
 
 export interface WorkApi {
   init: MethodSpec<{ wasmUrl: string }, { ms: number; wasmBytes: number }>;
@@ -462,6 +463,34 @@ export interface WorkApi {
   >;
   /** The user is scrolling or zooming: background work backs off for `quietMs`. */
   activity: MethodSpec<{ quietMs?: number }, null>;
+  /**
+   * A comparison's material (M12-07, D-66): a page's signature for pairing
+   * (S28: a 32 × 32 ink picture and its words), in displayed space. Viewing
+   * only, so no permission is needed (D-58). Scheduled at `compare` priority.
+   */
+  compareSignature: MethodSpec<{ docId: string; pageIndex: number }, PageSignature>;
+  /** A page's positioned characters in displayed space, typed arrays transferred (S30). */
+  compareText: MethodSpec<{ docId: string; pageIndex: number }, PageText>;
+  /**
+   * Rows of a page's analysis raster (S28: ink, page content only), drawn
+   * through `place` (this page's displayed space → the frame, pt) into a
+   * `width` × `height` px frame at `dpi`. Rendered in sub-bands with a
+   * checkpoint between them; the band is transferred.
+   */
+  compareRaster: MethodSpec<
+    {
+      docId: string;
+      pageIndex: number;
+      dpi: number;
+      width: number;
+      height: number;
+      top: number;
+      rows: number;
+      place?: Affine;
+      aliased?: boolean;
+    },
+    RasterBand
+  >;
   textStats: MethodSpec<
     { docId: string; priority?: WorkPriority },
     { pages: number; chars: number; ms: number },

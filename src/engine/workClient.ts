@@ -79,7 +79,10 @@ type JobMethod =
   | 'readOutline'
   | 'popupStates'
   | 'copyOutline'
-  | 'editOutline';
+  | 'editOutline'
+  | 'compareSignature'
+  | 'compareText'
+  | 'compareRaster';
 
 export interface WorkClientOptions {
   wasmUrl?: string;

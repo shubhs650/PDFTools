@@ -51,6 +51,31 @@ interop is in the M6 pack (CHECKLIST §M6 R1–R4). Rev 0 (M0–M4) is complete 
   `e2e/compare-input.spec.ts` (smoke, sets, Compare with…, password and owner unlock, keyboard
   path, axe light and dark).
 
+- **M12-07 — the Compare worker and its jobs (D-66).** `src/workers/compare.worker.ts` (our own
+  code, no PDFium) with its typed, cancellable client `src/engine/compareClient.ts`: the worker
+  starts with the first comparison and is **terminated when the last one closes**, which gives
+  its memory back; its store (`src/workers/compare/store.ts`) accounts every byte per
+  comparison. **Work worker jobs** at a new `compare` priority (below geometry, above
+  background, still running while a save is verified): `compareSignature` (S28's 32 × 32 ink
+  picture and the page's words), `compareText` (S30's positioned characters in typed arrays)
+  and `compareRaster` (an analysis raster's rows through a placement, rendered in sub-bands with
+  a checkpoint between them, the page held from EmbedPDF's page cache so a dense sheet is parsed
+  once). Everything is in the **displayed** space: the Work worker's copies are opened with
+  `normalizeRotation`, so the page's /Rotate is applied by us (`quarterTurn`), checked on a
+  self-made /Rotate 90 page. The main thread only routes: `CompareSession`
+  (`src/features/compare/engine/`) sends each result to the Compare worker by transfer, folds
+  the band pairs of each sheet into running facts (ink per side, overlap, boxes, identical) and
+  never holds a whole sheet raster (S28). `CompareQueue`: the viewed sheet first, then the sheets
+  after it, then those before it, nearest first; while the viewed sheet works the other slot
+  waits for it; dependencies, progress, failures and Cancel. Pairing (M12-09), alignment
+  (M12-10) and detection (M12-14) plug into the session's `pairs`, `place` and band handler.
+  Tests: 35 unit tests (queue, store, facts, client, a session over real PDFium on corpus pairs
+  01 and 16, the material on PDFium) plus two scheduler tests; perf `@smoke`
+  `e2e/perf/compare-worker.spec.ts`: comparing pair 13 (ARCH D and E at 150 dpi) while searching
+  a 2,000-page document 22 times — no long task, slowest first hit 48 ms (warm baseline 175 ms),
+  the viewed ARCH E sheet done in 0.7 s and both in 1.2 s, the worker gone after close. Not in
+  any release bundle yet (only the e2e probe uses it until M12-08).
+
 - **M12-06 — spike S31: the comparison file (D-65), and ADR-032.** Works
   ([RESULTS.md](../spikes/s31-comparison-file/RESULTS.md)). `spikes/s31-comparison-file/` writes
   both kinds of comparison file with the app's own object layer and save core (`narrowTail` in
@@ -3421,8 +3446,10 @@ rel="noopener noreferrer">`; the commands `app.home` / `app.reportIssue` open th
   route 1 with a tiling workaround), M12-03 (spike S28, alignment route 1), M12-04 (spike S29:
   worker overlay, vector overlay route 2 with masks), M12-05 (spike S30, text matching with our
   own code), M12-06 (spike S31, the comparison file; ADR-032 written, S30 section filled by
-  M12-05). Next: the owner accepts ADR-032 and checks the S29 and S31 sample packs. **No feature
-  code before that.**
+  M12-05). **ADR-032 accepted** by the owner (2026-11-22, the four recommended answers; both
+  sample packs work in Acrobat Reader and a second desktop editor); ARCHITECTURE.md Rev 0.22.
+  M12-07 (the Compare worker and its jobs). Next: M12-08 (the comparison tab and input window)
+  and M12-09 (pairing), then the overlay tasks.
 - **Agent (M11):** the 18 tasks in [docs/plan/M11.md](plan/M11.md) "Order of work", one thread
   each. Done: M11-01, M11-10, M11-02 (spike S26), M11-03 (tabs: look, hover card, +), M11-04
   (drag to reorder), M11-05 (tab menus), M11-06 (comments in every pointer mode), M11-07 (font
@@ -3614,12 +3641,8 @@ rel="noopener noreferrer">`; the commands `app.home` / `app.reportIssue` open th
 
 ## Decisions needed (owner)
 
-- **M12 (PDF comparison).** Accept [ADR-032](adr/032-m12-spike-results.md) (spike results S27 –
-  S31, the acceptance numbers, and four decisions on the comparison file: a protected input locks
-  it; carets for deleted text; Save review rewrites its wrapper; an unsigned copy for a certified
-  B), and check the sample packs in `/mnt/project-files/m12-04/` (vector overlay) and
-  `/mnt/project-files/m12-06/` (comparison files) in Acrobat Reader and a second desktop PDF
-  editor. No feature code before.
+- **M12 (PDF comparison).** None now: ADR-032 accepted on 2026-11-22. The next owner gate is
+  the M12-23 owner pack (hand check on real files, interop checklist).
 
 - **Keyboard text selection (M2-04).** Caret-based selection (Shift+arrows) is not built; the
   keyboard path is Ctrl+A (page text) + Ctrl+C. Accept as an exception to the M2-04 criterion, or
@@ -3676,3 +3699,4 @@ rel="noopener noreferrer">`; the commands `app.home` / `app.reportIssue` open th
 | 2026-11-01 | CI cadence       | Owner approved. CI runs once per PR commit (`push` only on `main`). PRs: checks, e2e tagged `@smoke` (22 critical flows) plus `@offline` and `@a11y`, and `@smoke` perf. Docs-only PRs skip e2e. `main`, nightly, Run workflow and the `full-e2e` PR label: full e2e in 3 shards plus offline, perf and acceptance. No test removed. Tag new critical flows `@smoke`; run the e2e specs a change touches locally.                                         |
 | 2026-11-22 | ADR-030          | Comparison unblocked by the owner (PDF overlay for drawings, text comparison for documents); the hold in §14 and rule 14 is lifted, the clean-room condition stays as rule 14. **Accepted**; ARCHITECTURE.md Rev 0.20.                                                                                                                                                                                                                                    |
 | 2026-11-22 | ADR-031          | M12 — PDF comparison: PDF overlay and text comparison, D-58 … D-66, plan `docs/plan/M12.md`, spikes S27 – S31 then ADR-032. Owner's answers: close-out = Completed plus a reply; the text comparison file shows Document B; Compare off in release builds until acceptance; F8 / Shift+F8 and hold X; optional O1 and O4. **Accepted** with the merge of PR #146; ARCHITECTURE.md Rev 0.21.                                                               |
+| 2026-11-22 | ADR-032          | M12 spike results S27 – S31, acceptance numbers. Owner's answers: protected input → password on the comparison file; carets for deleted text; Save review compacts or rebuilds the wrapper (A, B incremental); unsigned copy for a certified B. Both sample packs pass in Acrobat Reader and a second editor. **Accepted**; ARCHITECTURE.md Rev 0.22.                                                                                                     |
