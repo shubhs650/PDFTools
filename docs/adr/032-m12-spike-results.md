@@ -13,10 +13,9 @@
   [ADR-022](022-m6-spikes-s18-s22.md); CLAUDE.md rules 1, 2, 6, 7, 9
 - **Related spike / milestone:** M12 ([plan](../plan/M12.md)), tasks M12-02 … M12-06; write-ups
   [S27](../../spikes/s27-linked-views/RESULTS.md), [S28](../../spikes/s28-alignment/RESULTS.md),
-  [S29](../../spikes/s29-overlay/RESULTS.md), S30 (`spikes/s30-text-diff/RESULTS.md`, task
-  M12-05), [S31](../../spikes/s31-comparison-file/RESULTS.md); format
+  [S29](../../spikes/s29-overlay/RESULTS.md), [S30](../../spikes/s30-text-diff/RESULTS.md), [S31](../../spikes/s31-comparison-file/RESULTS.md); format
   [triya-comparison-v1](../formats/triya-comparison-v1.md)
-- **Outcome (spikes only):** Works with workaround (S27, S29); Works (S28, S31); S30 below
+- **Outcome (spikes only):** Works with workaround (S27, S29); Works (S28, S30, S31)
 
 ## Context
 
@@ -91,12 +90,36 @@ need a workaround or a rule, and four points need the owner's decision (below).
   Type 3 colour glyphs, source soft masks and clip-mode text are not covered (M12-16 decides with
   a fixture).
 
-### S30 — text matching (task M12-05)
+### S30 — text matching (works, our own code)
 
-_Filled in from `spikes/s30-text-diff/RESULTS.md` when M12-05 merges (that thread and this one
-agreed that whichever pull request merges second completes this section, its rows in the
-acceptance table and its row in `spikes/README.md`). The comparison file takes S30's marks as
-page, quads, kind and old and new text, any kind (format spec)._
+- **Every manifest difference, no false report:** 82 of 82 on the 17 text pairs (with OCR at
+  compare time on pair 08's scanned page) and 3 of 3 on a self-made scrambled two-column pair.
+  Each of the 160 reported changes is a manifest item or a real unlisted one (the revision letter
+  and date); the control chapters of pairs 10 and 17 report nothing.
+- **Reading order: our recursive XY-cut** over PDFium's characters (columns first, then the
+  widest gap; a strip of footnote numbers is not a column; right-to-left pages read from the
+  right). It is the only route right on every pair: PDFium's content order gives 32 false reports
+  and PDF Oxide's column-aware spans 17 and a miss on the scrambled pair. **Rejected:** both.
+- **Tokens** keep engineering values whole (`24.0 bar(g)`, `≥ 50 MΩ`, `$1,520.00`, tags, dates);
+  scripts without spaces go grapheme by grapheme; combining marks stay with their letter.
+- **Matching:** units (paragraphs continued across columns and pages, table rows, figures) by
+  unique keys, exact keys, keys with clause numbers masked and near pairs; then **word by word
+  inside the gaps as one stream**, so reflow costs nothing (pair 06: new font and margins, only
+  the two real edits); table rows by label and cell with row and column; a moved section is one
+  change with its edits inside. **Our Myers gives the same results as jsdiff** on every pair: no
+  library.
+- **Experimental (each with a switch, as the plan says):** headers and footers (pair 13: 5
+  changes instead of 17), clause renumbering with the cross-reference check (pair 05: one entry
+  instead of 29; footnotes too), and tables without ruling lines. Moves are not experimental.
+- **OCR at compare time:** about 1.3 s a page at 300 dpi; changes labelled "from OCR", typical
+  confusions "possible OCR error" (pair 12).
+- **Time and memory:** the 500-page contract in **22–24 s** in one core (matching 60 ms).
+  Matching the pages read so far gives the final changes for them, so the first page shows as
+  soon as both first pages are read. 250 MB as objects: **M12-17 stores words and tokens in typed
+  arrays.**
+- **Corpus fixes:** pair 17's edit is on page 456 (generator); pair 08's scanned page is page 3
+  and lists two more changes. The comparison file takes S30's marks as page, quads, kind and old
+  and new text (format spec).
 
 ### S31 — the comparison file (works)
 
@@ -157,20 +180,20 @@ so they are the owner's:
 The plan's table with the numbers fixed by the spikes. "Reference machine" times are checked in
 CI's perf job and on the owner's machine; the spike numbers are one core in a cloud container.
 
-| Check                                        | Plan's proposal                                                           | Measured in the spikes                                                     | Fixed here                                                              |
-| -------------------------------------------- | ------------------------------------------------------------------------- | -------------------------------------------------------------------------- | ----------------------------------------------------------------------- |
-| Differences found (drawings)                 | every manifest difference, all pairs                                      | 240 / 240 on 39 sheets; all 3 on the scan pair (S28)                       | every manifest difference, at Normal sensitivity                        |
-| False reports (drawings)                     | none on control pages; none on the identical pair                         | 0 at Normal; 1 at High (S28)                                               | none at Normal on the control sheets and pair 16                        |
-| Differences found, false reports (documents) | every manifest difference; none on control chapters                       | S30                                                                        | S30                                                                     |
-| Alignment, vector pages                      | 0.5 pt, 0.05 %, 0.05°                                                     | ≤ 0.003 pt (S28)                                                           | 0.5 pt, 0.05 %, 0.05° (kept: real files are less exact than the corpus) |
-| Alignment, scans                             | 2 px at 150 dpi                                                           | ≤ 0.25 px (S28)                                                            | 2 px at 150 dpi (kept)                                                  |
-| First result                                 | first sheet or page within 3 s                                            | align 0.3–0.4 s + detect 0.2 s a typical sheet (S28)                       | 3 s                                                                     |
-| Typical sheet (A1, CAD-like)                 | aligned and listed within 2 s                                             | 0.5–0.6 s; as is 0.2 s (S28)                                               | 2 s                                                                     |
-| Dense A1 pair                                | measured and reported                                                     | 1.3–1.7 s align + 1.1 s detect; as is 0.24 + 1.1 s (S28)                   | reported, not a limit                                                   |
-| 500-page contract                            | complete within 60 s                                                      | S30; the comparison file of it: written in 0.27 s, reopened in 37 ms (S31) | 60 s (S30)                                                              |
-| Overlay drawing                              | —                                                                         | every zoom frame on time; style change 40–70 ms a screen (S29)             | no frame over 50 ms while zooming the corpus sheets (perf test, M12-11) |
-| Main thread                                  | no task over 100 ms                                                       | 0 long tasks in every spike                                                | no task over 100 ms                                                     |
-| Comparison file in Acrobat Reader etc        | opens without a warning; overlay black where they agree; attachments open | PDFium, Poppler, pdf.js, qpdf: yes (S29, S31); Acrobat: owner's check      | as proposed, checked by the owner with the M12-23 interop checklist     |
+| Check                                        | Plan's proposal                                                           | Measured in the spikes                                                         | Fixed here                                                              |
+| -------------------------------------------- | ------------------------------------------------------------------------- | ------------------------------------------------------------------------------ | ----------------------------------------------------------------------- |
+| Differences found (drawings)                 | every manifest difference, all pairs                                      | 240 / 240 on 39 sheets; all 3 on the scan pair (S28)                           | every manifest difference, at Normal sensitivity                        |
+| False reports (drawings)                     | none on control pages; none on the identical pair                         | 0 at Normal; 1 at High (S28)                                                   | none at Normal on the control sheets and pair 16                        |
+| Differences found, false reports (documents) | every manifest difference; none on control chapters                       | 82 / 82 on 17 pairs; 0 false of 160 reported (S30)                             | every manifest difference; none on the control chapters                 |
+| Alignment, vector pages                      | 0.5 pt, 0.05 %, 0.05°                                                     | ≤ 0.003 pt (S28)                                                               | 0.5 pt, 0.05 %, 0.05° (kept: real files are less exact than the corpus) |
+| Alignment, scans                             | 2 px at 150 dpi                                                           | ≤ 0.25 px (S28)                                                                | 2 px at 150 dpi (kept)                                                  |
+| First result                                 | first sheet or page within 3 s                                            | align 0.3–0.4 s + detect 0.2 s a typical sheet (S28); first page < 0.1 s (S30) | 3 s                                                                     |
+| Typical sheet (A1, CAD-like)                 | aligned and listed within 2 s                                             | 0.5–0.6 s; as is 0.2 s (S28)                                                   | 2 s                                                                     |
+| Dense A1 pair                                | measured and reported                                                     | 1.3–1.7 s align + 1.1 s detect; as is 0.24 + 1.1 s (S28)                       | reported, not a limit                                                   |
+| 500-page contract                            | complete within 60 s                                                      | 22–24 s (S30); its comparison file written in 0.27 s, reopened in 37 ms (S31)  | 60 s                                                                    |
+| Overlay drawing                              | —                                                                         | every zoom frame on time; style change 40–70 ms a screen (S29)                 | no frame over 50 ms while zooming the corpus sheets (perf test, M12-11) |
+| Main thread                                  | no task over 100 ms                                                       | 0 long tasks in every spike                                                    | no task over 100 ms                                                     |
+| Comparison file in Acrobat Reader etc        | opens without a warning; overlay black where they agree; attachments open | PDFium, Poppler, pdf.js, qpdf: yes (S29, S31); Acrobat: owner's check          | as proposed, checked by the owner with the M12-23 interop checklist     |
 
 ## Consequences
 
@@ -184,7 +207,7 @@ CI's perf job and on the owner's machine; the spike numbers are one core in a cl
   the vector overlay; the comparison file per `docs/formats/triya-comparison-v1.md`; "highlights,
   carets and notes" instead of "highlights, strike-outs and notes"; the protected-input rule; the
   unsigned copy for certified B; and §2's D-65 row to match. It is not edited before.
-- New permissive dependencies: **none** (OpenCV rejected; pdf.js, Poppler and qpdf were used only
+- New permissive dependencies: **none** (OpenCV and jsdiff rejected; pdf.js, Poppler and qpdf were used only
   outside the repository to check files).
 
 ## Risks
@@ -207,7 +230,8 @@ CI's perf job and on the owner's machine; the spike numbers are one core in a cl
   `out/s28-*.json`).
 - S29: `spikes/s29-overlay/` (Node and browser harnesses, PDFium, Poppler, pdf.js 4.10.38;
   sample pack in `/mnt/project-files/m12-04/`).
-- S30: `spikes/s30-text-diff/` (M12-05).
+- S30: `spikes/s30-text-diff/` (Node harness on the app's PDFium, PDF Oxide and tesseract.js-core,
+  21 unit tests, the manifest accounting in `expected.ts`, `out/s30-*.json`).
 - S31: `spikes/s31-comparison-file/` (Node harness, 5 unit tests, qpdf 11, Poppler 24.02, pdf.js
   4.10.38; `test-results/s31-node.json`; sample pack in `/mnt/project-files/m12-06/`).
 - Inputs: the self-made `Synthetic PDF Corpus/` and its generated pairs (M12-01), self-made

@@ -586,9 +586,10 @@ export function text17(): PairFiles {
         f.heading(`Article ${String(article)} ${ARTICLES[(article - 1) % ARTICLES.length] ?? ''}`);
       }
       clauseNo++;
-      if (EDITS[base] && !isInserted) editAt.set(base, f.pages.length);
-      if (isInserted) editAt.set(-1, f.pages.length);
-      f.para(`${String(article)}.${String(clauseNo)} ${t}`, { justify: true });
+      // The page the clause's first line lands on (a clause may open a new page).
+      const at = f.para(`${String(article)}.${String(clauseNo)} ${t}`, { justify: true });
+      if (EDITS[base] && !isInserted) editAt.set(base, at);
+      if (isInserted) editAt.set(-1, at);
     });
     const pages = f.finish((p, total) =>
       headerFooter(

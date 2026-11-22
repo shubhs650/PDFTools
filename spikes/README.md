@@ -27,6 +27,7 @@ Throwaway spike code for [docs/plan/M0.md](../docs/plan/M0.md) (S1–S8) and M1-
 | S27     | [`s27-linked-views/`](s27-linked-views/) (M12-02)        | [ADR-032](../docs/adr/032-m12-spike-results.md); [RESULTS.md](s27-linked-views/RESULTS.md)    | Works with workaround |
 | S28     | [`s28-alignment/`](s28-alignment/) (M12-03)              | [ADR-032](../docs/adr/032-m12-spike-results.md); [RESULTS.md](s28-alignment/RESULTS.md)       | Works (route 1)       |
 | S29     | [`s29-overlay/`](s29-overlay/) (M12-04)                  | [ADR-032](../docs/adr/032-m12-spike-results.md); [RESULTS.md](s29-overlay/RESULTS.md)         | Works with workaround |
+| S30     | [`s30-text-diff/`](s30-text-diff/) (M12-05)              | [ADR-032](../docs/adr/032-m12-spike-results.md); [RESULTS.md](s30-text-diff/RESULTS.md)       | Works (own code)      |
 | S31     | [`s31-comparison-file/`](s31-comparison-file/) (M12-06)  | [ADR-032](../docs/adr/032-m12-spike-results.md); [RESULTS.md](s31-comparison-file/RESULTS.md) | Works                 |
 
 ## Shared pieces (`shared/`)
@@ -79,6 +80,12 @@ SPIKE=s29 npm run spikes -- --project=s29                                # → t
 # encrypted and signed inputs, Save review; sample pack → spikes/s31-comparison-file/out/pack/
 # (qpdf, Poppler and PDFJS_DIR optional, see RESULTS.md)
 node --import ./spikes/shared/ts-ext.ts spikes/s31-comparison-file/run-node.ts   # → test-results/s31-node.json
+
+# S30 text matching (M12-05): Node, PDFium WASM, PDF Oxide, tesseract.js-core, the corpus;
+# numbers → spikes/s30-text-diff/out/, findings in s30-text-diff/RESULTS.md. The jsdiff
+# comparison needs it for the run only: npm install --no-save diff@8.0.4
+node --expose-gc --import ./spikes/shared/ts-ext.ts spikes/s30-text-diff/run-node.ts [order|corpus|diff|perf|switches|prefix]
+npx vitest run spikes/s30-text-diff
 
 # S26 fonts in text comments (M11-02): the tests use fixtures/; the library build and the
 # interop file need the upstream fonts (network) and write to spikes/s26-freetext-fonts/out/
