@@ -28,6 +28,9 @@ Shared set-up for the Playwright jobs is in `.github/actions/setup-e2e`
   compare the run's base with `main`: if `main` has moved, update the branch from
   `main` (rebase, or GitHub's "Update branch"), fix any conflict, and wait for a new
   green run.
+- A PR with a merge conflict gets **no** CI run at all (GitHub has no merge commit to test), so
+  a push that shows no new run usually means `main` moved and conflicts: merge `main` in first.
+  `docs/PROGRESS.md` conflicts often; keep both entries.
 - Add `full-e2e` to a PR that changes risky shared code (engine, workers, save
   path, viewer).
 - Perf flakes on `main` are logged on issue #59 and do not block PRs.
