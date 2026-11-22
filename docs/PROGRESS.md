@@ -1,6 +1,6 @@
 # Triya PDF — Progress
 
-_Last updated: 2026-11-18 (session 97: V1, version 1.0.0 release prep)_
+_Last updated: 2026-11-22 (session 98: comparison unblocked, ADR-030)_
 
 **Current milestone:** V1 — version 1.0.0, the first public release: plan
 [docs/plan/V1.md](plan/V1.md) and [ADR-029](adr/029-v1-public-release.md) **accepted** by the owner
@@ -25,6 +25,14 @@ interop is in the M6 pack (CHECKLIST §M6 R1–R4). Rev 0 (M0–M4) is complete 
 
 ## Done
 
+- **Session 98 — comparison unblocked (ADR-030).** The owner decided to add comparison (PDF
+  overlay for drawings, text comparison for documents) and lifted the hold on revision compare.
+  ARCHITECTURE.md Rev 0.20: §1.5 no longer lists it as a non-goal, §14's "Parked" entry is now
+  "Comparison (unblocked)". CLAUDE.md rule 14 now holds the clean-room condition (the slot is
+  kept so rule 15 keeps its number). The owner added `Synthetic PDF Corpus/` (#144: 13 drawing
+  pairs, 12 text pairs, self-made); one README line that named other PDF products is reworded so
+  the D-57 name test passes. No plan and no code yet: the feature is being scoped with the owner
+  in a question-and-answer interview, and the plan follows only on the owner's go.
 - **Session 97 — V1, version 1.0.0 release prep (PRs #139–#143).** The owner asked for the
   first public release on `app.triyapdf.com` and `triya-pdf.openengtools.com`. Plan and ADR-029
   accepted with the owner's answers (both domains serve the app; the beta keeps deploying `main`;
@@ -3476,3 +3484,4 @@ rel="noopener noreferrer">`; the commands `app.home` / `app.reportIssue` open th
 | 2026-09-26 | M2 plan          | M2 plan approved. M2-Q1: no Oxide in M2 (M4). Q2: signature pane in M2. Q3: search reads existing annotation text and bookmark titles. Q4: internal links navigate; external links confirm first. Q5: agent writes the Pages Function, owner provisions Cloudflare. Q6: `frame-src blob:` only after ADR-013 approval. Q7: passwords in worker memory only. Q8: layers per M2-01. Q9: `m2/<task>` branches.                                               |
 | 2026-09-25 | ADR-011          | M1-01: adopt the EmbedPDF plugin stack (pinned 2.15.1, one registry + document manager, no per-document permission overrides); own bounded PreviewLayer, own encoder worker, own paged mode for single/facing. **Accepted**; no ARCHITECTURE.md change.                                                                                                                                                                                                   |
 | 2026-11-01 | CI cadence       | Owner approved. CI runs once per PR commit (`push` only on `main`). PRs: checks, e2e tagged `@smoke` (22 critical flows) plus `@offline` and `@a11y`, and `@smoke` perf. Docs-only PRs skip e2e. `main`, nightly, Run workflow and the `full-e2e` PR label: full e2e in 3 shards plus offline, perf and acceptance. No test removed. Tag new critical flows `@smoke`; run the e2e specs a change touches locally.                                         |
+| 2026-11-22 | ADR-030          | Comparison unblocked by the owner (PDF overlay for drawings, text comparison for documents); the hold in §14 and rule 14 is lifted, the clean-room condition stays as rule 14. **Accepted**; ARCHITECTURE.md Rev 0.20.                                                                                                                                                                                                                                    |

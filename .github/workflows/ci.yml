@@ -47,6 +47,10 @@ jobs:
       - name: Typecheck
         run: npm run typecheck
       - name: Lint
+        # Typed linting of the whole tree needs more than Node's default heap on the
+        # runner (about 2 GB): it ran out of memory there from 2026-11-19.
+        env:
+          NODE_OPTIONS: --max-old-space-size=4096
         run: npm run lint
       - name: Format
         run: npm run format:check
