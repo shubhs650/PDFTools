@@ -6493,6 +6493,295 @@ textarea.form-field {
   font-size: var(--font-size-m);
 }
 
+/* The overlay result (M12-11, D-59): header, sheet list on the left, the overlay window. */
+.overlay-result {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  min-height: 0;
+  background: var(--color-bg);
+  color: var(--color-text);
+}
+
+.overlay-head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-3);
+  padding: var(--space-2) var(--space-4);
+  border-bottom: var(--border-width) solid var(--color-border);
+  background: var(--color-surface);
+}
+
+.overlay-head-icon {
+  display: inline-flex;
+}
+
+.overlay-head-title {
+  display: flex;
+  flex: 1;
+  align-items: center;
+  gap: var(--space-3);
+  margin: var(--space-0);
+  font-size: var(--font-size-l);
+  font-weight: var(--font-weight-semibold);
+}
+
+.overlay-head-nav {
+  display: flex;
+  align-items: center;
+  gap: var(--space-1);
+}
+
+.overlay-head-sheet {
+  min-width: 8em;
+  text-align: center;
+  font-size: var(--font-size-m);
+}
+
+.overlay-wait {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+  max-width: 480px;
+  margin: var(--space-6) auto;
+  color: var(--color-text-muted);
+}
+
+.overlay-body {
+  display: flex;
+  flex: 1;
+  min-height: 0;
+}
+
+.overlay-side {
+  display: flex;
+  flex: 0 0 240px;
+  flex-direction: column;
+  gap: var(--space-4);
+  overflow: auto;
+  padding: var(--space-3);
+  border-right: var(--border-width) solid var(--color-border);
+  background: var(--color-surface);
+}
+
+.overlay-side-title {
+  margin: var(--space-0) var(--space-0) var(--space-2);
+  font-size: var(--font-size-s);
+  font-weight: var(--font-weight-semibold);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--color-text-muted);
+}
+
+.overlay-sheet-list,
+.overlay-layer-list {
+  margin: var(--space-0);
+  padding: var(--space-0);
+  list-style: none;
+}
+
+.overlay-sheet-list {
+  border-radius: var(--radius-m);
+}
+
+.overlay-sheet-list:focus-visible {
+  outline: var(--focus-width, 2px) solid var(--color-focus);
+  outline-offset: 2px;
+}
+
+.overlay-sheet {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+  padding: var(--space-2) var(--space-3);
+  border-radius: var(--radius-m);
+  cursor: pointer;
+}
+
+.overlay-sheet:hover {
+  background: var(--color-hover);
+}
+
+.overlay-sheet[aria-selected='true'] {
+  background: var(--color-selected);
+  color: var(--color-selected-text);
+}
+
+.overlay-sheet-name {
+  font-weight: var(--font-weight-semibold);
+  font-size: var(--font-size-m);
+}
+
+.overlay-sheet-detail,
+.overlay-layer,
+.overlay-layer-empty {
+  color: var(--color-text-muted);
+  font-size: var(--font-size-s);
+}
+
+.overlay-sheet[aria-selected='true'] .overlay-sheet-detail {
+  color: inherit;
+}
+
+.overlay-check {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  padding: var(--space-1) var(--space-0);
+  font-size: var(--font-size-m);
+}
+
+.overlay-layer {
+  padding: var(--space-1) var(--space-0);
+}
+
+.overlay-layer[data-on='false'] {
+  font-style: italic;
+}
+
+.overlay-layer-notice {
+  margin: var(--space-0) var(--space-0) var(--space-2);
+  padding: var(--space-2);
+  border-left: 3px solid var(--color-accent);
+  background: var(--color-surface-sunken);
+  font-size: var(--font-size-s);
+}
+
+/* The overlay window: the sheet on the canvas, the floating bar over it. */
+.overlay-window {
+  position: relative;
+  display: flex;
+  flex: 1;
+  min-width: 0;
+  min-height: 0;
+}
+
+.overlay-scroll {
+  position: relative;
+  flex: 1;
+  overflow: auto;
+  background: var(--color-canvas);
+  cursor: grab;
+  touch-action: none;
+}
+
+.overlay-scroll:active {
+  cursor: grabbing;
+}
+
+.overlay-scroll:focus-visible {
+  outline: var(--focus-width, 2px) solid var(--color-focus);
+  outline-offset: -2px;
+}
+
+.overlay-canvas {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-sizing: border-box;
+  min-width: 100%;
+  min-height: 100%;
+  width: max-content;
+  padding: var(--space-6) var(--space-6) 96px;
+}
+
+/* The sheet is paper whatever the theme: the overlay's colours are measured on it. */
+.overlay-sheet-paper {
+  position: relative;
+  flex: none;
+  overflow: hidden;
+  background: var(--color-page);
+  box-shadow: var(--elevation-1);
+}
+
+.overlay-tiles {
+  position: absolute;
+  inset: 0;
+  transform-origin: 0 0;
+}
+
+.overlay-tile {
+  position: absolute;
+  display: block;
+}
+
+.overlay-drawing {
+  position: absolute;
+  top: var(--space-3);
+  right: var(--space-4);
+}
+
+.overlay-bar {
+  position: absolute;
+  right: var(--space-4);
+  bottom: var(--space-4);
+  left: var(--space-4);
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-3);
+  width: fit-content;
+  margin-inline: auto;
+  padding: var(--space-1) var(--space-3);
+  border: var(--border-width) solid var(--color-border);
+  border-radius: var(--radius-l);
+  background: var(--color-surface-raised);
+  box-shadow: var(--elevation-2);
+}
+
+.overlay-bar-group {
+  display: flex;
+  align-items: center;
+  gap: var(--space-1);
+}
+
+.overlay-bar-group + .overlay-bar-group {
+  padding-left: var(--space-3);
+  border-left: var(--border-width) solid var(--color-border);
+}
+
+.overlay-swatch {
+  width: 12px;
+  height: 12px;
+  border: var(--border-width) solid var(--color-border-strong);
+  border-radius: var(--radius-round);
+}
+
+.overlay-balance {
+  width: 112px;
+  accent-color: var(--color-accent);
+}
+
+.overlay-zoom {
+  min-width: 4.5em;
+  text-align: center;
+  font-size: var(--font-size-m);
+  font-variant-numeric: tabular-nums;
+}
+
+.overlay-colours {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+}
+
+.overlay-colour-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-4);
+}
+
+.overlay-colour-warning {
+  margin: var(--space-0);
+  padding: var(--space-2) var(--space-3);
+  border-left: 3px solid var(--color-danger);
+  background: var(--color-surface-sunken);
+  font-size: var(--font-size-s);
+}
+
 .compare-pairing {
   display: flex;
   flex-direction: column;
