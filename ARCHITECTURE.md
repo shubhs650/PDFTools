@@ -1,7 +1,7 @@
-# Triya PDF — Architecture & Product Specification (Rev 0.19)
+# Triya PDF — Architecture & Product Specification (Rev 0.20)
 
 **App:** Triya PDF (formerly PDFTools, D-41) · **URL:** `app.triyapdf.com` and `triya-pdf.openengtools.com` (D-28) · **Platform:** Open Engineering Tools (OET)
-**Status:** Approved for implementation · **Last updated:** 18-Nov-2026 (Rev 0.19)
+**Status:** Approved for implementation · **Last updated:** 22-Nov-2026 (Rev 0.20)
 **Companion file:** `CLAUDE.md` (standing rules for the coding agent — read it first)
 
 > This document is the single source of truth. Where code and this document disagree, this document wins until it is deliberately amended. Decisions are numbered (D-xx) so commits, issues and ADRs can reference them.
@@ -25,6 +25,8 @@
 > **Rev 0.17 amendment** — [ADR-028](docs/adr/028-m11-tabs-fonts-select.md) (owner-approved 2026-11-17, all optional items accepted): **M11** — document tabs v2 (D-50), comments selectable in every pointer mode (D-51), a self-hosted font library for text comments with our own appearance streams (D-52), pick up where you left off (D-53), fonts installed on the computer (D-54), split, images to PDF and crop (D-55), resizable panes with edge arrows (D-56) (§2, §3.2, §7.1, §7.8, §8, §8.1, §9, §10.3, §13 M11).
 
 > **Rev 0.18 amendment** — [ADR-028](docs/adr/028-m11-tabs-fonts-select.md) amendment (owner, 2026-11-18): **D-54 withdrawn** — fonts installed on the user's computer are not supported (a cross-compatibility risk); text comments use only the fonts that ship with the app (D-52), and the library may grow later on user request (§2, §7.1, §10.3, §13 M11).
+
+> **Rev 0.20 amendment** — [ADR-030](docs/adr/030-comparison-unblocked.md) (owner, 2026-11-22): **comparison is unblocked** — the hold on revision compare is lifted by the owner; it is no longer a parked item or a non-goal and will be planned as its own milestone, as a clean-room build from public techniques (§1.5, §14; CLAUDE.md rule 14).
 
 > **Rev 0.19 amendment** — [ADR-029](docs/adr/029-v1-public-release.md) (owner-approved 2026-11-18): **V1 — version 1.0.0, the first public release** — release domains `app.triyapdf.com` and `triya-pdf.openengtools.com`, deployed from a version tag after approval; the beta keeps deploying `main` (D-28); no home button in the top bar, a repository link in About (D-35); the public tree names no other PDF product as a model and holds no third-party artwork or documents (D-57).
 
@@ -68,7 +70,7 @@ All performance work and acceptance tests target both:
 | **Drawing** | CAD-exported (AutoCAD / SmartPlant / E3D), < 100 MB, A0, dense vectors | pan, deep zoom to 6400 %, crisp tiled re-render, never freezes |
 
 ### 1.5 Non-goals for Rev 0
-Tablet/phone UI · Safari parity · PDF text/content editing · form design beyond the basic AcroForm fields of §7.10 (signature, button, barcode, image and scripted fields; calculations) · JavaScript in forms · XFA forms · revision compare (**parked, see §14**) · certificate-based signing (visual signatures only, §7.11) · certificate trust validation · any server-side processing · any analytics beyond Cloudflare's server-side request counts (no analytics script; ADR-001 B1).
+Tablet/phone UI · Safari parity · PDF text/content editing · form design beyond the basic AcroForm fields of §7.10 (signature, button, barcode, image and scripted fields; calculations) · JavaScript in forms · XFA forms · certificate-based signing (visual signatures only, §7.11) · certificate trust validation · any server-side processing · any analytics beyond Cloudflare's server-side request counts (no analytics script; ADR-001 B1).
 
 ---
 
@@ -545,7 +547,7 @@ The OCR text-selection fix; document tabs v2 (D-50); comments in every pointer m
 
 **Rev 2+:** PDF text editing · form design beyond M6's basic fields · advanced page tools (headers/footers, watermarks, Bates) · tablet UI · local folder search · native wrapper (.exe/.msi) (the dark theme moved to M7, ADR-023).
 
-**Parked:** Revision compare for drawings — **blocked pending the owner's employment-agreement / IP clearance.** Do not design or build until explicitly unblocked. If later cleared: clean-room implementation from public techniques only.
+**Comparison (unblocked, ADR-030):** PDF overlay for drawings and text comparison for documents. The owner lifted the earlier hold on 2026-11-22; scope and design are set in the milestone plan and its ADR before any code. **Clean-room implementation from public techniques only** (CLAUDE.md rule 14).
 
 **Extension points to reserve in Rev 0:** OCR text layer can be injected per page into the Work worker's text index; view layer supports a future two-document synchronized view.
 

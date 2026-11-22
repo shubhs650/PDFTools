@@ -17,7 +17,7 @@ You are building **Triya PDF** (formerly PDFTools; `app.triyapdf.com` and `triya
 11. **No hardcoded user-visible strings.** Use i18n keys (`/src/i18n/en.json`) and `Intl` formatting.
 12. **Every interactive control is keyboard-reachable with an accessible name.**
 13. **Test data is public or self-made PDFs only.** Never add company or client documents.
-14. **Do not work on revision compare** — parked pending IP clearance.
+14. **Comparison (PDF overlay, text comparison) is a clean-room build** (ADR-030): public techniques and permissively licensed libraries only. Never copy code, artwork or proprietary behaviour from another product's comparison feature.
 15. **Do not copy other PDF products' icons or artwork, and never name another product as the model for the UI** (D-57; a unit test checks). Use Fluent UI System Icons (Regular; Filled for active states — ADR-010); draw missing icons in the same style.
 
 ## Stack
