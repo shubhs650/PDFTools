@@ -17,6 +17,8 @@ playwright/.cache/
 corpus/
 *.pdf
 !e2e/fixtures/self-made/**/*.pdf
+# The comparison corpus: self-made, synthetic pairs (M12-01, D-66)
+!Synthetic PDF Corpus/**/*.pdf
 
 # Spike outputs (generated fixtures, saved files, interop packs)
 spikes/**/out/

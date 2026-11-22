@@ -1,6 +1,6 @@
 # Triya PDF — Progress
 
-_Last updated: 2026-11-22 (session 99: M12 plan, PDF comparison, ADR-031 proposed)_
+_Last updated: 2026-11-22 (M12-01: comparison corpus additions)_
 
 **Current milestone:** M12 — PDF comparison (PDF overlay for drawings, text comparison for
 documents), version 1.1.0: plan [docs/plan/M12.md](plan/M12.md) and
@@ -30,6 +30,28 @@ interop is in the M6 pack (CHECKLIST §M6 R1–R4). Rev 0 (M0–M4) is complete 
 
 ## Done
 
+- **M12-01 — comparison corpus additions (Q37, D-66).** A self-made generator in
+  `e2e/fixtures/comparison-corpus/` (Node, no new dependency: its own small PDF writer,
+  standard 14 fonts, its own stroke font for text as curves) rebuilds every new pair with
+  `npm run corpus` (`-- --check` reports stale files). Overlay pairs 14–19: a dense A1 plot plan
+  (about 85,000 line segments, zero-width lines, hatching, every label as curves), the same
+  drawing at A1 and A3, an identical control pair, a six-sheet set with one sheet removed and two
+  swapped, a title-block-only change, and a checked print with clouds, a callout, notes with a
+  reply and see-through check highlights whose comments Rev B addresses, changes differently or
+  leaves (close-out cases). Text pairs 13–17: running header with revision letter and "Page X of
+  Y" plus an inserted page, hyphenation with fi/fl ligatures and footnotes, a deleted page, a
+  table with merged and wrapped cells, and a 500-page contract that the loader builds at test
+  time (never committed). Manifests extended in the same columns (rows generated from the
+  facts the generator computes: zones, scale, pages of each edit); README sections generated
+  between markers. `.gitignore` now lets PDFs under `Synthetic PDF Corpus/` be committed. One
+  loader for every test: `e2e/fixtures/comparison-corpus/index.ts` (`corpusPairs`, `corpusPair`,
+  `corpusFile`, `corpusBytes`, `CORPUS_PASSWORDS`). Size added to the repository: 0.75 MB (the
+  corpus folder is now 5.6 MB; the 500-page pair is 1.5 MB, built at test time). Tests:
+  `tests/corpus/comparison-corpus.test.ts` (every manifest row's files and page counts, the
+  ignore exception, rebuilds equal the committed files, properties of the new pairs). Noted, not
+  changed: three hand-made text rows describe more pages than their files have (pair 04 "pages
+  2-5" in a 3-page file, pair 05 "adding 1 page" with 6 → 6, pair 10 "19->20" and "P19" with
+  17 → 18).
 - **Session 99 — M12 plan: PDF comparison (ADR-031 proposed).** After a 43-question interview
   with the owner (one question at a time, every answer recorded in the plan), the plan
   [docs/plan/M12.md](plan/M12.md), [ADR-031](adr/031-m12-pdf-comparison.md) and ARCHITECTURE.md
@@ -3259,10 +3281,9 @@ rel="noopener noreferrer">`; the commands `app.home` / `app.reportIssue` open th
 
 ## Next
 
-- **Owner (M12):** give the go to start M12-01 (the plan's five questions are answered).
-- **Agent (M12):** nothing until the owner's go; then the tasks in
-  [docs/plan/M12.md](plan/M12.md) "Order of work", one thread each, starting with M12-01 (corpus
-  additions) and the spikes M12-02 … M12-06.
+- **Agent (M12):** autodrive (owner, 2026-11-22): the tasks in [docs/plan/M12.md](plan/M12.md)
+  "Order of work", two threads at a time. Done: M12-01 (corpus additions). Next: the spikes
+  M12-02 … M12-06, ending in ADR-032 (owner gate).
 - **Agent (M11):** the 18 tasks in [docs/plan/M11.md](plan/M11.md) "Order of work", one thread
   each. Done: M11-01, M11-10, M11-02 (spike S26), M11-03 (tabs: look, hover card, +), M11-04
   (drag to reorder), M11-05 (tab menus), M11-06 (comments in every pointer mode), M11-07 (font
