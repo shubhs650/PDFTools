@@ -31,7 +31,10 @@ const COLOUR_NAME: Record<string, MessageKey> = {
 const colourName = (c: Rgb): MessageKey =>
   COLOUR_NAME[c.join(',')] ?? msg('compare.overlay.colourName_custom');
 
-type Size = { width: number; height: number };
+interface Size {
+  width: number;
+  height: number;
+}
 const frames = new Map<string, Promise<Size>>();
 
 /** A page's displayed size (points), from the Render worker, cached per edit count. */
@@ -253,10 +256,12 @@ export function OverlayWindow({ id, sheet, index }: { id: string; sheet: Sheet; 
     colB: t(colourName(view.style.colB)),
   });
   const preset = presetOf(view.style.colA, view.style.colB);
+  // Drawn: every visible tile of exactly this state is on screen (tests and the spinner).
+  const done = !!stats?.complete && stats.zoom === zoom && stats.contentKey === contentKey;
 
   return (
     <div className="overlay-window" data-testid="overlay-window">
-      {/* eslint-disable-next-line jsx-a11y/no-noninteractive-tabindex -- a scrollable region takes focus for keyboard scrolling, zoom and Blink (X) */}
+      {/* eslint-disable jsx-a11y/no-noninteractive-element-interactions, jsx-a11y/no-noninteractive-tabindex -- a scrollable region takes focus for keyboard scrolling, zoom and Blink (X) */}
       <div
         ref={scrollRef}
         className="overlay-scroll"
@@ -265,7 +270,7 @@ export function OverlayWindow({ id, sheet, index }: { id: string; sheet: Sheet; 
         tabIndex={0}
         data-testid="overlay-view"
         data-zoom={zoom}
-        data-complete={stats?.complete ? 'true' : 'false'}
+        data-complete={done ? 'true' : 'false'}
         data-tiles={stats?.drawn ?? 0}
         data-preset={preset ?? 'custom'}
         data-blink={view.blink ?? ''}
@@ -299,16 +304,17 @@ export function OverlayWindow({ id, sheet, index }: { id: string; sheet: Sheet; 
           <div
             ref={sheetRef}
             className="overlay-sheet-paper"
-            style={
-              frame
-                ? undefined
-                : { width: 0, height: 0 }
-            }
+            style={frame ? undefined : { width: 0, height: 0 }}
           />
         </div>
       </div>
-      {stats && !stats.complete ? (
-        <span className="overlay-drawing ui-spinner" role="status" aria-label={t('compare.overlay.drawing')} />
+      {/* eslint-enable jsx-a11y/no-noninteractive-element-interactions, jsx-a11y/no-noninteractive-tabindex */}
+      {stats && !done ? (
+        <span
+          className="overlay-drawing ui-spinner"
+          role="status"
+          aria-label={t('compare.overlay.drawing')}
+        />
       ) : null}
       <FloatingBar
         id={id}
@@ -325,4 +331,3 @@ export function OverlayWindow({ id, sheet, index }: { id: string; sheet: Sheet; 
     </div>
   );
 }
-

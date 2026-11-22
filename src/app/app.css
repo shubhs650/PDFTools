@@ -6624,6 +6624,15 @@ textarea.form-field {
   color: inherit;
 }
 
+.overlay-sheet-align,
+.overlay-sheet-hint {
+  font-size: var(--font-size-s);
+}
+
+.overlay-sheet-align[data-status='low'] {
+  font-weight: var(--font-weight-semibold);
+}
+
 .overlay-check {
   display: flex;
   align-items: center;

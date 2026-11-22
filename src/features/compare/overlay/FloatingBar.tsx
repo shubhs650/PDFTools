@@ -28,6 +28,7 @@ import {
   DropdownMenu,
   IconButton,
   ToggleButton,
+  type MenuEntry,
 } from '../../../ui/components';
 import {
   overlapWarning,
@@ -94,6 +95,26 @@ export function FloatingBar({
               b: format.percent(Math.min(1, 1 + s.balance)),
             });
 
+  const colourEntries: MenuEntry[] = [
+    {
+      kind: 'radio',
+      id: 'preset',
+      label: t('compare.overlay.colours'),
+      value: preset ?? CUSTOM,
+      options: PRESET_ORDER.map((p) => ({ value: p, label: t(PRESET_LABEL[p]) })),
+      onValueChange: (p) => {
+        if (p !== CUSTOM) set((v) => setPreset(v, p as ColourPreset));
+      },
+    },
+    { kind: 'separator', id: 'sep' },
+    {
+      id: 'custom',
+      label: t('compare.overlay.custom'),
+      onSelect: () => {
+        setCustom(true);
+      },
+    },
+  ];
   return (
     <div className="overlay-bar" role="toolbar" aria-label={t('compare.overlay.bar')}>
       <Group>
@@ -153,29 +174,8 @@ export function FloatingBar({
         />
         <BlinkButton disabled={!both} active={view.blink !== null} onBlink={onBlink} />
         <DropdownMenu
-          trigger={
-            <IconButton label={t('compare.overlay.colours')} icon={<Color20Regular />} />
-          }
-          entries={[
-            {
-              kind: 'radio',
-              id: 'preset',
-              label: t('compare.overlay.colours'),
-              value: preset ?? CUSTOM,
-              options: PRESET_ORDER.map((p) => ({ value: p, label: t(PRESET_LABEL[p]) })),
-              onValueChange: (p) => {
-                if (p !== CUSTOM) set((v) => setPreset(v, p as ColourPreset));
-              },
-            },
-            { kind: 'separator', id: 'sep' },
-            {
-              id: 'custom',
-              label: t('compare.overlay.custom'),
-              onSelect: () => {
-                setCustom(true);
-              },
-            },
-          ]}
+          trigger={<IconButton label={t('compare.overlay.colours')} icon={<Color20Regular />} />}
+          entries={colourEntries}
         />
       </Group>
       <Group>

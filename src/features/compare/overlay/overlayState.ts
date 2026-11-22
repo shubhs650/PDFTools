@@ -3,6 +3,7 @@
 // layer switches. Pure transitions plus one small store; the overlay window
 // reads it and asks the Render worker for tiles.
 import { createStore, useStore } from 'zustand';
+import type { SheetAlignment } from '../../../model/compare/align/aligner';
 import { IDENTITY, type Affine } from '../../../model/compare/material';
 import {
   DEFAULT_STYLE,
@@ -14,6 +15,7 @@ import {
 } from '../../../model/compare/overlay';
 import { clampZoom } from '../../../model/compare/overlayView';
 import type { PairRow } from '../../../model/compare/pairing';
+import type { LayerList } from '../../../model/ocg';
 import type { SidePage } from '../engine/session';
 
 /** A sheet of the result: a pair of pages, or a page only one revision has. */
@@ -52,8 +54,8 @@ export interface OverlayView {
   comments: { a: boolean; b: boolean; hideChecks: boolean };
   /** Blink (hold X): the side shown alone while held, flipping; null when not blinking. */
   blink: 'a' | 'b' | null;
-  /** Placement of A into B's frame per compared pair (M12-10 fills it); identity when absent. */
-  place: Record<number, Affine>;
+  /** Each compared pair's alignment as the session finds it (M12-10); as is until then. */
+  aligned: Record<number, SheetAlignment>;
 }
 
 export const DEFAULT_VIEW: OverlayView = {
@@ -64,7 +66,7 @@ export const DEFAULT_VIEW: OverlayView = {
   thicken: false,
   comments: { a: true, b: true, hideChecks: false },
   blink: null,
-  place: {},
+  aligned: {},
 };
 
 /** The style the tiles are drawn with: Blink shows one side alone. */
@@ -73,8 +75,19 @@ export function drawnStyle(v: OverlayView): OverlayStyle {
   return { ...v.style, showA: v.blink === 'a', showB: v.blink === 'b', balance: 0, fade: 0 };
 }
 
+/** The sheet's alignment, once found (pairs only). */
+export const alignmentOf = (v: OverlayView, s: Sheet | undefined): SheetAlignment | undefined =>
+  s?.pair === null || s?.pair === undefined ? undefined : v.aligned[s.pair];
+
+/** Where A is drawn in B's frame: the alignment found, else as is (D-60). */
 export const placeOf = (v: OverlayView, s: Sheet | undefined): Affine =>
-  s?.pair === null || s?.pair === undefined ? IDENTITY : (v.place[s.pair] ?? IDENTITY);
+  alignmentOf(v, s)?.place ?? IDENTITY;
+
+/** A sheet's alignment arrived (the session's watchAlignment). */
+export const setAligned = (v: OverlayView, pair: number, al: SheetAlignment): OverlayView => ({
+  ...v,
+  aligned: { ...v.aligned, [pair]: al },
+});
 
 export const setPreset = (v: OverlayView, p: ColourPreset): OverlayView => ({
   ...v,
@@ -87,8 +100,7 @@ export const setColour = (v: OverlayView, side: 'a' | 'b', c: Rgb): OverlayView 
 });
 
 /** The custom-colour warning (D-59): the two colours would not give a dark overlap. */
-export const overlapWarning = (v: OverlayView): boolean =>
-  !darkOverlap(v.style.colA, v.style.colB);
+export const overlapWarning = (v: OverlayView): boolean => !darkOverlap(v.style.colA, v.style.colB);
 
 export const toggleSide = (v: OverlayView, side: 'a' | 'b'): OverlayView => {
   const key = side === 'a' ? 'showA' : 'showB';
@@ -144,4 +156,17 @@ export function dropView(id: string): void {
   overlayStore.setState((s) => ({
     byId: Object.fromEntries(Object.entries(s.byId).filter(([k]) => k !== id)),
   }));
+}
+
+/** Names of layers that are on by default in one list and off in the other (D-59, Q24). */
+export function differingDefaults(a: LayerList | null, b: LayerList | null): string[] {
+  if (!a || !b) return [];
+  const onIn = (l: LayerList): Map<string, boolean> => new Map(l.layers.map((x) => [x.name, x.on]));
+  const mb = onIn(b);
+  const out: string[] = [];
+  for (const [name, on] of onIn(a)) {
+    const other = mb.get(name);
+    if (other !== undefined && other !== on) out.push(name);
+  }
+  return out;
 }

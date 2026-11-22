@@ -48,7 +48,7 @@ export function visibleTiles(
   if (x1 <= x0 || y1 <= y0) return [];
   const cx = (x0 + x1) / 2;
   const cy = (y0 + y1) / 2;
-  const out: (TileSpec & { d: number })[] = [];
+  const out: { tile: TileSpec; d: number }[] = [];
   for (let row = Math.floor(y0 / tile); row * tile < y1; row++)
     for (let col = Math.floor(x0 / tile); col * tile < x1; col++) {
       const x = col * tile;
@@ -57,17 +57,11 @@ export function visibleTiles(
       const h = Math.min(tile, sheetH - y);
       if (w <= 0 || h <= 0) continue;
       out.push({
-        key: `${String(col)}:${String(row)}`,
-        col,
-        row,
-        x,
-        y,
-        w,
-        h,
+        tile: { key: `${String(col)}:${String(row)}`, col, row, x, y, w, h },
         d: Math.hypot(x + w / 2 - cx, y + h / 2 - cy),
       });
     }
-  return out.sort((a, b) => a.d - b.d).map(({ d: _d, ...t }) => t);
+  return out.sort((a, b) => a.d - b.d).map((o) => o.tile);
 }
 
 /**
@@ -108,23 +102,4 @@ export const ZOOM_STEPS = [
 export function stepZoom(z: number, dir: 1 | -1): number {
   if (dir > 0) return ZOOM_STEPS.find((s) => s > z * 1.001) ?? MAX_ZOOM;
   return [...ZOOM_STEPS].reverse().find((s) => s < z / 1.001) ?? MIN_ZOOM;
-}
-
-/**
- * Scroll position that keeps the sheet point under (px, py) — CSS pixels in
- * the view — in place when the zoom changes from z0 to z1. `pad` is the space
- * around the sheet in the scroll area.
- */
-export function zoomScroll(
-  scroll: { left: number; top: number },
-  at: { x: number; y: number },
-  z0: number,
-  z1: number,
-  pad: { x: number; y: number } = { x: 0, y: 0 },
-): { left: number; top: number } {
-  const k = z1 / z0;
-  return {
-    left: (scroll.left + at.x - pad.x) * k + pad.x - at.x,
-    top: (scroll.top + at.y - pad.y) * k + pad.y - at.y,
-  };
 }

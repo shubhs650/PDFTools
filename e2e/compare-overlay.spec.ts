@@ -51,8 +51,14 @@ async function overlayOf(page: Page, id: string): Promise<void> {
   await drawn(page);
 }
 
-/** Waits until every visible tile of the current state is on screen. */
+/**
+ * Waits until the sheet shown is aligned (its overlay is then drawn through the
+ * alignment, M12-10) and every visible tile of the current state is on screen.
+ */
 async function drawn(page: Page): Promise<void> {
+  await expect(
+    page.locator('.overlay-sheet[aria-selected="true"] .overlay-sheet-align'),
+  ).toBeVisible({ timeout: 30_000 });
   await expect(view(page)).toHaveAttribute('data-complete', 'true', { timeout: 30_000 });
 }
 
@@ -136,7 +142,9 @@ test('pair 01: old red, new green, the same black; the floating bar changes the 
   // Zoom in from the bar: the tiles are drawn again at the new zoom.
   const z0 = Number(await view(page).getAttribute('data-zoom'));
   await bar(page).getByRole('button', { name: 'Zoom in' }).click();
-  await expect.poll(async () => Number(await view(page).getAttribute('data-zoom'))).toBeGreaterThan(z0);
+  await expect
+    .poll(async () => Number(await view(page).getAttribute('data-zoom')))
+    .toBeGreaterThan(z0);
   await drawn(page);
 
   // Blink: hold X in the window.
@@ -157,6 +165,19 @@ test('pair 16 (identical): no red or green anywhere', async ({ page }) => {
   expect(c.black).toBeGreaterThan(1000);
   expect(c.red).toBe(0);
   expect(c.green).toBe(0);
+});
+
+test('pair 15 (A1 against A3): the sheet is aligned automatically and drawn through the alignment', async ({
+  page,
+}) => {
+  await overlayOf(page, '15');
+  const sheet = page.getByRole('option', { name: /Sheet 1/ });
+  await expect(sheet.locator('.overlay-sheet-align')).toHaveAttribute('data-status', 'auto');
+  await expect(sheet).toContainText('Auto-aligned · Shift');
+  const aligned = await colours(page);
+  // Drawn through the alignment, the two revisions mostly agree (the A3 plot's pens
+  // are heavier relative to the sheet, S29); as is, they would not line up at all.
+  expect(aligned.black).toBeGreaterThan(aligned.red);
 });
 
 test('pair 07: the sheet list moves between sheets; custom colours warn when the overlap is not dark', async ({
@@ -199,7 +220,9 @@ test('pair 08: Thicken thin lines makes the hairlines heavier', async ({ page })
   expect(thick.black + thick.red + thick.green).toBeGreaterThan(
     (thin.black + thin.red + thin.green) * 1.3,
   );
-  await expect(page.getByRole('listbox', { name: 'Sheets of this comparison' }).getByRole('option')).toHaveCount(3);
+  await expect(
+    page.getByRole('listbox', { name: 'Sheets of this comparison' }).getByRole('option'),
+  ).toHaveCount(3);
 });
 
 test('pair 11: each file’s layers are listed, with the notice for a layer whose default differs', async ({
@@ -252,7 +275,9 @@ test('the overlay result passes axe in light and dark, and its controls are keyb
   await expect(view(page)).toBeFocused();
   await page.keyboard.press('Control+=');
   await drawn(page);
-  await bar(page).getByRole('slider', { name: 'Balance between Document A and Document B' }).focus();
+  await bar(page)
+    .getByRole('slider', { name: 'Balance between Document A and Document B' })
+    .focus();
   await page.keyboard.press('ArrowLeft');
   await expect(
     bar(page).getByRole('slider', { name: 'Balance between Document A and Document B' }),

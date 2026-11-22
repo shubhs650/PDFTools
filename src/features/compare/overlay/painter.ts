@@ -38,6 +38,9 @@ export interface PainterStats {
   wanted: number;
   /** Every visible tile of the current state is drawn. */
   complete: boolean;
+  /** The state these numbers are about: the zoom and the content key. */
+  zoom: number;
+  contentKey: string;
   cachedBytes: number;
 }
 
@@ -110,6 +113,8 @@ export class OverlayPainter {
       wanted: this.wanted,
       complete: !!top && top.pending.size === 0 && this.wanted > 0 && this.missing(top) === 0,
       cachedBytes: this.cachedBytes,
+      zoom: this.zoom,
+      contentKey: this.contentKey,
     };
   }
 
@@ -143,9 +148,7 @@ export class OverlayPainter {
 
   private current(): Layer | undefined {
     const top = this.layers[this.layers.length - 1];
-    return top && top.scale === this.scale() && top.contentKey === this.contentKey
-      ? top
-      : undefined;
+    return top?.scale === this.scale() && top.contentKey === this.contentKey ? top : undefined;
   }
 
   private visible(): ReturnType<typeof visibleTiles> {
@@ -263,7 +266,7 @@ export class OverlayPainter {
   /** Once the current layer covers the view, older layers go. */
   private settle(): void {
     const top = this.current();
-    if (top && top.pending.size === 0 && this.missing(top) === 0) {
+    if (top?.pending.size === 0 && this.missing(top) === 0) {
       for (const l of this.layers) if (l !== top) this.removeLayer(l);
       this.layers = [top];
     }

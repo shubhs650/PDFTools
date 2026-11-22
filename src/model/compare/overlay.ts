@@ -135,8 +135,7 @@ export function over(dst: Uint8ClampedArray, src: Uint8ClampedArray | Uint8Array
       continue;
     }
     const k = al / 255;
-    for (let c = 0; c < 3; c++)
-      dst[o + c] = (src[o + c] ?? 0) * k + (dst[o + c] ?? 0) * (1 - k);
+    for (let c = 0; c < 3; c++) dst[o + c] = (src[o + c] ?? 0) * k + (dst[o + c] ?? 0) * (1 - k);
   }
 }
 

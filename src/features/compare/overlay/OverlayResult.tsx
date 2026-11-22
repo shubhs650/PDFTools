@@ -11,12 +11,15 @@ import { updateInputs } from '../compareFlow';
 import type { Comparison } from '../model';
 import { startComparing, syncPairing, usePairing } from '../pairingFlow';
 import { typeLabel } from '../title';
+import { alignmentText } from '../alignmentText';
 import { OverlayLayers } from './OverlayLayers';
 import { OverlayWindow } from './OverlayWindow';
 import {
   dropView,
+  alignmentOf,
   goSheet,
   overlayStore,
+  setAligned,
   sheetsOf,
   updateView,
   useOverlayView,
@@ -65,10 +68,16 @@ export function OverlayResult({ comparison: c }: { comparison: Comparison }) {
     () => (pairing?.status === 'done' ? sheetsOf(pairing.rows, pairing.pages) : []),
     [pairing],
   );
-  const pairsKey =
-    pairing?.status === 'done' ? JSON.stringify(comparedPairs(pairing.rows)) : null;
+  const pairsKey = pairing?.status === 'done' ? JSON.stringify(comparedPairs(pairing.rows)) : null;
+  // Compare runs the comparison (D-66); each sheet's alignment comes back as it is found (D-60).
   useEffect(() => {
-    if (pairsKey !== null) startComparing(c.id);
+    if (pairsKey === null) return;
+    const session = startComparing(c.id);
+    if (!session) return;
+    updateView(c.id, (v) => (Object.keys(v.aligned).length ? { ...v, aligned: {} } : v));
+    return session.watchAlignment((pair, al) => {
+      updateView(c.id, (v) => setAligned(v, pair, al));
+    });
   }, [c.id, pairsKey]);
   const view = useOverlayView(c.id);
   const index = Math.min(view.sheet, Math.max(0, sheets.length - 1));
@@ -178,6 +187,7 @@ function usePageLabel(): (p: Sheet['a']) => string {
 /** The sheet list (Q14, Q17): one entry per sheet; arrows move, Enter is not needed. */
 function SheetList({ id, sheets, current }: { id: string; sheets: Sheet[]; current: number }) {
   const { t } = useTranslation();
+  const view = useOverlayView(id);
   const headingId = useId();
   const label = usePageLabel();
   const go = (i: number): void => {
@@ -188,7 +198,7 @@ function SheetList({ id, sheets, current }: { id: string; sheets: Sheet[]; curre
       <h3 id={headingId} className="overlay-side-title">
         {t('compare.overlay.sheets')}
       </h3>
-      <ul
+      <div
         className="overlay-sheet-list"
         role="listbox"
         aria-label={t('compare.overlay.sheetsList')}
@@ -215,12 +225,15 @@ function SheetList({ id, sheets, current }: { id: string; sheets: Sheet[]; curre
               : s.b
                 ? t('compare.overlay.sheetAdded', { b: label(s.b) })
                 : t('compare.overlay.sheetRemoved', { a: label(s.a) });
+          const al = alignmentOf(view, s);
+          const at = al ? alignmentText(al) : null;
           return (
             // eslint-disable-next-line jsx-a11y/click-events-have-key-events -- the listbox handles the keys
-            <li
+            <div
               key={i}
               id={`${id}-sheet-${String(i)}`}
               role="option"
+              tabIndex={-1}
               aria-selected={i === current}
               className="overlay-sheet"
               data-kind={s.a && s.b ? 'pair' : s.b ? 'added' : 'removed'}
@@ -232,10 +245,18 @@ function SheetList({ id, sheets, current }: { id: string; sheets: Sheet[]; curre
                 {t('compare.overlay.sheetName', { sheet: format.number(i + 1) })}
               </span>
               <span className="overlay-sheet-detail">{detail}</span>
-            </li>
+              {at ? (
+                <span className="overlay-sheet-align" data-status={al?.status}>
+                  {i === current && at.values ? `${at.status} · ${at.values}` : at.status}
+                </span>
+              ) : null}
+              {i === current && at?.hint ? (
+                <span className="overlay-sheet-hint">{at.hint}</span>
+              ) : null}
+            </div>
           );
         })}
-      </ul>
+      </div>
     </section>
   );
 }

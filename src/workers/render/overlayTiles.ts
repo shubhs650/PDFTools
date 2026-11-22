@@ -47,7 +47,7 @@ const FPDFBitmap_BGRA = 4;
 const HIGHLIGHT = 9;
 /** PdfBlendMode.Normal (EPDFAnnot_GetBlendMode). */
 const BLEND_NORMAL = 0;
-/** Hide check highlights (Q11): Highlight comments and anything more see-through than this. */
+/** Hide check highlights (Q11): Highlight comments and anything below this opacity. */
 export const CHECK_OPACITY = 0.7;
 /** Pixels the grey tiles may hold (S29: up to 90 MB uncapped after one zoom gesture). */
 export const GREY_CACHE_BYTES = 48 * 1024 * 1024;
@@ -152,8 +152,8 @@ function annotFrame(
 interface PageComments {
   boxes: AnnotBox[];
   /**
-   * Indexes of check highlights: Highlight comments, and comments more see-through than
-   * CHECK_OPACITY or drawn with a blend mode (a Multiply marker).
+   * Indexes of check highlights: Highlight comments, and comments below
+   * CHECK_OPACITY opacity or drawn with a blend mode (a Multiply marker).
    */
   checks: Set<number>;
 }
@@ -205,7 +205,9 @@ function renderComments(
     const pts = [corner(b.x0, b.y0), corner(b.x1, b.y0), corner(b.x0, b.y1), corner(b.x1, b.y1)];
     const xs = pts.map((p) => p[0]);
     const ys = pts.map((p) => p[1]);
-    return Math.max(...xs) >= 0 && Math.min(...xs) <= w && Math.max(...ys) >= 0 && Math.min(...ys) <= h;
+    return (
+      Math.max(...xs) >= 0 && Math.min(...xs) <= w && Math.max(...ys) >= 0 && Math.min(...ys) <= h
+    );
   });
   if (hits.length === 0) return null;
   const heap = heapOf(mod);
@@ -308,7 +310,13 @@ export class OverlayTiles {
         if (r.thicken) {
           // One pixel of margin so neighbouring tiles join without seams (S29).
           const mg: Affine = [m[0], m[1], m[2], m[3], m[4] + 1, m[5] + 1];
-          g = crop(thicken(renderGrey(mod, ref.pagePtr, mg, w + 2, h + 2), w + 2, h + 2), w + 2, 1, w, h);
+          g = crop(
+            thicken(renderGrey(mod, ref.pagePtr, mg, w + 2, h + 2), w + 2, h + 2),
+            w + 2,
+            1,
+            w,
+            h,
+          );
         } else g = renderGrey(mod, ref.pagePtr, m, w, h);
         this.grey.set(key, g, g.length);
         return g;

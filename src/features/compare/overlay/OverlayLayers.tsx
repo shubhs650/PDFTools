@@ -5,20 +5,7 @@ import { format } from '../../../i18n';
 import type { LayerList } from '../../../model/ocg';
 import { workClient } from '../../view/host';
 import type { Comparison } from '../model';
-import { updateView, useOverlayView, type Sheet } from './overlayState';
-
-/** Names of layers that are on by default in one list and off in the other (D-59, Q24). */
-export function differingDefaults(a: LayerList | null, b: LayerList | null): string[] {
-  if (!a || !b) return [];
-  const onIn = (l: LayerList): Map<string, boolean> => new Map(l.layers.map((x) => [x.name, x.on]));
-  const mb = onIn(b);
-  const out: string[] = [];
-  for (const [name, on] of onIn(a)) {
-    const other = mb.get(name);
-    if (other !== undefined && other !== on) out.push(name);
-  }
-  return out;
-}
+import { differingDefaults, updateView, useOverlayView, type Sheet } from './overlayState';
 
 const lists = new Map<string, Promise<LayerList>>();
 

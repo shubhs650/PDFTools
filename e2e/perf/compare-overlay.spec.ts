@@ -20,7 +20,9 @@ async function dropOn(target: Locator, name: string, bytes: Uint8Array): Promise
       const data = Uint8Array.from(atob(f.b64), (c) => c.charCodeAt(0));
       dt.items.add(new File([data], f.name, { type: 'application/pdf' }));
       for (const type of ['dragenter', 'dragover', 'drop'])
-        el.dispatchEvent(new DragEvent(type, { dataTransfer: dt, bubbles: true, cancelable: true }));
+        el.dispatchEvent(
+          new DragEvent(type, { dataTransfer: dt, bubbles: true, cancelable: true }),
+        );
     },
     { name, b64 },
   );
@@ -108,9 +110,12 @@ test('zooming and panning the dense A1 overlay adds no long task @smoke', async 
 
   // A style change re-composes from the cached grey tiles.
   const t1 = await page.evaluate(() => performance.now());
-  await page.getByRole('toolbar', { name: 'Overlay controls' }).getByRole('button', {
-    name: 'Fade unchanged',
-  }).click();
+  await page
+    .getByRole('toolbar', { name: 'Overlay controls' })
+    .getByRole('button', {
+      name: 'Fade unchanged',
+    })
+    .click();
   await drawn(page);
   const styleMs = Math.round((await page.evaluate(() => performance.now())) - t1);
 
@@ -118,8 +123,20 @@ test('zooming and panning the dense A1 overlay adds no long task @smoke', async 
     Math.round([...xs].sort((a, b) => a - b)[Math.floor(xs.length * p)] ?? 0);
   const result = {
     firstSheetMs: firstMs,
-    zoom: { frames: zoomFrames.length, p95: pctl(zoomFrames, 0.95), max: pctl(zoomFrames, 1 - 1e-9), over50: zoomFrames.filter((f) => f > 50).length, sharpMs: zoomSharpMs, zoom },
-    pan: { frames: panFrames.length, p95: pctl(panFrames, 0.95), over50: panFrames.filter((f) => f > 50).length, sharpMs: panSharpMs },
+    zoom: {
+      frames: zoomFrames.length,
+      p95: pctl(zoomFrames, 0.95),
+      max: pctl(zoomFrames, 1 - 1e-9),
+      over50: zoomFrames.filter((f) => f > 50).length,
+      sharpMs: zoomSharpMs,
+      zoom,
+    },
+    pan: {
+      frames: panFrames.length,
+      p95: pctl(panFrames, 0.95),
+      over50: panFrames.filter((f) => f > 50).length,
+      sharpMs: panSharpMs,
+    },
     styleChangeMs: styleMs,
   };
   mkdirSync('test-results', { recursive: true });

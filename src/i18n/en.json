@@ -2975,7 +2975,6 @@
       "inputs": "Change inputs"
     },
     "overlay": {
-      "title": "Overlay",
       "window": "Overlay of sheet {{sheet}}: {{a}} in {{colA}}, {{b}} in {{colB}}",
       "pairing": "Pairing pages before the overlay is shown…",
       "pairingFailed": "The pages couldn't be paired. Change the inputs to try again.",
@@ -2991,7 +2990,6 @@
       "next": "Next sheet",
       "zoomIn": "Zoom in",
       "zoomOut": "Zoom out",
-      "zoom": "Zoom {{percent}}",
       "fitPage": "Fit page",
       "fitWidth": "Fit width",
       "bar": "Overlay controls",
