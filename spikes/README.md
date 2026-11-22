@@ -24,6 +24,7 @@ Throwaway spike code for [docs/plan/M0.md](../docs/plan/M0.md) (S1–S8) and M1-
 | S23     | [`s23-popup/`](s23-popup/) (M7-06)                       | [ADR-023](../docs/adr/023-m7-second-beta-review.md)            | Works                 |
 | S25     | [`s25-freetext-colors/`](s25-freetext-colors/) (M7)      | [ADR-024](../docs/adr/024-freetext-text-and-border-colours.md) | Works with workaround |
 | S26     | [`s26-freetext-fonts/`](s26-freetext-fonts/) (M11-02)    | [ADR-028](../docs/adr/028-m11-tabs-fonts-select.md)            | Works (route R2)      |
+| S27     | [`s27-linked-views/`](s27-linked-views/) (M12-02)        | ADR-032 (M12-06); [RESULTS.md](s27-linked-views/RESULTS.md)    | Works with workaround |
 
 ## Shared pieces (`shared/`)
 
@@ -56,6 +57,10 @@ npm run typecheck:spikes
 node spikes/s1-save/make-fixtures.ts && node spikes/s1-save/run-node.ts   # → spikes/s1-save/out/
 SPIKE=s1 npm run spikes -- --project=s1   # browser timings → test-results/s1-results.json
 npx vitest run spikes                     # unit tests (narrow-tail writer, search core)
+
+# S27 several documents on screen (M12-02): the app's real view layer in two and three
+# windows; numbers → test-results/s27-results.json, findings in s27-linked-views/RESULTS.md
+SPIKE=s27 npm run spikes -- --project=s27
 
 # S26 fonts in text comments (M11-02): the tests use fixtures/; the library build and the
 # interop file need the upstream fonts (network) and write to spikes/s26-freetext-fonts/out/
