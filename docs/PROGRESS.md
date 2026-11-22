@@ -1,6 +1,6 @@
 # Triya PDF — Progress
 
-_Last updated: 2026-11-22 (M12-04: spike S29, the overlay on screen and the vector overlay PDF)_
+_Last updated: 2026-11-22 (M12-05: spike S30, text matching)_
 
 **Current milestone:** M12 — PDF comparison (PDF overlay for drawings, text comparison for
 documents), version 1.1.0: plan [docs/plan/M12.md](plan/M12.md) and
@@ -64,6 +64,25 @@ interop is in the M6 pack (CHECKLIST §M6 R1–R4). Rev 0 (M0–M4) is complete 
   @smoke fails intermittently (134 ms task on a PR run; red in main's perf job since
   2026-11-22), `bookmark-editing.spec.ts:260` and `comment-copy-paste.spec.ts:33` fail now and
   then in full shard 1/3.
+- **M12-05 — spike S30: text matching (D-63, D-64, D-66).** Works, **our own code**.
+  `spikes/s30-text-diff/` (Node, PDFium WASM, PDF Oxide, the corpus) accounts for every
+  manifest item: **82 of 82 on the 17 text pairs**, 3 of 3 on a self-made scrambled two-column
+  pair, and **no false report** (each of 160 reported changes is a manifest item or the
+  revision letter and date). **Reading order:** our recursive XY-cut is right on every pair;
+  PDFium's content order (32 false reports) and PDF Oxide's column-aware spans (17, one miss)
+  fail the scrambled pair. **Tokens** keep values whole (`24.0 bar(g)`, `≥ 50 MΩ`, tags, dates);
+  scripts without spaces go by grapheme. **Matching:** units by unique keys, exact, relabelled
+  (clause numbers masked) and near pairs; word by word inside the gaps as one stream (reflow
+  costs nothing); table rows by label and cell; moves with the edits inside. Our Myers equals
+  jsdiff's results on every pair: no library. **Experimental:** headers and footers (pair 13: 5
+  changes instead of 17), clause renumbering (pair 05: one entry instead of 29), tables without
+  ruling lines. **OCR at compare time** finds the three changes on pair 08's scanned page ("from
+  OCR"); pair 12's artefacts are "possible OCR error". **500 pages:** 22–24 s in one core
+  (target 60 s), matching 62 ms; matching the pages read so far gives the final changes for
+  them, so the first page can show at once; 250 MB as objects, so M12-17 must use typed arrays.
+  **Corpus fixes:** pair 17's liability edit is on page 456 (generator counted the page before
+  the paragraph); pair 08's scanned page is page 3 and its two further changes are listed.
+  Details in `spikes/s30-text-diff/RESULTS.md`, input for ADR-032 (M12-06).
 - **M12-04 — spike S29: the overlay on screen and the vector overlay PDF (D-59).** Works with
   workaround ([RESULTS.md](../spikes/s29-overlay/RESULTS.md)). **On screen: a worker combines**
   (PDFium renders each revision through a matrix, without comments, straight to grey; lookup
@@ -3354,8 +3373,8 @@ rel="noopener noreferrer">`; the commands `app.home` / `app.reportIssue` open th
 - **Agent (M12):** autodrive (owner, 2026-11-22): the tasks in [docs/plan/M12.md](plan/M12.md)
   "Order of work", two threads at a time. Done: M12-01 (corpus additions), M12-02 (spike S27,
   route 1 with a tiling workaround), M12-03 (spike S28, alignment route 1), M12-04 (spike S29:
-  worker overlay, vector overlay route 2 with masks). Next: the spikes M12-05 and M12-06, ending
-  in ADR-032 (owner gate).
+  worker overlay, vector overlay route 2 with masks), M12-05 (spike S30, text matching with our
+  own code). Next: M12-06 (spike S31) and ADR-032 (owner gate).
 - **Agent (M11):** the 18 tasks in [docs/plan/M11.md](plan/M11.md) "Order of work", one thread
   each. Done: M11-01, M11-10, M11-02 (spike S26), M11-03 (tabs: look, hover card, +), M11-04
   (drag to reorder), M11-05 (tab menus), M11-06 (comments in every pointer mode), M11-07 (font

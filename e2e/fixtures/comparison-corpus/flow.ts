@@ -124,7 +124,8 @@ export class Flow {
     this.y -= size * 0.5;
   }
 
-  para(text: string, o: ParaOptions = {}): void {
+  /** Sets a paragraph; returns the (1-based) page its first line lands on. */
+  para(text: string, o: ParaOptions = {}): number {
     const font = o.font ?? 'F1';
     const size = o.size ?? 10;
     const leading = o.leading ?? size * 1.3;
@@ -132,6 +133,7 @@ export class Flow {
     const indent = o.indent ?? 0;
     const words = this.parse(text);
     const lines = this.wrap(words, font, size, this.contentWidth - indent, lig);
+    let first = this.pages.length;
     lines.forEach((line, i) => {
       const fns = line.words.filter((w) => w.fn !== undefined);
       let need = leading;
@@ -140,6 +142,7 @@ export class Flow {
         need += this.noteHeight(note, lig) + (this.notes.length === 0 ? 10 : 0);
       }
       if (this.room() < need) this.newPage();
+      if (i === 0) first = this.pages.length;
       for (const w of fns) {
         const note = this.noteText(w.fn ?? 0);
         this.reserved += this.noteHeight(note, lig) + (this.notes.length === 0 ? 10 : 0);
@@ -159,6 +162,7 @@ export class Flow {
       );
     });
     this.y -= o.spaceAfter ?? size * 0.6;
+    return first;
   }
 
   /** Finishes the last page and returns one content stream per page. */
