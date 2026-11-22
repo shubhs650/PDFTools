@@ -53,6 +53,9 @@ export function installTestHook(): TestHook {
   void import('./ocrProbe').then((m) => {
     m.registerOcrProbe(hook);
   });
+  void import('./compareProbe').then((m) => {
+    m.registerCompareProbe(hook);
+  });
   void import('../app/commands/dispatch').then((d) => {
     const calls: string[] = [];
     hook.capabilities['commands'] = {
