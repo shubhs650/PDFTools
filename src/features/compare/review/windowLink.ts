@@ -148,6 +148,8 @@ export class WindowLink {
   private windows = new Map<WindowRole, LinkedWindow>();
   private readonly offs: (() => void)[] = [];
   private leader: WindowRole | null = null;
+  private pending: WindowRole | null = null;
+  private timer: ReturnType<typeof setTimeout> | null = null;
   private readonly zooming = new Set<WindowRole>();
   private readonly crosshairs = new Map<WindowRole, HTMLElement>();
   enabled = true;
@@ -167,7 +169,7 @@ export class WindowLink {
       const vp = w.host.querySelector<HTMLElement>('.viewport');
       if (vp) {
         const onScroll = (): void => {
-          if (this.enabled && this.leader === w.role) this.drive(w.role);
+          if (this.enabled && this.leader === w.role) this.driveSoon(w.role);
           this.hidePointer();
         };
         vp.addEventListener('scroll', onScroll, { passive: true });
@@ -179,13 +181,31 @@ export class WindowLink {
       if (zoom)
         this.offs.push(
           zoom.forDocument(w.docId).onStateChange(() => {
-            if (this.enabled && this.leader === w.role) this.drive(w.role);
+            if (this.enabled && this.leader === w.role) this.driveSoon(w.role);
           }),
         );
     }
   }
 
+  /**
+   * Drives in a task of its own (coalesced): the leader's own scroll or zoom
+   * update and the followers' never share one main-thread task (rule 1).
+   */
+  driveSoon(role: WindowRole): void {
+    this.pending = role;
+    if (this.timer !== null) return;
+    this.timer = setTimeout(() => {
+      this.timer = null;
+      const r = this.pending;
+      this.pending = null;
+      if (r && this.enabled) this.drive(r);
+    }, 0);
+  }
+
   detach(): void {
+    if (this.timer !== null) clearTimeout(this.timer);
+    this.timer = null;
+    this.pending = null;
     for (const off of this.offs) off();
     this.offs.length = 0;
     this.windows.clear();
@@ -215,7 +235,9 @@ export class WindowLink {
   /**
    * Moves every other window to `role`'s spot. A window in the middle of a zoom
    * (its laid-out scale is not yet the plugin's) is retried on the next frame; a
-   * follower whose zoom must change is zoomed first and centred once laid out.
+   * follower whose zoom must change is zoomed first and centred once laid out;
+   * one follower zooms per task (a zoom re-lays out its whole window), the next
+   * in the task after.
    */
   drive(role: WindowRole, tries = 30): void {
     const t0 = performance.now();
@@ -231,6 +253,8 @@ export class WindowLink {
         });
       return;
     }
+    let zoomed = false;
+    let more = false;
     for (const [other, w] of this.windows) {
       if (other === role) continue;
       const m = this.map(role, other);
@@ -242,6 +266,11 @@ export class WindowLink {
         continue;
       }
       if (this.zooming.has(other)) continue;
+      if (zoomed) {
+        more = true;
+        continue;
+      }
+      zoomed = true;
       this.zooming.add(other);
       zoom.forDocument(w.docId).requestZoom(want.scale);
       const land = (n: number): void => {
@@ -249,7 +278,7 @@ export class WindowLink {
         if ((at && sameScale(at.scale, want.scale)) || n === 0) {
           this.zooming.delete(other);
           const lead2 = this.leader;
-          if (lead2 && this.enabled) this.drive(lead2);
+          if (lead2 && this.enabled) this.driveSoon(lead2);
           return;
         }
         requestAnimationFrame(() => {
@@ -260,6 +289,7 @@ export class WindowLink {
         land(60);
       });
     }
+    if (more) this.driveSoon(role);
     this.stats.drives++;
     this.stats.lastMs = performance.now() - t0;
   }
