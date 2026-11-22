@@ -48,7 +48,13 @@ import type { RecutReport } from '../workers/work/redact/pathRecut';
 import type { Leak } from '../workers/work/redact/verify';
 import type { PageTables } from '../workers/work/tables/detect';
 import type { TableExportResult, TableFormat, TablePackaging } from '../workers/work/tables/job';
-import type { PageSignature, PageText, RasterBand, Affine } from '../model/compare/material';
+import type {
+  Affine,
+  PageFrame,
+  PageSignature,
+  PageText,
+  RasterBand,
+} from '../model/compare/material';
 import type { MethodSpec } from './protocol';
 
 export type WorkPriority = 'interactive' | 'save-verify' | 'geometry' | 'compare' | 'background';
@@ -469,6 +475,15 @@ export interface WorkApi {
    * only, so no permission is needed (D-58). Scheduled at `compare` priority.
    */
   compareSignature: MethodSpec<{ docId: string; pageIndex: number }, PageSignature>;
+  /**
+   * A page's line geometry for alignment (M12-10, D-60): the snap geometry's
+   * segments (reused when snapping already read them) in displayed space,
+   * with the page's frame. The segments are transferred.
+   */
+  compareGeometry: MethodSpec<
+    { docId: string; pageIndex: number },
+    { frame: PageFrame; segments: Float32Array }
+  >;
   /** A page's positioned characters in displayed space, typed arrays transferred (S30). */
   compareText: MethodSpec<{ docId: string; pageIndex: number }, PageText>;
   /**

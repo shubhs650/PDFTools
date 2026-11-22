@@ -81,6 +81,7 @@ type JobMethod =
   | 'copyOutline'
   | 'editOutline'
   | 'compareSignature'
+  | 'compareGeometry'
   | 'compareText'
   | 'compareRaster';
 

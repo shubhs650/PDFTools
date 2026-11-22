@@ -9,26 +9,14 @@ import { PdfiumNative } from '@embedpdf/engines/pdfium';
 import { init, type WrappedPdfiumModule } from '@embedpdf/pdfium';
 import { afterEach, beforeAll, describe, expect, it } from 'vitest';
 import { corpusBytes, corpusPair } from '../../e2e/fixtures/comparison-corpus/index';
-import type { CompareApi, SheetFacts } from '../../src/engine/compareApi';
+import type { SheetFacts } from '../../src/engine/compareApi';
 import { CompareClient } from '../../src/engine/compareClient';
-import type { WorkApi } from '../../src/engine/workApi';
-import type { WorkClient } from '../../src/engine/workClient';
-import type { ArgsOf, ResultOf } from '../../src/engine/protocol';
 import { AbortError } from '../../src/engine/errors';
 import { CompareSession, oneFile, pairInOrder } from '../../src/features/compare/engine/session';
 import type { PageSignature, PageText, RasterBand } from '../../src/model/compare/material';
-import { acquirePage, docPtrOf } from '../../src/workers/render/pdfium';
-import { serve } from '../../src/workers/rpc-host';
-import { compareHandlers } from '../../src/workers/compare/handlers';
 import { SheetAccumulator } from '../../src/workers/compare/sheetFacts';
 import { CompareStore } from '../../src/workers/compare/store';
-import {
-  analysisBand,
-  frameOf,
-  plainFrame,
-  signatureOf,
-  textOf,
-} from '../../src/workers/work/compareMaterial';
+import { compareSpawn, fakeWork, type FakeWorkers } from './support/inProcess';
 
 const band = (width: number, height: number, top: number, rows: number[][]): RasterBand => ({
   width,
@@ -139,31 +127,12 @@ afterEach(() => {
   for (const p of ports.splice(0)) p.close();
 });
 
-interface FakeWorkers {
-  spawned: number;
-  terminated: number;
-}
-
-function compareSpawn(w: FakeWorkers) {
-  return (): Worker => {
-    w.spawned++;
-    const ch = new MessageChannel();
-    ports.push(ch.port1, ch.port2);
-    serve<CompareApi>(ch.port1, compareHandlers(new CompareStore()));
-    const port = ch.port2 as unknown as Worker & { terminate(): void };
-    port.terminate = () => {
-      w.terminated++;
-      ch.port1.close();
-      ch.port2.close();
-    };
-    return port;
-  };
-}
+const spawnOf = (w: FakeWorkers) => compareSpawn(w, ports);
 
 describe('CompareClient', () => {
   it('starts the worker with the first comparison and terminates it with the last', async () => {
     const w: FakeWorkers = { spawned: 0, terminated: 0 };
-    const c = new CompareClient({ spawn: compareSpawn(w) });
+    const c = new CompareClient({ spawn: spawnOf(w) });
     expect(c.running).toBe(false);
     await c.openComparison('one');
     await c.openComparison('two');
@@ -191,7 +160,7 @@ describe('CompareClient', () => {
   });
 
   it('a cancelled call rejects with AbortError', async () => {
-    const c = new CompareClient({ spawn: compareSpawn({ spawned: 0, terminated: 0 }) });
+    const c = new CompareClient({ spawn: spawnOf({ spawned: 0, terminated: 0 }) });
     await c.openComparison('x');
     const ac = new AbortController();
     const job = c.call('summary', { cmpId: 'x' }, { signal: ac.signal });
@@ -224,54 +193,7 @@ beforeAll(async () => {
   }
 });
 
-type Run = WorkClient['run'];
-
-function fakeWork(log: string[]): Pick<WorkClient, 'run' | 'hold'> & { held: number } {
-  const page = <T>(docId: string, index: number, fn: (p: number) => T): T => {
-    const ref = acquirePage(native, docId, index);
-    try {
-      return fn(ref.pagePtr);
-    } finally {
-      ref.release();
-    }
-  };
-  const impl = {
-    compareSignature: ({ docId, pageIndex }: ArgsOf<WorkApi, 'compareSignature'>) =>
-      page(docId, pageIndex, (p) => signatureOf(mod, docPtrOf(native, docId), pageIndex, p)),
-    compareText: ({ docId, pageIndex }: ArgsOf<WorkApi, 'compareText'>) =>
-      page(docId, pageIndex, (p) =>
-        textOf(mod, p, plainFrame(frameOf(mod, docPtrOf(native, docId), pageIndex, p))),
-      ),
-    compareRaster: ({ docId, pageIndex, ...req }: ArgsOf<WorkApi, 'compareRaster'>) =>
-      page(docId, pageIndex, (p) =>
-        analysisBand(mod, p, frameOf(mod, docPtrOf(native, docId), pageIndex, p).turn, req, () =>
-          Promise.resolve(),
-        ),
-      ),
-  };
-  const fake = {
-    held: 0,
-    hold: () => {
-      fake.held++;
-      return () => {
-        fake.held--;
-      };
-    },
-    run: ((method: keyof typeof impl, args: never, options: { signal?: AbortSignal } = {}) => {
-      log.push(method);
-      const promise = (async () => {
-        await new Promise((r) => setTimeout(r, 0));
-        if (options.signal?.aborted) throw new AbortError();
-        return (impl[method] as (a: never) => unknown)(args);
-      })();
-      return {
-        promise: promise as Promise<ResultOf<WorkApi, typeof method>>,
-        cancel: () => undefined,
-      };
-    }) as unknown as Run,
-  };
-  return fake;
-}
+const workOf = (log: string[]) => fakeWork(mod, native, log);
 
 describe('CompareSession (real PDFium material)', () => {
   it('pairs in order by default', () => {
@@ -283,8 +205,8 @@ describe('CompareSession (real PDFium material)', () => {
 
   it('the identical pair (16) is identical sheet by sheet; the store is released on close', async () => {
     const w: FakeWorkers = { spawned: 0, terminated: 0 };
-    const compare = new CompareClient({ spawn: compareSpawn(w) });
-    const work = fakeWork([]);
+    const compare = new CompareClient({ spawn: spawnOf(w) });
+    const work = workOf([]);
     const sheets = new Map<number, SheetFacts>();
     const s = new CompareSession(oneFile('p16a', [0, 1]), oneFile('p16b', [0, 1]), {
       work,
@@ -293,11 +215,20 @@ describe('CompareSession (real PDFium material)', () => {
       bandRows: 128,
       onSheet: (i, f) => sheets.set(i, f),
     });
+    const watched: string[] = [];
+    const stop = s.watchAlignment((i, al) => watched.push(`${String(i)}:${al.status}`));
     await s.start();
     expect(work.held).toBe(1);
     await s.whenDone();
-    expect(s.progress()).toMatchObject({ done: 10, failed: 0, total: 10 });
+    expect(watched.sort()).toEqual(['0:as-is', '1:as-is']);
+    const late: number[] = [];
+    s.watchAlignment((i) => late.push(i))();
+    expect(late.sort()).toEqual([0, 1]);
+    stop();
+    // Per page a signature and text; per sheet an alignment and the analysis.
+    expect(s.progress()).toMatchObject({ done: 12, failed: 0, total: 12 });
     for (const sheet of [0, 1]) {
+      expect(s.alignment(sheet)).toMatchObject({ status: 'as-is', method: 'vector', score: 1 });
       const f = sheets.get(sheet);
       expect(f?.identical).toBe(true);
       expect(f?.rows).toBe(f?.height);
@@ -313,9 +244,9 @@ describe('CompareSession (real PDFium material)', () => {
   });
 
   it('a changed pair (01) is not identical, and the viewed sheet comes first', async () => {
-    const compare = new CompareClient({ spawn: compareSpawn({ spawned: 0, terminated: 0 }) });
+    const compare = new CompareClient({ spawn: spawnOf({ spawned: 0, terminated: 0 }) });
     const log: string[] = [];
-    const work = fakeWork(log);
+    const work = workOf(log);
     const order: number[] = [];
     const s = new CompareSession(oneFile('p01a', [0]), oneFile('p01b', [0]), {
       work,
@@ -339,14 +270,17 @@ describe('CompareSession (real PDFium material)', () => {
       'compareSignature',
       'compareText',
     ]);
-    expect(log.slice(4).every((m) => m === 'compareRaster')).toBe(true);
+    // Then its alignment (line geometry; the sheet lines up as it is), then its rasters.
+    expect(log.slice(4, 6)).toEqual(['compareGeometry', 'compareGeometry']);
+    expect(log.slice(6).every((m) => m === 'compareRaster')).toBe(true);
+    expect(s.alignment(0)?.status).toBe('as-is');
     await s.close();
   });
 
   it('cancel stops the work; close releases even a cancelled comparison', async () => {
-    const compare = new CompareClient({ spawn: compareSpawn({ spawned: 0, terminated: 0 }) });
+    const compare = new CompareClient({ spawn: spawnOf({ spawned: 0, terminated: 0 }) });
     const log: string[] = [];
-    const work = fakeWork(log);
+    const work = workOf(log);
     const sheets: number[] = [];
     const s = new CompareSession(oneFile('p01a', [0]), oneFile('p01b', [0]), {
       work,
@@ -373,8 +307,8 @@ describe('CompareSession (real PDFium material)', () => {
 
 describe('CompareSession pairing (M12-09, D-60)', () => {
   it('pairs pair 17 in the Compare worker: S-103 removed, S-105 and S-106 swapped', async () => {
-    const compare = new CompareClient({ spawn: compareSpawn({ spawned: 0, terminated: 0 }) });
-    const work = fakeWork([]);
+    const compare = new CompareClient({ spawn: spawnOf({ spawned: 0, terminated: 0 }) });
+    const work = workOf([]);
     const seen: string[] = [];
     const s = new CompareSession(
       oneFile('p17a', [0, 1, 2, 3, 4, 5]),
@@ -400,9 +334,9 @@ describe('CompareSession pairing (M12-09, D-60)', () => {
   });
 
   it('pairs a set of files across files by name, then compares those sheets reusing the signatures', async () => {
-    const compare = new CompareClient({ spawn: compareSpawn({ spawned: 0, terminated: 0 }) });
+    const compare = new CompareClient({ spawn: spawnOf({ spawned: 0, terminated: 0 }) });
     const log: string[] = [];
-    const work = fakeWork(log);
+    const work = workOf(log);
     const sheets = new Map<number, SheetFacts>();
     const s = new CompareSession(
       {
@@ -449,8 +383,8 @@ describe('CompareSession pairing (M12-09, D-60)', () => {
   });
 
   it('closing while pairing rejects the pairing as cancelled', async () => {
-    const compare = new CompareClient({ spawn: compareSpawn({ spawned: 0, terminated: 0 }) });
-    const work = fakeWork([]);
+    const compare = new CompareClient({ spawn: spawnOf({ spawned: 0, terminated: 0 }) });
+    const work = workOf([]);
     const s = new CompareSession(oneFile('p17a', [0, 1, 2, 3, 4, 5]), oneFile('p17b', [0, 1]), {
       work,
       compare,

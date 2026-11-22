@@ -10,7 +10,14 @@ import type { WorkApi } from '../engine/workApi';
 import { Transfer } from '../engine/protocol';
 import { serve } from './rpc-host';
 import { acquirePage, docPtrOf, wasmMemory } from './render/pdfium';
-import { analysisBand, frameOf, plainFrame, signatureOf, textOf } from './work/compareMaterial';
+import {
+  analysisBand,
+  displayedSegments,
+  frameOf,
+  plainFrame,
+  signatureOf,
+  textOf,
+} from './work/compareMaterial';
 import { textBuffers } from '../model/compare/material';
 import { digestDocument } from './render/save/digest';
 import { WorkDocs } from './work/docs';
@@ -614,6 +621,30 @@ serve<WorkApi>(self, {
           signatureOf(m, ptr, pageIndex, page),
         );
         return new Transfer(sig, [sig.ink.buffer as ArrayBuffer]);
+      } finally {
+        wasmBytes();
+      }
+    }),
+
+  compareGeometry: ({ docId, pageIndex }, ctx) =>
+    scheduler.run('compare', ctx.signal, async (slice) => {
+      if (!mod) throw new RpcError('not-initialized', 'The work worker is not initialized');
+      const m = mod;
+      const { doc } = await docs.get(docId);
+      if (pageIndex < 0 || pageIndex >= doc.pageCount)
+        throw new RpcError('page-out-of-range', 'No such page');
+      const ptr = docPtrOf(need(), doc.id);
+      try {
+        // Snapping's copy when it has one; otherwise read here and not cached (the
+        // comparison keeps only feature points).
+        const segs =
+          geometry.get(docId)?.get(pageIndex) ??
+          (await extractGeometry(m, ptr, pageIndex, slice)).segs;
+        const frame = onComparePage(doc.id, pageIndex, doc.pageCount, (page) =>
+          plainFrame(frameOf(m, ptr, pageIndex, page)),
+        );
+        const segments = displayedSegments(segs, frame.toDisplay);
+        return new Transfer({ frame, segments }, [segments.buffer]);
       } finally {
         wasmBytes();
       }

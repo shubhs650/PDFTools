@@ -3033,6 +3033,13 @@
       "colourName_magenta": "magenta",
       "colourName_custom": "its own colour",
       "drawing": "Drawing the overlay…"
+    },
+    "align": {
+      "asIs": "As is",
+      "auto": "Auto-aligned",
+      "low": "Low confidence",
+      "values": "Shift {{dx}}, {{dy}} pt · scale {{scale}} · rotation {{deg}}°",
+      "lowHint": "The sheets could not be lined up with certainty. Check the overlay, or align the sheet by points."
     }
   }
 }

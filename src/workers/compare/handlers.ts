@@ -43,6 +43,34 @@ export function compareHandlers(store: CompareStore): Handlers<CompareApi> {
       );
       return new Transfer(result, [result.sim.buffer as ArrayBuffer]);
     },
+    putGeometry: ({ cmpId, side, page, segments }, ctx) => {
+      ctx.throwIfAborted();
+      const features = guard(() => store.putGeometry(cmpId, side, page, segments));
+      return { features, bytes: store.summary(cmpId).bytes };
+    },
+    alignAsIs: ({ cmpId, a, b }) => guard(() => store.alignAsIs(cmpId, a, b)),
+    alignVector: ({ cmpId, sheet, a, b, coarse }, ctx) =>
+      guard(() =>
+        store.alignVector(cmpId, sheet, a, b, coarse, () => {
+          ctx.throwIfAborted();
+        }),
+      ),
+    putAlignBand: ({ cmpId, sheet, side, band }, ctx) => {
+      ctx.throwIfAborted();
+      return { bytes: guard(() => store.putAlignBand(cmpId, sheet, side, band)) };
+    },
+    alignImage: ({ cmpId, sheet, scale }, ctx) =>
+      guard(() =>
+        store.alignImage(cmpId, sheet, scale, () => {
+          ctx.throwIfAborted();
+        }),
+      ),
+    setAlignment: ({ cmpId, sheet, alignment }) => {
+      guard(() => {
+        store.setAlignment(cmpId, sheet, alignment);
+      });
+      return null;
+    },
     sheetFacts: ({ cmpId, sheet }) => guard(() => store.sheetFacts(cmpId, sheet)),
     summary: ({ cmpId }) => guard(() => store.summary(cmpId)),
     release: ({ cmpId }) => ({ freedBytes: store.release(cmpId) }),
