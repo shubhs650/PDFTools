@@ -1,6 +1,6 @@
 # Triya PDF — Progress
 
-_Last updated: 2026-11-22 (M12-05: spike S30, text matching)_
+_Last updated: 2026-11-22 (M12-05: spike S30, text matching; ADR-032 complete)_
 
 **Current milestone:** M12 — PDF comparison (PDF overlay for drawings, text comparison for
 documents), version 1.1.0: plan [docs/plan/M12.md](plan/M12.md) and
@@ -29,6 +29,31 @@ answers Q1–Q7; ARCHITECTURE.md Rev 0.12 after [ADR-024](adr/024-freetext-text-
 interop is in the M6 pack (CHECKLIST §M6 R1–R4). Rev 0 (M0–M4) is complete on the agent side.
 
 ## Done
+
+- **M12-06 — spike S31: the comparison file (D-65), and ADR-032.** Works
+  ([RESULTS.md](../spikes/s31-comparison-file/RESULTS.md)). `spikes/s31-comparison-file/` writes
+  both kinds of comparison file with the app's own object layer and save core (`narrowTail` in
+  its "only our objects" mode; `StandardCrypt` for encrypted bases): attachments (unchanged
+  inputs, Flate, MD5 checksum, `/AFRelationship`), `comparison.json`, the catalog tagged in
+  `/PieceInfo /TriyaPDF`, the file's own attachments kept. **Text: Document B's own bytes plus one
+  appended section** (marks as Highlight and Caret with appearance streams, A and the data
+  attached); B comes back by length and SHA-256, exact on all 17 text pairs (500 pages included);
+  25–45 % smaller than a rewritten copy, keeps B's signature valid and B's encryption.
+  **Overlay:** S29's vector overlay pages plus A and B attached: 1.3–2 × the inputs; sets of
+  several files per side work. Opens cleanly in PDFium, Poppler, pdf.js and qpdf; every
+  attachment byte for byte in Poppler and pdf.js. Detection from the catalog: 0.1–1 ms on a
+  plain file, 8 ms on the 500-page comparison file. RC4, AES-128 and AES-256 inputs; approval
+  and certified (`/P` 1–3) signatures; three rounds of Save review (copies incremental, the
+  wrapper compacted or rebuilt); files rewritten by PDFium and qpdf (detected, B not exact →
+  read-only). Format: [docs/formats/triya-comparison-v1.md](formats/triya-comparison-v1.md).
+  **[ADR-032](adr/032-m12-spike-results.md)** gathers S27–S31 (S30's section is completed by
+  whichever of M12-05 and M12-06 merges second), fixes the acceptance numbers and asks the owner
+  four decisions: a protected input locks the comparison file; carets instead of strike-outs for
+  deleted text; Save review rewrites the comparison file's own wrapper (A and B stay
+  incremental); a certified B that forbids comments uses an unsigned copy with B attached.
+  Sample pack for Acrobat Reader and a second desktop editor in `/mnt/project-files/m12-06/`.
+  `e2e/fixtures/signed.ts` now exports `fill`, `PLACEHOLDER` and `CONTENTS_HEX` for signing
+  copies.
 
 - **M12-03 — spike S28: alignment, pairing and detection (D-60, D-61, D-66).** Works,
   **route 1 (our own code)**. `spikes/s28-alignment/` (Node, PDFium WASM, the corpus) measures
@@ -3374,7 +3399,9 @@ rel="noopener noreferrer">`; the commands `app.home` / `app.reportIssue` open th
   "Order of work", two threads at a time. Done: M12-01 (corpus additions), M12-02 (spike S27,
   route 1 with a tiling workaround), M12-03 (spike S28, alignment route 1), M12-04 (spike S29:
   worker overlay, vector overlay route 2 with masks), M12-05 (spike S30, text matching with our
-  own code). Next: M12-06 (spike S31) and ADR-032 (owner gate).
+  own code), M12-06 (spike S31, the comparison file; ADR-032 written, S30 section filled by
+  M12-05). Next: the owner accepts ADR-032 and checks the S29 and S31 sample packs. **No feature
+  code before that.**
 - **Agent (M11):** the 18 tasks in [docs/plan/M11.md](plan/M11.md) "Order of work", one thread
   each. Done: M11-01, M11-10, M11-02 (spike S26), M11-03 (tabs: look, hover card, +), M11-04
   (drag to reorder), M11-05 (tab menus), M11-06 (comments in every pointer mode), M11-07 (font
@@ -3566,8 +3593,12 @@ rel="noopener noreferrer">`; the commands `app.home` / `app.reportIssue` open th
 
 ## Decisions needed (owner)
 
-- **M12 (PDF comparison).** The go to start M12-01 after the plan's merge. Later in M12:
-  ADR-032 (spike results) before any feature code.
+- **M12 (PDF comparison).** Accept [ADR-032](adr/032-m12-spike-results.md) (spike results S27 –
+  S31, the acceptance numbers, and four decisions on the comparison file: a protected input locks
+  it; carets for deleted text; Save review rewrites its wrapper; an unsigned copy for a certified
+  B), and check the sample packs in `/mnt/project-files/m12-04/` (vector overlay) and
+  `/mnt/project-files/m12-06/` (comparison files) in Acrobat Reader and a second desktop PDF
+  editor. No feature code before.
 
 - **Keyboard text selection (M2-04).** Caret-based selection (Shift+arrows) is not built; the
   keyboard path is Ctrl+A (page text) + Ctrl+C. Accept as an exception to the M2-04 criterion, or

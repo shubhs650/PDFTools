@@ -10,8 +10,8 @@ import { buildPdf } from './generate.ts';
 const crypto = webcrypto as unknown as Crypto;
 pkijs.setEngine('node', new pkijs.CryptoEngine({ name: 'node', crypto }));
 
-const CONTENTS_HEX = 16384; // 8 KiB of signature space
-const PLACEHOLDER = '/ByteRange [0 0000000000 0000000000 0000000000]';
+export const CONTENTS_HEX = 16384; // 8 KiB of signature space
+export const PLACEHOLDER = '/ByteRange [0 0000000000 0000000000 0000000000]';
 const OID = {
   data: '1.2.840.113549.1.7.1',
   signedData: '1.2.840.113549.1.7.2',
@@ -102,7 +102,7 @@ const latin1 = (b: Uint8Array): string => Buffer.from(b).toString('latin1');
  * Fills the last signature placeholder in `pdf` (ByteRange and Contents)
  * with a signature over everything else.
  */
-async function fill(pdf: Uint8Array, signer: Signer, when: Date): Promise<Uint8Array> {
+export async function fill(pdf: Uint8Array, signer: Signer, when: Date): Promise<Uint8Array> {
   const text = latin1(pdf);
   const brAt = text.lastIndexOf(PLACEHOLDER);
   if (brAt < 0) throw new Error('no signature placeholder');
