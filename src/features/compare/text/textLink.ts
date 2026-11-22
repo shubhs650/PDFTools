@@ -130,6 +130,8 @@ export class TextLink {
   private model: TextLinkModel | null = null;
   private placed: Placed | null = null;
   private readonly stacks = new Map<Side, PageStack>();
+  /** Each window's scale and offset, measured once at its zoom (a measure forces a layout). */
+  private readonly lays = new Map<Side, Laid>();
   private quietUntil = 0;
   /** A's half of a centring, on the next frame. */
   private pending = 0;
@@ -176,10 +178,23 @@ export class TextLink {
     return s;
   }
 
+  /**
+   * A window's scale and the stack's place in it. Measured off a page on
+   * screen, which lays the window out there and then, so the measure is kept
+   * while the window's zoom and layout stay the same: scrolling and centring
+   * then read no layout mid-task (rule 1).
+   */
   laid(side: Side): Laid | null {
     const w = this.windows.get(side);
     const s = this.stack(side);
-    return w && s ? laidOut(w, s) : null;
+    if (!w || !s) return null;
+    const level = zoomCap()?.forDocument(w.docId).getState().currentZoomLevel;
+    const kept = this.lays.get(side);
+    if (kept && level !== undefined && sameScale(kept.scale, level)) return kept;
+    const l = laidOut(w, s);
+    if (l && level !== undefined && sameScale(l.scale, level)) this.lays.set(side, l);
+    else this.lays.delete(side);
+    return l;
   }
 
   /** Called after either window scrolls or zooms (once a frame): the bands redraw. */
@@ -221,6 +236,7 @@ export class TextLink {
         this.offs.push(
           scroll.forDocument(w.docId).onLayoutChange(() => {
             this.stacks.delete(w.side);
+            this.lays.delete(w.side);
             this.placed = null;
             this.refresh();
           }),
@@ -248,6 +264,7 @@ export class TextLink {
     this.offs.length = 0;
     this.windows.clear();
     this.stacks.clear();
+    this.lays.clear();
     this.placed = null;
     if (this.frame) cancelAnimationFrame(this.frame);
     this.frame = 0;

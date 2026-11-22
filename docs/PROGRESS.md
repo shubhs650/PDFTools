@@ -61,6 +61,11 @@ interop is in the M6 pack (CHECKLIST §M6 R1–R4). Rev 0 (M0–M4) is complete 
   comments in both windows, switches and bands, OCR, axe light and dark);
   `e2e/perf/compare-text.spec.ts` (@smoke: the 500-page pair 17, first result about 17 s and
   complete about 19 s in the container, scrolling with sync p95 33 ms, no task over 100 ms).
+  **Page mounts no longer quadratic** (`src/features/view/handlerBatch.ts`, every view): the
+  pinned interaction manager emitted a handler change for each handler a page registers, and
+  every mounted page merged its handlers again; a far jump in two windows went over 100 ms on
+  CI. The emits of one task are now joined on a microtask (scroll-event time on the step test
+  down by a third; `tests/view/handler-batch.test.ts` fails if an upgrade changes the internal).
   **Left to M12-15:** the aligned copy of comments between the two documents and the close-out
   list, built there once for both comparison types (M12-15 had not started; the windows are
   ready for it). Presets for the colours: M12-21.

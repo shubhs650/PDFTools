@@ -7,7 +7,7 @@ import {
 } from '@fluentui/react-icons/svg/checkmark-circle';
 import { Dismiss16Regular } from '@fluentui/react-icons/svg/dismiss';
 import type { TFunction } from 'i18next';
-import { useEffect, useId, useRef, useState, type KeyboardEvent } from 'react';
+import { memo, useEffect, useId, useRef, useState, type KeyboardEvent } from 'react';
 import { useTranslation } from 'react-i18next';
 import { format, msg, type MessageKey } from '../../../i18n';
 import type { TextChange, TextChangeKind } from '../../../model/compare/text/match';
@@ -19,7 +19,7 @@ import {
   type MarkStyle,
 } from '../../../model/compare/textView';
 import { ColorPicker, IconButton, ToggleButton } from '../../../ui/components';
-import { changeKey, setColour, updateTextView, useTextView } from './textFlow';
+import { changeKey, setColour, updateTextView, useTextView, useTextViewPart } from './textFlow';
 
 const NEXT_KEYS = 'F8';
 const PREV_KEYS = 'Shift+F8';
@@ -58,9 +58,21 @@ const KIND_LABEL: Record<TextChangeKind, MessageKey> = {
 };
 
 /** The legend at the head of the list (D-64, Q42): each kind's colour and shape, its count and its switch. */
-export function Legend({ id, entries }: { id: string; entries: readonly ChangeEntry[] }) {
+/**
+ * The legend. It reads only the filter and the colours, so stepping through
+ * the list (a new entry in use) does not draw it again (rule 1).
+ */
+export const Legend = memo(function Legend({
+  id,
+  entries,
+}: {
+  id: string;
+  entries: readonly ChangeEntry[];
+}) {
   const { t } = useTranslation();
-  const view = useTextView(id);
+  const filter = useTextViewPart(id, (v) => v.filter);
+  const colours = useTextViewPart(id, (v) => v.colours);
+  const view = { filter, colours };
   const headingId = useId();
   const counts = countByStyle(entries);
   return (
@@ -120,7 +132,7 @@ export function Legend({ id, entries }: { id: string; entries: readonly ChangeEn
       </ul>
     </section>
   );
-}
+});
 
 /** A small picture of a kind's mark, as on the page. */
 function Sample({ style, colour }: { style: MarkStyle; colour: string }) {
