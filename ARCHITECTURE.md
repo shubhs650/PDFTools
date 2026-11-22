@@ -1,7 +1,7 @@
-# Triya PDF — Architecture & Product Specification (Rev 0.20)
+# Triya PDF — Architecture & Product Specification (Rev 0.21)
 
 **App:** Triya PDF (formerly PDFTools, D-41) · **URL:** `app.triyapdf.com` and `triya-pdf.openengtools.com` (D-28) · **Platform:** Open Engineering Tools (OET)
-**Status:** Approved for implementation · **Last updated:** 22-Nov-2026 (Rev 0.20)
+**Status:** Approved for implementation · **Last updated:** 22-Nov-2026 (Rev 0.21)
 **Companion file:** `CLAUDE.md` (standing rules for the coding agent — read it first)
 
 > This document is the single source of truth. Where code and this document disagree, this document wins until it is deliberately amended. Decisions are numbered (D-xx) so commits, issues and ADRs can reference them.
@@ -25,6 +25,8 @@
 > **Rev 0.17 amendment** — [ADR-028](docs/adr/028-m11-tabs-fonts-select.md) (owner-approved 2026-11-17, all optional items accepted): **M11** — document tabs v2 (D-50), comments selectable in every pointer mode (D-51), a self-hosted font library for text comments with our own appearance streams (D-52), pick up where you left off (D-53), fonts installed on the computer (D-54), split, images to PDF and crop (D-55), resizable panes with edge arrows (D-56) (§2, §3.2, §7.1, §7.8, §8, §8.1, §9, §10.3, §13 M11).
 
 > **Rev 0.18 amendment** — [ADR-028](docs/adr/028-m11-tabs-fonts-select.md) amendment (owner, 2026-11-18): **D-54 withdrawn** — fonts installed on the user's computer are not supported (a cross-compatibility risk); text comments use only the fonts that ship with the app (D-52), and the library may grow later on user request (§2, §7.1, §10.3, §13 M11).
+
+> **Rev 0.21 amendment** — [ADR-031](docs/adr/031-m12-pdf-comparison.md) (owner, 2026-11-22): **M12 — PDF comparison** — a comparison as its own tab with an input window and the Compare ribbon tab (D-58); the PDF overlay drawn as tinted Multiply at the current zoom, with a vector overlay PDF for export and as a beta display mode (D-59); automatic page pairing, check-then-align and manual alignment (D-60); difference detection on drawings (D-61); review across revisions in three live windows (D-62); text comparison (D-63, D-64); Save review, the comparison file and the change register (D-65); the Compare worker, progressive results and corpus acceptance (D-66) (§1.3, §2, §3.1 – §3.3, §7.1, §7.16, §8, §8.1, §10.3, §11 – §15).
 
 > **Rev 0.20 amendment** — [ADR-030](docs/adr/030-comparison-unblocked.md) (owner, 2026-11-22): **comparison is unblocked** — the hold on revision compare is lifted by the owner; it is no longer a parked item or a non-goal and will be planned as its own milestone, as a clean-room build from public techniques (§1.5, §14; CLAUDE.md rule 14).
 
@@ -59,7 +61,7 @@ Free to everyone. No login. No cookies. Private. Works offline after first load.
 Engineers and technical professionals in EPC / mechanical / civil work who review drawings, datasheets, vendor documents and contracts. General users benefit as a side effect; they are not the design target.
 
 ### 1.3 Interaction model (D-01)
-Document-centric editor in the style of classic desktop PDF editors: PDFs open into **tabs**, every ribbon command acts on the **active document**, multi-file jobs (e.g. merge) open as dialogs.
+Document-centric editor in the style of classic desktop PDF editors: PDFs open into **tabs**, every ribbon command acts on the **active document**, multi-file jobs (e.g. merge) open as dialogs. A **comparison** of two documents opens as a tab of its own (D-58, §7.16).
 
 ### 1.4 Two reference document profiles (D-02)
 All performance work and acceptance tests target both:
@@ -134,6 +136,15 @@ Tablet/phone UI · Safari parity · PDF text/content editing · form design beyo
 | D-55 | **Page tools** (ADR-028): Split (every N pages, ranges, top-level bookmarks) into a chosen folder; Images to PDF (JPG/PNG, new document or inserted pages); Crop (sets `/CropBox` only, one undo step) |
 | D-56 | **Panes** (ADR-028): the right Properties pane is resizable like the left pane (splitter, drag and keys); a chevron on each pane's inner edge, always visible, hides or shows it through the existing pane commands |
 | D-57 | **Clean public tree** (ADR-029): the repository names no other PDF product as a model for its UI and holds no third-party artwork or documents; interop is described as "Acrobat Reader and other viewers"; a unit test fails if the name returns |
+| D-58 | **Comparison as a tab** (ADR-031): two types, **PDF Overlay** (drawings) and **Text Comparison** (documents), started from the **Compare** ribbon tab; a comparison is its own tab in the document tab strip, opening on an input window (Document A old, Document B new, from a dropped or picked file or an open tab; thumbnails, page range, swap, options, named presets on the device); several files per side as one set for the overlay; a document open in a tab and in a comparison is one document; one tab dropped on another offers to compare the two; permission flags followed per action and per file |
+| D-59 | **PDF overlay** (ADR-031): on screen each revision is rendered at the current zoom without comments, turned to grey, tinted and combined with **Multiply** (old red, new green, the same black; red/blue and magenta/green presets; custom colours with a dark-overlap warning); show/hide, balance, Fade unchanged, Thicken thin lines, Blink; comments of both documents drawn on top, switchable, with Hide check highlights; each file's own default layers. A **vector overlay PDF** from one builder serves export, the comparison file's pages and a **beta** display mode (route by spike S29; image fallback) |
+| D-60 | **Pairing and alignment** (ADR-031): pages paired automatically by similarity (picture and text), inserted, removed and reordered sheets found, the table editable; each pair scored **as it is** and only poor matches aligned automatically; the transform is shift, one scale and rotation (never uneven stretching), old drawn in the new revision's frame; method by spike S28 (own geometry aligner and image method; OpenCV only if scans need it, on demand); **manual alignment** on any sheet with 1 – 3 snapped point pairs, numeric fine-tune and Apply to; **compare an area**: a rectangle on each revision overlaid through its own alignment |
+| D-61 | **Differences on drawings** (ADR-031): regions added, removed or changed found on the aligned pair in a worker, **text-aware** where the pages have text ("Ø120 → Ø128"); sensitivity and minimum size applied live; ignore zones as named sets; a list with filters, search, next/previous and a checked tick; unchanged sheets and percent changed per sheet; cloud comments made only on request |
+| D-62 | **Review across revisions** (ADR-031): layouts Overlay only and Review (overlay, Document A, Document B), one sheet at a time; every comment tool and context menu works in every window; the overlay is reference only (its notes belong to the comparison file, never to Document A or B); aligned sync with a lock and a linked pointer; aligned copy of comments between revisions; close-out tracking of the old revision's comments (Addressed, Carried over, Changed differently) as the standard status Completed plus a reply naming the outcome |
+| D-63 | **Text comparison engine** (ADR-031): inserted, deleted, replaced, moved (once, linked) and changed figures, never formatting alone; word level with engineering values kept whole and percent change for numbers; reading order by column; headers and footers found automatically and reported once, clause renumbering reported once (both experimental, switchable); table rows matched where a table is recognised; OCR at compare time for the comparison only; every script compared |
+| D-64 | **Text comparison view** (ADR-031): Document A and Document B side by side, continuous scroll synchronised by content, bands across the gap, the list on the right; marks by colour and shape (deleted red struck, inserted green underlined, replaced amber, moved blue, changed figure framed); the marks belong to the view, not to the documents; the comment and close-out rules of D-62 |
+| D-65 | **Saving a comparison** (ADR-031): **Save review** (Ctrl+S) writes only the reviewer's new comments into Document A and Document B by the normal incremental save; **Save comparison…** writes one standard PDF (overlay pages, or Document B's pages with the changes as standard markups) with the other document(s) and the comparison data as attachments, readable in any viewer and reopened here as the live comparison (format by spike S31); Export Document A / B; change register to Excel and CSV; optional summary page |
+| D-66 | **Comparison work and acceptance** (ADR-031): a PDFium-free **Compare worker** for alignment, difference detection and text matching, fed by the Work worker; progressive results, viewed items first, with progress and Cancel; done = the corpus acceptance suite in CI (`Synthetic PDF Corpus/`, self-made) plus the owner's hand check; numbers fixed after the spikes (ADR-032) |
 | D-34 | **OCR** (Rev 1 item 1, ADR-020): Tesseract WASM core in its own worker, five languages (English precached, the rest on first use), invisible text layer written by our object layer with a glyphless font, pages with text skipped unless asked; needs the modify permission |
 
 ---
@@ -171,6 +182,12 @@ Tablet/phone UI · Safari parity · PDF text/content editing · form design beyo
                 │                             │  rasters in, words out       │
                 │                             │  (ADR-020)                   │
                 │                             └──────────────────────────────┘
+                │                             ┌──────────────────────────────┐
+                │                             │  COMPARE WORKER (pure JS,    │
+                │                             │  no PDFium): alignment,      │
+                │                             │  differences, text matching  │
+                │                             │  (ADR-031)                   │
+                │                             └──────────────────────────────┘
                 └─────────── OPFS (recovery) · IndexedDB (settings, handles, recent) ───────────┘
 ```
 
@@ -183,6 +200,7 @@ Rules:
 - Memory: WASM memory only grows. The Work worker is respawned when idle after a job whose peak exceeds ~256 MB and on document eviction (remaining documents reload original bytes + tail); the Render worker is respawned only when no document is open (ADR-004).
 - The **Snap worker** holds per-page snap indexes (typed arrays) transferred from the Work worker and answers pointer queries (≤ 1 in flight per animation frame), so snapping never waits for PDFium work (ADR-008).
 - The **OCR worker** hosts the Tesseract WASM core behind the typed RPC, started for a job with the chosen languages and terminated when it ends (its memory only grows) or on a mid-page cancel. The Work worker renders the page raster and builds the text-layer objects; the Render worker applies them like transferred comments (§7.14, ADR-020).
+- The **Compare worker** (our own code, no PDFium) does the comparison's alignment maths, difference detection and text matching (§7.16, D-66, ADR-031). The Work worker supplies page signatures, analysis rasters without comments and positioned text; the Render worker supplies the screen tiles of both revisions, the old one through the alignment matrix (a direct PDFium call, D-09). Jobs are cancellable, report progress, and work on the viewed sheet first.
 
 ### 3.2 Technology stack (all permissive — verify each at install)
 
@@ -211,6 +229,7 @@ Rules:
 | UI font | Inter (variable WOFF2, Latin subsets), **self-hosted**, core precache; system fonts as fallback (ADR-027) | OFL-1.1 |
 | Font library for text comments (D-52) | About 26 Google Fonts families, **self-hosted**, background precache; route and any shaping library (e.g. `harfbuzzjs`, MIT) per spike S26 (ADR-028) | OFL-1.1 / Apache-2.0 |
 | Handwriting fonts for typed signatures | `@embedpdf/default-signature-fonts`, **exact pin** (prerelease), self-hosted and precached (ADR-022) | Apache-2.0 AND OFL-1.1 |
+| Comparison (D-58 … D-66) | Own code: similarity alignment (RANSAC, least squares, phase correlation), tolerance-based difference detection, Myers' text matching, the vector overlay builder on the object layer. OpenCV.js only if spike S28 shows scans need it, **self-hosted and loaded on demand**, never in the core (ADR-031) | MIT (ours); OpenCV Apache-2.0 |
 | License gate | own script `scripts/check-licenses.ts` + `scripts/license-policy.ts` in CI | MIT (ours) |
 
 **Forbidden:** GPL, LGPL-with-static-link concerns, AGPL (incl. PyMuPDF, Ghostscript, CoherentPDF, BentoPDF source), SSPL, "non-commercial" licenses, any runtime CDN dependency. MPL-2.0 is forbidden in anything that ships; it is allowed only for dev-only tooling that npm marks `dev` in the lockfile (e.g. Vite's lightningcss, axe-core) (ADR-002).
@@ -221,9 +240,10 @@ Rules:
 /src
   /app            shell: AppFrame, Ribbon, TabStrip, LeftRail, Panes, PropertiesPane, StatusBar, StartScreen
   /features       one folder per feature (view, search, annotate, measure, stamps, crs, extract,
-                  tables, convert, pages, redact, forms, signatures, print, protect, settings, recovery)
+                  tables, convert, pages, redact, forms, signatures, print, protect, settings, recovery,
+                  compare)
   /engine         typed RPC clients for workers (renderClient.ts, workClient.ts), job/cancel/progress infra
-  /workers        render.worker.ts, work.worker.ts
+  /workers        render.worker.ts, work.worker.ts, compare.worker.ts (ADR-031)
   /model          domain types: Annotation, StatusScheme, ScaleViewport, TableGrid, ReviewerProfile …
   /storage        opfs.ts, idb.ts, fileAccess.ts (FSA API + fallback)
   /i18n           en.json (+ future locales), format helpers (dates, numbers, units)
@@ -233,6 +253,8 @@ Rules:
 /tests            unit tests (Vitest)
 /e2e              Playwright: functional, perf, offline, interop-prep
 /corpus           git-ignored, local only: the owner's test PDFs (never committed, D-57)
+/Synthetic PDF Corpus  self-made revision pairs with manifests of the expected differences,
+                  for the comparison's acceptance tests (rule 13, D-66)
 /scripts          tooling (license gate, checks)
 /spikes           throwaway M0 spike code — never imported by /src, never shipped
 /docs/adr         architecture decision records (one per D-xx change)
@@ -312,7 +334,7 @@ Types: **every annotation type/tool supported by EmbedPDF** (ADR-001 B7). No cus
 - Properties pane edits the selected annotation(s); style copy/apply.
 - Undo/redo per document, unlimited within a session.
 - Comments pane: list, filter (author, status, type, page), sort, reply, set status, jump-to.
-- **Comment transfer:** import comments from another PDF (e.g. an earlier revision; page range, filters, page mapping, duplicates skipped by `/NM`) or from our JSON export (lossless from v2, which carries the comments' own PDF objects, ADR-025), and copy/paste comments between documents; imported comments are standard annotation objects saved by the next Ctrl+S (ADR-018).
+- **Comment transfer:** import comments from another PDF (e.g. an earlier revision; page range, filters, page mapping, duplicates skipped by `/NM`) or from our JSON export (lossless from v2, which carries the comments' own PDF objects, ADR-025), and copy/paste comments between documents; imported comments are standard annotation objects saved by the next Ctrl+S (ADR-018). In a comparison, a comment copied or pasted to the other revision lands at the **matching spot** through the alignment (D-62, §7.16).
 - **Styles** (D-37, ADR-021): every tool has default properties (red `#FF0000`, 10 pt text, 1 pt lines and borders; highlight and sticky note yellow; Highlight, Highlight Area and Free Highlight at 50 % opacity; the typewriter black Courier — ADR-023), editable in the Properties pane while the tool is active; a **style palette** per tool (presets incl. cloudy variants, the user's own styles, Comment Styles Palette manager, export/import `.pdftools-styles.json`). Styles are property sets applied through the normal property path; appearances stay PDFium's.
 - **Text comments** (D-43, ADR-023): a new text box, typewriter or callout is selected and edits with "Type here" selected; one click selects it (box, text or callout line) and a drag moves it; double-click (Enter / F2) edits; Esc, a click elsewhere, a tool or tab change, Ctrl+S and closing all commit the edit as one undo step; right-click while editing opens our text menu (Undo, Redo, Cut, Copy, Paste, Delete, Select All, Text Style for the whole comment, Properties); a callout can be drawn with one drag. **Selection:** marquee with Select Comments (and Select on empty space), Ctrl+ / Shift+click toggle, a newly drawn comment is selected.
 - **Sticky note popup** (D-44, ADR-023): a popup window on the page for `/Text` notes — header (author, date), multi-line text, menu, status, lock, Reply; draggable and resizable; opened on creation and double-click. Its position and open state are saved as a standard `/Popup` by our object layer only if spike S23 passes.
@@ -400,11 +422,29 @@ Convert → **Recognize Text (OCR)** (ADR-020). Dialog: pages (all / current / s
 ### 7.15 Bookmark editing (D-38)
 New (from the current view), rename (F2), delete / delete but keep children / delete only children, set destination, cut/copy/paste within the document, drag to reorder and nest, expand/collapse all — from the Bookmarks pane toolbar and context menu. Edits go through **our own outline writer** (ADR-022 decision 5, route B; the engine's `setBookmarks` loses colour, style and open state and truncates outlines with actions it cannot write): the Work worker reads the outline, applies the edit and writes fresh outline objects keeping every key of every item; the Render worker applies them with the reopen route (`applyObjects`) as one undo step each (capability **modify**); Ctrl+S saves them in the narrow tail with the catalog and outline root marked dirty; encrypted files use the object layer's string encryption (ADR-021, spike S21).
 
+### 7.16 Comparison (D-58 … D-66)
+Two comparison types (ADR-031, plan `docs/plan/M12.md`): **PDF Overlay** for drawings and **Text Comparison** for documents. **Document A** is the old revision, **Document B** the new one. A clean-room build from public techniques (rule 14). No network, no AI.
+
+- **Starting** (D-58): Compare → PDF Overlay or Text Comparison, or Compare with… on a document tab, opens a **comparison tab** on its input window: each side takes a dropped file, a picked file or an open tab (the overlay also several files as one set), with thumbnails, a page range and a swap button; a collapsed Options section and named presets (colours, ignore zones, sensitivity, header handling) stored on the device. Compare runs with the defaults and turns the same tab into the result; the inputs can be revisited. Dropping one document tab on another offers "Compare these two". A document open in its own tab and in a comparison is one document (one undo history, one unsaved mark).
+- **Protected files** (D-58, rule 9): viewing a comparison is viewing; commenting needs that file's commenting permission; copying text from the list, Export Overlay…, the change register and Save comparison… need the content-copying permission of both files; the permissions password unlocks; a blocked action names the file and the reason.
+- **Pairing** (D-60): pages are paired by a similarity signature (a coarse picture and a text fingerprint), keeping order where possible and finding inserted, removed and reordered sheets; the pairing table is editable.
+- **Alignment** (D-60): each pair is scored as it is, and only a poor match is aligned automatically, by a **similarity transform** (shift, one scale, rotation; `/Rotate` and page boxes folded in) that draws the old revision in the new revision's frame. Status per sheet: as is, auto-aligned (values shown), low confidence. Manual alignment on any sheet: 1 – 3 point pairs picked with snapping and a magnifier, numeric fine-tune (offset, scale %, rotation °, nudge), applied to this sheet, all sheets or all low-confidence sheets. **Compare an area:** a rectangle picked on each revision (same or different sheets) is overlaid through an alignment of its own, for a detail that moved. The method is set by spike S28.
+- **Overlay display** (D-59): both revisions are rendered at the **current zoom**, without comments, turned to grey, tinted (old red, new green by default) and combined with **Multiply**, so what is the same is black and thin lines stay as sharp as in the normal view at any zoom. A floating bar: show/hide old and new, balance, Fade unchanged, Thicken thin lines, Blink. Comments of both documents are drawn on top in their own colours, switchable per document; **Hide check highlights** hides Highlight comments and anything under 70 % opacity. Each file uses its own default layer visibility, with layer switches per document.
+- **Vector overlay** (D-59, beta as a display mode): one builder writes a standard PDF in which each source page is a tinted form and the two are combined with the PDF Multiply blend mode; used for Export Overlay…, for the comparison file's pages and as a display mode. Route by spike S29; fallback a high-resolution image PDF.
+- **Differences on drawings** (D-61): on the aligned pair, ink of one revision with no ink of the other within a tolerance forms regions (added, removed, changed); positioned text is compared too, so an entry reads "Ø120 → Ø128" and is labelled text, geometry or both. Sensitivity and minimum size apply live; ignore zones (rectangles, one sheet or all) are saved as named sets. The list has filters, search, next/previous and a checked tick; the sheet list shows unchanged sheets and percent changed. **Make cloud comments** creates real cloud comments on the new revision only on request.
+- **Review across revisions** (D-62): layouts **Overlay only** and **Review** (overlay left, Document A top right, Document B bottom right; splitters; one sheet at a time). Every comment tool, the Properties pane and every context menu work in every window. What is drawn on the overlay is a note of the comparison and is never written into Document A or B. The windows stay on the same spot through the alignment (lock on by default) with a linked pointer. Copy to new revision (and back) and paste land at the matching spot. A close-out list tracks every comment of the old revision: Addressed, Carried over (which also copies it) and Changed differently each set the standard status **Completed** on the old comment, add a reply naming the outcome and the new file, and apply a check highlight, so the states reach the CRS export (§7.5) and other viewers understand them.
+- **Text comparison** (D-63): text in reading order by column, normalised (line-end hyphens, ligatures, spacing), matched paragraph by paragraph and then word by word, with **engineering values kept whole** (a number with its separators and unit, a tag, a date, a document number) and the percent change of numbers. Reported: inserted, deleted, replaced, **moved** (once, linked, inner edits shown) and changed figures (compared as pictures); never formatting alone. Headers and footers are found automatically, left out and a changed one reported once; clause renumbering is reported once and consistent cross-references are not flagged (both experimental, each with a switch). Where a table is recognised (§7.7) rows are matched as rows. Scanned pages are read by OCR at compare time for the comparison only (§7.14), labelled "from OCR", with typical confusions grouped as "possible OCR error". Every script is compared; "limited support" is shown where text cannot be read reliably. One file per side.
+- **Text comparison view** (D-64): Document A and Document B side by side in continuous scroll, synchronised by content, with bands across the gap and the list on the right. Marks by colour and shape: deleted red with a strike-through, inserted green with an underline, replaced amber on both sides, moved blue with a band, changed figure a blue frame. The marks belong to the view; they are not comments. The comment and close-out rules of the overlay apply.
+- **Saving** (D-65): **Save review** (Ctrl+S in a comparison) writes only the reviewer's new comments into Document A and Document B by the normal incremental save (§4.2), each file with its own unsaved mark. **Save comparison…** writes the **comparison file**, one standard PDF: for the overlay, the vector overlay as pages with Document A and B attached unchanged; for text, Document B's pages with the changes as standard highlights, strike-outs and notes holding the old text, with Document A attached; in both, the comparison data (pairing, alignment, options, ignore zones, ticks, close-out states) as one JSON attachment, the file tagged through `/PieceInfo`. Any viewer opens it; this app reopens it as the live comparison, saves review comments into the copies inside and exports Document A / B. The Save dialog states that the file contains both documents. Format by spike S31, kept as a versioned spec.
+- **Outputs** (D-65): a **change register** to Excel and CSV (number, sheet or page, kind, old, new, percent, checked; follows the list's filters) and an optional summary page (files, date, counts, legend, settings).
+- **Work and progress** (D-66): the Compare worker (§3.1) computes; results arrive sheet by sheet, the viewed one first, with progress and Cancel.
+- **Not in scope:** more than two revisions at once; non-PDF inputs; accepting, rejecting or merging changes; several files per side in a text comparison; a curtain slider; an inline redline pane; a title-block reader; unit conversion; formatting-only changes; comparing comments as content; a folder picker.
+
 ---
 
 ## 8. UI specification
 
-- Ribbon tabs (Rev 0) — this list is authoritative, and out-of-scope commands are omitted rather than shown disabled (ADR-001 B6): **File** (backstage: open, recent, save, save as, save optimized, print, properties, settings, about (version, open-source licenses, D-48)/privacy), **Home**, **View**, **Comment**, **Form** (ADR-021), **Measure**, **Organize**, **Convert**, **Protect** (redact, security info, signatures), **Help**.
+- Ribbon tabs (Rev 0) — this list is authoritative, and out-of-scope commands are omitted rather than shown disabled (ADR-001 B6): **File** (backstage: open, recent, save, save as, save optimized, print, properties, settings, about (version, open-source licenses, D-48)/privacy), **Home**, **View**, **Comment**, **Form** (ADR-021), **Measure**, **Organize**, **Convert**, **Compare** (PDF overlay, text comparison, ADR-031), **Protect** (redact, security info, signatures), **Help**.
 - **Top bar** (D-35, ADR-021): **one row** (D-47) holding the product mark and "Triya PDF" at the left (D-41), Quick Access, File and the ribbon tabs; a **light/dark theme** toggle (D-42), **OpenEngTools** (standard Home icon), **Report an issue** (GitHub, new tab, version/browser/OS only) and **Full screen** (the whole app; Esc leaves) at the right.
 - Large (32 px) and small (16/20 px) buttons, groups with labels, split buttons and dropdowns, collapsible ribbon, keyboard access (Alt key tips — nice-to-have).
 - **Adaptive ribbon** (D-36, ADR-021): when a tab does not fit, groups step down by priority — full labels → icons with short labels → icon-only grid → one group button opening a dropdown — so every tab fits 1280 px and every command keeps its accessible name and keyboard path. Home's rotate buttons rotate the **view**; Organize rotates pages.
@@ -412,12 +452,13 @@ New (from the current view), rename (F2), delete / delete but keep children / de
 - Design tokens (color, spacing, type, radius, elevation, **motion**) as CSS variables (design language v2, D-47: motion only on opacity/transform, never in the document view, off under `prefers-reduced-motion`); light theme default; **dark theme** through the top-bar toggle (D-42, ADR-023), stored on the device; PDF pages stay white in both; no literal colours outside the tokens.
 - **Panes** (D-56, ADR-028): the left panes and the right Properties pane are both resizable (window splitter, drag and keys, 160–480 px) and each has an always-visible chevron on its inner edge to hide or show it.
 - **Document tabs** (D-50, ADR-028): the selected tab is filled with the accent; a hover card shows the page 1 thumbnail, full name, where the file came from (no folder path: browsers do not expose it), pages, size, modified time and status; a **+** button opens a file; tabs reorder by dragging (Chrome-like), Ctrl+Shift+Left/Right or the tab menu; middle-click closes; a tab menu (Save, Save As, Close, Close Others, Close to the Right, Close All, Reopen Closed Tab, Move Left/Right, Sort by Name, Copy File Name, Rename File where the browser can rename in place, Document Properties) and a strip menu (Open, Create Blank PDF, Reopen Closed Tab, Close All).
+- **Comparison tab** (D-58, ADR-031): a comparison is a tab in the document tab strip with its own icon; it shows the input window, then the result (overlay: Overlay only or Review with splitters; text: side by side), with the differences list in the right pane (§7.16).
 - Layout minimum 1280 px wide.
 - Start screen: open file, drop zone, recent files (clearable).
 - **Do not copy other PDF products' artwork or proprietary visual assets.** Layout conventions only.
 
 ### 8.1 Keyboard (D-29)
-Ctrl+O/S/P, Ctrl+Shift+S, Ctrl+Z/Y, Ctrl+F, Ctrl+Shift+F, Ctrl+0/1/2 (fit page / actual / fit width), Ctrl+= / Ctrl+-, H (hand), V (select), single-letter tool keys, **Ctrl+F4** close tab, **Ctrl+PageUp/PageDown** switch tabs, Esc cancels tool. **F1** opens Help (ADR-026). **Ctrl+Shift+Left/Right** moves the focused document tab and **Reopen Closed Tab** is on the tab menu (D-50). Help → printable shortcut sheet. Ctrl+F4 and Ctrl+PageUp/PageDown are reserved by Chrome in a normal tab (may work in the installed PWA window); alternates are defined in M1 (ADR-001 B5).
+Ctrl+O/S/P, Ctrl+Shift+S, Ctrl+Z/Y, Ctrl+F, Ctrl+Shift+F, Ctrl+0/1/2 (fit page / actual / fit width), Ctrl+= / Ctrl+-, H (hand), V (select), single-letter tool keys, **Ctrl+F4** close tab, **Ctrl+PageUp/PageDown** switch tabs, Esc cancels tool. **F1** opens Help (ADR-026). **Ctrl+Shift+Left/Right** moves the focused document tab and **Reopen Closed Tab** is on the tab menu (D-50). In a comparison (ADR-031): **F8** / **Shift+F8** next and previous difference; **X** held blinks between old and new while the overlay has focus. Help → printable shortcut sheet. Ctrl+F4 and Ctrl+PageUp/PageDown are reserved by Chrome in a normal tab (may work in the installed PWA window); alternates are defined in M1 (ADR-001 B5).
 
 ### 8.2 i18n & accessibility (D-30)
 No user-visible string literals in components — all via i18n keys in `en.json` (Help's text in `help.en.json`, ADR-026). Locale-aware dates/numbers/units via `Intl`. Layouts tolerate +40 % label length. Every control keyboard-reachable with visible focus and an accessible name.
@@ -456,7 +497,7 @@ Analytics uses **Cloudflare's server-side request analytics only**. No beacon sc
 - The top bar's **Report an issue** opens the repository's GitHub new-issue page in a new tab, prefilled with app version, commit, browser and OS only; the app itself sends nothing (D-35, ADR-021).
 
 ### 10.3 Local data
-IndexedDB: profile, schemes, settings, recent-file handles, table templates, comment tool defaults and styles, saved visual signatures (ADR-021); the theme, accent colour and density choices (ADR-023, ADR-027, stored before first paint); the start-up choice and each file's last view by fingerprint (D-53); recently used comment fonts (D-52). OPFS: recovery snapshots. Privacy page lists all of it; Settings → "Clear all local data".
+IndexedDB: profile, schemes, settings, recent-file handles, table templates, comment tool defaults and styles, saved visual signatures (ADR-021); the theme, accent colour and density choices (ADR-023, ADR-027, stored before first paint); the start-up choice and each file's last view by fingerprint (D-53); recently used comment fonts (D-52); comparison presets and ignore-zone sets (D-58, D-61). OPFS: recovery snapshots. Privacy page lists all of it; Settings → "Clear all local data".
 
 ---
 
@@ -468,6 +509,7 @@ IndexedDB: profile, schemes, settings, recent-file handles, table templates, com
 - **Offline test:** context offline after first load → every Rev 0 feature must work; assert zero outbound requests during document work.
 - **Round-trip (manual checklist, per milestone):** files created here opened/edited in Acrobat Reader and a second desktop PDF editor, and vice versa. Checklist lives in `/e2e/interop/CHECKLIST.md`. The agent prepares files and checklists; the owner runs them on Windows (ADR-001 B16).
 - **Corpus:** public-domain sources (e.g. the US Federal Acquisition Regulation for the Contract profile; pdf.js test PDFs, veraPDF corpus, DARPA SafeDocs, checked per file) plus self-made files. Copyrighted standards (ASME, ISO) are never used. No synthetic generation of heavy files: the ~500 MB contract, dense drawings and P&IDs are **owner-supplied local files**, never committed and not listed by URL (ADR-001 B15, ADR-002). **Never company documents.** Large files are git-ignored and fetched by script.
+- **Comparison corpus** (D-66, ADR-031): `Synthetic PDF Corpus/`, self-made revision pairs with manifests of the expected differences (drawings: shift, scale, rotation, inserted sheets, scans, layers, encryption, large and dense sheets; documents: numbers, tables, columns, renumbering, moves, scripts, OCR), rebuilt by a script in the repository. An acceptance suite in CI checks that every manifest difference is found, that control pages report nothing, that known transforms are recovered and that each pair finishes in time.
 
 ---
 
@@ -488,6 +530,7 @@ Reference machine: Core i5-class, 16 GB RAM, Edge, installed PWA.
 | Memory (5 heavy tabs) | < 2 GB total |
 | Round-trip | standard markups interoperate with Acrobat Reader + a second desktop PDF editor, both directions |
 | Offline proof | network off → all Rev 0 features work; zero outbound requests during document work |
+| Comparison (M12) | the corpus acceptance suite passes (§11); first sheet or page shown within about 3 s; the exact limits are fixed in ADR-032 after the M12 spikes |
 
 ---
 
@@ -539,6 +582,9 @@ The "solid tool but basic UI" feedback (2026-11-16): design language v2 inside t
 ### M11 — Tabs, fonts, comments in every mode (ADR-028)
 The OCR text-selection fix; document tabs v2 (D-50); comments in every pointer mode (D-51); spike S26 and the font library for text comments (D-52); the selected-text menu, last view and session restore (D-53), Zoom to Area, copy page images, split, images to PDF, crop (D-55) (`docs/plan/M11.md`; system fonts, D-54, were withdrawn on 2026-11-18).
 
+### M12 — PDF comparison (ADR-031)
+PDF overlay for drawings and text comparison for documents (§7.16, D-58 … D-66), version 1.1.0: corpus additions; spikes S27 – S31 (several documents on screen, alignment, the overlay and the vector overlay PDF, text matching, the comparison file) with ADR-032 as a second owner gate; the Compare worker, the comparison tab and input window, pairing, alignment, the overlay view, the Review layout, differences, review across revisions, the vector overlay, the text comparison engine and view, saving, the change register, compare an area, Help, acceptance and the owner's hand check; switched off in release builds until acceptance (`docs/plan/M12.md`).
+
 ---
 
 ## 14. Roadmap after Rev 0
@@ -547,9 +593,9 @@ The OCR text-selection fix; document tabs v2 (D-50); comments in every pointer m
 
 **Rev 2+:** PDF text editing · form design beyond M6's basic fields · advanced page tools (headers/footers, watermarks, Bates) · tablet UI · local folder search · native wrapper (.exe/.msi) (the dark theme moved to M7, ADR-023).
 
-**Comparison (unblocked, ADR-030):** PDF overlay for drawings and text comparison for documents. The owner lifted the earlier hold on 2026-11-22; scope and design are set in the milestone plan and its ADR before any code. **Clean-room implementation from public techniques only** (CLAUDE.md rule 14).
+**Comparison (M12, ADR-030, ADR-031):** PDF overlay for drawings and text comparison for documents, planned as M12 (§7.16, §13). **Clean-room implementation from public techniques only** (CLAUDE.md rule 14). Left for later: more than two revisions at once, a side-by-side report, move distances.
 
-**Extension points to reserve in Rev 0:** OCR text layer can be injected per page into the Work worker's text index; view layer supports a future two-document synchronized view.
+**Extension points to reserve in Rev 0:** OCR text layer can be injected per page into the Work worker's text index; view layer supports a future two-document synchronized view (used by M12's comparison windows, spike S27).
 
 ---
 
@@ -567,3 +613,6 @@ The OCR text-selection fix; document tabs v2 (D-50); comments in every pointer m
 | EmbedPDF CDN defaults (`pdfium.wasm`, fonts on jsDelivr) | Always self-host; M0-S8 asserts zero third-party requests |
 | EmbedPDF has no measurement tool / Measure fields | Own object layer in Render worker (ADR-007) |
 | Font bundle size (CJK) | Background precache; measure in CI |
+| Several live document windows do not fit the single view | Spike S27 before any comparison UI; fallback: Document A and B live, the overlay display-only with its own notes layer (ADR-031) |
+| Automatic alignment picks a wrong match on repetitive drawings | Pairs are checked as they are first; a confidence score; low confidence asks for points; manual alignment on every sheet (D-60) |
+| The vector overlay or the comparison file displays wrongly in another viewer | Spikes S29 and S31 with the owner's check in Acrobat Reader and other viewers; the vector display mode is beta; image fallback for export (D-59, D-65) |
