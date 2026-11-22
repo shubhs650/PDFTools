@@ -30,6 +30,27 @@ interop is in the M6 pack (CHECKLIST §M6 R1–R4). Rev 0 (M0–M4) is complete 
 
 ## Done
 
+- **M12-03 — spike S28: alignment, pairing and detection (D-60, D-61, D-66).** Works,
+  **route 1 (our own code)**. `spikes/s28-alignment/` (Node, PDFium WASM, the corpus) measures
+  against an independent truth (each sheet's `cm` for the transform; vector lines and positioned
+  characters for the differences). **Alignment:** Fourier–Mellin coarse step, then feature points
+  from the line work with RANSAC and closest-point least squares (vector), or tile phase
+  correlation (scans). Every vector case within 0.003 pt (target 0.5 pt, 0.05 %, 0.05°), scans
+  within 0.25 px at 150 dpi (target 2 px), 0.3–0.4 s a sheet, 1.3–1.7 s for the moved dense A1;
+  7.6 KB gzip. OpenCV.js ORB (route 2): also within target but less accurate on every case
+  (up to 0.49 pt), about 5 × slower, 3.5 MB gzip: not needed. **As is:** a raster score cannot
+  tell a 1 pt move from real changes; the share of feature points that agree within 0.1 pt
+  does (unmoved ≥ 0.598, moved ≤ 0.096): threshold 0.3. **Pairing:** ink thumbnail plus tf-idf
+  words, order-keeping assignment above 0.35: 19 of 19 pairs (ink alone fails pair 17).
+  **Detection:** 150 dpi, A rendered by PDFium straight into B's frame, tolerance 1 px (High) or
+  2 px (Normal), regions within 6 pt join, plus a text layer: 240 of 240 true differences on 39
+  sheets; Normal has no false report (High: 1, pair 15's line weight); the text layer is needed
+  (8 single-digit changes are below the raster tolerance). Scans: tol 3 px, ink 128, minimum
+  80 px finds pair 06's three changes with 11 regions, all real. A whole ARCH E sheet peaks at
+  350 MB, so the detector must work in bands. **Corpus fixes:** pair 15's `cm` was rounded to 3
+  decimals (0.08 % off) and pair 18's drawing area moved 7 pt; both generator bugs fixed and
+  the files rebuilt. Numbers for the acceptance table and the risks are in
+  `spikes/s28-alignment/RESULTS.md`, input for ADR-032 (M12-06).
 - **CI for two parallel PRs (M12 autodrive).** `.github/workflows/ci.yml`: the PR e2e set no
   longer runs as one 13–15 min job; the smoke flows with the perf smoke scenarios run on one
   runner and the axe gate on two (`--shard=N/2`, the offline flow on part 2), beside the checks
@@ -3332,9 +3353,9 @@ rel="noopener noreferrer">`; the commands `app.home` / `app.reportIssue` open th
 
 - **Agent (M12):** autodrive (owner, 2026-11-22): the tasks in [docs/plan/M12.md](plan/M12.md)
   "Order of work", two threads at a time. Done: M12-01 (corpus additions), M12-02 (spike S27,
-  route 1 with a tiling workaround), M12-04 (spike S29: worker overlay, vector overlay route 2
-  with masks). Next: the spikes M12-03, M12-05, M12-06, ending in ADR-032 (owner
-  gate).
+  route 1 with a tiling workaround), M12-03 (spike S28, alignment route 1), M12-04 (spike S29:
+  worker overlay, vector overlay route 2 with masks). Next: the spikes M12-05 and M12-06, ending
+  in ADR-032 (owner gate).
 - **Agent (M11):** the 18 tasks in [docs/plan/M11.md](plan/M11.md) "Order of work", one thread
   each. Done: M11-01, M11-10, M11-02 (spike S26), M11-03 (tabs: look, hover card, +), M11-04
   (drag to reorder), M11-05 (tab menus), M11-06 (comments in every pointer mode), M11-07 (font
