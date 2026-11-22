@@ -19,8 +19,9 @@ export const S11_FRAME_PORT = 4188;
 export const S13_PORT = 4189;
 export const S17_PORT = 4190;
 export const S27_PORT = 4191;
+export const S29_PORT = 4193;
 
-// SPIKE=s8|s3|s1|s5|s7|s4|s9|s11|s13|s17|s27 limits which spike gets built and served (default: both).
+// SPIKE=s8|s3|s1|s5|s7|s4|s9|s11|s13|s17|s27|s29 limits which spike gets built and served (default: both).
 const only = process.env.SPIKE;
 const want = (name: string): boolean => !only || only === name;
 
@@ -114,6 +115,16 @@ export default defineConfig({
         viewport: { width: 1600, height: 1000 },
       },
     },
+    {
+      // M12-04: the overlay on screen, compositor against worker (ADR-032).
+      name: 's29',
+      testMatch: ['s29-overlay/**/*.spec.ts'],
+      use: {
+        ...devices['Desktop Chrome'],
+        baseURL: `http://localhost:${String(S29_PORT)}`,
+        viewport: { width: 1600, height: 1000 },
+      },
+    },
   ],
   webServer: [
     ...(want('s8') ? [server('s8', 's8-csp', S8_PORT)] : []),
@@ -202,6 +213,17 @@ export default defineConfig({
             timeout: 180_000,
             name: 's27',
           },
+        ]
+      : []),
+    ...(want('s29')
+      ? [
+          server(
+            's29',
+            's29-overlay',
+            S29_PORT,
+            ' --coi --corpus spikes/s29-overlay/out',
+            'node spikes/s29-overlay/make-fixtures.ts && ',
+          ),
         ]
       : []),
   ],

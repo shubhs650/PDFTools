@@ -1,6 +1,6 @@
 # Triya PDF — Progress
 
-_Last updated: 2026-11-22 (M12-03: spike S28, alignment, pairing and detection)_
+_Last updated: 2026-11-22 (M12-04: spike S29, the overlay on screen and the vector overlay PDF)_
 
 **Current milestone:** M12 — PDF comparison (PDF overlay for drawings, text comparison for
 documents), version 1.1.0: plan [docs/plan/M12.md](plan/M12.md) and
@@ -64,6 +64,21 @@ interop is in the M6 pack (CHECKLIST §M6 R1–R4). Rev 0 (M0–M4) is complete 
   @smoke fails intermittently (134 ms task on a PR run; red in main's perf job since
   2026-11-22), `bookmark-editing.spec.ts:260` and `comment-copy-paste.spec.ts:33` fail now and
   then in full shard 1/3.
+- **M12-04 — spike S29: the overlay on screen and the vector overlay PDF (D-59).** Works with
+  workaround ([RESULTS.md](../spikes/s29-overlay/RESULTS.md)). **On screen: a worker combines**
+  (PDFium renders each revision through a matrix, without comments, straight to grey; lookup
+  tables tint and multiply; one bitmap per tile to the page). Exact black on overlap (pair 16:
+  118,268 full-ink pixels all 0, 0, 0; 0 red or green in the browser), Fade unchanged, Thicken
+  (1–2 px lines to 3–4 px) and a "neutral" overlap without olive edges all work; zooming pair 14
+  100 % → 800 %: every frame on time, no long task. The compositor route (CSS blend) gives the
+  same colours but 10–16 frames over 25 ms, twice the bitmap memory, and cannot do Fade, Thicken
+  or neutral overlap. **Vector overlay: route 2 (recolour) with route 1's one-object mask for
+  images, shadings, patterns and spot colours**; correct in PDFium, Poppler and pdf.js on pairs
+  01, 07, 08, 11, 12, 14, 15, 16 and a self-made stress sheet (a few ‰ of colour difference, all
+  anti-aliasing); about the size of the two sources; draws at 6400 % in about twice the time of
+  one revision in every engine. **Route 1 alone fails:** PDFium ignores layer visibility inside a
+  soft mask (pair 11 shows the old file's hidden layer). Image fallback not needed. Owner's check
+  of the sample pack (Acrobat Reader, a second desktop editor, browser viewers) still open.
 - **M12-02 — spike S27: several documents on screen together (D-58, D-62, D-64).** Works with
   workaround, **route 1** (EmbedPDF's own per-document viewports in one registry over the shared
   workers). `spikes/s27-linked-views/` mounts the app's real `DocumentView` two and three times;
@@ -3338,8 +3353,9 @@ rel="noopener noreferrer">`; the commands `app.home` / `app.reportIssue` open th
 
 - **Agent (M12):** autodrive (owner, 2026-11-22): the tasks in [docs/plan/M12.md](plan/M12.md)
   "Order of work", two threads at a time. Done: M12-01 (corpus additions), M12-02 (spike S27,
-  route 1 with a tiling workaround). Next: the spikes M12-03 … M12-06, ending in ADR-032 (owner
-  gate).
+  route 1 with a tiling workaround), M12-03 (spike S28, alignment route 1), M12-04 (spike S29:
+  worker overlay, vector overlay route 2 with masks). Next: the spikes M12-05 and M12-06, ending
+  in ADR-032 (owner gate).
 - **Agent (M11):** the 18 tasks in [docs/plan/M11.md](plan/M11.md) "Order of work", one thread
   each. Done: M11-01, M11-10, M11-02 (spike S26), M11-03 (tabs: look, hover card, +), M11-04
   (drag to reorder), M11-05 (tab menus), M11-06 (comments in every pointer mode), M11-07 (font
