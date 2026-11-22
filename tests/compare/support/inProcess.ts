@@ -22,6 +22,8 @@ import {
   textOf,
 } from '../../../src/workers/work/compareMaterial';
 import { extractGeometry } from '../../../src/workers/work/geometry';
+import { mayHoldTables, pageObjects, tablesOf } from '../../../src/workers/work/compareStructure';
+import { rasterForOcr } from '../../../src/workers/work/ocrRaster';
 
 export interface FakeWorkers {
   spawned: number;
@@ -70,10 +72,38 @@ export function fakeWork(
       const frame = page(docId, pageIndex, (p) => plainFrame(frameOf(mod, ptr, pageIndex, p)));
       return { frame, segments: displayedSegments(segs, frame.toDisplay) };
     },
-    compareText: ({ docId, pageIndex }: ArgsOf<WorkApi, 'compareText'>) =>
-      page(docId, pageIndex, (p) =>
-        textOf(mod, p, plainFrame(frameOf(mod, docPtrOf(native, docId), pageIndex, p))),
-      ),
+    compareText: async ({ docId, pageIndex, structure }: ArgsOf<WorkApi, 'compareText'>) => {
+      const ptr = docPtrOf(native, docId);
+      let paths = 0;
+      const text = page(docId, pageIndex, (p) => {
+        const frame = plainFrame(frameOf(mod, ptr, pageIndex, p));
+        const t = textOf(mod, p, frame);
+        if (structure) {
+          const o = pageObjects(mod, p, frame);
+          paths = o.paths;
+          t.structure = { imageCover: o.imageCover, figures: o.figures, tables: [] };
+        }
+        return t;
+      });
+      if (text.structure && mayHoldTables(text, paths))
+        text.structure.tables = tablesOf(
+          text,
+          (await extractGeometry(mod, ptr, pageIndex, null)).segs,
+        );
+      return text;
+    },
+    compareOcrRaster: ({ docId, pageIndex, dpi }: ArgsOf<WorkApi, 'compareOcrRaster'>) => {
+      const ptr = docPtrOf(native, docId);
+      const loaded = page(docId, pageIndex, (p) => frameOf(mod, ptr, pageIndex, p));
+      const r = rasterForOcr(mod, ptr, pageIndex, dpi, true);
+      return {
+        width: r.width,
+        height: r.height,
+        data: r.data.buffer,
+        frame: plainFrame(loaded),
+        turn: loaded.turn,
+      };
+    },
     compareRaster: ({ docId, pageIndex, ...req }: ArgsOf<WorkApi, 'compareRaster'>) =>
       page(docId, pageIndex, (p) =>
         analysisBand(mod, p, frameOf(mod, docPtrOf(native, docId), pageIndex, p).turn, req, () =>

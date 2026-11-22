@@ -174,6 +174,9 @@ function fakeSpawn(world: FakeWorld) {
       compareText: () => {
         throw new Error('not used');
       },
+      compareOcrRaster: () => {
+        throw new Error('not used');
+      },
       compareRaster: () => {
         throw new Error('not used');
       },

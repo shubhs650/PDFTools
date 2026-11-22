@@ -1,4 +1,12 @@
-import type { PageSignature, PageText, RasterBand } from '../model/compare/material';
+import type {
+  Affine,
+  PageFrame,
+  PageSignature,
+  PageText,
+  RasterBand,
+} from '../model/compare/material';
+import type { HfBands } from '../model/compare/text/headers';
+import type { OcrLine } from '../model/ocr/types';
 import type { AsIsCheck, SheetAlignment } from '../model/compare/align/aligner';
 import type { PairingResult } from '../model/compare/pairing';
 import type { TextComparison } from '../model/compare/text/match';
@@ -84,6 +92,18 @@ export interface PairingProgress {
   total: number;
 }
 
+/** The switches of a text comparison (D-63). */
+export interface TextOptions {
+  /** Detect moves (default true). */
+  moves?: boolean;
+  /** Leave headers and footers out and report them once (default true; experimental). */
+  headersFooters?: boolean;
+  /** Header and footer bands drawn by hand, per side: they replace the detection. */
+  bands?: { a?: HfBands; b?: HfBands };
+  /** Fold clause renumbering into one entry (default true; experimental). */
+  renumbering?: boolean;
+}
+
 export interface CompareApi {
   /** Starts a comparison's store (idempotent). */
   open: MethodSpec<{ cmpId: string }, null>;
@@ -102,9 +122,26 @@ export interface CompareApi {
    * pages read into paragraphs, then the stretches compared.
    */
   matchText: MethodSpec<
-    { cmpId: string; pages?: { a: number; b: number }; moves?: boolean },
+    { cmpId: string; pages?: { a: number; b: number } } & TextOptions,
     TextComparison,
     TextMatchProgress
+  >;
+  /**
+   * A scanned page read by OCR at compare time (M12-18, D-63, Q29): the OCR
+   * worker's lines on a raster at `dpi` in PDFium's layout of the page,
+   * `turn` to the displayed page. Kept like a text page put with `layout`.
+   */
+  putOcr: MethodSpec<
+    {
+      cmpId: string;
+      side: CompareSide;
+      page: number;
+      lines: OcrLine[];
+      dpi: number;
+      frame: PageFrame;
+      turn: Affine;
+    },
+    { bytes: number }
   >;
   /**
    * The same rows of both analysis rasters of sheet `sheet` (A already drawn
