@@ -1,9 +1,10 @@
-// M12-17 (D-63, D-66): the text comparison on corpus pairs 01, 03, 04, 06, 09
-// and 11 through the whole pipeline — the Work worker's positioned text on
-// real PDFium, the Compare worker's handlers (layout kept instead of the
-// characters, matching) and the session's early results on the first pages.
-// Every manifest difference is found and every reported change is explained
-// (spike S30's accounting); figures and table rows come with M12-18.
+// M12-17, M12-18 (D-63, D-66): the corpus acceptance suite for documents.
+// The text comparison on every text pair of the corpus (01 – 17) through the
+// whole pipeline — the Work worker's positioned text, figures and tables on
+// real PDFium, OCR at compare time (Tesseract in this process), the Compare
+// worker's handlers (layout kept instead of the characters, matching) and the
+// session's early results on the first pages. Every manifest difference is
+// found and every reported change is explained (spike S30's accounting).
 import { readFileSync } from 'node:fs';
 import { createRequire } from 'node:module';
 import { PdfiumNative } from '@embedpdf/engines/pdfium';
@@ -18,7 +19,9 @@ import {
   type TextState,
 } from '../../src/features/compare/engine/session';
 import type { TextComparison } from '../../src/model/compare/text/match';
+import type { TextOptions } from '../../src/engine/compareApi';
 import { compareSpawn, fakeWork } from './support/inProcess';
+import { ocrInProcess } from './support/ocrInProcess';
 import { EXPECTED, account } from './support/textExpected';
 
 const require = createRequire(import.meta.url);
@@ -29,22 +32,44 @@ afterEach(() => {
   for (const p of ports.splice(0)) p.close();
 });
 
-const PAIRS = ['01', '03', '04', '06', '09', '11'];
+const PAIRS = [
+  '01',
+  '02',
+  '03',
+  '04',
+  '05',
+  '06',
+  '07',
+  '08',
+  '09',
+  '10',
+  '11',
+  '12',
+  '13',
+  '14',
+  '15',
+  '16',
+];
+const opened = new Set<string>();
+
+async function open(pair: string): Promise<void> {
+  if (opened.has(pair)) return;
+  opened.add(pair);
+  for (const side of ['old', 'new'] as const)
+    await native
+      .openDocumentBuffer(
+        {
+          id: `t${pair}${side}`,
+          content: corpusBytes(corpusPair('text', pair), side).slice().buffer,
+        },
+        { normalizeRotation: true },
+      )
+      .toPromise();
+}
 
 beforeAll(async () => {
   mod = await init({ wasmBinary: readFileSync(require.resolve('@embedpdf/pdfium/pdfium.wasm')) });
   native = new PdfiumNative(mod, { fontFallback: null });
-  for (const pair of PAIRS)
-    for (const side of ['old', 'new'] as const)
-      await native
-        .openDocumentBuffer(
-          {
-            id: `t${pair}${side}`,
-            content: corpusBytes(corpusPair('text', pair), side).slice().buffer,
-          },
-          { normalizeRotation: true },
-        )
-        .toPromise();
 });
 
 interface Run {
@@ -53,8 +78,15 @@ interface Run {
   bytes: number;
 }
 
+interface Options {
+  /** OCR at compare time (pair 08's scanned page). */
+  ocr?: boolean;
+  text?: Omit<TextOptions, 'moves'>;
+}
+
 /** A text comparison of a corpus pair through the session, every result kept. */
-async function comparePair(pair: string): Promise<Run> {
+async function comparePair(pair: string, o: Options = {}): Promise<Run> {
+  await open(pair);
   const p = corpusPair('text', pair);
   const pages = (n: number): number[] => [...Array(n).keys()];
   const log: string[] = [];
@@ -69,6 +101,8 @@ async function comparePair(pair: string): Promise<Run> {
       text: true,
       align: false,
       onText: (result, state) => results.push({ result, state }),
+      ...(o.ocr ? { ocr: { languages: ['eng'], client: ocrInProcess() } } : {}),
+      ...(o.text ? { textOptions: o.text } : {}),
     },
   );
   await s.start();
@@ -83,17 +117,131 @@ describe('text comparison on the corpus', () => {
   it.each(PAIRS)(
     'pair %s: every manifest difference found, no false report',
     async (pair) => {
-      const { results, log } = await comparePair(pair);
+      const ocr = pair === '08';
+      const { results, log } = await comparePair(pair, { ocr });
       const last = results[results.length - 1];
       expect(last?.state.complete).toBe(true);
-      const acc = account(EXPECTED[pair] ?? [], last?.result.changes ?? []);
+      const acc = account(EXPECTED[pair] ?? [], last?.result.changes ?? [], ocr);
       expect(acc.missed).toEqual([]);
       expect(acc.unexplained).toEqual([]);
-      // A text comparison reads text only: no signatures, geometry or rasters.
-      expect(new Set(log)).toEqual(new Set(['compareText']));
+      // A text comparison reads text only (and scans for OCR): no signatures, geometry or rasters.
+      expect(new Set(log)).toEqual(
+        new Set(ocr ? ['compareText', 'compareOcrRaster'] : ['compareText']),
+      );
     },
-    60_000,
+    120_000,
   );
+
+  it('17 (500 pages): every manifest difference, the renumbering once', async () => {
+    const { results } = await comparePair('17');
+    const last = results[results.length - 1];
+    expect(last?.state.complete).toBe(true);
+    const changes = last?.result.changes ?? [];
+    const acc = account(EXPECTED['17'] ?? [], changes);
+    expect(acc.missed).toEqual([]);
+    expect(acc.unexplained).toEqual([]);
+    expect(changes.filter((c) => c.kind === 'renumbered')).toMatchObject([
+      { a: { text: '96.2–96.40' }, b: { text: '96.3–96.41' } },
+    ]);
+  }, 300_000);
+
+  it('08: without OCR the scanned page is limited support and offered for OCR; with it, "from OCR"', async () => {
+    const plain = (await comparePair('08')).results.at(-1)?.result;
+    expect(plain?.limited).toEqual({ a: [2], b: [2] });
+    expect(plain?.scanned).toEqual({ a: [2], b: [2] });
+    expect(account(EXPECTED['08'] ?? [], plain?.changes ?? [], false).missed).toEqual([]);
+    const read = (await comparePair('08', { ocr: true })).results.at(-1)?.result;
+    expect(read?.limited).toEqual({ a: [], b: [] });
+    const fromOcr = read?.changes.filter((c) => c.ocr) ?? [];
+    expect(fromOcr.map((c) => c.a?.text)).toEqual([
+      'CAL-2026-7741-A',
+      expect.stringMatching(/^2026-12-31/),
+      '16.81%',
+    ]);
+    expect(fromOcr.every((c) => c.ocr === 'ocr' && (c.b?.rects.length ?? 0) > 0)).toBe(true);
+    // Live text is not labelled.
+    expect(read?.changes.find((c) => c.a?.text === 'HT-99241-A')?.ocr).toBeUndefined();
+  }, 120_000);
+
+  it('12: an OCR text layer is "from OCR"; typical confusions are "possible OCR error", not hidden', async () => {
+    const r = (await comparePair('12')).results.at(-1)?.result;
+    const errors = r?.changes.filter((c) => c.ocr === 'ocr-error') ?? [];
+    expect(errors.map((c) => [c.a?.text, c.b?.text])).toEqual([
+      ['5O0 mm', '500 mm'],
+      ['U1trasonic', 'Ultrasonic'],
+    ]);
+    expect(r?.changes.every((c) => c.ocr)).toBe(true);
+  }, 60_000);
+
+  it('05: the renumbering is one entry; the switch shows every number', async () => {
+    const on = (await comparePair('05')).results.at(-1)?.result;
+    expect(on?.changes.filter((c) => c.kind === 'renumbered')).toMatchObject([
+      { a: { text: '3.4–3.9' }, b: { text: '3.6–3.11' }, renumber: { shifted: 12, follow: 6 } },
+    ]);
+    expect(on?.changes.filter((c) => c.kind === 'reference')).toEqual([]);
+    const off = (await comparePair('05', { text: { renumbering: false } })).results.at(-1)?.result;
+    expect(off?.changes.some((c) => c.kind === 'renumbered')).toBe(false);
+    expect(
+      off?.changes.filter((c) => c.kind === 'replaced' && /^3\.\d+$/.test(c.a?.text ?? '')).length,
+    ).toBeGreaterThan(5);
+  }, 60_000);
+
+  it('14: footnotes renumber like clauses; the new footnote and its mark are reported', async () => {
+    const r = (await comparePair('14')).results.at(-1)?.result;
+    expect(r?.changes.filter((c) => c.kind === 'renumbered')).toMatchObject([
+      { a: { text: '2–3' }, b: { text: '3–4' } },
+    ]);
+  }, 60_000);
+
+  it('07: rows matched as rows; a deleted and an inserted row are one change each; the repeated header is not reported', async () => {
+    const r = (await comparePair('07')).results.at(-1)?.result;
+    const rows = r?.changes.filter((c) => c.table && c.table.column === undefined) ?? [];
+    expect(rows.map((c) => [c.kind, c.table?.row.slice(0, 4)])).toEqual([
+      ['deleted', '038 '],
+      ['inserted', '075A'],
+    ]);
+    const cells = r?.changes.filter((c) => c.table?.column !== undefined) ?? [];
+    expect(cells.every((c) => !c.table?.head)).toBe(true);
+    expect(new Set(cells.map((c) => c.table?.col))).toEqual(new Set(['Rate (USD)', 'Total (USD)']));
+    // A cell is marked by its box, on the page where it is.
+    const rate = cells.find((c) => c.a?.text === '25.50');
+    expect(rate).toMatchObject({ b: { text: '38.00' }, pct: 49.02 });
+    expect(rate?.b?.rects).toHaveLength(1);
+  }, 60_000);
+
+  it('02, 03, 09: a changed picture is one changed figure with how different it looks', async () => {
+    for (const pair of ['02', '03', '09']) {
+      const r = (await comparePair(pair)).results.at(-1)?.result;
+      const figs = r?.changes.filter((c) => c.figure) ?? [];
+      expect(figs).toHaveLength(1);
+      expect(figs[0]?.kind).toBe('figure');
+      expect(figs[0]?.figure?.diff).toBeGreaterThan(0);
+      expect(figs[0]?.a?.rects).toHaveLength(1);
+      expect(figs[0]?.b?.rects).toHaveLength(1);
+    }
+  }, 60_000);
+
+  it('13: headers and footers once; bands drawn by hand do the same; the switch makes them text', async () => {
+    const hf = (r?: TextComparison) =>
+      r?.changes
+        .filter((c) => c.kind === 'header' || c.kind === 'footer')
+        .map((c) => [c.kind, c.a?.text, c.b?.text]);
+    const auto = (await comparePair('13')).results.at(-1)?.result;
+    expect(hf(auto)).toEqual([
+      ['header', 'C', 'D'],
+      ['footer', '6', '7'],
+    ]);
+    const band = { top: 70, bottom: 60 };
+    const drawn = (await comparePair('13', { text: { bands: { a: band, b: band } } })).results.at(
+      -1,
+    )?.result;
+    expect(hf(drawn)).toEqual(hf(auto));
+    const off = (await comparePair('13', { text: { headersFooters: false } })).results.at(
+      -1,
+    )?.result;
+    expect(hf(off)).toEqual([]);
+    expect(off?.changes.some((c) => c.a?.text === 'C' && c.b?.text === 'D')).toBe(true);
+  }, 60_000);
 
   it('09: the swapped sections are one move carrying the bearing pressure edit', async () => {
     const { results, bytes } = await comparePair('09');

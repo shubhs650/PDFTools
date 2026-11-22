@@ -98,7 +98,48 @@ export interface PageText {
   angles: Float32Array;
   /** TEXT_GENERATED | TEXT_INVISIBLE | TEXT_BOLD. */
   flags: Uint8Array;
+  /** What a text comparison reads besides the characters (M12-18): figures, tables, scans. */
+  structure?: PageStructure;
 }
+
+/** A picture on the page (D-63, changed figure), compared as a picture. */
+export interface PageFigure {
+  /** Displayed space: x0, y0, x1, y1. */
+  box: [number, number, number, number];
+  /** Size and FNV-1a hash of the decoded pixels: the same picture. */
+  hash: string;
+  /** 16 × 16 grey thumbnail, 0–255: how different two pictures are. */
+  thumb: Uint8Array;
+}
+
+/** A recognised table (D-63, Q30): its cells as read, rows top to bottom. */
+export interface PageTable {
+  /** Displayed space: x0, y0, x1, y1. */
+  box: [number, number, number, number];
+  /** Cell text per row and column (a merged block's text in its first cell). */
+  cells: string[][];
+  headerRows: number;
+  merges: { r: number; c: number; rs: number; cs: number }[];
+  /** Per row and column: x0, y0, x1, y1 in displayed space (the merged block's box). */
+  cellBoxes: Float32Array;
+}
+
+/** Share of a page's area covered by pictures from which it is a scan. */
+export const SCAN_COVER = 0.8;
+
+export interface PageStructure {
+  /** Share of the page covered by pictures (1: a scan). */
+  imageCover: number;
+  /** Pictures over 400 pt² (none on a scan: its own picture is not a figure). */
+  figures: PageFigure[];
+  tables: PageTable[];
+  /** Read by OCR at compare time (D-63, Q29): the words are OCR words, the file has no text. */
+  ocr?: boolean;
+}
+
+/** A page that is a picture with no text: OCR can read it for the comparison. */
+export const isScan = (t: PageText): boolean =>
+  !!t.structure && t.structure.imageCover >= SCAN_COVER && t.codes.length === 0;
 
 /** Analysis resolution (S28: 150 dpi; 100 dpi is the fallback for very large sheets). */
 export const ANALYSIS_DPI = 150;
@@ -266,8 +307,20 @@ export function textBytes(t: PageText): number {
     t.origins.byteLength +
     t.sizes.byteLength +
     t.angles.byteLength +
-    t.flags.byteLength
+    t.flags.byteLength +
+    (t.structure ? structureBytes(t.structure) : 0)
   );
+}
+
+/** Bytes a page's structure holds (cell text counted as UTF-16). */
+export function structureBytes(s: PageStructure): number {
+  let n = 64;
+  for (const f of s.figures) n += f.thumb.byteLength + f.hash.length * 2 + 48;
+  for (const t of s.tables) {
+    n += t.cellBoxes.byteLength + 64;
+    for (const r of t.cells) for (const c of r) n += c.length * 2 + 8;
+  }
+  return n;
 }
 
 /** Bytes a signature holds (words counted as UTF-16). */
@@ -281,7 +334,16 @@ export function signatureBytes(s: PageSignature): number {
 export function textBuffers(t: PageText): ArrayBuffer[] {
   return [
     ...new Set(
-      [t.codes, t.boxes, t.origins, t.sizes, t.angles, t.flags].map((a) => a.buffer as ArrayBuffer),
+      [
+        t.codes,
+        t.boxes,
+        t.origins,
+        t.sizes,
+        t.angles,
+        t.flags,
+        ...(t.structure?.figures.map((f) => f.thumb) ?? []),
+        ...(t.structure?.tables.map((x) => x.cellBoxes) ?? []),
+      ].map((a) => a.buffer as ArrayBuffer),
     ),
   ];
 }

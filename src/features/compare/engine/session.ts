@@ -27,6 +27,7 @@
 import type {
   CompareSide,
   TextMatchProgress,
+  TextOptions,
   PairingLayout,
   PairingProgress,
   SheetFacts,
@@ -34,6 +35,9 @@ import type {
 import type { CompareClient } from '../../../engine/compareClient';
 import { AbortError, RpcError } from '../../../engine/errors';
 import type { WorkClient } from '../../../engine/workClient';
+import type { OcrClient } from '../../../engine/ocrClient';
+import type { OcrLanguage } from '../../../model/ocr/languages';
+import { OCR_DPI } from '../../../model/ocr/types';
 import {
   AS_IS_AGREEMENT,
   asIs,
@@ -46,6 +50,7 @@ import {
   BAND_ROWS,
   IDENTITY,
   bandRanges,
+  isScan,
   rasterSize,
   textBuffers,
   type Affine,
@@ -134,6 +139,18 @@ export interface SessionOptions {
   text?: boolean;
   /** Detect moves in a text comparison (default true). */
   moves?: boolean;
+  /** A text comparison's other switches (D-63): headers and footers, hand-drawn bands, renumbering. */
+  textOptions?: Omit<TextOptions, 'moves'>;
+  /**
+   * OCR at compare time (M12-18, D-63, Q29): scanned pages without text are
+   * read by the OCR worker for the comparison only (the files are not
+   * changed). Without it such pages are "limited support" and the result
+   * lists them as `scanned`, so the window can offer OCR.
+   */
+  ocr?: {
+    languages: readonly OcrLanguage[];
+    client: Pick<OcrClient, 'recognize'>;
+  };
   /** A text comparison's result: on the first pages while it runs, then complete. */
   onText?: (result: TextComparison, state: TextState) => void;
   /** Text matching progress (pages read into paragraphs, then stretches compared). */
@@ -407,7 +424,12 @@ export class CompareSession {
     if (have && have.a >= pages.a && have.b >= pages.b) return;
     const result = await this.opts.compare.call(
       'matchText',
-      { cmpId: this.id, pages, ...(this.opts.moves === false ? { moves: false } : {}) },
+      {
+        cmpId: this.id,
+        pages,
+        ...(this.opts.moves === false ? { moves: false } : {}),
+        ...this.opts.textOptions,
+      },
       { signal, ...(this.opts.onTextProgress ? { onProgress: this.opts.onTextProgress } : {}) },
     ).promise;
     if (signal.aborted) return;
@@ -489,9 +511,37 @@ export class CompareSession {
   ): Promise<void> {
     const text: PageText = await this.opts.work.run(
       'compareText',
-      { docId: from.docId, pageIndex: from.page },
+      { docId: from.docId, pageIndex: from.page, ...(layout ? { structure: true } : {}) },
       { signal },
     ).promise;
+    const ocr = this.opts.ocr;
+    if (layout && ocr && isScan(text)) {
+      // A scan without text: read by OCR for this comparison only (D-63, Q29).
+      const r = await this.opts.work.run(
+        'compareOcrRaster',
+        { docId: from.docId, pageIndex: from.page, dpi: OCR_DPI },
+        { signal },
+      ).promise;
+      const rec = await ocr.client.recognize(
+        { width: r.width, height: r.height, data: r.data, dpi: OCR_DPI },
+        ocr.languages,
+        { signal },
+      );
+      await this.opts.compare.call(
+        'putOcr',
+        {
+          cmpId: this.id,
+          side,
+          page,
+          lines: rec.lines,
+          dpi: OCR_DPI,
+          frame: r.frame,
+          turn: r.turn,
+        },
+        { signal },
+      ).promise;
+      return;
+    }
     await this.opts.compare.call(
       'putText',
       { cmpId: this.id, side, page, text, ...(layout ? { layout } : {}) },

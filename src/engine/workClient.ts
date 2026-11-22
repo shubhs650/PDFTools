@@ -83,6 +83,7 @@ type JobMethod =
   | 'compareSignature'
   | 'compareGeometry'
   | 'compareText'
+  | 'compareOcrRaster'
   | 'compareRaster';
 
 export interface WorkClientOptions {

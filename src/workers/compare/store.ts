@@ -26,6 +26,7 @@ import {
 } from '../../model/compare/align/aligner';
 import type { Ink } from '../../model/compare/align/ink';
 import { pairPages, type PairingResult, type PairingSide } from '../../model/compare/pairing';
+import type { TextOptions } from '../../engine/compareApi';
 import { buildDoc } from '../../model/compare/text/document';
 import { layoutBytes, pageLayout, type PageLayout } from '../../model/compare/text/layout';
 import { matchText, type TextComparison } from '../../model/compare/text/match';
@@ -116,7 +117,7 @@ export class CompareStore {
   matchText(
     cmpId: string,
     pages?: { a: number; b: number },
-    moves?: boolean,
+    o: TextOptions = {},
     tick?: (stage: 'read' | 'match', done: number, total: number) => void,
   ): TextComparison {
     const c = this.get(cmpId);
@@ -140,12 +141,23 @@ export class CompareStore {
     const step = (): void => {
       tick?.('read', Math.min(++read, total), total);
     };
-    const docA = buildDoc(la, c.words, { checkpoint: step });
-    const docB = buildDoc(lb, c.words, { checkpoint: step });
+    const hf = o.headersFooters === false ? { headersFooters: false } : {};
+    const docA = buildDoc(la, c.words, {
+      checkpoint: step,
+      ...hf,
+      ...(o.bands?.a ? { bands: o.bands.a } : {}),
+    });
+    const docB = buildDoc(lb, c.words, {
+      checkpoint: step,
+      ...hf,
+      ...(o.bands?.b ? { bands: o.bands.b } : {}),
+    });
     tick?.('read', total, total);
     let gaps = 0;
     return matchText(docA, docB, {
-      ...(moves === false ? { moves: false } : {}),
+      ...(o.moves === false ? { moves: false } : {}),
+      ...hf,
+      ...(o.renumbering === false ? { renumbering: false } : {}),
       checkpoint: () => {
         tick?.('match', ++gaps, 0);
       },

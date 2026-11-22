@@ -60,6 +60,39 @@ interop is in the M6 pack (CHECKLIST §M6 R1–R4). Rev 0 (M0–M4) is complete 
   and dark). **Open:** the notes are discarded without a prompt when the comparison closes
   until M12-20 saves them in the comparison file; near a sheet's edge a follower can be held at
   its scroll limit, so the spots match only where both windows can scroll.
+- **M12-18 — text structure (D-63).** The text comparison now reads tables, figures, clause
+  numbers and scans (spike S30's method, our own code, no new dependency). **Work worker:**
+  `compareText` with `structure` (text comparisons only) adds the page's pictures
+  (`src/workers/work/compareStructure.ts`: pictures over 400 pt² with a pixel hash and a 16 × 16
+  thumbnail, the share of the page they cover; a scan's own picture is not a figure) and its
+  tables, found by the app's own table detector (§7.7) from **PDFium's** words (the same words
+  the comparison reads) and segments, only on pages with rulings or many numbers; an unruled
+  table must have short, partly numeric cells (S30). Bold now also comes from the font's name
+  (the standard 14 fonts report weight 0), so header rows are found. A new job
+  `compareOcrRaster` renders a scan for OCR without changing the file. **Engine**
+  (`src/model/compare/text/`): tables and figures take part in the XY-cut as one box each; a
+  table row is a unit (cells apart, marked by the cell's box, the row named by its first cell
+  and the next when the first is a short item number, columns named by the header rows; a
+  header row repeated on later pages, or a first row heading two tables, is a header and left
+  out); rows are matched by name, then likeness, then cell by cell; a figure is a unit keyed by
+  its hash, a changed one is reported as a changed figure with how different it looks.
+  `renumber.ts`: the unit alignment on a skeleton of units unique with their clause numbers
+  masked, then exact, relabelled and near pairs; renumbering reported once per run of clauses
+  (`renumber: { shifted, follow }`), a cross-reference that does not follow is a `reference`
+  change (also in unchanged text); raised small numbers count, so footnotes renumber too. The
+  switch (`renumbering: false`) lists every shifted number instead. OCR labels: text from an
+  OCR layer or read at compare time is `ocr`, a typical confusion (0/O, 1/l, rn/m …) is
+  `ocr-error`, never hidden. Header and footer bands drawn by hand (`bands`) replace the
+  detection; `headersFooters: false` is the switch. **OCR at compare time:** `CompareSession`
+  with `ocr: { languages, client }` reads a scan without text through the OCR worker and the
+  Compare worker's new `putOcr` (`ocrText.ts`: OCR words as positioned characters). Without
+  it, such pages are listed in `scanned` (and `limited`), so the window can offer OCR when
+  Compare is pressed. **Corpus acceptance suite for documents** (`tests/compare/text-corpus.test.ts`):
+  all 17 text pairs, every manifest item found and every change explained (pair 08 with OCR in
+  the test process, pair 17 = 500 pages in about 25 s in Node); specific checks for the switch,
+  bands, figures, row changes, OCR labels. `tests/compare/text-structure.test.ts`: 16 tests on
+  self-made pages. Not yet: the window that starts a text comparison, its switches, the band
+  drawing and the OCR offer (M12-19).
 - **M12-17 — text comparison engine (D-63).** Spike S30's method as app code in
   `src/model/compare/text/` (our own code, no new dependency): `tokens.ts` (engineering values,
   tags and dates kept whole, scripts without spaces one token per character, NFKC keys, percent
@@ -3583,8 +3616,8 @@ rel="noopener noreferrer">`; the commands `app.home` / `app.reportIssue` open th
   sample packs work in Acrobat Reader and a second desktop editor); ARCHITECTURE.md Rev 0.22.
   M12-07 (the Compare worker and its jobs), M12-08 (the comparison tab and input window), M12-09
   (pairing), M12-10 (automatic alignment), M12-11 (the overlay view; layer switches open),
-  M12-17 (the text comparison engine), M12-12 (the Review layout). Next: the remaining tasks in
-  plan order.
+  M12-17 (text comparison engine), M12-18 (text structure), M12-12 (the Review layout). Next:
+  the remaining tasks in plan order.
 - **Agent (M11):** the 18 tasks in [docs/plan/M11.md](plan/M11.md) "Order of work", one thread
   each. Done: M11-01, M11-10, M11-02 (spike S26), M11-03 (tabs: look, hover card, +), M11-04
   (drag to reorder), M11-05 (tab menus), M11-06 (comments in every pointer mode), M11-07 (font
