@@ -247,10 +247,12 @@ jobs:
           retention-days: 7
 
   result:
-    # A job skipped by the suite choice counts as passed; a failed or cancelled one does not.
+    # A job skipped by the suite choice counts as passed; a failed, timed-out or cancelled
+    # one does not. A run cancelled as a whole (superseded by a newer commit on the PR)
+    # skips this job, so the old commit does not get a red check; the new run reports.
     name: CI result
     needs: [checks, changes, e2e-smoke, e2e-smoke-a11y, e2e, a11y, gates]
-    if: always()
+    if: ${{ !cancelled() }}
     runs-on: ubuntu-24.04
     steps:
       - name: Every job passed or was skipped
