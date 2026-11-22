@@ -18,8 +18,9 @@ export const S11_PORT = 4187;
 export const S11_FRAME_PORT = 4188;
 export const S13_PORT = 4189;
 export const S17_PORT = 4190;
+export const S27_PORT = 4191;
 
-// SPIKE=s8|s3|s1|s5|s7|s4|s9|s11|s13|s17 limits which spike gets built and served (default: both).
+// SPIKE=s8|s3|s1|s5|s7|s4|s9|s11|s13|s17|s27 limits which spike gets built and served (default: both).
 const only = process.env.SPIKE;
 const want = (name: string): boolean => !only || only === name;
 
@@ -103,6 +104,16 @@ export default defineConfig({
       testMatch: ['s17-ocr/**/*.spec.ts'],
       use: { ...devices['Desktop Chrome'], baseURL: `http://localhost:${String(S17_PORT)}` },
     },
+    {
+      // M12-02: several documents on screen (the app's real view layer, ADR-032).
+      name: 's27',
+      testMatch: ['s27-linked-views/**/*.spec.ts'],
+      use: {
+        ...devices['Desktop Chrome'],
+        baseURL: `http://localhost:${String(S27_PORT)}`,
+        viewport: { width: 1600, height: 1000 },
+      },
+    },
   ],
   webServer: [
     ...(want('s8') ? [server('s8', 's8-csp', S8_PORT)] : []),
@@ -178,6 +189,19 @@ export default defineConfig({
             ' --coi',
             'node --import ./spikes/shared/ts-ext.ts spikes/s17-ocr/run-node.ts > /dev/null && ',
           ),
+        ]
+      : []),
+    ...(want('s27')
+      ? [
+          {
+            // Built like the app's e2e build (the test probes stay in), with the app's _headers.
+            command: `node spikes/s27-linked-views/make-fixtures.ts && npx vite build --mode e2e --config spikes/s27-linked-views/vite.config.ts && node spikes/shared/serve.ts --root spikes/s27-linked-views/dist --port ${String(S27_PORT)} --report --coi --corpus spikes/s27-linked-views/out`,
+            cwd: '..',
+            url: `http://localhost:${String(S27_PORT)}`,
+            reuseExistingServer: false,
+            timeout: 180_000,
+            name: 's27',
+          },
         ]
       : []),
   ],

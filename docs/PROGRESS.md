@@ -1,6 +1,6 @@
 # Triya PDF — Progress
 
-_Last updated: 2026-11-22 (M12-01: comparison corpus additions)_
+_Last updated: 2026-11-22 (M12-02: spike S27, several documents on screen)_
 
 **Current milestone:** M12 — PDF comparison (PDF overlay for drawings, text comparison for
 documents), version 1.1.0: plan [docs/plan/M12.md](plan/M12.md) and
@@ -43,6 +43,27 @@ interop is in the M6 pack (CHECKLIST §M6 R1–R4). Rev 0 (M0–M4) is complete 
   @smoke fails intermittently (134 ms task on a PR run; red in main's perf job since
   2026-11-22), `bookmark-editing.spec.ts:260` and `comment-copy-paste.spec.ts:33` fail now and
   then in full shard 1/3.
+- **M12-02 — spike S27: several documents on screen together (D-58, D-62, D-64).** Works with
+  workaround, **route 1** (EmbedPDF's own per-document viewports in one registry over the shared
+  workers). `spikes/s27-linked-views/` mounts the app's real `DocumentView` two and three times;
+  8 Playwright tests on three self-made dense A0 sheets (about 89,000 segments each) and corpus
+  pairs 15 and 19: tiles, zoom, pan, the comment tools, Ctrl+Z/Ctrl+Y, the Comment and Page menus
+  and text selection all act on the window they are used in; one window drives the others
+  through a transform within 0.7 px (pair 15, A1 against A3: 0.2 px); a document in its own tab
+  and in a comparison is one document (comments, unsaved mark, undo) but has one view state, so
+  the comparison must give the tab its place back (done in the spike). Measured: three A0 sheets
+  in three windows 88–95 MB of JS/WASM heaps and 330–530 MB renderer RSS; panning three linked
+  windows every frame for 4 s, no frame over 25 ms, no long task, no long animation frame; the
+  link costs 0.1 ms a frame; three windows get sharp after a jump in 0.5–0.6 s against 0.13–0.23
+  s for one (one Render worker queue). **Found:** `@embedpdf/plugin-tiling` 2.15.1 recalculates
+  tiles from one throttled scroll listener for every document, so linked windows stay blurry;
+  a listener keyed by document fixes it (`keyedTiles.ts`, an internal of the pinned version).
+  The same document in two windows at once is not possible (one state per document id). The
+  view-layer changes for M12-08/11/12/19 (active tab and active document split, controller
+  calls per window, visible-first rendering for a set of windows, a place per window, the
+  overlay window as a live view of an in-memory notes document) and the risks are in
+  `spikes/s27-linked-views/RESULTS.md`, the input for ADR-032 (M12-06). Also: `spikes/tsconfig.json`
+  and the ESLint spike block now cover `.tsx`.
 - **M12-01 — comparison corpus additions (Q37, D-66).** A self-made generator in
   `e2e/fixtures/comparison-corpus/` (Node, no new dependency: its own small PDF writer,
   standard 14 fonts, its own stroke font for text as curves) rebuilds every new pair with
@@ -3295,8 +3316,9 @@ rel="noopener noreferrer">`; the commands `app.home` / `app.reportIssue` open th
 ## Next
 
 - **Agent (M12):** autodrive (owner, 2026-11-22): the tasks in [docs/plan/M12.md](plan/M12.md)
-  "Order of work", two threads at a time. Done: M12-01 (corpus additions). Next: the spikes
-  M12-02 … M12-06, ending in ADR-032 (owner gate).
+  "Order of work", two threads at a time. Done: M12-01 (corpus additions), M12-02 (spike S27,
+  route 1 with a tiling workaround). Next: the spikes M12-03 … M12-06, ending in ADR-032 (owner
+  gate).
 - **Agent (M11):** the 18 tasks in [docs/plan/M11.md](plan/M11.md) "Order of work", one thread
   each. Done: M11-01, M11-10, M11-02 (spike S26), M11-03 (tabs: look, hover card, +), M11-04
   (drag to reorder), M11-05 (tab menus), M11-06 (comments in every pointer mode), M11-07 (font

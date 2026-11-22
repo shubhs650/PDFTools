@@ -60,7 +60,7 @@ export default defineConfig(
   },
   // M0 spike code (throwaway; browser, workers and Node tooling)
   {
-    files: ['spikes/**/*.ts'],
+    files: ['spikes/**/*.{ts,tsx}'],
     languageOptions: {
       globals: { ...globals.browser, ...globals.worker, ...globals.node },
     },
