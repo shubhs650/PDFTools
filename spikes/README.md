@@ -25,6 +25,7 @@ Throwaway spike code for [docs/plan/M0.md](../docs/plan/M0.md) (S1–S8) and M1-
 | S25     | [`s25-freetext-colors/`](s25-freetext-colors/) (M7)      | [ADR-024](../docs/adr/024-freetext-text-and-border-colours.md) | Works with workaround |
 | S26     | [`s26-freetext-fonts/`](s26-freetext-fonts/) (M11-02)    | [ADR-028](../docs/adr/028-m11-tabs-fonts-select.md)            | Works (route R2)      |
 | S27     | [`s27-linked-views/`](s27-linked-views/) (M12-02)        | ADR-032 (M12-06); [RESULTS.md](s27-linked-views/RESULTS.md)    | Works with workaround |
+| S28     | [`s28-alignment/`](s28-alignment/) (M12-03)              | ADR-032 (M12-06); [RESULTS.md](s28-alignment/RESULTS.md)       | Works (route 1)       |
 
 ## Shared pieces (`shared/`)
 
@@ -57,6 +58,12 @@ npm run typecheck:spikes
 node spikes/s1-save/make-fixtures.ts && node spikes/s1-save/run-node.ts   # → spikes/s1-save/out/
 SPIKE=s1 npm run spikes -- --project=s1   # browser timings → test-results/s1-results.json
 npx vitest run spikes                     # unit tests (narrow-tail writer, search core)
+
+# S28 alignment, pairing and detection (M12-03): Node, PDFium WASM, the corpus; numbers →
+# spikes/s28-alignment/out/, findings in s28-alignment/RESULTS.md. Route 2 needs OpenCV.js
+# for the run only: npm install --no-save @techstark/opencv-js@4.12.0-release.1
+node --import ./spikes/shared/ts-ext.ts spikes/s28-alignment/run-node.ts [align|asis|pairing|detect|size]
+npx vitest run spikes/s28-alignment
 
 # S27 several documents on screen (M12-02): the app's real view layer in two and three
 # windows; numbers → test-results/s27-results.json, findings in s27-linked-views/RESULTS.md

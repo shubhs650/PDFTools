@@ -4,7 +4,7 @@
 
 import { area, cloud, highlight, marker, note, textBox, type AnnotCommon } from './annots.ts';
 import { Canvas } from './canvas.ts';
-import { Doc, num, type DocInfo, type PageSpec } from './pdf.ts';
+import { Doc, type DocInfo, type PageSpec } from './pdf.ts';
 import {
   densePlotPlan,
   detailsSheet,
@@ -172,9 +172,10 @@ function framingA1(): FramingSpec {
   };
 }
 
-function framingA1Sheet(c: Canvas, s: Sheet, t: TitleBlock): void {
+/** `layout`: the title block the drawing area is laid out above (default `t`). */
+function framingA1Sheet(c: Canvas, s: Sheet, t: TitleBlock, layout: TitleBlock = t): void {
   const inner = frame(c, s);
-  const box = planBox(inner, t);
+  const box = planBox(inner, layout);
   framingPlan(c, box, { ...framingA1(), notesAt: [inner.x + 6, inner.y + 6] });
   titleBlock(c, s, t);
 }
@@ -202,7 +203,9 @@ export function pair15(): PairFiles {
   const docB = new Doc();
   docB.addPage({
     ...pb,
-    content: `q ${num(k)} 0 0 ${num(k)} ${num(tx)} ${num(ty)} cm\n${cb.toString()}\nQ`,
+    // Six decimals: `num` keeps three, which wrote 0.499 instead of 0.49941
+    // (0.08 % off the manifest; found by spike S28).
+    content: `q ${k.toFixed(6)} 0 0 ${k.toFixed(6)} ${tx.toFixed(6)} ${ty.toFixed(6)} cm\n${cb.toString()}\nQ`,
   });
   return {
     old: docA.finish(
@@ -446,7 +449,10 @@ export function pair18(): PairFiles {
   });
   const make = (t: TitleBlock, rev: string, date: string) => {
     const c = new Canvas();
-    framingA1Sheet(c, s, t);
+    // Both revisions keep the drawing area where the larger title block
+    // leaves it: laid out above each sheet's own title block, the plan moved
+    // 7.09 pt when the revision table grew (found by spike S28).
+    framingA1Sheet(c, s, t, tbB);
     const d = new Doc();
     d.addPage(page(s, c.toString()));
     return d.finish(
