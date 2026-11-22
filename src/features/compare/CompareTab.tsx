@@ -3,7 +3,7 @@ import { ArrowSwap20Regular } from '@fluentui/react-icons/svg/arrow-swap';
 import { ArrowUp16Regular } from '@fluentui/react-icons/svg/arrow-up';
 import { ChevronDown16Regular } from '@fluentui/react-icons/svg/chevron-down';
 import { Dismiss16Regular } from '@fluentui/react-icons/svg/dismiss';
-import { useId, useState, type DragEvent } from 'react';
+import { useEffect, useId, useState, type DragEvent } from 'react';
 import { useTranslation } from 'react-i18next';
 import { securityOf, useDocuments, type DocumentsState } from '../../app/store/documentStore';
 import { format, msg, type MessageKey } from '../../i18n';
@@ -37,6 +37,9 @@ import {
   type SideFile,
   type SideId,
 } from './model';
+import { PairingTable } from './PairingTable';
+import { syncPairing, usePairing } from './pairingFlow';
+import { comparedPairs } from '../../model/compare/pairing';
 import { limitsOf } from './permissions';
 import { typeLabel } from './title';
 import type { RangeError } from '../print/options';
@@ -82,8 +85,19 @@ function InputWindow({ comparison: c }: { comparison: Comparison }) {
   const titleId = useId();
   const statusId = useId();
   const docs = useDocuments((s) => s.docs);
-  const block = compareBlock(c, (d) => docs[d]?.meta.pageCount);
+  const inputBlock = compareBlock(c, (d) => docs[d]?.meta.pageCount);
   const opening = useCompareUi((s) => openingCount(s, c.id, 'a') + openingCount(s, c.id, 'b'));
+  // An overlay pairs its pages as soon as both sides are ready (M12-09, D-60).
+  useEffect(() => {
+    syncPairing(c);
+  }, [c, docs]);
+  const pairing = usePairing(c.id);
+  const overlay = c.type === 'overlay';
+  let block: CompareBlock | null = inputBlock;
+  if (!block && overlay) {
+    if (pairing?.status !== 'done') block = { kind: 'pairing' };
+    else if (comparedPairs(pairing.rows).length === 0) block = { kind: 'noSheets' };
+  }
   const nameOf = (d: string): string => docs[d]?.meta.name ?? '';
   const blockText = (b: CompareBlock): string => {
     switch (b.kind) {
@@ -93,6 +107,12 @@ function InputWindow({ comparison: c }: { comparison: Comparison }) {
         return t('compare.block.opening');
       case 'range':
         return t('compare.block.range', { name: nameOf(b.docId) });
+      case 'pairing':
+        return pairing?.status === 'failed'
+          ? t('compare.pairing.failed')
+          : t('compare.block.pairing');
+      case 'noSheets':
+        return t('compare.block.noSheets');
     }
   };
   const count = (files: readonly SideFile[]): number =>
@@ -159,6 +179,7 @@ function InputWindow({ comparison: c }: { comparison: Comparison }) {
           </div>
           <SidePanel comparison={c} side="b" />
         </div>
+        {overlay && !inputBlock ? <PairingTable id={c.id} /> : null}
         <footer className="compare-foot">
           <p id={statusId} className="compare-status" role="status">
             {status}
