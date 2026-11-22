@@ -4,9 +4,9 @@ _Last updated: 2026-11-22 (session 99: M12 plan, PDF comparison, ADR-031 propose
 
 **Current milestone:** M12 — PDF comparison (PDF overlay for drawings, text comparison for
 documents), version 1.1.0: plan [docs/plan/M12.md](plan/M12.md) and
-[ADR-031](adr/031-m12-pdf-comparison.md) **proposed**, waiting for the owner's review;
-ARCHITECTURE.md Rev 0.21 (D-58 … D-66). No code before the owner's acceptance, and none after the
-merge until the owner says go. **Previous:** V1 — version 1.0.0, the first public release
+[ADR-031](adr/031-m12-pdf-comparison.md) **reviewed by the owner** (2026-11-22: every recommended
+answer, optional items O1 and O4), accepted with the merge of PR #146; ARCHITECTURE.md Rev 0.21
+(D-58 … D-66). No code after the merge until the owner says go. **Previous:** V1 — version 1.0.0, the first public release
 (live since 2026-11-18): plan
 [docs/plan/V1.md](plan/V1.md) and [ADR-029](adr/029-v1-public-release.md) **accepted** by the owner
 (2026-11-18), ARCHITECTURE.md Rev 0.19 (D-28 release domains and deploy from a tag, D-35 no home
@@ -41,7 +41,9 @@ interop is in the M6 pack (CHECKLIST §M6 R1–R4). Rev 0 (M0–M4) is complete 
   comparison with moves, whole engineering values, headers, tables, renumbering and OCR (D-63,
   D-64); Save review, the comparison file and the change register (D-65); a Compare worker,
   progressive results and corpus acceptance (D-66). 23 tasks: corpus additions, spikes S27 to
-  S31 ending in ADR-032 (a second owner gate), then the build. No code in this session.
+  S31 ending in ADR-032 (a second owner gate), then the build. The owner reviewed it the same
+  day: the recommended answer to questions 1 to 4, and optional items O1 (compare an area) and
+  O4 (drop a tab on a tab). No code in this session.
 - **Session 98 — comparison unblocked (ADR-030).** The owner decided to add comparison (PDF
   overlay for drawings, text comparison for documents) and lifted the hold on revision compare.
   ARCHITECTURE.md Rev 0.20: §1.5 no longer lists it as a non-goal, §14's "Parked" entry is now
@@ -3257,8 +3259,7 @@ rel="noopener noreferrer">`; the commands `app.home` / `app.reportIssue` open th
 
 ## Next
 
-- **Owner (M12):** review the plan and ADR-031, answer the five questions in the plan
-  ("Questions for the owner"), then give the go to start M12-01.
+- **Owner (M12):** give the go to start M12-01 (the plan's five questions are answered).
 - **Agent (M12):** nothing until the owner's go; then the tasks in
   [docs/plan/M12.md](plan/M12.md) "Order of work", one thread each, starting with M12-01 (corpus
   additions) and the spikes M12-02 … M12-06.
@@ -3453,10 +3454,8 @@ rel="noopener noreferrer">`; the commands `app.home` / `app.reportIssue` open th
 
 ## Decisions needed (owner)
 
-- **M12 plan (PDF comparison).** Accept [docs/plan/M12.md](plan/M12.md) and
-  [ADR-031](adr/031-m12-pdf-comparison.md), and answer the plan's five questions: close-out
-  states, what the text comparison file shows in another reader, the build switch while M12 is
-  being built, the difference keys, and the optional items O1 … O5.
+- **M12 (PDF comparison).** The go to start M12-01 after the plan's merge. Later in M12:
+  ADR-032 (spike results) before any feature code.
 
 - **Keyboard text selection (M2-04).** Caret-based selection (Shift+arrows) is not built; the
   keyboard path is Ctrl+A (page text) + Ctrl+C. Accept as an exception to the M2-04 criterion, or
@@ -3512,4 +3511,4 @@ rel="noopener noreferrer">`; the commands `app.home` / `app.reportIssue` open th
 | 2026-09-25 | ADR-011          | M1-01: adopt the EmbedPDF plugin stack (pinned 2.15.1, one registry + document manager, no per-document permission overrides); own bounded PreviewLayer, own encoder worker, own paged mode for single/facing. **Accepted**; no ARCHITECTURE.md change.                                                                                                                                                                                                   |
 | 2026-11-01 | CI cadence       | Owner approved. CI runs once per PR commit (`push` only on `main`). PRs: checks, e2e tagged `@smoke` (22 critical flows) plus `@offline` and `@a11y`, and `@smoke` perf. Docs-only PRs skip e2e. `main`, nightly, Run workflow and the `full-e2e` PR label: full e2e in 3 shards plus offline, perf and acceptance. No test removed. Tag new critical flows `@smoke`; run the e2e specs a change touches locally.                                         |
 | 2026-11-22 | ADR-030          | Comparison unblocked by the owner (PDF overlay for drawings, text comparison for documents); the hold in §14 and rule 14 is lifted, the clean-room condition stays as rule 14. **Accepted**; ARCHITECTURE.md Rev 0.20.                                                                                                                                                                                                                                    |
-| 2026-11-22 | ADR-031          | M12 — PDF comparison: PDF overlay and text comparison, D-58 … D-66, plan `docs/plan/M12.md`, spikes S27 – S31 then ADR-032. **Proposed**, waiting for the owner; ARCHITECTURE.md Rev 0.21 in the same pull request.                                                                                                                                                                                                                                       |
+| 2026-11-22 | ADR-031          | M12 — PDF comparison: PDF overlay and text comparison, D-58 … D-66, plan `docs/plan/M12.md`, spikes S27 – S31 then ADR-032. Owner's answers: close-out = Completed plus a reply; the text comparison file shows Document B; Compare off in release builds until acceptance; F8 / Shift+F8 and hold X; optional O1 and O4. **Accepted** with the merge of PR #146; ARCHITECTURE.md Rev 0.21.                                                               |

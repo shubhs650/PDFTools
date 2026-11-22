@@ -1,8 +1,9 @@
 # ADR-031: M12 — PDF comparison (PDF overlay for drawings, text comparison for documents)
 
-- **Status:** Proposed (2026-11-22). The owner asked for the plan, this ADR and the
-  ARCHITECTURE.md revision as one pull request for review; merging that pull request is the
-  owner's acceptance. Applied with it: ARCHITECTURE.md Rev 0.21.
+- **Status:** Accepted by the owner with the merge of the plan's pull request (#146), which
+  carries the plan, this ADR and ARCHITECTURE.md Rev 0.21 together as the owner asked. The
+  owner reviewed the plan on 2026-11-22 and took the recommended answer to each of its
+  questions 1 to 4, and the optional items O1 and O4.
 - **Date:** 2026-11-22
 - **Deciders:** owner (Shubham) / agent (comparison planning thread)
 - **Related decisions:** D-01 (layout), D-03 (standard annotations), D-06 (incremental save),
@@ -98,6 +99,9 @@ Nine decisions, D-58 … D-66. The plan carries the full detail and the intervie
 - PDF Overlay accepts **several files per side as one set**. Text Comparison takes one file per
   side.
 - A document open in its own tab and in a comparison is one document with one undo history.
+- Dropping one document tab on another offers "Compare these two" (optional item O4, accepted).
+- While M12 is being built, Compare is switched on in the beta site, previews and tests with a
+  "Preview" tag, and **off in release builds** until the acceptance task.
 - **Permissions per action, per file** (rule 9): viewing a comparison is viewing; commenting
   needs that file's commenting permission; copying text from the list, exporting and saving a
   comparison file need the content-copying permission of both files.
@@ -107,7 +111,7 @@ Nine decisions, D-58 … D-66. The plan carries the full detail and the intervie
 - On screen each revision is rendered **at the current zoom, without comments**, turned to
   grey, tinted, and the two combined with **Multiply**: the same is black. Default old red, new
   green; presets red/blue and magenta/green; custom colours with a dark-overlap warning.
-- Controls: show/hide each side, balance, Fade unchanged, Thicken thin lines, Blink.
+- Controls: show/hide each side, balance, Fade unchanged, Thicken thin lines, Blink (hold X).
 - Comments of both documents are drawn on top in their own colours, switchable per document;
   **Hide check highlights** hides Highlight comments and anything under 70 % opacity.
 - Each file is shown with its own default layer visibility; layer switches per document.
@@ -130,6 +134,8 @@ Nine decisions, D-58 … D-66. The plan carries the full detail and the intervie
   demand.**
 - **Manual alignment on any sheet:** 1 to 3 point pairs with snapping and a magnifier, numeric
   fine-tune, and Apply to (this sheet, all, all low-confidence).
+- **Compare an area** (optional item O1, accepted): a rectangle on each revision, on the same or
+  different sheets, overlaid through an alignment of their own, for a detail that moved.
 
 ### D-61 — Differences on drawings
 
@@ -138,7 +144,7 @@ Nine decisions, D-58 … D-66. The plan carries the full detail and the intervie
 - Entries are **text-aware** where the pages have text ("Ø120 → Ø128"; text, geometry or both).
 - Sensitivity and minimum size apply live; **ignore zones** per sheet or for all sheets, saved
   as named sets.
-- A list with filters, search, next/previous and a checked tick; a sheet list with unchanged
+- A list with filters, search, next/previous (F8, Shift+F8) and a checked tick; a sheet list with unchanged
   sheets and percent changed; view-only outlines on the overlay.
 - **Make cloud comments** on request; never automatic.
 
@@ -152,7 +158,8 @@ Nine decisions, D-58 … D-66. The plan carries the full detail and the intervie
 - **Aligned sync** of the windows (lock on by default) and a **linked pointer**.
 - **Aligned copy** of comments between revisions, and **close-out tracking** of the old
   revision's comments (Addressed, Carried over, Changed differently) with a check highlight;
-  the states are carried by the existing comment status so they reach the CRS export.
+  each sets the standard status **Completed** on the old comment and adds a reply naming the
+  outcome and the new file, so both reach the CRS export and other viewers understand them.
 
 ### D-63 — Text comparison: what is compared
 
@@ -250,11 +257,13 @@ a folder picker; tablet and phone layouts.
   vector display mode) are labelled as such in the UI and each can be switched off.
 - M12 is large: 23 tasks, five of them spikes, with ADR-032 as a second owner gate before any
   feature code.
-- Follow-ups outside M12: the optional items O1 … O5 in the plan.
+- Optional items O1 (compare an area) and O4 (drop a tab on a tab) are part of M12; O2, O3
+  and O5 in the plan are follow-ups outside it.
 
 ## Evidence
 
-- The owner's interview answers Q1 – Q43 (2026-11-22), cited throughout the plan.
+- The owner's interview answers Q1 – Q43 (2026-11-22), cited throughout the plan, and the
+  owner's answers to the plan's five questions (2026-11-22).
 - Code read on `main` at 92f302f: `src/engine/workApi.ts` (jobs `snapGeometry`, `pageGeometry`,
   `textSlices`, `detectTables`, `ocrRaster`, `copyComments`, `listLayers`, `listAttachments`),
   `src/model/snapIndex.ts`, `src/features/view/DocumentHost.tsx` (one host, one active
