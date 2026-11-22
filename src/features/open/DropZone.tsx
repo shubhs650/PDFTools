@@ -16,7 +16,11 @@ import { openOrConvert } from '../pages/images';
 export function DropZone() {
   const { t } = useTranslation();
   const over = useDragOver();
-  const hasDocument = useDocuments((s) => s.order.length > 0);
+  // The drop card over a document; a comparison's input window has drop targets of its
+  // own (M12-08), and the start screen its card.
+  const hasDocument = useDocuments(
+    (s) => s.activeTab !== null && s.docs[s.activeTab] !== undefined,
+  );
 
   useEffect(() => {
     let depth = 0;

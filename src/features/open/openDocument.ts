@@ -3,7 +3,13 @@
 // parses them in the Render worker (rule 1). The Work worker gets its own copy
 // afterwards, read again from the file, so the first page never waits for it.
 // Opening writes nothing to OPFS: recovery starts on the first edit (§4.3).
-import { documentStore, type DocumentSource, type FileFacts } from '../../app/store/documentStore';
+import {
+  documentStore,
+  inComparison,
+  type DocumentSource,
+  type FileFacts,
+} from '../../app/store/documentStore';
+import { documentsOf } from '../compare/model';
 import { storageClient } from '../../engine/storageClient';
 import type { OpenedFile } from '../../storage/fileAccess';
 import {
@@ -42,6 +48,15 @@ export interface RecoveredOpen extends OpenedFile {
   recordRecent: false;
 }
 
+export interface OpenOptions {
+  /**
+   * False: the document opens without a tab of its own and nothing is selected (a file
+   * dropped or picked into a comparison, M12-08, D-58). A file that is open already is
+   * then used as it is.
+   */
+  tab?: boolean;
+}
+
 /**
  * Opens files one after another, each in its own tab, in the given order.
  * `source`: where they came from, for the tab's hover card (M11-03).
@@ -49,9 +64,10 @@ export interface RecoveredOpen extends OpenedFile {
 export async function openFiles(
   files: readonly (OpenedFile | RecoveredOpen)[],
   source: DocumentSource = 'picked',
+  options: OpenOptions = {},
 ): Promise<(string | undefined)[]> {
   const ids: (string | undefined)[] = [];
-  for (const f of files) ids.push(await openOne(f, source));
+  for (const f of files) ids.push(await openOne(f, source, options.tab !== false));
   return ids;
 }
 
@@ -75,6 +91,7 @@ export function fileFacts(file: File, source: DocumentSource): FileFacts {
 async function openOne(
   req: OpenedFile | RecoveredOpen,
   source: DocumentSource,
+  tab: boolean,
 ): Promise<string | undefined> {
   const { file, handle } = req;
   const recovered = 'recordRecent' in req;
@@ -88,14 +105,18 @@ async function openOne(
     const dup = await findDuplicate({ ...(handle ? { handle } : {}), fingerprint });
     if (dup) {
       advance(job, { type: 'duplicate', docId: dup });
-      documentStore.getState().activate(dup);
+      if (!tab) return dup; // one document in its tab and in a comparison (D-58)
+      // Open in a comparison only: it gets its tab back (showTab selects it).
+      documentStore.getState().showTab(dup);
       // A copy under another name: say why no new tab opened (pre-release audit bug 13).
       const openName = documentStore.getState().docs[dup]?.meta.name;
       if (openName && openName !== file.name)
         showStatusToast(dup, t('open.alreadyOpen', { name: openName }), true);
       return dup;
     }
-    if (documentStore.getState().order.length >= MAX_DOCUMENTS) throw new OpenError('too-many');
+    // Documents in comparisons without a tab of their own count too (the engine's limit).
+    if (Object.keys(documentStore.getState().docs).length >= MAX_DOCUMENTS)
+      throw new OpenError('too-many');
     header = hasPdfHeader(new Uint8Array(await file.slice(0, HEADER_WINDOW).arrayBuffer()));
     if (!header) throw new OpenError('not-pdf');
     advance(job, { type: 'read' });
@@ -146,7 +167,7 @@ async function openOne(
       ...(recovered && req.pendingPrefix ? { pendingPrefix: req.pendingPrefix } : {}),
     });
     trackView(id, fingerprint, await lastView, info.pageCount);
-    documentStore.getState().open({
+    const meta = {
       id,
       name: file.name,
       pageCount: info.pageCount,
@@ -156,7 +177,9 @@ async function openOne(
       signatureCount: info.signatureCount,
       formType: info.formType,
       ...fileFacts(file, source),
-    });
+    };
+    if (tab) documentStore.getState().open(meta);
+    else documentStore.getState().openWithoutTab(meta);
     advance(job, { type: 'opened', docId: id });
     void openInWorkWorker(id, file, password);
     if (recovered) return id;
@@ -208,8 +231,9 @@ export async function closeDocument(docId: string): Promise<void> {
   stopIndexing(docId);
   const { docs, order } = documentStore.getState();
   const doc = docs[docId];
-  // Reopen Closed Tab (M11-05) reopens it from its file, where it has one.
-  if (doc)
+  // Reopen Closed Tab (M11-05) reopens it from its file, where it has one (a document
+  // that was only in a comparison had no tab to reopen).
+  if (doc && order.includes(docId))
     rememberClosed({
       name: doc.meta.name,
       handle: sources.get(docId)?.handle,
@@ -239,13 +263,26 @@ export function requestClose(docId: string): void {
  * Close (Save, Don't Save, Cancel). Cancel keeps that one and every one after it open.
  */
 export function requestCloseMany(ids: readonly string[]): void {
-  const { docs } = documentStore.getState();
   const unsaved: string[] = [];
-  for (const id of ids) {
-    const doc = docs[id];
-    if (!doc) continue;
+  const close = (id: string): void => {
+    const doc = documentStore.getState().docs[id];
+    if (!doc) return;
     if (doc.dirty) unsaved.push(id);
     else void closeDocument(id);
+  };
+  for (const id of ids) {
+    const s = documentStore.getState();
+    const comparison = s.comparisons[id];
+    if (comparison) {
+      // A comparison tab (M12-08, D-58): its documents close with it, unless a tab of
+      // their own or another comparison still shows them.
+      s.closeComparison(id);
+      for (const docId of documentsOf(comparison)) if (!stillShown(docId)) close(docId);
+      continue;
+    }
+    // A document a comparison shows loses only its tab: it stays one open document.
+    if (s.docs[id] && inComparison(s, id)) s.removeTab(id);
+    else close(id);
   }
   if (unsaved.length === 0) return;
   const { closePrompt, closeQueue } = openStore.getState();
@@ -282,7 +319,30 @@ export function nextClosePrompt(): void {
   }
 }
 
-/** Cancel on the prompt (or a save that failed): nothing more closes. */
+/** Whether a tab of its own or a comparison shows the document (D-58). */
+export function stillShown(docId: string): boolean {
+  const s = documentStore.getState();
+  return s.order.includes(docId) || inComparison(s, docId);
+}
+
+/**
+ * Closes the documents in `docIds` that nothing shows any more (no tab of their own and
+ * no comparison), with the unsaved-changes prompt (M12-08).
+ */
+export function releaseDocuments(docIds: readonly string[]): void {
+  const s = documentStore.getState();
+  const gone = docIds.filter((id) => s.docs[id] !== undefined && !stillShown(id));
+  if (gone.length > 0) requestCloseMany(gone);
+}
+
+/**
+ * Cancel on the prompt (or a save that failed): nothing more closes. A document that
+ * was being closed because nothing showed it any more gets a tab, so it stays reachable.
+ */
 export function cancelClosePrompts(): void {
+  const { closePrompt, closeQueue } = openStore.getState();
   openStore.setState({ closePrompt: null, closeQueue: [] });
+  for (const id of [closePrompt, ...closeQueue])
+    if (id !== null && documentStore.getState().docs[id] && !stillShown(id))
+      documentStore.getState().showTab(id);
 }

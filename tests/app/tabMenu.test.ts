@@ -48,6 +48,7 @@ describe('tab menu model (M11-05, D-50)', () => {
     expect(ids(true)).toEqual([
       'file.save',
       'file.saveAs',
+      'tab.compareWith', // M12-08 (D-58), behind the Compare build switch
       'tab.close',
       'tab.closeOthers',
       'tab.closeRight',

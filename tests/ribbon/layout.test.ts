@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { COMMANDS, RIBBON_TABS } from '../../src/app/commands';
+import { COMMANDS, PREVIEWS_ON, RIBBON_TABS, availableIn } from '../../src/app/commands';
 import {
   choosePlan,
   commandsAtStep,
@@ -23,6 +23,7 @@ describe('ribbon layout from the command table (§8, ADR-001 B6, M1-Q2)', () => 
       'measure',
       'organize',
       'convert',
+      'compare', // M12-08 (D-58), behind the Compare build switch
       'protect',
       'help',
     ]);
@@ -402,5 +403,28 @@ describe('adaptive steps (D-36)', () => {
       for (let p = 1; p < plans.length; p++)
         expect(plans[p]?.filter((s, i) => s !== plans[p - 1]?.[i])).toHaveLength(1);
     }
+  });
+});
+
+describe('the Compare build switch (M12-08, D-58, plan question 3)', () => {
+  it('shows the Compare tab with PDF Overlay and Text Comparison where it is on', () => {
+    const on = ribbonLayout(COMMANDS, (c) => availableIn(c, true));
+    const compare = on.tabs.find((t) => t.tab === 'compare');
+    expect(compare?.groups.flatMap((g) => g.commands.map((c) => c.id))).toEqual([
+      'compare.overlay',
+      'compare.text',
+    ]);
+  });
+
+  it('leaves every Compare command out of a release build', () => {
+    const off = ribbonLayout(COMMANDS, (c) => availableIn(c, false));
+    expect(off.tabs.map((t) => t.tab)).not.toContain('compare');
+    const preview = COMMANDS.filter((c) => c.preview).map((c) => c.id);
+    expect(preview).toEqual(['compare.overlay', 'compare.text', 'tab.compareWith']);
+    expect(COMMANDS.filter((c) => availableIn(c, false) && c.preview)).toEqual([]);
+  });
+
+  it('is on unless the build says VITE_COMPARE=off (tests and the beta build)', () => {
+    expect(PREVIEWS_ON).toBe(true);
   });
 });

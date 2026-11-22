@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import {
   MAX_SESSION_FILES,
+  comparisonsOf,
   parseSession,
   parseStartup,
   sameSession,
@@ -184,5 +185,82 @@ describe('withoutRecoverable', () => {
     expect(rest.entries.map((e) => e.name)).toEqual(['a.pdf', 'c.pdf']);
     expect(rest.active).toBe(1);
     expect(withoutRecoverable(record, new Set(['fc'])).active).toBe(-1);
+  });
+});
+
+describe('comparisons in the record (M12-08, D-58)', () => {
+  const h = (name: string) => ({ kind: 'file', name }) as unknown as FileSystemFileHandle;
+  const doc = (name: string, range = '', onDisk = true) => ({
+    id: name,
+    name,
+    source: 'dropped' as const,
+    ...(onDisk ? { handle: h(name), fp: `fp-${name}` } : {}),
+    range,
+  });
+
+  it('keeps the files that can be reopened, and drops a comparison with none', () => {
+    const { comparisons, activeComparison } = comparisonsOf([
+      {
+        type: 'overlay',
+        index: 2,
+        a: [doc('a.pdf', '1-2')],
+        b: [doc('new.pdf', '', false)],
+        active: false,
+      },
+      { type: 'text', index: 3, a: [doc('x.pdf', '', false)], b: [], active: true },
+      { type: 'text', index: 4, a: [doc('c.pdf')], b: [doc('d.pdf')], active: true },
+    ]);
+    expect(comparisons).toHaveLength(2);
+    expect(comparisons[0]).toMatchObject({
+      type: 'overlay',
+      index: 2,
+      a: [{ name: 'a.pdf', range: '1-2' }],
+      b: [],
+    });
+    expect(activeComparison).toBe(1);
+  });
+
+  it('reads back what it wrote, and notices a changed range', () => {
+    const { comparisons, activeComparison } = comparisonsOf([
+      { type: 'text', index: 0, a: [doc('a.pdf', '3')], b: [doc('b.pdf')], active: true },
+    ]);
+    const record = { entries: [], active: -1, comparisons, activeComparison, savedAt: 5 };
+    const back = parseSession(JSON.parse(JSON.stringify(record)));
+    expect(back?.comparisons?.[0]).toMatchObject({ type: 'text', index: 0, a: [{ range: '3' }] });
+    expect(back?.activeComparison).toBe(0);
+    expect(sameSession(record, { ...record, savedAt: 9 })).toBe(true);
+    const changed = {
+      ...record,
+      comparisons: comparisons.map((c) => ({ ...c, a: c.a.map((f) => ({ ...f, range: '4' })) })),
+    };
+    expect(sameSession(record, changed)).toBe(false);
+  });
+
+  it('ignores what is not a comparison, and keeps one file per side of a text comparison', () => {
+    const file = { name: 'a.pdf', handle: { kind: 'file' }, fp: 'f', source: 'picked', range: '' };
+    const back = parseSession({
+      entries: [],
+      active: -1,
+      comparisons: [
+        { type: 'nope', a: [file] },
+        { type: 'text', index: -3, a: [file, file], b: 'x' },
+      ],
+      activeComparison: 7,
+    });
+    expect(back?.comparisons).toEqual([
+      { type: 'text', index: 0, a: [{ ...file, source: 'picked' }], b: [] },
+    ]);
+    expect(back?.activeComparison).toBe(-1);
+  });
+
+  it('leaves out a comparison file that has a recovery snapshot', () => {
+    const { comparisons } = comparisonsOf([
+      { type: 'overlay', index: 0, a: [doc('a.pdf')], b: [doc('b.pdf')], active: false },
+    ]);
+    const rest = withoutRecoverable(
+      { entries: [], active: -1, comparisons, savedAt: 0 },
+      new Set(['fp-b.pdf']),
+    );
+    expect(rest.comparisons?.[0]?.b).toEqual([]);
   });
 });

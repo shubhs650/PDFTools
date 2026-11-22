@@ -10,13 +10,17 @@ import { capability, tileCache, useHost } from '../view/host';
 import type { DocumentManagerCapability } from '@embedpdf/plugin-document-manager';
 import { SessionPrompt } from '../session/SessionPrompt';
 import { StartScreen } from './StartScreen';
+import { CompareTab } from '../compare/CompareTab';
 
 /**
- * The document panel's content: the active document or the start screen. Keeps EmbedPDF's active document in step with
- * our tab state, which is the source of truth.
+ * The document panel's content: the selected tab (a document, or a comparison, M12-08)
+ * or the start screen. Keeps EmbedPDF's active document in step with our tab state,
+ * which is the source of truth.
  */
 export function DocumentArea() {
-  const activeId = useDocuments((s) => s.activeId);
+  const activeTab = useDocuments((s) => s.activeTab);
+  const isDocument = useDocuments((s) => s.activeTab !== null && s.docs[s.activeTab] !== undefined);
+  const activeId = isDocument ? activeTab : null;
   const registry = useHost((s) => s.registry);
 
   useEffect(() => {
@@ -34,7 +38,12 @@ export function DocumentArea() {
 
   return (
     <DocumentHost>
-      {activeId ? (
+      {activeTab !== null && !isDocument ? (
+        <div className="document-stack">
+          <SessionPrompt variant="bar" />
+          <CompareTab id={activeTab} />
+        </div>
+      ) : activeId ? (
         <div className="document-stack">
           <SessionPrompt variant="bar" />
           <PermissionBanner documentId={activeId} />

@@ -86,6 +86,10 @@ jobs:
         run: npm run licenses
       - name: Build
         run: npm run build
+        env:
+          # The Compare build switch (M12-08, M12 plan question 3): PDF comparison stays out
+          # of release builds until M12-23 turns it on. The beta site and previews have it.
+          VITE_COMPARE: 'off'
       - name: No test hook or other forbidden strings in the build (M1-02)
         run: npm run check:dist
       - name: Static asset limits and root files (D-11)

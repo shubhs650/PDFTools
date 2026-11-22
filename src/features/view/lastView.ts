@@ -105,7 +105,8 @@ export async function restorePending(docId: string): Promise<void> {
   }
 }
 
-const isShown = (docId: string): boolean => documentStore.getState().activeId === docId;
+/** Shown in its own tab (a comparison's windows keep their own place, S27 change 7). */
+const isShown = (docId: string): boolean => documentStore.getState().activeTab === docId;
 
 const pause = (ms: number): Promise<void> =>
   new Promise((resolve) => {

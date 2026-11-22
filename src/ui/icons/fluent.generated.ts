@@ -61,6 +61,7 @@ import { DocumentBorderPrint20Regular, DocumentBorderPrint32Regular } from '@flu
 import { DocumentBulletList20Regular, DocumentBulletList24Regular } from '@fluentui/react-icons/svg/document-bullet-list';
 import { DocumentDismiss20Regular, DocumentDismiss24Regular } from '@fluentui/react-icons/svg/document-dismiss';
 import { DocumentEdit20Regular, DocumentEdit24Regular } from '@fluentui/react-icons/svg/document-edit';
+import { DocumentLandscapeSplit20Regular, DocumentLandscapeSplit24Regular } from '@fluentui/react-icons/svg/document-landscape-split';
 import { DocumentMultiple20Regular, DocumentMultiple24Regular } from '@fluentui/react-icons/svg/document-multiple';
 import { DocumentOnePage20Filled, DocumentOnePage20Regular } from '@fluentui/react-icons/svg/document-one-page';
 import { DocumentOnePageAdd20Regular, DocumentOnePageAdd24Regular } from '@fluentui/react-icons/svg/document-one-page-add';
@@ -134,6 +135,7 @@ import { Signature20Filled, Signature20Regular, Signature32Regular } from '@flue
 import { SlideMultiple20Filled, SlideMultiple20Regular } from '@fluentui/react-icons/svg/slide-multiple';
 import { Square20Filled, Square20Regular } from '@fluentui/react-icons/svg/square';
 import { SquareHint20Filled, SquareHint20Regular } from '@fluentui/react-icons/svg/square-hint';
+import { SquareMultiple20Regular, SquareMultiple32Regular } from '@fluentui/react-icons/svg/square-multiple';
 import { StackVertical20Filled, StackVertical20Regular } from '@fluentui/react-icons/svg/stack-vertical';
 import { Status20Regular } from '@fluentui/react-icons/svg/status';
 import { TabDesktopArrowClockwise20Regular } from '@fluentui/react-icons/svg/tab-desktop-arrow-clockwise';
@@ -296,6 +298,8 @@ export const FLUENT_GLYPHS: Record<string, FluentGlyphs> = {
   'convert.reviewExtract': { regular: { small: TableEdit20Regular, large: TableEdit28Regular, largeNative: 28 } },
   'convert.tableTemplates': { regular: { small: TableSettings20Regular, large: TableSettings28Regular, largeNative: 28 } },
   'convert.ocr': { regular: { small: ScanText20Regular, large: ScanText32Regular, largeNative: 32 } },
+  'compare.overlay': { regular: { small: SquareMultiple20Regular, large: SquareMultiple32Regular, largeNative: 32 } },
+  'compare.text': { regular: { small: DocumentLandscapeSplit20Regular, large: DocumentLandscapeSplit24Regular, largeNative: 24 } },
   'protect.markRedaction': { regular: { small: TextStrikethrough20Regular, large: TextStrikethrough24Regular, largeNative: 24 }, filled: { small: TextStrikethrough20Filled, large: TextStrikethrough24Filled, largeNative: 24 } },
   'protect.markRedactionArea': { regular: { small: RectangleLandscape20Regular, large: RectangleLandscape32Regular, largeNative: 32 }, filled: { small: RectangleLandscape20Filled, large: RectangleLandscape32Filled, largeNative: 32 } },
   'protect.applyRedactions': { regular: { small: CheckmarkCircle20Regular, large: CheckmarkCircle32Regular, largeNative: 32 } },
@@ -371,6 +375,7 @@ export const FLUENT_GLYPHS: Record<string, FluentGlyphs> = {
   'tab.closeOthers': { regular: { small: TabDesktopMultiple20Regular } },
   'tab.closeRight': { regular: { small: DismissSquare20Regular } },
   'tab.closeAll': { regular: { small: DismissSquareMultiple20Regular } },
+  'tab.compareWith': { regular: { small: SquareMultiple20Regular } },
   'tab.reopenClosed': { regular: { small: TabDesktopArrowClockwise20Regular } },
   'tab.moveLeft': { regular: { small: ArrowLeft20Regular } },
   'tab.moveRight': { regular: { small: ArrowRight20Regular } },

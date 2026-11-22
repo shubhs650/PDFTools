@@ -70,12 +70,12 @@ export function reorderTabs(next: readonly string[]): boolean {
   const same =
     next.length === s.order.length &&
     next.every((id, i) => id === s.order[i]) &&
-    next.every((id) => s.docs[id]);
+    next.every((id) => s.order.includes(id));
   if (same || next.length !== s.order.length) return false;
   const commit = (): void => {
     documentStore.getState().reorder(next);
   };
-  const keep = s.activeId ?? next[0];
+  const keep = s.activeTab ?? next[0];
   if (animator && keep) animator(commit, keep);
   else commit();
   tellTabs({ kind: 'sorted' });
@@ -84,7 +84,7 @@ export function reorderTabs(next: readonly string[]): boolean {
 
 /** Moves the active tab one place left (-1) or right (+1). */
 export function moveActiveTab(step: -1 | 1): boolean {
-  const { order, activeId } = documentStore.getState();
-  if (!activeId) return false;
-  return moveTab(activeId, order.indexOf(activeId) + step);
+  const { order, activeTab } = documentStore.getState();
+  if (!activeTab) return false;
+  return moveTab(activeTab, order.indexOf(activeTab) + step);
 }

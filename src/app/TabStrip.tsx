@@ -23,7 +23,9 @@ import { documentStore, useDocuments } from './store/documentStore';
 import { TabCard } from './TabCard';
 import { tabCardText } from './tabCardText';
 import { canRenameFile, tabStateFor } from './tabCommands';
-import { isTabCommand, STRIP_MENU, tabMenuEntries } from './tabMenu';
+import { COMPARISON_TAB_MENU, isTabCommand, STRIP_MENU, tabMenuEntries } from './tabMenu';
+import { comparisonTitle, typeLabel } from '../features/compare/title';
+import { CommandIcon } from '../ui/icons/CommandIcon';
 import { beginTabPress, isTabDragging, type TabDragHost } from './tabDragSession';
 import { moveTab, onTabNews, setTabAnimator } from './tabMove';
 
@@ -80,8 +82,15 @@ function openMenuOn(el: HTMLElement): void {
 export function TabStrip() {
   const { t } = useTranslation();
   const order = useDocuments((s) => s.order);
-  const activeId = useDocuments((s) => s.activeId);
+  // The tab shown (a document's or a comparison's, M12-08).
+  const activeId = useDocuments((s) => s.activeTab);
   const docs = useDocuments((s) => s.docs);
+  const comparisons = useDocuments((s) => s.comparisons);
+  /** A tab's name: the file's, or the comparison's ("RevA ↔ RevB", M12-08). */
+  const nameOf = (id: string): string => {
+    const c = comparisons[id];
+    return c ? comparisonTitle(c, (d) => docs[d]?.meta.name) : (docs[id]?.meta.name ?? '');
+  };
   const jobs = useOpen((s) => s.jobs);
   const refs = useRef(new Map<string, HTMLButtonElement>());
   const closeRefs = useRef(new Map<string, HTMLSpanElement>());
@@ -297,8 +306,12 @@ export function TabStrip() {
     if (e.pointerType === 'touch' && (e.target as HTMLElement).closest('[data-tab-id]'))
       e.preventDefault();
   };
-  const menuOn = menuTab !== null && docs[menuTab] ? menuTab : null;
-  const menuEntries = menuOn ? tabMenuEntries(canRenameFile(menuOn)) : STRIP_MENU;
+  const menuOn = menuTab !== null && (docs[menuTab] || comparisons[menuTab]) ? menuTab : null;
+  const menuEntries = menuOn
+    ? comparisons[menuOn]
+      ? COMPARISON_TAB_MENU
+      : tabMenuEntries(canRenameFile(menuOn))
+    : STRIP_MENU;
   const menuState = (id: string) => (isTabCommand(id) ? tabStateFor(id, menuOn) : undefined);
 
   const openKeys = shortcutText('file.open', t);
@@ -306,9 +319,7 @@ export function TabStrip() {
   return (
     <ContextMenu
       label={
-        menuOn
-          ? t('frame.menu.tabLabel', { name: docs[menuOn]?.meta.name ?? '' })
-          : t('frame.menu.stripLabel')
+        menuOn ? t('frame.menu.tabLabel', { name: nameOf(menuOn) }) : t('frame.menu.stripLabel')
       }
       entries={menuEntries}
       {...(menuOn ? { args: { tab: menuOn } } : {})}
@@ -344,14 +355,18 @@ export function TabStrip() {
           <div role="tablist" aria-label={t('frame.tabs')} className="tab-tablist">
             {order.map((id, i) => {
               const d = docs[id];
-              if (!d) return null;
+              const comparison = comparisons[id];
+              if (!d && !comparison) return null;
+              const name = nameOf(id);
+              const dirty = d?.dirty === true;
               const active = id === activeId;
               // The tab whose menu is open keeps the hover tint, so it is clear which it is for.
               const hovered = id === hoverId || (menuOpen && id === menuTab);
               return (
                 <RadixTooltip.Root
                   key={id}
-                  open={shownCard === id && dragId === null}
+                  // A comparison tab has no file, so no hover card (its name says it all).
+                  open={shownCard === id && dragId === null && d !== undefined}
                   delayDuration={CARD_HOVER_DELAY_MS}
                   onOpenChange={(open) => {
                     if (open && !isTabDragging()) setCardId(id);
@@ -368,11 +383,10 @@ export function TabStrip() {
                       role="tab"
                       id={`tab-${id}`}
                       data-tab-id={id}
+                      data-tab-kind={comparison ? 'comparison' : 'document'}
                       aria-selected={active}
                       aria-controls="document-panel"
-                      aria-label={
-                        d.dirty ? t('frame.dirtyTab', { name: d.meta.name }) : d.meta.name
-                      }
+                      aria-label={dirty ? t('frame.dirtyTab', { name }) : name}
                       aria-describedby={`tab-desc-${id}`}
                       tabIndex={active ? 0 : -1}
                       className={`tab-button ui-focusable${active ? ' tab--active' : ''}${
@@ -404,29 +418,37 @@ export function TabStrip() {
                         setHoverId((cur) => (cur === id ? null : cur));
                       }}
                     >
-                      {d.dirty ? <span className="tab-dirty" aria-hidden="true" /> : null}
-                      <span className="tab-name">{d.meta.name}</span>
+                      {dirty ? <span className="tab-dirty" aria-hidden="true" /> : null}
+                      {comparison ? (
+                        <span className="tab-icon" aria-hidden="true">
+                          <CommandIcon
+                            id={comparison.type === 'overlay' ? 'compare.overlay' : 'compare.text'}
+                          />
+                        </span>
+                      ) : null}
+                      <span className="tab-name">{name}</span>
                     </button>
                   </RadixTooltip.Trigger>
-                  <RadixTooltip.Portal container={stripEl}>
-                    <RadixTooltip.Content
-                      className="tab-card"
-                      side="bottom"
-                      align="start"
-                      sideOffset={4}
-                      collisionPadding={8}
-                      aria-label={d.meta.name}
-                    >
-                      <TabCard docId={id} />
-                    </RadixTooltip.Content>
-                  </RadixTooltip.Portal>
+                  {d ? (
+                    <RadixTooltip.Portal container={stripEl}>
+                      <RadixTooltip.Content
+                        className="tab-card"
+                        side="bottom"
+                        align="start"
+                        sideOffset={4}
+                        collisionPadding={8}
+                        aria-label={name}
+                      >
+                        <TabCard docId={id} />
+                      </RadixTooltip.Content>
+                    </RadixTooltip.Portal>
+                  ) : null}
                 </RadixTooltip.Root>
               );
             })}
           </div>
           {order.map((id, i) => {
-            const d = docs[id];
-            if (!d) return null;
+            if (!docs[id] && !comparisons[id]) return null;
             const active = id === activeId;
             return (
               // The ×'s part of the tab drags and middle-click-closes like the tab itself;
@@ -458,7 +480,7 @@ export function TabStrip() {
                 }}
               >
                 <IconButton
-                  label={t('frame.closeTab', { name: d.meta.name })}
+                  label={t('frame.closeTab', { name: nameOf(id) })}
                   icon={<Dismiss16Regular />}
                   size="small"
                   tooltip={false}
@@ -489,10 +511,15 @@ export function TabStrip() {
         <div hidden>
           {order.map((id) => {
             const d = docs[id];
-            if (!d) return null;
+            const comparison = comparisons[id];
+            if (!d && !comparison) return null;
             return (
               <span key={id} id={`tab-desc-${id}`}>
-                {tabCardText(d, t, format).description}
+                {d
+                  ? tabCardText(d, t, format).description
+                  : comparison
+                    ? t('compare.tab.description', { type: typeLabel(comparison.type) })
+                    : ''}
               </span>
             );
           })}
@@ -516,7 +543,7 @@ export function TabStrip() {
             }
             entries={order.map((id) => ({
               id,
-              label: docs[id]?.meta.name ?? id,
+              label: nameOf(id) || id,
               onSelect: () => {
                 documentStore.getState().activate(id);
               },

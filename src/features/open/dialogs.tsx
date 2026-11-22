@@ -22,7 +22,8 @@ export function CloseDocumentDialog() {
 
   const save = async (): Promise<void> => {
     if (!id) return;
-    documentStore.getState().activate(id);
+    // Save acts on the active document; one in a comparison has no tab to select.
+    documentStore.getState().focusDocument(id);
     await runCommand(SAVE);
     // A save that did not finish (cancelled, failed) stops the closing there.
     if (documentStore.getState().docs[id]?.dirty !== false) {

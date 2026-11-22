@@ -78,6 +78,7 @@ import { AppFrame } from './AppFrame';
 import { Backstage } from './backstage/Backstage';
 import { registerBuiltinCommands } from './commands/builtins';
 import { registerTabCommands } from './tabCommands';
+import { registerCompareCommands } from '../features/compare/commands';
 import { RenameFileDialog } from './RenameFileDialog';
 import { registerCommand } from './commands/dispatch';
 import { BOUNDARY } from './diagnostics';
@@ -110,6 +111,7 @@ export function App() {
   const [backstage, setBackstage] = useState<{ section?: string } | null>(null);
   useEffect(() => registerBuiltinCommands(), []);
   useEffect(() => registerTabCommands(), []);
+  useEffect(() => registerCompareCommands(), []);
   // A side pane shown, hidden or resized keeps the document's place (M11-10).
   useEffect(() => followPanes(), []);
   useEffect(

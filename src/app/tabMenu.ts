@@ -4,6 +4,8 @@
 import { msg } from '../i18n';
 import type { ContextMenuEntry } from '../ui/components/contextMenuModel';
 import type { CommandState } from './commands/dispatch';
+import type { Comparison } from '../features/compare/model';
+import { isAvailable, COMMANDS } from './commands';
 import type { DocumentSlice } from './store/documentStore';
 
 const sep = (key: string): ContextMenuEntry => ({ kind: 'separator', key });
@@ -18,6 +20,8 @@ export function tabMenuEntries(canRename: boolean): ContextMenuEntry[] {
     cmd('file.save'),
     cmd('file.saveAs'),
     sep('save'),
+    // Compare with… (M12-08, D-58), behind the Compare build switch.
+    ...(compareShown() ? [cmd('tab.compareWith'), sep('compare')] : []),
     cmd('tab.close'),
     cmd('tab.closeOthers'),
     cmd('tab.closeRight'),
@@ -35,6 +39,23 @@ export function tabMenuEntries(canRename: boolean): ContextMenuEntry[] {
     cmd('file.properties'),
   ];
 }
+
+const compareShown = (): boolean =>
+  COMMANDS.some((c) => c.id === 'tab.compareWith' && isAvailable(c));
+
+/** A comparison tab's menu (M12-08): the tab commands that are not about a file. */
+export const COMPARISON_TAB_MENU: readonly ContextMenuEntry[] = [
+  cmd('tab.close'),
+  cmd('tab.closeOthers'),
+  cmd('tab.closeRight'),
+  cmd('tab.closeAll'),
+  sep('close'),
+  cmd('tab.reopenClosed'),
+  sep('reopen'),
+  cmd('tab.moveLeft'),
+  cmd('tab.moveRight'),
+  cmd('tab.sortByName'),
+];
 
 /** The empty part of the strip (D-50): Open, Create Blank PDF, Reopen Closed Tab, Close All. */
 export const STRIP_MENU: readonly ContextMenuEntry[] = [
@@ -84,6 +105,8 @@ export function sortedByName(
 export interface TabWorld {
   order: readonly string[];
   docs: Readonly<Record<string, DocumentSlice | undefined>>;
+  /** Comparison tabs (M12-08): tabs too, with no file of their own. */
+  comparisons?: Readonly<Record<string, Comparison | undefined>>;
   /** How many closed tabs can be reopened (this session). */
   closedCount: number;
 }
@@ -113,7 +136,8 @@ export function tabCommandState(
   }
   const i = target ? order.indexOf(target) : -1;
   const doc = target ? world.docs[target] : undefined;
-  if (i < 0 || !doc) return off(msg('ribbon.needsDocument'));
+  const comparison = target ? world.comparisons?.[target] : undefined;
+  if (i < 0 || (!doc && !comparison)) return off(msg('ribbon.needsDocument'));
   switch (id) {
     case 'tab.closeOthers':
       return order.length > 1 ? ON : off(msg('frame.menu.oneTab'));
@@ -124,6 +148,7 @@ export function tabCommandState(
     case 'tab.moveRight':
       return i < order.length - 1 ? ON : off(msg('frame.menu.last'));
     case 'tab.rename':
+      if (!doc) return off(msg('ribbon.needsDocument'));
       return doc.save === 'saving' ? off(msg('frame.menu.saving')) : ON;
     default:
       return ON;

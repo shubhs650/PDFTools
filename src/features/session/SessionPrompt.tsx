@@ -1,8 +1,9 @@
 import { History20Regular } from '@fluentui/react-icons/svg/history';
 import { useTranslation } from 'react-i18next';
+import { useShallow } from 'zustand/react/shallow';
 import { format } from '../../i18n';
 import { Button } from '../../ui/components';
-import { dismissWaiting, reopenWaiting, useSession } from './session';
+import { dismissWaiting, reopenWaiting, useSession, waitingNames } from './session';
 
 /** Names listed before "and N more". */
 const LISTED = 4;
@@ -15,10 +16,11 @@ const LISTED = 4;
  */
 export function SessionPrompt({ variant }: { variant: 'card' | 'bar' }) {
   const { t } = useTranslation();
-  const waiting = useSession((s) => s.waiting);
+  // Files of comparisons from last time are listed too (M12-08).
+  const waiting = useSession(useShallow(waitingNames));
   const busy = useSession((s) => s.busy);
   if (waiting.length === 0) return null;
-  const names = waiting.map((e) => e.name);
+  const names = waiting;
   const shown = names.slice(0, LISTED);
   const more = names.length - shown.length;
   const list =
