@@ -1,6 +1,6 @@
 # Triya PDF — Progress
 
-_Last updated: 2026-11-22 (M12-12: the Review layout)_
+_Last updated: 2026-11-22 (M12-19: the text comparison view)_
 
 **Current milestone:** M12 — PDF comparison (PDF overlay for drawings, text comparison for
 documents), version 1.1.0: plan [docs/plan/M12.md](plan/M12.md) and
@@ -29,6 +29,41 @@ answers Q1–Q7; ARCHITECTURE.md Rev 0.12 after [ADR-024](adr/024-freetext-text-
 interop is in the M6 pack (CHECKLIST §M6 R1–R4). Rev 0 (M0–M4) is complete on the agent side.
 
 ## Done
+
+- **M12-19 — the text comparison view (D-64).** A text comparison's result
+  (`src/features/compare/text/`): Document A and Document B side by side as **live windows in
+  continuous scroll** (`DocumentView` with a `sheet` that has no page: never paged by the tab's
+  view mode, a `decor` layer over each page as displayed), the **bands** across a 48 px gap, and
+  the **legend and the list** on the right. **Content sync** (`textLink.ts`, model in
+  `src/model/compare/textView.ts`): the engine's sync points become a monotone curve between the
+  two documents' page stacks (read from the scroll plugin's layout, every page, laid out or not);
+  the window last touched leads and the other centres the matching place inside the leader's
+  scroll event, and takes its zoom; a switch in the head turns it off. An inserted page does not
+  throw the sides out of step (e2e on pair 10). **Marks** (`MarkLayer.tsx`, drawn by the view,
+  never comments, no pointer events): deleted red struck through on A, inserted green
+  underlined on B, replaced amber on both, moved blue on both, a changed figure a blue frame;
+  the entry in use outlined; colours from the standard swatches in the legend. **The list**:
+  one row per change in B's reading order (a move's inner edits after it), drawn only in view
+  (fixed 68 px rows) as a listbox; kinds switched off in the legend, search on Enter (rule 3),
+  the checked tick (Space or the button, Hide checked), next / previous (F8, Shift+F8, wrapping);
+  a click or a step centres the change on both sides (B first, A on the next frame: two jumps in
+  one task were a 109 ms long task on the 500-page pair). **Switches** (Options): leave out
+  headers and footers, report renumbering once, and **header and footer bands drawn by hand**
+  (lines dragged on any page, fields in mm as the keyboard path; Apply runs the comparison
+  again with the bands). **OCR offer** (Q29): scans without text are offered "Read by OCR" in
+  the last OCR languages, for this comparison only; limited-support pages and early results
+  (first pages while the rest is compared) are noted. The run (`textFlow.ts`) is a
+  `CompareSession` with `text: true`, started when the result shows, run again on a new switch,
+  released when the comparison closes; Stop keeps what is found. Guard: in a text comparison
+  the windows turn pages; the view modes and view rotation stay off. **Tests:**
+  `tests/compare/text-view.test.ts` (9: entries, marks, sync curve with a moved paragraph and an
+  inserted page, bands, filters, steps); `e2e/compare-text.spec.ts` (8: pairs 05, 08, 09, 10,
+  comments in both windows, switches and bands, OCR, axe light and dark);
+  `e2e/perf/compare-text.spec.ts` (@smoke: the 500-page pair 17, first result about 17 s and
+  complete about 19 s in the container, scrolling with sync p95 33 ms, no task over 100 ms).
+  **Left to M12-15:** the aligned copy of comments between the two documents and the close-out
+  list, built there once for both comparison types (M12-15 had not started; the windows are
+  ready for it). Presets for the colours: M12-21.
 
 - **M12-12 — the Review layout (D-62, D-59).** An overlay result shows **Overlay only** or
   **Review**: the overlay large on the left, Document A top right and Document B bottom right,
@@ -3616,7 +3651,8 @@ rel="noopener noreferrer">`; the commands `app.home` / `app.reportIssue` open th
   sample packs work in Acrobat Reader and a second desktop editor); ARCHITECTURE.md Rev 0.22.
   M12-07 (the Compare worker and its jobs), M12-08 (the comparison tab and input window), M12-09
   (pairing), M12-10 (automatic alignment), M12-11 (the overlay view; layer switches open),
-  M12-17 (text comparison engine), M12-18 (text structure), M12-12 (the Review layout). Next:
+  M12-17 (text comparison engine), M12-18 (text structure), M12-12 (the Review layout),
+  M12-19 (the text comparison view; aligned copy and close-out for text left to M12-15). Next:
   the remaining tasks in plan order.
 - **Agent (M11):** the 18 tasks in [docs/plan/M11.md](plan/M11.md) "Order of work", one thread
   each. Done: M11-01, M11-10, M11-02 (spike S26), M11-03 (tabs: look, hover card, +), M11-04

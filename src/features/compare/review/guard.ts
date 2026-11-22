@@ -24,6 +24,20 @@ const ONE_SHEET = new Set([
   'view.rotateCcw',
 ]);
 
+/**
+ * A text comparison's windows (M12-19, D-64) scroll through the whole document,
+ * so pages can be turned; the view modes and the view rotation stay out (both
+ * windows are continuous and upright, or the content sync would not hold).
+ */
+const TEXT_WINDOW = new Set([
+  'view.singlePage',
+  'view.continuous',
+  'view.facing',
+  'view.continuousFacing',
+  'view.rotateCw',
+  'view.rotateCcw',
+]);
+
 /** Command families that change pages: not in a comparison window (they would undo the pairing). */
 const PAGES = ['organize.'];
 
@@ -54,7 +68,9 @@ export function compareGuard(id: string): MessageKey | null {
   if (!s.activeTab || !s.comparisons[s.activeTab]) return null;
   const active = s.activeId ? s.docs[s.activeId] : undefined;
   if (!active) return null;
-  if (ONE_SHEET.has(id)) return msg('compare.review.oneSheet');
+  if (s.comparisons[s.activeTab]?.type === 'text') {
+    if (TEXT_WINDOW.has(id)) return msg('compare.text.continuousOnly');
+  } else if (ONE_SHEET.has(id)) return msg('compare.review.oneSheet');
   if (active.meta.role === 'notes') {
     if (NOT_ON_NOTES.has(id) || startsWith(id, NOT_ON_NOTES_FAMILIES))
       return msg('compare.review.notOnNotes');

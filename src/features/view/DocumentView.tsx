@@ -100,11 +100,13 @@ function Page({
   layout,
   hidden,
   content,
+  decor,
 }: {
   documentId: string;
   layout: PageLayout;
   hidden: boolean;
   content?: SheetWindow['content'];
+  decor?: SheetWindow['decor'];
 }) {
   const doc = useDocumentState(documentId);
   const pageObj = doc?.document?.pages[layout.pageIndex];
@@ -188,6 +190,8 @@ function Page({
           </PagePointerProvider>
         </Rotate>
       )}
+      {/* A comparison's own marks (M12-19): over the page as displayed, never comments. */}
+      {hidden || !decor || !frame ? null : decor(layout.pageIndex, frame.scale)}
       {/* Sticky note windows (M7-06): upright over the turned page, above its layers. */}
       {hidden || !frame ? null : (
         <NotePopupLayer documentId={documentId} pageIndex={layout.pageIndex} frame={frame} />
@@ -220,11 +224,18 @@ function currentPages(documentId: string, sheet?: number): number[] {
 
 /**
  * A comparison window (M12-12, D-62, S27): the document shows one page, the
- * sheet's, and never turns the page itself; the sheet list does.
+ * sheet's, and never turns the page itself; the sheet list does. Without
+ * `page`, a text comparison's window (M12-19, D-64): the whole document in
+ * continuous scroll, whatever view mode its own tab uses.
  */
 export interface SheetWindow {
-  /** The page shown (0-based). */
-  page: number;
+  /** The page shown (0-based); none: every page, in continuous scroll. */
+  page?: number;
+  /**
+   * Drawn over each page as displayed (unrotated by the view; the window keeps
+   * no view rotation): the comparison's marks (M12-19). `scale` is CSS px per pt.
+   */
+  decor?: (pageIndex: number, scale: number) => ReactNode;
   /** Draws the page's content instead of the document's own tiles (the overlay window). */
   content?: (pageIndex: number, scale: number) => ReactNode;
   /** The window's accessible name (the document's name otherwise). */
@@ -251,7 +262,8 @@ export function DocumentView({ documentId, sheet }: { documentId: string; sheet?
   const mode = useDocuments((s) => s.docs[documentId]?.view.mode ?? 'continuous');
   const page = useDocuments((s) => s.docs[documentId]?.view.page ?? 0);
   const pageCount = useDocuments((s) => s.docs[documentId]?.meta.pageCount ?? 0);
-  const paged = sheetPage !== undefined || isPaged(mode);
+  // A comparison window is never paged by its tab's view mode (M12-12, M12-19).
+  const paged = sheetPage !== undefined || (!sheet && isPaged(mode));
   const shown = useMemo(() => {
     if (sheetPage !== undefined) return new Set([sheetPage]);
     const spreads = spreadsFor(pageCount, isFacing(mode));
@@ -262,10 +274,11 @@ export function DocumentView({ documentId, sheet }: { documentId: string; sheet?
   const pan = useRef<{ x: number; y: number; id: number } | null>(null);
   // The file's last view (D-53) is put in place once its pages are laid out
   // (in its own tab: a comparison window keeps its own place, S27 change 7).
-  const restoring = useRestoringView(documentId) && sheetPage === undefined;
+  const inWindow = sheet !== undefined;
+  const restoring = useRestoringView(documentId) && !inWindow;
   useEffect(() => {
-    if (registry && sheetPage === undefined) void restorePending(documentId);
-  }, [registry, documentId, sheetPage]);
+    if (registry && !inWindow) void restorePending(documentId);
+  }, [registry, documentId, inWindow]);
 
   // Page and zoom state → the document store (status bar, commands, recovery).
   useEffect(() => {
@@ -396,7 +409,7 @@ export function DocumentView({ documentId, sheet }: { documentId: string; sheet?
     // Paged modes: scroll within the page or spread; past its edge, turn the page.
     const pagedWheel = (e: WheelEvent, vp: HTMLElement): void => {
       const d = documentStore.getState().docs[documentId];
-      if (!d || (sheetPage === undefined && !isPaged(d.view.mode))) return;
+      if (!d || (sheetPage === undefined && (inWindow || !isPaged(d.view.mode)))) return;
       const span = currentSpan(vp, currentPages(documentId, sheetPage));
       if (!span) return;
       e.preventDefault();
@@ -417,7 +430,7 @@ export function DocumentView({ documentId, sheet }: { documentId: string; sheet?
     return () => {
       el.removeEventListener('wheel', onWheel);
     };
-  }, [documentId, sheetPage]);
+  }, [documentId, sheetPage, inWindow]);
 
   // Paged modes: hold scrolling (scrollbar, arrows, Hand) within the page or spread.
   useEffect(() => {
@@ -515,7 +528,7 @@ export function DocumentView({ documentId, sheet }: { documentId: string; sheet?
         className="document-host"
         data-tool={tool}
         data-panning={panning || undefined}
-        data-mode={mode}
+        data-mode={inWindow && sheetPage === undefined ? 'continuous' : mode}
         data-restoring={restoring || undefined}
         data-sheet={sheetPage}
         // The page last clicked: Ctrl+V pastes there while it is in view (M6-02).
@@ -549,6 +562,7 @@ export function DocumentView({ documentId, sheet }: { documentId: string; sheet?
                 layout={layout}
                 hidden={paged && !shown.has(layout.pageIndex)}
                 {...(sheet?.content ? { content: sheet.content } : {})}
+                {...(sheet?.decor ? { decor: sheet.decor } : {})}
               />
             )}
           />
