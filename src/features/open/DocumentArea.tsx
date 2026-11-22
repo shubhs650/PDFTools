@@ -36,27 +36,33 @@ export function DocumentArea() {
     });
   }, [registry]);
 
+  const comparison = activeTab !== null && !isDocument ? activeTab : null;
   return (
-    <DocumentHost>
-      {activeTab !== null && !isDocument ? (
+    <>
+      {/* Outside the engine's host: the host wraps its children once the engine starts
+          (on the first open), which would remount the input window and drop its focus. */}
+      {comparison !== null && (
         <div className="document-stack">
           <SessionPrompt variant="bar" />
-          <CompareTab id={activeTab} />
+          <CompareTab id={comparison} />
         </div>
-      ) : activeId ? (
-        <div className="document-stack">
-          <SessionPrompt variant="bar" />
-          <PermissionBanner documentId={activeId} />
-          <SignatureBanner documentId={activeId} />
-          <XfaBanner documentId={activeId} />
-          <FindBar />
-          <div className="document-stack-view">
-            <DocumentView key={activeId} documentId={activeId} />
-          </div>
-        </div>
-      ) : (
-        <StartScreen />
       )}
-    </DocumentHost>
+      <DocumentHost>
+        {comparison !== null ? null : activeId ? (
+          <div className="document-stack">
+            <SessionPrompt variant="bar" />
+            <PermissionBanner documentId={activeId} />
+            <SignatureBanner documentId={activeId} />
+            <XfaBanner documentId={activeId} />
+            <FindBar />
+            <div className="document-stack-view">
+              <DocumentView key={activeId} documentId={activeId} />
+            </div>
+          </div>
+        ) : (
+          <StartScreen />
+        )}
+      </DocumentHost>
+    </>
   );
 }
