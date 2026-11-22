@@ -67,19 +67,39 @@ const mostCommon = <T>(xs: readonly T[]): T | undefined => {
 };
 
 /**
+ * Header and footer bands drawn by hand (D-63, Q28): the height of each band
+ * from its edge of the page, in points. Everything in a band is a header or
+ * footer, on every page, whether it repeats or not; nothing outside is.
+ */
+export interface HfBands {
+  top: number;
+  bottom: number;
+}
+
+/**
  * The header and footer groups of a document and the layout lines they
- * hold. `rows[p]` are page p's rows; `heights[p]` its height.
+ * hold. `rows[p]` are page p's rows; `heights[p]` its height. With `bands`,
+ * the hand-drawn bands replace the detection.
  */
 export function detectHf(
   rows: readonly (readonly Row[])[],
   heights: readonly number[],
+  bands?: HfBands,
 ): { groups: HfGroup[]; lines: Set<number> } {
   const n = rows.length;
   const lines = new Set<number>();
-  if (n < 2) return { groups: [], lines };
+  if (n < (bands ? 1 : 2)) return { groups: [], lines };
   const cands: { r: Row; band: 'top' | 'bottom'; y: number }[] = [];
   rows.forEach((rs, p) => {
     const h = heights[p] ?? 842;
+    if (bands) {
+      for (const r of rs) {
+        const cy = (r.y0 + r.y1) / 2;
+        if (cy <= bands.top) cands.push({ r, band: 'top', y: r.y0 });
+        else if (cy >= h - bands.bottom) cands.push({ r, band: 'bottom', y: r.y0 - h });
+      }
+      return;
+    }
     // Only the outermost two rows at each edge can be a header or footer.
     const byY = [...rs].sort((a, b) => a.y0 - b.y0);
     const edge = new Set([...byY.slice(0, 2), ...byY.slice(-2)]);
@@ -97,13 +117,13 @@ export function detectHf(
     if (last && prev?.band === c.band && c.y - prev.y <= 4) last.push(c);
     else clusters.push([c]);
   }
-  const enough = Math.max(2, Math.ceil(0.5 * n));
+  const enough = bands ? 1 : Math.max(2, Math.ceil(0.5 * n));
   const groups: HfGroup[] = [];
   for (const cl of clusters) {
     if (new Set(cl.map((c) => c.r.page)).size < enough) continue;
     // The usual text of the group (digits masked), and the members like it.
     const usual = mostCommon(cl.map((c) => mask(c.r.text))) ?? '';
-    const members = cl.filter((c) => dice(mask(c.r.text), usual) >= 0.5);
+    const members = bands ? cl : cl.filter((c) => dice(mask(c.r.text), usual) >= 0.5);
     const pages = new Set(members.map((c) => c.r.page));
     if (pages.size < enough) continue;
     for (const c of members) for (const id of c.r.lines) lines.add(id);

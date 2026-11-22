@@ -484,8 +484,22 @@ export interface WorkApi {
     { docId: string; pageIndex: number },
     { frame: PageFrame; segments: Float32Array }
   >;
-  /** A page's positioned characters in displayed space, typed arrays transferred (S30). */
-  compareText: MethodSpec<{ docId: string; pageIndex: number }, PageText>;
+  /**
+   * A page's positioned characters in displayed space, typed arrays
+   * transferred (S30). With `structure` (a text comparison, M12-18): its
+   * figures, its tables and how much of it pictures cover.
+   */
+  compareText: MethodSpec<{ docId: string; pageIndex: number; structure?: boolean }, PageText>;
+  /**
+   * A scanned page for OCR at compare time (M12-18, D-63, Q29): 8-bit grey at
+   * `dpi` in PDFium's layout of the page, and `turn` from that layout (pt, y
+   * down) to the displayed page. Reading only: the file is not changed. The
+   * raster is transferred.
+   */
+  compareOcrRaster: MethodSpec<
+    { docId: string; pageIndex: number; dpi: number },
+    { width: number; height: number; data: ArrayBuffer; frame: PageFrame; turn: Affine }
+  >;
   /**
    * Rows of a page's analysis raster (S28: ink, page content only), drawn
    * through `place` (this page's displayed space → the frame, pt) into a

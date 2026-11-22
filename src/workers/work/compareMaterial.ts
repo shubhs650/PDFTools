@@ -268,6 +268,25 @@ export function displayedSegments(segs: Float32Array, toDisplay: Affine): Float3
   return out;
 }
 
+/** Room for a font's name (FPDFText_GetFontInfo; longer names are cut, the weight word comes early). */
+const FONT_NAME = 40;
+const BOLD_NAME = /bold|black|heavy|semibold|demi/iu;
+
+/**
+ * Whether a character's font is bold: its weight, or its name for fonts that
+ * give none (the standard 14 fonts report weight 0: "Helvetica-Bold").
+ * `buf` holds at least FONT_NAME bytes.
+ */
+function boldFont(mod: WrappedPdfiumModule, tp: number, i: number, buf: number): boolean {
+  if (rawCall(mod, 'FPDFText_GetFontWeight', tp, i) >= 600) return true;
+  const n = rawCall(mod, 'FPDFText_GetFontInfo', tp, i, buf, FONT_NAME, 0);
+  if (n <= 1) return false;
+  const bytes = heapOf(mod).HEAPU8.subarray(buf, buf + Math.min(n, FONT_NAME) - 1);
+  let name = '';
+  for (const c of bytes) name += String.fromCharCode(c);
+  return BOLD_NAME.test(name);
+}
+
 /** Positioned characters of a loaded page in displayed space (S30's route). */
 export function textOf(mod: WrappedPdfiumModule, page: number, frame: PageFrame): PageText {
   const empty = (): PageText => ({
@@ -282,7 +301,8 @@ export function textOf(mod: WrappedPdfiumModule, page: number, frame: PageFrame)
   const tp = rawCall(mod, 'FPDFText_LoadPage', page);
   if (!tp) return empty();
   const heap = heapOf(mod);
-  const b = heap.wasmExports.malloc(48);
+  // Char box and origin (48 bytes), then a font name (boldFont).
+  const b = heap.wasmExports.malloc(48 + FONT_NAME);
   try {
     const n = Math.max(0, rawCall(mod, 'FPDFText_CountChars', tp));
     const codes = new Uint32Array(n);
@@ -338,7 +358,7 @@ export function textOf(mod: WrappedPdfiumModule, page: number, frame: PageFrame)
           angle: Math.abs(a) < 1e-6 ? 0 : a,
           bits:
             (obj && rawCall(mod, 'FPDFTextObj_GetTextRenderMode', obj) === 3 ? TEXT_INVISIBLE : 0) |
-            (rawCall(mod, 'FPDFText_GetFontWeight', tp, i) >= 600 ? TEXT_BOLD : 0),
+            (boldFont(mod, tp, i, b + 48) ? TEXT_BOLD : 0),
         };
         style.set(obj, st);
       }

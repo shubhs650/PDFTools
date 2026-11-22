@@ -227,3 +227,23 @@ export function percentChange(a: number, b: number): number | undefined {
   if (a === 0) return undefined;
   return ((b - a) / Math.abs(a)) * 100;
 }
+
+/** Typical OCR confusions (S30): two texts the same under these are a "possible OCR error". */
+const OCR_FOLD: [RegExp, string][] = [
+  [/rn/g, 'm'],
+  [/[O0oQD]/g, '0'],
+  [/[Il1|!]/g, '1'],
+  [/[S5$]/g, '5'],
+  [/[B8]/g, '8'],
+  [/[Z2]/g, '2'],
+  [/[G6]/g, '6'],
+  [/vv/g, 'w'],
+  [/cl/g, 'd'],
+];
+
+/** A text with the typical OCR confusions folded together. */
+export function ocrFold(s: string): string {
+  let t = s;
+  for (const [re, to] of OCR_FOLD) t = t.replace(re, to);
+  return t;
+}

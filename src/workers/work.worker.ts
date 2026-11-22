@@ -39,6 +39,7 @@ import { pageBox, renderBand } from './work/print';
 import { readProperties } from './work/properties';
 import { checkSignatures } from './work/signatures';
 import { extractGeometry } from './work/geometry';
+import { mayHoldTables, pageObjects, tablesOf } from './work/compareStructure';
 import { exportCrs } from './work/crs';
 import { buildGrid, DENSE_BYTES, DENSE_SEGMENTS, thin } from '../model/snapIndex';
 import { OxideHost, webLoader } from './work/oxide';
@@ -650,17 +651,60 @@ serve<WorkApi>(self, {
       }
     }),
 
-  compareText: ({ docId, pageIndex }, ctx) =>
+  compareText: ({ docId, pageIndex, structure }, ctx) =>
+    scheduler.run('compare', ctx.signal, async (slice) => {
+      if (!mod) throw new RpcError('not-initialized', 'The work worker is not initialized');
+      const m = mod;
+      const { doc } = await docs.get(docId);
+      const ptr = docPtrOf(need(), doc.id);
+      try {
+        let paths = 0;
+        const text = onComparePage(doc.id, pageIndex, doc.pageCount, (page) => {
+          const frame = plainFrame(frameOf(m, ptr, pageIndex, page));
+          const t = textOf(m, page, frame);
+          if (structure) {
+            // A text comparison (M12-18): its pictures, then (below) its tables.
+            const o = pageObjects(m, page, frame);
+            paths = o.paths;
+            t.structure = { imageCover: o.imageCover, figures: o.figures, tables: [] };
+          }
+          return t;
+        });
+        if (text.structure && mayHoldTables(text, paths)) {
+          const segs =
+            geometry.get(docId)?.get(pageIndex) ??
+            (await extractGeometry(m, ptr, pageIndex, slice)).segs;
+          text.structure.tables = tablesOf(text, segs);
+        }
+        return new Transfer(text, textBuffers(text));
+      } finally {
+        wasmBytes();
+      }
+    }),
+
+  compareOcrRaster: ({ docId, pageIndex, dpi }, ctx) =>
     scheduler.run('compare', ctx.signal, async () => {
       if (!mod) throw new RpcError('not-initialized', 'The work worker is not initialized');
       const m = mod;
       const { doc } = await docs.get(docId);
       const ptr = docPtrOf(need(), doc.id);
       try {
-        const text = onComparePage(doc.id, pageIndex, doc.pageCount, (page) =>
-          textOf(m, page, plainFrame(frameOf(m, ptr, pageIndex, page))),
+        const loaded = onComparePage(doc.id, pageIndex, doc.pageCount, (page) =>
+          frameOf(m, ptr, pageIndex, page),
         );
-        return new Transfer(text, textBuffers(text));
+        // Viewing only (D-58): the page is read for the comparison, the file is not changed.
+        const r = rasterForOcr(m, ptr, pageIndex, dpi, true);
+        const data = r.data.buffer;
+        return new Transfer(
+          {
+            width: r.width,
+            height: r.height,
+            data,
+            frame: plainFrame(loaded),
+            turn: loaded.turn,
+          },
+          [data],
+        );
       } finally {
         wasmBytes();
       }

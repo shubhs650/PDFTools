@@ -9,7 +9,16 @@
 // Largest gap first keeps a full-width heading above two columns from slicing
 // the columns into strips. Atomic items (a recognised table or figure, M12-18)
 // take part in the cut as one box, so they land at their place in the order.
-import { TEXT_BOLD, TEXT_GENERATED, TEXT_INVISIBLE, type PageText } from '../material';
+import {
+  TEXT_BOLD,
+  TEXT_GENERATED,
+  TEXT_INVISIBLE,
+  isScan,
+  structureBytes,
+  type PageFigure,
+  type PageTable,
+  type PageText,
+} from '../material';
 
 export interface Box {
   x0: number;
@@ -24,6 +33,8 @@ export const WORD_BOLD = 1;
 export const WORD_INVISIBLE = 2;
 /** Has right-to-left letters. */
 export const WORD_RTL = 4;
+/** A table cell standing for its words (M12-18): marked whole, never in part. */
+export const WORD_CELL = 8;
 
 export interface Word extends Box {
   text: string;
@@ -362,6 +373,17 @@ export interface PageLayout {
   lineBox: Float32Array;
   lineSize: Float32Array;
   lineFlags: Uint8Array;
+  /**
+   * Per line: −1 for a line of words, else the atomic item it stands for
+   * (M12-18): `tables[k]` for k below the number of tables, then the figures.
+   */
+  lineAtom: Int16Array;
+  tables: PageTable[];
+  figures: PageFigure[];
+  /** A scan without text (OCR could read it for the comparison). */
+  scan: boolean;
+  /** The words were read by OCR at compare time. */
+  ocr: boolean;
 }
 
 /** Bytes a page layout holds (for the store's accounting). */
@@ -377,13 +399,27 @@ export function layoutBytes(l: PageLayout): number {
     l.lineBox.byteLength +
     l.lineSize.byteLength +
     l.lineFlags.byteLength +
+    l.lineAtom.byteLength +
+    structureBytes({ imageCover: 0, figures: l.figures, tables: l.tables }) +
     64
   );
 }
 
-/** Lines (in reading order) → a page layout. Atoms are left out (M12-18). */
-export function packLayout(width: number, height: number, lines: readonly Line[]): PageLayout {
-  const ls = lines.filter((l) => l.atom === undefined && l.words.length > 0);
+export interface LayoutExtras {
+  tables?: PageTable[];
+  figures?: PageFigure[];
+  scan?: boolean;
+  ocr?: boolean;
+}
+
+/** Lines (in reading order) → a page layout; atom lines index `tables`, then `figures`. */
+export function packLayout(
+  width: number,
+  height: number,
+  lines: readonly Line[],
+  x: LayoutExtras = {},
+): PageLayout {
+  const ls = lines.filter((l) => l.atom !== undefined || l.words.length > 0);
   let nw = 0;
   for (const l of ls) nw += l.words.length;
   const wordStart = new Int32Array(nw + 1);
@@ -395,6 +431,7 @@ export function packLayout(width: number, height: number, lines: readonly Line[]
   const lineBox = new Float32Array(ls.length * 4);
   const lineSize = new Float32Array(ls.length);
   const lineFlags = new Uint8Array(ls.length);
+  const lineAtom = new Int16Array(ls.length).fill(-1);
   const parts: string[] = [];
   let off = 0;
   let k = 0;
@@ -403,6 +440,7 @@ export function packLayout(width: number, height: number, lines: readonly Line[]
     lineBox.set([l.x0, l.y0, l.x1, l.y1], li * 4);
     lineSize[li] = l.size;
     lineFlags[li] = l.flags;
+    if (l.atom !== undefined) lineAtom[li] = l.atom;
     for (const w of l.words) {
       wordStart[k] = off;
       parts.push(w.text);
@@ -429,10 +467,46 @@ export function packLayout(width: number, height: number, lines: readonly Line[]
     lineBox,
     lineSize,
     lineFlags,
+    lineAtom,
+    tables: x.tables ?? [],
+    figures: x.figures ?? [],
+    scan: x.scan ?? false,
+    ocr: x.ocr ?? false,
   };
 }
 
-/** A page's characters → its layout: words, reading order, lines. */
+const boxOf = (b: readonly number[]): Box => ({
+  x0: b[0] ?? 0,
+  y0: b[1] ?? 0,
+  x1: b[2] ?? 0,
+  y1: b[3] ?? 0,
+});
+
+const centreIn = (w: Box, b: Box): boolean => {
+  const cx = (w.x0 + w.x1) / 2;
+  const cy = (w.y0 + w.y1) / 2;
+  return cx >= b.x0 && cx <= b.x1 && cy >= b.y0 && cy <= b.y1;
+};
+
+/**
+ * A page's characters → its layout: words, reading order, lines. A page's
+ * tables and figures (M12-18) take part in the reading order as one box each;
+ * the words of a table are its cells', so they leave the running text.
+ */
 export function pageLayout(t: PageText, o: CutOptions = {}): PageLayout {
-  return packLayout(t.frame.width, t.frame.height, readingOrder(wordsOf(t), [], o));
+  const s = t.structure;
+  const tables = s?.tables ?? [];
+  const figures = s?.figures ?? [];
+  let words = wordsOf(t);
+  if (tables.length) {
+    const boxes = tables.map((x) => boxOf(x.box));
+    words = words.filter((w) => !boxes.some((b) => centreIn(w, b)));
+  }
+  const atoms = [...tables.map((x) => boxOf(x.box)), ...figures.map((f) => boxOf(f.box))];
+  return packLayout(t.frame.width, t.frame.height, readingOrder(words, atoms, o), {
+    tables,
+    figures,
+    scan: isScan(t),
+    ocr: s?.ocr ?? false,
+  });
 }

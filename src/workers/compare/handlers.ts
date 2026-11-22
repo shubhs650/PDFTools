@@ -1,5 +1,6 @@
 // The Compare worker's handlers (M12-07, D-66) over one store, apart from the
 // worker module so tests can serve them on a MessageChannel.
+import { ocrPageText } from '../../model/compare/text/ocrText';
 import type { CompareApi } from '../../engine/compareApi';
 import { RpcError } from '../../engine/errors';
 import { Transfer } from '../../engine/protocol';
@@ -30,9 +31,17 @@ export function compareHandlers(store: CompareStore): Handlers<CompareApi> {
       ctx.throwIfAborted();
       return { bytes: guard(() => store.putText(cmpId, side, page, text, layout)) };
     },
-    matchText: ({ cmpId, pages, moves }, ctx) => {
+    putOcr: ({ cmpId, side, page, lines, dpi, frame, turn }, ctx) => {
+      ctx.throwIfAborted();
+      return {
+        bytes: guard(() =>
+          store.putText(cmpId, side, page, ocrPageText(lines, dpi, frame, turn), true),
+        ),
+      };
+    },
+    matchText: ({ cmpId, pages, ...options }, ctx) => {
       const result = guard(() =>
-        store.matchText(cmpId, pages, moves, (stage, done, total) => {
+        store.matchText(cmpId, pages, options, (stage, done, total) => {
           ctx.throwIfAborted();
           ctx.progress({ stage, done, total });
         }),
