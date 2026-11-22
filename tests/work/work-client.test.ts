@@ -165,6 +165,15 @@ function fakeSpawn(world: FakeWorld) {
         ctx.throwIfAborted();
         return { pages: 3, chars: 10, ms: 5 };
       },
+      compareSignature: () => {
+        throw new Error('not used');
+      },
+      compareText: () => {
+        throw new Error('not used');
+      },
+      compareRaster: () => {
+        throw new Error('not used');
+      },
     });
     const port = ch.port2;
     port.start();

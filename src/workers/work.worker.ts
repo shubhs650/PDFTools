@@ -9,7 +9,9 @@ import { RpcError } from '../engine/errors';
 import type { WorkApi } from '../engine/workApi';
 import { Transfer } from '../engine/protocol';
 import { serve } from './rpc-host';
-import { docPtrOf, wasmMemory } from './render/pdfium';
+import { acquirePage, docPtrOf, wasmMemory } from './render/pdfium';
+import { analysisBand, frameOf, plainFrame, signatureOf, textOf } from './work/compareMaterial';
+import { textBuffers } from '../model/compare/material';
 import { digestDocument } from './render/save/digest';
 import { WorkDocs } from './work/docs';
 import { verifyCandidate } from './work/verify';
@@ -135,6 +137,23 @@ async function outlineCall<T>(fn: () => Promise<T>): Promise<T> {
   } catch (err) {
     if (err instanceof OutlineError) throw new RpcError(err.code, err.message);
     throw err;
+  }
+}
+
+/** Runs `fn` on a page held from EmbedPDF's page cache (M12-07). */
+function onComparePage<T>(
+  docId: string,
+  pageIndex: number,
+  pageCount: number,
+  fn: (page: number) => T,
+): T {
+  if (pageIndex < 0 || pageIndex >= pageCount)
+    throw new RpcError('page-out-of-range', 'No such page');
+  const ref = acquirePage(need(), docId, pageIndex);
+  try {
+    return fn(ref.pagePtr);
+  } finally {
+    ref.release();
   }
 }
 
@@ -583,6 +602,58 @@ serve<WorkApi>(self, {
     scheduler.run('interactive', ctx.signal, () =>
       readViewports(docs.bytes(docId), inflate, docs.passwordOf(docId)),
     ),
+
+  compareSignature: ({ docId, pageIndex }, ctx) =>
+    scheduler.run('compare', ctx.signal, async () => {
+      if (!mod) throw new RpcError('not-initialized', 'The work worker is not initialized');
+      const m = mod;
+      const { doc } = await docs.get(docId);
+      const ptr = docPtrOf(need(), doc.id);
+      try {
+        const sig = onComparePage(doc.id, pageIndex, doc.pageCount, (page) =>
+          signatureOf(m, ptr, pageIndex, page),
+        );
+        return new Transfer(sig, [sig.ink.buffer as ArrayBuffer]);
+      } finally {
+        wasmBytes();
+      }
+    }),
+
+  compareText: ({ docId, pageIndex }, ctx) =>
+    scheduler.run('compare', ctx.signal, async () => {
+      if (!mod) throw new RpcError('not-initialized', 'The work worker is not initialized');
+      const m = mod;
+      const { doc } = await docs.get(docId);
+      const ptr = docPtrOf(need(), doc.id);
+      try {
+        const text = onComparePage(doc.id, pageIndex, doc.pageCount, (page) =>
+          textOf(m, page, plainFrame(frameOf(m, ptr, pageIndex, page))),
+        );
+        return new Transfer(text, textBuffers(text));
+      } finally {
+        wasmBytes();
+      }
+    }),
+
+  compareRaster: ({ docId, pageIndex, ...req }, ctx) =>
+    scheduler.run('compare', ctx.signal, async (slice) => {
+      if (!mod) throw new RpcError('not-initialized', 'The work worker is not initialized');
+      const m = mod;
+      const { doc } = await docs.get(docId);
+      const ptr = docPtrOf(need(), doc.id);
+      if (pageIndex < 0 || pageIndex >= doc.pageCount)
+        throw new RpcError('page-out-of-range', 'No such page');
+      // Held from EmbedPDF's page cache across the checkpoints: a dense sheet is parsed once.
+      const ref = acquirePage(need(), doc.id, pageIndex);
+      try {
+        const turn = frameOf(m, ptr, pageIndex, ref.pagePtr).turn;
+        const band = await analysisBand(m, ref.pagePtr, turn, req, () => slice.checkpoint());
+        return new Transfer(band, [band.data.buffer as ArrayBuffer]);
+      } finally {
+        ref.release();
+        wasmBytes();
+      }
+    }),
 
   snapGeometry: ({ docId, pageIndex, minLen }, ctx) =>
     scheduler.run('geometry', ctx.signal, async (slice) => {

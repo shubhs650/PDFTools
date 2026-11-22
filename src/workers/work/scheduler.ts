@@ -11,13 +11,17 @@ import { AbortError } from '../../engine/errors';
 
 // Snap geometry (M3-18, ADR-008) sits below interactive work and above
 // background indexing; like interactive work it still runs during a save.
-export type Priority = 'interactive' | 'save-verify' | 'geometry' | 'background';
+// A comparison's reads (M12-07, D-66) come after geometry: search, snapping
+// and everything the user asked for take over at its next band or page, and
+// it still runs during a save (a save waiting to be verified goes first).
+export type Priority = 'interactive' | 'save-verify' | 'geometry' | 'compare' | 'background';
 
 const RANK: Record<Priority, number> = {
   interactive: 0,
   'save-verify': 1,
   geometry: 2,
-  background: 3,
+  compare: 3,
+  background: 4,
 };
 
 export interface JobSlice {

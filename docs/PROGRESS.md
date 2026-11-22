@@ -1,6 +1,6 @@
 # Triya PDF — Progress
 
-_Last updated: 2026-11-22 (ADR-032 accepted by the owner; ARCHITECTURE.md Rev 0.22)_
+_Last updated: 2026-11-22 (M12-07: the Compare worker and its jobs)_
 
 **Current milestone:** M12 — PDF comparison (PDF overlay for drawings, text comparison for
 documents), version 1.1.0: plan [docs/plan/M12.md](plan/M12.md) and
@@ -29,6 +29,31 @@ answers Q1–Q7; ARCHITECTURE.md Rev 0.12 after [ADR-024](adr/024-freetext-text-
 interop is in the M6 pack (CHECKLIST §M6 R1–R4). Rev 0 (M0–M4) is complete on the agent side.
 
 ## Done
+
+- **M12-07 — the Compare worker and its jobs (D-66).** `src/workers/compare.worker.ts` (our own
+  code, no PDFium) with its typed, cancellable client `src/engine/compareClient.ts`: the worker
+  starts with the first comparison and is **terminated when the last one closes**, which gives
+  its memory back; its store (`src/workers/compare/store.ts`) accounts every byte per
+  comparison. **Work worker jobs** at a new `compare` priority (below geometry, above
+  background, still running while a save is verified): `compareSignature` (S28's 32 × 32 ink
+  picture and the page's words), `compareText` (S30's positioned characters in typed arrays)
+  and `compareRaster` (an analysis raster's rows through a placement, rendered in sub-bands with
+  a checkpoint between them, the page held from EmbedPDF's page cache so a dense sheet is parsed
+  once). Everything is in the **displayed** space: the Work worker's copies are opened with
+  `normalizeRotation`, so the page's /Rotate is applied by us (`quarterTurn`), checked on a
+  self-made /Rotate 90 page. The main thread only routes: `CompareSession`
+  (`src/features/compare/engine/`) sends each result to the Compare worker by transfer, folds
+  the band pairs of each sheet into running facts (ink per side, overlap, boxes, identical) and
+  never holds a whole sheet raster (S28). `CompareQueue`: the viewed sheet first, then the sheets
+  after it, then those before it, nearest first; while the viewed sheet works the other slot
+  waits for it; dependencies, progress, failures and Cancel. Pairing (M12-09), alignment
+  (M12-10) and detection (M12-14) plug into the session's `pairs`, `place` and band handler.
+  Tests: 35 unit tests (queue, store, facts, client, a session over real PDFium on corpus pairs
+  01 and 16, the material on PDFium) plus two scheduler tests; perf `@smoke`
+  `e2e/perf/compare-worker.spec.ts`: comparing pair 13 (ARCH D and E at 150 dpi) while searching
+  a 2,000-page document 22 times — no long task, slowest first hit 48 ms (warm baseline 175 ms),
+  the viewed ARCH E sheet done in 0.7 s and both in 1.2 s, the worker gone after close. Not in
+  any release bundle yet (only the e2e probe uses it until M12-08).
 
 - **M12-06 — spike S31: the comparison file (D-65), and ADR-032.** Works
   ([RESULTS.md](../spikes/s31-comparison-file/RESULTS.md)). `spikes/s31-comparison-file/` writes
@@ -3402,7 +3427,8 @@ rel="noopener noreferrer">`; the commands `app.home` / `app.reportIssue` open th
   own code), M12-06 (spike S31, the comparison file; ADR-032 written, S30 section filled by
   M12-05). **ADR-032 accepted** by the owner (2026-11-22, the four recommended answers; both
   sample packs work in Acrobat Reader and a second desktop editor); ARCHITECTURE.md Rev 0.22.
-  Next: the feature tasks from M12-07 (Compare worker and jobs).
+  M12-07 (the Compare worker and its jobs). Next: M12-08 (the comparison tab and input window)
+  and M12-09 (pairing), then the overlay tasks.
 - **Agent (M11):** the 18 tasks in [docs/plan/M11.md](plan/M11.md) "Order of work", one thread
   each. Done: M11-01, M11-10, M11-02 (spike S26), M11-03 (tabs: look, hover card, +), M11-04
   (drag to reorder), M11-05 (tab menus), M11-06 (comments in every pointer mode), M11-07 (font

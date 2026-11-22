@@ -189,3 +189,43 @@ describe('Scheduler onIdle (M4-20)', () => {
     expect(idle).toBeGreaterThan(0);
   });
 });
+
+describe('Scheduler compare priority (M12-07, D-66)', () => {
+  it('search and other interactive work take over a comparison at its next band', async () => {
+    const s = new Scheduler();
+    const log: string[] = [];
+    const ac = new AbortController();
+    const cmp = s.run('compare', ac.signal, job(log, 'cmp', 6));
+    await tick();
+    await tick();
+    const search = s.run('interactive', ac.signal, job(log, 'search', 2));
+    await Promise.all([cmp, search]);
+    const first = log.indexOf('search0');
+    expect(first).toBeGreaterThan(0);
+    expect(first).toBeLessThan(log.indexOf('cmp5'));
+    expect(log.indexOf('search1')).toBe(first + 1);
+  });
+
+  it('ranks below geometry and above background, and still runs while a save is verified', async () => {
+    const s = new Scheduler();
+    const log: string[] = [];
+    const ac = new AbortController();
+    const hold = s.run('interactive', ac.signal, job(log, 'i', 1));
+    const runs = [
+      s.run('background', ac.signal, job(log, 'bg', 1)),
+      s.run('compare', ac.signal, job(log, 'cmp', 1)),
+      s.run('geometry', ac.signal, job(log, 'geo', 1)),
+    ];
+    await Promise.all([hold, ...runs]);
+    expect(log).toEqual(['i0', 'geo0', 'cmp0', 'bg0']);
+
+    const log2: string[] = [];
+    const save = s.run('save-verify', ac.signal, job(log2, 's', 2));
+    const cmp = s.run('compare', ac.signal, job(log2, 'cmp', 1));
+    const bg = s.run('background', ac.signal, job(log2, 'bg', 1));
+    await Promise.all([save, cmp, bg]);
+    // Background is parked until the save is verified; the comparison is not.
+    expect(log2.indexOf('cmp0')).toBeLessThan(log2.indexOf('bg0'));
+    expect(log2.indexOf('bg0')).toBeGreaterThan(log2.indexOf('s1'));
+  });
+});
