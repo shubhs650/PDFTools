@@ -2938,12 +2938,37 @@
       "unlock": "Unlock {{name}}…"
     },
     "swap": "Swap Document A and Document B",
+    "pairing": {
+      "title": "Pairing",
+      "caption": "Which page of Document A is compared with which page of Document B",
+      "reading": "Reading pages: {{done}} of {{total}}…",
+      "matching": "Pairing pages…",
+      "failed": "The pages couldn't be paired. Change the inputs to try again.",
+      "summary": "{{sheets}} to compare. Added in Document B: {{added}}. Removed from Document A: {{removed}}.",
+      "sheets_one": "{{count}} sheet",
+      "sheets_other": "{{count}} sheets",
+      "edited": "Edited",
+      "reset": "Pair automatically",
+      "sheet": "Sheet",
+      "match": "Match",
+      "compare": "Compare",
+      "choose": "{{side}} page of sheet {{sheet}}",
+      "include": "Compare sheet {{sheet}}",
+      "page": "Page {{page}}",
+      "pageOf": "{{name}}, page {{page}}",
+      "noneA": "None (added in Document B)",
+      "noneB": "None (removed from Document A)",
+      "added": "Added",
+      "removed": "Removed"
+    },
     "run": "Compare",
     "ready": "Ready: {{a}} against {{b}}.",
     "block": {
       "empty": "Add a file to {{side}}.",
       "opening": "Opening files…",
-      "range": "Check the pages of {{name}}."
+      "range": "Check the pages of {{name}}.",
+      "pairing": "Pairing pages…",
+      "noSheets": "Choose at least one sheet to compare in the pairing table."
     },
     "result": {
       "pending": "{{a}} against {{b}}. The comparison result arrives in a later preview build; you can change the inputs meanwhile.",
