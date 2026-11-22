@@ -262,7 +262,10 @@ function fakeWork(log: string[]): Pick<WorkClient, 'run' | 'hold'> & { held: num
         if (options.signal?.aborted) throw new AbortError();
         return (impl[method] as (a: never) => unknown)(args);
       })();
-      return { promise: promise as Promise<ResultOf<WorkApi, typeof method>>, cancel: () => undefined };
+      return {
+        promise: promise as Promise<ResultOf<WorkApi, typeof method>>,
+        cancel: () => undefined,
+      };
     }) as unknown as Run,
   };
   return fake;
