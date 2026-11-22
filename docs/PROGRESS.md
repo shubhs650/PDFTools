@@ -1,6 +1,6 @@
 # Triya PDF — Progress
 
-_Last updated: 2026-11-22 (M12-09: page pairing)_
+_Last updated: 2026-11-22 (M12-10: automatic alignment)_
 
 **Current milestone:** M12 — PDF comparison (PDF overlay for drawings, text comparison for
 documents), version 1.1.0: plan [docs/plan/M12.md](plan/M12.md) and
@@ -29,6 +29,29 @@ answers Q1–Q7; ARCHITECTURE.md Rev 0.12 after [ADR-024](adr/024-freetext-text-
 interop is in the M6 pack (CHECKLIST §M6 R1–R4). Rev 0 (M0–M4) is complete on the agent side.
 
 ## Done
+
+- **M12-10 — automatic alignment (D-60).** Spike S28's route 1 as app code in
+  `src/model/compare/align/` (similarity fit and RANSAC, FFT and phase correlation, the aligner):
+  each sheet is **checked as it is** first (share of A's feature points with a B feature within
+  0.1 pt; ≥ 0.3 → as is), and only a poor match is aligned: vector sheets by Fourier–Mellin on
+  two 512 px rasters, then feature RANSAC and closest-point least squares; scans (fewer than 24
+  feature points) by tile phase correlation at 0.5, 1 and 2 px per pt, checked as is first too.
+  Both try a **quarter turn** when the first try is low confidence or the pages differ in
+  orientation (ADR-032's known gap). An aligned result is kept only when it agrees better than as
+  is. Status per sheet: **as is**, **auto-aligned** (shift, scale, rotation) or **low confidence**
+  (vector match share < 0.3, or fewer than 6 agreeing tiles). Work worker job `compareGeometry`
+  (the snap geometry's segments in displayed space; snapping's cache is reused, not filled);
+  Compare worker `putGeometry` (keeps feature points only), `alignAsIs`, `alignVector`,
+  `putAlignBand`/`alignImage` (scan rasters dropped after), `setAlignment`. The session runs an
+  `align:<n>` task before each sheet's analysis, which draws A through the alignment; a
+  `SheetPair.place` counts as set by hand and skips it; `alignment(sheet)`, `watchAlignment()` and
+  `onAlign` report it. `userPlacement()` (material.ts) gives A's user space → B's user space with
+  /Rotate and page boxes folded in; `alignmentText()` gives the sheet list's wording
+  (`compare.align.*`). Tests (`tests/compare/align.test.ts`, 24): the maths on self-made drawings
+  (quarter turns, low confidence, scans) and the whole pipeline on real PDFium against the
+  manifest: 03 (+14/−9 pt and 98.2 % found, P3 as is), 04 (−1.2° found, the /Rotate 90 page as is),
+  06 (scan pair: 0.50°, within 0.96 pt of S28's shift), 09 (page boxes as is), 13 (ARCH D/E as is),
+  15 (A1 against A3: 49.94 %). In-process worker stand-ins moved to `tests/compare/support/`.
 
 - **M12-09 — page pairing (D-60).** As soon as both sides of a PDF overlay are ready, the pages
   are paired in the workers: the Work worker reads each page's signature (S28: 32 × 32 ink
@@ -3473,7 +3496,7 @@ rel="noopener noreferrer">`; the commands `app.home` / `app.reportIssue` open th
   M12-05). **ADR-032 accepted** by the owner (2026-11-22, the four recommended answers; both
   sample packs work in Acrobat Reader and a second desktop editor); ARCHITECTURE.md Rev 0.22.
   M12-07 (the Compare worker and its jobs), M12-08 (the comparison tab and input window), M12-09
-  (pairing). Next: the overlay tasks, M12-10 (automatic alignment) on.
+  (pairing), M12-10 (automatic alignment). Next: the overlay tasks, M12-11 (the overlay view) on.
 - **Agent (M11):** the 18 tasks in [docs/plan/M11.md](plan/M11.md) "Order of work", one thread
   each. Done: M11-01, M11-10, M11-02 (spike S26), M11-03 (tabs: look, hover card, +), M11-04
   (drag to reorder), M11-05 (tab menus), M11-06 (comments in every pointer mode), M11-07 (font

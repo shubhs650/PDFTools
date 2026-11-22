@@ -1,4 +1,5 @@
 import type { PageSignature, PageText, RasterBand } from '../model/compare/material';
+import type { AsIsCheck, SheetAlignment } from '../model/compare/align/aligner';
 import type { PairingResult } from '../model/compare/pairing';
 import type { MethodSpec } from './protocol';
 
@@ -96,6 +97,41 @@ export interface CompareApi {
     PairingResult,
     PairingProgress
   >;
+  /**
+   * A page's line geometry (M12-10, D-60): segments in displayed space, from
+   * the Work worker's `compareGeometry`. The worker keeps only the page's
+   * feature points (line ends, corners, junctions).
+   */
+  putGeometry: MethodSpec<
+    { cmpId: string; side: CompareSide; page: number; segments: Float32Array },
+    { features: number; bytes: number }
+  >;
+  /** The "as is" check of a sheet pair (S28): features within 0.1 pt, no transform. */
+  alignAsIs: MethodSpec<{ cmpId: string; a: number; b: number }, AsIsCheck>;
+  /**
+   * Aligns a vector sheet that failed the as-is check: both pages' coarse
+   * ink rasters at `scale` px per pt (whole pages, one band each) and the
+   * features put before. The result is kept as the sheet's alignment.
+   */
+  alignVector: MethodSpec<
+    {
+      cmpId: string;
+      sheet: number;
+      a: number;
+      b: number;
+      coarse: { a: RasterBand; b: RasterBand; scale: number };
+    },
+    SheetAlignment
+  >;
+  /** A band of a page's raster for the image method (scans), kept until `alignImage`. */
+  putAlignBand: MethodSpec<
+    { cmpId: string; sheet: number; side: CompareSide; band: RasterBand },
+    { bytes: number }
+  >;
+  /** Aligns a sheet by the image method on the bands put (at `scale` px per pt), then drops them. */
+  alignImage: MethodSpec<{ cmpId: string; sheet: number; scale: number }, SheetAlignment>;
+  /** Records a sheet's alignment (as is, or set by hand later: M12-13). */
+  setAlignment: MethodSpec<{ cmpId: string; sheet: number; alignment: SheetAlignment }, null>;
   /** A sheet's facts once its bands are in. */
   sheetFacts: MethodSpec<{ cmpId: string; sheet: number }, SheetFacts>;
   summary: MethodSpec<{ cmpId: string }, CompareSummary>;
