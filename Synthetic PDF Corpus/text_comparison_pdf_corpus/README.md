@@ -1,0 +1,18 @@
+# Synthetic Text-Mode PDF Comparison Test Corpus
+
+This corpus contains **12 Old/New revision pairs (24 PDFs total, 1 to 18 pages each)** designed to benchmark **Text Mode Comparison** features in PDF-XChange Editor, Nutrient (PSPDFKit), Adobe Acrobat Compare, and similar PDF SDKs.
+
+| Pair | Document Type | Pages (Old→New) | Layout | Edge Case Tested | Expected Differences |
+| :--- | :--- | :--- | :--- | :--- | :--- |
+| **01** | Commercial Invoice | 1 → 1 | A4 Portrait | Numeric/Currency Table Diff + Added Line Item | Item 3 qty 12->15 & price $1,450->$1,520; Item 5 added ($3,200); GST 18%->12%; PO R1->R2; Net 30->Net 45; totals recalculated. |
+| **02** | NDT Inspection Report | 2 → 2 | A4 Portrait | Interleaved Inline Image Resize + Status Flip | Overall status ACCEPT->CONDITIONAL HOLD; Fig 1 UT A-scan replaced & taller (reflows text); W-14 flaw 2.1->3.4 mm (REJECT); NCR note added. |
+| **03** | Calculation Report | 3 → 3 | A4 Portrait | Engineering Symbols, Units, Sub/Superscripts + Embedded Chart | Wind factor 1.40->1.50; M_Ed 142.5->156.8 kN·m; σ_b 178.4->191.2 MPa; utilization 0.78->0.84; bolts Grade 8.8->10.9; updated BMD figure. |
+| **04** | Technical Specification | 3 → 3 | A4 Portrait (2-Col) | 2-Column Reading Order + Multi-Column Reflow | 2 new clauses inserted at 2.2.1/2.2.2 causing cascading 2-column reflow across pages 2-5; metallurgy CF8M->Duplex 2205; hydrotest 24->30 bar. |
+| **05** | EPC Tender | 6 → 6 | A4 Portrait | Clause Insertion, Cascading Renumbering + Legal 'not' Flip | 2 new clauses inserted in Sec 3 (renumbering 3.4-3.9 -> 3.6-3.11 & adding 1 page); LD cap 5%->10%; Clause 5.3 removes 'not' from liability! |
+| **06** | Commissioning SOP | 2 → 2 | A4 Portrait | Formatting/Font/Margin Reflow Noise vs 2 True Text Edits | Font Helvetica->Times-Roman, margins 16->25mm (every line wraps differently), but ONLY 2 real edits: purge 15->25 min & Shift Engineer->Commissioning Lead. |
+| **07** | Civil BOQ Table | 11 → 11 | A4 Landscape | 135-Row Multi-Page Repeating-Header Table | Item 38 deleted; Item 075A inserted; 4 surgical rate increases (+12.50 on items 22, 64, 98, 121); Grand Total recalculated. |
+| **08** | QA/MTC Audit Report | 3 → 3 | A4 Portrait | Hybrid Live Text (P1-3) + Rasterized Image-Only Appendix (P4) | Live text edits on P1 (Heat HT-99241-A->B, 2->3 observations, deadline); P4 is rasterized scan changing calibration expiry 2026-12-31->2027-06-30. |
+| **09** | Geotechnical Report | 2 → 2 | A4 Portrait | Swapped/Reordered Sections + Embedded Borehole Chart | Groundwater & Foundation sections swapped in order; groundwater depth 3.2->2.6 m; allowable bearing capacity 180->165 kPa; updated SPT chart. |
+| **10** | Master EPC Tender | 17 → 18 | A4 Portrait | Long 19->20 Page Stress Test + Control Chapters + Buried Edits | 5 unchanged control chapters; surgical edits on P3/7/11/19 (bond 10->15%, warranty 12->24 mo, milestone date, Mumbai->Singapore) + 1-page Addendum 6A inserted. |
+| **11** | Multi-Script Specification | 2 → 2 | A4 Portrait (Multi-Script) | Multi-Language Unicode (DE/HI/JA/AR RTL) + SI Math Symbols | Temp 280->320°C; ΔP 0.60->0.45 bar; German Prüfdruck 16->25 bar; Hindi safety factor 2.5->3.0; Japanese SUS304 6mm->SUS316L 8mm; Arabic RTL warranty 12->24 mo; Ra 3.2->1.6 µm; ≥50->≥100 MΩ. |
+| **12** | OCR-Layered Scanned Contract | 3 → 3 | A4 Portrait (180 DPI Scan + Tr 3 OCR) | OCR-Layered Searchable Scan (Invisible Tr 3 Text + OCR Artifacts) | Contract value $285,000->$312,500; completion 2027-02-28->2027-04-15; retention 5.0%->7.5%; grout 45->55 MPa; VO-014-R1->R2; PLUS Rev A OCR artifacts ('5O0 mm', 'U1trasonic') vs clean Rev B. |
