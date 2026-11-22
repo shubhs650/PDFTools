@@ -16,7 +16,7 @@ import { Button, IconButton, ProgressBar, ToggleButton } from '../../../ui/compo
 import { CommandIcon } from '../../../ui/icons/CommandIcon';
 import { updateInputs } from '../compareFlow';
 import type { Comparison } from '../model';
-import { startComparing, syncPairing, usePairing } from '../pairingFlow';
+import { pairingInputs, startComparing, syncPairing, usePairing } from '../pairingFlow';
 import { typeLabel } from '../title';
 import { alignmentText } from '../alignmentText';
 import { OverlayLayers } from './OverlayLayers';
@@ -68,12 +68,13 @@ function watchClosing(c: Comparison): void {
 export function OverlayResult({ comparison: c }: { comparison: Comparison }) {
   const { t } = useTranslation();
   const titleId = useId();
-  const docs = useDocuments((s) => s.docs);
+  // What pairing reads of the documents (not their views: the windows change those all the time).
+  const inputsKey = useDocuments((s) => pairingInputs(c, s.docs)?.key ?? null);
   // A restored comparison pairs its pages again (M12-09: pairing edits are not restored).
   useEffect(() => {
     syncPairing(c);
     watchClosing(c);
-  }, [c, docs]);
+  }, [c, inputsKey]);
   const pairing = usePairing(c.id);
   const sheets = useMemo(
     () => (pairing?.status === 'done' ? sheetsOf(pairing.rows, pairing.pages) : []),
@@ -255,12 +256,16 @@ export function OverlayResult({ comparison: c }: { comparison: Comparison }) {
 
 /** A page of a side, as the list names it: "3", or "Sheets-B.pdf 3" for a set. */
 function usePageLabel(c: Comparison): (p: Sheet['a']) => string {
-  const docs = useDocuments((s) => s.docs);
+  // The names only (a string, so a window's view change re-renders nothing here).
+  const names = useDocuments((s) =>
+    JSON.stringify(documentsOf(c).map((id) => [id, s.docs[id]?.meta.name ?? ''])),
+  );
+  const byId = useMemo(() => new Map(JSON.parse(names) as [string, string][]), [names]);
   return (p) => {
     if (!p) return '';
     const page = format.number(p.page + 1);
     return p.file > 0 || documentsOf(c).length > 2
-      ? `${docs[p.docId]?.meta.name ?? ''} ${page}`.trim()
+      ? `${byId.get(p.docId) ?? ''} ${page}`.trim()
       : page;
   };
 }

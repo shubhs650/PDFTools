@@ -1,4 +1,12 @@
-import { useEffect, useMemo, useRef, type ReactNode, type RefObject } from 'react';
+import {
+  startTransition,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+  type ReactNode,
+  type RefObject,
+} from 'react';
 import { useTranslation } from 'react-i18next';
 import { documentStore, useDocuments } from '../../../app/store/documentStore';
 import { format } from '../../../i18n';
@@ -71,8 +79,26 @@ export function ReviewLayout({
   const place = placeOf(view, sheet);
   const paired = !!sheet.a && !!sheet.b;
 
+  // A and B mount one after the other, after the overlay, each as a transition:
+  // three document windows in one commit would be a main-thread task over 100 ms (rule 1).
+  const [sides, setSides] = useState(0);
+  useEffect(() => {
+    if (!review || sides >= 2) return;
+    const timer = setTimeout(() => {
+      startTransition(() => {
+        setSides((n) => n + 1);
+      });
+    }, 0);
+    return () => {
+      clearTimeout(timer);
+    };
+  }, [review, sides]);
+
   // The windows on screen: their documents, pages and maps into the overlay's frame.
-  const windowsKey = JSON.stringify([review, notesId, index, sheet.a, sheet.b, place]);
+  const sheetKey = JSON.stringify([review, notesId, index, sheet.a, sheet.b, place]);
+  const windowsKey = JSON.stringify([sheetKey, sides]);
+  /** The sheet the overlay was last fitted to (a side window mounting later does not refit it). */
+  const fitted = useRef<string | null>(null);
   const windows = (): LinkedWindow[] => {
     const out: LinkedWindow[] = [];
     const add = (role: WindowRole, docId: string, page: number): void => {
@@ -88,21 +114,26 @@ export function ReviewLayout({
   };
 
   // A new sheet, layout or alignment: each window shows its page, the overlay is
-  // fitted, and the others follow it (or fit themselves without the lock).
+  // fitted, and the others follow it (or fit themselves without the lock). A side
+  // window that mounts later only shows its page and follows.
   useEffect(() => {
     const list = windows();
     link.setWindows(list);
     const run = { stopped: false };
     const stopped = (): boolean => run.stopped;
+    const refit = fitted.current !== sheetKey;
     void (async () => {
       const shown = await Promise.all(list.map((w) => showPage(w)));
       if (stopped() || shown.some((ok) => !ok)) return;
       const overlay = list.find((w) => w.role === 'overlay');
-      if (!overlay || !(await fitWindow(overlay, 'page')) || stopped()) return;
-      if (view.lock) {
+      if (!overlay) return;
+      if (refit) {
+        if (!(await fitWindow(overlay, 'page')) || stopped()) return;
+        fitted.current = sheetKey;
         link.lead('overlay');
-        link.drive('overlay');
-      } else for (const w of list) if (w.role !== 'overlay') void fitWindow(w, 'page');
+      }
+      if (view.lock) link.drive(link.leaderRole ?? 'overlay');
+      else for (const w of list) if (w.role !== 'overlay') void fitWindow(w, 'page');
     })();
     return () => {
       run.stopped = true;
@@ -216,9 +247,13 @@ export function ReviewLayout({
           />
           <div ref={column} className="review-column">
             <div className="review-pane" style={{ flexBasis: `${String(view.splits.y * 100)}%` }}>
-              <SideWindow side="a" sheet={sheet} props={windowProps}>
-                <Crosshair link={link} of="a" />
-              </SideWindow>
+              {sides >= 1 ? (
+                <SideWindow side="a" sheet={sheet} props={windowProps}>
+                  <Crosshair link={link} of="a" />
+                </SideWindow>
+              ) : (
+                <div className="review-window" />
+              )}
             </div>
             <Splitter
               orientation="horizontal"
@@ -232,9 +267,13 @@ export function ReviewLayout({
               }}
             />
             <div className="review-pane review-pane-rest">
-              <SideWindow side="b" sheet={sheet} props={windowProps}>
-                <Crosshair link={link} of="b" />
-              </SideWindow>
+              {sides >= 2 ? (
+                <SideWindow side="b" sheet={sheet} props={windowProps}>
+                  <Crosshair link={link} of="b" />
+                </SideWindow>
+              ) : (
+                <div className="review-window" />
+              )}
             </div>
           </div>
         </>
