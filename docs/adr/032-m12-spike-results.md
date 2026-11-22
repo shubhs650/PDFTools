@@ -207,7 +207,7 @@ CI's perf job and on the owner's machine; the spike numbers are one core in a cl
   the vector overlay; the comparison file per `docs/formats/triya-comparison-v1.md`; "highlights,
   carets and notes" instead of "highlights, strike-outs and notes"; the protected-input rule; the
   unsigned copy for certified B; and §2's D-65 row to match. It is not edited before.
-- New permissive dependencies: **none** (OpenCV rejected; pdf.js, Poppler and qpdf were used only
+- New permissive dependencies: **none** (OpenCV and jsdiff rejected; pdf.js, Poppler and qpdf were used only
   outside the repository to check files).
 
 ## Risks
