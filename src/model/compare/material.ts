@@ -27,6 +27,26 @@ export const thenAffine = (first: Affine, second: Affine): Affine => [
   second[1] * first[4] + second[3] * first[5] + second[5],
 ];
 
+/** The inverse map (an affine map of a page is never singular). */
+export function invertAffine(m: Affine): Affine {
+  const det = m[0] * m[3] - m[1] * m[2];
+  const a = m[3] / det;
+  const b = -m[1] / det;
+  const c = -m[2] / det;
+  const d = m[0] / det;
+  return [a, b, c, d, -(a * m[4] + c * m[5]), -(b * m[4] + d * m[5])];
+}
+
+/**
+ * A sheet's alignment (A's displayed page → B's displayed page, M12-10) in
+ * the pages' own user spaces: A's user space → B's user space. /Rotate and
+ * the page boxes of both pages are folded in (D-60), for drawing A's content
+ * into B's page (the overlay, the vector overlay PDF).
+ */
+export function userPlacement(a: PageFrame, place: Affine, b: PageFrame): Affine {
+  return thenAffine(thenAffine(a.toDisplay, place), invertAffine(b.toDisplay));
+}
+
 /** A page as displayed. */
 export interface PageFrame {
   /** Displayed size in points (after /Rotate). */

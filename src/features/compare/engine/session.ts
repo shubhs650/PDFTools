@@ -9,6 +9,15 @@
 // M12-07 builds the pipeline; pairing (M12-09) supplies `pairs`, alignment
 // (M12-10) the placement of A, detection (M12-14) the work on the bands.
 //
+// Alignment (M12-10, D-60): each sheet is checked as it is first, and only a
+// poor match is aligned. The Work worker reads both pages' line geometry; the
+// Compare worker keeps their feature points and scores the sheet as it is.
+// A vector sheet that fails gets two small coarse rasters and is aligned
+// there; a scan (no line work) gets its rasters at 2 px per pt, band by band,
+// for the image method. The sheet's analysis then draws A through the
+// alignment found, and `onAlign` reports the status (as is, auto-aligned,
+// low confidence).
+//
 // Pairing (M12-09, D-60): a side is one file or, for an overlay, a set of
 // files; its "side pages" are the files' pages one after the other, each file
 // with its page range. `pair()` reads every side page's signature and has the
@@ -25,6 +34,13 @@ import type { CompareClient } from '../../../engine/compareClient';
 import { AbortError, RpcError } from '../../../engine/errors';
 import type { WorkClient } from '../../../engine/workClient';
 import {
+  AS_IS_AGREEMENT,
+  asIs,
+  coarseScale,
+  imageScale,
+  type SheetAlignment,
+} from '../../../model/compare/align/aligner';
+import {
   ANALYSIS_DPI,
   BAND_ROWS,
   IDENTITY,
@@ -35,6 +51,7 @@ import {
   type PageFrame,
   type PageSignature,
   type PageText,
+  type RasterBand,
 } from '../../../model/compare/material';
 import type { PairingResult } from '../../../model/compare/pairing';
 import { CompareQueue, type QueueProgress, type QueueTask } from './jobQueue';
@@ -90,7 +107,7 @@ export interface SheetPair {
   /** Side page of A and side page of B. */
   a: number;
   b: number;
-  /** A's displayed space → B's frame (pt); default: as is. */
+  /** A's displayed space → B's frame (pt), set by hand; default: aligned automatically. */
   place?: Affine;
 }
 
@@ -104,7 +121,11 @@ export interface SessionOptions {
   bandRows?: number;
   /** Tasks in flight (default 2). */
   concurrency?: number;
+  /** Align the sheets automatically (D-60; default true): an overlay aligns, a text comparison does not. */
+  align?: boolean;
   onSheet?: (sheet: number, facts: SheetFacts) => void;
+  /** A sheet's alignment and its status, as soon as it is known. */
+  onAlign?: (sheet: number, alignment: SheetAlignment) => void;
   /** Pairing progress: signatures read, then rows of the similarity matrix. */
   onPairing?: (progress: PairingProgress & { stage: 'read' | 'match' }) => void;
   onProgress?: (progress: QueueProgress) => void;
@@ -136,6 +157,8 @@ export class CompareSession {
     b: new Map(),
   };
   private releaseWork: (() => void) | null = null;
+  private readonly aligned = new Map<number, SheetAlignment>();
+  private readonly alignWatchers = new Set<(sheet: number, alignment: SheetAlignment) => void>();
   private closed = false;
   private started = false;
 
@@ -314,13 +337,24 @@ export class CompareSession {
           run: (signal) => this.readText(side, p, k, signal),
         });
       });
+    const align = this.opts.align ?? true;
     this.sheetPairs.forEach((pair, sheet) => {
+      // The frames come with the signatures.
+      const sigs = [`sig:a:${String(pair.a)}`, `sig:b:${String(pair.b)}`];
+      const aligned = align && !pair.place;
+      if (aligned)
+        out.push({
+          key: `align:${String(sheet)}`,
+          sheet,
+          phase: 1,
+          after: sigs,
+          run: (signal) => this.alignSheet(sheet, pair, signal),
+        });
       out.push({
         key: `sheet:${String(sheet)}`,
         sheet,
         phase: 1,
-        // The frames come with the signatures.
-        after: [`sig:a:${String(pair.a)}`, `sig:b:${String(pair.b)}`],
+        after: aligned ? [...sigs, `align:${String(sheet)}`] : sigs,
         run: (signal) => this.analyseSheet(sheet, pair, signal),
       });
     });
@@ -364,13 +398,111 @@ export class CompareSession {
     ).promise;
   }
 
+  /** A sheet's automatic alignment (D-60), once found. */
+  alignment(sheet: number): SheetAlignment | undefined {
+    return this.aligned.get(sheet);
+  }
+
+  /**
+   * Calls `fn` with each sheet's alignment as it is found (and at once with
+   * those already found), for views made after the session (the result).
+   */
+  watchAlignment(fn: (sheet: number, alignment: SheetAlignment) => void): () => void {
+    this.alignWatchers.add(fn);
+    for (const [sheet, al] of this.aligned) fn(sheet, al);
+    return () => {
+      this.alignWatchers.delete(fn);
+    };
+  }
+
+  /** Checks a sheet as it is and, when it matches poorly, aligns it (D-60, S28). */
+  private async alignSheet(sheet: number, pair: SheetPair, signal: AbortSignal): Promise<void> {
+    const pa = this.pages.a[pair.a];
+    const pb = this.pages.b[pair.b];
+    if (!pa || !pb) throw new Error('sheet page missing');
+    const call = this.opts.compare;
+    const geo = async (side: CompareSide, from: SidePage, page: number): Promise<PageFrame> => {
+      const g = await this.opts.work.run(
+        'compareGeometry',
+        { docId: from.docId, pageIndex: from.page },
+        { signal },
+      ).promise;
+      await call.call(
+        'putGeometry',
+        { cmpId: this.id, side, page, segments: g.segments },
+        { signal, transfer: [g.segments.buffer as ArrayBuffer] },
+      ).promise;
+      return g.frame;
+    };
+    const fa = await geo('a', pa, pair.a);
+    const fb = await geo('b', pb, pair.b);
+    const check = await call.call('alignAsIs', { cmpId: this.id, a: pair.a, b: pair.b }, { signal })
+      .promise;
+    let al: SheetAlignment;
+    if (check.vector && check.agreement >= AS_IS_AGREEMENT) {
+      al = asIs('vector', check.agreement);
+      await call.call('setAlignment', { cmpId: this.id, sheet, alignment: al }, { signal }).promise;
+    } else if (check.vector) {
+      // Two small whole-page rasters for the coarse step (S28: 512 px canvas).
+      const scale = coarseScale(fa, fb);
+      const whole = async (from: SidePage, frame: PageFrame): Promise<RasterBand> => {
+        const size = rasterSize(frame.width, frame.height, scale * 72);
+        return this.opts.work.run(
+          'compareRaster',
+          {
+            docId: from.docId,
+            pageIndex: from.page,
+            dpi: scale * 72,
+            ...size,
+            top: 0,
+            rows: size.height,
+          },
+          { signal },
+        ).promise;
+      };
+      const a = await whole(pa, fa);
+      const b = await whole(pb, fb);
+      al = await call.call(
+        'alignVector',
+        { cmpId: this.id, sheet, a: pair.a, b: pair.b, coarse: { a, b, scale } },
+        { signal, transfer: [a.data.buffer as ArrayBuffer, b.data.buffer as ArrayBuffer] },
+      ).promise;
+    } else {
+      // A scan, or next to no line work: the image method on finer rasters.
+      const scale = imageScale(fa, fb);
+      for (const [side, from, frame] of [
+        ['a', pa, fa],
+        ['b', pb, fb],
+      ] as const) {
+        const size = rasterSize(frame.width, frame.height, scale * 72);
+        for (const range of bandRanges(size.height, this.opts.bandRows ?? BAND_ROWS)) {
+          const band = await this.opts.work.run(
+            'compareRaster',
+            { docId: from.docId, pageIndex: from.page, dpi: scale * 72, ...size, ...range },
+            { signal },
+          ).promise;
+          await call.call(
+            'putAlignBand',
+            { cmpId: this.id, sheet, side, band },
+            { signal, transfer: [band.data.buffer as ArrayBuffer] },
+          ).promise;
+        }
+      }
+      al = await call.call('alignImage', { cmpId: this.id, sheet, scale }, { signal }).promise;
+    }
+    if (signal.aborted) return;
+    this.aligned.set(sheet, al);
+    this.opts.onAlign?.(sheet, al);
+    for (const fn of this.alignWatchers) fn(sheet, al);
+  }
+
   /** Both rasters of a sheet pair in B's frame, band by band, folded into the sheet's facts. */
   private async analyseSheet(sheet: number, pair: SheetPair, signal: AbortSignal): Promise<void> {
     const frame = this.frames.b.get(pair.b);
     if (!frame) throw new Error('B frame missing');
     const dpi = this.opts.dpi ?? ANALYSIS_DPI;
     const size = rasterSize(frame.width, frame.height, dpi);
-    const place = pair.place ?? IDENTITY;
+    const place = pair.place ?? this.aligned.get(sheet)?.place ?? IDENTITY;
     const pa = this.pages.a[pair.a];
     const pb = this.pages.b[pair.b];
     if (!pa || !pb) throw new Error('sheet page missing');

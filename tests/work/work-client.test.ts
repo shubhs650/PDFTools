@@ -168,6 +168,9 @@ function fakeSpawn(world: FakeWorld) {
       compareSignature: () => {
         throw new Error('not used');
       },
+      compareGeometry: () => {
+        throw new Error('not used');
+      },
       compareText: () => {
         throw new Error('not used');
       },

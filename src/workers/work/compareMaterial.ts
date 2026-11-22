@@ -254,6 +254,20 @@ export async function analysisBand(
   return { width: req.width, height: req.height, top, rows, data };
 }
 
+/**
+ * A page's line segments (user space, [x1, y1, x2, y2, …]) in displayed
+ * space, for alignment (M12-10): a new array, the snap cache is not touched.
+ */
+export function displayedSegments(segs: Float32Array, toDisplay: Affine): Float32Array {
+  const out = new Float32Array(segs.length);
+  for (let i = 0; i + 1 < segs.length; i += 2) {
+    const [x, y] = applyAffine(toDisplay, segs[i] ?? 0, segs[i + 1] ?? 0);
+    out[i] = x;
+    out[i + 1] = y;
+  }
+  return out;
+}
+
 /** Positioned characters of a loaded page in displayed space (S30's route). */
 export function textOf(mod: WrappedPdfiumModule, page: number, frame: PageFrame): PageText {
   const empty = (): PageText => ({

@@ -16,20 +16,41 @@ import {
   type PageText,
   type RasterBand,
 } from '../../model/compare/material';
+import {
+  alignImage,
+  alignVector,
+  asIsCheck,
+  features,
+  type AsIsCheck,
+  type SheetAlignment,
+} from '../../model/compare/align/aligner';
+import type { Ink } from '../../model/compare/align/ink';
 import { pairPages, type PairingResult, type PairingSide } from '../../model/compare/pairing';
 import { SheetAccumulator } from './sheetFacts';
 
 interface Side {
   signatures: Map<number, PageSignature>;
   texts: Map<number, PageText>;
+  /** Feature points per page for alignment (M12-10): x, y, … in displayed pt. */
+  features: Map<number, Float64Array>;
+}
+
+/** A page raster put band by band for the image method. */
+interface AlignRaster {
+  ink: Ink;
+  rows: number;
 }
 
 class Comparison {
   readonly sides: Record<CompareSide, Side> = {
-    a: { signatures: new Map(), texts: new Map() },
-    b: { signatures: new Map(), texts: new Map() },
+    a: { signatures: new Map(), texts: new Map(), features: new Map() },
+    b: { signatures: new Map(), texts: new Map(), features: new Map() },
   };
   readonly sheets = new Map<number, SheetAccumulator>();
+  /** Each sheet's alignment (M12-10, D-60). */
+  readonly alignments = new Map<number, SheetAlignment>();
+  /** Rasters of the image method, per sheet, until it has run. */
+  readonly alignRasters = new Map<number, Partial<Record<CompareSide, AlignRaster>>>();
   bytes = 0;
 }
 
@@ -94,6 +115,106 @@ export class CompareStore {
       names: l.names,
     });
     return pairPages(side('a', a), side('b', b), threshold, tick);
+  }
+
+  /** Keeps a page's feature points from its line geometry (displayed pt). */
+  putGeometry(cmpId: string, side: CompareSide, page: number, segments: Float32Array): number {
+    const c = this.get(cmpId);
+    const old = c.sides[side].features.get(page);
+    if (old) c.bytes -= old.byteLength;
+    const f = features(segments);
+    c.sides[side].features.set(page, f);
+    c.bytes += f.byteLength;
+    return f.length / 2;
+  }
+
+  private featuresOf(c: Comparison, side: CompareSide, page: number): Float64Array {
+    const f = c.sides[side].features.get(page);
+    if (!f) throw new Error('geometry missing');
+    return f;
+  }
+
+  alignAsIs(cmpId: string, a: number, b: number): AsIsCheck {
+    const c = this.get(cmpId);
+    return asIsCheck(this.featuresOf(c, 'a', a), this.featuresOf(c, 'b', b));
+  }
+
+  alignVector(
+    cmpId: string,
+    sheet: number,
+    a: number,
+    b: number,
+    coarse: { a: RasterBand; b: RasterBand; scale: number },
+    checkpoint?: () => void,
+  ): SheetAlignment {
+    const c = this.get(cmpId);
+    const ink = (r: RasterBand): Ink => {
+      if (r.top !== 0 || r.rows !== r.height) throw new Error('coarse raster incomplete');
+      return { w: r.width, h: r.height, data: r.data };
+    };
+    const al = alignVector(
+      this.featuresOf(c, 'a', a),
+      this.featuresOf(c, 'b', b),
+      { a: ink(coarse.a), b: ink(coarse.b), scale: coarse.scale },
+      checkpoint,
+    );
+    c.alignments.set(sheet, al);
+    return al;
+  }
+
+  putAlignBand(cmpId: string, sheet: number, side: CompareSide, band: RasterBand): number {
+    const c = this.get(cmpId);
+    const rasters = c.alignRasters.get(sheet) ?? {};
+    c.alignRasters.set(sheet, rasters);
+    let r = rasters[side];
+    if (r?.ink.w !== band.width || r.ink.h !== band.height) {
+      if (r) c.bytes -= r.ink.data.byteLength;
+      r = {
+        ink: { w: band.width, h: band.height, data: new Uint8Array(band.width * band.height) },
+        rows: 0,
+      };
+      rasters[side] = r;
+      c.bytes += r.ink.data.byteLength;
+    }
+    if (
+      band.top < 0 ||
+      band.top + band.rows > band.height ||
+      band.data.length !== band.width * band.rows
+    )
+      throw new Error('band outside the raster');
+    r.ink.data.set(band.data, band.top * band.width);
+    r.rows += band.rows;
+    return c.bytes;
+  }
+
+  alignImage(cmpId: string, sheet: number, scale: number, checkpoint?: () => void): SheetAlignment {
+    const c = this.get(cmpId);
+    const rasters = c.alignRasters.get(sheet);
+    const a = rasters?.a;
+    const b = rasters?.b;
+    try {
+      if (!a || !b || a.rows < a.ink.h || b.rows < b.ink.h) throw new Error('raster incomplete');
+      const al = alignImage(a.ink, b.ink, scale, checkpoint);
+      c.alignments.set(sheet, al);
+      return al;
+    } finally {
+      this.dropAlignRasters(c, sheet);
+    }
+  }
+
+  private dropAlignRasters(c: Comparison, sheet: number): void {
+    const rasters = c.alignRasters.get(sheet);
+    if (!rasters) return;
+    for (const r of [rasters.a, rasters.b]) if (r) c.bytes -= r.ink.data.byteLength;
+    c.alignRasters.delete(sheet);
+  }
+
+  setAlignment(cmpId: string, sheet: number, alignment: SheetAlignment): void {
+    this.get(cmpId).alignments.set(sheet, alignment);
+  }
+
+  alignment(cmpId: string, sheet: number): SheetAlignment | undefined {
+    return this.comparisons.get(cmpId)?.alignments.get(sheet);
   }
 
   /** Folds a band pair into the sheet's facts; the bands are not kept. */
