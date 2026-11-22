@@ -46,7 +46,9 @@ import {
   setBalance,
   setColour,
   setPreset,
-  setZoom,
+  setLayout,
+  setLock,
+  setSplits,
   sheetsOf,
   toggleSide,
   differingDefaults,
@@ -267,7 +269,7 @@ describe('the overlay view', () => {
     expect(drawnStyle(v)).toBe(v.style);
   });
 
-  it('changes colours, sides, balance and zoom', () => {
+  it('changes colours, sides and balance', () => {
     expect(setPreset(DEFAULT_VIEW, 'redBlue').style.colB).toEqual(BLUE);
     const custom = setColour(DEFAULT_VIEW, 'b', [255, 128, 0]);
     expect(overlapWarning(custom)).toBe(true);
@@ -275,13 +277,24 @@ describe('the overlay view', () => {
     expect(toggleSide(DEFAULT_VIEW, 'a').style.showA).toBe(false);
     expect(setBalance(DEFAULT_VIEW, -1.7).style.balance).toBe(-1);
     expect(setBalance(DEFAULT_VIEW, 0.333).style.balance).toBe(0.3);
-    expect(setZoom(DEFAULT_VIEW, 1000)).toMatchObject({ zoom: MAX_ZOOM, fit: null });
   });
 
-  it('goes to another sheet within the list and fits it', () => {
-    const v = { ...DEFAULT_VIEW, fit: null };
-    expect(goSheet(v, 3, 3)).toMatchObject({ sheet: 2, fit: 'page' });
+  it('goes to another sheet within the list', () => {
+    const v = DEFAULT_VIEW;
+    expect(goSheet(v, 3, 3)).toMatchObject({ sheet: 2 });
     expect(goSheet(v, -1, 3)).toBe(v);
+  });
+
+  it('opens in Review with the lock on, and switches layout, splitters and lock (M12-12)', () => {
+    expect(DEFAULT_VIEW).toMatchObject({ layout: 'review', lock: true });
+    expect(setLayout(DEFAULT_VIEW, 'overlay').layout).toBe('overlay');
+    expect(setLayout(DEFAULT_VIEW, 'review')).toBe(DEFAULT_VIEW);
+    expect(setSplits(DEFAULT_VIEW, { y: 0.3 }).splits).toEqual({
+      x: DEFAULT_VIEW.splits.x,
+      y: 0.3,
+    });
+    expect(setLock(DEFAULT_VIEW, false).lock).toBe(false);
+    expect(setLock(DEFAULT_VIEW, true)).toBe(DEFAULT_VIEW);
   });
 
   it('draws A through its alignment once found, as is before', () => {

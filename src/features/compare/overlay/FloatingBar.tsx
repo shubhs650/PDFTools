@@ -66,12 +66,15 @@ export function FloatingBar({
   sheet,
   zoomText,
   onZoom,
+  onFit,
   onBlink,
 }: {
   id: string;
   sheet: Sheet;
   zoomText: string;
   onZoom: (dir: 1 | -1) => void;
+  /** Fits the sheet to the window (once; any zoom after it is the user's). */
+  onFit: (mode: 'page' | 'width') => void;
   onBlink: (on: boolean) => void;
 }) {
   const { t } = useTranslation();
@@ -196,22 +199,18 @@ export function FloatingBar({
             onZoom(1);
           }}
         />
-        <ToggleButton
+        <IconButton
           label={t('compare.overlay.fitPage')}
-          iconOnly
           icon={<PageFit20Regular />}
-          pressed={view.fit === 'page'}
-          onPressedChange={() => {
-            set((v) => ({ ...v, fit: 'page' }));
+          onClick={() => {
+            onFit('page');
           }}
         />
-        <ToggleButton
+        <IconButton
           label={t('compare.overlay.fitWidth')}
-          iconOnly
           icon={<ArrowAutofitWidth20Regular />}
-          pressed={view.fit === 'width'}
-          onPressedChange={() => {
-            set((v) => ({ ...v, fit: 'width' }));
+          onClick={() => {
+            onFit('width');
           }}
         />
       </Group>

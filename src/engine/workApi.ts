@@ -117,10 +117,16 @@ export interface WorkApi {
   >;
   /**
    * Create Blank PDF (M10-08·O4, D-49): a new, unencrypted document of `count`
-   * empty pages of `width` × `height` points. Refused outside the dialog's limits.
+   * empty pages of `width` × `height` points, or of `sizes` (one per page, a
+   * comparison's notes, M12-12). Refused outside the dialog's limits.
    */
   createBlank: MethodSpec<
-    { width: number; height: number; count: number },
+    {
+      width: number;
+      height: number;
+      count: number;
+      sizes?: readonly { width: number; height: number }[];
+    },
     { bytes: ArrayBuffer },
     { done: number; total: number }
   >;

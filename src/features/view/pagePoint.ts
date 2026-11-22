@@ -62,7 +62,7 @@ export function toOffset(point: Point, size: Size, rotation: number, scale: numb
 /** A document's scroll container (DocumentView). */
 export function viewOf(docId: string): HTMLElement | null {
   return document.querySelector<HTMLElement>(
-    `[data-testid="document-view"][data-doc-id="${CSS.escape(docId)}"]`,
+    `[data-document-view][data-doc-id="${CSS.escape(docId)}"]`,
   );
 }
 

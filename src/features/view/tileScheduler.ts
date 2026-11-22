@@ -12,6 +12,11 @@ export interface ViewFocus {
   docId: string | null;
   /** 0-based page in view. */
   pageIndex: number;
+  /**
+   * Other documents on screen at the same time (a comparison's windows, S27
+   * change 5) and the page each shows: after the focused one, before the rest.
+   */
+  visible?: ReadonlyMap<string, number>;
 }
 
 export interface RankedTask {
@@ -19,13 +24,16 @@ export interface RankedTask {
 }
 
 const OTHER_DOC = -1e9;
+const OTHER_WINDOW = -1e6;
 
 /** Higher runs first. */
 export function rankTask(task: RankedTask, focus: ViewFocus): number {
   const { docId, pageIndex } = task.meta ?? {};
   if (docId === undefined || pageIndex === undefined) return 0;
-  const distance = Math.abs(pageIndex - focus.pageIndex);
-  return docId === focus.docId ? -distance : OTHER_DOC - distance;
+  if (docId === focus.docId) return -Math.abs(pageIndex - focus.pageIndex);
+  const shown = focus.visible?.get(docId);
+  if (shown !== undefined) return OTHER_WINDOW - Math.abs(pageIndex - shown);
+  return OTHER_DOC - Math.abs(pageIndex - focus.pageIndex);
 }
 
 export const viewFocus: ViewFocus = { docId: null, pageIndex: 0 };
@@ -33,6 +41,11 @@ export const viewFocus: ViewFocus = { docId: null, pageIndex: 0 };
 export function setViewFocus(docId: string | null, pageIndex: number): void {
   viewFocus.docId = docId;
   viewFocus.pageIndex = pageIndex;
+}
+
+/** The windows on screen besides the focused one (docId → page); empty with one window. */
+export function setVisibleWindows(windows: ReadonlyMap<string, number>): void {
+  viewFocus.visible = windows;
 }
 
 interface RankableQueue {

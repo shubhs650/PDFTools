@@ -105,6 +105,16 @@ export async function restorePending(docId: string): Promise<void> {
   }
 }
 
+/**
+ * A comparison window showed this document (M12-12, S27 change 7): its own tab gets
+ * back the place it had, `view`, the next time it is shown, as a last view is.
+ */
+export function giveBackPlace(docId: string, view: ViewState): void {
+  if (!documentStore.getState().docs[docId]) return;
+  pending.set(docId, lastViewOf(view, Date.now()));
+  setRestoring(docId, true);
+}
+
 /** Shown in its own tab (a comparison's windows keep their own place, S27 change 7). */
 const isShown = (docId: string): boolean => documentStore.getState().activeTab === docId;
 
@@ -197,6 +207,8 @@ export function installLastViews(): () => void {
     for (const [id, d] of Object.entries(next.docs)) {
       const before = prev.docs[id]?.view;
       if (!keys.has(id) || before === d.view) continue;
+      // Only the document tab's own place (S27 change 7): a comparison window's is its own.
+      if (!isShown(id)) continue;
       if (sameView(before, d.view)) continue; // only the resolved scale of a fit mode changed
       const timer = timers.get(id);
       if (timer !== undefined) clearTimeout(timer);

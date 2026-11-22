@@ -87,7 +87,9 @@ function StatusInput({
 export function PageNav() {
   const { t } = useTranslation();
   const doc = useDocuments(selectActive);
-  if (!doc) return null;
+  // A comparison's windows show one sheet each: the sheet list moves between pages (M12-12).
+  const comparison = useDocuments((s) => !!s.activeTab && !!s.comparisons[s.activeTab]);
+  if (!doc || comparison) return null;
   const count = doc.meta.pageCount;
   return (
     <div role="group" aria-label={t('status.pageNav')} className="status-group">

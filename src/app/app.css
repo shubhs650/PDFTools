@@ -6533,6 +6533,14 @@ textarea.form-field {
   gap: var(--space-1);
 }
 
+.overlay-head-layout {
+  display: flex;
+  align-items: center;
+  gap: var(--space-1);
+  padding-left: var(--space-3);
+  border-left: var(--border-width) solid var(--color-border);
+}
+
 .overlay-head-sheet {
   min-width: 8em;
   text-align: center;
@@ -6657,51 +6665,33 @@ textarea.form-field {
   font-size: var(--font-size-s);
 }
 
-/* The overlay window: the sheet on the canvas, the floating bar over it. */
+/* The overlay window (M12-12: a document window of the comparison's notes, the overlay
+   drawn as its page's content), the floating bar over it. */
 .overlay-window {
   position: relative;
   display: flex;
   flex: 1;
+  flex-direction: column;
   min-width: 0;
   min-height: 0;
 }
 
-.overlay-scroll {
-  position: relative;
+.overlay-window > .document-menu-area,
+.overlay-window .document-host {
   flex: 1;
-  overflow: auto;
-  background: var(--color-canvas);
-  cursor: grab;
-  touch-action: none;
-}
-
-.overlay-scroll:active {
-  cursor: grabbing;
-}
-
-.overlay-scroll:focus-visible {
-  outline: var(--focus-width, 2px) solid var(--color-focus);
-  outline-offset: -2px;
-}
-
-.overlay-canvas {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  box-sizing: border-box;
-  min-width: 100%;
-  min-height: 100%;
-  width: max-content;
-  padding: var(--space-6) var(--space-6) 96px;
+  min-height: 0;
 }
 
 /* The sheet is paper whatever the theme: the overlay's colours are measured on it. */
 .overlay-sheet-paper {
-  position: relative;
-  flex: none;
+  position: absolute;
+  inset: 0;
   overflow: hidden;
   background: var(--color-page);
-  box-shadow: var(--elevation-1);
+}
+
+.overlay-window[data-drawing='false'] .overlay-drawing {
+  display: none;
 }
 
 .overlay-tiles {
@@ -6897,4 +6887,158 @@ textarea.form-field {
   .compare-type-option:has(input:checked) {
     outline: var(--border-width) solid Highlight;
   }
+}
+
+/* The Review layout (M12-12, D-62): the overlay left, Document A top right, Document B
+   bottom right, with splitters; or the overlay alone. */
+.review-layout {
+  display: flex;
+  flex: 1;
+  min-width: 0;
+  min-height: 0;
+}
+
+.review-pane {
+  display: flex;
+  flex-grow: 0;
+  flex-shrink: 1;
+  min-width: 0;
+  min-height: 0;
+}
+
+.review-pane-rest {
+  flex: 1;
+}
+
+.review-column {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  min-width: 0;
+  min-height: 0;
+}
+
+.review-window {
+  position: relative;
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  min-width: 0;
+  min-height: 0;
+  overflow: hidden;
+  background: var(--color-canvas);
+}
+
+.review-window-title {
+  flex: none;
+  margin: var(--space-0);
+  padding: var(--space-1) var(--space-3);
+  overflow: hidden;
+  border-bottom: var(--border-width) solid var(--color-border);
+  background: var(--color-surface);
+  color: var(--color-text);
+  font-size: var(--font-size-s);
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+.review-window-view {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  min-height: 0;
+}
+
+.review-window-view > .document-menu-area,
+.review-window-view .document-host {
+  flex: 1;
+  min-height: 0;
+}
+
+.review-empty-text {
+  margin: var(--space-6) auto;
+  max-width: 320px;
+  color: var(--color-text-muted);
+  font-size: var(--font-size-m);
+  text-align: center;
+}
+
+.review-splitter {
+  position: relative;
+  flex: none;
+  background: var(--color-border);
+  touch-action: none;
+}
+
+.review-splitter[data-orientation='vertical'] {
+  width: var(--space-1);
+  cursor: col-resize;
+}
+
+.review-splitter[data-orientation='horizontal'] {
+  height: var(--space-1);
+  cursor: row-resize;
+}
+
+.review-splitter:hover,
+.review-splitter:focus-visible {
+  background: var(--color-accent);
+}
+
+.review-splitter:focus-visible {
+  outline: var(--focus-width) solid var(--color-focus);
+  outline-offset: calc(-1 * var(--focus-width));
+}
+
+/* The linked pointer (Q21): a crosshair at the same spot as the pointer in another window. */
+.review-crosshair {
+  position: absolute;
+  top: var(--space-0);
+  left: var(--space-0);
+  z-index: 2;
+  /* A 28 px mark centred on the spot the link moves it to. */
+  width: 28px;
+  height: 28px;
+  margin: -14px 0 0 -14px;
+  pointer-events: none;
+}
+
+.review-crosshair[hidden] {
+  display: none;
+}
+
+.review-crosshair::before,
+.review-crosshair::after {
+  top: 0;
+  left: 13.5px;
+  width: 1px;
+  height: 28px;
+}
+
+.review-crosshair::before {
+  top: 13.5px;
+  left: 0;
+  width: 28px;
+  height: 1px;
+}
+
+.review-crosshair::after {
+  top: 0;
+  left: 13.5px;
+  width: 1px;
+  height: 28px;
+}
+
+.review-crosshair::before {
+  top: -0.5px;
+  left: -14px;
+  width: 28px;
+  height: 1px;
+}
+
+.review-crosshair::after {
+  top: -14px;
+  left: -0.5px;
+  width: 1px;
+  height: 28px;
 }

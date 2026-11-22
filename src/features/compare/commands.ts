@@ -1,10 +1,11 @@
 // The Compare ribbon tab and Compare with… on a document tab's menu (M12-08, D-58).
 // None needs an active document: each opens a comparison tab on its input window.
-import { registerCommand } from '../../app/commands/dispatch';
+import { addCommandGuard, registerCommand } from '../../app/commands/dispatch';
 import { documentStore } from '../../app/store/documentStore';
 import { msg } from '../../i18n';
 import { startComparison } from './compareFlow';
 import type { CompareType } from './model';
+import { compareGuard } from './review/guard';
 
 /** The type Compare with… starts with: the last one started (the window can switch it). */
 let lastType: CompareType = 'overlay';
@@ -16,6 +17,8 @@ const start = (type: CompareType, a: readonly string[] = []): void => {
 
 export function registerCompareCommands(): () => void {
   const offs = [
+    // A comparison's windows keep to their sheet; its notes take comment and view commands.
+    addCommandGuard(compareGuard),
     registerCommand('compare.overlay', {
       run: () => {
         start('overlay');

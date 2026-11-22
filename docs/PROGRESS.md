@@ -1,6 +1,6 @@
 # Triya PDF — Progress
 
-_Last updated: 2026-11-22 (M12-18: text structure)_
+_Last updated: 2026-11-22 (M12-12: the Review layout)_
 
 **Current milestone:** M12 — PDF comparison (PDF overlay for drawings, text comparison for
 documents), version 1.1.0: plan [docs/plan/M12.md](plan/M12.md) and
@@ -30,6 +30,36 @@ interop is in the M6 pack (CHECKLIST §M6 R1–R4). Rev 0 (M0–M4) is complete 
 
 ## Done
 
+- **M12-12 — the Review layout (D-62, D-59).** An overlay result shows **Overlay only** or
+  **Review**: the overlay large on the left, Document A top right and Document B bottom right,
+  with two WAI-ARIA splitters (drag, arrows in 2 % steps, Home and End; at least 160 px a
+  window). All three are **live document windows** (S27 route 1, `src/features/compare/review/`):
+  the overlay is drawn as the page content of a **notes document**, a blank PDF with one page
+  per sheet in the sheet's displayed frame, opened without a tab (`meta.role = 'notes'`; no
+  recent entry, no recovery, no last view), so every comment tool, the Properties pane, the
+  context menus and undo act on the window in use (`focusDocument`, the activeTab/activeId split
+  of M12-08) and notes on the overlay never reach A or B. `DocumentView` gained a sheet mode
+  (one page, no page turns, optional page content in place of the tiles); the overlay painter
+  draws at EmbedPDF's zoom (`OverlayPage.tsx`). **Link** (`src/model/compare/link.ts`, pure;
+  `windowLink.ts`): each window maps into the overlay's frame (A through the sheet's alignment,
+  B and the overlay by identity); the window last used leads with the centre of the part of its
+  sheet in view, and the others take that spot at the leader's zoom ÷ the map's scale. The
+  **lock** (on by default) turns following off and on; a **crosshair** marks the pointer's spot
+  in the other windows. **Rendering:** the windows on screen render first, the focused one
+  before the others (`setVisibleWindows`, `tileCache.setVisible` with a three-pass eviction),
+  and the S27 keyed tile scroll listener (`keyedTiles.ts`). A comparison window keeps the
+  document's own place, spread and rotation (`useWindowPlace`, `giveBackPlace`). **Guards**
+  (`addCommandGuard`): page navigation, view modes, rotation and Organize are off in
+  comparison windows; save, print, convert, protect, forms and bookmarks are off on the notes.
+  Every view now carries `data-document-view`, which page-point lookups, focus and the forms Tab
+  order use (the comparison windows have their own test ids). Tests:
+  `tests/compare/review-link.test.ts`, `tests/view/keyed-tiles.test.ts`, view and blank-page
+  additions; `e2e/compare-review.spec.ts` (each drawing tool, the note and text box keys and the
+  page menu in each window; Properties pane; comment menu; undo per window; sync after zoom,
+  pan and sheet change on pairs 15 and 07; splitters; Overlay only; a one-sided sheet; axe light
+  and dark). **Open:** the notes are discarded without a prompt when the comparison closes
+  until M12-20 saves them in the comparison file; near a sheet's edge a follower can be held at
+  its scroll limit, so the spots match only where both windows can scroll.
 - **M12-18 — text structure (D-63).** The text comparison now reads tables, figures, clause
   numbers and scans (spike S30's method, our own code, no new dependency). **Work worker:**
   `compareText` with `structure` (text comparisons only) adds the page's pictures
@@ -3586,8 +3616,8 @@ rel="noopener noreferrer">`; the commands `app.home` / `app.reportIssue` open th
   sample packs work in Acrobat Reader and a second desktop editor); ARCHITECTURE.md Rev 0.22.
   M12-07 (the Compare worker and its jobs), M12-08 (the comparison tab and input window), M12-09
   (pairing), M12-10 (automatic alignment), M12-11 (the overlay view; layer switches open),
-  M12-17 (text comparison engine), M12-18 (text structure). Next: the remaining tasks in plan
-  order.
+  M12-17 (text comparison engine), M12-18 (text structure), M12-12 (the Review layout). Next:
+  the remaining tasks in plan order.
 - **Agent (M11):** the 18 tasks in [docs/plan/M11.md](plan/M11.md) "Order of work", one thread
   each. Done: M11-01, M11-10, M11-02 (spike S26), M11-03 (tabs: look, hover card, +), M11-04
   (drag to reorder), M11-05 (tab menus), M11-06 (comments in every pointer mode), M11-07 (font

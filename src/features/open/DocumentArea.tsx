@@ -37,18 +37,30 @@ export function DocumentArea() {
   }, [registry]);
 
   const comparison = activeTab !== null && !isDocument ? activeTab : null;
+  // A comparison's result shows its documents in live windows (M12-12): inside the host.
+  const result = useDocuments((s) =>
+    comparison !== null ? s.comparisons[comparison]?.stage === 'result' : false,
+  );
   return (
     <>
-      {/* Outside the engine's host: the host wraps its children once the engine starts
-          (on the first open), which would remount the input window and drop its focus. */}
-      {comparison !== null && (
+      {/* The input window is outside the engine's host: the host wraps its children once
+          the engine starts (on the first open), which would remount the input window and
+          drop its focus. */}
+      {comparison !== null && !result && (
         <div className="document-stack">
           <SessionPrompt variant="bar" />
           <CompareTab id={comparison} />
         </div>
       )}
       <DocumentHost>
-        {comparison !== null ? null : activeId ? (
+        {comparison !== null ? (
+          result ? (
+            <div className="document-stack">
+              <SessionPrompt variant="bar" />
+              <CompareTab id={comparison} />
+            </div>
+          ) : null
+        ) : activeId ? (
           <div className="document-stack">
             <SessionPrompt variant="bar" />
             <PermissionBanner documentId={activeId} />

@@ -47,6 +47,12 @@ export interface DocumentMeta {
   fileSize?: number;
   /** The file's last-modified time (ms since the epoch), as last opened or written. */
   modified?: number;
+  /**
+   * A comparison's notes (M12-12, D-62): the blank pages behind the overlay window,
+   * one per sheet, holding what is drawn there. Never a tab, never written into
+   * Document A or B, and only the comment and view commands act on it.
+   */
+  role?: 'notes';
 }
 
 /** What the tab's hover card shows about the file (M11-03); set at open and after a save. */

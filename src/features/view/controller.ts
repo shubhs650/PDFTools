@@ -37,9 +37,10 @@ interface Active {
   rotate: RotateCapability;
 }
 
-function active(): Active | null {
+/** The active document, or `docId` (a window acting on its own document, S27 change 4). */
+function active(only?: string): Active | null {
   const registry = hostStore.getState().registry;
-  const docId = documentStore.getState().activeId;
+  const docId = only ?? documentStore.getState().activeId;
   if (!registry || !docId) return null;
   const dm = capability<DocumentManagerCapability>(registry, 'document-manager');
   if (!dm.isDocumentOpen(docId)) return null;
@@ -63,9 +64,12 @@ export function currentScale(): number {
   return a ? a.zoom.getState().currentZoomLevel : 1;
 }
 
-/** Zoom by factor, at a viewport point if given (Ctrl+wheel keeps it under the cursor). */
-export function zoomTo(factor: number, center?: { vx: number; vy: number }): void {
-  const a = active();
+/**
+ * Zoom by factor, at a viewport point if given (Ctrl+wheel keeps it under the cursor);
+ * `docId`: that document's window instead of the active document's.
+ */
+export function zoomTo(factor: number, center?: { vx: number; vy: number }, docId?: string): void {
+  const a = active(docId);
   if (!a) return;
   fitVisibleLevels.delete(a.docId);
   a.zoom.requestZoom(clampZoom(factor), center);
