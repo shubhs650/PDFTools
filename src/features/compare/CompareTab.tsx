@@ -38,6 +38,7 @@ import {
   type SideId,
 } from './model';
 import { PairingTable } from './PairingTable';
+import { OverlayResult } from './overlay/OverlayResult';
 import { syncPairing, usePairing } from './pairingFlow';
 import { comparedPairs } from '../../model/compare/pairing';
 import { limitsOf } from './permissions';
@@ -68,8 +69,9 @@ const COMMAND: Record<CompareType, string> = { overlay: 'compare.overlay', text:
 export function CompareTab({ id }: { id: string }) {
   const comparison = useDocuments((s) => s.comparisons[id]);
   if (!comparison) return null;
-  return comparison.stage === 'input' ? (
-    <InputWindow comparison={comparison} />
+  if (comparison.stage === 'input') return <InputWindow comparison={comparison} />;
+  return comparison.type === 'overlay' ? (
+    <OverlayResult comparison={comparison} />
   ) : (
     <ResultStage comparison={comparison} />
   );
@@ -428,8 +430,8 @@ function FileItem({
 }
 
 /**
- * The result (M12-08: a placeholder until the overlay and text views arrive in later
- * tasks): what will be compared, and the way back to the inputs.
+ * The result of a text comparison (a placeholder until the text view arrives, M12-19):
+ * what will be compared, and the way back to the inputs.
  */
 function ResultStage({ comparison: c }: { comparison: Comparison }) {
   const { t } = useTranslation();

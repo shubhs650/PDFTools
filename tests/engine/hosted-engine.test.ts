@@ -58,6 +58,11 @@ function executorWith(
     },
     pagesDrop: () => null,
     annotationTile: () => null,
+    overlayFrame: () => ({ width: 0, height: 0 }),
+    overlayTile: () => {
+      throw new Error('not used');
+    },
+    overlayRelease: () => null,
     snapshot: () => {
       throw new Error('not used');
     },

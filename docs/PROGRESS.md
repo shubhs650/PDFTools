@@ -57,7 +57,35 @@ interop is in the M6 pack (CHECKLIST §M6 R1–R4). Rev 0 (M0–M4) is complete 
   for M12-18). Pair 17 (500 pages): about 0.6 s a side to build and 25 ms to match in Node;
   without M12-18's renumbering the 38 shifted clause numbers of its article are listed one by one.
   Not yet: no window starts a text comparison (M12-19).
-
+- **M12-11 — the overlay view (D-59).** The comparison tab's result for overlay comparisons
+  (`src/features/compare/overlay/`). **Render worker** (`src/workers/render/overlayTiles.ts`,
+  jobs `overlayFrame`, `overlayTile`, `overlayRelease`): each revision's page content (no
+  comments) is drawn into an 8-bit grey bitmap through the tile matrix (A through its
+  alignment, both in B's displayed space), the grey tiles are cached (48 MB LRU, dropped when a
+  document changes or closes), and the tile is composed by three 256 × 256 lookup tables per
+  style (tint and Multiply, Fade unchanged; `src/model/compare/overlay.ts`). Thicken thin lines
+  is a 3 × 3 minimum filter on tiles rendered with a 1 px margin. Comments of A and B are drawn
+  on top in their own colours (as annotation tiles), only for a shown side; **Hide check
+  highlights** leaves out Highlight comments, comments under 70 % opacity, and comments drawn
+  with a blend mode (corpus pair 19's checker marks are Ink with /BM /Multiply). The tile comes
+  back as an ImageBitmap; the main thread only places canvases (`painter.ts`: 512 px tiles,
+  centre first, the old zoom's fullest layer stays under the new one until it is complete).
+  **Window**: zoom (buttons, Ctrl+wheel anchored at the pointer, Ctrl+= / − / 0, fit page / fit
+  width), drag to pan, Blink by holding X or the bar's button. **Floating bar**: show/hide A and
+  B, balance (old only ↔ both ↔ new only), Fade unchanged, Thicken thin lines, Blink, colour
+  presets (red/green, red/blue, magenta/green) and custom colours with the standard swatch
+  picker and the dark-overlap warning, zoom. **Left pane**: the sheet list (pair, added or
+  removed, alignment status from M12-10 with its values and the low-confidence hint), comment
+  switches per document, Hide check highlights, and each file's layers with their default
+  visibility and a notice naming layers whose default differs. `startComparing()`
+  (pairingFlow.ts) starts the session on the result and restarts it when the pairs change.
+  Tests: `tests/compare/overlay.test.ts` (composition, Fade, Thicken seams, colours, tile grid,
+  zoom, cache, view state, layer notice), `tests/compare/overlay-tiles.test.ts` (real PDFium on
+  pairs 01, 16, 19), `e2e/compare-overlay.spec.ts` (pairs 01, 07, 08, 11, 15, 16, 19; axe light
+  and dark; keyboard), `e2e/perf/compare-overlay.spec.ts` (pair 14 dense A1: Ctrl+wheel zoom
+  p95 17–33 ms, pan p95 17 ms, no long task). **Open:** layer _switches_ (Q24) are not built:
+  PDFium cannot switch layers (ADR-012), so each file is drawn with its default layers and the
+  list shows them; reported to the owner with options.
 - **M12-10 — automatic alignment (D-60).** Spike S28's route 1 as app code in
   `src/model/compare/align/` (similarity fit and RANSAC, FFT and phase correlation, the aligner):
   each sheet is **checked as it is** first (share of A's feature points with a B feature within
@@ -3524,7 +3552,8 @@ rel="noopener noreferrer">`; the commands `app.home` / `app.reportIssue` open th
   M12-05). **ADR-032 accepted** by the owner (2026-11-22, the four recommended answers; both
   sample packs work in Acrobat Reader and a second desktop editor); ARCHITECTURE.md Rev 0.22.
   M12-07 (the Compare worker and its jobs), M12-08 (the comparison tab and input window), M12-09
-  (pairing), M12-10 (automatic alignment). Next: the overlay tasks, M12-11 (the overlay view) on.
+  (pairing), M12-10 (automatic alignment), M12-11 (the overlay view; layer switches open). Next:
+  the remaining tasks in plan order.
 - **Agent (M11):** the 18 tasks in [docs/plan/M11.md](plan/M11.md) "Order of work", one thread
   each. Done: M11-01, M11-10, M11-02 (spike S26), M11-03 (tabs: look, hover card, +), M11-04
   (drag to reorder), M11-05 (tab menus), M11-06 (comments in every pointer mode), M11-07 (font

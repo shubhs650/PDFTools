@@ -1,0 +1,172 @@
+// The overlay view's state per comparison (M12-11, D-59): the sheet shown,
+// the zoom, the colours and the floating bar's switches, the comment and
+// layer switches. Pure transitions plus one small store; the overlay window
+// reads it and asks the Render worker for tiles.
+import { createStore, useStore } from 'zustand';
+import type { SheetAlignment } from '../../../model/compare/align/aligner';
+import { IDENTITY, type Affine } from '../../../model/compare/material';
+import {
+  DEFAULT_STYLE,
+  PRESETS,
+  darkOverlap,
+  type ColourPreset,
+  type OverlayStyle,
+  type Rgb,
+} from '../../../model/compare/overlay';
+import { clampZoom } from '../../../model/compare/overlayView';
+import type { PairRow } from '../../../model/compare/pairing';
+import type { LayerList } from '../../../model/ocg';
+import type { SidePage } from '../engine/session';
+
+/** A sheet of the result: a pair of pages, or a page only one revision has. */
+export interface Sheet {
+  a: SidePage | null;
+  b: SidePage | null;
+  /** The sheet's index in the session's compared pairs (both sides present), else null. */
+  pair: number | null;
+}
+
+/** The sheets of a pairing table, in its order; sheets left out of the comparison are skipped. */
+export function sheetsOf(rows: readonly PairRow[], pages: Record<'a' | 'b', SidePage[]>): Sheet[] {
+  const out: Sheet[] = [];
+  let pair = 0;
+  for (const r of rows) {
+    if (r.excluded) continue;
+    const a = r.a === null ? null : (pages.a[r.a] ?? null);
+    const b = r.b === null ? null : (pages.b[r.b] ?? null);
+    if (!a && !b) continue;
+    out.push({ a, b, pair: a && b ? pair++ : null });
+  }
+  return out;
+}
+
+/** How the zoom follows the window: fit the page, fit the width, or a fixed zoom. */
+export type Fit = 'page' | 'width' | null;
+
+export interface OverlayView {
+  sheet: number;
+  /** Fraction of 100 %. */
+  zoom: number;
+  fit: Fit;
+  style: OverlayStyle;
+  thicken: boolean;
+  /** Comments of each document on top, and Hide check highlights (D-59, Q10, Q11). */
+  comments: { a: boolean; b: boolean; hideChecks: boolean };
+  /** Blink (hold X): the side shown alone while held, flipping; null when not blinking. */
+  blink: 'a' | 'b' | null;
+  /** Each compared pair's alignment as the session finds it (M12-10); as is until then. */
+  aligned: Record<number, SheetAlignment>;
+}
+
+export const DEFAULT_VIEW: OverlayView = {
+  sheet: 0,
+  zoom: 1,
+  fit: 'page',
+  style: DEFAULT_STYLE,
+  thicken: false,
+  comments: { a: true, b: true, hideChecks: false },
+  blink: null,
+  aligned: {},
+};
+
+/** The style the tiles are drawn with: Blink shows one side alone. */
+export function drawnStyle(v: OverlayView): OverlayStyle {
+  if (v.blink === null) return v.style;
+  return { ...v.style, showA: v.blink === 'a', showB: v.blink === 'b', balance: 0, fade: 0 };
+}
+
+/** The sheet's alignment, once found (pairs only). */
+export const alignmentOf = (v: OverlayView, s: Sheet | undefined): SheetAlignment | undefined =>
+  s?.pair === null || s?.pair === undefined ? undefined : v.aligned[s.pair];
+
+/** Where A is drawn in B's frame: the alignment found, else as is (D-60). */
+export const placeOf = (v: OverlayView, s: Sheet | undefined): Affine =>
+  alignmentOf(v, s)?.place ?? IDENTITY;
+
+/** A sheet's alignment arrived (the session's watchAlignment). */
+export const setAligned = (v: OverlayView, pair: number, al: SheetAlignment): OverlayView => ({
+  ...v,
+  aligned: { ...v.aligned, [pair]: al },
+});
+
+export const setPreset = (v: OverlayView, p: ColourPreset): OverlayView => ({
+  ...v,
+  style: { ...v.style, colA: PRESETS[p].a, colB: PRESETS[p].b },
+});
+
+export const setColour = (v: OverlayView, side: 'a' | 'b', c: Rgb): OverlayView => ({
+  ...v,
+  style: { ...v.style, [side === 'a' ? 'colA' : 'colB']: c },
+});
+
+/** The custom-colour warning (D-59): the two colours would not give a dark overlap. */
+export const overlapWarning = (v: OverlayView): boolean => !darkOverlap(v.style.colA, v.style.colB);
+
+export const toggleSide = (v: OverlayView, side: 'a' | 'b'): OverlayView => {
+  const key = side === 'a' ? 'showA' : 'showB';
+  return { ...v, style: { ...v.style, [key]: !v.style[key] } };
+};
+
+export const setBalance = (v: OverlayView, balance: number): OverlayView => ({
+  ...v,
+  style: { ...v.style, balance: Math.max(-1, Math.min(1, Math.round(balance * 10) / 10)) },
+});
+
+export const setFade = (v: OverlayView, on: boolean): OverlayView => ({
+  ...v,
+  style: { ...v.style, fade: on ? 1 : 0 },
+});
+
+export const setZoom = (v: OverlayView, zoom: number): OverlayView => ({
+  ...v,
+  zoom: clampZoom(zoom),
+  fit: null,
+});
+
+/** Another sheet: the zoom fits the page again. */
+export const goSheet = (v: OverlayView, sheet: number, count: number): OverlayView => {
+  const s = Math.max(0, Math.min(count - 1, sheet));
+  return s === v.sheet ? v : { ...v, sheet: s, fit: v.fit ?? 'page' };
+};
+
+interface OverlayStoreState {
+  byId: Record<string, OverlayView>;
+}
+
+export const overlayStore = createStore<OverlayStoreState>()(() => ({ byId: {} }));
+
+export function useOverlayView(id: string): OverlayView {
+  return useStore(overlayStore, (s) => s.byId[id] ?? DEFAULT_VIEW);
+}
+
+export function overlayView(id: string): OverlayView {
+  return overlayStore.getState().byId[id] ?? DEFAULT_VIEW;
+}
+
+export function updateView(id: string, fn: (v: OverlayView) => OverlayView): void {
+  overlayStore.setState((s) => {
+    const cur = s.byId[id] ?? DEFAULT_VIEW;
+    const next = fn(cur);
+    return next === cur ? {} : { byId: { ...s.byId, [id]: next } };
+  });
+}
+
+export function dropView(id: string): void {
+  if (!overlayStore.getState().byId[id]) return;
+  overlayStore.setState((s) => ({
+    byId: Object.fromEntries(Object.entries(s.byId).filter(([k]) => k !== id)),
+  }));
+}
+
+/** Names of layers that are on by default in one list and off in the other (D-59, Q24). */
+export function differingDefaults(a: LayerList | null, b: LayerList | null): string[] {
+  if (!a || !b) return [];
+  const onIn = (l: LayerList): Map<string, boolean> => new Map(l.layers.map((x) => [x.name, x.on]));
+  const mb = onIn(b);
+  const out: string[] = [];
+  for (const [name, on] of onIn(a)) {
+    const other = mb.get(name);
+    if (other !== undefined && other !== on) out.push(name);
+  }
+  return out;
+}
