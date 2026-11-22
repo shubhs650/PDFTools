@@ -1,0 +1,43 @@
+html,
+body {
+  margin: 0;
+  background: #808080;
+}
+#view {
+  position: absolute;
+  inset: 0;
+  overflow: auto;
+}
+#sheet {
+  position: relative;
+  background: #fff;
+}
+.layer {
+  position: absolute;
+  inset: 0;
+}
+.layer[hidden] {
+  display: none;
+}
+.tile {
+  position: absolute;
+  display: block;
+}
+/* The compositor route: each side is an isolated group, its colour under its
+   grey tiles (screen keeps white as white and turns black into the colour);
+   side B multiplies onto side A. */
+.stack {
+  isolation: isolate;
+  background: #fff;
+}
+.side {
+  position: absolute;
+  inset: 0;
+  isolation: isolate;
+}
+#side-b {
+  mix-blend-mode: multiply;
+}
+.side .grey {
+  mix-blend-mode: screen;
+}

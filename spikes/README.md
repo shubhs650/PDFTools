@@ -25,6 +25,7 @@ Throwaway spike code for [docs/plan/M0.md](../docs/plan/M0.md) (S1–S8) and M1-
 | S25     | [`s25-freetext-colors/`](s25-freetext-colors/) (M7)      | [ADR-024](../docs/adr/024-freetext-text-and-border-colours.md) | Works with workaround |
 | S26     | [`s26-freetext-fonts/`](s26-freetext-fonts/) (M11-02)    | [ADR-028](../docs/adr/028-m11-tabs-fonts-select.md)            | Works (route R2)      |
 | S27     | [`s27-linked-views/`](s27-linked-views/) (M12-02)        | ADR-032 (M12-06); [RESULTS.md](s27-linked-views/RESULTS.md)    | Works with workaround |
+| S29     | [`s29-overlay/`](s29-overlay/) (M12-04)                  | ADR-032 (M12-06); [RESULTS.md](s29-overlay/RESULTS.md)         | Works with workaround |
 
 ## Shared pieces (`shared/`)
 
@@ -61,6 +62,11 @@ npx vitest run spikes                     # unit tests (narrow-tail writer, sear
 # S27 several documents on screen (M12-02): the app's real view layer in two and three
 # windows; numbers → test-results/s27-results.json, findings in s27-linked-views/RESULTS.md
 SPIKE=s27 npm run spikes -- --project=s27
+
+# S29 the overlay on screen and the vector overlay PDF (M12-04): PDFium directly, worker against
+# compositor; the vector overlay pack → spikes/s29-overlay/out/pack/ (PDFJS_DIR optional, see RESULTS.md)
+node --import ./spikes/shared/ts-ext.ts spikes/s29-overlay/run-node.ts   # → test-results/s29-node.json
+SPIKE=s29 npm run spikes -- --project=s29                                # → test-results/s29-browser.json
 
 # S26 fonts in text comments (M11-02): the tests use fixtures/; the library build and the
 # interop file need the upstream fonts (network) and write to spikes/s26-freetext-fonts/out/
