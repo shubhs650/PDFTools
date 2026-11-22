@@ -49,6 +49,9 @@ export function usePairing(id: string): PairingState | undefined {
 }
 
 const sessions = new Map<string, CompareSession>();
+/** Each session's inputs, and the pairs it was started with (M12-11: the result starts it). */
+const sessionInputs = new Map<string, { a: CompareInput; b: CompareInput }>();
+const startedWith = new Map<string, string>();
 
 function patch(id: string, key: string, fn: (p: PairingState) => Partial<PairingState>): void {
   pairingStore.setState((s) => {
@@ -62,6 +65,8 @@ function patch(id: string, key: string, fn: (p: PairingState) => Partial<Pairing
 function drop(id: string): void {
   const session = sessions.get(id);
   sessions.delete(id);
+  sessionInputs.delete(id);
+  startedWith.delete(id);
   void session?.close();
   if (pairingStore.getState().byId[id])
     pairingStore.setState((s) => ({
@@ -119,6 +124,7 @@ export function syncPairing(c: Comparison): void {
     },
   });
   sessions.set(c.id, session);
+  sessionInputs.set(c.id, { a: inputs.a, b: inputs.b });
   const pages = { a: [...session.sidePages('a')], b: [...session.sidePages('b')] };
   pairingStore.setState((s) => ({
     byId: {
@@ -192,6 +198,34 @@ export function sheetsToCompare(id: string): { a: number; b: number }[] | null {
 /** The comparison's session (later tasks start it with `sheetsToCompare`). */
 export function pairingSession(id: string): CompareSession | undefined {
   return sessions.get(id);
+}
+
+/**
+ * Starts the comparison of the sheets the pairing table settled on (M12-11:
+ * the result does, when Compare is pressed). A session already started with
+ * other pairs (the table was edited since) is replaced by a new one on the
+ * same inputs; the pairing itself is kept.
+ */
+export function startComparing(id: string): CompareSession | undefined {
+  const pairs = sheetsToCompare(id);
+  const session = sessions.get(id);
+  const inputs = sessionInputs.get(id);
+  if (!pairs || !session || !inputs) return undefined;
+  const key = JSON.stringify(pairs);
+  const was = startedWith.get(id);
+  if (was === key) return session;
+  let target = session;
+  if (was !== undefined) {
+    void session.close();
+    target = new CompareSession(inputs.a, inputs.b, {
+      work: workClient(),
+      compare: compareClient(),
+    });
+    sessions.set(id, target);
+  }
+  startedWith.set(id, key);
+  void target.start(pairs).catch(() => undefined);
+  return target;
 }
 
 /** Pages a partner list offers: every page of a small side, else the likeliest ones. */

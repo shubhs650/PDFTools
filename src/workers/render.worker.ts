@@ -24,6 +24,7 @@ import { applyPageOp, withSource } from './render/pages';
 import { renderProgressive } from './render/progressive';
 import { AnnotBoxCache, annotBoxes, renderAnnotTile } from './render/annotTiles';
 import { renderSnapshot } from './render/snapshot';
+import { OverlayTiles, displayedSize } from './render/overlayTiles';
 import { imageUnder } from './shared/pageImages';
 import { dropCustom, keepAuthor, nameTargets, writeMarkupIntent } from './render/annotIds';
 import { installFontReadback } from './render/freeTextFonts';
@@ -56,6 +57,18 @@ let mod: WrappedPdfiumModule | undefined;
 let native: PdfiumNative | undefined;
 let tracker: SaveTracker | undefined;
 const annotBoxCache = new AnnotBoxCache();
+const overlayTiles = new OverlayTiles();
+
+/** One macrotask: a cancel sent behind a burst of tile requests is read before they draw. */
+const nextTask = (): Promise<void> =>
+  new Promise((resolve) => {
+    const ch = new MessageChannel();
+    ch.port1.onmessage = () => {
+      ch.port1.close();
+      resolve();
+    };
+    ch.port2.postMessage(null);
+  });
 /** The font library's faces (M11-07, D-52), loaded on first use from our own origin. */
 const commentFaces = new FaceStore(
   workerFontSource(self.location.origin, new URL(subsetWasmUrl, self.location.href).href),
@@ -339,6 +352,26 @@ const handlers: Handlers<RenderApi> = {
     return tile ? new Transfer(tile, [tile.data.buffer]) : null;
   },
 
+  overlayFrame: ({ docId, pageIndex }) => {
+    const { mod: m, native: n } = ready();
+    return displayedSize(m, n, docId, pageIndex);
+  },
+
+  overlayTile: async (req, ctx) => {
+    const { mod: m, native: n } = ready();
+    // Requests of a zoom or a sheet the view has left are cancelled before they draw (S29).
+    await nextTask();
+    ctx.throwIfAborted();
+    const rgba = overlayTiles.render(m, n, req, ctx.signal);
+    const bitmap = await createImageBitmap(new ImageData(rgba, req.width, req.height));
+    return new Transfer({ bitmap, cachedBytes: overlayTiles.cachedBytes }, [bitmap]);
+  },
+
+  overlayRelease: ({ docIds }) => {
+    for (const d of docIds) overlayTiles.drop(d);
+    return null;
+  },
+
   snapshot: ({ docId, ...req }) => {
     const { mod: m, native: n, tracker: t } = ready();
     // Rule 9: a snapshot copies the page's content (M6-09).
@@ -438,6 +471,7 @@ const handlers: Handlers<RenderApi> = {
         return v === undefined || v < 0 ? null : v;
       });
       annotBoxCache.drop(docId);
+      overlayTiles.drop(docId);
     }
   },
 
@@ -456,6 +490,7 @@ const handlers: Handlers<RenderApi> = {
     const { mod: m, native: n, tracker: t } = ready();
     await t.restore(docId, token);
     annotBoxCache.drop(docId);
+    overlayTiles.drop(docId);
     return { pages: pageInfos(m, n, docId) };
   },
 
@@ -463,6 +498,7 @@ const handlers: Handlers<RenderApi> = {
     const { mod: m, native: n, tracker: t } = ready();
     await t.applyObjects(docId, objects, firstNew, capability ?? 'annotate');
     annotBoxCache.drop(docId);
+    overlayTiles.drop(docId);
     return { pages: pageInfos(m, n, docId) };
   },
 

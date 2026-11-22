@@ -10,6 +10,7 @@ import type { FlattenCounts } from '../workers/render/flatten';
 import type { SnapshotPixels, SnapshotRequest } from '../workers/render/snapshot';
 import type { PageOp } from '../workers/render/pages';
 import type { NotePopupInfo } from '../workers/render/notePopups';
+import type { OverlayTileRequest } from '../workers/render/overlayTiles';
 import type { DeviceRect, PageInfo } from '../workers/render/pdfium';
 import type { DocDigest } from '../workers/render/save/digest';
 import type { SecureAction } from '../workers/render/security';
@@ -172,6 +173,21 @@ export interface RenderApi {
     } & AnnotTileRequest,
     { data: Uint8ClampedArray<ArrayBuffer>; drawn: number } | null
   >;
+  /**
+   * The overlay's displayed page size (M12-11, D-59): points, /Rotate and the
+   * crop box applied — the frame a sheet is drawn in.
+   */
+  overlayFrame: MethodSpec<{ docId: string; pageIndex: number }, { width: number; height: number }>;
+  /**
+   * One tile of the PDF overlay (M12-11, D-59, ADR-032 S29): both revisions
+   * rendered without comments to grey through their matrices (A through its
+   * placement), tinted and multiplied, each side's comments drawn on top
+   * unless switched off. An ImageBitmap, transferred. Cancellable until it
+   * starts drawing; grey tiles are cached under a byte cap.
+   */
+  overlayTile: MethodSpec<OverlayTileRequest, { bitmap: ImageBitmap; cachedBytes: number }>;
+  /** Forgets the overlay's cached tiles (a comparison closed). */
+  overlayRelease: MethodSpec<{ docIds: string[] }, null>;
   /**
    * A region of a page as the view shows it (M6-09 snapshot): content, the
    * drawn markups and form fields, at the given rotation; RGBA, transferred.
