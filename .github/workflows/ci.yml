@@ -1,19 +1,28 @@
 name: CI
 
 # When CI runs:
-# - Pull requests: the checks job, plus the @smoke e2e flows with the offline and
-#   accessibility gates and the @smoke perf scenarios. A PR whose files are all
-#   Markdown or under docs/ skips e2e. Add the `full-e2e` label to a PR to run
-#   the full suite on it instead (removing it runs the smoke set again).
+# - Pull requests: the checks job, plus the @smoke e2e flows with the @smoke perf
+#   scenarios in one job and the offline and accessibility gates in another, side
+#   by side. A PR whose files are all Markdown or under docs/ skips e2e. Add the
+#   `full-e2e` label to a PR to run the full suite on it instead (removing it runs
+#   the smoke set again).
 # - Push to main, nightly, and Run workflow (workflow_dispatch): the checks job,
 #   the full e2e suite in 3 shards, the accessibility gate, and the offline flow,
 #   perf gate and acceptance table, each set in its own job.
+# - "CI result" always runs last and fails if any job above failed or was
+#   cancelled: one check to read before merging.
 # The offline flow and the accessibility gate run as their own Playwright runs,
 # as they did before sharding: mixing the CPU-heavy axe scans into the shards
 # coincided with timing failures in other flows.
 # A branch push runs CI only through its PR: with both `push: ['**']` and
 # `pull_request`, every PR commit ran CI twice, in two concurrency groups
 # (refs/heads/<branch> and refs/pull/<n>/merge).
+#
+# Two PRs at once (M12 autodrive): each PR has its own concurrency group, so a new
+# commit cancels only that PR's older run; runs on main are never cancelled and
+# queue one at a time. A PR run tests the PR merged onto main as it was when the
+# run started: when another PR merges first, update the branch from main and wait
+# for a green run before merging (docs/deploy/ci.md).
 
 on:
   push:
@@ -102,33 +111,15 @@ jobs:
           echo "suite=$suite" | tee -a "$GITHUB_OUTPUT"
 
   e2e-smoke:
-    name: E2E smoke · Offline · Accessibility (Playwright, Chromium)
+    name: E2E smoke · Perf smoke (Playwright, Chromium)
     needs: changes
     if: needs.changes.outputs.suite == 'smoke'
     runs-on: ubuntu-24.04
     steps:
       - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
-        with:
-          node-version-file: .nvmrc
-          cache: npm
-      - run: npm ci
-      - name: Install Chromium
-        run: npx playwright install --with-deps chromium
-      - name: Install qpdf (test fixtures only; not a dependency)
-        run: sudo apt-get install -y qpdf
+      - uses: ./.github/actions/setup-e2e
       - name: Smoke flows (built app under the production _headers)
         run: npm run e2e -- --grep @smoke --grep-invert "@offline|@a11y"
-      - name: Offline and update flow (§9, D-17, D-18)
-        if: success() || failure()
-        run: npm run e2e:offline
-        env:
-          E2E_SKIP_BUILD: '1'
-      - name: Accessibility gate (axe, rule 12)
-        if: success() || failure()
-        run: npm run e2e:a11y
-        env:
-          E2E_SKIP_BUILD: '1'
       - name: Perf gate, @smoke scenarios (no main-thread task > 100 ms after boot)
         if: success() || failure()
         run: npm run perf -- --grep @smoke
@@ -138,6 +129,30 @@ jobs:
         if: failure()
         with:
           name: playwright-report-smoke
+          path: playwright-report/
+          retention-days: 7
+
+  e2e-smoke-gates:
+    # Its own runner, beside the smoke flows: in one job the four runs took about
+    # 13 min one after another (smoke 6 min, offline 1.5 min, axe 5.5 min).
+    name: Offline · Accessibility (Playwright, Chromium)
+    needs: changes
+    if: needs.changes.outputs.suite == 'smoke'
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+      - uses: ./.github/actions/setup-e2e
+      - name: Offline and update flow (§9, D-17, D-18)
+        run: npm run e2e:offline
+      - name: Accessibility gate (axe, rule 12)
+        if: success() || failure()
+        run: npm run e2e:a11y
+        env:
+          E2E_SKIP_BUILD: '1'
+      - uses: actions/upload-artifact@v4
+        if: failure()
+        with:
+          name: playwright-report-smoke-gates
           path: playwright-report/
           retention-days: 7
 
@@ -152,15 +167,7 @@ jobs:
         shard: [1, 2, 3]
     steps:
       - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
-        with:
-          node-version-file: .nvmrc
-          cache: npm
-      - run: npm ci
-      - name: Install Chromium
-        run: npx playwright install --with-deps chromium
-      - name: Install qpdf (test fixtures only; not a dependency)
-        run: sudo apt-get install -y qpdf
+      - uses: ./.github/actions/setup-e2e
       - name: E2E tests (built app under the production _headers)
         run: npm run e2e -- --grep-invert "@offline|@a11y" --shard=${{ matrix.shard }}/3
       - uses: actions/upload-artifact@v4
@@ -177,15 +184,7 @@ jobs:
     runs-on: ubuntu-24.04
     steps:
       - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
-        with:
-          node-version-file: .nvmrc
-          cache: npm
-      - run: npm ci
-      - name: Install Chromium
-        run: npx playwright install --with-deps chromium
-      - name: Install qpdf (test fixtures only; not a dependency)
-        run: sudo apt-get install -y qpdf
+      - uses: ./.github/actions/setup-e2e
       - name: Accessibility gate (axe, rule 12)
         run: npm run e2e:a11y
       - uses: actions/upload-artifact@v4
@@ -202,15 +201,7 @@ jobs:
     runs-on: ubuntu-24.04
     steps:
       - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
-        with:
-          node-version-file: .nvmrc
-          cache: npm
-      - run: npm ci
-      - name: Install Chromium
-        run: npx playwright install --with-deps chromium
-      - name: Install qpdf (test fixtures only; not a dependency)
-        run: sudo apt-get install -y qpdf
+      - uses: ./.github/actions/setup-e2e
       - name: Offline and update flow (§9, D-17, D-18)
         # Its own output folder: the perf run below starts by clearing test-results/, which
         # took the offline traces with it.
@@ -243,3 +234,19 @@ jobs:
             playwright-report/
             offline-results/
           retention-days: 7
+
+  result:
+    # A job skipped by the suite choice counts as passed; a failed or cancelled one does not.
+    name: CI result
+    needs: [checks, changes, e2e-smoke, e2e-smoke-gates, e2e, a11y, gates]
+    if: always()
+    runs-on: ubuntu-24.04
+    steps:
+      - name: Every job passed or was skipped
+        env:
+          RESULTS: ${{ join(needs.*.result, ' ') }}
+        run: |
+          echo "Job results: $RESULTS"
+          for r in $RESULTS; do
+            case "$r" in success|skipped) ;; *) echo "::error::A CI job ended as $r"; exit 1 ;; esac
+          done
