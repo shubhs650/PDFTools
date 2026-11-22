@@ -26,9 +26,18 @@ export function compareHandlers(store: CompareStore): Handlers<CompareApi> {
       ctx.throwIfAborted();
       return { bytes: guard(() => store.putSignature(cmpId, side, page, signature)) };
     },
-    putText: ({ cmpId, side, page, text }, ctx) => {
+    putText: ({ cmpId, side, page, text, layout }, ctx) => {
       ctx.throwIfAborted();
-      return { bytes: guard(() => store.putText(cmpId, side, page, text)) };
+      return { bytes: guard(() => store.putText(cmpId, side, page, text, layout)) };
+    },
+    matchText: ({ cmpId, pages, moves }, ctx) => {
+      const result = guard(() =>
+        store.matchText(cmpId, pages, moves, (stage, done, total) => {
+          ctx.throwIfAborted();
+          ctx.progress({ stage, done, total });
+        }),
+      );
+      return new Transfer(result, [result.sync.buffer as ArrayBuffer]);
     },
     sheetBand: ({ cmpId, sheet, dpi, a, b, inkLevel }, ctx) => {
       ctx.throwIfAborted();
