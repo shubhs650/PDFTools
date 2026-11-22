@@ -1,6 +1,6 @@
 # Triya PDF — Progress
 
-_Last updated: 2026-11-22 (M12-08: the comparison tab and input window)_
+_Last updated: 2026-11-22 (M12-09: page pairing)_
 
 **Current milestone:** M12 — PDF comparison (PDF overlay for drawings, text comparison for
 documents), version 1.1.0: plan [docs/plan/M12.md](plan/M12.md) and
@@ -29,6 +29,30 @@ answers Q1–Q7; ARCHITECTURE.md Rev 0.12 after [ADR-024](adr/024-freetext-text-
 interop is in the M6 pack (CHECKLIST §M6 R1–R4). Rev 0 (M0–M4) is complete on the agent side.
 
 ## Done
+
+- **M12-09 — page pairing (D-60).** As soon as both sides of a PDF overlay are ready, the pages
+  are paired in the workers: the Work worker reads each page's signature (S28: 32 × 32 ink
+  picture and words) and the Compare worker's new `pairPages` (progress, cancel, matrix back by
+  transfer) scores every pair (ink and tf-idf words half and half, portrait against landscape
+  less) and assigns them (`src/model/compare/pairing.ts`): an order-keeping pass, then the pages
+  it left best first (reordered sheets), what stays is added or removed. **One change from the
+  spike:** a pair counts less in the ordered pass by how far it falls short of either page's best
+  partner; without it the app's own signatures paired the swapped S-105/S-106 of pair 17 wrongly.
+  **Sets:** a side is one file or a set (`CompareSession` takes `{ files }`, sheets are pairs of
+  side pages); when both sides are sets, file names that name the same sheet (revision marks
+  such as "Rev B", "_R2", "OLD", a trailing letter dropped) add to the score and put A's files in
+  B's order first. **The pairing table** in the input window (`PairingTable.tsx`,
+  `pairingFlow.ts`): a sheet per row, each side's page in a list (every page of a side up to 60
+  pages, else the likeliest twenty and the current one), None marks a page added or removed,
+  a Compare check box leaves a sheet out, the match in %, file names for sets, "Pair
+  automatically" undoes the edits; changing the inputs pairs again. Compare waits for the pairing
+  and for at least one sheet. `session.pair()` then `session.start(pairs)` reuses the signatures;
+  `sheetsToCompare(id)` and `pairingSession(id)` are what M12-11 starts the result with. Tests:
+  corpus pairs 02, 05, 10 and 17 exactly as the manifest says, every other readable overlay pair
+  in order (pair 12 is encrypted), pair 17 as six one-sheet files picked in another order, the
+  table model, the flow; a session pairing a set across files and comparing those sheets; e2e
+  `compare-pairing.spec.ts` (pair 17 with edits, a set by file name, keyboard, axe light and
+  dark). Not yet: pairing edits are not part of session restore (paired again on restore).
 
 - **M12-08 — the comparison tab and its input window (D-58).** Compare → PDF Overlay and Text
   Comparison (a new **Compare** ribbon tab) and **Compare with…** on a document tab's menu open a
@@ -3448,8 +3472,8 @@ rel="noopener noreferrer">`; the commands `app.home` / `app.reportIssue` open th
   own code), M12-06 (spike S31, the comparison file; ADR-032 written, S30 section filled by
   M12-05). **ADR-032 accepted** by the owner (2026-11-22, the four recommended answers; both
   sample packs work in Acrobat Reader and a second desktop editor); ARCHITECTURE.md Rev 0.22.
-  M12-07 (the Compare worker and its jobs). Next: M12-08 (the comparison tab and input window)
-  and M12-09 (pairing), then the overlay tasks.
+  M12-07 (the Compare worker and its jobs), M12-08 (the comparison tab and input window), M12-09
+  (pairing). Next: the overlay tasks, M12-10 (automatic alignment) on.
 - **Agent (M11):** the 18 tasks in [docs/plan/M11.md](plan/M11.md) "Order of work", one thread
   each. Done: M11-01, M11-10, M11-02 (spike S26), M11-03 (tabs: look, hover card, +), M11-04
   (drag to reorder), M11-05 (tab menus), M11-06 (comments in every pointer mode), M11-07 (font

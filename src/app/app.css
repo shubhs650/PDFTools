@@ -6493,6 +6493,94 @@ textarea.form-field {
   font-size: var(--font-size-m);
 }
 
+.compare-pairing {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+  padding: var(--space-5);
+  border: var(--border-width) solid var(--color-border);
+  border-radius: var(--radius-xl);
+  background: var(--color-surface);
+}
+
+.compare-pairing-head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-3);
+}
+
+.compare-pairing-head .compare-side-title {
+  flex: 1;
+}
+
+.compare-pairing-edited {
+  color: var(--color-text-muted);
+  font-size: var(--font-size-s);
+}
+
+.compare-pairing-status,
+.compare-pairing-progress {
+  margin: var(--space-0);
+  color: var(--color-text-muted);
+  font-size: var(--font-size-m);
+}
+
+.compare-pairing-progress {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+
+/* A long set scrolls inside the table, its header row kept in view. */
+.compare-pairing-scroll {
+  max-height: 420px;
+  overflow: auto;
+  border: var(--border-width) solid var(--color-border);
+  border-radius: var(--radius-m);
+}
+
+.compare-pairing-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: var(--font-size-m);
+}
+
+.compare-pairing-table th,
+.compare-pairing-table td {
+  padding: var(--space-2) var(--space-3);
+  border-bottom: var(--border-width) solid var(--color-border);
+  text-align: start;
+  vertical-align: middle;
+}
+
+.compare-pairing-table thead th {
+  position: sticky;
+  top: 0;
+  z-index: 1;
+  background: var(--color-surface-raised);
+  font-weight: var(--font-weight-semibold);
+}
+
+.compare-pairing-table tbody th {
+  width: 4em;
+  color: var(--color-text-muted);
+  font-weight: var(--font-weight-regular);
+}
+
+.compare-pairing-table tr[data-excluded] td:not(:last-child) {
+  color: var(--color-text-muted);
+}
+
+.compare-pairing-select {
+  width: 100%;
+  min-width: 10em;
+}
+
+.compare-pairing-match {
+  white-space: nowrap;
+}
+
 @media (max-width: 900px) {
   .compare-sides {
     grid-template-columns: minmax(0, 1fr);

@@ -2,6 +2,7 @@
 // worker module so tests can serve them on a MessageChannel.
 import type { CompareApi } from '../../engine/compareApi';
 import { RpcError } from '../../engine/errors';
+import { Transfer } from '../../engine/protocol';
 import type { Handlers } from '../rpc-host';
 import type { CompareStore } from './store';
 
@@ -32,6 +33,15 @@ export function compareHandlers(store: CompareStore): Handlers<CompareApi> {
     sheetBand: ({ cmpId, sheet, dpi, a, b, inkLevel }, ctx) => {
       ctx.throwIfAborted();
       return { rows: guard(() => store.sheetBand(cmpId, sheet, dpi, a, b, inkLevel)) };
+    },
+    pairPages: ({ cmpId, a, b, threshold }, ctx) => {
+      const result = guard(() =>
+        store.pairPages(cmpId, a, b, threshold, (done, total) => {
+          ctx.throwIfAborted();
+          ctx.progress({ done, total });
+        }),
+      );
+      return new Transfer(result, [result.sim.buffer as ArrayBuffer]);
     },
     sheetFacts: ({ cmpId, sheet }) => guard(() => store.sheetFacts(cmpId, sheet)),
     summary: ({ cmpId }) => guard(() => store.summary(cmpId)),

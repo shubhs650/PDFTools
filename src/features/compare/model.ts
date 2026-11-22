@@ -127,7 +127,11 @@ export function rangePages(
 export type CompareBlock =
   | { kind: 'empty'; side: SideId }
   | { kind: 'range'; side: SideId; docId: string; error: RangeError }
-  | { kind: 'opening' };
+  | { kind: 'opening' }
+  /** An overlay's pages are being paired (M12-09). */
+  | { kind: 'pairing' }
+  /** The pairing table leaves no sheet to compare (M12-09). */
+  | { kind: 'noSheets' };
 
 export function compareBlock(
   c: Comparison,

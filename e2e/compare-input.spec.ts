@@ -177,6 +177,7 @@ test('the keyboard reaches every control of the input window, in order', async (
   await page.goto('/');
   await openOverlay(page);
   await dropOn(side(page, 'a'), [{ name: 'A.pdf', b64: b64(simplePdf(1)) }]);
+  await expect(side(page, 'a').getByTestId('compare-file')).toContainText('A.pdf');
   await dropOn(side(page, 'b'), [{ name: 'B.pdf', b64: b64(simplePdf(2)) }]);
   await expect(side(page, 'b').getByTestId('compare-file')).toContainText('B.pdf');
   await expect(input(page).getByRole('button', { name: 'Compare', exact: true })).toBeEnabled();
@@ -207,6 +208,12 @@ test('the keyboard reaches every control of the input window, in order', async (
     'Remove B.pdf',
     'Pages of B.pdf',
     'Add files…',
+    // The pairing table (M12-09): "Pair automatically" is off until the table is edited.
+    'Document A (old) page of sheet 1',
+    'Document B (new) page of sheet 1',
+    'Compare sheet 1',
+    'Document A (old) page of sheet 2',
+    'Document B (new) page of sheet 2',
     'Compare',
   ]);
   // Arrow keys choose the type; Enter on Compare runs it.
