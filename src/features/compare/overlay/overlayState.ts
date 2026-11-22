@@ -1,7 +1,9 @@
 // The overlay view's state per comparison (M12-11, D-59): the sheet shown,
-// the zoom, the colours and the floating bar's switches, the comment and
-// layer switches. Pure transitions plus one small store; the overlay window
-// reads it and asks the Render worker for tiles.
+// the colours and the floating bar's switches, the comment and layer
+// switches, and the Review layout's layout, splitters and lock (M12-12,
+// D-62). Pure transitions plus one small store; the overlay window reads it
+// and asks the Render worker for tiles. The zoom is the windows' own
+// (EmbedPDF's, per document).
 import { createStore, useStore } from 'zustand';
 import type { SheetAlignment } from '../../../model/compare/align/aligner';
 import { IDENTITY, type Affine } from '../../../model/compare/material';
@@ -13,7 +15,7 @@ import {
   type OverlayStyle,
   type Rgb,
 } from '../../../model/compare/overlay';
-import { clampZoom } from '../../../model/compare/overlayView';
+import { DEFAULT_SPLITS, type Splits } from '../../../model/compare/link';
 import type { PairRow } from '../../../model/compare/pairing';
 import type { LayerList } from '../../../model/ocg';
 import type { SidePage } from '../engine/session';
@@ -40,14 +42,17 @@ export function sheetsOf(rows: readonly PairRow[], pages: Record<'a' | 'b', Side
   return out;
 }
 
-/** How the zoom follows the window: fit the page, fit the width, or a fixed zoom. */
-export type Fit = 'page' | 'width' | null;
+/** The result's layout (D-62, Q14): the overlay alone, or the overlay with A and B. */
+export type ReviewLayout = 'review' | 'overlay';
 
 export interface OverlayView {
   sheet: number;
-  /** Fraction of 100 %. */
-  zoom: number;
-  fit: Fit;
+  /** Review (a result opens in it) or Overlay only. */
+  layout: ReviewLayout;
+  /** The Review layout's splitters. */
+  splits: Splits;
+  /** The windows stay on the same spot of the drawing (D-62, Q21: on by default). */
+  lock: boolean;
   style: OverlayStyle;
   thicken: boolean;
   /** Comments of each document on top, and Hide check highlights (D-59, Q10, Q11). */
@@ -60,8 +65,9 @@ export interface OverlayView {
 
 export const DEFAULT_VIEW: OverlayView = {
   sheet: 0,
-  zoom: 1,
-  fit: 'page',
+  layout: 'review',
+  splits: DEFAULT_SPLITS,
+  lock: true,
   style: DEFAULT_STYLE,
   thicken: false,
   comments: { a: true, b: true, hideChecks: false },
@@ -117,17 +123,22 @@ export const setFade = (v: OverlayView, on: boolean): OverlayView => ({
   style: { ...v.style, fade: on ? 1 : 0 },
 });
 
-export const setZoom = (v: OverlayView, zoom: number): OverlayView => ({
-  ...v,
-  zoom: clampZoom(zoom),
-  fit: null,
-});
-
-/** Another sheet: the zoom fits the page again. */
+/** Another sheet (its windows fit it again). */
 export const goSheet = (v: OverlayView, sheet: number, count: number): OverlayView => {
   const s = Math.max(0, Math.min(count - 1, sheet));
-  return s === v.sheet ? v : { ...v, sheet: s, fit: v.fit ?? 'page' };
+  return s === v.sheet ? v : { ...v, sheet: s };
 };
+
+export const setLayout = (v: OverlayView, layout: ReviewLayout): OverlayView =>
+  v.layout === layout ? v : { ...v, layout };
+
+export const setSplits = (v: OverlayView, splits: Partial<Splits>): OverlayView => ({
+  ...v,
+  splits: { ...v.splits, ...splits },
+});
+
+export const setLock = (v: OverlayView, lock: boolean): OverlayView =>
+  v.lock === lock ? v : { ...v, lock };
 
 interface OverlayStoreState {
   byId: Record<string, OverlayView>;

@@ -4,7 +4,7 @@
 // back or switching tabs shows images without a new render.
 //
 // Eviction: least recently used entries of inactive documents first, then of
-// the active one. Entries are dropped with their document on close.
+// other documents on screen (a comparison's windows), then of the active one. Entries are dropped with their document on close.
 //
 // M3 (annotation edits) must call dropPage() for a page whose content changes.
 
@@ -21,6 +21,7 @@ export class TileCache {
   private readonly entries = new Map<string, Entry>();
   private bytes = 0;
   private active: string | null = null;
+  private visible: ReadonlySet<string> = new Set();
   readonly maxBytes: number;
   hits = 0;
   evictions = 0;
@@ -63,6 +64,14 @@ export class TileCache {
     this.active = docId;
   }
 
+  /**
+   * Other documents on screen with the active one (a comparison's windows, S27
+   * change 5): evicted after the hidden ones, before the active one.
+   */
+  setVisible(docIds: readonly string[]): void {
+    this.visible = new Set(docIds);
+  }
+
   dropDoc(docId: string): void {
     this.dropWhere((e) => e.docId === docId);
   }
@@ -87,8 +96,10 @@ export class TileCache {
 
   private evict(): void {
     if (this.bytes <= this.maxBytes) return;
-    // Inactive documents first (oldest first), then the active one.
-    for (const pass of [(e: Entry) => e.docId !== this.active, () => true]) {
+    // Hidden documents first (oldest first), then other windows on screen, then the active one.
+    const hidden = (e: Entry): boolean => e.docId !== this.active && !this.visible.has(e.docId);
+    const notActive = (e: Entry): boolean => e.docId !== this.active;
+    for (const pass of [hidden, notActive, () => true]) {
       for (const [key, e] of this.entries) {
         if (this.bytes <= this.maxBytes) return;
         if (!pass(e)) continue;

@@ -58,17 +58,24 @@ export class OverlayPainter {
   private frame = 0;
   private disposed = false;
   private readonly onChange: (s: PainterStats) => void;
+  private readonly cssPerPt: number;
 
+  /**
+   * `cssPerPt`: CSS px per point at zoom 1 (the overlay window's own 96/72; 1 in
+   * a document window, whose zoom is EmbedPDF's, M12-12).
+   */
   constructor(
     view: HTMLElement,
     sheet: HTMLElement,
     request: RequestTile,
     onChange: (s: PainterStats) => void = () => undefined,
+    cssPerPt = CSS_PER_PT,
   ) {
     this.view = view;
     this.sheet = sheet;
     this.request = request;
     this.onChange = onChange;
+    this.cssPerPt = cssPerPt;
   }
 
   /** The sheet (points) and what its tiles show; a new key draws every tile anew. */
@@ -94,7 +101,7 @@ export class OverlayPainter {
 
   /** The sheet's size in CSS pixels at the current zoom. */
   cssSize(): { width: number; height: number } {
-    const k = this.zoom * CSS_PER_PT;
+    const k = this.zoom * this.cssPerPt;
     return { width: this.size.width * k, height: this.size.height * k };
   }
 
@@ -135,7 +142,7 @@ export class OverlayPainter {
 
   /** Device pixels per point. */
   private scale(): number {
-    return this.zoom * CSS_PER_PT * this.dpr();
+    return this.zoom * this.cssPerPt * this.dpr();
   }
 
   private schedule(): void {

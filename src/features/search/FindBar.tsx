@@ -70,7 +70,7 @@ export function FindBar() {
   const close = (): void => {
     closeFind();
     document.getElementById('document-panel')?.focus();
-    document.querySelector<HTMLElement>('[data-testid="document-view"]')?.focus();
+    document.querySelector<HTMLElement>('[data-document-view]')?.focus();
   };
 
   return (

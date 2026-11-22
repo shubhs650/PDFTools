@@ -67,6 +67,24 @@ describe('TileCache (M1-14, §5)', () => {
   });
 });
 
+describe('TileCache with several windows (M12-12, S27 change 5)', () => {
+  it('evicts hidden documents first, then the other windows, then the active one', () => {
+    const blob = (n: number) => new Blob([new Uint8Array(n)]);
+    const c = new TileCache(300);
+    c.setActive('A');
+    c.setVisible(['B']);
+    c.set('a', 'A', 0, blob(100));
+    c.set('b', 'B', 0, blob(100));
+    c.set('c', 'C', 0, blob(100));
+    c.set('a2', 'A', 1, blob(100));
+    expect(c.get('c')).toBeUndefined();
+    expect(c.get('b')).toBeDefined();
+    c.set('a3', 'A', 2, blob(100));
+    expect(c.get('b')).toBeUndefined();
+    expect(c.get('a')).toBeDefined();
+  });
+});
+
 describe('rankTask: visible first (M1-14)', () => {
   const focus = { docId: 'A', pageIndex: 10 };
   it('ranks the active document by distance from the page in view', () => {
@@ -75,6 +93,14 @@ describe('rankTask: visible first (M1-14)', () => {
     expect(r('A', 11)).toBe(r('A', 9));
     expect(r('A', 12)).toBeGreaterThan(r('A', 50));
     expect(r('A', 1999)).toBeGreaterThan(r('B', 10)); // other documents last
+  });
+  it('ranks the other windows on screen after the focused one, before hidden documents (M12-12)', () => {
+    const several = { ...focus, visible: new Map([['B', 3]]) };
+    const r = (docId: string, pageIndex: number) =>
+      rankTask({ meta: { docId, pageIndex } }, several);
+    expect(r('A', 1999)).toBeGreaterThan(r('B', 3));
+    expect(r('B', 3)).toBeGreaterThan(r('B', 4));
+    expect(r('B', 900)).toBeGreaterThan(r('C', 10));
   });
   it('leaves tasks without page metadata neutral', () => {
     expect(rankTask({}, focus)).toBe(0);

@@ -55,6 +55,11 @@ export interface OpenOptions {
    * then used as it is.
    */
   tab?: boolean;
+  /**
+   * A comparison's notes document (M12-12, D-62): opens without a tab, out of the
+   * recent list and the file's last view.
+   */
+  notes?: boolean;
 }
 
 /**
@@ -67,7 +72,8 @@ export async function openFiles(
   options: OpenOptions = {},
 ): Promise<(string | undefined)[]> {
   const ids: (string | undefined)[] = [];
-  for (const f of files) ids.push(await openOne(f, source, options.tab !== false));
+  for (const f of files)
+    ids.push(await openOne(f, source, options.tab !== false && !options.notes, !!options.notes));
   return ids;
 }
 
@@ -92,6 +98,7 @@ async function openOne(
   req: OpenedFile | RecoveredOpen,
   source: DocumentSource,
   tab: boolean,
+  notes = false,
 ): Promise<string | undefined> {
   const { file, handle } = req;
   const recovered = 'recordRecent' in req;
@@ -101,7 +108,7 @@ async function openOne(
   try {
     const fingerprint = await storageClient().call('fingerprint', { file }).promise;
     // The file's last view (D-53), read while it opens; a recovered document has its own.
-    const lastView = recovered ? Promise.resolve(null) : readLastView(fingerprint);
+    const lastView = recovered || notes ? Promise.resolve(null) : readLastView(fingerprint);
     const dup = await findDuplicate({ ...(handle ? { handle } : {}), fingerprint });
     if (dup) {
       advance(job, { type: 'duplicate', docId: dup });
@@ -166,7 +173,7 @@ async function openOne(
       size: file.size,
       ...(recovered && req.pendingPrefix ? { pendingPrefix: req.pendingPrefix } : {}),
     });
-    trackView(id, fingerprint, await lastView, info.pageCount);
+    if (!notes) trackView(id, fingerprint, await lastView, info.pageCount);
     const meta = {
       id,
       name: file.name,
@@ -177,12 +184,13 @@ async function openOne(
       signatureCount: info.signatureCount,
       formType: info.formType,
       ...fileFacts(file, source),
+      ...(notes ? { role: 'notes' as const } : {}),
     };
     if (tab) documentStore.getState().open(meta);
     else documentStore.getState().openWithoutTab(meta);
     advance(job, { type: 'opened', docId: id });
     void openInWorkWorker(id, file, password);
-    if (recovered) return id;
+    if (recovered || notes) return id;
     void import('../recent/recent')
       .then(({ recordOpened }) =>
         recordOpened({ file, ...(handle ? { handle } : {}), fingerprint }),

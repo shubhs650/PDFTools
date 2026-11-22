@@ -42,8 +42,11 @@ const THUMB_GAP: Readonly<Record<Density, number>> = { comfortable: 12, compact:
  */
 export function ThumbnailsPane() {
   const { t } = useTranslation();
-  const documentId = useDocuments((s) => s.activeId);
-  const current = useDocuments((s) => (s.activeId ? (s.docs[s.activeId]?.view.page ?? 0) : 0));
+  // A comparison's windows show one sheet each: the sheet list moves between pages (M12-12).
+  const documentId = useDocuments((s) =>
+    s.activeTab && s.comparisons[s.activeTab] ? null : s.activeId,
+  );
+  const current = useDocuments((s) => (documentId ? (s.docs[documentId]?.view.page ?? 0) : 0));
   const pages = usePages(documentId);
   const version = usePageOps((s) => (documentId ? (s.version[documentId] ?? 0) : 0));
   const selection = usePageSelection(documentId);

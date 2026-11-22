@@ -127,7 +127,29 @@ export function commandState(
     return { enabled: false, pressed, reason: msg('protect.restricted') };
   const reason = h.disabledReason?.(ctx, args) ?? null;
   if (reason) return { enabled: false, pressed, reason };
+  for (const guard of guards) {
+    const r = guard(id);
+    if (r) return { enabled: false, pressed, reason: r };
+  }
   return { enabled: true, pressed };
+}
+
+/** A rule a feature adds over every command (null: no objection). */
+export type CommandGuard = (id: string) => MessageKey | null;
+
+const guards = new Set<CommandGuard>();
+
+/**
+ * Adds a rule over every command (M12-12: a comparison's windows keep to one
+ * sheet, and its notes take only comment and view commands); returns the remover.
+ */
+export function addCommandGuard(guard: CommandGuard): () => void {
+  guards.add(guard);
+  notify();
+  return () => {
+    guards.delete(guard);
+    notify();
+  };
 }
 
 const beforeRun = new Set<(id: string) => void>();

@@ -139,6 +139,8 @@ export function installRecovery(): () => void {
   let prev = documentStore.getState();
   const onChange = (next: DocumentsState): void => {
     for (const [id, d] of Object.entries(next.docs)) {
+      // A comparison's notes (M12-12) belong to the comparison file (D-65), not to recovery.
+      if (d.meta.role === 'notes') continue;
       const before = prev.docs[id];
       if (d.edits > (before?.edits ?? 0)) apply(id, { type: 'edit' });
       else if (before?.dirty && !d.dirty) clearFor(id); // saved

@@ -116,6 +116,27 @@ describe('createBlank (Work worker)', () => {
     expect(qpdfOk(bytes)).toBe(true);
   });
 
+  it('builds each page at its own size (a comparison’s notes, M12-12)', async () => {
+    const sizes = [
+      { width: 3370, height: 2384 },
+      { width: 1190.55, height: 841.89 },
+    ];
+    const bytes = await createBlank(mod, { width: 0, height: 0, count: 2, sizes }, slice, () => {
+      // no progress needed
+    });
+    expect(await boxes(bytes)).toEqual([
+      [0, 0, 3370, 2384],
+      [0, 0, 1190.55, 841.89],
+    ]);
+    expect(qpdfOk(bytes)).toBe(true);
+    expect(() => {
+      checkBlankSpec({ width: 0, height: 0, count: 3, sizes });
+    }).toThrow(/number of pages/);
+    expect(() => {
+      checkBlankSpec({ width: 0, height: 0, count: 1, sizes: [{ width: 20, height: 600 }] });
+    }).toThrow(/size/);
+  });
+
   it('gives every new document its own trailer ID', async () => {
     const spec = { width: 595.28, height: 841.89, count: 1 };
     const a = await createBlank(mod, spec, slice, () => undefined);

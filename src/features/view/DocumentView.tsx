@@ -10,7 +10,15 @@ import type { SelectionCapability } from '@embedpdf/plugin-selection';
 import { TilingLayer } from '@embedpdf/plugin-tiling/react';
 import { Viewport } from '@embedpdf/plugin-viewport/react';
 import { ZoomMode, type ZoomCapability, type ZoomDocumentState } from '@embedpdf/plugin-zoom';
-import { useEffect, useMemo, useRef, useState, type KeyboardEvent, type PointerEvent } from 'react';
+import {
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+  type KeyboardEvent,
+  type PointerEvent,
+  type ReactNode,
+} from 'react';
 import { appStore, effectiveTool, useApp } from '../../app/store/appStore';
 import { isEditable } from '../../app/keys/useShortcuts';
 import { documentStore, useDocuments, type ZoomSetting } from '../../app/store/documentStore';
@@ -91,10 +99,12 @@ function Page({
   documentId,
   layout,
   hidden,
+  content,
 }: {
   documentId: string;
   layout: PageLayout;
   hidden: boolean;
+  content?: SheetWindow['content'];
 }) {
   const doc = useDocumentState(documentId);
   const pageObj = doc?.document?.pages[layout.pageIndex];
@@ -119,15 +129,21 @@ function Page({
               className="page-content"
               style={{ width: size.width * scale, height: size.height * scale }}
             >
-              <PreviewLayer documentId={documentId} pageIndex={layout.pageIndex} />
-              <TilingLayer
-                documentId={documentId}
-                pageIndex={layout.pageIndex}
-                className="page-tiles"
-                // Sharp copies of the preview (whose <img> has alt=""): EmbedPDF's
-                // tiles have no alt, so the whole layer is hidden from assistive tech.
-                aria-hidden
-              />
+              {content ? (
+                content(layout.pageIndex, scale)
+              ) : (
+                <>
+                  <PreviewLayer documentId={documentId} pageIndex={layout.pageIndex} />
+                  <TilingLayer
+                    documentId={documentId}
+                    pageIndex={layout.pageIndex}
+                    className="page-tiles"
+                    // Sharp copies of the preview (whose <img> has alt=""): EmbedPDF's
+                    // tiles have no alt, so the whole layer is hidden from assistive tech.
+                    aria-hidden
+                  />
+                </>
+              )}
               {/* Markups (M3-05, ADR-014): our annotation tiles over the content tiles. */}
               <AnnotationTileLayer
                 documentId={documentId}
@@ -194,7 +210,8 @@ function currentSpan(vp: HTMLElement, pages: readonly number[]): Span | null {
 }
 
 /** The pages of the spread holding the store's current page, for a document. */
-function currentPages(documentId: string): number[] {
+function currentPages(documentId: string, sheet?: number): number[] {
+  if (sheet !== undefined) return [sheet];
   const d = documentStore.getState().docs[documentId];
   if (!d) return [];
   const spreads = spreadsFor(d.meta.pageCount, isFacing(d.view.mode));
@@ -202,12 +219,31 @@ function currentPages(documentId: string): number[] {
 }
 
 /**
+ * A comparison window (M12-12, D-62, S27): the document shows one page, the
+ * sheet's, and never turns the page itself; the sheet list does.
+ */
+export interface SheetWindow {
+  /** The page shown (0-based). */
+  page: number;
+  /** Draws the page's content instead of the document's own tiles (the overlay window). */
+  content?: (pageIndex: number, scale: number) => ReactNode;
+  /** The window's accessible name (the document's name otherwise). */
+  label?: string;
+  testId?: string;
+  /** More `data-*` attributes on the scroll container (state for tests and styles). */
+  data?: Record<`data-${string}`, string>;
+}
+
+/**
  * The active document (§5, D-09): EmbedPDF's virtual scroller; each page is a
  * bounded preview under 256 px tiles (ADR-011). The scroll container is
- * focusable and named, so the keyboard reaches it (rule 12).
+ * focusable and named, so the keyboard reaches it (rule 12). With `sheet`, a
+ * window of a comparison showing one page (M12-12).
  */
-export function DocumentView({ documentId }: { documentId: string }) {
-  const name = useDocuments((s) => s.docs[documentId]?.meta.name ?? '');
+export function DocumentView({ documentId, sheet }: { documentId: string; sheet?: SheetWindow }) {
+  const docName = useDocuments((s) => s.docs[documentId]?.meta.name ?? '');
+  const name = sheet?.label ?? docName;
+  const sheetPage = sheet?.page;
   const registry = useHost((s) => s.registry);
   const ready = useDocuments((s) => s.docs[documentId] !== undefined);
 
@@ -215,19 +251,21 @@ export function DocumentView({ documentId }: { documentId: string }) {
   const mode = useDocuments((s) => s.docs[documentId]?.view.mode ?? 'continuous');
   const page = useDocuments((s) => s.docs[documentId]?.view.page ?? 0);
   const pageCount = useDocuments((s) => s.docs[documentId]?.meta.pageCount ?? 0);
-  const paged = isPaged(mode);
+  const paged = sheetPage !== undefined || isPaged(mode);
   const shown = useMemo(() => {
+    if (sheetPage !== undefined) return new Set([sheetPage]);
     const spreads = spreadsFor(pageCount, isFacing(mode));
     return new Set(spreads[spreadIndexOf(spreads, page)] ?? []);
-  }, [pageCount, mode, page]);
+  }, [pageCount, mode, page, sheetPage]);
   const host = useRef<HTMLDivElement>(null);
   const [panning, setPanning] = useState(false);
   const pan = useRef<{ x: number; y: number; id: number } | null>(null);
-  // The file's last view (D-53) is put in place once its pages are laid out.
-  const restoring = useRestoringView(documentId);
+  // The file's last view (D-53) is put in place once its pages are laid out
+  // (in its own tab: a comparison window keeps its own place, S27 change 7).
+  const restoring = useRestoringView(documentId) && sheetPage === undefined;
   useEffect(() => {
-    if (registry) void restorePending(documentId);
-  }, [registry, documentId]);
+    if (registry && sheetPage === undefined) void restorePending(documentId);
+  }, [registry, documentId, sheetPage]);
 
   // Page and zoom state → the document store (status bar, commands, recovery).
   useEffect(() => {
@@ -348,19 +386,25 @@ export function DocumentView({ documentId }: { documentId: string }) {
       const r = vp.getBoundingClientRect();
       const scale = documentStore.getState().docs[documentId]?.view.scale ?? 1;
       const delta = e.deltaMode === WheelEvent.DOM_DELTA_LINE ? e.deltaY * 40 : e.deltaY;
-      zoomTo(wheelZoom(scale, delta), { vx: e.clientX - r.left, vy: e.clientY - r.top });
+      // This window's own document, whichever window has the focus (S27 change 4).
+      zoomTo(
+        wheelZoom(scale, delta),
+        { vx: e.clientX - r.left, vy: e.clientY - r.top },
+        documentId,
+      );
     };
     // Paged modes: scroll within the page or spread; past its edge, turn the page.
     const pagedWheel = (e: WheelEvent, vp: HTMLElement): void => {
       const d = documentStore.getState().docs[documentId];
-      if (!d || !isPaged(d.view.mode)) return;
-      const span = currentSpan(vp, currentPages(documentId));
+      if (!d || (sheetPage === undefined && !isPaged(d.view.mode))) return;
+      const span = currentSpan(vp, currentPages(documentId, sheetPage));
       if (!span) return;
       e.preventDefault();
       const range = pagedScrollRange(span, vp.clientHeight, PAGE_GAP);
       const delta = e.deltaMode === WheelEvent.DOM_DELTA_LINE ? e.deltaY * 40 : e.deltaY;
       const atEnd = delta > 0 ? vp.scrollTop >= range.bottom - 1 : vp.scrollTop <= range.top + 1;
-      if (atEnd && delta !== 0) {
+      // A comparison window never turns the page: the sheet list does.
+      if (atEnd && delta !== 0 && sheetPage === undefined) {
         if (performance.now() - lastTurn < PAGE_TURN_COOLDOWN_MS) return;
         lastTurn = performance.now();
         move(delta > 0 ? 'next' : 'prev');
@@ -373,7 +417,7 @@ export function DocumentView({ documentId }: { documentId: string }) {
     return () => {
       el.removeEventListener('wheel', onWheel);
     };
-  }, [documentId]);
+  }, [documentId, sheetPage]);
 
   // Paged modes: hold scrolling (scrollbar, arrows, Hand) within the page or spread.
   useEffect(() => {
@@ -381,7 +425,7 @@ export function DocumentView({ documentId }: { documentId: string }) {
     const vp = host.current?.querySelector<HTMLElement>('.viewport');
     if (!vp) return;
     const clamp = (): void => {
-      const span = currentSpan(vp, currentPages(documentId));
+      const span = currentSpan(vp, currentPages(documentId, sheetPage));
       if (!span) return;
       const range = pagedScrollRange(span, vp.clientHeight, PAGE_GAP);
       const top = clampToRange(vp.scrollTop, range);
@@ -392,7 +436,7 @@ export function DocumentView({ documentId }: { documentId: string }) {
     return () => {
       vp.removeEventListener('scroll', clamp);
     };
-  }, [paged, page, documentId]);
+  }, [paged, page, documentId, sheetPage]);
 
   // Space held = Hand until released (§8.1); Z held with Hand = Zoom to Area
   // until released (M11-08·O4); released anywhere.
@@ -416,7 +460,9 @@ export function DocumentView({ documentId }: { documentId: string }) {
 
   const onKeyDown = (e: KeyboardEvent): void => {
     if (e.ctrlKey || e.altKey || e.metaKey || isEditable(e.target as Element)) return;
-    if (e.key === 'Home' || e.key === 'End') {
+    if (sheetPage !== undefined && ['Home', 'End', 'PageUp', 'PageDown'].includes(e.key)) {
+      // A comparison window keeps to its sheet: these scroll within it.
+    } else if (e.key === 'Home' || e.key === 'End') {
       // First / last page (§5), not the scroll container's own jump.
       e.preventDefault();
       move(e.key === 'Home' ? 'first' : 'last');
@@ -471,6 +517,7 @@ export function DocumentView({ documentId }: { documentId: string }) {
         data-panning={panning || undefined}
         data-mode={mode}
         data-restoring={restoring || undefined}
+        data-sheet={sheetPage}
         // The page last clicked: Ctrl+V pastes there while it is in view (M6-02).
         onPointerDownCapture={(e) => {
           notePointerDown(documentId, e.target);
@@ -480,7 +527,9 @@ export function DocumentView({ documentId }: { documentId: string }) {
         <Viewport
           documentId={documentId}
           className="viewport ui-focusable"
-          data-testid={VIEW_TEST_ID}
+          {...sheet?.data}
+          data-testid={sheet?.testId ?? VIEW_TEST_ID}
+          data-document-view=""
           data-doc-id={documentId}
           role={REGION}
           aria-label={name}
@@ -499,6 +548,7 @@ export function DocumentView({ documentId }: { documentId: string }) {
                 documentId={documentId}
                 layout={layout}
                 hidden={paged && !shown.has(layout.pageIndex)}
+                {...(sheet?.content ? { content: sheet.content } : {})}
               />
             )}
           />

@@ -39,7 +39,7 @@ interface Loaded {
  */
 function moveFocus(e: KeyboardEvent<HTMLElement>): void {
   if (e.key !== 'Tab' || e.altKey || e.ctrlKey || e.metaKey) return;
-  const view = e.currentTarget.closest('[data-testid="document-view"]') ?? document;
+  const view = e.currentTarget.closest('[data-document-view]') ?? document;
   const all = [...view.querySelectorAll<HTMLElement>('[data-form-control]')];
   const next = all[all.indexOf(e.currentTarget) + (e.shiftKey ? -1 : 1)];
   if (!next) return; // past the last (or first) field: the browser's own order

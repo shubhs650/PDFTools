@@ -1,7 +1,7 @@
 import AxeBuilder from '@axe-core/playwright';
-import type { Locator, Page } from '@playwright/test';
-import { corpusBytes, corpusPair } from './fixtures/comparison-corpus/index.ts';
-import { darkTheme, type DropFile } from './support/app.ts';
+import type { Page } from '@playwright/test';
+import { darkTheme } from './support/app.ts';
+import { overlayDrawn, overlayOf, overlayView } from './support/compare.ts';
 import { expect, test } from './support/fixtures.ts';
 
 // M12-11 (D-59): the overlay view. Both revisions are drawn by the Render
@@ -11,56 +11,9 @@ import { expect, test } from './support/fixtures.ts';
 // moves between sheets; comments of both documents are drawn on top with
 // their switches; each file's layers are listed with the notice.
 
-const side = (page: Page, s: 'a' | 'b') => page.getByTestId(`compare-side-${s}`);
-const view = (page: Page) => page.getByTestId('overlay-view');
+const view = overlayView;
+const drawn = overlayDrawn;
 const bar = (page: Page) => page.getByRole('toolbar', { name: 'Overlay controls' });
-const b64 = (bytes: Uint8Array): string => Buffer.from(bytes).toString('base64');
-
-const corpus = (id: string, s: 'old' | 'new', name: string): DropFile => ({
-  name,
-  b64: b64(corpusBytes(corpusPair('overlay', id), s)),
-});
-
-async function dropOn(target: Locator, files: DropFile[]): Promise<void> {
-  await target.evaluate((el, fs) => {
-    const dt = new DataTransfer();
-    for (const f of fs) {
-      const bytes = Uint8Array.from(atob(f.b64), (c) => c.charCodeAt(0));
-      dt.items.add(new File([bytes], f.name, { type: 'application/pdf' }));
-    }
-    for (const type of ['dragenter', 'dragover', 'drop'])
-      el.dispatchEvent(new DragEvent(type, { dataTransfer: dt, bubbles: true, cancelable: true }));
-  }, files);
-}
-
-/** Opens a PDF overlay of corpus pair `id` and shows its result. */
-async function overlayOf(page: Page, id: string): Promise<void> {
-  await page.goto('/');
-  await page.getByRole('tab', { name: 'Compare', exact: true }).click();
-  await page.getByRole('button', { name: 'PDF Overlay' }).click();
-  await dropOn(side(page, 'a'), [corpus(id, 'old', `Pair ${id} RevA.pdf`)]);
-  await expect(side(page, 'a').getByTestId('compare-file')).toHaveCount(1);
-  await dropOn(side(page, 'b'), [corpus(id, 'new', `Pair ${id} RevB.pdf`)]);
-  await expect(page.getByTestId('compare-pairing')).toHaveAttribute('data-status', 'done', {
-    timeout: 30_000,
-  });
-  await page
-    .getByTestId('compare-input')
-    .getByRole('button', { name: 'Compare', exact: true })
-    .click();
-  await drawn(page);
-}
-
-/**
- * Waits until the sheet shown is aligned (its overlay is then drawn through the
- * alignment, M12-10) and every visible tile of the current state is on screen.
- */
-async function drawn(page: Page): Promise<void> {
-  await expect(
-    page.locator('.overlay-sheet[aria-selected="true"] .overlay-sheet-align'),
-  ).toBeVisible({ timeout: 30_000 });
-  await expect(view(page)).toHaveAttribute('data-complete', 'true', { timeout: 30_000 });
-}
 
 interface Counts {
   red: number;

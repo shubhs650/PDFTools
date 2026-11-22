@@ -14,16 +14,25 @@ export interface BlankSpec {
   width: number;
   height: number;
   count: number;
+  /**
+   * Each page's own size instead (a comparison's notes, one page per sheet in the
+   * sheet's displayed size, M12-12); `count` must equal its length.
+   */
+  sizes?: readonly { width: number; height: number }[];
 }
 
 const SLICE = 50;
 
 /** Throws on a size or page count outside the dialog's limits. */
-export function checkBlankSpec({ width, height, count }: BlankSpec): void {
+export function checkBlankSpec({ width, height, count, sizes }: BlankSpec): void {
   if (!Number.isInteger(count) || count < 1 || count > BLANK_MAX_PAGES)
     throw new RpcError('pages-count', 'The number of pages is out of range');
+  if (sizes && sizes.length !== count)
+    throw new RpcError('pages-count', 'The number of pages is out of range');
   const ok = (v: number) => Number.isFinite(v) && v >= BLANK_MIN_SIDE && v <= BLANK_MAX_SIDE;
-  if (!ok(width) || !ok(height)) throw new RpcError('pages-size', 'The page size is out of range');
+  for (const s of sizes ?? [{ width, height }])
+    if (!ok(s.width) || !ok(s.height))
+      throw new RpcError('pages-size', 'The page size is out of range');
 }
 
 /**
@@ -70,7 +79,8 @@ export async function createBlank(
       await slice.checkpoint();
       const end = Math.min(spec.count, i + SLICE);
       for (let k = i; k < end; k++) {
-        const page = rawCall(mod, 'FPDFPage_New', doc, k, spec.width, spec.height);
+        const size = spec.sizes?.[k] ?? spec;
+        const page = rawCall(mod, 'FPDFPage_New', doc, k, size.width, size.height);
         if (!page) throw new RpcError('page-new', 'The page could not be created');
         rawCall(mod, 'FPDF_ClosePage', page);
       }

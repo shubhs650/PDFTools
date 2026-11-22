@@ -23,6 +23,7 @@ import { installAttachmentRefresh } from '../attachments/attachments';
 import { installSignTools } from '../sign/signDocument';
 import { installFieldTools } from '../forms/fieldTools';
 import { capability, setRegistry, useHost } from './host';
+import { installKeyedTiles } from './keyedTiles';
 
 let textEditInstalled = false;
 
@@ -53,6 +54,8 @@ const onInitialized = (registry: Parameters<typeof setRegistry>[0]): Promise<voi
     installCommentSelection(registry);
     installSelectAfterDraw(registry);
     installCommitGuard(registry);
+    // Sharp tiles in every window of a comparison (S27 finding 1, M12-12).
+    installKeyedTiles(registry);
     // Text comment edits are written on every way out of the editor (M7-02).
     // … and pressed, dragged or double-clicked like desktop editors' (M7-03).
     if (!textEditInstalled) {

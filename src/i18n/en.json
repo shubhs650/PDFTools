@@ -3038,6 +3038,23 @@
       "low": "Low confidence",
       "values": "Shift {{dx}}, {{dy}} pt · scale {{scale}} · rotation {{deg}}°",
       "lowHint": "The sheets could not be lined up with certainty. Check the overlay, or align the sheet by points."
+    },
+    "review": {
+      "oneSheet": "Not in a comparison: each window shows the sheet chosen in the sheet list.",
+      "pagesInTab": "Pages can't be changed in a comparison. Open the document in its own tab to change its pages.",
+      "notOnNotes": "Not on the overlay window: what you draw there is a note of the comparison, kept apart from Document A and Document B.",
+      "layout": "Layout",
+      "layout_review": "Review",
+      "layout_overlay": "Overlay only",
+      "lock": "Keep the windows on the same spot",
+      "windowTitle": "{{side}}: {{name}}, page {{page}}",
+      "noPage_a": "This sheet isn't in Document A.",
+      "noPage_b": "This sheet isn't in Document B.",
+      "splitX": "Resize the overlay and the documents",
+      "splitY": "Resize Document A and Document B",
+      "notesName": "Comparison notes.pdf",
+      "preparing": "Preparing the windows…",
+      "notesFailed": "The overlay window couldn't be prepared. Change the inputs to try again."
     }
   }
 }
