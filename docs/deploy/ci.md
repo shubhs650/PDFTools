@@ -5,12 +5,12 @@
 
 ## What runs when
 
-| Event                                              | Jobs                                                                                          | Wall time |
-| -------------------------------------------------- | --------------------------------------------------------------------------------------------- | --------- |
-| Pull request (code)                                | Checks · smoke flows + perf smoke + offline on two runners · axe on two runners, side by side | ~9 min    |
-| Pull request, every file Markdown or under `docs/` | Checks only                                                                                   | ~7 min    |
-| Pull request with the `full-e2e` label             | Checks · full e2e in 3 shards · accessibility · offline + perf + acceptance                   | ~13 min   |
-| Push to `main`, nightly (02:23 UTC), Run workflow  | Same as `full-e2e`                                                                            | ~13 min   |
+| Event                                              | Jobs                                                                                         | Wall time |
+| -------------------------------------------------- | -------------------------------------------------------------------------------------------- | --------- |
+| Pull request (code)                                | Checks · smoke flows + perf smoke · axe on two runners (offline on the second), side by side | ~9 min    |
+| Pull request, every file Markdown or under `docs/` | Checks only                                                                                  | ~7 min    |
+| Pull request with the `full-e2e` label             | Checks · full e2e in 3 shards · accessibility · offline + perf + acceptance                  | ~13 min   |
+| Push to `main`, nightly (02:23 UTC), Run workflow  | Same as `full-e2e`                                                                           | ~13 min   |
 
 "CI result" runs last on every event and fails when any other job failed or was
 cancelled (a job the event skips counts as passed). It is the one check to read.
