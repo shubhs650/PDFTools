@@ -1,4 +1,5 @@
 import type { PageSignature, PageText, RasterBand } from '../model/compare/material';
+import type { PairingResult } from '../model/compare/pairing';
 import type { MethodSpec } from './protocol';
 
 /**
@@ -48,6 +49,24 @@ export interface CompareSummary {
   bytes: number;
 }
 
+/**
+ * One side of a pairing (M12-09, D-60): its side pages 0 … count − 1 (the
+ * side's files one after the other, each with its page range), the file each
+ * comes from, and the files' names.
+ */
+export interface PairingLayout {
+  count: number;
+  /** File index per side page. */
+  files: number[];
+  names: string[];
+}
+
+/** Rows of the similarity matrix done so far. */
+export interface PairingProgress {
+  done: number;
+  total: number;
+}
+
 export interface CompareApi {
   /** Starts a comparison's store (idempotent). */
   open: MethodSpec<{ cmpId: string }, null>;
@@ -66,6 +85,16 @@ export interface CompareApi {
   sheetBand: MethodSpec<
     { cmpId: string; sheet: number; dpi: number; a: RasterBand; b: RasterBand; inkLevel?: number },
     { rows: number }
+  >;
+  /**
+   * Pairs the pages of A and B (M12-09, D-60) on the signatures put so far
+   * (keyed by side page): similarity, then the order-keeping assignment.
+   * The similarity matrix comes back by transfer for the pairing table.
+   */
+  pairPages: MethodSpec<
+    { cmpId: string; a: PairingLayout; b: PairingLayout; threshold?: number },
+    PairingResult,
+    PairingProgress
   >;
   /** A sheet's facts once its bands are in. */
   sheetFacts: MethodSpec<{ cmpId: string; sheet: number }, SheetFacts>;

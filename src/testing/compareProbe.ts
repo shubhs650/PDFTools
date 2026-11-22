@@ -4,7 +4,7 @@
 // sheets as they arrive (with the main-thread time), memory and release.
 import type { SheetFacts } from '../engine/compareApi';
 import { compareClient } from '../features/compare/engine/compareHost';
-import { CompareSession } from '../features/compare/engine/session';
+import { CompareSession, oneFile } from '../features/compare/engine/session';
 import type { QueueProgress } from '../features/compare/engine/jobQueue';
 import { workClient } from '../features/view/host';
 import type { TestHook } from './hook';
@@ -44,8 +44,8 @@ export function registerCompareProbe(hook: TestHook): void {
         doneMs: null,
       };
       r.session = new CompareSession(
-        { docId: aDocId, pages: range(aPages) },
-        { docId: bDocId, pages: range(bPages) },
+        oneFile(aDocId, range(aPages)),
+        oneFile(bDocId, range(bPages)),
         {
           work,
           compare: compareClient(),
