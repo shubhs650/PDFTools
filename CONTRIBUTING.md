@@ -33,6 +33,8 @@ that way.
 
 4. Keep the pull request to one change, describe what and why, and reference the D-xx decision
    it follows.
+5. CI runs on the pull request; what it runs and when is in
+   [`docs/deploy/ci.md`](docs/deploy/ci.md).
 
 ## License
 

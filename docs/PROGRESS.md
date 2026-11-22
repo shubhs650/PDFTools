@@ -51,6 +51,19 @@ interop is in the M6 pack (CHECKLIST §M6 R1–R4). Rev 0 (M0–M4) is complete 
   decimals (0.08 % off) and pair 18's drawing area moved 7 pt; both generator bugs fixed and
   the files rebuilt. Numbers for the acceptance table and the risks are in
   `spikes/s28-alignment/RESULTS.md`, input for ADR-032 (M12-06).
+- **CI for two parallel PRs (M12 autodrive).** `.github/workflows/ci.yml`: the PR e2e set no
+  longer runs as one 13–15 min job; the smoke flows with the perf smoke scenarios run on one
+  runner and the axe gate on two (`--shard=N/2`, the offline flow on part 2), beside the checks
+  job: PR runs took 6.5–11 min instead of 13–15 (runner speed varies). Shared set-up in
+  `.github/actions/setup-e2e` (Chromium files cached per `package-lock.json`). A "CI result" job
+  fails when any job failed or was cancelled: the one check to read. Rules for two PRs at once
+  in [docs/deploy/ci.md](deploy/ci.md): when another PR merges first, update from `main` and get
+  a new green run before merging. Tried and dropped: sharding the smoke flows, which made
+  `e2e/paste-image.spec.ts` the first test on a fresh worker and its long-task check saw a cold
+  first-paste task of 110–117 ms in 2 of 3 runs (logged on #59). Open: `e2e/perf/open.spec.ts`
+  @smoke fails intermittently (134 ms task on a PR run; red in main's perf job since
+  2026-11-22), `bookmark-editing.spec.ts:260` and `comment-copy-paste.spec.ts:33` fail now and
+  then in full shard 1/3.
 - **M12-02 — spike S27: several documents on screen together (D-58, D-62, D-64).** Works with
   workaround, **route 1** (EmbedPDF's own per-document viewports in one registry over the shared
   workers). `spikes/s27-linked-views/` mounts the app's real `DocumentView` two and three times;

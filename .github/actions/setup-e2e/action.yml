@@ -1,0 +1,27 @@
+name: Set up for Playwright
+description: >
+  Node from .nvmrc with the npm cache, npm ci, Chromium (browser files cached per
+  package-lock.json, system packages installed each run) and qpdf for test fixtures.
+  Run actions/checkout first.
+runs:
+  using: composite
+  steps:
+    - uses: actions/setup-node@v4
+      with:
+        node-version-file: .nvmrc
+        cache: npm
+    - run: npm ci
+      shell: bash
+    # The browser download (about 170 MB) took 21 to 39 s, and once 5 min when the
+    # download host was slow. A cache hit skips it; --with-deps still installs the
+    # system packages, which are not in the cache.
+    - uses: actions/cache@v4
+      with:
+        path: ~/.cache/ms-playwright
+        key: playwright-${{ runner.os }}-${{ hashFiles('package-lock.json') }}
+    - name: Install Chromium
+      run: npx playwright install --with-deps chromium
+      shell: bash
+    - name: Install qpdf (test fixtures only; not a dependency)
+      run: sudo apt-get install -y qpdf
+      shell: bash
