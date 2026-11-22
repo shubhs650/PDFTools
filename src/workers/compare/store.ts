@@ -6,6 +6,7 @@ import type {
   CompareMemory,
   CompareSide,
   CompareSummary,
+  PairingLayout,
   SheetFacts,
 } from '../../engine/compareApi';
 import {
@@ -15,6 +16,7 @@ import {
   type PageText,
   type RasterBand,
 } from '../../model/compare/material';
+import { pairPages, type PairingResult, type PairingSide } from '../../model/compare/pairing';
 import { SheetAccumulator } from './sheetFacts';
 
 interface Side {
@@ -71,6 +73,27 @@ export class CompareStore {
 
   text(cmpId: string, side: CompareSide, page: number): PageText | undefined {
     return this.comparisons.get(cmpId)?.sides[side].texts.get(page);
+  }
+
+  /** Pairs the side pages of A and B on their signatures (M12-09, D-60). */
+  pairPages(
+    cmpId: string,
+    a: PairingLayout,
+    b: PairingLayout,
+    threshold?: number,
+    tick?: (done: number, total: number) => void,
+  ): PairingResult {
+    const c = this.get(cmpId);
+    const side = (s: CompareSide, l: PairingLayout): PairingSide => ({
+      pages: Array.from({ length: l.count }, (_, k) => {
+        const sig = c.sides[s].signatures.get(k);
+        if (!sig) throw new Error('signature missing');
+        return { ink: sig.ink, landscape: sig.frame.width >= sig.frame.height, words: sig.words };
+      }),
+      files: l.files,
+      names: l.names,
+    });
+    return pairPages(side('a', a), side('b', b), threshold, tick);
   }
 
   /** Folds a band pair into the sheet's facts; the bands are not kept. */
