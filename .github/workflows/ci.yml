@@ -1,9 +1,9 @@
 name: CI
 
 # When CI runs:
-# - Pull requests: the checks job, plus the @smoke e2e flows with the @smoke perf
-#   scenarios in one job and the offline and accessibility gates on two more
-#   runners, side by side. A PR whose files are all Markdown or under docs/ skips e2e. Add the
+# - Pull requests: the checks job, plus the @smoke e2e flows (with the @smoke perf
+#   scenarios and the offline flow) and the accessibility gate, each split over two
+#   runners, all side by side. A PR whose files are all Markdown or under docs/ skips e2e. Add the
 #   `full-e2e` label to a PR to run the full suite on it instead (removing it runs
 #   the smoke set again).
 # - Push to main, nightly, and Run workflow (workflow_dispatch): the checks job,
@@ -110,34 +110,11 @@ jobs:
           fi
           echo "suite=$suite" | tee -a "$GITHUB_OUTPUT"
 
+  # The PR e2e set on four runners beside the checks job. In one job the runs took
+  # 13 to 15 min one after another (smoke flows 6 to 8.5 min, offline 2 min, axe
+  # 5.5 to 7.5 min, perf smoke 15 s).
   e2e-smoke:
-    name: E2E smoke · Perf smoke (Playwright, Chromium)
-    needs: changes
-    if: needs.changes.outputs.suite == 'smoke'
-    runs-on: ubuntu-24.04
-    steps:
-      - uses: actions/checkout@v4
-      - uses: ./.github/actions/setup-e2e
-      - name: Smoke flows (built app under the production _headers)
-        run: npm run e2e -- --grep @smoke --grep-invert "@offline|@a11y"
-      - name: Perf gate, @smoke scenarios (no main-thread task > 100 ms after boot)
-        if: success() || failure()
-        run: npm run perf -- --grep @smoke
-        env:
-          E2E_SKIP_BUILD: '1'
-      - uses: actions/upload-artifact@v4
-        if: failure()
-        with:
-          name: playwright-report-smoke
-          path: playwright-report/
-          retention-days: 7
-
-  e2e-smoke-gates:
-    # Beside the smoke flows on their own runners: in one job the four runs took
-    # 13 to 15 min one after another (smoke 6 min, offline 1.5 min, axe 5.5 to 7.5
-    # min). The axe scans are split over two runners (a11y.spec.ts runs its tests
-    # in parallel mode, so a shard takes half of them); part 1 also runs offline.
-    name: Offline · Accessibility, part ${{ matrix.part }}/2 (Playwright, Chromium)
+    name: E2E smoke, part ${{ matrix.part }}/2 · ${{ matrix.part == 1 && 'Perf smoke' || 'Offline' }} (Playwright, Chromium)
     needs: changes
     if: needs.changes.outputs.suite == 'smoke'
     runs-on: ubuntu-24.04
@@ -148,18 +125,44 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - uses: ./.github/actions/setup-e2e
+      - name: Smoke flows (built app under the production _headers)
+        run: npm run e2e -- --grep @smoke --grep-invert "@offline|@a11y" --shard=${{ matrix.part }}/2
+      - name: Perf gate, @smoke scenarios (no main-thread task > 100 ms after boot)
+        if: matrix.part == 1 && (success() || failure())
+        run: npm run perf -- --grep @smoke
+        env:
+          E2E_SKIP_BUILD: '1'
       - name: Offline and update flow (§9, D-17, D-18)
-        if: matrix.part == 1
+        if: matrix.part == 2 && (success() || failure())
         run: npm run e2e:offline
-      - name: Accessibility gate (axe, rule 12)
-        if: success() || failure()
-        run: npm run e2e:a11y -- --shard=${{ matrix.part }}/2
         env:
           E2E_SKIP_BUILD: '1'
       - uses: actions/upload-artifact@v4
         if: failure()
         with:
-          name: playwright-report-smoke-gates-${{ matrix.part }}
+          name: playwright-report-smoke-${{ matrix.part }}
+          path: playwright-report/
+          retention-days: 7
+
+  e2e-smoke-a11y:
+    # a11y.spec.ts runs its tests in parallel mode, so a shard takes about half of them.
+    name: Accessibility, part ${{ matrix.part }}/2 (axe, rule 12)
+    needs: changes
+    if: needs.changes.outputs.suite == 'smoke'
+    runs-on: ubuntu-24.04
+    strategy:
+      fail-fast: false
+      matrix:
+        part: [1, 2]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: ./.github/actions/setup-e2e
+      - name: Accessibility gate (axe, rule 12)
+        run: npm run e2e:a11y -- --shard=${{ matrix.part }}/2
+      - uses: actions/upload-artifact@v4
+        if: failure()
+        with:
+          name: playwright-report-a11y-${{ matrix.part }}
           path: playwright-report/
           retention-days: 7
 
@@ -245,7 +248,7 @@ jobs:
   result:
     # A job skipped by the suite choice counts as passed; a failed or cancelled one does not.
     name: CI result
-    needs: [checks, changes, e2e-smoke, e2e-smoke-gates, e2e, a11y, gates]
+    needs: [checks, changes, e2e-smoke, e2e-smoke-a11y, e2e, a11y, gates]
     if: always()
     runs-on: ubuntu-24.04
     steps:
