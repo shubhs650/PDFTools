@@ -19,6 +19,7 @@ import type { Comparison } from '../model';
 import { pairingInputs, startComparing, syncPairing, usePairing } from '../pairingFlow';
 import { typeLabel } from '../title';
 import { alignmentText } from '../alignmentText';
+import { AlignPanel } from '../align/AlignPanel';
 import { OverlayLayers } from './OverlayLayers';
 import { frameOf, framePage } from './frames';
 import {
@@ -86,7 +87,9 @@ export function OverlayResult({ comparison: c }: { comparison: Comparison }) {
     if (pairsKey === null) return;
     const session = startComparing(c.id);
     if (!session) return;
-    updateView(c.id, (v) => (Object.keys(v.aligned).length ? { ...v, aligned: {} } : v));
+    updateView(c.id, (v) =>
+      Object.keys(v.aligned).length || v.manual ? { ...v, aligned: {}, manual: null } : v,
+    );
     return session.watchAlignment((pair, al) => {
       updateView(c.id, (v) => setAligned(v, pair, al));
     });
@@ -148,6 +151,11 @@ export function OverlayResult({ comparison: c }: { comparison: Comparison }) {
       <div className="overlay-body">
         <aside className="overlay-side" aria-label={t('compare.overlay.sheets')}>
           <SheetList comparison={c} sheets={sheets} current={index} />
+          <AlignPanel
+            id={c.id}
+            sheet={sheet}
+            pairs={sheets.filter((s) => s.pair !== null).length}
+          />
           <OverlayLayers comparison={c} sheet={sheet} />
         </aside>
         {notes?.status === 'ready' && notes.docId ? (

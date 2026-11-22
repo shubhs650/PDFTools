@@ -19,6 +19,7 @@ import { DEFAULT_SPLITS, type Splits } from '../../../model/compare/link';
 import type { PairRow } from '../../../model/compare/pairing';
 import type { LayerList } from '../../../model/ocg';
 import type { SidePage } from '../engine/session';
+import type { ManualAlign } from '../align/manualAlign';
 
 /** A sheet of the result: a pair of pages, or a page only one revision has. */
 export interface Sheet {
@@ -61,6 +62,8 @@ export interface OverlayView {
   blink: 'a' | 'b' | null;
   /** Each compared pair's alignment as the session finds it (M12-10); as is until then. */
   aligned: Record<number, SheetAlignment>;
+  /** Manual alignment of the sheet shown, while it is being set (M12-13); null otherwise. */
+  manual: ManualAlign | null;
 }
 
 export const DEFAULT_VIEW: OverlayView = {
@@ -73,6 +76,7 @@ export const DEFAULT_VIEW: OverlayView = {
   comments: { a: true, b: true, hideChecks: false },
   blink: null,
   aligned: {},
+  manual: null,
 };
 
 /** The style the tiles are drawn with: Blink shows one side alone. */
@@ -85,15 +89,26 @@ export function drawnStyle(v: OverlayView): OverlayStyle {
 export const alignmentOf = (v: OverlayView, s: Sheet | undefined): SheetAlignment | undefined =>
   s?.pair === null || s?.pair === undefined ? undefined : v.aligned[s.pair];
 
-/** Where A is drawn in B's frame: the alignment found, else as is (D-60). */
+/** Where A is drawn in B's frame: the alignment being set by hand, the alignment found, else as is (D-60). */
 export const placeOf = (v: OverlayView, s: Sheet | undefined): Affine =>
-  alignmentOf(v, s)?.place ?? IDENTITY;
+  (v.manual && s?.pair === v.manual.pair ? v.manual.place : null) ??
+  alignmentOf(v, s)?.place ??
+  IDENTITY;
 
 /** A sheet's alignment arrived (the session's watchAlignment). */
 export const setAligned = (v: OverlayView, pair: number, al: SheetAlignment): OverlayView => ({
   ...v,
   aligned: { ...v.aligned, [pair]: al },
 });
+
+/** A sheet's alignment is not known (set by hand, then given back before the automatic one came). */
+export const dropAligned = (v: OverlayView, pair: number): OverlayView => {
+  if (!(pair in v.aligned)) return v;
+  const aligned = Object.fromEntries(
+    Object.entries(v.aligned).filter(([k]) => k !== String(pair)),
+  ) as Record<number, SheetAlignment>;
+  return { ...v, aligned };
+};
 
 export const setPreset = (v: OverlayView, p: ColourPreset): OverlayView => ({
   ...v,
@@ -123,14 +138,21 @@ export const setFade = (v: OverlayView, on: boolean): OverlayView => ({
   style: { ...v.style, fade: on ? 1 : 0 },
 });
 
-/** Another sheet (its windows fit it again). */
+/** Another sheet (its windows fit it again); a manual alignment not applied is left. */
 export const goSheet = (v: OverlayView, sheet: number, count: number): OverlayView => {
   const s = Math.max(0, Math.min(count - 1, sheet));
-  return s === v.sheet ? v : { ...v, sheet: s };
+  return s === v.sheet ? v : { ...v, sheet: s, manual: null };
 };
 
+/** Overlay only has no Document A and B windows to pick points in. */
 export const setLayout = (v: OverlayView, layout: ReviewLayout): OverlayView =>
-  v.layout === layout ? v : { ...v, layout };
+  v.layout === layout
+    ? v
+    : {
+        ...v,
+        layout,
+        manual: v.manual && layout === 'overlay' ? { ...v.manual, picking: false } : v.manual,
+      };
 
 export const setSplits = (v: OverlayView, splits: Partial<Splits>): OverlayView => ({
   ...v,

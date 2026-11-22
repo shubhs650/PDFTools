@@ -209,6 +209,12 @@ export class CompareSession {
   };
   private releaseWork: (() => void) | null = null;
   private readonly aligned = new Map<number, SheetAlignment>();
+  /** Placements set by hand (M12-13), over the automatic ones. */
+  private readonly manual = new Map<number, Affine>();
+  /** Bumped when a sheet's placement changes: an analysis under the old one stops. */
+  private readonly placeRev = new Map<number, number>();
+  /** The key of each sheet's latest analysis task. */
+  private readonly sheetTask = new Map<number, string>();
   private readonly alignWatchers = new Set<(sheet: number, alignment: SheetAlignment) => void>();
   private closed = false;
   private started = false;
@@ -549,9 +555,69 @@ export class CompareSession {
     ).promise;
   }
 
-  /** A sheet's automatic alignment (D-60), once found. */
+  /** A sheet's alignment in use (D-60): set by hand, else the automatic one once found. */
   alignment(sheet: number): SheetAlignment | undefined {
+    const place = this.manual.get(sheet);
+    return place ? this.manualAlignment(sheet, place) : this.aligned.get(sheet);
+  }
+
+  /** A sheet's automatic alignment, once found, whatever was set by hand. */
+  autoAlignment(sheet: number): SheetAlignment | undefined {
     return this.aligned.get(sheet);
+  }
+
+  private manualAlignment(sheet: number, place: Affine): SheetAlignment {
+    const auto = this.aligned.get(sheet);
+    return { status: 'manual', method: auto?.method ?? 'vector', place, score: auto?.score ?? 0 };
+  }
+
+  /**
+   * Sets a sheet's placement by hand (M12-13, D-60: points or values), or with
+   * null goes back to the automatic alignment. The watchers hear the new
+   * alignment (the automatic one only once it is known), the Compare worker
+   * records it, and the sheet is analysed again under it.
+   */
+  setManual(sheet: number, place: Affine | null): void {
+    if (this.closed || !this.sheetPairs[sheet]) return;
+    if (place) this.manual.set(sheet, place);
+    else this.manual.delete(sheet);
+    const rev = (this.placeRev.get(sheet) ?? 0) + 1;
+    this.placeRev.set(sheet, rev);
+    const al = this.alignment(sheet);
+    if (!al) return;
+    this.notifyAlign(sheet, al);
+    if (!this.started) return;
+    void this.open()
+      .then(
+        () =>
+          this.opts.compare.call('setAlignment', { cmpId: this.id, sheet, alignment: al }).promise,
+      )
+      .catch(() => undefined);
+    // A pending analysis reads the placement when it starts; one under way or over runs again.
+    const key = this.sheetTask.get(sheet) ?? `sheet:${String(sheet)}`;
+    const state = this.queue.state(key);
+    if (state === undefined || state === 'pending' || this.queue.isCancelled) return;
+    const next = `sheet:${String(sheet)}@${String(rev)}`;
+    const pair = this.sheetPairs[sheet];
+    this.sheetTask.set(sheet, next);
+    this.releaseWork ??= this.opts.work.hold();
+    this.queue.add([
+      {
+        key: next,
+        sheet,
+        phase: 1,
+        after: state === 'running' ? [key] : [],
+        run: (signal) => this.analyseSheet(sheet, pair, signal),
+      },
+    ]);
+    void this.queue.whenIdle().then(() => {
+      this.letWorkGo();
+    });
+  }
+
+  private notifyAlign(sheet: number, al: SheetAlignment): void {
+    this.opts.onAlign?.(sheet, al);
+    for (const fn of this.alignWatchers) fn(sheet, al);
   }
 
   /**
@@ -560,7 +626,11 @@ export class CompareSession {
    */
   watchAlignment(fn: (sheet: number, alignment: SheetAlignment) => void): () => void {
     this.alignWatchers.add(fn);
-    for (const [sheet, al] of this.aligned) fn(sheet, al);
+    const known = new Set([...this.aligned.keys(), ...this.manual.keys()]);
+    for (const sheet of known) {
+      const al = this.alignment(sheet);
+      if (al) fn(sheet, al);
+    }
     return () => {
       this.alignWatchers.delete(fn);
     };
@@ -643,8 +713,16 @@ export class CompareSession {
     }
     if (signal.aborted) return;
     this.aligned.set(sheet, al);
-    this.opts.onAlign?.(sheet, al);
-    for (const fn of this.alignWatchers) fn(sheet, al);
+    const manual = this.manual.get(sheet);
+    if (manual) {
+      // Set by hand meanwhile: that stays in use (the worker hears it again over the automatic one).
+      const mine = this.manualAlignment(sheet, manual);
+      await call.call('setAlignment', { cmpId: this.id, sheet, alignment: mine }, { signal })
+        .promise;
+      this.notifyAlign(sheet, mine);
+      return;
+    }
+    this.notifyAlign(sheet, al);
   }
 
   /** Both rasters of a sheet pair in B's frame, band by band, folded into the sheet's facts. */
@@ -653,7 +731,9 @@ export class CompareSession {
     if (!frame) throw new Error('B frame missing');
     const dpi = this.opts.dpi ?? ANALYSIS_DPI;
     const size = rasterSize(frame.width, frame.height, dpi);
-    const place = pair.place ?? this.aligned.get(sheet)?.place ?? IDENTITY;
+    const place =
+      this.manual.get(sheet) ?? pair.place ?? this.aligned.get(sheet)?.place ?? IDENTITY;
+    const rev = this.placeRev.get(sheet) ?? 0;
     const pa = this.pages.a[pair.a];
     const pb = this.pages.b[pair.b];
     if (!pa || !pb) throw new Error('sheet page missing');
@@ -671,6 +751,8 @@ export class CompareSession {
         { signal },
       );
       const [a, b] = await Promise.all([ja.promise, jb.promise]);
+      // The placement changed meanwhile: the analysis under the new one takes over.
+      if ((this.placeRev.get(sheet) ?? 0) !== rev) return;
       await this.opts.compare.call(
         'sheetBand',
         { cmpId: this.id, sheet, dpi, a, b },

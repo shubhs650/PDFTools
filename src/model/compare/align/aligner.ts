@@ -56,8 +56,8 @@ export const IMAGE_SCALE = 2;
 /** The image method's rasters stay under this many pixels per page (an ARCH E sheet at 2 px/pt is 36 MP). */
 export const IMAGE_MAX_PIXELS = 48_000_000;
 
-/** As is, aligned automatically, or low confidence (needs points: M12-13). */
-export type AlignStatus = 'as-is' | 'auto' | 'low';
+/** As is, aligned automatically, low confidence (needs points), or set by hand (M12-13). */
+export type AlignStatus = 'as-is' | 'auto' | 'low' | 'manual';
 
 /** A sheet's alignment and how sure it is (D-60: the status per sheet). */
 export interface SheetAlignment {

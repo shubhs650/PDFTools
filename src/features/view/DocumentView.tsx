@@ -100,11 +100,13 @@ function Page({
   layout,
   hidden,
   content,
+  layer,
 }: {
   documentId: string;
   layout: PageLayout;
   hidden: boolean;
   content?: SheetWindow['content'];
+  layer?: SheetWindow['layer'];
 }) {
   const doc = useDocumentState(documentId);
   const pageObj = doc?.document?.pages[layout.pageIndex];
@@ -184,6 +186,8 @@ function Page({
               <CropAreaLayer documentId={documentId} pageIndex={layout.pageIndex} scale={scale} />
               {/* The Attach File tool (M6-10): a click picks the file to attach there. */}
               <AttachFileLayer documentId={documentId} pageIndex={layout.pageIndex} scale={scale} />
+              {/* A comparison window's own layer on top (M12-13: picking alignment points). */}
+              {layer && frame ? layer(layout.pageIndex, frame) : null}
             </div>
           </PagePointerProvider>
         </Rotate>
@@ -218,6 +222,14 @@ function currentPages(documentId: string, sheet?: number): number[] {
   return spreads[spreadIndexOf(spreads, d.view.page)] ?? [];
 }
 
+/** A page as laid out in the view: its unturned size (pt), turn and zoom. */
+export interface PageFrameInfo {
+  width: number;
+  height: number;
+  rotation: number;
+  scale: number;
+}
+
 /**
  * A comparison window (M12-12, D-62, S27): the document shows one page, the
  * sheet's, and never turns the page itself; the sheet list does.
@@ -227,6 +239,11 @@ export interface SheetWindow {
   page: number;
   /** Draws the page's content instead of the document's own tiles (the overlay window). */
   content?: (pageIndex: number, scale: number) => ReactNode;
+  /**
+   * A layer over the page's own layers (M12-13), in the page's laid-out space
+   * (unturned, `frame.scale` CSS px per point; `frame.rotation` quarter turns shown).
+   */
+  layer?: (pageIndex: number, frame: PageFrameInfo) => ReactNode;
   /** The window's accessible name (the document's name otherwise). */
   label?: string;
   testId?: string;
@@ -549,6 +566,7 @@ export function DocumentView({ documentId, sheet }: { documentId: string; sheet?
                 layout={layout}
                 hidden={paged && !shown.has(layout.pageIndex)}
                 {...(sheet?.content ? { content: sheet.content } : {})}
+                {...(sheet?.layer ? { layer: sheet.layer } : {})}
               />
             )}
           />

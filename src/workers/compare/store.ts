@@ -285,8 +285,16 @@ export class CompareStore {
     c.alignRasters.delete(sheet);
   }
 
+  /** Records a sheet's alignment; facts gathered under another placement start again (M12-13). */
   setAlignment(cmpId: string, sheet: number, alignment: SheetAlignment): void {
-    this.get(cmpId).alignments.set(sheet, alignment);
+    const c = this.get(cmpId);
+    const was = c.alignments.get(sheet);
+    c.alignments.set(sheet, alignment);
+    const acc = c.sheets.get(sheet);
+    if (acc && was?.place.join(',') !== alignment.place.join(',')) {
+      c.bytes -= sheetBytes(acc);
+      c.sheets.delete(sheet);
+    }
   }
 
   alignment(cmpId: string, sheet: number): SheetAlignment | undefined {

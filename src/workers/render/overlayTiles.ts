@@ -80,6 +80,8 @@ export interface OverlayTileRequest {
   thicken: boolean;
   /** Comments of each side on top (Q10), and Hide check highlights (Q11). */
   comments: { a: boolean; b: boolean; hideChecks: boolean };
+  /** False: the grey tiles are not kept (the alignment magnifier, M12-13: every spot is new). */
+  cache?: boolean;
 }
 
 /** A page's displayed size in points (/Rotate and crop box applied). */
@@ -318,7 +320,7 @@ export class OverlayTiles {
             h,
           );
         } else g = renderGrey(mod, ref.pagePtr, m, w, h);
-        this.grey.set(key, g, g.length);
+        if (r.cache !== false) this.grey.set(key, g, g.length);
         return g;
       });
       const out = compose(greys[0] ?? null, greys[1] ?? null, w, h, this.tablesFor(r.style));

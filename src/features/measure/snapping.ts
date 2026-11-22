@@ -70,11 +70,14 @@ export async function dropSnapPages(docId: string): Promise<void> {
   if (client) await client.call('drop', { prefix }).promise.catch(() => undefined);
 }
 
-/** Extracts and loads a page's index once (per document, per page). */
-export async function ensurePage(docId: string, page: number): Promise<void> {
+/**
+ * Extracts and loads a page's index once (per document, per page). `force`:
+ * also with snapping switched off (picking alignment points, M12-13).
+ */
+export async function ensurePage(docId: string, page: number, force = false): Promise<void> {
   const key = keyOf(docId, page);
   const st = snapStore.getState();
-  if (!st.enabled || st.pages[key] === 'ready' || st.pages[key] === 'preparing') return;
+  if ((!st.enabled && !force) || st.pages[key] === 'ready' || st.pages[key] === 'preparing') return;
   snapStore.setState((s) => ({ pages: { ...s.pages, [key]: 'preparing' } }));
   try {
     const minLen = MIN_DEVICE_PX / zoomOf(docId);
@@ -100,6 +103,8 @@ interface Query {
   docId: string;
   page: number;
   pos: Pt;
+  /** The window's zoom when the caller knows it (a comparison window, M12-13). */
+  zoom?: number;
 }
 
 let pending: Query | null = null;
@@ -121,7 +126,7 @@ function fire(): void {
   const st = snapStore.getState();
   const kinds = SNAP_KINDS.filter((k) => st.kinds[k]);
   const f = frameOf(q.docId, q.page);
-  const r = RADIUS_PX / zoomOf(q.docId);
+  const r = RADIUS_PX / (q.zoom ?? zoomOf(q.docId));
   inFlight = true;
   const clearedAtStart = cleared;
   const t0 = performance.now();
@@ -165,19 +170,34 @@ function request(q: Query): void {
  * point near this one; a new query goes out for this position either way.
  */
 export function snapPoint(page: number, pos: Pt, evt: unknown): Pt {
-  const st = snapStore.getState();
   const docId = documentStore.getState().activeId;
+  return docId ? snapPointIn(docId, page, pos, evt) : pos;
+}
+
+/**
+ * snapPoint on a given document's page. `force`: snaps even with snapping
+ * switched off (picking alignment points snaps to the drawing, M12-13, D-60);
+ * `zoom`: the zoom of the window the pointer is in (CSS px per point).
+ */
+export function snapPointIn(
+  docId: string,
+  page: number,
+  pos: Pt,
+  evt: unknown,
+  { force = false, zoom }: { force?: boolean; zoom?: number } = {},
+): Pt {
+  const st = snapStore.getState();
   const alt = (evt as { altKey?: boolean } | null)?.altKey === true;
-  if (!st.enabled || !docId || alt) {
+  if ((!st.enabled && !force) || alt) {
     if (st.marker) snapStore.setState({ marker: null });
     return pos;
   }
   const key = keyOf(docId, page);
   if (st.pages[key] !== 'ready') {
-    void ensurePage(docId, page);
+    void ensurePage(docId, page, force);
     return pos;
   }
-  request({ docId, page, pos });
+  request({ docId, page, pos, ...(zoom ? { zoom } : {}) });
   const l = last;
   if (
     l?.at &&
