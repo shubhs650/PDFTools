@@ -424,9 +424,8 @@ describe.runIf(PACK !== undefined)('the interop pack', () => {
     ];
     const layersB = await readLayers(files.get('11b')?.bytes ?? new Uint8Array(), inflate);
     const switched = layersB.layers.find((l) => l.on);
-    const labels = (p: string) => ({
-      a: { [`${p}a`]: `Old — pair ${p}` },
-      b: { [`${p}b`]: `New — pair ${p}` },
+    const labels = (p: string): Partial<VectorOverlayRequest> => ({
+      labels: { a: { [`${p}a`]: `Old — pair ${p}` }, b: { [`${p}b`]: `New — pair ${p}` } },
     });
     const cases: [string, VectorSheet[], Partial<VectorOverlayRequest>][] = [
       ['01-changed-drawing', await pairSheets('01'), labels('01')],
