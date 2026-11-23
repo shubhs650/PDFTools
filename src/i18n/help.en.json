@@ -1447,6 +1447,9 @@
           "p": "In the <b>Side by side</b> layout, the overlay, Document A and Document B are each a full document window: every comment tool, the Properties pane and every right-click menu work in them. Comments you add to Document A or Document B belong to that file. What you draw on the overlay window is a note of the comparison and stays apart from both documents."
         },
         {
+          "p": "A dot after the title <b>Document A (old)</b> or <b>Document B (new)</b> means that document has unsaved comments, and the comparison's tab shows the same dot. <b>Save review</b> (<kbd>Ctrl+S</kbd>) saves them into the files. Comments drawn on the overlay window are kept only by <b>Save Comparison…</b>, so closing the comparison asks first."
+        },
+        {
           "shot": "compare-review-1",
           "alt": "The Review layout with the overlay, Document A, Document B and the Close-out list"
         },
@@ -1455,11 +1458,18 @@
         },
         {
           "steps": [
-            "Choose <b>Close-out</b> above the result. It lists every comment of Document A, the old revision.",
-            "Select a comment. The windows go to its place on both revisions.",
-            "Check the new revision, then choose one: <b>Addressed</b> (it was fixed), <b>Carried Over</b> (it was not, so the comment is also copied to the new revision) or <b>Changed Differently</b>.",
+            "Choose <b>Close-out</b> above the result. It lists every comment of Document A, the old revision: comments with typed text first (notes, text boxes, callouts), then markup without text, each by page and from the top of the page down.",
+            "Click a comment. The windows zoom to it, so it fills about a third of the window (never past 400 %), and it is selected in Document A and flashes once. In a text comparison both sides scroll to it.",
+            "Check the new revision, then choose <b>Close Out As…</b> and one of: <b>Addressed</b> (the new revision makes the change the comment asked for), <b>Carried Over</b> (not done yet: the comment is also copied to the new revision, so it stays open there) or <b>Changed Differently</b> (the place changed, but not the way the comment asked).",
             "The old comment's status becomes Completed, with a reply that says what happened, such as “Carried over to RevB.pdf”, and the place is marked with a check highlight. <b>Reopen</b> undoes it."
           ]
+        },
+        {
+          "shot": "compare-review-2",
+          "alt": "The Close Out As… menu, with a line under each outcome saying what it means"
+        },
+        {
+          "tip": "<b>Hide highlights</b> above the list leaves out highlights and see-through markup, such as the ticks a checker puts on what was checked. It is on at first, and {{app}} remembers your choice."
         },
         {
           "p": "The status and the replies are ordinary comment data, so they show in other PDF viewers and in the comment list exports (see [Copying, exporting and importing comments](#comment-transfer))."
@@ -1511,7 +1521,8 @@
           "steps": [
             "Click a change in the list to centre it on both sides, or press <kbd>F8</kbd> and <kbd>Shift+F8</kbd> for the next and previous change.",
             "Tick a change once you have checked it, and use <b>Hide checked</b> to see what is left.",
-            "Use the legend's switches to show only some kinds, or type a word and press <kbd>Enter</kbd> to search the changes."
+            "Use the legend's switches to show only some kinds, or type a word and press <kbd>Enter</kbd> to search the changes.",
+            "Each window's title shows the page in view, such as <b>Page 12 of 140</b>. Click it, type a page number and press <kbd>Enter</kbd> to go there; the other document follows to the matching text."
           ]
         },
         {

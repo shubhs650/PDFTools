@@ -24,7 +24,9 @@ import {
 import { DocumentView } from '../../view/DocumentView';
 import { setViewFocus } from '../../view/tileScheduler';
 import { useWindowPlace } from '../review/windowPlace';
+import { UnsavedDot } from '../UnsavedDot';
 import { MarkLayer } from './MarkLayer';
+import { PageCounter } from './PageCounter';
 import { TextMarks, type MarksContext } from './marksContext';
 import { TextLink, fitWidth, textLinks as links, type TextWindowRef } from './textLink';
 import { updateTextView, useTextView, type TextRun } from './textFlow';
@@ -159,7 +161,14 @@ export function TextWindows({
   return (
     <TextMarks.Provider value={ctx}>
       <div className="text-windows">
-        <TextWindow side="a" docId={a.docId} hostRef={hostA} mounted={sides >= 1} onEnter={enter} />
+        <TextWindow
+          side="a"
+          docId={a.docId}
+          hostRef={hostA}
+          mounted={sides >= 1}
+          onEnter={enter}
+          link={link}
+        />
         <Gap
           link={link}
           entries={entries}
@@ -167,7 +176,14 @@ export function TextWindows({
           selected={selected}
           colours={view.colours}
         />
-        <TextWindow side="b" docId={b.docId} hostRef={hostB} mounted={sides >= 2} onEnter={enter} />
+        <TextWindow
+          side="b"
+          docId={b.docId}
+          hostRef={hostB}
+          mounted={sides >= 2}
+          onEnter={enter}
+          link={link}
+        />
       </div>
     </TextMarks.Provider>
   );
@@ -183,12 +199,15 @@ const TextWindow = memo(function TextWindow({
   hostRef,
   mounted,
   onEnter,
+  link,
 }: {
   side: Side;
   docId: string;
   hostRef: RefObject<HTMLDivElement | null>;
   mounted: boolean;
   onEnter: (side: Side) => void;
+  /** The windows' link: the page counter reads and moves this window through it (M12-27). */
+  link: TextLink;
 }) {
   const { t } = useTranslation();
   const name = useDocuments((s) => s.docs[docId]?.meta.name ?? '');
@@ -224,9 +243,13 @@ const TextWindow = memo(function TextWindow({
       onFocusCapture={enter}
       onKeyDownCapture={enter}
     >
-      <p className="review-window-title" data-side={side}>
-        {t('compare.text.window', { side: sideName, name })}
-      </p>
+      <div className="review-window-title text-window-title" data-side={side}>
+        <span className="review-window-name">
+          {t('compare.text.window', { side: sideName, name })}
+        </span>
+        <UnsavedDot docId={docId} testId={`text-unsaved-${side}`} />
+        {mounted ? <PageCounter side={side} docId={docId} link={link} /> : null}
+      </div>
       <div className="review-window-view">
         {mounted ? <DocumentView key={docId} documentId={docId} sheet={sheet} /> : null}
       </div>

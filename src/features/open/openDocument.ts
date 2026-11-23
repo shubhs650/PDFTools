@@ -311,11 +311,34 @@ export function requestClose(docId: string): void {
 }
 
 /**
+ * A comparison tab that must ask before it closes (M12-27, ADR-033): changes only a
+ * comparison file keeps (comments on the overlay, a reopened comparison file's review
+ * comments). True: it asks, and closes the tab itself (with `asked`) if told to.
+ */
+export type ComparisonCloseGuard = (id: string) => boolean;
+
+let comparisonGuard: ComparisonCloseGuard = () => false;
+
+export function setComparisonCloseGuard(fn: ComparisonCloseGuard): () => void {
+  comparisonGuard = fn;
+  return () => {
+    if (comparisonGuard === fn) comparisonGuard = () => false;
+  };
+}
+
+export interface CloseOptions {
+  /** The comparison's own question was answered (Don't Save): no asking it again. */
+  asked?: boolean;
+  /** Its documents close without the unsaved-changes prompt (copies in a comparison file). */
+  discard?: boolean;
+}
+
+/**
  * Closes several documents (M11-05: Close Others, to the Right, All): the ones without
  * unsaved changes at once, then the unsaved ones one by one through the same prompt as
  * Close (Save, Don't Save, Cancel). Cancel keeps that one and every one after it open.
  */
-export function requestCloseMany(ids: readonly string[]): void {
+export function requestCloseMany(ids: readonly string[], options: CloseOptions = {}): void {
   const unsaved: string[] = [];
   const close = (id: string): void => {
     const doc = documentStore.getState().docs[id];
@@ -327,10 +350,15 @@ export function requestCloseMany(ids: readonly string[]): void {
     const s = documentStore.getState();
     const comparison = s.comparisons[id];
     if (comparison) {
+      // What only a comparison file keeps is asked about first (M12-27).
+      if (!options.asked && comparisonGuard(id)) continue;
       // A comparison tab (M12-08, D-58): its documents close with it, unless a tab of
       // their own or another comparison still shows them.
       s.closeComparison(id);
-      for (const docId of documentsOf(comparison)) if (!stillShown(docId)) close(docId);
+      for (const docId of documentsOf(comparison))
+        if (stillShown(docId)) continue;
+        else if (options.discard) void closeDocument(docId);
+        else close(docId);
       continue;
     }
     // A document a comparison shows loses only its tab: it stays one open document.

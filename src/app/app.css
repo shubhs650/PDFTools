@@ -7577,7 +7577,11 @@ textarea.form-field {
 }
 
 .review-window-title {
+  display: flex;
   flex: none;
+  align-items: center;
+  gap: var(--space-2);
+  min-height: 24px;
   margin: var(--space-0);
   padding: var(--space-1) var(--space-3);
   overflow: hidden;
@@ -7586,7 +7590,51 @@ textarea.form-field {
   color: var(--color-text);
   font-size: var(--font-size-s);
   white-space: nowrap;
+}
+
+/* The window's name gives way first; the unsaved dot and the page counter stay (M12-27). */
+.review-window-name {
+  min-width: 0;
+  overflow: hidden;
   text-overflow: ellipsis;
+}
+
+.text-page-counter {
+  display: inline-flex;
+  flex: none;
+  align-items: center;
+  gap: var(--space-1);
+  margin-left: auto;
+  font-size: var(--font-size-s);
+}
+
+.text-page-button {
+  padding: 0 var(--space-2);
+  border: var(--border-width) solid var(--color-border-strong);
+  border-radius: var(--radius-s);
+  background: var(--color-surface);
+  color: var(--color-text);
+  font: inherit;
+  cursor: pointer;
+}
+
+.text-page-button:hover {
+  background: var(--color-hover);
+}
+
+.text-page-input {
+  width: auto;
+  padding: 0 var(--space-1);
+  border: var(--border-width) solid var(--color-border-strong);
+  border-radius: var(--radius-s);
+  background: var(--color-surface);
+  color: var(--color-text);
+  font: inherit;
+  text-align: right;
+}
+
+.text-page-input[aria-invalid='true'] {
+  border-color: var(--color-danger);
 }
 
 .review-window-view {
@@ -8317,8 +8365,30 @@ textarea.form-field {
   gap: var(--space-1);
 }
 
+.closeout-hide-highlights {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-1);
+  font-size: var(--font-size-s);
+  white-space: nowrap;
+}
+
 .closeout-colour {
   margin-left: auto;
+}
+
+/* Comments with text first, then markup (M12-27): each group under a small title. */
+.closeout-group-title {
+  position: sticky;
+  top: 0;
+  z-index: 1;
+  margin: var(--space-0);
+  padding: var(--space-1) var(--space-2);
+  border-bottom: var(--border-width) solid var(--color-border);
+  background: var(--color-surface-sunken);
+  color: var(--color-text-muted);
+  font-size: var(--font-size-xs);
+  font-weight: var(--font-weight-semibold);
 }
 
 .closeout-doc {
@@ -8717,5 +8787,36 @@ textarea.form-field {
 
   .area-veil {
     fill: Canvas;
+  }
+}
+
+/* ---- Compare review (M12-27, ADR-033) ---------------------------------------------- */
+
+/* A comment the close-out list brought into view, flashed once (opacity only). */
+.comment-flash {
+  position: absolute;
+  z-index: 3;
+  box-sizing: content-box;
+  margin: -6px 0 0 -6px;
+  padding: 3px;
+  border: 3px solid var(--color-accent);
+  border-radius: var(--radius-m);
+  pointer-events: none;
+  animation: comment-flash var(--duration-slow) var(--ease-out) 5 alternate;
+}
+
+@keyframes comment-flash {
+  from {
+    opacity: 0;
+  }
+
+  to {
+    opacity: 1;
+  }
+}
+
+@media (forced-colors: active) {
+  .comment-flash {
+    border-color: Highlight;
   }
 }

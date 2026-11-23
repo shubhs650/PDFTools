@@ -26,10 +26,11 @@ import {
   useOverlayView,
   type Sheet,
 } from '../overlay/overlayState';
+import { UnsavedDot } from '../UnsavedDot';
 import { Splitter } from './Splitter';
 import { useWindowPlace } from './windowPlace';
 import { WindowLink, centreOnBox, fitWindow, showPage, type LinkedWindow } from './windowLink';
-import { focusers, pendingFocus, type Box } from './overlayFocus';
+import { focusers, pendingFocus, type Box, type FocusOptions } from './overlayFocus';
 
 const SPLIT_TEST_ID = { x: 'review-split-x', y: 'review-split-y' } as const;
 
@@ -149,10 +150,10 @@ export function ReviewLayout({
       if (view.lock) link.drive(link.leaderRole ?? 'overlay');
       else for (const w of list) if (w.role !== 'overlay') void fitWindow(w, 'page');
       // A difference picked on another sheet is shown once its sheet is (M12-14).
-      const box = pendingFocus.get(c.id);
-      if (box) {
+      const pending = pendingFocus.get(c.id);
+      if (pending) {
         pendingFocus.delete(c.id);
-        focusers.get(c.id)?.(box);
+        focusers.get(c.id)?.(pending.box, pending.options);
       }
     })();
     return () => {
@@ -162,16 +163,22 @@ export function ReviewLayout({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [windowsKey, link]);
 
-  // The differences list brings a box of the overlay into view (M12-14).
+  // The differences list brings a box of the overlay into view (M12-14); the
+  // close-out list a comment, at most 400 %, then flashes it (M12-27).
   useEffect(() => {
-    const focus = (box: Box): void => {
+    const focus = (box: Box, o: FocusOptions = {}): void => {
       const w = link.window('overlay');
       if (!w) return;
-      void centreOnBox(w, box).then((ok) => {
-        if (!ok) return;
+      void (async () => {
+        if (!(await centreOnBox(w, box, undefined, o.maxZoom))) return;
         link.lead('overlay');
         if (link.enabled) link.drive('overlay');
-      });
+        else {
+          const a = link.window('a');
+          if (a && o.a) await centreOnBox(a, o.a, undefined, o.maxZoom);
+        }
+        o.onShown?.();
+      })();
     };
     focusers.set(c.id, focus);
     return () => {
@@ -411,7 +418,8 @@ function SideWindow({
       {...rest}
     >
       <p className="review-window-title" data-side={side}>
-        {title}
+        <span className="review-window-name">{title}</span>
+        <UnsavedDot docId={p.docId} testId={`review-unsaved-${side}`} />
       </p>
       <div className="review-window-view">
         <DocumentView

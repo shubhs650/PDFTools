@@ -72,8 +72,30 @@ export function isCheckMark(a: PdfAnnotationObject): boolean {
   return o.blendMode !== undefined && o.blendMode !== PdfBlendMode.Normal;
 }
 
+/**
+ * A highlight-type comment (ADR-033 decision 4, the list's Hide highlights):
+ * a Highlight, or a markup drawn see-through or blended (an area highlight, a
+ * highlighter stroke). Notes and text boxes never are: they hold typed text.
+ */
+export function isHighlightType(a: PdfAnnotationObject): boolean {
+  if (a.type === S.HIGHLIGHT) return true;
+  if (a.type === S.TEXT || a.type === S.FREETEXT) return false;
+  const o = a as { opacity?: number; blendMode?: PdfBlendMode };
+  if (typeof o.opacity === 'number' && o.opacity < 1) return true;
+  return o.blendMode !== undefined && o.blendMode !== PdfBlendMode.Normal;
+}
+
+/** The list's two groups (ADR-033): comments with typed text first, then markup without text. */
+export type CloseOutGroup = 'text' | 'markup';
+
+export const CLOSE_OUT_GROUPS: readonly CloseOutGroup[] = ['text', 'markup'];
+
 export interface CloseOutRow {
   id: string;
+  /** Typed text (a note, a text box, a callout, any markup with contents) or markup only. */
+  group: CloseOutGroup;
+  /** A highlight-type comment (Hide highlights hides it). */
+  highlight: boolean;
   /** The Comments pane's number (M3-Q5), so the list and the CRS agree. */
   number: number;
   page: number;
@@ -92,8 +114,10 @@ const time = (a: PdfAnnotationObject): number => (a.created ?? a.modified)?.getT
 
 /**
  * The close-out list of the old revision (`all`: every annotation of
- * Document A): each comment in the Comments pane's order with its state;
- * reviewers' check marks are not listed (they close nothing).
+ * Document A): each comment with its state, comments with typed text first,
+ * then markup without text, each group by page and then by place on the page
+ * (top to bottom, then left to right; ADR-033). Highlights are listed and
+ * marked, for the list's Hide highlights; a close-out's own parts are not.
  */
 export function closeOutRows(all: readonly PdfAnnotationObject[]): CloseOutRow[] {
   const kids = new Map<string, PdfAnnotationObject[]>();
@@ -105,7 +129,7 @@ export function closeOutRows(all: readonly PdfAnnotationObject[]): CloseOutRow[]
   }
   const out: CloseOutRow[] = [];
   for (const c of commentsOf(all)) {
-    if (isCheckMark(c.annot) || isCloseOutPart(c.annot)) continue;
+    if (isCloseOutPart(c.annot)) continue;
     const parts = kids.get(c.id) ?? [];
     let reply: PdfAnnotationObject | null = null;
     for (const p of parts) if (outcomeOf(p) && (!reply || time(p) >= time(reply))) reply = p;
@@ -113,6 +137,8 @@ export function closeOutRows(all: readonly PdfAnnotationObject[]): CloseOutRow[]
     const done = c.status === PdfAnnotationState.Completed;
     out.push({
       id: c.id,
+      group: c.contents.trim() === '' ? 'markup' : 'text',
+      highlight: isHighlightType(c.annot),
       number: c.number,
       page: c.page,
       type: c.type,
@@ -124,7 +150,18 @@ export function closeOutRows(all: readonly PdfAnnotationObject[]): CloseOutRow[]
       annot: c.annot,
     });
   }
-  return out;
+  return out.sort(byListOrder);
+}
+
+/** Text first, then markup; by page; then top to bottom and left to right (pt, rounded). */
+function byListOrder(p: CloseOutRow, q: CloseOutRow): number {
+  const g = CLOSE_OUT_GROUPS.indexOf(p.group) - CLOSE_OUT_GROUPS.indexOf(q.group);
+  if (g !== 0) return g;
+  if (p.page !== q.page) return p.page - q.page;
+  const dy = Math.round(p.annot.rect.origin.y) - Math.round(q.annot.rect.origin.y);
+  if (dy !== 0) return dy;
+  const dx = Math.round(p.annot.rect.origin.x) - Math.round(q.annot.rect.origin.x);
+  return dx !== 0 ? dx : p.number - q.number;
 }
 
 /** The parts a close-out added to comment `rootId` (Reopen deletes them). */
@@ -146,9 +183,20 @@ export const CLOSE_OUT_FILTERS: readonly CloseOutFilter[] = ['all', 'open', 'clo
 
 export const isClosed = (s: CloseOutState): boolean => s !== 'open';
 
-export function filterRows(rows: readonly CloseOutRow[], f: CloseOutFilter): CloseOutRow[] {
-  if (f === 'all') return [...rows];
-  return rows.filter((r) => isClosed(r.state) === (f === 'closed'));
+/** Without the highlight-type comments when `hideHighlights` (ADR-033). */
+export const withoutHighlights = (
+  rows: readonly CloseOutRow[],
+  hideHighlights: boolean,
+): CloseOutRow[] => (hideHighlights ? rows.filter((r) => !r.highlight) : [...rows]);
+
+export function filterRows(
+  rows: readonly CloseOutRow[],
+  f: CloseOutFilter,
+  hideHighlights = false,
+): CloseOutRow[] {
+  const shown = withoutHighlights(rows, hideHighlights);
+  if (f === 'all') return shown;
+  return shown.filter((r) => isClosed(r.state) === (f === 'closed'));
 }
 
 export function counts(rows: readonly CloseOutRow[]): { open: number; closed: number } {

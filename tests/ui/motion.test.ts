@@ -143,6 +143,8 @@ describe('motion (M10-07, D-47)', () => {
     expect(animated).toEqual(
       [
         ".backstage[data-state='open']",
+        // A comment the close-out list brought into view, flashed once (M12-27).
+        '.comment-flash',
         '.drop-overlay-card',
         '.left-pane-body > *, .properties-pane > :not(.pane-header)',
         '.offline-spinner',

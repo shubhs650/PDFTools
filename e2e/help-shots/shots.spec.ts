@@ -961,7 +961,8 @@ test('compare-review-1: the Review layout and the Close-out list', async ({ page
   await expect(pane).toBeVisible();
   const row = pane.locator('.closeout-row').first();
   await row.click();
-  await pane.getByRole('button', { name: 'Addressed', exact: true }).click();
+  await pane.getByRole('button', { name: 'Close Out As…', exact: true }).click();
+  await page.getByRole('menuitem', { name: 'Addressed', exact: true }).click();
   await expect(row).toHaveAttribute('data-state', 'addressed');
   await pane.locator('.closeout-row').nth(1).click();
   await page.waitForTimeout(800);
@@ -973,6 +974,30 @@ test('compare-review-1: the Review layout and the Close-out list', async ({ page
       { n: 2, target: page.getByTestId('review-window-a'), at: 'tr', dx: -14, dy: 44 },
       { n: 3, target: page.getByTestId('review-window-b'), at: 'tr', dx: -14, dy: 44 },
       { n: 4, target: pane, at: 'l', dx: 4 },
+    ],
+  });
+});
+
+test('compare-review-2: Close Out As…, a line under each outcome', async ({ page }) => {
+  await page.setViewportSize({ width: 1600, height: 900 });
+  await start(page);
+  await compareInputs(page, 'overlay', '19', ['S-201 Framing RevA.pdf', 'S-201 Framing RevB.pdf']);
+  await runCompare(page, 'overlay');
+  await result(page).getByRole('button', { name: 'Close-out', exact: true }).click();
+  const pane = page.getByTestId('closeout-pane');
+  await expect(pane).toBeVisible();
+  await pane.locator('.closeout-row').nth(1).click();
+  await pane.getByRole('button', { name: 'Close Out As…', exact: true }).click();
+  const menu = page.getByRole('menu');
+  await expect(menu.getByRole('menuitem')).toHaveCount(3);
+  await page.waitForTimeout(800);
+  await shoot(page, 'compare-review-2', {
+    clip: [pane, menu],
+    pad: 6,
+    callouts: [
+      { n: 1, target: pane.locator('.closeout-hide-highlights'), at: 'b', dy: 12 },
+      { n: 2, target: pane.locator('.closeout-group-title').first(), at: 'r', dx: -16 },
+      { n: 3, target: menu, at: 'tr', dx: -16, dy: 16 },
     ],
   });
 });

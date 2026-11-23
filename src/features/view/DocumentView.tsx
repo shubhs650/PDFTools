@@ -1,3 +1,4 @@
+import { PageFlashLayer } from './PageFlashLayer';
 import { useDocumentState } from '@embedpdf/core/react';
 import type { DocumentManagerCapability } from '@embedpdf/plugin-document-manager';
 import type { InteractionManagerCapability } from '@embedpdf/plugin-interaction-manager';
@@ -166,6 +167,8 @@ function Page({
               <CommentMarquee documentId={documentId} pageIndex={layout.pageIndex} scale={scale} />
               {/* Annotation hit areas, selection and handles (M3-05) above the text layer. */}
               <AnnotationLayer documentId={documentId} pageIndex={layout.pageIndex} scale={scale} />
+              {/* A comment brought into view by the close-out list, flashed once (M12-27). */}
+              <PageFlashLayer documentId={documentId} pageIndex={layout.pageIndex} scale={scale} />
               {/* Comment numbers (M3-11), when switched on. */}
               <NumberOverlay documentId={documentId} pageIndex={layout.pageIndex} scale={scale} />
               {/* Scale viewports while on the Measure tab (M3-17). */}
