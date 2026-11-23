@@ -1,6 +1,6 @@
 # Triya PDF — Progress
 
-_Last updated: 2026-11-23 (M12-20: the comparison file; M12-21: change register and presets)_
+_Last updated: 2026-11-23 (M12-21·O4: drop a tab on a tab; M12-20: the comparison file; M12-21: change register and presets)_
 
 **Current milestone:** M12 — PDF comparison (PDF overlay for drawings, text comparison for
 documents), version 1.1.0: plan [docs/plan/M12.md](plan/M12.md) and
@@ -29,6 +29,27 @@ answers Q1–Q7; ARCHITECTURE.md Rev 0.12 after [ADR-024](adr/024-freetext-text-
 interop is in the M6 pack (CHECKLIST §M6 R1–R4). Rev 0 (M0–M4) is complete on the agent side.
 
 ## Done
+
+- **M12-21·O4 — drop a tab on a tab (D-58; optional item O4, accepted).** A document tab lifted
+  and **held still for half a second** while it covers at least a quarter of another document
+  tab takes that tab as its drop target: the order stops changing, the target is tinted and
+  ringed in the accent colour, the lifted tab turns see-through and a hint "Compare these two"
+  shows under the target (the live region says "Let go to compare with …"). Let go there, the
+  strip's menu offers **Compare these two → PDF Overlay / Text Comparison**; either opens a
+  comparison tab on its input window, right after the two tabs, with the tab first in the strip
+  as Document A (old) and the other as Document B (new) (the window's swap button turns it
+  round). Moving 12 px on lets the target go and the reorder goes on; a quick drag only
+  reorders, as before; Esc on the menu changes nothing. Comparison tabs are never a target or
+  dropped; nothing is offered while Compare is switched off (VITE_COMPARE) or while the row
+  auto-scrolls by its ends. **Keyboard path:** Compare with… on the tab's menu (Shift+F10), then
+  "Use an open file" on Document B. Code: `coveredTab` and the hold constants in
+  `src/app/tabDrag.ts` (pure, TDD), the hold in `tabDragSession.ts` (`canDropOn`, `target`,
+  `dropOn` on the host), `dropPair` / `DROP_ON_TAB_MENU` in `tabMenu.ts`, the menu and hint in
+  `TabStrip.tsx`; `compare.overlay` / `compare.text` take `args.pair`; `ContextMenu` got an
+  optional `heading`. Tests: `tests/app/tabDrag.test.ts`, `tabMenu.test.ts`,
+  `tests/compare/tabs.test.ts`; `e2e/compare-drop-tab.spec.ts` (offer and both types, moving
+  on, Esc, comparison tabs, the keyboard path, axe light and dark). Also brought
+  `compare-input.spec` up to date with M12-21's Options section in the keyboard order.
 
 - **M12-21 — change register and presets (D-65, D-58, Q34, Q35); the summary page follows M12-20.**
   **Compare → Export Change Register…** writes the differences the list shows (its kind and

@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest';
 import {
   AUTO_SCROLL_MAX_PX,
   clampLeft,
+  coveredTab,
   dropIndex,
   edgeSpeed,
   shiftFor,
@@ -86,5 +87,41 @@ describe('edgeSpeed', () => {
 
   it('does not scroll a row too short to have a middle', () => {
     expect(edgeSpeed(10, 0, 60)).toBe(0);
+  });
+});
+
+// M12-21·O4 (D-58): dropping one document tab on another offers "Compare these two".
+describe('coveredTab', () => {
+  it('finds no tab while the lifted tab covers less than a quarter of one', () => {
+    // Tab 1 (104–164, 60 wide) moved right by 10: covers 10 of tab 2.
+    expect(coveredTab(SLOTS, 1, 1, 114)).toBeNull();
+    expect(coveredTab(SLOTS, 1, 1, 104)).toBeNull();
+  });
+
+  it('takes the neighbour it covers before the neighbour slides away', () => {
+    // Moved right by 20: covers 20 of tab 2 (a quarter of 60 is 15).
+    expect(coveredTab(SLOTS, 1, 1, 124)).toBe(2);
+    // Moved left by 30: covers 30 of tab 0.
+    expect(coveredTab(SLOTS, 1, 1, 74)).toBe(0);
+  });
+
+  it('follows a neighbour that slid out of the way to where it is shown', () => {
+    // Tab 1 passed tab 2 (to = 2): tab 2 now shows at 104–244, the lifted tab at 180–240.
+    expect(dropIndex(SLOTS, 1, 180)).toBe(2);
+    expect(coveredTab(SLOTS, 1, 2, 180)).toBe(2);
+  });
+
+  it('takes the tab it covers most', () => {
+    // Tab 0 (100 wide) at 120–220, nothing slid: covers 44 of tab 1 and 56 of tab 2.
+    expect(coveredTab(SLOTS, 0, 0, 120)).toBe(2);
+  });
+
+  it('skips tabs that cannot take the drop', () => {
+    expect(coveredTab(SLOTS, 1, 1, 124, (j) => j !== 2)).toBeNull();
+    expect(coveredTab(SLOTS, 1, 1, 74, (j) => j !== 2)).toBe(0);
+  });
+
+  it('is null for an unknown tab', () => {
+    expect(coveredTab(SLOTS, 9, 9, 0)).toBeNull();
   });
 });

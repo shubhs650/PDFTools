@@ -66,9 +66,26 @@ const exportReason = () => {
 /** The type Compare with… starts with: the last one started (the window can switch it). */
 let lastType: CompareType = 'overlay';
 
-const start = (type: CompareType, a: readonly string[] = []): void => {
+const start = (
+  type: CompareType,
+  a: readonly string[] = [],
+  b: readonly string[] = [],
+  at?: number,
+): void => {
   lastType = type;
-  startComparison(type, a);
+  startComparison(type, a, b, at);
+};
+
+/**
+ * PDF Overlay or Text Comparison; from "Compare these two" (a tab dropped on a tab, O4)
+ * with both open documents on the sides, else empty.
+ */
+const startFrom = (type: CompareType, pair: readonly [string, string] | undefined): void => {
+  const { docs, order } = documentStore.getState();
+  // Its tab goes right after the later of the two.
+  if (pair && docs[pair[0]] && docs[pair[1]])
+    start(type, [pair[0]], [pair[1]], Math.max(...pair.map((d) => order.indexOf(d))) + 1);
+  else start(type);
 };
 
 export function registerCompareCommands(): () => void {
@@ -92,13 +109,13 @@ export function registerCompareCommands(): () => void {
     // Review across revisions (M12-15): aligned copy and paste, close-out.
     registerCloseOutCommands(),
     registerCommand('compare.overlay', {
-      run: () => {
-        start('overlay');
+      run: (_ctx, args) => {
+        startFrom('overlay', args?.pair);
       },
     }),
     registerCommand('compare.text', {
-      run: () => {
-        start('text');
+      run: (_ctx, args) => {
+        startFrom('text', args?.pair);
       },
     }),
     registerCommand('compare.area', {
