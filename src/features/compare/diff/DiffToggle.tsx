@@ -10,7 +10,8 @@ export function DiffToggle({ id }: { id: string }) {
   return (
     <ToggleButton
       label={t('compare.diff.toggle')}
-      iconOnly
+      tooltip={t('compare.diff.toggleTip')}
+      compact
       icon={<PanelRight20Regular />}
       pressedIcon={<PanelRight20Filled />}
       pressed={open}

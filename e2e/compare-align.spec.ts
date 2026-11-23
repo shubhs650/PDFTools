@@ -1,7 +1,7 @@
 import AxeBuilder from '@axe-core/playwright';
 import type { Page } from '@playwright/test';
 import { darkTheme } from './support/app.ts';
-import { overlayDrawn, overlayOf, overlayView } from './support/compare.ts';
+import { overlayDrawn, overlayOf, overlayView, unfold } from './support/compare.ts';
 import { expect, test } from './support/fixtures.ts';
 
 // M12-13 (D-60, Q7, Q8): manual alignment on corpus pair 04 (sheet 1: a 1.2°
@@ -89,6 +89,7 @@ async function marked(page: Page, s: Side, n: number): Promise<Pt> {
 async function startAligning(page: Page): Promise<void> {
   await overlayOf(page, '04');
   await expect(page.getByTestId('review-window-b').locator('.page')).not.toHaveCount(0);
+  await unfold(page, 'align');
   await panel(page).getByRole('button', { name: 'Align by points' }).click();
   await expect(pickLayer(page, 'a')).toBeVisible();
   await expect(pickLayer(page, 'b')).toBeVisible();
@@ -215,6 +216,7 @@ test.describe('manual alignment (pair 04)', () => {
     await sheets.focus();
     await page.keyboard.press('ArrowDown');
     await overlayDrawn(page);
+    await unfold(page, 'align');
     await panel(page).getByRole('button', { name: 'Align by points' }).click();
     await expect(pickLayer(page, 'b')).toBeVisible();
     // Move over B's drawing until the pointer snaps (Rev B is stored landscape, shown turned).

@@ -20,6 +20,8 @@ import {
 } from '../../../model/compare/align/manual';
 import { Button, IconButton, ToggleButton } from '../../../ui/components';
 import { useFrame, framePage } from '../overlay/frames';
+import { alignmentText } from '../alignmentText';
+import { FoldSection } from '../layout/FoldSection';
 import { alignmentOf, updateView, useOverlayView, type Sheet } from '../overlay/overlayState';
 import {
   applyManual,
@@ -35,6 +37,10 @@ import {
   startManual,
   type ApplyTo,
 } from './manualAlign';
+
+// The section's test id and help topic (M12-25: the FoldSection takes them as props).
+const ALIGN_TEST_ID = 'align-panel';
+const ALIGN_HELP = 'compare-alignment';
 
 const APPLY_TO: readonly { to: ApplyTo; label: MessageKey }[] = [
   { to: 'sheet', label: msg('compare.manual.applyTo_sheet') },
@@ -93,7 +99,6 @@ export function AlignPanel({
   pairs: number;
 }) {
   const { t } = useTranslation();
-  const headingId = useId();
   const view = useOverlayView(id);
   const frame = useFrame(framePage(sheet), 0);
   if (sheet.pair === null) return null;
@@ -102,18 +107,18 @@ export function AlignPanel({
   const manual = view.manual?.pair === pair ? view.manual : null;
 
   return (
-    <section
+    // Folds to the sheet's alignment status (M12-25); open while points are picked.
+    <FoldSection
+      id={id}
+      section="align"
+      title={t('compare.manual.title')}
+      summary={al ? alignmentText(al).status : t('compare.fold.aligning')}
+      help={<HelpButton topic="compare-alignment" />}
+      forceOpen={manual !== null}
       className="overlay-align"
-      aria-labelledby={headingId}
-      data-testid="align-panel"
-      data-help-topic="compare-alignment"
+      testId={ALIGN_TEST_ID}
+      helpTopic={ALIGN_HELP}
     >
-      <div className="pane-title-row">
-        <h3 id={headingId} className="overlay-side-title">
-          {t('compare.manual.title')}
-        </h3>
-        <HelpButton topic="compare-alignment" />
-      </div>
       {!manual ? (
         <div className="overlay-align-actions">
           <Button
@@ -140,7 +145,7 @@ export function AlignPanel({
           centre={frame ? { x: frame.width / 2, y: frame.height / 2 } : { x: 0, y: 0 }}
         />
       )}
-    </section>
+    </FoldSection>
   );
 }
 

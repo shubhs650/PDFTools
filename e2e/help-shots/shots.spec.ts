@@ -9,7 +9,14 @@ import { OWNER_PW, qpdfEncrypt } from '../fixtures/encrypted.ts';
 import { attachmentsPdf } from '../fixtures/generate.ts';
 import { helpReportPdf } from '../fixtures/help-samples.ts';
 import { cap, darkTheme, drop } from '../support/app.ts';
-import { compareSide, corpusFile, dropOn, overlayDrawn, textFile } from '../support/compare.ts';
+import {
+  compareSide,
+  corpusFile,
+  dropOn,
+  overlayDrawn,
+  textFile,
+  unfold,
+} from '../support/compare.ts';
 import { expect, test } from '../support/fixtures.ts';
 import { shoot, type Box } from './shoot.ts';
 import {
@@ -925,6 +932,7 @@ test('compare-alignment-1: the sheet list and the Alignment section', async ({ p
   await compareInputs(page, 'overlay', '04', ['C-120 Site RevA.pdf', 'C-120 Site RevB.pdf']);
   await runCompare(page, 'overlay');
   const panel = page.getByTestId('align-panel');
+  await unfold(page, 'align');
   await panel.getByRole('button', { name: 'Align by points' }).click();
   await expect(page.getByTestId('align-instruction')).toContainText('Document A');
   await shoot(page, 'compare-alignment-1', {
@@ -948,7 +956,7 @@ test('compare-review-1: the Review layout and the Close-out list', async ({ page
   await start(page);
   await compareInputs(page, 'overlay', '19', ['S-201 Framing RevA.pdf', 'S-201 Framing RevB.pdf']);
   await runCompare(page, 'overlay');
-  await result(page).getByRole('button', { name: 'Close-out list', exact: true }).click();
+  await result(page).getByRole('button', { name: 'Close-out', exact: true }).click();
   const pane = page.getByTestId('closeout-pane');
   await expect(pane).toBeVisible();
   const row = pane.locator('.closeout-row').first();

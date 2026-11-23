@@ -48,6 +48,10 @@ import { documentsOf } from '../model';
 import { CloseOutPane } from '../closeout/CloseOutPane';
 import { CloseOutToggle } from '../closeout/CloseOutToggle';
 import { useCloseOutView } from '../closeout/closeOutStore';
+import { ComparePane } from '../layout/ComparePane';
+import { foldKey, useLayout } from '../layout/layoutStore';
+import { MaximiseButton } from '../layout/Maximise';
+import { useMaximised } from '../layout/maximised';
 import { DiffPane } from '../diff/DiffPane';
 import { DiffToggle } from '../diff/DiffToggle';
 import { IgnoreZones } from '../diff/IgnoreZones';
@@ -170,6 +174,9 @@ export function OverlayResult({ comparison: c }: { comparison: Comparison }) {
   const notes = useNotes(c.id);
   const closeOutOpen = useCloseOutView(c.id).open;
   const diffPane = useDiffPart(c.id, (v) => v.pane);
+  // Maximise and folded panes leave the windows more room (M12-25, ADR-033).
+  const max = useMaximised(c.id);
+  const folds = foldKey(useLayout(c.id));
 
   let body;
   if (!pairing || pairing.status === 'reading' || pairing.status === 'matching') {
@@ -197,25 +204,29 @@ export function OverlayResult({ comparison: c }: { comparison: Comparison }) {
   } else {
     body = (
       <div className="overlay-body">
-        <aside className="overlay-side" aria-label={t('compare.overlay.sheets')}>
-          <SheetList comparison={c} sheets={sheets} current={index} />
-          {c.area ? <AreaInfo comparison={c} sheet={sheet} /> : null}
-          <AlignPanel
-            id={c.id}
-            sheet={sheet}
-            pairs={sheets.filter((s) => s.pair !== null).length}
-          />
-          {c.area ? null : <AreaPanel id={c.id} sheet={sheet} />}
-          <OverlayLayers comparison={c} sheet={sheet} />
-          <IgnoreZones id={c.id} sheets={sheets} current={index} />
-        </aside>
+        {max ? null : (
+          <ComparePane id={c.id} pane="sheets" side="left" name={t('compare.overlay.sheets')}>
+            <aside className="overlay-side" aria-label={t('compare.overlay.sheets')}>
+              <SheetList comparison={c} sheets={sheets} current={index} />
+              {c.area ? <AreaInfo comparison={c} sheet={sheet} /> : null}
+              <AlignPanel
+                id={c.id}
+                sheet={sheet}
+                pairs={sheets.filter((s) => s.pair !== null).length}
+              />
+              {c.area ? null : <AreaPanel id={c.id} sheet={sheet} />}
+              <OverlayLayers comparison={c} sheet={sheet} />
+              <IgnoreZones id={c.id} sheets={sheets} current={index} />
+            </aside>
+          </ComparePane>
+        )}
         {notes?.status === 'ready' && notes.docId ? (
           <ReviewLayout
             comparison={c}
             sheet={sheet}
             index={index}
             notesId={notes.docId}
-            fitKey={`${String(diffPane)}|${String(closeOutOpen)}`}
+            fitKey={`${String(diffPane)}|${String(closeOutOpen)}|${folds}|${String(max)}`}
           />
         ) : notes?.status === 'failed' ? (
           <p className="overlay-wait" role="status">
@@ -227,8 +238,16 @@ export function OverlayResult({ comparison: c }: { comparison: Comparison }) {
             <ProgressBar label={t('compare.review.preparing')} value={null} />
           </div>
         )}
-        {diffPane ? <DiffPane id={c.id} sheets={sheets} current={index} /> : null}
-        {closeOutOpen ? <CloseOutPane comparison={c} /> : null}
+        {diffPane && !max ? (
+          <ComparePane id={c.id} pane="diffs" side="right" name={t('compare.diff.title')}>
+            <DiffPane id={c.id} sheets={sheets} current={index} />
+          </ComparePane>
+        ) : null}
+        {closeOutOpen && !max ? (
+          <ComparePane id={c.id} pane="closeout" side="right" name={t('compare.closeout.title')}>
+            <CloseOutPane comparison={c} />
+          </ComparePane>
+        ) : null}
       </div>
     );
   }
@@ -241,7 +260,7 @@ export function OverlayResult({ comparison: c }: { comparison: Comparison }) {
       data-type="overlay"
       data-help-topic="compare-overlay"
     >
-      <header className="overlay-head">
+      <header className="overlay-head ui-compact-bar">
         <span className="overlay-head-icon" aria-hidden="true">
           <CommandIcon id="compare.overlay" />
         </span>
@@ -279,7 +298,8 @@ export function OverlayResult({ comparison: c }: { comparison: Comparison }) {
           <div className="overlay-head-layout" role="group" aria-label={t('compare.review.layout')}>
             <ToggleButton
               label={t('compare.review.layout_review')}
-              iconOnly
+              tooltip={t('compare.review.layout_reviewTip')}
+              compact
               icon={<LayoutColumnTwoSplitRight20Regular />}
               pressedIcon={<LayoutColumnTwoSplitRight20Filled />}
               pressed={view.layout === 'review'}
@@ -289,7 +309,8 @@ export function OverlayResult({ comparison: c }: { comparison: Comparison }) {
             />
             <ToggleButton
               label={t('compare.review.layout_overlay')}
-              iconOnly
+              tooltip={t('compare.review.layout_overlayTip')}
+              compact
               icon={<Square20Regular />}
               pressedIcon={<Square20Filled />}
               pressed={view.layout === 'overlay'}
@@ -299,7 +320,8 @@ export function OverlayResult({ comparison: c }: { comparison: Comparison }) {
             />
             <ToggleButton
               label={t('compare.review.lock')}
-              iconOnly
+              tooltip={t('compare.review.lockTip')}
+              compact
               icon={<LockOpen20Regular />}
               pressedIcon={<LockClosed20Filled />}
               pressed={view.lock}
@@ -311,6 +333,7 @@ export function OverlayResult({ comparison: c }: { comparison: Comparison }) {
             <CloseOutToggle id={c.id} />
           </div>
         ) : null}
+        {sheets.length > 0 ? <MaximiseButton id={c.id} /> : null}
         {c.area ? null : (
           // An area comparison's inputs are its rectangles, drawn in another comparison (O1).
           <NewComparisonButton id={c.id} />

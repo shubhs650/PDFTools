@@ -398,7 +398,7 @@ test('aligned sync: the windows keep the same spot after zoom and pan; the lock 
   }
 
   // Lock off: panning the overlay leaves A and B where they are.
-  await page.getByRole('button', { name: 'Keep the windows on the same spot' }).click();
+  await page.getByRole('button', { name: 'Link views', exact: true }).click();
   const held = await spots(page);
   await viewport(page, 'overlay').evaluate((el) => {
     el.scrollLeft += 150;
@@ -413,7 +413,7 @@ test('aligned sync: the windows keep the same spot after zoom and pan; the lock 
   const now = await spots(page);
   expect(Math.abs((now.a?.fx ?? 0) - (held.a?.fx ?? 0))).toBeLessThan(0.002);
   // Lock on again: A and B come to the overlay's spot.
-  await page.getByRole('button', { name: 'Keep the windows on the same spot' }).click();
+  await page.getByRole('button', { name: 'Link views', exact: true }).click();
   await expectLinked(page);
 });
 
@@ -451,7 +451,7 @@ test('a sheet change shows each document’s page of the new sheet, still linked
   await expect(win(page, 'a')).toHaveCount(0);
   await expect(win(page, 'b')).toHaveCount(0);
   await overlayDrawn(page);
-  await page.getByRole('button', { name: 'Review', exact: true }).click();
+  await page.getByRole('button', { name: 'Side by side', exact: true }).click();
   await expect(win(page, 'a')).toBeVisible();
   await expectLinked(page, 0.02);
 });

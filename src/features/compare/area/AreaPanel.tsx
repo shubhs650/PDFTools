@@ -28,6 +28,17 @@ import {
   updatePick,
   useAreaPick,
 } from './areaPick';
+import { FoldSection } from '../layout/FoldSection';
+
+// The section's test id and help topic (M12-25: the FoldSection takes them as props).
+/** The folded section's line: no, one or both rectangles drawn. */
+const AREA_SUMMARY: readonly [MessageKey, MessageKey, MessageKey] = [
+  msg('compare.fold.areaNone'),
+  msg('compare.fold.areaOne'),
+  msg('compare.fold.areaBoth'),
+];
+const AREA_TEST_ID = 'area-panel';
+const AREA_HELP = 'compare-differences';
 
 const SIDE_IDS: readonly SideId[] = ['a', 'b'];
 const DRAW: Record<SideId, MessageKey> = {
@@ -69,7 +80,6 @@ function useDescribe(): (area: PageArea | null) => string {
 export function AreaPanel({ id, sheet }: { id: string; sheet: Sheet }) {
   const { t } = useTranslation();
   const pick = useAreaPick(id);
-  const headingId = useId();
   const describe = useDescribe();
   const [fields, setFields] = useState({ left: '', top: '', width: '', height: '' });
   const [problem, setProblem] = useState<string | null>(null);
@@ -134,19 +144,21 @@ export function AreaPanel({ id, sheet }: { id: string; sheet: Sheet }) {
     </label>
   );
 
+  const drawn = Number(Boolean(pick.a)) + Number(Boolean(pick.b));
   return (
-    <section
+    // Folds to what is drawn (M12-25); open while a rectangle is being drawn.
+    <FoldSection
+      id={id}
+      section="area"
+      title={t('compare.area.title')}
+      summary={t(AREA_SUMMARY[drawn as 0 | 1 | 2])}
+      help={<HelpButton topic="compare-differences" />}
+      defaultOpen={drawn > 0}
+      forceOpen={pick.drawing !== null}
       className="overlay-area"
-      aria-labelledby={headingId}
-      data-testid="area-panel"
-      data-help-topic="compare-differences"
+      testId={AREA_TEST_ID}
+      helpTopic={AREA_HELP}
     >
-      <div className="pane-title-row">
-        <h3 id={headingId} className="overlay-side-title">
-          {t('compare.area.title')}
-        </h3>
-        <HelpButton topic="compare-differences" />
-      </div>
       <p className="overlay-zone-hint">{t('compare.area.hint')}</p>
       {SIDE_IDS.map((side) => (
         <div key={side} className="overlay-area-side">
@@ -216,7 +228,7 @@ export function AreaPanel({ id, sheet }: { id: string; sheet: Sheet }) {
           }}
         />
       </div>
-    </section>
+    </FoldSection>
   );
 }
 

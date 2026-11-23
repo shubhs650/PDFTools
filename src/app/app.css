@@ -6737,8 +6737,9 @@ textarea.form-field {
 
 .overlay-head-title {
   display: flex;
-  flex: 1;
+  flex: 1 0 auto;
   align-items: center;
+  white-space: nowrap;
   gap: var(--space-3);
   margin: var(--space-0);
   font-size: var(--font-size-l);
@@ -6760,7 +6761,7 @@ textarea.form-field {
 }
 
 .overlay-head-sheet {
-  min-width: 8em;
+  min-width: 6.5em;
   text-align: center;
   font-size: var(--font-size-m);
 }
@@ -8106,6 +8107,178 @@ textarea.form-field {
 .text-entry-new {
   flex: 1 1 auto;
   text-decoration: underline;
+}
+
+/* Room to work (M12-25, ADR-033): Maximise hides everything but the comparison. */
+.app-frame--maximised {
+  grid-template-rows: minmax(0, 1fr);
+}
+
+.app-frame--maximised .app-body {
+  grid-template-columns: minmax(0, 1fr);
+}
+
+/* On a comparison tab the comparison's own pane strips sit at the edge: the app's left pane
+   strip is left out while that pane is closed (the rail's first button still opens it). */
+.app-body:has(.compare-result) .left-rail--collapsed > .pane-edge {
+  display: none;
+}
+
+.app-frame--maximised .app-banner,
+.app-frame--maximised .left-rail,
+.app-frame--maximised .properties-dock,
+.app-frame--maximised .status-bar {
+  display: none;
+}
+
+/* A bar whose compact buttons (ToggleButton `compact`) drop their labels when it is narrow:
+   the label stays the button's name, hidden visually; the tooltip still says it. */
+.ui-compact-bar {
+  container: compact-bar / inline-size;
+}
+
+@container compact-bar (max-width: 1240px) {
+  .ui-button--compact {
+    min-width: var(--control-height-m);
+    padding-inline: var(--space-0);
+  }
+
+  .ui-button--compact .ui-button-label {
+    position: absolute;
+    width: var(--border-width);
+    height: var(--border-width);
+    overflow: hidden;
+    clip-path: inset(50%);
+    white-space: nowrap;
+  }
+}
+
+/* A comparison pane that folds and resizes: its body (width set inline) and an edge strip
+   like the app's side panes (D-56), the splitter in it while the pane is open. */
+.cmp-pane {
+  display: flex;
+  flex: none;
+  min-height: 0;
+}
+
+.cmp-pane > .cmp-pane-body {
+  display: flex;
+  min-width: 0;
+  min-height: 0;
+}
+
+.cmp-pane > .cmp-pane-body > * {
+  flex: 1 1 0;
+  min-width: 0;
+  border-inline: 0;
+}
+
+.cmp-pane-edge--left {
+  border-right: var(--border-width) solid var(--color-border);
+}
+
+.cmp-pane-edge--left.pane-edge--open {
+  border-left: var(--border-width) solid var(--color-border);
+}
+
+.cmp-pane-edge--right {
+  border-left: var(--border-width) solid var(--color-border);
+}
+
+.cmp-pane-edge--right.pane-edge--open {
+  border-right: var(--border-width) solid var(--color-border);
+}
+
+/* A left-pane section that folds to a one-line summary; its title is the button. */
+.cmp-fold-title {
+  margin: var(--space-0);
+}
+
+.cmp-fold-button {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-1);
+  margin: calc(-1 * var(--space-1));
+  padding: var(--space-1);
+  border: 0;
+  border-radius: var(--radius-s);
+  background: none;
+  color: inherit;
+  font: inherit;
+  letter-spacing: inherit;
+  text-align: start;
+  text-transform: inherit;
+  cursor: pointer;
+}
+
+.cmp-fold-button:hover:not(:disabled) {
+  background: var(--color-hover);
+}
+
+.cmp-fold-button:disabled {
+  cursor: default;
+}
+
+.cmp-fold-chevron {
+  display: flex;
+  color: var(--color-icon);
+}
+
+.cmp-fold-summary {
+  margin: var(--space-0);
+  color: var(--color-text-muted);
+  font-size: var(--font-size-s);
+}
+
+.cmp-fold[data-open='false'] > .pane-title-row {
+  margin-block-end: var(--space-1);
+}
+
+.cmp-fold > .pane-title-row > .overlay-side-title {
+  margin: var(--space-0);
+}
+
+/* Filters in the Differences pane: Sensitivity and Minimum size, folded by default. */
+.cmp-filters-head {
+  display: flex;
+  flex-wrap: wrap;
+  grid-column: 1 / -1;
+  align-items: center;
+  gap: var(--space-2);
+  font-size: var(--font-size-s);
+  font-weight: var(--font-weight-semibold);
+}
+
+.cmp-filters-summary {
+  color: var(--color-text-muted);
+  font-weight: var(--font-weight-regular);
+}
+
+.cmp-filters-body {
+  display: grid;
+  grid-column: 1 / -1;
+  grid-template-columns: 1fr 1fr;
+  gap: var(--space-2);
+}
+
+/* The overlay's colour key, the floating bar's last line. */
+.overlay-key {
+  display: flex;
+  flex-basis: 100%;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: var(--space-1) var(--space-3);
+  margin: var(--space-0);
+  padding: var(--space-0) var(--space-0) var(--space-1);
+  list-style: none;
+  color: var(--color-text-muted);
+  font-size: var(--font-size-s);
+}
+
+.overlay-key-item {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-1);
 }
 
 /* The close-out list (M12-15, D-62): the old revision's comments and their states. */

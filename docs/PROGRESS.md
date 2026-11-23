@@ -30,6 +30,27 @@ interop is in the M6 pack (CHECKLIST §M6 R1–R4). Rev 0 (M0–M4) is complete 
 
 ## Done
 
+- **M12-25 — Room to work in a comparison (ADR-033, D-62; plan [M12-ux](plan/M12-ux.md) task B).**
+  Every comparison pane (the overlay's left pane, Differences, Close-out, the text view's
+  Changes) has an edge strip like the app's side panes: its arrow folds the pane to the strip
+  and opens it again, and the strip is a splitter (drag, arrow keys, Home/End; 160–480 px).
+  Folds and widths are kept per comparison for the session (`src/features/compare/layout/`:
+  `layoutStore.ts`, `ComparePane.tsx`). The left pane's sections fold to a one-line summary
+  (`FoldSection.tsx`): Sheets stays open; Alignment, Compare an area, Comments, Layers and
+  Ignore zones start folded (Layers open when a layer's default differs), and stay open while
+  points are picked or an area or zone is drawn. **Maximise** (header, `Maximise.tsx`,
+  `appStore.maximised`) hides the ribbon, the tabs, the app's panes, the comparison's panes and
+  the status bar; Esc or the button restores, unless Esc has another job first (a dialog or
+  menu, a field, picking or drawing, a comment tool). The app's left pane closes when a
+  comparison tab comes into use and comes back as it was on a document tab (`appPanes.ts`).
+  Header toggles carry labels ("Side by side", "Overlay only", "Link views", "Differences",
+  "Close-out"; text view "Link views"), hidden to icons below a 1240 px header (container query,
+  `ToggleButton compact`). The floating bar has a colour key following the colours chosen
+  (`keyColours` in `src/model/compare/overlay.ts`). The differences list says "Drawing" and
+  "Text and drawing"; Sensitivity and Minimum size fold under **Filters**. Help (overlay,
+  differences, review, text) and six Help screenshots updated; What's new v1.1.0 has a line.
+  Tests: `tests/compare/room-layout.test.ts`, `e2e/compare-room.spec.ts`; Compare e2e use
+  `unfold()` / `openFilters()` from `e2e/support/compare.ts`.
 - **M12-24 — The Compare input window (D-58, D-60, ADR-033, plan [M12-ux](plan/M12-ux.md)).**
   Each pairing row shows its A and B page (fitted to 160 × 120 px, drawn in the Render worker
   through the thumbnail queue only while on screen, `PagePicture.tsx`); a picture opens the

@@ -2,7 +2,14 @@ import AxeBuilder from '@axe-core/playwright';
 import { readFileSync } from 'node:fs';
 import type { Download, Page } from '@playwright/test';
 import { darkTheme } from './support/app.ts';
-import { compareSide, corpusFile, dropOn, overlayOf, textOf } from './support/compare.ts';
+import {
+  compareSide,
+  corpusFile,
+  dropOn,
+  openFilters,
+  overlayOf,
+  textOf,
+} from './support/compare.ts';
 import { expect, test } from './support/fixtures.ts';
 
 // M12-21 (D-65, D-58, Q34, Q35): Compare → Export Change Register… writes
@@ -111,6 +118,7 @@ test('a preset saved from a result is picked in a new comparison’s Options and
 }) => {
   await overlayOf(page, '01');
   // The result's settings: high sensitivity and red/blue.
+  await openFilters(page);
   await page.getByTestId('diff-sensitivity').selectOption('high');
   await page.getByTestId('diff-min-size').selectOption('1');
   await page.getByRole('tab', { name: 'Compare', exact: true }).click();
@@ -141,6 +149,7 @@ test('a preset saved from a result is picked in a new comparison’s Options and
   const axe = await new AxeBuilder({ page }).include('[data-testid="compare-input"]').analyze();
   expect(axe.violations.map((v) => v.id)).toEqual([]);
   await input.getByRole('button', { name: 'Compare', exact: true }).click();
+  await openFilters(page);
   await expect(page.getByTestId('diff-sensitivity')).toHaveValue('high');
   await expect(page.getByTestId('diff-min-size')).toHaveValue('1');
 });

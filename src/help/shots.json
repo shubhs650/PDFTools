@@ -32,15 +32,15 @@
     "h": 396
   },
   "compare-alignment-1": {
-    "w": 252,
+    "w": 236,
     "h": 568
   },
   "compare-differences-1": {
-    "w": 337,
+    "w": 320,
     "h": 560
   },
   "compare-overlay-1": {
-    "w": 1038,
+    "w": 1299,
     "h": 601
   },
   "compare-pairing-1": {
@@ -52,7 +52,7 @@
     "h": 458
   },
   "compare-review-1": {
-    "w": 1272,
+    "w": 1533,
     "h": 701
   },
   "compare-saving-1": {
@@ -68,7 +68,7 @@
     "h": 1018
   },
   "compare-text-1": {
-    "w": 1038,
+    "w": 1299,
     "h": 601
   },
   "creating-fields-1": {

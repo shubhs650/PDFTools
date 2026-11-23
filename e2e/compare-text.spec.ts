@@ -140,7 +140,7 @@ test('pair 10: scrolling stays in step by content across the inserted page; the 
   await expect.poll(async () => (await centrePage(page, 'b')).page).toBe(7);
 
   // Sync off: scrolling B leaves A where it is.
-  await page.getByRole('button', { name: 'Keep both documents in step by content' }).click();
+  await page.getByRole('button', { name: 'Link views', exact: true }).click();
   const before = await viewport(page, 'a').evaluate((vp) => vp.scrollTop);
   await viewport(page, 'b').hover();
   for (let i = 0; i < 4; i++) await page.mouse.wheel(0, 400);

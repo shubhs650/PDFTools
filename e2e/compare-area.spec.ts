@@ -1,7 +1,7 @@
 import AxeBuilder from '@axe-core/playwright';
 import type { Page } from '@playwright/test';
 import { darkTheme } from './support/app.ts';
-import { overlayDrawn, overlayOf } from './support/compare.ts';
+import { overlayDrawn, overlayOf, unfold } from './support/compare.ts';
 import { expect, test } from './support/fixtures.ts';
 import { skipReviewerPrompt } from './support/shots.ts';
 
@@ -33,6 +33,7 @@ async function typeArea(
   side: 'a' | 'b',
   [left, top, width, height]: [number, number, number, number],
 ): Promise<void> {
+  await unfold(page, 'area');
   await page.getByTestId('area-left').fill(String(left));
   await page.getByTestId('area-top').fill(String(top));
   await page.getByTestId('area-width').fill(String(width));
@@ -57,6 +58,7 @@ test.describe('compare an area', () => {
     const whole = await detected(page);
     expect(whole).toBeGreaterThan(20);
 
+    await unfold(page, 'area');
     // Draw on Document A: B is next.
     await panel(page).getByRole('button', { name: 'Draw on Document A' }).click();
     await drawOn(page, 'a', 0.25, 0.6);
@@ -155,7 +157,7 @@ test.describe('compare an area', () => {
     await overlayOf(page, '01');
     await page.getByRole('button', { name: 'Overlay only', exact: false }).first().click();
     await page.getByRole('tab', { name: 'Compare', exact: true }).click();
-    await page.getByRole('button', { name: 'Compare an Area' }).click();
+    await page.getByRole('button', { name: 'Compare an Area', exact: true }).click();
     // Drawing happens in the Review layout: it comes back.
     await expect(page.getByTestId('area-draw-a')).toBeVisible();
     await expect(panel(page).getByRole('button', { name: 'Draw on Document A' })).toHaveAttribute(

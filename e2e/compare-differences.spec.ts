@@ -1,7 +1,7 @@
 import AxeBuilder from '@axe-core/playwright';
 import type { Page } from '@playwright/test';
 import { cap, darkTheme } from './support/app.ts';
-import { overlayOf } from './support/compare.ts';
+import { openFilters, overlayOf, unfold } from './support/compare.ts';
 import { expect, test } from './support/fixtures.ts';
 import { skipReviewerPrompt } from './support/shots.ts';
 
@@ -108,6 +108,7 @@ test.describe('differences on drawings', () => {
     await overlayOf(page, '01');
     const normal = await detected(page, 1);
     // A minimum size of 10 mm drops the small ones (bolt holes, digits).
+    await openFilters(page);
     await page.getByTestId('diff-min-size').selectOption('10');
     await expect.poll(() => count(page).getAttribute('data-count')).not.toBe(String(normal));
     const big = Number(await count(page).getAttribute('data-count'));
@@ -124,6 +125,7 @@ test.describe('differences on drawings', () => {
     // typed in millimetres: the revision row and the title's date and letter go.
     await searchFor(page, '8-BOLT');
     await expect(pane(page).getByRole('option', { name: /8-BOLT/ })).toHaveCount(1);
+    await unfold(page, 'zones');
     const zones = page.getByTestId('ignore-zones');
     await page.getByTestId('zone-left').fill('0');
     await page.getByTestId('zone-top').fill('260');

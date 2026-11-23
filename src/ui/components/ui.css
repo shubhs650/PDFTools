@@ -780,6 +780,11 @@ textarea.ui-field-input {
   transition: width var(--duration-normal);
 }
 
+.ui-button--compact {
+  gap: var(--space-1);
+  padding-inline: var(--space-2);
+}
+
 .ui-visually-hidden {
   position: absolute;
   width: var(--border-width);

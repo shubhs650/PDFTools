@@ -1,7 +1,13 @@
 import AxeBuilder from '@axe-core/playwright';
 import type { Page } from '@playwright/test';
 import { darkTheme } from './support/app.ts';
-import { hideDifferences, overlayDrawn, overlayOf, overlayView } from './support/compare.ts';
+import {
+  hideDifferences,
+  overlayDrawn,
+  overlayOf,
+  overlayView,
+  unfold,
+} from './support/compare.ts';
 import { expect, test } from './support/fixtures.ts';
 
 // M12-11 (D-59): the overlay view. Both revisions are drawn by the Render
@@ -270,6 +276,7 @@ test('pair 19: comments are drawn on top and can be switched off; check highligh
   // The checker's yellow marks (Highlight, and Multiply ink over the drawing) are comments of A.
   const shown = await colours(page);
   expect(shown.yellow).toBeGreaterThan(500);
+  await unfold(page, 'comments');
   await page.getByRole('checkbox', { name: 'Hide check highlights' }).check();
   await drawn(page);
   const noChecks = await colours(page);
