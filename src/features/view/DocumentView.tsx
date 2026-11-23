@@ -1,4 +1,4 @@
-import { PageFlashLayer } from './pageFlash';
+import { PageFlashLayer } from './PageFlashLayer';
 import { useDocumentState } from '@embedpdf/core/react';
 import type { DocumentManagerCapability } from '@embedpdf/plugin-document-manager';
 import type { InteractionManagerCapability } from '@embedpdf/plugin-interaction-manager';

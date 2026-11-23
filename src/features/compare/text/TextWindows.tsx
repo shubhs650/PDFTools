@@ -24,7 +24,7 @@ import {
 import { DocumentView } from '../../view/DocumentView';
 import { setViewFocus } from '../../view/tileScheduler';
 import { useWindowPlace } from '../review/windowPlace';
-import { UnsavedDot } from '../unsaved';
+import { UnsavedDot } from '../UnsavedDot';
 import { MarkLayer } from './MarkLayer';
 import { PageCounter } from './PageCounter';
 import { TextMarks, type MarksContext } from './marksContext';

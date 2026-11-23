@@ -213,7 +213,8 @@ test("closes out the old revision's comments, following the owner's three cases 
   await row(page, 'C1-cloud').click();
   await action(page, 'Reopen').click();
   await expect(row(page, 'C1-cloud')).toHaveAttribute('data-state', 'open');
-  expect(await parts(page, a, 'C1-cloud')).toEqual([]);
+  // (Its three parts go one after another: the state first.)
+  await expect.poll(() => parts(page, a, 'C1-cloud')).toEqual([]);
   await viewport(page, 'a').focus();
   await page.keyboard.press('Control+z');
   await expect(row(page, 'C1-cloud')).toHaveAttribute('data-state', 'addressed');

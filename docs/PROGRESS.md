@@ -1,6 +1,6 @@
 # Triya PDF — Progress
 
-_Last updated: 2026-11-23 (M12-24: the Compare input window made clearer; M12-23: M12 acceptance, M12 complete on the agent side; M12-22: Compare help and release notes; M12-21·O4: drop a tab on a tab; M12-20: the comparison file; M12-21: change register and presets)_
+_Last updated: 2026-11-23 (M12-27: review in a comparison made easier; M12-25: room to work in a comparison; M12-24: the Compare input window made clearer; M12-23: M12 acceptance, M12 complete on the agent side; M12-22: Compare help and release notes; M12-21·O4: drop a tab on a tab; M12-20: the comparison file; M12-21: change register and presets)_
 
 **Current milestone:** M12 — PDF comparison (PDF overlay for drawings, text comparison for
 documents), version 1.1.0: plan [docs/plan/M12.md](plan/M12.md) and
@@ -30,6 +30,25 @@ interop is in the M6 pack (CHECKLIST §M6 R1–R4). Rev 0 (M0–M4) is complete 
 
 ## Done
 
+- **M12-27 — Review in a comparison (ADR-033 decisions 4–6, D-62, D-64; plan [M12-ux](plan/M12-ux.md) task D).**
+  The close-out list shows comments with typed text first, then markup without text, each group
+  by page then position (`closeOutModel.ts`). A **Hide highlights** box (on by default, kept on
+  this device as `pdftools.closeOutHideHighlights`) leaves out see-through check marks; they were
+  always left out before, so the default behaves as it did. A click on a row zooms the linked
+  windows so the comment fills about a third of the window (never past 400 %), selects it and
+  flashes it once (`closeout/reveal.ts`, `view/pageFlash.ts`); in a text comparison both sides
+  scroll to it and zoom in when it is small (`TextLink.zoomTo`). The three outcome buttons became
+  one **Close Out As…** menu with a line explaining each outcome (`DropdownMenu` items take a
+  `description`). Document A and B window titles and the comparison's tab carry the unsaved dot
+  (`compare/unsaved.ts`, `UnsavedDot.tsx`); closing a comparison whose overlay comments live
+  only in it asks first (Save Comparison… / Save review, Don't save, Cancel:
+  `file/closePrompt.ts`, `CloseComparisonDialog.tsx`, `setComparisonCloseGuard` in
+  `openDocument.ts`). Each text comparison window shows "Page n of m", updated as it scrolls; a
+  click turns it into a box, Enter goes to the page and the other side follows
+  (`text/PageCounter.tsx`, `model/compare/pageCounter.ts`). Tests: `tests/compare/review-ux.test.ts`,
+  `close-out.test.ts`, `e2e/compare-review-ux.spec.ts` (axe light and dark),
+  `e2e/perf/compare-review.spec.ts`; Help topics compare-review and compare-text with new shots;
+  a What's new 1.1.0 line.
 - **M12-25 — Room to work in a comparison (ADR-033, D-62; plan [M12-ux](plan/M12-ux.md) task B).**
   Every comparison pane (the overlay's left pane, Differences, Close-out, the text view's
   Changes) has an edge strip like the app's side panes: its arrow folds the pane to the strip

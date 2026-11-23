@@ -26,7 +26,7 @@ import {
   useOverlayView,
   type Sheet,
 } from '../overlay/overlayState';
-import { UnsavedDot } from '../unsaved';
+import { UnsavedDot } from '../UnsavedDot';
 import { Splitter } from './Splitter';
 import { useWindowPlace } from './windowPlace';
 import { WindowLink, centreOnBox, fitWindow, showPage, type LinkedWindow } from './windowLink';
