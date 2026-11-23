@@ -302,6 +302,34 @@ describe('text comparison on the corpus', () => {
         if ((c.b?.page ?? c.a?.page ?? 0) < r.state.settled.b) expect(final.has(key(c))).toBe(true);
     expect(results[0]?.state.settled).toEqual({ a: 0, b: 0 });
   }, 60_000);
+
+  it('an early result does not wait for the last pages to be read (M12-23, D-66)', async () => {
+    // Pair 10: 17 against 18 pages. Before M12-23 every early match waited for
+    // every page of both documents, so the first result came with the last.
+    await open('10');
+    const p = corpusPair('text', '10');
+    const pages = (n: number): number[] => [...Array(n).keys()];
+    const log: string[] = [];
+    const s = new CompareSession(
+      oneFile('t10old', pages(p.oldPages)),
+      oneFile('t10new', pages(p.newPages)),
+      {
+        work: fakeWork(mod, native, log),
+        compare: new CompareClient({ spawn: compareSpawn({ spawned: 0, terminated: 0 }, ports) }),
+        text: true,
+        align: false,
+        onText: (_, state) => log.push(`result:${String(state.pages.b)}`),
+      },
+    );
+    await s.start();
+    await s.whenDone();
+    await s.close();
+    const firstResult = log.findIndex((e) => e.startsWith('result:'));
+    const lastRead = log.lastIndexOf('compareText');
+    expect(firstResult).toBeGreaterThan(-1);
+    expect(firstResult).toBeLessThan(lastRead);
+    expect(log.at(-1)).toBe('result:18');
+  }, 60_000);
 });
 
 type TextChange = TextComparison['changes'][number];

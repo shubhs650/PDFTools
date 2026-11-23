@@ -439,7 +439,11 @@ export class CompareSession {
       out.push({
         key: complete ? 'match' : `match:${String(n)}`,
         sheet: null,
-        phase: 1,
+        // An early match runs as soon as its pages are read, in among the
+        // reading (M12-23, D-66: the first result within 3 s); in phase 1 it
+        // waited for every page of both documents, so on the 500-page
+        // contract the first result came with the last.
+        phase: complete ? 1 : 0,
         after: upTo(n),
         run: (signal) => this.matchText(pages, complete, signal),
       });

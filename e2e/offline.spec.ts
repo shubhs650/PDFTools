@@ -11,6 +11,7 @@ import {
 import { reviewSourcePdf } from './fixtures/comments.ts';
 import { tablesPdf } from './fixtures/tables.ts';
 import { cap, drop } from './support/app.ts';
+import { compareSide, corpusFile, dropOn, overlayDrawn, textFile } from './support/compare.ts';
 import { expect, test } from './support/fixtures.ts';
 import { printCalls, stubFramePrint } from './support/printStub.ts';
 import { savedFiles, stubSavePicker } from './support/savePicker.ts';
@@ -669,6 +670,95 @@ test(
       // A verified save of everything (the same route as Ctrl+S).
       expect(await cap(page, 'save', 'verifiedSave', id)).toMatchObject({ fellBack: false });
       expect(await cap(page, 'annotate', 'errors', '')).toEqual([]);
+      expect(outbound).toEqual([]);
+    } finally {
+      await context.setOffline(false);
+    }
+  },
+);
+
+test(
+  'M12 offline: a PDF overlay with its differences, the change register as Excel, a saved comparison file, and a text comparison; zero outbound requests',
+  { tag: '@offline' },
+  async ({ page, context }) => {
+    // M12-23 (D-66, rule 4): Compare runs with the network off. Its workers
+    // (Compare, overlay), the Excel writer and the fonts of the comparison
+    // file all come from the service worker's cache.
+    test.setTimeout(180_000);
+    await page.addInitScript(() => {
+      Object.defineProperty(window, 'showSaveFilePicker', { value: undefined });
+    });
+    await page.goto('/?sw');
+    await expect(status(page).getByText('✓ Ready offline')).toBeVisible({ timeout: 60_000 });
+
+    await context.setOffline(true);
+    const outbound: string[] = [];
+    page.on('requestfailed', (r) => {
+      if (/^https?:/.test(r.url())) outbound.push(`failed ${r.url()}`);
+    });
+    page.on('response', (r) => {
+      if (/^https?:/.test(r.url()) && !r.fromServiceWorker()) outbound.push(r.url());
+    });
+    const ribbon = () => page.getByRole('tab', { name: 'Compare', exact: true }).click();
+    const compare = () =>
+      page
+        .getByTestId('compare-input')
+        .getByRole('button', { name: 'Compare', exact: true })
+        .click();
+    try {
+      await page.reload();
+      await expect(page.getByTestId('start-screen')).toBeVisible();
+
+      // A PDF overlay of corpus pair 01: aligned, drawn, its differences listed.
+      await ribbon();
+      await page.getByRole('button', { name: 'PDF Overlay' }).click();
+      await dropOn(compareSide(page, 'a'), [corpusFile('01', 'old', 'Flange RevA.pdf')]);
+      await expect(compareSide(page, 'a').getByTestId('compare-file')).toHaveCount(1);
+      await dropOn(compareSide(page, 'b'), [corpusFile('01', 'new', 'Flange RevB.pdf')]);
+      await expect(page.getByTestId('compare-pairing')).toHaveAttribute('data-status', 'done', {
+        timeout: 30_000,
+      });
+      await compare();
+      await overlayDrawn(page);
+      await expect(page.getByTestId('sheet-diff').first()).toHaveAttribute(
+        'data-status',
+        'changed',
+        { timeout: 30_000 },
+      );
+
+      // The change register as Excel (ExcelJS in the Work worker).
+      await ribbon();
+      await page.getByRole('button', { name: 'Export Change Register…' }).click();
+      const register = page.getByRole('dialog', { name: 'Export Change Register' });
+      await register.getByRole('radio', { name: 'Excel workbook (.xlsx)' }).check();
+      const xlsx = page.waitForEvent('download');
+      await register.getByRole('button', { name: 'Export…' }).click();
+      expect((await xlsx).suggestedFilename()).toMatch(/\.xlsx$/u);
+      await expect(register).toHaveCount(0);
+
+      // The comparison file (both documents inside).
+      await ribbon();
+      await page.getByRole('button', { name: 'Save Comparison…' }).click();
+      const save = page.getByRole('dialog', { name: 'Save Comparison' });
+      await expect(save).toBeVisible();
+      const pdf = page.waitForEvent('download');
+      await save.getByRole('button', { name: 'Save…' }).click();
+      expect((await pdf).suggestedFilename()).toMatch(/\.pdf$/u);
+      await expect(save).toHaveCount(0, { timeout: 60_000 });
+
+      // A text comparison of corpus pair 01 in a new comparison tab.
+      await ribbon();
+      await page.getByRole('button', { name: 'Text Comparison' }).click();
+      await dropOn(compareSide(page, 'a'), [textFile('01', 'old', 'Invoice RevA.pdf')]);
+      await expect(compareSide(page, 'a').getByTestId('compare-file')).toHaveCount(1);
+      await dropOn(compareSide(page, 'b'), [textFile('01', 'new', 'Invoice RevB.pdf')]);
+      await expect(compareSide(page, 'b').getByTestId('compare-file')).toHaveCount(1);
+      await compare();
+      const result = page.locator('[data-testid="compare-result"][data-type="text"]');
+      await expect(result).toHaveAttribute('data-status', 'done', { timeout: 60_000 });
+      expect(
+        Number(await page.getByTestId('text-list-count').getAttribute('data-count')),
+      ).toBeGreaterThan(0);
       expect(outbound).toEqual([]);
     } finally {
       await context.setOffline(false);

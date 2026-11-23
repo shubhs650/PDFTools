@@ -81,6 +81,8 @@ beforeAll(async () => {
   await open('a1', corpusBytes(corpusPair('overlay', '15'), 'old'));
   await open('a3', corpusBytes(corpusPair('overlay', '15'), 'new'));
   await open('pair02', corpusBytes(corpusPair('overlay', '02'), 'old'));
+  await open('p04a', corpusBytes(corpusPair('overlay', '04'), 'old'));
+  await open('p04b', corpusBytes(corpusPair('overlay', '04'), 'new'));
 });
 
 /** Mean ink of a rectangle of a band (pixels). */
@@ -139,8 +141,25 @@ describe('positioned text', () => {
     expect(y0).toBeGreaterThanOrEqual(99);
     expect(y1).toBeLessThan(120);
     expect(t.sizes[0]).toBeCloseTo(12, 1);
-    expect(Math.round(Math.abs(t.angles[0] ?? 0))).not.toBe(0);
+    // Running down the displayed page: a quarter turn clockwise (M12-23: PDFium's char
+    // angle is clockwise; it came out as +90 before).
+    expect(t.angles[0]).toBeCloseTo(-90, 3);
     expect(wordsOf(t)).toEqual(['AB']);
+  });
+
+  it('reads text on a /Rotate 90 sheet as displayed: level lines at 0°, a label reading up at 90° (pair 04)', () => {
+    for (const id of ['p04a', 'p04b']) {
+      const t = onPage(id, 1, (p, f) => textOf(mod, p, plainFrame(f)));
+      const s = String.fromCodePoint(...t.codes);
+      const angle = (word: string): number => t.angles[s.indexOf(word)] ?? NaN;
+      // A is stored portrait; B landscape with /Rotate 90: both display the same.
+      expect(angle('DETAIL')).toBeCloseTo(0, 3);
+      expect(angle('DRAWING')).toBeCloseTo(0, 3);
+      expect(angle('BEDDING')).toBeCloseTo(90, 3);
+      const words = wordsOf(t);
+      expect(words).toContain('DETAIL');
+      expect(words).toContain('BEDDING');
+    }
   });
 
   it('reads a drawing sheet: title block words are found', () => {
