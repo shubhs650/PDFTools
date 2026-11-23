@@ -41,7 +41,8 @@ import { ensureNotes, useNotes } from '../review/notes';
 import { ReviewLayout } from '../review/ReviewLayout';
 import { renderEngine, workClient } from '../../view/host';
 import { closeLayerCopies } from './layerCopies';
-import { closeVectorPages } from './vectorOverlay';
+import { closeVectorPages, comparisonSheets } from './vectorOverlay';
+import { applyRestoredPlaces } from '../file/restore';
 import { documentsOf } from '../model';
 import { CloseOutPane } from '../closeout/CloseOutPane';
 import { CloseOutToggle } from '../closeout/CloseOutToggle';
@@ -121,6 +122,8 @@ export function OverlayResult({ comparison: c }: { comparison: Comparison }) {
     // Layer switches stay with the documents: a new session draws with them too (Q24).
     for (const [docId, states] of Object.entries(overlayView(c.id).layers))
       session.setLayers(docId, states);
+    // A comparison reopened from its file (M12-20): the sheets placed by hand.
+    applyRestoredPlaces(c.id, session, comparisonSheets(c.id) ?? []);
     // Each sheet's differences as its detection ends (M12-14, D-61); none kept from other pairs.
     updateDiff(c.id, (v) =>
       Object.keys(v.results).length || v.selected !== null

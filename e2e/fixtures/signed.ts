@@ -136,6 +136,32 @@ export async function signedPdf(signer: Signer): Promise<Uint8Array> {
   return fill(pdf, signer, new Date(Date.UTC(2024, 2, 1, 12)));
 }
 
+/**
+ * One page certified by `signer` (M12-20): a certification signature whose
+ * DocMDP transform has permission level `p` (1 no changes, 2 form filling and
+ * signing, 3 also comments).
+ */
+export async function certifiedPdf(
+  signer: Signer,
+  p: 1 | 2 | 3,
+  text = 'Certified test page',
+): Promise<Uint8Array> {
+  const sig = sigDict('Test Signer', 'Certified', 'Test Lab', 'D:20240301120000Z').replace(
+    / >>$/,
+    ` /Reference [<< /Type /SigRef /TransformMethod /DocMDP /TransformParams << /Type /TransformParams /P ${String(p)} /V /1.2 >> >>] >>`,
+  );
+  const pdf = buildPdf([
+    '<< /Type /Catalog /Pages 2 0 R /AcroForm << /Fields [5 0 R] /SigFlags 3 >> /Perms << /DocMDP 6 0 R >> >>',
+    '<< /Type /Pages /Kids [3 0 R] /Count 1 >>',
+    '<< /Type /Page /Parent 2 0 R /MediaBox [0 0 595 842] /Resources << /Font << /F1 7 0 R >> >> /Contents 4 0 R /Annots [5 0 R] >>',
+    { dict: '<< >>', stream: `BT /F1 24 Tf 72 740 Td (${text}) Tj ET` },
+    '<< /Type /Annot /Subtype /Widget /FT /Sig /T (Certification) /Rect [0 0 0 0] /F 132 /P 3 0 R /V 6 0 R >>',
+    sig,
+    '<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica >>',
+  ]);
+  return fill(pdf, signer, new Date(Date.UTC(2024, 2, 1, 12)));
+}
+
 /** Appends an incremental revision with the given [object number, text] objects. */
 export function appendRevision(
   base: Uint8Array,

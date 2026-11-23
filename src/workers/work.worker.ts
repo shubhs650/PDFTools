@@ -62,6 +62,13 @@ import { copyItems, editObjects, OutlineError, readOutline } from './work/outlin
 import { popupStates } from './work/popups';
 import { LayerCopyError, layerCopy, layerKey, type LayerStates } from './shared/layerCopy';
 import { buildVectorOverlay } from './work/vectorOverlay';
+import {
+  compareFileProbe,
+  compareFileRead,
+  compareFileSave,
+  compareNotesSeed,
+  type FileJobEnv,
+} from './work/comparisonFile/jobs';
 
 let mod: WrappedPdfiumModule | undefined;
 let native: PdfiumNative | undefined;
@@ -86,6 +93,15 @@ function wasmBytes(): number {
 }
 
 const docs = new WorkDocs(need);
+
+/** What the comparison file's jobs need (M12-20). */
+function fileEnv(
+  slice: JobSlice,
+  progress: (p: { done: number; total: number }) => void,
+): FileJobEnv {
+  if (!mod) throw new RpcError('not-initialized', 'The work worker is not initialized');
+  return { mod, native: need(), docs, inflate, liveReader, slice, progress };
+}
 
 /**
  * What the table jobs read (M4-12): Oxide's copy of the current state and
@@ -845,6 +861,59 @@ serve<WorkApi>(self, {
       } finally {
         wasmBytes(); // the new document and its copy grow the heap (ADR-004)
       }
+    }),
+
+  compareFileSave: (req, ctx) =>
+    scheduler.run('interactive', ctx.signal, async (slice) => {
+      try {
+        const r = await compareFileSave(
+          fileEnv(slice, (p) => {
+            ctx.progress(p);
+          }),
+          req,
+        );
+        return new Transfer(r, [r.bytes]);
+      } finally {
+        wasmBytes(); // the overlay pages and the scratch copies grow the heap (ADR-004)
+      }
+    }),
+
+  compareFileProbe: ({ docId }, ctx) =>
+    scheduler.run('interactive', ctx.signal, (slice) =>
+      compareFileProbe(
+        fileEnv(slice, () => undefined),
+        docId,
+      ),
+    ),
+
+  compareFileRead: ({ docId }, ctx) =>
+    scheduler.run('interactive', ctx.signal, async (slice) => {
+      const r = await compareFileRead(
+        fileEnv(slice, () => undefined),
+        docId,
+      );
+      return new Transfer(r, [
+        ...r.A.map((f) => f.bytes),
+        ...r.B.map((f) => f.bytes),
+        ...(r.notes ? [r.notes] : []),
+      ]);
+    }),
+
+  compareNotesSeed: ({ blank, notes }, ctx) =>
+    scheduler.run('interactive', ctx.signal, async (slice) => {
+      const bytes = await compareNotesSeed(
+        fileEnv(slice, () => undefined),
+        blank,
+        notes,
+      );
+      return new Transfer({ bytes }, [bytes]);
+    }),
+
+  compareFileInput: ({ docId }, ctx) =>
+    scheduler.run('interactive', ctx.signal, async () => {
+      await docs.get(docId);
+      const bytes = docs.bytes(docId).slice().buffer;
+      return new Transfer({ bytes }, [bytes]);
     }),
 
   compareLayersRelease: ({ docIds }) => {

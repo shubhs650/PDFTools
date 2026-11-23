@@ -49,6 +49,28 @@ export function usePairing(id: string): PairingState | undefined {
 }
 
 const sessions = new Map<string, CompareSession>();
+/** A reopened comparison file's pairing table (M12-20), used instead of the automatic one. */
+const restored = new Map<string, PairRow[]>();
+
+/** The pairing table to use when the comparison's pages are first paired. */
+export function restorePairing(id: string, rows: PairRow[]): void {
+  restored.set(id, rows);
+}
+
+/** Whether `rows` is a table of these pages: every page once, within range. */
+export function validRows(rows: readonly PairRow[], counts: Record<SideId, number>): boolean {
+  const seen: Record<SideId, Set<number>> = { a: new Set(), b: new Set() };
+  for (const r of rows) {
+    if (r.a === null && r.b === null) return false;
+    for (const s of ['a', 'b'] as const) {
+      const p = r[s];
+      if (p === null) continue;
+      if (!Number.isInteger(p) || p < 0 || p >= counts[s] || seen[s].has(p)) return false;
+      seen[s].add(p);
+    }
+  }
+  return seen.a.size === counts.a && seen.b.size === counts.b;
+}
 /** Each session's inputs, and the pairs it was started with (M12-11: the result starts it). */
 const sessionInputs = new Map<string, { a: CompareInput; b: CompareInput }>();
 const startedWith = new Map<string, string>();
@@ -156,7 +178,14 @@ export function syncPairing(c: Comparison): void {
         return;
       }
       const result = await session.pair();
-      patch(c.id, key, () => ({ status: 'done', result, rows: pairingRows(result) }));
+      const kept = restored.get(c.id);
+      restored.delete(c.id);
+      const counts = { a: pages.a.length, b: pages.b.length };
+      patch(c.id, key, () => ({
+        status: 'done',
+        result,
+        rows: kept && validRows(kept, counts) ? kept : pairingRows(result),
+      }));
     } catch (err) {
       if (isAbortError(err)) return;
       patch(c.id, key, () => ({ status: 'failed' }));

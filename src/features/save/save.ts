@@ -190,6 +190,27 @@ async function wholeFile(docId: string, tail: ArrayBuffer | undefined): Promise<
   return new Blob(parts, { type: 'application/pdf' });
 }
 
+/**
+ * Where Ctrl+S goes instead, when somewhere else decides (M12-20: in a
+ * comparison it is Save review, which saves every document of the comparison,
+ * or the comparison file a reopened comparison lives in). Null: save as usual.
+ */
+type SaveRedirect = (docId: string) => Promise<unknown> | null;
+let redirect: SaveRedirect = () => null;
+
+export function setSaveRedirect(fn: SaveRedirect): () => void {
+  redirect = fn;
+  return () => {
+    if (redirect === fn) redirect = () => null;
+  };
+}
+
+/** Ctrl+S on the document commands act on: redirected in a comparison (M12-20). */
+export async function saveActive(docId: string): Promise<unknown> {
+  const elsewhere = redirect(docId);
+  return elsewhere ?? save(docId);
+}
+
 /** Ctrl+S (§4.2). `skipGrowthCheck`: the user chose "Just save" in the growth prompt. */
 export async function save(docId: string, skipGrowthCheck = false): Promise<SavePhase> {
   const src = sources.get(docId);
@@ -231,6 +252,105 @@ export async function save(docId: string, skipGrowthCheck = false): Promise<Save
     },
     src.pendingPrefix !== undefined,
   );
+}
+
+/** A document's unsaved changes as an incremental tail on the file as saved (not committed). */
+export interface UnsavedTail {
+  tail: ArrayBuffer;
+  baseLength: number;
+}
+
+/**
+ * The unsaved changes of these documents as verified incremental tails, as
+ * Ctrl+S would write them, without writing or committing anything (M12-20:
+ * Save comparison… puts the review comments into the copies it holds, and the
+ * documents' own files stay as they are).
+ */
+export async function unsavedTails(
+  docIds: readonly string[],
+  signal: AbortSignal,
+): Promise<Map<string, UnsavedTail>> {
+  await editsSettled();
+  const out = new Map<string, UnsavedTail>();
+  const deps = saveDeps();
+  for (const docId of docIds) {
+    if (!documentStore.getState().docs[docId]?.dirty) continue;
+    await annotationsSettled(docId);
+    while (pageOpRunning(docId)) await new Promise((r) => setTimeout(r, 50));
+    const p = await prepareSave(docId, deps, { signal });
+    if (p) out.set(docId, { tail: p.tail, baseLength: p.baseLength });
+  }
+  return out;
+}
+
+/** What a save of several documents into one file ended with. */
+export type TogetherResult = 'written' | 'nothing' | 'cancelled' | 'failed';
+
+/**
+ * Saves several documents into one file that `write` writes (M12-20: Save
+ * review in a reopened comparison file, whose copies of Document A and B are
+ * its attachments). Each document's tail is prepared and verified as for
+ * Ctrl+S; `write` gets them all; then each is committed (rule 7: the copies
+ * grow by incremental sections). Nothing is committed when `write` fails or
+ * is cancelled. `write` runs even when no document changed (`always`).
+ */
+export async function saveTogether(
+  docIds: readonly string[],
+  write: (tails: Map<string, PreparedSave>, signal: AbortSignal) => Promise<void>,
+  always = false,
+): Promise<TogetherResult> {
+  await editsSettled();
+  for (const docId of docIds) {
+    await annotationsSettled(docId);
+    while (pageOpRunning(docId)) await new Promise((r) => setTimeout(r, 50));
+  }
+  const ids = docIds.filter((d) => documentStore.getState().docs[d] && !isActive(phaseOf(d)));
+  if (ids.length === 0) return 'nothing';
+  const ac = new AbortController();
+  const editsAtStart = new Map(ids.map((d) => [d, documentStore.getState().docs[d]?.edits ?? 0]));
+  for (const d of ids) {
+    controllers.set(d, ac);
+    emit(d, { type: 'start' });
+  }
+  const deps = saveDeps();
+  const prepared = new Map<string, PreparedSave>();
+  try {
+    for (const d of ids) {
+      const p = await prepareSave(d, deps, {
+        signal: ac.signal,
+        onVerify: () => emit(d, { type: 'verifying' }),
+      });
+      if (p) prepared.set(d, p);
+    }
+    if (prepared.size === 0 && !always) {
+      for (const d of ids) {
+        documentStore.getState().markSaved(d, 0, editsAtStart.get(d));
+        emit(d, { type: 'nothing-to-save' });
+      }
+      return 'nothing';
+    }
+    ac.signal.throwIfAborted();
+    for (const d of ids) emit(d, { type: 'writing' });
+    await write(prepared, ac.signal);
+    // Written: from here on the save cannot be cancelled.
+    for (const d of ids) {
+      const p = prepared.get(d);
+      if (p) {
+        await finishSave(p, deps);
+        committed.set(d, [...(committed.get(d) ?? []), p.tail]);
+      }
+      documentStore.getState().markSaved(d, p?.tail.byteLength ?? 0, editsAtStart.get(d));
+      emit(d, { type: 'written', appended: p?.tail.byteLength ?? 0 });
+    }
+    return 'written';
+  } catch (err) {
+    const kind = errorKind(err);
+    for (const d of ids)
+      emit(d, kind === 'cancelled' ? { type: 'cancel' } : { type: 'fail', kind });
+    return kind === 'cancelled' ? 'cancelled' : 'failed';
+  } finally {
+    for (const d of ids) if (controllers.get(d) === ac) controllers.delete(d);
+  }
 }
 
 /** Tails committed since open (or since the last optimized save): recovery snapshots (M1-24). */

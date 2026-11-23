@@ -39,6 +39,10 @@ import { PrintReadyDialog } from '../features/print/PrintReadyDialog';
 import { ExportOverlayDialog } from '../features/compare/overlay/ExportOverlayDialog';
 import { RegisterDialog } from '../features/compare/register/RegisterDialog';
 import { SavePresetDialog } from '../features/compare/presets/SavePresetDialog';
+import {
+  RebuildComparisonDialog,
+  SaveComparisonDialog,
+} from '../features/compare/file/SaveComparisonDialog';
 import { registerReportCommands } from '../features/report/commands';
 import { ReportDialog } from '../features/report/ReportDialog';
 import { ResetFormDialog } from '../features/forms/ResetFormDialog';
@@ -239,6 +243,8 @@ export function App() {
         <ExportOverlayDialog />
         <RegisterDialog />
         <SavePresetDialog />
+        <SaveComparisonDialog />
+        <RebuildComparisonDialog />
         <ExternalLinkDialog />
         <SaveErrorDialog />
         <SaveOptimizedDialog />

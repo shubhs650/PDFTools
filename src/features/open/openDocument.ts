@@ -60,6 +60,29 @@ export interface OpenOptions {
    * recent list and the file's last view.
    */
   notes?: boolean;
+  /**
+   * A copy taken out of another file (a comparison file's documents, M12-20):
+   * always a document of its own (never one open already), out of the recent list.
+   */
+  inner?: boolean;
+  /** A password to try first (a comparison file's own); the prompt follows if it is wrong. */
+  password?: string;
+}
+
+/**
+ * Called after a file opened in a tab of its own (not a copy, notes or a
+ * recovered document): a comparison file (M12-20) turns itself into its
+ * comparison. Registered by features, so this module does not import them.
+ */
+export type OpenedHook = (
+  docId: string,
+  opened: { file: File; handle?: FileSystemFileHandle; password?: string },
+) => void;
+
+let openedHook: OpenedHook | null = null;
+
+export function setOpenedHook(fn: OpenedHook | null): void {
+  openedHook = fn;
 }
 
 /**
@@ -73,7 +96,9 @@ export async function openFiles(
 ): Promise<(string | undefined)[]> {
   const ids: (string | undefined)[] = [];
   for (const f of files)
-    ids.push(await openOne(f, source, options.tab !== false && !options.notes, !!options.notes));
+    ids.push(
+      await openOne(f, source, options.tab !== false && !options.notes, !!options.notes, options),
+    );
   return ids;
 }
 
@@ -99,6 +124,7 @@ async function openOne(
   source: DocumentSource,
   tab: boolean,
   notes = false,
+  options: OpenOptions = {},
 ): Promise<string | undefined> {
   const { file, handle } = req;
   const recovered = 'recordRecent' in req;
@@ -109,7 +135,9 @@ async function openOne(
     const fingerprint = await storageClient().call('fingerprint', { file }).promise;
     // The file's last view (D-53), read while it opens; a recovered document has its own.
     const lastView = recovered || notes ? Promise.resolve(null) : readLastView(fingerprint);
-    const dup = await findDuplicate({ ...(handle ? { handle } : {}), fingerprint });
+    const dup = options.inner
+      ? undefined
+      : await findDuplicate({ ...(handle ? { handle } : {}), fingerprint });
     if (dup) {
       advance(job, { type: 'duplicate', docId: dup });
       if (!tab) return dup; // one document in its tab and in a comparison (D-58)
@@ -133,6 +161,10 @@ async function openOne(
     // transferred to the Render worker on every attempt (rule 1).
     const dm = await documentManager();
     let password: string | undefined;
+    // A password to try before asking (a comparison file's own, for a copy inside it);
+    // when it fails too, the prompt asks as for the first time.
+    let guess = options.password;
+    let guessed = false;
     let id = '';
     for (;;) {
       const buffer = await file.arrayBuffer();
@@ -154,7 +186,14 @@ async function openOne(
         if (classifyOpenError(err, header) !== 'needs-password') throw err;
         await releaseEngineDocument(id);
         docId = undefined;
-        advance(job, { type: 'needs-password', retry: password !== undefined });
+        if (guess !== undefined) {
+          password = guess;
+          guess = undefined;
+          guessed = true;
+          continue;
+        }
+        advance(job, { type: 'needs-password', retry: password !== undefined && !guessed });
+        guessed = false;
         const answer = await askPassword(job);
         if (answer === null) {
           advance(job, { type: 'cancelled' });
@@ -190,7 +229,13 @@ async function openOne(
     else documentStore.getState().openWithoutTab(meta);
     advance(job, { type: 'opened', docId: id });
     void openInWorkWorker(id, file, password);
-    if (recovered || notes) return id;
+    if (recovered || notes || options.inner) return id;
+    if (tab && openedHook)
+      openedHook(id, {
+        file,
+        ...(handle ? { handle } : {}),
+        ...(password === undefined ? {} : { password }),
+      });
     void import('../recent/recent')
       .then(({ recordOpened }) =>
         recordOpened({ file, ...(handle ? { handle } : {}), fingerprint }),

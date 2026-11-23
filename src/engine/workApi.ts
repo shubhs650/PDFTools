@@ -11,6 +11,12 @@ import type { FlattenOptions } from '../workers/work/flatten';
 import type { LayerList } from '../model/ocg';
 import type { LayerStates } from '../workers/shared/layerCopy';
 import type { VectorOverlayRequest, VectorOverlayStats } from '../workers/work/vectorOverlay';
+import type {
+  ComparisonContents,
+  CompareFileRequest,
+  CompareFileResult,
+} from '../workers/work/comparisonFile/jobs';
+import type { Detected } from '../workers/work/comparisonFile/read';
 import type { DocProperties } from '../workers/work/properties';
 import type { SignatureInfo } from '../workers/work/signatures';
 import type {
@@ -551,6 +557,25 @@ export interface WorkApi {
     { bytes: ArrayBuffer; stats: VectorOverlayStats },
     { done: number; total: number }
   >;
+  /**
+   * The comparison file (M12-20, D-65, ADR-032): Save comparison…, and Save
+   * review in a reopened comparison file. Every input's content-copying
+   * permission (and, for text, commenting in B) is required (rule 9). Progress
+   * counts sheets (overlay) or steps (text); the bytes are transferred.
+   */
+  compareFileSave: MethodSpec<
+    CompareFileRequest,
+    CompareFileResult,
+    { done: number; total: number }
+  >;
+  /** Whether an open document is a comparison file (reads its catalog only). */
+  compareFileProbe: MethodSpec<{ docId: string }, Detected | null>;
+  /** A comparison file taken apart: its data, every input byte for byte, its overlay notes. */
+  compareFileRead: MethodSpec<{ docId: string }, ComparisonContents>;
+  /** A reopened comparison's blank notes pages with the file's overlay notes copied onto them. */
+  compareNotesSeed: MethodSpec<{ blank: ArrayBuffer; notes: ArrayBuffer }, { bytes: ArrayBuffer }>;
+  /** A document's file as saved (Export Document A / B of a reopened comparison file). */
+  compareFileInput: MethodSpec<{ docId: string }, { bytes: ArrayBuffer }>;
   textStats: MethodSpec<
     { docId: string; priority?: WorkPriority },
     { pages: number; chars: number; ms: number },

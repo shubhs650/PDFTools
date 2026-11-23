@@ -185,6 +185,11 @@ function fakeSpawn(world: FakeWorld) {
       },
       compareLayersRelease: () => null,
       compareVectorOverlay: () => ({ bytes: new ArrayBuffer(0), stats: {} as never }),
+      compareFileSave: () => ({ bytes: new ArrayBuffer(0), route: null, notes: 0 }),
+      compareFileProbe: () => null,
+      compareFileRead: () => ({}) as never,
+      compareNotesSeed: () => ({ bytes: new ArrayBuffer(0) }),
+      compareFileInput: () => ({ bytes: new ArrayBuffer(0) }),
     });
     const port = ch.port2;
     port.start();
