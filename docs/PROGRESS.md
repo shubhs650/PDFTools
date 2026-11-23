@@ -1,6 +1,6 @@
 # Triya PDF — Progress
 
-_Last updated: 2026-11-23 (M12-15: review across revisions)_
+_Last updated: 2026-11-23 (M12-14: differences on drawings)_
 
 **Current milestone:** M12 — PDF comparison (PDF overlay for drawings, text comparison for
 documents), version 1.1.0: plan [docs/plan/M12.md](plan/M12.md) and
@@ -29,6 +29,36 @@ answers Q1–Q7; ARCHITECTURE.md Rev 0.12 after [ADR-024](adr/024-freetext-text-
 interop is in the M6 pack (CHECKLIST §M6 R1–R4). Rev 0 (M0–M4) is complete on the agent side.
 
 ## Done
+
+- **M12-14 — differences on drawings (D-61, Q17, Q22, Q23).** Detection in the Compare worker
+  (`src/model/compare/detect/`): while the sheet is analysed, each ink pixel of either side gets
+  its distance to the other side's ink (capped at 5 px, two row sweeps and ±4 rows; only the rows
+  in reach are kept), counted per 3 pt cell in four bins, so **every sensitivity and minimum size
+  applies live** without analysing again (S28 tolerances: vector 1/2/3 px at 150 dpi, scans
+  2/3/4 px with their own ink level and noise floor). The **text layer**: A's positioned words
+  moved by the placement against B's; a word not found is a change (invisible text left out;
+  scans compare ink alone). **Entries**: 8-connected cell regions joined with the word changes on
+  them (same line, touching), kind added/removed/changed, type text/geometry/both, a key on a
+  6 pt grid so the checked tick survives a new setting; percent changed = changed ink / ink.
+  Entries read "Ø120.0 → Ø128.0". **The pane** (`src/features/compare/diff/`): count, sensitivity,
+  minimum size, outlines on/off, this sheet / all sheets, kinds and types, search on Enter (rule
+  3), next / previous (F8, Shift+F8, wrapping), the checked tick (Space, Hide checked), a
+  virtualized listbox; picking an entry moves to its sheet and centres it in the overlay. **Outlines**
+  on the overlay (drawn by the view, dashes by kind, the entry in use orange; never comments).
+  **Ignore zones** (left pane): typed in millimetres (keyboard path) or drawn on the overlay, for
+  this sheet or every sheet, shown hatched; **named sets** saved on this device (IndexedDB v10
+  `ignoreZoneSets`, listed on the Privacy page, cleared by Clear all local data). **Sheet list**:
+  "Unchanged" or "31 differences · 18.4% changed", Most changed first. **Make cloud comments**
+  (selected entry or every entry shown): real Polygon cloud annotations on Document B with the
+  cloud tool's style and the change as their text, only where B allows comments (rule 9).
+  **Tests:** `tests/compare/detect.test.ts` (22: detector, entries, text layer, clouds, zone sets,
+  list state); **corpus acceptance suite for drawings** `tests/compare/detect-corpus.test.ts` (7,
+  whole pipeline on PDFium: pairs 16 and 15 report nothing, pair 10 sheet 2 unchanged and EF-03
+  found, pair 01 every manifest change text-aware, pair 18 only inside the title block, pair 17 in
+  the manifest pairing only S-104, pair 06 scan by ink); `e2e/compare-differences.spec.ts` (5:
+  list, filters, search, F8, checked, outlines, live settings, zones and sets, drawing a zone,
+  clouds on B only, pair 10 sheets, axe light and dark). The pane is switched in the result's
+  head (Differences list, shown by default) beside the close-out list.
 
 - **M12-15 — review across revisions (D-62, Q16, Q43).** Comments move between a comparison's
   windows at the matching place. **Copy to New Revision** / **Copy to Old Revision** (comment
@@ -3747,7 +3777,8 @@ rel="noopener noreferrer">`; the commands `app.home` / `app.reportIssue` open th
   follow-up, done 2026-11-23),
   M12-17 (text comparison engine), M12-18 (text structure), M12-12 (the Review layout), M12-13
   (manual alignment), M12-19 (the text comparison view), M12-15 (review across revisions: aligned copy and paste,
-  the close-out list, for overlay and text). Next: the remaining tasks in plan order.
+  the close-out list, for overlay and text), M12-14 (differences on drawings; the drawings corpus
+  suite starts). Next: the remaining tasks in plan order.
 - **Agent (M11):** the 18 tasks in [docs/plan/M11.md](plan/M11.md) "Order of work", one thread
   each. Done: M11-01, M11-10, M11-02 (spike S26), M11-03 (tabs: look, hover card, +), M11-04
   (drag to reorder), M11-05 (tab menus), M11-06 (comments in every pointer mode), M11-07 (font

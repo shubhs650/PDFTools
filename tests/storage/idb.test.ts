@@ -22,6 +22,7 @@ describe('AppDb (M1-12)', () => {
     expect(db.db.version).toBe(MIGRATIONS.length);
     expect([...db.db.objectStoreNames].sort()).toEqual([
       'commentStyles',
+      'ignoreZoneSets',
       'lastViews',
       'profile',
       'recent',
@@ -275,7 +276,7 @@ describe('AppDb v9 (M11-08·O2)', () => {
     const v8 = await AppDb.open({ factory, migrations: MIGRATIONS.slice(0, 8) });
     await v8.putLastView('fp-a', { savedAt: 1 });
     v8.close();
-    const db = await AppDb.open({ factory });
+    const db = await AppDb.open({ factory, migrations: MIGRATIONS.slice(0, 9) });
     expect(db.db.version).toBe(9);
     expect(await db.getLastView('fp-a')).toEqual({ savedAt: 1 });
     expect(await db.getSession()).toBeUndefined();
@@ -287,6 +288,27 @@ describe('AppDb v9 (M11-08·O2)', () => {
     await db.putSession(record(3));
     await db.clearAll();
     expect(await db.getSession()).toBeUndefined();
+    db.close();
+  });
+});
+
+describe('AppDb v10 (M12-14)', () => {
+  it('keeps named sets of ignore zones by id, and clears them with the rest', async () => {
+    const factory = new IDBFactory();
+    const v9 = await AppDb.open({ factory, migrations: MIGRATIONS.slice(0, 9) });
+    await v9.putSession({ entries: [], active: -1, savedAt: 1 });
+    v9.close();
+    const db = await AppDb.open({ factory });
+    expect(db.db.version).toBe(10);
+    expect(await db.getSession()).toEqual({ entries: [], active: -1, savedAt: 1 });
+    const set = { id: 's1', name: 'Title block', zones: [{ box: [0, 0, 10, 10], all: true }] };
+    await db.putZoneSet(set);
+    expect(await db.listZoneSets()).toEqual([set]);
+    await db.deleteZoneSet('s1');
+    expect(await db.listZoneSets()).toEqual([]);
+    await db.putZoneSet(set);
+    await db.clearAll();
+    expect(await db.listZoneSets()).toEqual([]);
     db.close();
   });
 });

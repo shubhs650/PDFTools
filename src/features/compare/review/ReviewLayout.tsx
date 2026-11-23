@@ -26,7 +26,8 @@ import {
 } from '../overlay/overlayState';
 import { Splitter } from './Splitter';
 import { useWindowPlace } from './windowPlace';
-import { WindowLink, fitWindow, showPage, type LinkedWindow } from './windowLink';
+import { WindowLink, centreOnBox, fitWindow, showPage, type LinkedWindow } from './windowLink';
+import { focusers, pendingFocus, type Box } from './overlayFocus';
 
 const SPLIT_TEST_ID = { x: 'review-split-x', y: 'review-split-y' } as const;
 
@@ -136,6 +137,12 @@ export function ReviewLayout({
       }
       if (view.lock) link.drive(link.leaderRole ?? 'overlay');
       else for (const w of list) if (w.role !== 'overlay') void fitWindow(w, 'page');
+      // A difference picked on another sheet is shown once its sheet is (M12-14).
+      const box = pendingFocus.get(c.id);
+      if (box) {
+        pendingFocus.delete(c.id);
+        focusers.get(c.id)?.(box);
+      }
     })();
     return () => {
       run.stopped = true;
@@ -143,6 +150,23 @@ export function ReviewLayout({
     // windowsKey stands for the windows; the lock's later changes do not refit.
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [windowsKey, link]);
+
+  // The differences list brings a box of the overlay into view (M12-14).
+  useEffect(() => {
+    const focus = (box: Box): void => {
+      const w = link.window('overlay');
+      if (!w) return;
+      void centreOnBox(w, box).then((ok) => {
+        if (!ok) return;
+        link.lead('overlay');
+        if (link.enabled) link.drive('overlay');
+      });
+    };
+    focusers.set(c.id, focus);
+    return () => {
+      if (focusers.get(c.id) === focus) focusers.delete(c.id);
+    };
+  }, [c.id, link]);
 
   // Turning the lock on brings the others to the window last used.
   useEffect(() => {

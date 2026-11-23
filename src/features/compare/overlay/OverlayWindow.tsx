@@ -7,7 +7,8 @@ import { IDENTITY } from '../../../model/compare/material';
 import { presetOf, type Rgb } from '../../../model/compare/overlay';
 import { zoomTo } from '../../view/controller';
 import { stepZoom } from '../../view/zoom';
-import { DocumentView } from '../../view/DocumentView';
+import { DocumentView, type PageFrameInfo } from '../../view/DocumentView';
+import { DiffOutlines, ZoneDrawLayer } from '../diff/DiffMarks';
 import { pairingSession } from '../pairingFlow';
 import { FloatingBar } from './FloatingBar';
 import { OverlayPage } from './OverlayPage';
@@ -172,11 +173,27 @@ export function OverlayWindow({
     colA: t(colourName(view.style.colA)),
     colB: t(colourName(view.style.colB)),
   });
+  // The differences' outlines and the ignore zones (M12-14), on the sheet's page.
+  const pair = sheet.pair;
+  const decor = useCallback(
+    (pageIndex: number, pageScale: number) =>
+      pageIndex === index && pair !== null ? (
+        <DiffOutlines id={id} pair={pair} scale={pageScale} />
+      ) : null,
+    [id, index, pair],
+  );
+  const layer = useCallback(
+    (pageIndex: number, f: PageFrameInfo) =>
+      pageIndex === index && pair !== null ? <ZoneDrawLayer id={id} pair={pair} frame={f} /> : null,
+    [id, index, pair],
+  );
   const preset = presetOf(view.style.colA, view.style.colB);
   const sheetWindow = useMemo(
     () => ({
       page: index,
       content: pageContent,
+      decor,
+      layer,
       label,
       testId: 'overlay-view',
       data: {
@@ -184,7 +201,7 @@ export function OverlayWindow({
         'data-blink': view.blink ?? '',
       } as Record<`data-${string}`, string>,
     }),
-    [index, pageContent, label, preset, view.blink],
+    [index, pageContent, decor, layer, label, preset, view.blink],
   );
 
   return (

@@ -415,3 +415,36 @@ export async function showPage(w: LinkedWindow, frames = 120): Promise<boolean> 
   }
   return false;
 }
+
+/** How much of the window a difference takes when the list brings it into view (M12-14). */
+const BOX_SHARE = 1 / 3;
+/** The deepest zoom a difference is shown at, over the fitted sheet. */
+const BOX_MAX_OVER_FIT = 16;
+
+/**
+ * Shows a box of the window's page (a difference, M12-14): centred, at a zoom
+ * where it takes about a third of the window; the zoom in use is kept when
+ * the box already shows well at it. False when the window is not ready.
+ */
+export async function centreOnBox(
+  w: LinkedWindow,
+  box: readonly [number, number, number, number],
+): Promise<boolean> {
+  if (!(await settled(w))) return false;
+  const fit = fitScale(w, 'page');
+  const vp = w.host.querySelector<HTMLElement>('.viewport');
+  const now = windowCentre(w);
+  const zoom = zoomCap();
+  if (fit === null || !vp || !now || !zoom) return false;
+  const bw = Math.max(box[2] - box[0], 6);
+  const bh = Math.max(box[3] - box[1], 6);
+  const want = Math.min((vp.clientWidth * BOX_SHARE) / bw, (vp.clientHeight * BOX_SHARE) / bh);
+  const target = Math.max(fit, Math.min(want, fit * BOX_MAX_OVER_FIT));
+  const shows = bw * now.scale <= vp.clientWidth * 0.9 && bh * now.scale <= vp.clientHeight * 0.9;
+  if (!shows || now.scale < target / 2) {
+    zoom.forDocument(w.docId).requestZoom(target);
+    if (!(await settled(w))) return false;
+  }
+  centreWindowOn(w, { x: (box[0] + box[2]) / 2, y: (box[1] + box[3]) / 2 });
+  return true;
+}

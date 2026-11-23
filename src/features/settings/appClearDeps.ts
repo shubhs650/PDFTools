@@ -13,6 +13,7 @@ import { resetSignatures } from '../sign/signStore';
 import { resetWhatsNew } from '../whatsNew/releases';
 import { resetRecentFonts } from '../annotate/fonts/recentFonts';
 import { resetSession } from '../session/session';
+import { resetZoneSets } from '../compare/diff/zoneSetsStore';
 import type { ClearDeps } from './clearAll';
 
 const hasCaches = (): boolean => typeof caches !== 'undefined';
@@ -45,5 +46,7 @@ export const appClearDeps: ClearDeps = {
     resetRecentFonts();
     // Start-up back to the start screen, no files kept (M11-08·O2).
     resetSession();
+    // The comparison's ignore zone sets (M12-14).
+    resetZoneSets();
   },
 };

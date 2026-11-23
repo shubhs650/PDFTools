@@ -2,7 +2,8 @@
 // recent-files list (file handles + display metadata), the reviewer profile,
 // status schemes, table templates, the comment tools' default styles and the
 // user's own comment styles (style palette), saved visual signatures, each
-// file's last view (by fingerprint) and the files open last time (their handles).
+// file's last view (by fingerprint), the files open last time (their handles)
+// and the named sets of ignore zones for comparing drawings.
 // Never document bytes:
 // those live in the user's file and, for recovery, in OPFS (§4.3).
 //
@@ -69,6 +70,11 @@ export const MIGRATIONS: readonly Migration[] = [
   // (validate it: sessionModel.ts), kept only while Settings › Start-up says to reopen them.
   (db) => {
     db.createObjectStore('session');
+  },
+  // v10 (M12-14, D-61): named sets of ignore zones for comparing drawings, by id
+  // (validate them: zoneSets.ts). They never leave this device.
+  (db) => {
+    db.createObjectStore('ignoreZoneSets', { keyPath: 'id' });
   },
 ];
 
@@ -302,6 +308,24 @@ export class AppDb {
   async deleteSession(): Promise<void> {
     const tx = this.db.transaction('session', 'readwrite');
     tx.objectStore('session').delete(SESSION_KEY);
+    await done(tx);
+  }
+
+  /** Named sets of ignore zones, as stored (validate them: zoneSets.ts). */
+  async listZoneSets(): Promise<unknown[]> {
+    const tx = this.db.transaction('ignoreZoneSets', 'readonly');
+    return request(tx.objectStore('ignoreZoneSets').getAll());
+  }
+
+  async putZoneSet(value: { id: string }): Promise<void> {
+    const tx = this.db.transaction('ignoreZoneSets', 'readwrite');
+    tx.objectStore('ignoreZoneSets').put(value);
+    await done(tx);
+  }
+
+  async deleteZoneSet(id: string): Promise<void> {
+    const tx = this.db.transaction('ignoreZoneSets', 'readwrite');
+    tx.objectStore('ignoreZoneSets').delete(id);
     await done(tx);
   }
 

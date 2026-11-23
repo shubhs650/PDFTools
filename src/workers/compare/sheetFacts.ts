@@ -1,13 +1,13 @@
 // A sheet pair's running facts (M12-07, D-66): the analysis rasters of A
 // (already drawn into B's frame) and B arrive band by band and are folded in
 // here, then dropped, so no whole-sheet raster is ever held (S28: an ARCH E
-// sheet would need 350 MB). Exact pixels: the tolerances, regions and text
-// layer of detection are M12-14's.
+// sheet would need 350 MB). Exact pixels; the tolerances, regions and text
+// layer of detection are the DiffDetector's (M12-14).
 import type { SheetFacts } from '../../engine/compareApi';
+import { INK_LEVEL } from '../../model/compare/detect/detector';
 import type { RasterBand } from '../../model/compare/material';
 
-/** Ink level that counts as a mark (S28: 96 of 255 for vector sheets). */
-export const INK_LEVEL = 96;
+export { INK_LEVEL };
 
 export class SheetAccumulator {
   readonly width: number;

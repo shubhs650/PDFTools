@@ -7815,3 +7815,229 @@ textarea.form-field {
   flex-wrap: wrap;
   gap: var(--space-1);
 }
+
+/* Differences on drawings (M12-14, D-61): the list on the right of an overlay result. */
+.overlay-diffs {
+  display: flex;
+  flex: 0 0 320px;
+  flex-direction: column;
+  gap: var(--space-3);
+  min-height: 0;
+  padding: var(--space-3);
+  overflow: auto;
+  border-left: var(--border-width) solid var(--color-border);
+  background: var(--color-surface);
+}
+
+.overlay-diffs .text-list-rows {
+  min-height: 160px;
+}
+
+.overlay-diff-settings {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: var(--space-2);
+}
+
+.overlay-diff-settings > .overlay-check {
+  grid-column: 1 / -1;
+  padding: var(--space-0);
+}
+
+.overlay-diff-filters {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+
+.overlay-diff-scope {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+}
+
+.overlay-diff-scope .ui-field-input {
+  flex: 1;
+  min-width: 0;
+}
+
+.overlay-diff-field {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+  min-width: 0;
+}
+
+.overlay-diff-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-1) var(--space-3);
+}
+
+.overlay-diff-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-1);
+  font-size: var(--font-size-s);
+}
+
+.overlay-diff-actions {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+}
+
+.overlay-diff-notice,
+.overlay-zone-hint {
+  margin: var(--space-0);
+  color: var(--color-text-muted);
+  font-size: var(--font-size-s);
+}
+
+.overlay-diff-notice:empty {
+  display: none;
+}
+
+.overlay-sheet-diff {
+  font-size: var(--font-size-s);
+}
+
+.overlay-sheet-diff[data-status='changed'] {
+  font-weight: var(--font-weight-semibold);
+}
+
+.overlay-sheet-diff[data-status='done'] {
+  color: var(--color-success-text);
+}
+
+.overlay-sheet[aria-selected='true'] .overlay-sheet-diff {
+  color: inherit;
+}
+
+.overlay-sheet-sort {
+  padding-top: var(--space-0);
+}
+
+.overlay-zones {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+
+.overlay-zone-fields {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: var(--space-2);
+}
+
+.overlay-zone-field {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+  min-width: 0;
+}
+
+.overlay-zone-field .ui-field-input {
+  min-width: 0;
+}
+
+.overlay-zone-list {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+  margin: var(--space-0);
+  padding: var(--space-0);
+  list-style: none;
+}
+
+.overlay-zone {
+  display: flex;
+  align-items: center;
+  gap: var(--space-1);
+  font-size: var(--font-size-s);
+}
+
+.overlay-zone-name {
+  flex: 1;
+  min-width: 0;
+}
+
+.overlay-zone-sets {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+
+/*
+ * Outlines and ignore zones on the overlay: drawn on the sheet, which is paper
+ * whatever the theme, so their colours are fixed; never in the pointer's way.
+ */
+.diff-marks {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  width: 100%;
+  height: 100%;
+  overflow: visible;
+  pointer-events: none;
+}
+
+.diff-outline {
+  fill: none;
+  stroke: var(--color-accent);
+  stroke-width: 1.5px;
+  vector-effect: non-scaling-stroke;
+}
+
+.diff-outline[data-kind='removed'] {
+  stroke-dasharray: 6 3;
+}
+
+.diff-outline[data-kind='changed'] {
+  stroke-dasharray: 8 3 2 3;
+}
+
+.diff-outline[data-selected] {
+  stroke: var(--color-find-current);
+  stroke-width: 3px;
+  stroke-dasharray: none;
+}
+
+.diff-zone {
+  stroke: var(--color-border-strong);
+  stroke-width: 1px;
+  stroke-dasharray: 4 2;
+}
+
+.diff-zone-hatch {
+  stroke: var(--color-border-strong);
+  stroke-opacity: 0.45;
+  stroke-width: 1px;
+}
+
+.diff-zone-layer {
+  z-index: 2;
+}
+
+.diff-zone-drag {
+  position: absolute;
+  border: 1px dashed var(--color-border-strong);
+  background: color-mix(in srgb, var(--color-border-strong) 15%, transparent);
+  pointer-events: none;
+}
+
+@media (forced-colors: active) {
+  .diff-outline,
+  .diff-outline[data-selected] {
+    stroke: CanvasText;
+  }
+
+  .diff-outline[data-selected] {
+    stroke: Highlight;
+  }
+
+  .diff-zone,
+  .diff-zone-hatch {
+    stroke: GrayText;
+  }
+}
