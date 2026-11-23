@@ -1,6 +1,6 @@
 # Triya PDF — Progress
 
-_Last updated: 2026-11-23 (M12 follow-up: overlay layer switches)_
+_Last updated: 2026-11-23 (M12-15: review across revisions)_
 
 **Current milestone:** M12 — PDF comparison (PDF overlay for drawings, text comparison for
 documents), version 1.1.0: plan [docs/plan/M12.md](plan/M12.md) and
@@ -29,6 +29,30 @@ answers Q1–Q7; ARCHITECTURE.md Rev 0.12 after [ADR-024](adr/024-freetext-text-
 interop is in the M6 pack (CHECKLIST §M6 R1–R4). Rev 0 (M0–M4) is complete on the agent side.
 
 ## Done
+
+- **M12-15 — review across revisions (D-62, Q16, Q43).** Comments move between a comparison's
+  windows at the matching place. **Copy to New Revision** / **Copy to Old Revision** (comment
+  menu, `compare.copyToNew`/`copyToOld`) copy the selected comments with their replies: in an
+  overlay through the sheet's alignment (A's page to B's page, or the notes page), in a text
+  comparison onto the matching text of the other side (the content-sync curve, and the change
+  spans for moved or replaced text, so a comment on a moved paragraph follows it). The transfer
+  engine takes a per-page displayed-space map (`place`, `alignedPlacement`). **Aligned paste**:
+  Ctrl+C on one window and Ctrl+V on another window of the same sheet (or the other side of a
+  text comparison) lands at the matching spot instead of the pointer. The pure maths is in
+  `src/model/compare/alignedCopy.ts`. **Close-out list** (the result's "Close-out list" toggle,
+  `src/features/compare/closeout/`): every comment of the old revision (not replies or check
+  marks) with its Comments-pane number and state (Open, Addressed, Carried over, Changed
+  differently, Completed some other way), filters All/Open/Closed, keyboard listbox; selecting
+  one shows its sheet or its text on both sides. **Addressed / Carried Over / Changed
+  Differently** (owner's answer to question 1) set the comment to Completed, add an automatic
+  reply naming the outcome and the new file, and add a grouped see-through check highlight
+  (colour from the swatch picker) — one undo step; Carried Over copies it to B first.
+  **Reopen** removes those parts. The parts are standard annotations named by /NM
+  (`closeout-state-…`, `closeout-<outcome>-…`, `closeout-check-…`); a later status set by hand
+  reopens it. The CRS export shows Completed and the reply with no extra rows. Tests:
+  `aligned-copy`, `close-out`, placement and transfer integration; e2e
+  `compare-closeout.spec.ts` (pair 19's three cases, pair 03 aligned copy and paste, text pair
+  09, axe).
 
 - **M12 follow-up — overlay layer switches (D-59, Q24).** Owner's choice (2026-11-23, after
   M12-11 found PDFium can't switch layers, ADR-012): render from a copy with `/OCProperties /D`
@@ -3722,8 +3746,8 @@ rel="noopener noreferrer">`; the commands `app.home` / `app.reportIssue` open th
   (pairing), M12-10 (automatic alignment), M12-11 (the overlay view; layer switches as a
   follow-up, done 2026-11-23),
   M12-17 (text comparison engine), M12-18 (text structure), M12-12 (the Review layout), M12-13
-  (manual alignment), M12-19 (the text comparison view; aligned copy and close-out for text left
-  to M12-15). Next: the remaining tasks in plan order.
+  (manual alignment), M12-19 (the text comparison view), M12-15 (review across revisions: aligned copy and paste,
+  the close-out list, for overlay and text). Next: the remaining tasks in plan order.
 - **Agent (M11):** the 18 tasks in [docs/plan/M11.md](plan/M11.md) "Order of work", one thread
   each. Done: M11-01, M11-10, M11-02 (spike S26), M11-03 (tabs: look, hover card, +), M11-04
   (drag to reorder), M11-05 (tab menus), M11-06 (comments in every pointer mode), M11-07 (font

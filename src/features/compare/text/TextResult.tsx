@@ -39,6 +39,9 @@ import {
 } from './textFlow';
 import { textLinkOf } from './textLink';
 import { TextWindows } from './TextWindows';
+import { CloseOutPane } from '../closeout/CloseOutPane';
+import { CloseOutToggle } from '../closeout/CloseOutToggle';
+import { useCloseOutView } from '../closeout/closeOutStore';
 
 const LANGUAGE: Record<OcrLanguage, MessageKey> = {
   eng: msg('ocr.languages.eng'),
@@ -76,6 +79,7 @@ export function TextResult({ comparison: c }: { comparison: Comparison }) {
   }, [c, inputsKey]);
   const run = useTextRun(c.id);
   const view = useTextView(c.id);
+  const closeOutOpen = useCloseOutView(c.id).open;
 
   const entries = useMemo(() => entriesOf(run?.result ?? null), [run?.result]);
   const checked = useMemo(() => {
@@ -210,6 +214,7 @@ export function TextResult({ comparison: c }: { comparison: Comparison }) {
             }
             entries={options}
           />
+          <CloseOutToggle id={c.id} />
         </div>
         <Button
           label={t('compare.result.inputs')}
@@ -244,6 +249,7 @@ export function TextResult({ comparison: c }: { comparison: Comparison }) {
               total={entries.length}
             />
           </aside>
+          {closeOutOpen ? <CloseOutPane comparison={c} /> : null}
         </div>
       ) : (
         <div className="overlay-wait" role="status">

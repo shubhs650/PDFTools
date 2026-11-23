@@ -61,6 +61,29 @@ export const useClip = (): Clip | null => useStore(clipboardStore, (s) => s.clip
 /** Where a paste goes. */
 export type PasteMode = 'current' | 'original';
 
+/**
+ * An aligned paste (M12-15, D-62, Q16): between the windows of a comparison
+ * the comments land on the matching spot of the other revision. Per clipboard
+ * page, the target page and the map from the source page as displayed to it;
+ * null for a plain paste.
+ */
+export type AlignedPaste = (
+  clip: Clip,
+  target: { docId: string; page: number },
+) => { pageMap: number[]; place: Mat[] } | null;
+
+type Mat = [number, number, number, number, number, number];
+
+let aligned: AlignedPaste | null = null;
+
+/** The comparison feature's aligned paste (one at a time; returns the uninstall). */
+export function setAlignedPaste(fn: AlignedPaste): () => void {
+  aligned = fn;
+  return () => {
+    if (aligned === fn) aligned = null;
+  };
+}
+
 /** Pasted this far right and down (points) onto the page the comments came from. */
 export const PASTE_OFFSET = 10;
 
@@ -234,10 +257,13 @@ export async function pasteComments(
   const pointed = mode === 'current' && at?.docId === docId ? at : undefined;
   const page = pointed?.page ?? pasteTargetPage(docId, d.view.page);
   const plan = pastePlan(clip, { docId, page, pageCount: d.meta.pageCount }, mode);
-  const { pageMap } = plan;
+  // Between a comparison's windows: the matching spot of the other revision (M12-15).
+  const matched = mode === 'current' ? (aligned?.(clip, { docId, page }) ?? null) : null;
+  const pageMap: (number | null)[] = matched?.pageMap ?? plan.pageMap;
   const size = pointed ? pageSizeOf(docId, pointed.page) : null;
-  const move =
-    pointed && size && clip.bounds
+  const move = matched
+    ? null
+    : pointed && size && clip.bounds
       ? shiftTo(clip.bounds, pointed, size)
       : plan.shift
         ? { dx: PASTE_OFFSET, dy: PASTE_OFFSET }
@@ -255,6 +281,7 @@ export async function pasteComments(
             withReplies: true,
             pageMap,
             ...(move ? { shift: move } : {}),
+            ...(matched ? { place: matched.place } : {}),
           },
         },
         { onProgress: progress },

@@ -29,6 +29,17 @@ const cmd = (id: string): ContextMenuEntry => ({ kind: 'command', id });
 /** A pointer tool: one of the page menu's radio group (M11-06). */
 const tool = (id: string): ContextMenuEntry => ({ kind: 'command', id, radio: 'tool' });
 
+/** Items another feature adds to a document's comment menu (M12-15: a comparison's). */
+const commentExtras = new Set<(docId: string) => ContextMenuEntry[]>();
+
+/** Adds items after the thread's (reply, status); returns the removal. */
+export function addCommentMenuItems(fn: (docId: string) => ContextMenuEntry[]): () => void {
+  commentExtras.add(fn);
+  return () => {
+    commentExtras.delete(fn);
+  };
+}
+
 /** A comment on the page (and its card). */
 export function commentMenu(docId: string): ContextMenuEntry[] {
   return [
@@ -45,6 +56,7 @@ export function commentMenu(docId: string): ContextMenuEntry[] {
     cmd('comment.reply'),
     { kind: 'submenu', id: 'comment.setStatus', choices: statusChoices(docId) },
     cmd('comment.toggleMarked'),
+    ...[...commentExtras].flatMap((fn) => fn(docId)),
     sep('flags'),
     cmd('comment.toggleLocked'),
     cmd('comment.togglePrintable'),

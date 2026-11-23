@@ -56,6 +56,7 @@ import { Dismiss20Filled, Dismiss20Regular } from '@fluentui/react-icons/svg/dis
 import { DismissSquare20Regular } from '@fluentui/react-icons/svg/dismiss-square';
 import { DismissSquareMultiple20Regular } from '@fluentui/react-icons/svg/dismiss-square-multiple';
 import { DocumentAdd20Regular, DocumentAdd28Regular } from '@fluentui/react-icons/svg/document-add';
+import { DocumentArrowLeft20Regular } from '@fluentui/react-icons/svg/document-arrow-left';
 import { DocumentArrowRight20Regular, DocumentArrowRight24Regular } from '@fluentui/react-icons/svg/document-arrow-right';
 import { DocumentBorderPrint20Regular, DocumentBorderPrint32Regular } from '@fluentui/react-icons/svg/document-border-print';
 import { DocumentBulletList20Regular, DocumentBulletList24Regular } from '@fluentui/react-icons/svg/document-bullet-list';
@@ -145,6 +146,7 @@ import { TableLightning20Regular, TableLightning28Regular } from '@fluentui/reac
 import { TableSettings20Regular, TableSettings28Regular } from '@fluentui/react-icons/svg/table-settings';
 import { Target20Filled, Target20Regular } from '@fluentui/react-icons/svg/target';
 import { TargetArrow20Regular } from '@fluentui/react-icons/svg/target-arrow';
+import { TaskListSquareLtr20Regular } from '@fluentui/react-icons/svg/task-list-square-ltr';
 import { TextAdd20Filled, TextAdd20Regular } from '@fluentui/react-icons/svg/text-add';
 import { TextBulletListSquare20Filled, TextBulletListSquare20Regular, TextBulletListSquare32Filled, TextBulletListSquare32Regular } from '@fluentui/react-icons/svg/text-bullet-list-square';
 import { TextDensity20Filled, TextDensity20Regular } from '@fluentui/react-icons/svg/text-density';
@@ -376,6 +378,9 @@ export const FLUENT_GLYPHS: Record<string, FluentGlyphs> = {
   'tab.closeRight': { regular: { small: DismissSquare20Regular } },
   'tab.closeAll': { regular: { small: DismissSquareMultiple20Regular } },
   'tab.compareWith': { regular: { small: SquareMultiple20Regular } },
+  'compare.copyToNew': { regular: { small: DocumentArrowRight20Regular } },
+  'compare.copyToOld': { regular: { small: DocumentArrowLeft20Regular } },
+  'compare.closeOut': { regular: { small: TaskListSquareLtr20Regular } },
   'tab.reopenClosed': { regular: { small: TabDesktopArrowClockwise20Regular } },
   'tab.moveLeft': { regular: { small: ArrowLeft20Regular } },
   'tab.moveRight': { regular: { small: ArrowRight20Regular } },

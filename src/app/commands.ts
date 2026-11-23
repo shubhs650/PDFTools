@@ -2203,6 +2203,39 @@ export const COMMANDS: readonly CommandDef[] = [
     shipped: true,
     preview: true,
   },
+  // Review across revisions (M12-15, D-62): a comment of a comparison's window
+  // copied to the matching spot of the other revision, and the close-out of the
+  // old revision's comments. Context menus only.
+  {
+    id: 'compare.copyToNew',
+    tab: 'menu',
+    group: 'menu',
+    size: 'small',
+    fluent: 'DocumentArrowRight',
+    milestone: 'M6',
+    shipped: true,
+    preview: true,
+  },
+  {
+    id: 'compare.copyToOld',
+    tab: 'menu',
+    group: 'menu',
+    size: 'small',
+    fluent: 'DocumentArrowLeft',
+    milestone: 'M6',
+    shipped: true,
+    preview: true,
+  },
+  {
+    id: 'compare.closeOut',
+    tab: 'menu',
+    group: 'menu',
+    size: 'small',
+    fluent: 'TaskListSquareLtr',
+    milestone: 'M6',
+    shipped: true,
+    preview: true,
+  },
   {
     id: 'tab.reopenClosed',
     tab: 'menu',

@@ -343,4 +343,47 @@ describe('comment transfer: the Work worker jobs and the Render apply', () => {
       await close(doc.id);
     },
   );
+
+  it.skipIf(!hasQpdf)(
+    'aligned copy (M12-15): placed through a map between the pages as displayed',
+    async () => {
+      const doc = await open(revA);
+      const clip = await copyComments(
+        mod,
+        native,
+        docs,
+        doc.id,
+        ['fx-square'],
+        true,
+        inflate,
+        slice,
+      );
+      expect(clip.pages).toEqual([2]);
+      // Half size, 20 pt right and 10 pt down as displayed (a sheet's alignment).
+      await importInto(
+        doc.id,
+        { bytes: buf(clip.bytes) },
+        { newNames: true, pageMap: [2], place: [[0.5, 0, 0, 0.5, 20, 10]] },
+      );
+      const { saved } = await save(doc.id, revA);
+      expect(qpdfOk(saved)).toBe(true);
+      const before = await annots(revA);
+      const added = (await annots(saved)).filter((a) => !before.some((b) => b.nm === a.nm));
+      const square = added.find((a) => a.type === 'Square');
+      const r = await PdfReader.open(saved, inflate);
+      const p = (await r.pages())[2];
+      const list = p ? await r.resolve(p.dict.get('Annots')) : [];
+      let rect: unknown = null;
+      for (const a of Array.isArray(list) ? list : []) {
+        const d = await r.resolve(a);
+        if (!isDict(d)) continue;
+        const nm = d.get('NM');
+        if (nm instanceof PdfString && nm.text() === square?.nm) rect = d.get('Rect');
+      }
+      // [300 600 450 680] on an 842 pt high page: displayed 300–450 × 162–242,
+      // mapped to 170–245 × 91–131, which is user 170–245 × 711–751.
+      expect(rect).toEqual([170, 711, 245, 751]);
+      await close(doc.id);
+    },
+  );
 });
