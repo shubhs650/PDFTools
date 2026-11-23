@@ -419,6 +419,9 @@ describe('the Compare build switch (M12-08, D-58, plan question 3)', () => {
       // The change register and presets (M12-21).
       'compare.exportRegister',
       'compare.savePreset',
+      'compare.saveComparison',
+      'compare.exportA',
+      'compare.exportB',
     ]);
   });
 
@@ -433,6 +436,9 @@ describe('the Compare build switch (M12-08, D-58, plan question 3)', () => {
       'compare.exportOverlay',
       'compare.exportRegister',
       'compare.savePreset',
+      'compare.saveComparison',
+      'compare.exportA',
+      'compare.exportB',
       'tab.compareWith',
       // Review across revisions (M12-15): context menus of a comparison's windows.
       'compare.copyToNew',

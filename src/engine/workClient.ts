@@ -86,7 +86,12 @@ type JobMethod =
   | 'compareOcrRaster'
   | 'compareRaster'
   | 'compareLayerCopy'
-  | 'compareVectorOverlay';
+  | 'compareVectorOverlay'
+  | 'compareFileSave'
+  | 'compareFileProbe'
+  | 'compareFileRead'
+  | 'compareNotesSeed'
+  | 'compareFileInput';
 
 export interface WorkClientOptions {
   wasmUrl?: string;
@@ -266,6 +271,11 @@ export class WorkClient {
     this.rpc
       .call('activity', quietMs === undefined ? {} : { quietMs })
       .promise.catch(() => undefined);
+  }
+
+  /** The open password a document was opened with (memory only), if any. */
+  openPassword(docId: string): string | undefined {
+    return this.docs.get(docId)?.password;
   }
 
   /** Owner-password unlock of the worker's copy (§7.12); kept for respawn reloads. */

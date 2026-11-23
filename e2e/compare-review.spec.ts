@@ -244,11 +244,12 @@ test('three live windows: comments, the Properties pane, the context menu and un
   await page.keyboard.press('Control+y');
   await expect.poll(async () => (await list(page, ids.overlay)).length).toBe(1);
 
-  // The notes are never saved as a file: Save is off while the overlay window is in use.
+  // The notes are never saved as a file of their own: Save in the overlay window is Save
+  // review (M12-20, D-65), which saves A and B; the notes go with Save Comparison….
   const save = page
     .getByRole('toolbar', { name: 'Quick access toolbar' })
     .getByRole('button', { name: 'Save', exact: true });
-  await expect(save).toBeDisabled();
+  await expect(save).toBeEnabled();
   await viewport(page, 'a').focus();
   await expect(save).toBeEnabled();
 });

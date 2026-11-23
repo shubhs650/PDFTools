@@ -178,7 +178,10 @@
       "area": "Compare an Area",
       "exportOverlay": "Export Overlay…",
       "exportRegister": "Export Change Register…",
-      "savePreset": "Save as Preset…"
+      "savePreset": "Save as Preset…",
+      "saveComparison": "Save Comparison…",
+      "exportA": "Export Document A…",
+      "exportB": "Export Document B…"
     },
     "protect": {
       "markRedaction": "Mark for Redaction",
@@ -3461,6 +3464,82 @@
       "failed": "The preset couldn't be saved.",
       "needsComparison": "Open a comparison to save its settings as a preset.",
       "needsResult": "Compare first: a preset is saved from the result."
+    },
+    "file": {
+      "fileName": "{{a}} vs {{b}} (comparison).pdf",
+      "descA": "Document A (old revision), attached unchanged",
+      "descB": "Document B (new revision), attached unchanged",
+      "descData": "The comparison data: pairing, alignment, options, ticks and close-out states",
+      "author": "{{app}} comparison",
+      "subject": {
+        "inserted": "Inserted",
+        "deleted": "Deleted",
+        "replaced": "Changed",
+        "moved": "Moved",
+        "header": "Changed header",
+        "footer": "Changed footer",
+        "renumbered": "Renumbered",
+        "reference": "Changed reference",
+        "figure": "Changed figure"
+      },
+      "note": {
+        "inserted": "Inserted text",
+        "moved": "Moved text",
+        "figure": "Changed figure",
+        "was": "was: {{old}}",
+        "deleted": "Deleted: {{old}}"
+      },
+      "save": {
+        "title": "Save Comparison",
+        "description": "Save this comparison as one PDF file: {{name}}.",
+        "both": "This file contains both documents, {{a}} and {{b}}, as well as the comparison. Anyone you share it with can open and save both documents.",
+        "overlay": "Its pages show the overlay, with the overlay notes as comments. Open it in {{app}} to carry on the review.",
+        "text": "Its pages are Document B with every change marked; Document A is attached. Open it in {{app}} to carry on the review.",
+        "unsaved": "Review comments not saved yet are included. Your own files are not changed.",
+        "lockTitle": "Password for the comparison file",
+        "password": "Open password",
+        "confirm": "Confirm the password",
+        "passwordWhy": "{{name}} needs a password to open, so the comparison file needs one too.",
+        "save": "Save…",
+        "close": "Close",
+        "cancel": "Cancel",
+        "progressName": "Saving the comparison",
+        "preparing": "Preparing the documents…",
+        "aligning": "Waiting until every sheet is aligned…",
+        "drawing": "Drawing the comparison…",
+        "drawingOf": "Drawing sheets: {{done}} of {{total}}",
+        "writing": "Writing the file…",
+        "done": "Comparison saved: {{name}}",
+        "failed": "The comparison couldn’t be saved.",
+        "denied": "A file of this comparison doesn’t allow copying content (or, for a text comparison, commenting in Document B), so the comparison can’t be saved.",
+        "blocked": "{{name}} doesn’t allow this, so the comparison can’t be saved. Unlock it with its permissions password first.",
+        "needsPassword": "Enter a password.",
+        "mismatch": "The passwords don’t match.",
+        "needsComparison": "Open a comparison to save it.",
+        "needsResult": "Compare first: the comparison is saved from the result.",
+        "needsPermission": "A file of this comparison doesn’t allow this."
+      },
+      "review": {
+        "notesOnly": "The overlay notes are kept with the comparison: use Save Comparison… to keep them.",
+        "rebuildTitle": "Save the review?",
+        "rebuild": "Another program added changes to this comparison file after {{app}} saved it. Saving rebuilds the file from Document B, so those changes would be lost.",
+        "rebuildGo": "Save anyway",
+        "rebuildCancel": "Cancel",
+        "failed": "The review couldn’t be saved into the comparison file."
+      },
+      "open": {
+        "newer": "This comparison file was made by a newer version of {{app}}, so it opens as a plain PDF.",
+        "broken": "The comparison data in this file can’t be read, so it opens as a plain PDF.",
+        "missing": "A document of this comparison is missing from the file, so it opens as a plain PDF.",
+        "changedB": "Document B in this file was changed by another program, so it opens as a plain PDF. Its marks and attachments are still there.",
+        "foreign": "Another program added changes to this comparison file. They stay in Document B’s copy.",
+        "failed": "The comparison couldn’t be reopened, so the file opens as a plain PDF."
+      },
+      "export": {
+        "done": "Saved {{name}}",
+        "failed": "The document couldn’t be exported.",
+        "needsFile": "Open a comparison file to export its documents."
+      }
     }
   }
 }

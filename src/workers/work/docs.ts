@@ -126,6 +126,16 @@ export class WorkDocs {
     return e.password ?? e.ownerPassword;
   }
 
+  /** Whether the Work worker holds a copy of the document. */
+  has(docId: string): boolean {
+    return this.entries.has(docId);
+  }
+
+  /** Whether the document was opened with an open (user) password (M12-20: a protected input). */
+  hasOpenPassword(docId: string): boolean {
+    return this.require(docId).password !== undefined;
+  }
+
   refresh(docId: string, tail: ArrayBuffer): boolean {
     const e = this.require(docId);
     e.tail = tail;
