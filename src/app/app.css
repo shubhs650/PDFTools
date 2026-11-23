@@ -7307,6 +7307,20 @@ textarea.form-field {
   width: 100%;
   border-collapse: collapse;
   font-size: var(--font-size-m);
+  /* Column widths from the header row only: a long set lays out quickly (M12-24). */
+  table-layout: fixed;
+}
+
+.compare-pairing-table thead th:first-child {
+  width: 4em;
+}
+
+.compare-pairing-table thead th:nth-child(4) {
+  width: 13em;
+}
+
+.compare-pairing-table thead th:last-child {
+  width: 6.5em;
 }
 
 .compare-pairing-table th,
@@ -7337,7 +7351,6 @@ textarea.form-field {
 
 .compare-pairing-select {
   width: 100%;
-  min-width: 10em;
 }
 
 .compare-pairing-match {
@@ -7346,7 +7359,7 @@ textarea.form-field {
 
 /* M12-24 (ADR-033): the page pictures of the pairing table, the page picker, Preview pair. */
 .compare-pairing-side {
-  min-width: 12em;
+  overflow: hidden;
 }
 
 .compare-pairing-picture {

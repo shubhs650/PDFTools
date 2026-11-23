@@ -1,5 +1,6 @@
 import { Eye20Regular } from '@fluentui/react-icons/svg/eye';
-import { useEffect, useId, useRef, useState } from 'react';
+import { useEffect, useId, useRef, useState, type RefObject } from 'react';
+import { createStore, useStore } from 'zustand';
 import { useTranslation } from 'react-i18next';
 import { format } from '../../i18n';
 import {
@@ -127,25 +128,7 @@ const ROW_BOX = { width: 160, height: 120 };
 function Rows({ id, p }: { id: string; p: PairingState }) {
   const { t } = useTranslation();
   const label = usePageLabel(p);
-  const [picker, setPicker] = useState<{ row: number; side: SideId } | null>(null);
-  const [preview, setPreview] = useState<number | null>(null);
   const scroll = useRef<HTMLDivElement>(null);
-  // A pick re-keys the sheet's row: focus goes back to the new row's picture.
-  const [refocus, setRefocus] = useState<{ row: number; side: SideId } | null>(null);
-  useEffect(() => {
-    if (!refocus) return;
-    const timer = setTimeout(() => {
-      const row = scroll.current?.querySelectorAll('tbody tr')[refocus.row];
-      const el = row?.querySelector<HTMLElement>(
-        `[data-testid="compare-pairing-picture-${refocus.side}"]`,
-      );
-      if (el && !el.contains(document.activeElement)) el.focus();
-      setRefocus(null);
-    }, 0);
-    return () => {
-      clearTimeout(timer);
-    };
-  }, [refocus]);
   const edit = (fn: (rows: PairRow[]) => PairRow[]): void => {
     editPairing(id, fn);
   };
@@ -194,7 +177,7 @@ function Rows({ id, p }: { id: string; p: PairingState }) {
                         aria-haspopup="dialog"
                         data-testid={`compare-pairing-picture-${side}`}
                         onClick={() => {
-                          setPicker({ row: i, side });
+                          dialogs.setState({ picker: { row: i, side } });
                         }}
                       >
                         {page ? (
@@ -247,7 +230,7 @@ function Rows({ id, p }: { id: string; p: PairingState }) {
                     size="small"
                     aria-haspopup="dialog"
                     onClick={() => {
-                      setPreview(i);
+                      dialogs.setState({ preview: i });
                     }}
                   />
                 </td>
@@ -269,6 +252,57 @@ function Rows({ id, p }: { id: string; p: PairingState }) {
           })}
         </tbody>
       </table>
+      <PairingDialogs id={id} rows={p.rows.length} scroll={scroll} />
+    </div>
+  );
+}
+
+/**
+ * Which dialog of the table is open: the page picker of a sheet's side, or
+ * Preview pair at a sheet. Kept outside the table, so opening one does not
+ * render the table's rows again (a long set has hundreds).
+ */
+const dialogs = createStore<{
+  picker: { row: number; side: SideId } | null;
+  preview: number | null;
+}>()(() => ({ picker: null, preview: null }));
+
+function PairingDialogs({
+  id,
+  rows,
+  scroll,
+}: {
+  id: string;
+  rows: number;
+  scroll: RefObject<HTMLDivElement | null>;
+}) {
+  const picker = useStore(dialogs, (s) => s.picker);
+  const preview = useStore(dialogs, (s) => s.preview);
+  // A pick re-keys the sheet's row: focus goes back to the new row's picture.
+  const [refocus, setRefocus] = useState<{ row: number; side: SideId } | null>(null);
+  useEffect(() => {
+    if (!refocus) return;
+    const timer = setTimeout(() => {
+      const row = scroll.current?.querySelectorAll('tbody tr')[refocus.row];
+      const el = row?.querySelector<HTMLElement>(
+        `[data-testid="compare-pairing-picture-${refocus.side}"]`,
+      );
+      if (el && !el.contains(document.activeElement)) el.focus();
+      setRefocus(null);
+    }, 0);
+    return () => {
+      clearTimeout(timer);
+    };
+  }, [refocus, scroll]);
+  // Another comparison's table, or one closed with a dialog open, starts with none.
+  useEffect(
+    () => () => {
+      dialogs.setState({ picker: null, preview: null });
+    },
+    [id],
+  );
+  return (
+    <>
       {picker ? (
         <PagePicker
           id={id}
@@ -276,20 +310,22 @@ function Rows({ id, p }: { id: string; p: PairingState }) {
           side={picker.side}
           onClose={(picked) => {
             if (picked) setRefocus(picker);
-            setPicker(null);
+            dialogs.setState({ picker: null });
           }}
         />
       ) : null}
       {preview !== null ? (
         <PairPreview
           id={id}
-          row={Math.min(preview, p.rows.length - 1)}
-          onRow={setPreview}
+          row={Math.min(preview, rows - 1)}
+          onRow={(row) => {
+            dialogs.setState({ preview: row });
+          }}
           onClose={() => {
-            setPreview(null);
+            dialogs.setState({ preview: null });
           }}
         />
       ) : null}
-    </div>
+    </>
   );
 }
