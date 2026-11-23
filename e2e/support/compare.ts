@@ -49,9 +49,29 @@ export async function overlayOf(page: Page, id: string): Promise<void> {
  * the width it had before the pane, and waits for the drawing again.
  */
 export async function hideDifferences(page: Page): Promise<void> {
-  await page.getByRole('button', { name: 'Differences list', exact: true }).click();
+  await page.getByRole('button', { name: 'Differences', exact: true }).click();
   await expect(page.getByTestId('diff-pane')).toHaveCount(0);
   await overlayDrawn(page);
+}
+
+/**
+ * Opens a folded section of the overlay's left pane (M12-25): align, area, comments,
+ * layers or zones.
+ */
+export async function unfold(
+  page: Page,
+  section: 'align' | 'area' | 'comments' | 'layers' | 'zones',
+): Promise<void> {
+  const button = page.getByTestId(`fold-${section}`);
+  if ((await button.getAttribute('aria-expanded')) !== 'true') await button.click();
+  await expect(button).toHaveAttribute('aria-expanded', 'true');
+}
+
+/** Opens the Differences pane's Filters (Sensitivity, Minimum size; M12-25). */
+export async function openFilters(page: Page): Promise<void> {
+  const button = page.getByTestId('diff-filters');
+  if ((await button.getAttribute('aria-expanded')) !== 'true') await button.click();
+  await expect(page.getByTestId('diff-sensitivity')).toBeVisible();
 }
 
 /**

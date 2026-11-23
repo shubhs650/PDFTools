@@ -19,6 +19,10 @@ import {
   withZones,
 } from './diffState';
 import { loadZoneSets as loadSets, zoneSetsStore as setsStore } from './zoneSetsStore';
+import { FoldSection } from '../layout/FoldSection';
+
+// The section's test id and help topic (M12-25: the FoldSection takes them as props).
+const ZONES_TEST_ID = 'ignore-zones';
 
 const ZONE_SCOPES = ['sheet', 'all'] as const;
 const ZONE_SCOPE_LABEL: Record<(typeof ZONE_SCOPES)[number], MessageKey> = {
@@ -46,7 +50,6 @@ export function IgnoreZones({
 }) {
   const { t } = useTranslation();
   const view = useDiffView(id);
-  const headingId = useId();
   const scopeId = useId();
   const setId = useId();
   const { sets, loaded } = useStore(setsStore);
@@ -149,10 +152,20 @@ export function IgnoreZones({
   );
 
   return (
-    <section className="overlay-zones" aria-labelledby={headingId} data-testid="ignore-zones">
-      <h3 id={headingId} className="overlay-side-title">
-        {t('compare.diff.zones')}
-      </h3>
+    // Folds to how many zones there are (M12-25); open while a zone is drawn.
+    <FoldSection
+      id={id}
+      section="zones"
+      title={t('compare.diff.zones')}
+      summary={
+        view.zones.length === 0
+          ? t('compare.diff.zoneNone')
+          : t('compare.fold.zones', { count: view.zones.length })
+      }
+      forceOpen={view.drawing}
+      className="overlay-zones"
+      testId={ZONES_TEST_ID}
+    >
       <p className="overlay-zone-hint">{t('compare.diff.zonesHint')}</p>
       <div className="overlay-diff-field">
         <label htmlFor={scopeId} className="ui-field-label">
@@ -298,6 +311,6 @@ export function IgnoreZones({
           {notice ?? ''}
         </p>
       </div>
-    </section>
+    </FoldSection>
   );
 }

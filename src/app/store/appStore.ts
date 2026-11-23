@@ -58,6 +58,11 @@ export interface AppState {
   spaceHand: boolean;
   /** Z held with Hand: Zoom to Area until released (M11-08·O4). */
   zoomHold: boolean;
+  /**
+   * The tab shown maximised (M12-25, ADR-033): while it is the tab in use, the ribbon, the
+   * document tabs, the side panes and the status bar are hidden. Null: nothing is.
+   */
+  maximised: string | null;
   toggleLeftPane(): void;
   /** Shows `pane`; choosing the pane already shown closes the pane area. */
   choosePane(pane: string): void;
@@ -71,6 +76,7 @@ export interface AppState {
   setTool(tool: Tool): void;
   setSpaceHand(on: boolean): void;
   setZoomHold(on: boolean): void;
+  setMaximised(tab: string | null): void;
 }
 
 export const createAppStore = () =>
@@ -86,6 +92,7 @@ export const createAppStore = () =>
     tool: 'select',
     spaceHand: false,
     zoomHold: false,
+    maximised: null,
     toggleLeftPane: () => {
       set((s) => ({ leftPaneOpen: !s.leftPaneOpen }));
     },
@@ -125,6 +132,9 @@ export const createAppStore = () =>
     },
     setZoomHold: (on) => {
       set({ zoomHold: on });
+    },
+    setMaximised: (tab) => {
+      set({ maximised: tab });
     },
   }));
 

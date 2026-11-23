@@ -35,6 +35,9 @@ import {
   type ShownEntry,
 } from './diffState';
 import { makeClouds } from './makeClouds';
+import { ChevronDown12Regular } from '@fluentui/react-icons/svg/chevron-down';
+import { ChevronRight12Regular } from '@fluentui/react-icons/svg/chevron-right';
+import { updateLayout, useLayout } from '../layout/layoutStore';
 
 /** Next difference; with Shift, the previous one (as in a text comparison: F8, Shift+F8). */
 const NEXT_KEY = 'F8';
@@ -106,7 +109,10 @@ export function DiffPane({
   const listId = useId();
   const sensId = useId();
   const minId = useId();
+  const filtersId = useId();
   const scopeId = useId();
+  // Sensitivity and Minimum size fold under Filters (M12-25).
+  const filtersOpen = useLayout(id).filters;
   const [query, setQuery] = useState(view.filter.query);
   const [notice, setNotice] = useState<string | null>(null);
   const scroller = useRef<HTMLDivElement>(null);
@@ -264,50 +270,82 @@ export function DiffPane({
       </div>
 
       <div className="overlay-diff-settings" role="group" aria-label={t('compare.diff.settings')}>
-        <div className="overlay-diff-field">
-          <label htmlFor={sensId} className="ui-field-label">
-            {t('compare.diff.sensitivity')}
-          </label>
-          <select
-            id={sensId}
-            className="ui-field-input"
-            data-testid="diff-sensitivity"
-            value={view.sensitivity}
-            onChange={(e) => {
-              const s = e.currentTarget.value as Sensitivity;
-              updateDiff(id, (v) => ({ ...v, sensitivity: s }));
+        <div className="cmp-filters-head">
+          <button
+            type="button"
+            className="cmp-fold-button ui-focusable"
+            aria-expanded={filtersOpen}
+            aria-controls={filtersOpen ? filtersId : undefined}
+            data-testid="diff-filters"
+            onClick={() => {
+              updateLayout(id, (l) => ({ ...l, filters: !filtersOpen }));
             }}
           >
-            {SENSITIVITIES.map((s) => (
-              <option key={s} value={s}>
-                {t(SENSITIVITY_LABEL[s])}
-              </option>
-            ))}
-          </select>
+            <span className="cmp-fold-chevron" aria-hidden="true">
+              {filtersOpen ? <ChevronDown12Regular /> : <ChevronRight12Regular />}
+            </span>
+            <span>{t('compare.diff.filters')}</span>
+          </button>
+          {filtersOpen ? null : (
+            <span className="cmp-filters-summary" data-testid="diff-filters-summary">
+              {t('compare.fold.filters', {
+                sensitivity: t(SENSITIVITY_LABEL[view.sensitivity]),
+                size:
+                  view.minSize === 0
+                    ? t('compare.diff.minSize_off')
+                    : t('compare.diff.minSize_mm', { size: format.number(view.minSize, 1) }),
+              })}
+            </span>
+          )}
         </div>
-        <div className="overlay-diff-field">
-          <label htmlFor={minId} className="ui-field-label">
-            {t('compare.diff.minSize')}
-          </label>
-          <select
-            id={minId}
-            className="ui-field-input"
-            data-testid="diff-min-size"
-            value={String(view.minSize)}
-            onChange={(e) => {
-              const mm = Number(e.currentTarget.value);
-              updateDiff(id, (v) => ({ ...v, minSize: mm }));
-            }}
-          >
-            {MIN_SIZES.map((mm) => (
-              <option key={mm} value={String(mm)}>
-                {mm === 0
-                  ? t('compare.diff.minSize_off')
-                  : t('compare.diff.minSize_mm', { size: format.number(mm, 1) })}
-              </option>
-            ))}
-          </select>
-        </div>
+        {filtersOpen ? (
+          <div id={filtersId} className="cmp-filters-body">
+            <div className="overlay-diff-field">
+              <label htmlFor={sensId} className="ui-field-label">
+                {t('compare.diff.sensitivity')}
+              </label>
+              <select
+                id={sensId}
+                className="ui-field-input"
+                data-testid="diff-sensitivity"
+                value={view.sensitivity}
+                onChange={(e) => {
+                  const s = e.currentTarget.value as Sensitivity;
+                  updateDiff(id, (v) => ({ ...v, sensitivity: s }));
+                }}
+              >
+                {SENSITIVITIES.map((s) => (
+                  <option key={s} value={s}>
+                    {t(SENSITIVITY_LABEL[s])}
+                  </option>
+                ))}
+              </select>
+            </div>
+            <div className="overlay-diff-field">
+              <label htmlFor={minId} className="ui-field-label">
+                {t('compare.diff.minSize')}
+              </label>
+              <select
+                id={minId}
+                className="ui-field-input"
+                data-testid="diff-min-size"
+                value={String(view.minSize)}
+                onChange={(e) => {
+                  const mm = Number(e.currentTarget.value);
+                  updateDiff(id, (v) => ({ ...v, minSize: mm }));
+                }}
+              >
+                {MIN_SIZES.map((mm) => (
+                  <option key={mm} value={String(mm)}>
+                    {mm === 0
+                      ? t('compare.diff.minSize_off')
+                      : t('compare.diff.minSize_mm', { size: format.number(mm, 1) })}
+                  </option>
+                ))}
+              </select>
+            </div>
+          </div>
+        ) : null}
         <label className="overlay-check">
           <input
             type="checkbox"
@@ -323,7 +361,7 @@ export function DiffPane({
         </label>
       </div>
 
-      <div className="overlay-diff-filters" role="group" aria-label={t('compare.diff.filters')}>
+      <div className="overlay-diff-filters" role="group" aria-label={t('compare.diff.showGroup')}>
         <div className="overlay-diff-scope">
           <label htmlFor={scopeId} className="ui-field-label">
             {t('compare.diff.scope')}
