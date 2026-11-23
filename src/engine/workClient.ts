@@ -85,7 +85,8 @@ type JobMethod =
   | 'compareText'
   | 'compareOcrRaster'
   | 'compareRaster'
-  | 'compareLayerCopy';
+  | 'compareLayerCopy'
+  | 'compareVectorOverlay';
 
 export interface WorkClientOptions {
   wasmUrl?: string;

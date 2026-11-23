@@ -18,6 +18,15 @@ function areaHost(): string | null {
   return c?.type === 'overlay' && c.stage === 'result' && !c.area ? c.id : null;
 }
 
+import { comparisonSheets, exportBlock, openExportOverlay } from './overlay/vectorOverlay';
+
+/** The PDF overlay in the active tab, or null. */
+const activeOverlay = () => {
+  const s = documentStore.getState();
+  const c = s.activeTab ? s.comparisons[s.activeTab] : undefined;
+  return c?.type === 'overlay' ? c : null;
+};
+
 /** The type Compare with… starts with: the last one started (the window can switch it). */
 let lastType: CompareType = 'overlay';
 
@@ -51,6 +60,20 @@ export function registerCompareCommands(): () => void {
         beginAreas(id);
       },
       disabledReason: () => (areaHost() ? null : msg('compare.area.needsOverlay')),
+    }),
+    // Export Overlay… (M12-16): needs every file's content-copying permission (rule 9).
+    registerCommand('compare.exportOverlay', {
+      run: () => {
+        const c = activeOverlay();
+        if (c) openExportOverlay(c.id);
+      },
+      disabledReason: () => {
+        const c = activeOverlay();
+        if (!c) return msg('compare.export.needsOverlay');
+        if (c.stage !== 'result' || !comparisonSheets(c.id)?.length)
+          return msg('compare.export.needsResult');
+        return exportBlock(c) ? msg('compare.export.needsCopy') : null;
+      },
     }),
     registerCommand('tab.compareWith', {
       // The tab's document is Document A (old); the window has a swap button.

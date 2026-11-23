@@ -1,6 +1,6 @@
 # Triya PDF — Progress
 
-_Last updated: 2026-11-23 (M12-21·O1: compare an area)_
+_Last updated: 2026-11-23 (M12-16: the vector overlay; M12-21·O1: compare an area)_
 
 **Current milestone:** M12 — PDF comparison (PDF overlay for drawings, text comparison for
 documents), version 1.1.0: plan [docs/plan/M12.md](plan/M12.md) and
@@ -57,6 +57,27 @@ interop is in the M6 pack (CHECKLIST §M6 R1–R4). Rev 0 (M0–M4) is complete 
   within 1 pt, only the change inside the region, an unchanged area reports nothing),
   `tests/compare/area-flow.test.ts`, session record; `e2e/compare-area.spec.ts` (drawn on pair
   01, typed across two sheets of pair 10, the ribbon command, axe light and dark).
+- **M12-16 — the vector overlay (D-59, ADR-032 route 2, spike S29).** **Compare → Export
+  Overlay…** (`compare.exportOverlay`, ribbon group Output; needs a PDF overlay's result and the
+  content-copying permission of every file, rule 9) writes the overlay as a new PDF: one vector
+  page per sheet (all sheets or the sheet shown), old red, new green, shared ink black, no
+  attachments (that is M12-20's comparison file), not encrypted, comments left out (Q10). It waits
+  for the automatic alignment of sheets not yet aligned, then the Work worker's
+  `compareVectorOverlay` job builds it with progress and Cancel. The builder
+  (`src/workers/work/vectorOverlay.ts`) imports each side's page as a form (PDFium), recolours it
+  in one object-layer section (`src/model/compare/vector/`: content tokenizer and `Recolourer`,
+  colours to the tint of the same lightness, images, shadings, patterns and spot colours through
+  one-object luminosity masks, Type 3 pages through one mask of the whole page), draws B with
+  Multiply and A through its placement, undoes a turned page's form matrix, and compacts with a
+  full PDFium save. Each file's layers are kept, listed once per file under "Old — name" /
+  "New — name", shown as the comparison's layer switches say. **Vector overlay (beta)** on the
+  floating bar draws the sheet from that PDF's page (the Render worker's overlay tiles, in
+  colour) instead of the two tinted revisions; Balance, Fade, Thicken and Blink are off there,
+  show and hide still apply. Tests: `vector-overlay` (real PDFium, measured against the screen
+  overlay: pairs 01, 07, 11 layers, 12 encrypted, 16, 19, placement, the stress and Type 3 sheets,
+  a /Rotate 90 page, cancel), `vector-recolour`, `vector-request`; e2e `compare-vector.spec.ts`
+  (the exported file reopens here with red, green and black; sheet scope; display mode). Interop
+  pack for the owner: `VECTOR_PACK_DIR=<folder> npx vitest run tests/compare/vector-overlay.test.ts`.
 
 - **M12-14 — differences on drawings (D-61, Q17, Q22, Q23).** Detection in the Compare worker
   (`src/model/compare/detect/`): while the sheet is analysed, each ink pixel of either side gets
@@ -141,8 +162,8 @@ states)` re-queues the analysis of every sheet of that document (an analysis und
   tiles from `contentId`), `tests/compare/layer-session.test.ts` (pair 11: facts start again with
   more ink in A, back to the defaults gives the first facts, alignment kept), overlay state
   transitions; `e2e/compare-overlay.spec.ts` pair 11 (FIRE_PROTECTION on in A turns green to
-  black, REV_CLOUDS off in B, reset to the defaults). **Open:** M12-16's vector overlay and M12-20's
-  comparison file should take the switches into account when they are built.
+  black, REV_CLOUDS off in B, reset to the defaults). M12-16's vector overlay honours them;
+  **open:** M12-20's comparison file should too.
 
 - **M12-19 — the text comparison view (D-64).** A text comparison's result
   (`src/features/compare/text/`): Document A and Document B side by side as **live windows in
@@ -3806,8 +3827,11 @@ rel="noopener noreferrer">`; the commands `app.home` / `app.reportIssue` open th
   M12-17 (text comparison engine), M12-18 (text structure), M12-12 (the Review layout), M12-13
   (manual alignment), M12-19 (the text comparison view), M12-15 (review across revisions: aligned copy and paste,
   the close-out list, for overlay and text), M12-14 (differences on drawings; the drawings corpus
-  suite starts), M12-21·O1 (compare an area, ahead of M12-20/21 while M12-16 is built). Next:
-  the remaining tasks in plan order.
+  suite starts), M12-21·O1 (compare an area), M12-16 (the vector overlay: Export Overlay… and
+  the beta display mode). Next: the remaining tasks in plan order.
+- **Owner (M12):** the M12-16 interop pack (exported vector overlays with a checklist: colours,
+  layers, Type 3 and spot colours) in Acrobat Reader and a second desktop editor, whenever
+  convenient; it feeds the M12 acceptance.
 - **Agent (M11):** the 18 tasks in [docs/plan/M11.md](plan/M11.md) "Order of work", one thread
   each. Done: M11-01, M11-10, M11-02 (spike S26), M11-03 (tabs: look, hover card, +), M11-04
   (drag to reorder), M11-05 (tab menus), M11-06 (comments in every pointer mode), M11-07 (font

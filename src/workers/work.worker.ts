@@ -61,6 +61,7 @@ import { installFontReadback } from './render/freeTextFonts';
 import { copyItems, editObjects, OutlineError, readOutline } from './work/outline';
 import { popupStates } from './work/popups';
 import { LayerCopyError, layerCopy, layerKey, type LayerStates } from './shared/layerCopy';
+import { buildVectorOverlay } from './work/vectorOverlay';
 
 let mod: WrappedPdfiumModule | undefined;
 let native: PdfiumNative | undefined;
@@ -811,6 +812,39 @@ serve<WorkApi>(self, {
       await docs.get(docId);
       const bytes = await layerCall(() => layerCopy(docs.liveBytes(docId), layers, inflate));
       return new Transfer({ bytes: bytes.buffer }, [bytes.buffer]);
+    }),
+
+  compareVectorOverlay: ({ exported, ...req }, ctx) =>
+    scheduler.run('interactive', ctx.signal, async (slice) => {
+      if (!mod) throw new RpcError('not-initialized', 'The work worker is not initialized');
+      const m = mod;
+      const docIds = new Set(req.sheets.flatMap((s) => [s.a?.docId, s.b?.docId]));
+      for (const docId of docIds) {
+        if (docId === undefined) continue;
+        const { doc } = await docs.get(docId);
+        // Export Overlay… copies the content out of every file (rule 9, D-58).
+        if (exported) requireCapability(securityOf(m, docPtrOf(need(), doc.id)), 'copy');
+      }
+      try {
+        const { bytes, stats } = await buildVectorOverlay(
+          {
+            mod: m,
+            native: need(),
+            source: async (docId) => {
+              const { doc } = await docs.get(docId);
+              return { engineId: doc.id, reader: () => liveReader(docId) };
+            },
+            slice,
+            progress: (p) => {
+              ctx.progress(p);
+            },
+          },
+          req,
+        );
+        return new Transfer({ bytes: bytes.buffer, stats }, [bytes.buffer]);
+      } finally {
+        wasmBytes(); // the new document and its copy grow the heap (ADR-004)
+      }
     }),
 
   compareLayersRelease: ({ docIds }) => {

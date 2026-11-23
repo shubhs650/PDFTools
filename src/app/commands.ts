@@ -1488,6 +1488,17 @@ export const COMMANDS: readonly CommandDef[] = [
     shipped: true,
     preview: true,
   },
+  // Export Overlay… (M12-16, D-59): the active PDF overlay as a vector PDF, one page per sheet.
+  {
+    id: 'compare.exportOverlay',
+    tab: 'compare',
+    group: 'output',
+    size: 'large',
+    fluent: 'ArrowExportLtr',
+    milestone: 'M6',
+    shipped: true,
+    preview: true,
+  },
   {
     id: 'protect.markRedaction',
     tab: 'protect',
