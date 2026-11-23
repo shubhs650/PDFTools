@@ -169,6 +169,7 @@ test('the input window’s Options pass axe in the dark theme', async ({ page })
 
 test('New comparison carries the result’s settings into a new tab (M12-24)', async ({ page }) => {
   await overlayOf(page, '01');
+  await openFilters(page);
   await page.getByTestId('diff-sensitivity').selectOption('high');
   await page.getByTestId('diff-min-size').selectOption('1');
   await page.getByRole('button', { name: 'New comparison' }).click();
@@ -186,6 +187,7 @@ test('New comparison carries the result’s settings into a new tab (M12-24)', a
   );
   await expect(page.getByRole('button', { name: 'Delete preset' })).toBeDisabled();
   await input.getByRole('button', { name: 'Compare', exact: true }).click();
+  await openFilters(page);
   await expect(page.getByTestId('diff-sensitivity')).toHaveValue('high');
   await expect(page.getByTestId('diff-min-size')).toHaveValue('1');
 });
