@@ -5,7 +5,7 @@ import { useStore } from 'zustand';
 import { recordError } from '../../../app/diagnostics';
 import { format, msg, type MessageKey } from '../../../i18n';
 import { parseLocaleNumber } from '../../../i18n/format';
-import type { ZoneSet } from '../../../model/compare/detect/zoneSets';
+import { placeZones, storeZones, type ZoneSet } from '../../../model/compare/detect/zoneSets';
 import { appDb } from '../../../storage/appDb';
 import { Button, IconButton, ToggleButton } from '../../../ui/components';
 import type { Sheet } from '../overlay/overlayState';
@@ -16,7 +16,7 @@ import {
   removeZone,
   updateDiff,
   useDiffView,
-  type IgnoreZone,
+  withZones,
 } from './diffState';
 import { loadZoneSets as loadSets, zoneSetsStore as setsStore } from './zoneSetsStore';
 
@@ -89,13 +89,7 @@ export function IgnoreZones({
       id: existing?.id ?? newSetId(),
       name,
       savedAt: Date.now(),
-      zones: view.zones
-        .map((z) =>
-          z.pair === null
-            ? { box: z.box, all: true }
-            : { box: z.box, all: false, sheet: sheetOfPair(z.pair) },
-        )
-        .filter((z) => z.all || (z.sheet ?? -1) >= 0),
+      zones: storeZones(view.zones, sheetOfPair),
     };
     try {
       await (await appDb()).putZoneSet(set);
@@ -111,15 +105,12 @@ export function IgnoreZones({
   const apply = (): void => {
     const set = sets.find((s) => s.id === picked);
     if (!set) return;
-    updateDiff(id, (v) => {
-      let next = { ...v, zones: [] as IgnoreZone[] };
-      for (const z of set.zones) {
-        const p = z.all ? null : (sheets[z.sheet ?? -1]?.pair ?? undefined);
-        if (p === undefined) continue;
-        next = addZone({ ...next, zoneScope: z.all ? 'all' : 'sheet' }, p, z.box);
-      }
-      return { ...next, zoneScope: v.zoneScope };
-    });
+    updateDiff(id, (v) =>
+      withZones(
+        v,
+        placeZones(set.zones, (k) => sheets[k]?.pair),
+      ),
+    );
     setNotice(t('compare.diff.setApplied', { name: set.name }));
   };
 

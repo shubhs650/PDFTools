@@ -101,6 +101,7 @@ import { Note20Filled, Note20Regular, Note28Filled, Note28Regular } from '@fluen
 import { NumberSymbol20Regular } from '@fluentui/react-icons/svg/number-symbol';
 import { NumberSymbolSquare20Filled, NumberSymbolSquare20Regular } from '@fluentui/react-icons/svg/number-symbol-square';
 import { Open20Regular } from '@fluentui/react-icons/svg/open';
+import { Options20Regular, Options32Regular } from '@fluentui/react-icons/svg/options';
 import { Oval20Filled, Oval20Regular } from '@fluentui/react-icons/svg/oval';
 import { PageFit20Regular } from '@fluentui/react-icons/svg/page-fit';
 import { PaintBrush20Regular } from '@fluentui/react-icons/svg/paint-brush';
@@ -143,6 +144,7 @@ import { StackVertical20Filled, StackVertical20Regular } from '@fluentui/react-i
 import { Status20Regular } from '@fluentui/react-icons/svg/status';
 import { TabDesktopArrowClockwise20Regular } from '@fluentui/react-icons/svg/tab-desktop-arrow-clockwise';
 import { TabDesktopMultiple20Regular } from '@fluentui/react-icons/svg/tab-desktop-multiple';
+import { TableArrowUp20Regular, TableArrowUp24Regular } from '@fluentui/react-icons/svg/table-arrow-up';
 import { TableEdit20Regular, TableEdit28Regular } from '@fluentui/react-icons/svg/table-edit';
 import { TableLightning20Regular, TableLightning28Regular } from '@fluentui/react-icons/svg/table-lightning';
 import { TableSettings20Regular, TableSettings28Regular } from '@fluentui/react-icons/svg/table-settings';
@@ -306,6 +308,8 @@ export const FLUENT_GLYPHS: Record<string, FluentGlyphs> = {
   'compare.text': { regular: { small: DocumentLandscapeSplit20Regular, large: DocumentLandscapeSplit24Regular, largeNative: 24 } },
   'compare.area': { regular: { small: ScanDash20Regular, large: ScanDash32Regular, largeNative: 32 } },
   'compare.exportOverlay': { regular: { small: ArrowExportLtr20Regular, large: ArrowExportLtr32Regular, largeNative: 32 } },
+  'compare.exportRegister': { regular: { small: TableArrowUp20Regular, large: TableArrowUp24Regular, largeNative: 24 } },
+  'compare.savePreset': { regular: { small: Options20Regular, large: Options32Regular, largeNative: 32 } },
   'protect.markRedaction': { regular: { small: TextStrikethrough20Regular, large: TextStrikethrough24Regular, largeNative: 24 }, filled: { small: TextStrikethrough20Filled, large: TextStrikethrough24Filled, largeNative: 24 } },
   'protect.markRedactionArea': { regular: { small: RectangleLandscape20Regular, large: RectangleLandscape32Regular, largeNative: 32 }, filled: { small: RectangleLandscape20Filled, large: RectangleLandscape32Filled, largeNative: 32 } },
   'protect.applyRedactions': { regular: { small: CheckmarkCircle20Regular, large: CheckmarkCircle32Regular, largeNative: 32 } },

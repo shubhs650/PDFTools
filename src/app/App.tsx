@@ -37,6 +37,8 @@ import { FileDialogs } from '../features/pages/FileDialogs';
 import { PrintDialog } from '../features/print/PrintDialog';
 import { PrintReadyDialog } from '../features/print/PrintReadyDialog';
 import { ExportOverlayDialog } from '../features/compare/overlay/ExportOverlayDialog';
+import { RegisterDialog } from '../features/compare/register/RegisterDialog';
+import { SavePresetDialog } from '../features/compare/presets/SavePresetDialog';
 import { registerReportCommands } from '../features/report/commands';
 import { ReportDialog } from '../features/report/ReportDialog';
 import { ResetFormDialog } from '../features/forms/ResetFormDialog';
@@ -235,6 +237,8 @@ export function App() {
         <PrintDialog />
         <PrintReadyDialog />
         <ExportOverlayDialog />
+        <RegisterDialog />
+        <SavePresetDialog />
         <ExternalLinkDialog />
         <SaveErrorDialog />
         <SaveOptimizedDialog />

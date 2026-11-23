@@ -15,6 +15,7 @@ import {
   type SheetDiff,
 } from '../../../model/compare/detect/entries';
 import type { Box } from '../../../model/compare/detect/textDiff';
+import type { PlacedZone } from '../../../model/compare/detect/zoneSets';
 import type { Sheet } from '../overlay/overlayState';
 
 /** An ignore zone (Q22): a rectangle of one sheet, or of every sheet (`pair` null). */
@@ -214,6 +215,14 @@ export function addZone(v: DiffView, pair: number | null, box: Box): DiffView {
       { id: `z${String(++zoneSeq)}`, pair: v.zoneScope === 'all' ? null : pair, box: b },
     ],
   };
+}
+
+/** The zones replaced by `zones` (a saved set or a preset placed on the result's sheets). */
+export function withZones(v: DiffView, zones: readonly PlacedZone[]): DiffView {
+  let next: DiffView = { ...v, zones: [] };
+  for (const z of zones)
+    next = addZone({ ...next, zoneScope: z.pair === null ? 'all' : 'sheet' }, z.pair, z.box);
+  return { ...next, zoneScope: v.zoneScope };
 }
 
 export const removeZone = (v: DiffView, zoneId: string): DiffView => ({

@@ -1,6 +1,6 @@
 # Triya PDF — Progress
 
-_Last updated: 2026-11-23 (M12-16: the vector overlay; M12-21·O1: compare an area)_
+_Last updated: 2026-11-23 (M12-21: change register and presets; M12-16: the vector overlay; M12-21·O1: compare an area)_
 
 **Current milestone:** M12 — PDF comparison (PDF overlay for drawings, text comparison for
 documents), version 1.1.0: plan [docs/plan/M12.md](plan/M12.md) and
@@ -29,6 +29,33 @@ answers Q1–Q7; ARCHITECTURE.md Rev 0.12 after [ADR-024](adr/024-freetext-text-
 interop is in the M6 pack (CHECKLIST §M6 R1–R4). Rev 0 (M0–M4) is complete on the agent side.
 
 ## Done
+
+- **M12-21 — change register and presets (D-65, D-58, Q34, Q35); the summary page follows M12-20.**
+  **Compare → Export Change Register…** writes the differences the list shows (its kind and
+  type filters, search, scope and Hide checked), in its order, as an Excel workbook (Work
+  worker, the CRS builder, now with its own column widths and number columns) or a CSV (CRS
+  rules: BOM, CRLF, formula guard), built in pieces with yields (rule 1). PDF overlay columns:
+  No., Sheet, Page (old), Page (new) (file name and page for a set), Kind, Type, Old, New,
+  Change (%), Checked; text comparison: No., Page (old), Page (new), Kind (the engine's own:
+  header changed, renumbered…), Old, New, Change (%), Notes (table row and column, OCR, …),
+  Checked. The percent is the engine's for text, and for drawings a single value on each side
+  ("Ø120" → "Ø128": 6.67, a tag only when its letters agree). The workbook's header block names
+  the files, the date, the settings and "12 of 40, as the list shows them", and says when the
+  comparison was still running. Needs every file's content-copying permission (rule 9).
+  **Compare → Save as Preset…** keeps a result's settings on this device (IndexedDB v11
+  `comparePresets`, in the Privacy list and Clear all): a PDF overlay's colours, sensitivity,
+  minimum size and ignore zones (by sheet number, as zone sets); a text comparison's mark
+  colours and header, footer and renumbering handling. The input window has a collapsed
+  **Options** section with the presets of its type (Default settings first, Delete); the one
+  picked is applied once when Compare runs (zones placed on the sheets as paired), so edits in
+  the result survive a second Compare from the revisited inputs. Pure code:
+  `src/model/compare/register.ts`, `presets.ts`, `storeZones`/`placeZones` in `zoneSets.ts`
+  (now also used by Ignore zones); text change labels moved to `text/changeLabels.ts`. Tests:
+  `tests/compare/register.test.ts` (TDD, workbook read back), `presets.test.ts`,
+  `presets-flow.test.ts`, IndexedDB v11; `e2e/compare-register.spec.ts` (pair 01 Excel and CSV
+  following the search, text pair 09, a preset saved and used, axe light and dark).
+  **Next in M12-21:** the optional summary page as the comparison file's first page, wired into
+  Save comparison… after M12-20 merges (M12-20 adds `leadingPages` to the comparison data for it).
 
 - **M12-21·O1 — compare an area (D-60, D-61; optional item O1, accepted).** Done ahead of
   M12-20 and M12-21, which wait on M12-16's vector overlay (built in parallel). In a PDF Overlay

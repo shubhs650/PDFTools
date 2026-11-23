@@ -38,6 +38,8 @@ import {
   type SideId,
 } from './model';
 import { PairingTable } from './PairingTable';
+import { PresetOptions } from './presets/PresetOptions';
+import { applyPickedPreset } from './presets/presetStore';
 import { OverlayResult } from './overlay/OverlayResult';
 import { TextResult } from './text/TextResult';
 import { syncPairing, usePairing } from './pairingFlow';
@@ -178,6 +180,7 @@ function InputWindow({ comparison: c }: { comparison: Comparison }) {
           <SidePanel comparison={c} side="b" />
         </div>
         {overlay && !inputBlock ? <PairingTable id={c.id} /> : null}
+        {c.area ? null : <PresetOptions comparison={c} />}
         <footer className="compare-foot">
           <p id={statusId} className="compare-status" role="status">
             {status}
@@ -188,6 +191,8 @@ function InputWindow({ comparison: c }: { comparison: Comparison }) {
             disabled={block !== null}
             aria-describedby={statusId}
             onClick={() => {
+              // The preset picked in Options goes into the result's settings (M12-21).
+              applyPickedPreset(c);
               updateInputs(c.id, (cur) => ({ ...cur, stage: 'result' }));
             }}
           />

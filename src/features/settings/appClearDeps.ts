@@ -14,6 +14,7 @@ import { resetWhatsNew } from '../whatsNew/releases';
 import { resetRecentFonts } from '../annotate/fonts/recentFonts';
 import { resetSession } from '../session/session';
 import { resetZoneSets } from '../compare/diff/zoneSetsStore';
+import { resetPresets } from '../compare/presets/presetStore';
 import type { ClearDeps } from './clearAll';
 
 const hasCaches = (): boolean => typeof caches !== 'undefined';
@@ -48,5 +49,7 @@ export const appClearDeps: ClearDeps = {
     resetSession();
     // The comparison's ignore zone sets (M12-14).
     resetZoneSets();
+    // The comparison presets (M12-21).
+    resetPresets();
   },
 };
