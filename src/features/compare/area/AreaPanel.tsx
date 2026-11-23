@@ -1,3 +1,4 @@
+import { HelpButton } from '../../help/HelpButton';
 import { useId, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { documentStore, useDocuments } from '../../../app/store/documentStore';
@@ -134,10 +135,18 @@ export function AreaPanel({ id, sheet }: { id: string; sheet: Sheet }) {
   );
 
   return (
-    <section className="overlay-area" aria-labelledby={headingId} data-testid="area-panel">
-      <h3 id={headingId} className="overlay-side-title">
-        {t('compare.area.title')}
-      </h3>
+    <section
+      className="overlay-area"
+      aria-labelledby={headingId}
+      data-testid="area-panel"
+      data-help-topic="compare-differences"
+    >
+      <div className="pane-title-row">
+        <h3 id={headingId} className="overlay-side-title">
+          {t('compare.area.title')}
+        </h3>
+        <HelpButton topic="compare-differences" />
+      </div>
       <p className="overlay-zone-hint">{t('compare.area.hint')}</p>
       {SIDE_IDS.map((side) => (
         <div key={side} className="overlay-area-side">

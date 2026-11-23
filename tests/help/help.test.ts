@@ -15,8 +15,10 @@ import { helpKeys } from '../../src/help/keys';
 import { searchHelp, queryWords } from '../../src/help/search';
 import shots from '../../src/help/shots.json';
 import {
+  ALL_CHAPTERS,
   CHAPTERS,
   FIRST_TOPIC,
+  chaptersFor,
   TOPICS,
   chapterOf,
   isTopicId,
@@ -91,6 +93,30 @@ describe('Help topics and text', () => {
     ]);
     expect(fill('{{app}} works offline', {})).toBe(`${APP_NAME} works offline`);
     expect(fill('{{unknown}}', {})).toBe('{{unknown}}');
+  });
+
+  it('leaves the Compare chapter out of a build with Compare switched off (M12-22)', () => {
+    expect(CHAPTERS).toEqual(ALL_CHAPTERS);
+    expect(chaptersFor(true).map((c) => c.id)).toContain('compare');
+    const off = chaptersFor(false);
+    expect(off.map((c) => c.id)).not.toContain('compare');
+    expect(off.length).toBe(ALL_CHAPTERS.length - 1);
+    expect(off.flatMap((c) => c.topics).some((id) => id.startsWith('compare-'))).toBe(false);
+  });
+
+  it('has a topic for each window of a comparison (M12-22)', () => {
+    expect(topicForTab('compare')).toBe('compare-start');
+    for (const id of [
+      'compare-start',
+      'compare-overlay',
+      'compare-alignment',
+      'compare-differences',
+      'compare-review',
+      'compare-text',
+      'compare-saving',
+      'compare-other-readers',
+    ])
+      expect(chapterOf(id as (typeof TOPICS)[number]), id).toBe('compare');
   });
 
   it('opens at the chapter of the active ribbon tab', () => {

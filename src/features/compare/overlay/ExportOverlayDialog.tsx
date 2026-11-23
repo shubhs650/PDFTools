@@ -1,4 +1,5 @@
 import { Dismiss20Regular } from '@fluentui/react-icons/svg/dismiss';
+import { dialogHelp } from '../../help/openHelp';
 import { useTranslation } from 'react-i18next';
 import { useDocuments } from '../../../app/store/documentStore';
 import { format } from '../../../i18n';
@@ -42,6 +43,7 @@ export function ExportOverlayDialog() {
         if (!open) closeExportOverlay();
       }}
       title={t('compare.export.title')}
+      help={dialogHelp('compare-other-readers')}
       description={t('compare.export.description', { name: fileName })}
       closeIcon={<Dismiss20Regular />}
       footer={

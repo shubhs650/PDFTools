@@ -1,6 +1,18 @@
 {
   "releases": [
     {
+      "id": "v1.1.0",
+      "date": "2026-11-23",
+      "title": "Version 1.1.0: compare revisions",
+      "items": [
+        "PDF Overlay: lay the new revision of a drawing over the old one, old in red, new in green and the same in black, with every difference listed and aligned for you.",
+        "Text Comparison: see every changed word, number, clause and table row of two revisions side by side.",
+        "Review across revisions: close out the old revision's comments against the new one, and copy comments to the matching place.",
+        "Save a comparison as one PDF that anyone can open, export the overlay, or export a change register to Excel.",
+        "All of it on this device and offline. Help has a new chapter, Compare revisions."
+      ]
+    },
+    {
       "id": "v1.0.0",
       "date": "2026-11-18",
       "title": "Version 1.0.0, the first public release",

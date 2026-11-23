@@ -81,13 +81,43 @@ test('F1, Help → Help and a dialog\'s "?" open Help at the right topic, in one
   expect(context.pages()).toHaveLength(2);
 });
 
+test('a comparison\'s "?" buttons and F1 open the Compare chapter (M12-22)', async ({
+  page,
+  context,
+}) => {
+  await page.goto('/');
+  await page.getByRole('tab', { name: 'Compare', exact: true }).click();
+  await page
+    .getByRole('toolbar', { name: 'Compare commands' })
+    .getByRole('button', { name: 'PDF Overlay' })
+    .click();
+  const input = page.getByTestId('compare-input');
+  await expect(input).toHaveAttribute('data-help-topic', 'compare-start');
+  const help = await helpWindow(context, () =>
+    input.getByRole('button', { name: 'Help for comparing documents' }).click(),
+  );
+  await help.waitForLoadState();
+  await expect(help).toHaveURL(/\/help#compare-start$/);
+  await expect(topic(help).getByRole('heading', { level: 1 })).toHaveText('Starting a comparison');
+  await expect(
+    help.getByRole('navigation', { name: 'Contents' }).getByText('Compare revisions'),
+  ).toBeVisible();
+  // F1 with the focus in the input window: the same topic, in the same window.
+  await page.bringToFront();
+  await input.getByRole('radio', { name: 'Text Comparison' }).focus();
+  await page.keyboard.press('F1');
+  await expect(help).toHaveURL(/\/help#compare-start$/);
+  expect(context.pages()).toHaveLength(2);
+});
+
 test('the Help page: contents, pager, search on Enter only, screenshots and lightbox @smoke', async ({
   page,
 }) => {
   test.setTimeout(90_000);
   await page.goto('/help#welcome');
   const nav = page.getByRole('navigation', { name: 'Contents' });
-  await expect(nav.getByRole('link')).toHaveCount(44);
+  // 44 topics, and 8 in Compare revisions (M12-22; on while Compare is switched on).
+  await expect(nav.getByRole('link')).toHaveCount(52);
   await expect(topic(page).getByRole('heading', { level: 1 })).toHaveText('Welcome to Triya PDF');
 
   // Contents and the pager move between topics.

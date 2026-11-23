@@ -1,4 +1,5 @@
 import { ChevronLeft20Regular } from '@fluentui/react-icons/svg/chevron-left';
+import { HelpButton } from '../../help/HelpButton';
 import { ChevronRight20Regular } from '@fluentui/react-icons/svg/chevron-right';
 import {
   LayoutColumnTwoSplitRight20Filled,
@@ -238,6 +239,7 @@ export function OverlayResult({ comparison: c }: { comparison: Comparison }) {
       aria-labelledby={titleId}
       data-testid="compare-result"
       data-type="overlay"
+      data-help-topic="compare-overlay"
     >
       <header className="overlay-head">
         <span className="overlay-head-icon" aria-hidden="true">
@@ -319,6 +321,7 @@ export function OverlayResult({ comparison: c }: { comparison: Comparison }) {
             }}
           />
         )}
+        <HelpButton topic="compare-overlay" label={t('compare.help')} />
       </header>
       {body}
     </section>

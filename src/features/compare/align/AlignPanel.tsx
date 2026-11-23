@@ -1,3 +1,4 @@
+import { HelpButton } from '../../help/HelpButton';
 import { ArrowDown20Regular } from '@fluentui/react-icons/svg/arrow-down';
 import { ArrowLeft20Regular } from '@fluentui/react-icons/svg/arrow-left';
 import { ArrowRight20Regular } from '@fluentui/react-icons/svg/arrow-right';
@@ -101,10 +102,18 @@ export function AlignPanel({
   const manual = view.manual?.pair === pair ? view.manual : null;
 
   return (
-    <section className="overlay-align" aria-labelledby={headingId} data-testid="align-panel">
-      <h3 id={headingId} className="overlay-side-title">
-        {t('compare.manual.title')}
-      </h3>
+    <section
+      className="overlay-align"
+      aria-labelledby={headingId}
+      data-testid="align-panel"
+      data-help-topic="compare-alignment"
+    >
+      <div className="pane-title-row">
+        <h3 id={headingId} className="overlay-side-title">
+          {t('compare.manual.title')}
+        </h3>
+        <HelpButton topic="compare-alignment" />
+      </div>
       {!manual ? (
         <div className="overlay-align-actions">
           <Button

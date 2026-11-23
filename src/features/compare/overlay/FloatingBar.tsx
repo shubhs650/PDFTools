@@ -1,4 +1,5 @@
 import { ArrowAutofitWidth20Regular } from '@fluentui/react-icons/svg/arrow-autofit-width';
+import { dialogHelp } from '../../help/openHelp';
 import { Blur20Regular } from '@fluentui/react-icons/svg/blur';
 import { Color20Regular } from '@fluentui/react-icons/svg/color';
 import { Dismiss20Regular } from '@fluentui/react-icons/svg/dismiss';
@@ -341,6 +342,7 @@ function CustomColours({
       open={open}
       onOpenChange={onOpenChange}
       title={t('compare.overlay.customTitle')}
+      help={dialogHelp('compare-overlay')}
       closeIcon={<Dismiss20Regular />}
       footer={
         <Button

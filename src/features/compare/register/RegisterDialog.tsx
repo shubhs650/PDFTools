@@ -1,4 +1,5 @@
 import { Dismiss20Regular } from '@fluentui/react-icons/svg/dismiss';
+import { dialogHelp } from '../../help/openHelp';
 import type { TFunction } from 'i18next';
 import { useTranslation } from 'react-i18next';
 import { useDocuments } from '../../../app/store/documentStore';
@@ -56,6 +57,7 @@ export function RegisterDialog() {
         if (!open) closeRegister();
       }}
       title={t('compare.register.title')}
+      help={dialogHelp('compare-saving')}
       description={t('compare.register.description', { name: fileName })}
       closeIcon={<Dismiss20Regular />}
       footer={

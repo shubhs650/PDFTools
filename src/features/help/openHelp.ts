@@ -30,14 +30,18 @@ export function openHelp(topic?: string): void {
 
 /**
  * The topic for what the user is doing (F1): the open dialog's own topic
- * (`data-help-topic`, set by Dialog's `help`), else the chapter of the
- * active ribbon tab.
+ * (`data-help-topic`, set by Dialog's `help`), else the topic of the part of
+ * the window that has focus (a comparison's panes, M12-22), else the chapter
+ * of the active ribbon tab.
  */
 export function currentHelpTopic(): string | undefined {
   const dialogs = document.querySelectorAll<HTMLElement>('[role="dialog"][data-help-topic]');
   const last = dialogs[dialogs.length - 1];
   const topic = last?.dataset['helpTopic'];
   if (topic) return topic;
+  const focused = document.activeElement?.closest<HTMLElement>('[data-help-topic]');
+  const here = focused?.dataset['helpTopic'];
+  if (here && isTopicId(here)) return here;
   return topicForTab(appStore.getState().ribbonTab);
 }
 

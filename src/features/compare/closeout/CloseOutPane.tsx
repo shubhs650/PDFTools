@@ -5,6 +5,7 @@
 // Addressed, Carried Over (copied to the new revision first) or Changed
 // Differently, reopen it, or copy it to the new revision. The check
 // highlight's colour comes from the standard swatch picker.
+import { HelpButton } from '../../help/HelpButton';
 import { useId, useMemo, type KeyboardEvent } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useDocuments } from '../../../app/store/documentStore';
@@ -100,10 +101,18 @@ export function CloseOutPane({ comparison: c }: { comparison: Comparison }) {
   const colour = useCloseOut((s) => s.colour);
   const files = c.a.map((f) => f.docId);
   return (
-    <aside className="closeout-pane" aria-labelledby={headingId} data-testid="closeout-pane">
-      <h3 id={headingId} className="overlay-side-title">
-        {t('compare.closeout.title')}
-      </h3>
+    <aside
+      className="closeout-pane"
+      aria-labelledby={headingId}
+      data-testid="closeout-pane"
+      data-help-topic="compare-review"
+    >
+      <div className="pane-title-row">
+        <h3 id={headingId} className="overlay-side-title">
+          {t('compare.closeout.title')}
+        </h3>
+        <HelpButton topic="compare-review" />
+      </div>
       <p className="closeout-intro">{t('compare.closeout.intro')}</p>
       <div className="closeout-tools">
         <div className="closeout-filter" role="group" aria-label={t('compare.closeout.filter')}>

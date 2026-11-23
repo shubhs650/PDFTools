@@ -1,3 +1,4 @@
+import { HelpButton } from '../../help/HelpButton';
 import { ArrowDown20Regular } from '@fluentui/react-icons/svg/arrow-down';
 import { ArrowUp20Regular } from '@fluentui/react-icons/svg/arrow-up';
 import { Checkmark16Filled } from '@fluentui/react-icons/svg/checkmark';
@@ -230,7 +231,12 @@ export function DiffPane({
   const selectedEntry = shown.find((e) => e.id === view.selected) ?? null;
 
   return (
-    <aside className="overlay-diffs" aria-labelledby={headingId} data-testid="diff-pane">
+    <aside
+      className="overlay-diffs"
+      aria-labelledby={headingId}
+      data-testid="diff-pane"
+      data-help-topic="compare-differences"
+    >
       <div className="text-list-head">
         <h3 id={headingId} className="overlay-side-title">
           {t('compare.diff.title')}
@@ -254,6 +260,7 @@ export function DiffPane({
                   count: format.number(scoped.length),
                 })}
         </span>
+        <HelpButton topic="compare-differences" />
       </div>
 
       <div className="overlay-diff-settings" role="group" aria-label={t('compare.diff.settings')}>
