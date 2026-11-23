@@ -13,6 +13,8 @@ import { format } from '../../../i18n';
 import { toReference, type WindowRole } from '../../../model/compare/link';
 import { DocumentView, type PageFrameInfo } from '../../view/DocumentView';
 import { AlignPickLayer } from '../align/AlignPickLayer';
+import { AreaDrawLayer, AreaMark } from '../area/AreaLayers';
+import { useAreaPick } from '../area/areaPick';
 import { tileCache } from '../../view/host';
 import { setViewFocus, setVisibleWindows } from '../../view/tileScheduler';
 import type { Comparison } from '../model';
@@ -30,6 +32,9 @@ import { WindowLink, centreOnBox, fitWindow, showPage, type LinkedWindow } from 
 import { focusers, pendingFocus, type Box } from './overlayFocus';
 
 const SPLIT_TEST_ID = { x: 'review-split-x', y: 'review-split-y' } as const;
+
+/** How much of the overlay window an area comparison's area takes when it opens (O1). */
+const AREA_SHARE = 0.8;
 
 /** The links of the comparisons on screen. */
 const links = new Map<string, WindowLink>();
@@ -135,6 +140,9 @@ export function ReviewLayout({
       if (!overlay) return;
       if (refit) {
         if (!(await fitWindow(overlay, 'page')) || stopped()) return;
+        // An area comparison (O1) opens on its area: B's rectangle fills most of the window.
+        if (c.area && !(await centreOnBox(overlay, c.area.b, AREA_SHARE))) return;
+        if (stopped()) return;
         fitted.current = sheetKey;
         link.lead('overlay');
       }
@@ -334,6 +342,8 @@ function SideWindow({
   const { t } = useTranslation();
   const p = sheet[side];
   const name = useDocuments((s) => (p ? (s.docs[p.docId]?.meta.name ?? '') : ''));
+  const area = useDocuments((s) => s.comparisons[id]?.area ?? null);
+  const pick = useAreaPick(id);
   useWindowPlace(p?.docId ?? null);
   const sideName = t(side === 'a' ? 'compare.side.a' : 'compare.side.b');
   if (!p)
@@ -352,21 +362,46 @@ function SideWindow({
   });
   const { ref, ...rest } = props(side, p.docId, p.page);
   const pair = sheet.pair;
-  // Picking alignment points and their marks (M12-13), on the sheet's page.
+  // Picking alignment points and their marks (M12-13), and drawing an area's
+  // rectangle (O1, not in an area comparison itself), on the sheet's page.
   const layer =
-    pair === null
+    pair === null && area
       ? undefined
       : (pageIndex: number, frame: PageFrameInfo) =>
           pageIndex === p.page ? (
-            <AlignPickLayer
-              id={id}
-              side={side}
-              pair={pair}
-              docId={p.docId}
-              pageIndex={pageIndex}
-              frame={frame}
-            />
+            <>
+              {pair !== null ? (
+                <AlignPickLayer
+                  id={id}
+                  side={side}
+                  pair={pair}
+                  docId={p.docId}
+                  pageIndex={pageIndex}
+                  frame={frame}
+                />
+              ) : null}
+              {area ? null : (
+                <AreaDrawLayer
+                  id={id}
+                  side={side}
+                  docId={p.docId}
+                  pageIndex={pageIndex}
+                  frame={frame}
+                />
+              )}
+            </>
           ) : null;
+  // The area's rectangle on this page: an area comparison's own, or one drawn here (O1).
+  const drawn = pick[side];
+  const mark = area
+    ? area[side]
+    : drawn?.docId === p.docId && drawn.page === p.page
+      ? drawn.box
+      : null;
+  const decor = mark
+    ? (pageIndex: number, scale: number) =>
+        pageIndex === p.page ? <AreaMark box={mark} scale={scale} side={side} /> : null
+    : undefined;
   return (
     <div
       ref={ref}
@@ -387,6 +422,7 @@ function SideWindow({
             label: title,
             testId: `review-view-${side}`,
             ...(layer ? { layer } : {}),
+            ...(decor ? { decor } : {}),
           }}
         />
       </div>

@@ -20,6 +20,7 @@ import { pairingInputs, startComparing, syncPairing, usePairing } from '../pairi
 import { typeLabel } from '../title';
 import { alignmentText } from '../alignmentText';
 import { AlignPanel } from '../align/AlignPanel';
+import { AreaInfo, AreaPanel } from '../area/AreaPanel';
 import { OverlayLayers } from './OverlayLayers';
 import { frameOf, framePage } from './frames';
 import {
@@ -191,11 +192,13 @@ export function OverlayResult({ comparison: c }: { comparison: Comparison }) {
       <div className="overlay-body">
         <aside className="overlay-side" aria-label={t('compare.overlay.sheets')}>
           <SheetList comparison={c} sheets={sheets} current={index} />
+          {c.area ? <AreaInfo comparison={c} sheet={sheet} /> : null}
           <AlignPanel
             id={c.id}
             sheet={sheet}
             pairs={sheets.filter((s) => s.pair !== null).length}
           />
+          {c.area ? null : <AreaPanel id={c.id} sheet={sheet} />}
           <OverlayLayers comparison={c} sheet={sheet} />
           <IgnoreZones id={c.id} sheets={sheets} current={index} />
         </aside>
@@ -235,7 +238,7 @@ export function OverlayResult({ comparison: c }: { comparison: Comparison }) {
           <CommandIcon id="compare.overlay" />
         </span>
         <h2 id={titleId} className="overlay-head-title">
-          {typeLabel(c.type)}
+          {c.area ? t('compare.area.resultTitle') : typeLabel(c.type)}
           <span className="compare-preview">{t('compare.preview')}</span>
         </h2>
         {sheets.length > 0 ? (
@@ -300,13 +303,16 @@ export function OverlayResult({ comparison: c }: { comparison: Comparison }) {
             <CloseOutToggle id={c.id} />
           </div>
         ) : null}
-        <Button
-          label={t('compare.result.inputs')}
-          size="small"
-          onClick={() => {
-            updateInputs(c.id, (cur) => ({ ...cur, stage: 'input' }));
-          }}
-        />
+        {c.area ? null : (
+          // An area comparison's inputs are its rectangles, drawn in another comparison (O1).
+          <Button
+            label={t('compare.result.inputs')}
+            size="small"
+            onClick={() => {
+              updateInputs(c.id, (cur) => ({ ...cur, stage: 'input' }));
+            }}
+          />
+        )}
       </header>
       {body}
     </section>

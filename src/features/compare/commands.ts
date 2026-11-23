@@ -7,6 +7,16 @@ import { startComparison } from './compareFlow';
 import type { CompareType } from './model';
 import { compareGuard } from './review/guard';
 import { registerCloseOutCommands } from './closeout/commands';
+import { beginAreas } from './area/areaPick';
+import { setPicking } from './align/manualAlign';
+import { setLayout, updateView } from './overlay/overlayState';
+
+/** The overlay result in the selected tab an area can be drawn in (not an area comparison itself). */
+function areaHost(): string | null {
+  const s = documentStore.getState();
+  const c = s.activeTab ? s.comparisons[s.activeTab] : undefined;
+  return c?.type === 'overlay' && c.stage === 'result' && !c.area ? c.id : null;
+}
 
 /** The type Compare with… starts with: the last one started (the window can switch it). */
 let lastType: CompareType = 'overlay';
@@ -31,6 +41,16 @@ export function registerCompareCommands(): () => void {
       run: () => {
         start('text');
       },
+    }),
+    registerCommand('compare.area', {
+      // Compare an area (O1): the result's panel starts drawing on Document A.
+      run: () => {
+        const id = areaHost();
+        if (!id) return;
+        updateView(id, (v) => setLayout(v.manual?.picking ? setPicking(v, false) : v, 'review'));
+        beginAreas(id);
+      },
+      disabledReason: () => (areaHost() ? null : msg('compare.area.needsOverlay')),
     }),
     registerCommand('tab.compareWith', {
       // The tab's document is Document A (old); the window has a swap button.

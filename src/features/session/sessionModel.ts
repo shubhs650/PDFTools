@@ -5,6 +5,7 @@
 // a new document that was never saved, a download or a recovered copy is not.
 import type { DocumentSource } from '../../app/store/documentStore';
 import type { CompareType, SideId } from '../compare/model';
+import { normBox, type AreaBox, type AreaPair } from '../../model/compare/area';
 
 /** What happens when Triya PDF starts: the start screen, or last session's files. */
 export type StartupChoice = 'start' | 'reopen';
@@ -43,6 +44,8 @@ export interface SessionComparison {
   index: number;
   a: SessionSideFile[];
   b: SessionSideFile[];
+  /** An area comparison's rectangles (O1): it reopens on its result, one page per side. */
+  area?: AreaPair;
 }
 
 export interface SessionRecord {
@@ -124,6 +127,7 @@ export interface OpenComparison {
   a: readonly (OpenDoc & { range: string })[];
   b: readonly (OpenDoc & { range: string })[];
   active: boolean;
+  area?: AreaPair;
 }
 
 /**
@@ -154,8 +158,10 @@ export function comparisonsOf(open: readonly OpenComparison[]): {
     const a = side(c.a);
     const b = side(c.b);
     if (a.length + b.length === 0 || comparisons.length >= MAX_SESSION_COMPARISONS) continue;
+    // An area comparison (O1) is kept only whole: both its pages can be reopened.
+    if (c.area && (a.length !== 1 || b.length !== 1)) continue;
     if (c.active) activeComparison = comparisons.length;
-    comparisons.push({ type: c.type, index: c.index, a, b });
+    comparisons.push({ type: c.type, index: c.index, a, b, ...(c.area ? { area: c.area } : {}) });
   }
   return { comparisons, activeComparison };
 }
@@ -176,7 +182,13 @@ export function sameSession(a: SessionRecord | null, b: SessionRecord | null): b
     return false;
   const comparisonsSame = ca.every((c, i) => {
     const o = cb[i];
-    return c.type === o?.type && c.index === o.index && sameFiles(c.a, o.a) && sameFiles(c.b, o.b);
+    return (
+      c.type === o?.type &&
+      c.index === o.index &&
+      sameFiles(c.a, o.a) &&
+      sameFiles(c.b, o.b) &&
+      JSON.stringify(c.area ?? null) === JSON.stringify(o.area ?? null)
+    );
   });
   return comparisonsSame && a.entries.every((e, i) => sameEntry(e, b.entries[i]));
 }
@@ -205,6 +217,21 @@ function parseSide(value: unknown): SessionSideFile[] {
   });
 }
 
+/** An area comparison's rectangles as stored, or null when they are not two rectangles. */
+function parseArea(value: unknown): AreaPair | null {
+  if (!isObject(value)) return null;
+  const box = (v: unknown): AreaBox | null => {
+    if (!Array.isArray(v) || v.length !== 4) return null;
+    const n = v as unknown[];
+    if (!n.every((x) => typeof x === 'number' && Number.isFinite(x))) return null;
+    const b = normBox(n as number[]);
+    return b[2] - b[0] > 0 && b[3] - b[1] > 0 ? b : null;
+  };
+  const a = box(value['a']);
+  const b = box(value['b']);
+  return a && b ? { a, b } : null;
+}
+
 function parseComparisons(value: unknown): SessionComparison[] {
   if (!Array.isArray(value)) return [];
   const out: SessionComparison[] = [];
@@ -219,10 +246,18 @@ function parseComparisons(value: unknown): SessionComparison[] {
     // A text comparison has one file per side.
     if (type === 'text') for (const s of ['a', 'b'] as const) sides[s] = sides[s].slice(0, 1);
     if (sides.a.length + sides.b.length === 0) continue;
+    const area = c['area'] === undefined ? undefined : parseArea(c['area']);
+    // An area comparison (O1): an overlay of one page of each side, both rectangles valid.
+    if (
+      area === null ||
+      (area && (type !== 'overlay' || sides.a.length !== 1 || sides.b.length !== 1))
+    )
+      continue;
     out.push({
       type,
       index: typeof index === 'number' && Number.isInteger(index) && index >= 0 ? index : 0,
       ...sides,
+      ...(area ? { area } : {}),
     });
   }
   return out.slice(0, MAX_SESSION_COMPARISONS);

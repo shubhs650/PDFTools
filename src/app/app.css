@@ -6969,6 +6969,8 @@ textarea.form-field {
   border-radius: var(--radius-l);
   background: var(--color-surface-raised);
   box-shadow: var(--elevation-2);
+  /* Over the marks drawn on the sheet (outlines, an area's veil: O1). */
+  z-index: 3;
 }
 
 .overlay-bar-group {
@@ -8039,5 +8041,83 @@ textarea.form-field {
   .diff-zone,
   .diff-zone-hatch {
     stroke: GrayText;
+  }
+}
+
+/*
+ * Compare an area (O1): the rectangles drawn on Document A and B, and an area
+ * comparison's overlay with everything but the region compared veiled. Drawn
+ * by the view over the page, never in the pointer's way.
+ */
+.overlay-area {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+}
+
+.overlay-area-side {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-0);
+  margin: var(--space-0);
+}
+
+.overlay-area-what {
+  color: var(--color-text-muted);
+  font-size: var(--font-size-s);
+}
+
+.overlay-area-typed {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+  margin: var(--space-0);
+  padding: var(--space-0);
+  border: none;
+}
+
+.area-marks {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  width: 100%;
+  height: 100%;
+  overflow: visible;
+  pointer-events: none;
+}
+
+.area-mark,
+.area-region {
+  fill: none;
+  stroke: var(--color-accent);
+  stroke-width: 2px;
+  stroke-dasharray: 8 4;
+  vector-effect: non-scaling-stroke;
+}
+
+.area-veil {
+  fill: var(--color-canvas);
+  fill-opacity: 0.88;
+}
+
+.area-draw-layer {
+  z-index: 2;
+}
+
+.area-drag {
+  position: absolute;
+  border: 2px dashed var(--color-accent);
+  background: color-mix(in srgb, var(--color-accent) 12%, transparent);
+  pointer-events: none;
+}
+
+@media (forced-colors: active) {
+  .area-mark,
+  .area-region {
+    stroke: Highlight;
+  }
+
+  .area-veil {
+    fill: Canvas;
   }
 }

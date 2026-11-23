@@ -60,6 +60,16 @@ import {
   type RasterBand,
 } from '../../../model/compare/material';
 import type { PairingResult } from '../../../model/compare/pairing';
+import {
+  areaRasterPlace,
+  areaRasterSize,
+  areaRegion,
+  areaScale,
+  rectPlace,
+  regionRows,
+  type AreaBox,
+  type AreaPair,
+} from '../../../model/compare/area';
 import type { TextComparison } from '../../../model/compare/text/match';
 import { layerKey, type LayerStates } from '../../../workers/shared/layerCopy';
 import type { Box } from '../../../model/compare/detect/textDiff';
@@ -120,6 +130,12 @@ export interface SheetPair {
   b: number;
   /** A's displayed space → B's frame (pt), set by hand; default: aligned automatically. */
   place?: Affine;
+  /**
+   * An area comparison (O1): a rectangle on each page. The sheet is aligned
+   * from them and on what is inside them, and only the region both cover is
+   * compared.
+   */
+  area?: AreaPair;
 }
 
 export interface SessionOptions {
@@ -487,7 +503,10 @@ export class CompareSession {
           sheet,
           phase: 1,
           after: sigs,
-          run: (signal) => this.alignSheet(sheet, pair, signal),
+          run: (signal) =>
+            pair.area
+              ? this.alignAreaSheet(sheet, pair, pair.area, signal)
+              : this.alignSheet(sheet, pair, signal),
         });
       // Detection's text layer reads both pages' positioned text (D-61).
       const texts = [`text:a:${String(pair.a)}`, `text:b:${String(pair.b)}`];
@@ -721,25 +740,89 @@ export class CompareSession {
     return this.aligned.get(sheet)?.method === 'image';
   }
 
+  /** A page's line geometry, read by the Work worker and kept as features by the Compare worker. */
+  private async putGeometry(
+    side: CompareSide,
+    from: SidePage,
+    page: number,
+    signal: AbortSignal,
+  ): Promise<PageFrame> {
+    const g = await this.opts.work.run(
+      'compareGeometry',
+      { docId: from.docId, pageIndex: from.page },
+      { signal },
+    ).promise;
+    await this.opts.compare.call(
+      'putGeometry',
+      { cmpId: this.id, side, page, segments: g.segments },
+      { signal, transfer: [g.segments.buffer as ArrayBuffer] },
+    ).promise;
+    return g.frame;
+  }
+
+  /**
+   * Aligns an area comparison (O1): from its two rectangles, refined on the
+   * line work inside them, or by the image method on their rasters.
+   */
+  private async alignAreaSheet(
+    sheet: number,
+    pair: SheetPair,
+    area: AreaPair,
+    signal: AbortSignal,
+  ): Promise<void> {
+    const pa = this.pages.a[pair.a];
+    const pb = this.pages.b[pair.b];
+    if (!pa || !pb) throw new Error('sheet page missing');
+    await this.putGeometry('a', pa, pair.a, signal);
+    await this.putGeometry('b', pb, pair.b, signal);
+    const scale = areaScale(area);
+    const raster = (from: SidePage, box: AreaBox): Promise<RasterBand> => {
+      const size = areaRasterSize(box, scale);
+      return this.opts.work.run(
+        'compareRaster',
+        {
+          docId: from.docId,
+          pageIndex: from.page,
+          dpi: scale * 72,
+          ...size,
+          top: 0,
+          rows: size.height,
+          place: areaRasterPlace(box),
+        },
+        { signal },
+      ).promise;
+    };
+    const a = await raster(pa, area.a);
+    const b = await raster(pb, area.b);
+    const al = await this.opts.compare.call(
+      'alignArea',
+      { cmpId: this.id, sheet, a: pair.a, b: pair.b, area, rasters: { a, b, scale } },
+      { signal, transfer: [a.data.buffer as ArrayBuffer, b.data.buffer as ArrayBuffer] },
+    ).promise;
+    if (signal.aborted) return;
+    this.aligned.set(sheet, al);
+    const manual = this.manual.get(sheet);
+    if (manual) {
+      const mine = this.manualAlignment(sheet, manual);
+      await this.opts.compare.call(
+        'setAlignment',
+        { cmpId: this.id, sheet, alignment: mine },
+        { signal },
+      ).promise;
+      this.notifyAlign(sheet, mine);
+      return;
+    }
+    this.notifyAlign(sheet, al);
+  }
+
   /** Checks a sheet as it is and, when it matches poorly, aligns it (D-60, S28). */
   private async alignSheet(sheet: number, pair: SheetPair, signal: AbortSignal): Promise<void> {
     const pa = this.pages.a[pair.a];
     const pb = this.pages.b[pair.b];
     if (!pa || !pb) throw new Error('sheet page missing');
     const call = this.opts.compare;
-    const geo = async (side: CompareSide, from: SidePage, page: number): Promise<PageFrame> => {
-      const g = await this.opts.work.run(
-        'compareGeometry',
-        { docId: from.docId, pageIndex: from.page },
-        { signal },
-      ).promise;
-      await call.call(
-        'putGeometry',
-        { cmpId: this.id, side, page, segments: g.segments },
-        { signal, transfer: [g.segments.buffer as ArrayBuffer] },
-      ).promise;
-      return g.frame;
-    };
+    const geo = (side: CompareSide, from: SidePage, page: number): Promise<PageFrame> =>
+      this.putGeometry(side, from, page, signal);
     const fa = await geo('a', pa, pair.a);
     const fb = await geo('b', pb, pair.b);
     const check = await call.call('alignAsIs', { cmpId: this.id, a: pair.a, b: pair.b }, { signal })
@@ -817,7 +900,13 @@ export class CompareSession {
     const dpi = this.opts.dpi ?? ANALYSIS_DPI;
     const size = rasterSize(frame.width, frame.height, dpi);
     const place =
-      this.manual.get(sheet) ?? pair.place ?? this.aligned.get(sheet)?.place ?? IDENTITY;
+      this.manual.get(sheet) ??
+      pair.place ??
+      this.aligned.get(sheet)?.place ??
+      (pair.area ? rectPlace(pair.area) : IDENTITY);
+    // An area comparison (O1): only the region both rectangles cover is compared.
+    const clip = pair.area ? areaRegion(pair.area, place) : undefined;
+    const rowsIn = clip ? regionRows(clip, dpi, size.height) : null;
     const rev = this.placeRev.get(sheet) ?? 0;
     const pa = this.pages.a[pair.a];
     const pb = this.pages.b[pair.b];
@@ -835,30 +924,42 @@ export class CompareSession {
     this.detected.delete(sheet);
     for (const range of bandRanges(size.height, this.opts.bandRows ?? BAND_ROWS)) {
       const req = { dpi, width: size.width, height: size.height, ...range };
-      // Both reads are queued in the Work worker at once; it renders them one after the other.
-      const ja = this.opts.work.run(
-        'compareRaster',
-        { docId: pa.docId, pageIndex: pa.page, ...req, place, ...(la ? { layers: la } : {}) },
-        { signal },
-      );
-      const jb = this.opts.work.run(
-        'compareRaster',
-        { docId: pb.docId, pageIndex: pb.page, ...req, ...(lb ? { layers: lb } : {}) },
-        { signal },
-      );
-      const [a, b] = await Promise.all([ja.promise, jb.promise]);
+      let a: RasterBand;
+      let b: RasterBand;
+      if (rowsIn && (range.top + range.rows <= rowsIn[0] || range.top >= rowsIn[1])) {
+        // Rows outside an area's region are paper on both sides: nothing to draw.
+        const blank = (): RasterBand => ({
+          ...req,
+          data: new Uint8Array(size.width * range.rows),
+        });
+        a = blank();
+        b = blank();
+      } else {
+        // Both reads are queued in the Work worker at once; it renders them one after the other.
+        const ja = this.opts.work.run(
+          'compareRaster',
+          { docId: pa.docId, pageIndex: pa.page, ...req, place, ...(la ? { layers: la } : {}) },
+          { signal },
+        );
+        const jb = this.opts.work.run(
+          'compareRaster',
+          { docId: pb.docId, pageIndex: pb.page, ...req, ...(lb ? { layers: lb } : {}) },
+          { signal },
+        );
+        [a, b] = await Promise.all([ja.promise, jb.promise]);
+      }
       // The placement changed meanwhile: the analysis under the new one takes over.
       if ((this.placeRev.get(sheet) ?? 0) !== rev) return;
       await this.opts.compare.call(
         'sheetBand',
-        { cmpId: this.id, sheet, dpi, a, b, inkLevel },
+        { cmpId: this.id, sheet, dpi, a, b, inkLevel, ...(clip ? { clip } : {}) },
         { signal, transfer: [a.data.buffer as ArrayBuffer, b.data.buffer as ArrayBuffer] },
       ).promise;
     }
     // Detection (M12-14, D-61): the counts are kept, and the text layer compares the words.
     await this.opts.compare.call(
       'detectSheet',
-      { cmpId: this.id, sheet, a: pair.a, b: pair.b, place, scan },
+      { cmpId: this.id, sheet, a: pair.a, b: pair.b, place, scan, ...(clip ? { clip } : {}) },
       { signal },
     ).promise;
     const facts = await this.opts.compare.call('sheetFacts', { cmpId: this.id, sheet }, { signal })

@@ -429,6 +429,8 @@ const BOX_MAX_OVER_FIT = 16;
 export async function centreOnBox(
   w: LinkedWindow,
   box: readonly [number, number, number, number],
+  /** How much of the window the box takes (an area comparison's area, O1: most of it). */
+  share = BOX_SHARE,
 ): Promise<boolean> {
   if (!(await settled(w))) return false;
   const fit = fitScale(w, 'page');
@@ -438,7 +440,7 @@ export async function centreOnBox(
   if (fit === null || !vp || !now || !zoom) return false;
   const bw = Math.max(box[2] - box[0], 6);
   const bh = Math.max(box[3] - box[1], 6);
-  const want = Math.min((vp.clientWidth * BOX_SHARE) / bw, (vp.clientHeight * BOX_SHARE) / bh);
+  const want = Math.min((vp.clientWidth * share) / bw, (vp.clientHeight * share) / bh);
   const target = Math.max(fit, Math.min(want, fit * BOX_MAX_OVER_FIT));
   const shows = bw * now.scale <= vp.clientWidth * 0.9 && bh * now.scale <= vp.clientHeight * 0.9;
   if (!shows || now.scale < target / 2) {

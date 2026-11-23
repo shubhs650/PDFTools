@@ -22,7 +22,7 @@ import { documentStore } from '../../app/store/documentStore';
 import { newComparisonId, type SideFile } from '../compare/model';
 import { appDb } from '../../storage/appDb';
 import { ensurePermission } from '../../storage/fileAccess';
-import { openFiles } from '../open/openDocument';
+import { openFiles, releaseDocuments } from '../open/openDocument';
 import { reportFailure } from '../open/openStore';
 import { sources } from '../open/sources';
 import { recentSupported } from '../recent/recent';
@@ -116,7 +116,18 @@ function currentRecord(): SessionRecord {
     files.map((f) => ({ ...openDoc(f.docId), range: f.range }));
   const open = order.flatMap((id, index) => {
     const c = comparisons[id];
-    return c ? [{ type: c.type, index, a: side(c.a), b: side(c.b), active: id === activeTab }] : [];
+    return c
+      ? [
+          {
+            type: c.type,
+            index,
+            a: side(c.a),
+            b: side(c.b),
+            active: id === activeTab,
+            ...(c.area ? { area: c.area } : {}),
+          },
+        ]
+      : [];
   });
   const kept = comparisonsOf(open);
   // Comparisons still waiting for a click stay in the record, as waiting files do.
@@ -168,6 +179,17 @@ async function openComparison(c: SessionComparison): Promise<string | undefined>
   const b = (await side(c.b)).filter((f) => !a.some((x) => x.docId === f.docId));
   if (a.length + b.length === 0) return undefined;
   const id = newComparisonId();
+  if (c.area) {
+    // An area comparison (O1) reopens on its result, or not at all without both pages.
+    if (a.length !== 1 || b.length !== 1) {
+      releaseDocuments([...a, ...b].map((f) => f.docId));
+      return undefined;
+    }
+    documentStore
+      .getState()
+      .openComparison({ id, type: 'overlay', stage: 'result', a, b, area: c.area }, c.index);
+    return id;
+  }
   documentStore.getState().openComparison({ id, type: c.type, stage: 'input', a, b }, c.index);
   return id;
 }

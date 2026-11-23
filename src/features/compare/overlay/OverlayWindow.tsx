@@ -9,6 +9,8 @@ import { zoomTo } from '../../view/controller';
 import { stepZoom } from '../../view/zoom';
 import { DocumentView, type PageFrameInfo } from '../../view/DocumentView';
 import { DiffOutlines, ZoneDrawLayer } from '../diff/DiffMarks';
+import { AreaVeil } from '../area/AreaLayers';
+import { areaRegion } from '../../../model/compare/area';
 import { pairingSession } from '../pairingFlow';
 import { FloatingBar } from './FloatingBar';
 import { OverlayPage } from './OverlayPage';
@@ -175,12 +177,26 @@ export function OverlayWindow({
   });
   // The differences' outlines and the ignore zones (M12-14), on the sheet's page.
   const pair = sheet.pair;
+  // An area comparison (O1): only the region compared shows, the rest is veiled.
+  const area = useDocuments((s) => s.comparisons[id]?.area ?? null);
+  const placed = placeOf(view, sheet);
+  const regionKey = area && frame ? JSON.stringify(areaRegion(area, placed)) : null;
   const decor = useCallback(
     (pageIndex: number, pageScale: number) =>
       pageIndex === index && pair !== null ? (
-        <DiffOutlines id={id} pair={pair} scale={pageScale} />
+        <>
+          {regionKey !== null && frame ? (
+            <AreaVeil
+              region={JSON.parse(regionKey) as number[]}
+              width={frame.width}
+              height={frame.height}
+              scale={pageScale}
+            />
+          ) : null}
+          <DiffOutlines id={id} pair={pair} scale={pageScale} />
+        </>
       ) : null,
-    [id, index, pair],
+    [id, index, pair, regionKey, frame],
   );
   const layer = useCallback(
     (pageIndex: number, f: PageFrameInfo) =>
