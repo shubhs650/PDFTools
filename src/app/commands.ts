@@ -1499,6 +1499,28 @@ export const COMMANDS: readonly CommandDef[] = [
     shipped: true,
     preview: true,
   },
+  // Export Change Register… (M12-21, D-65): the differences the list shows, to Excel or CSV.
+  {
+    id: 'compare.exportRegister',
+    tab: 'compare',
+    group: 'output',
+    size: 'large',
+    fluent: 'TableArrowUp',
+    milestone: 'M6',
+    shipped: true,
+    preview: true,
+  },
+  // Save as Preset… (M12-21, D-58): a result's settings, picked again in the input window.
+  {
+    id: 'compare.savePreset',
+    tab: 'compare',
+    group: 'output',
+    size: 'large',
+    fluent: 'Options',
+    milestone: 'M6',
+    shipped: true,
+    preview: true,
+  },
   {
     id: 'protect.markRedaction',
     tab: 'protect',

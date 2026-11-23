@@ -67,3 +67,50 @@ export function zoneSetsOf(list: readonly unknown[]): ZoneSet[] {
     .filter((s): s is ZoneSet => s !== null)
     .sort((a, b) => a.name.localeCompare(b.name));
 }
+
+/** A zone as a comparison holds it: for one compared pair, or for every sheet (null). */
+export interface PlacedZone {
+  pair: number | null;
+  box: Box;
+}
+
+/**
+ * A comparison's zones as a set stores them: a sheet's zone by the sheet's
+ * number in the result (`sheetOfPair`, −1 when the pair is not shown: left out).
+ */
+export function storeZones(
+  zones: readonly PlacedZone[],
+  sheetOfPair: (pair: number) => number,
+): StoredZone[] {
+  const out: StoredZone[] = [];
+  for (const z of zones) {
+    if (z.pair === null) {
+      out.push({ box: z.box, all: true });
+      continue;
+    }
+    const sheet = sheetOfPair(z.pair);
+    if (sheet >= 0) out.push({ box: z.box, all: false, sheet });
+  }
+  return out;
+}
+
+/**
+ * A stored set's zones placed on a result: a sheet's zone goes to that
+ * sheet's compared pair (`pairOfSheet`); one for a sheet the result does not
+ * have, or one without both revisions, is left out.
+ */
+export function placeZones(
+  zones: readonly StoredZone[],
+  pairOfSheet: (sheet: number) => number | null | undefined,
+): PlacedZone[] {
+  const out: PlacedZone[] = [];
+  for (const z of zones) {
+    if (z.all) {
+      out.push({ pair: null, box: z.box });
+      continue;
+    }
+    const pair = pairOfSheet(z.sheet ?? -1);
+    if (pair !== null && pair !== undefined) out.push({ pair, box: z.box });
+  }
+  return out;
+}

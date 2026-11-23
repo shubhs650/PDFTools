@@ -19,6 +19,14 @@ function areaHost(): string | null {
 }
 
 import { comparisonSheets, exportBlock, openExportOverlay } from './overlay/vectorOverlay';
+import { openRegister, registerBlock } from './register/changeRegister';
+import { openSavePreset } from './presets/presetStore';
+
+/** The comparison in the selected tab, or null. */
+const activeComparison = () => {
+  const s = documentStore.getState();
+  return s.activeTab ? (s.comparisons[s.activeTab] ?? null) : null;
+};
 
 /** The PDF overlay in the active tab, or null. */
 const activeOverlay = () => {
@@ -73,6 +81,31 @@ export function registerCompareCommands(): () => void {
         if (c.stage !== 'result' || !comparisonSheets(c.id)?.length)
           return msg('compare.export.needsResult');
         return exportBlock(c) ? msg('compare.export.needsCopy') : null;
+      },
+    }),
+    // Export Change Register… (M12-21): needs every file's content-copying permission (rule 9).
+    registerCommand('compare.exportRegister', {
+      run: () => {
+        const c = activeComparison();
+        if (c?.stage === 'result') openRegister(c.id);
+      },
+      disabledReason: () => {
+        const c = activeComparison();
+        if (!c) return msg('compare.register.needsComparison');
+        if (c.stage !== 'result') return msg('compare.register.needsResult');
+        return registerBlock(c) ? msg('compare.register.needsCopy') : null;
+      },
+    }),
+    // Save as Preset… (M12-21): the result's settings, kept on this device.
+    registerCommand('compare.savePreset', {
+      run: () => {
+        const c = activeComparison();
+        if (c?.stage === 'result') openSavePreset(c.id);
+      },
+      disabledReason: () => {
+        const c = activeComparison();
+        if (!c) return msg('compare.presets.needsComparison');
+        return c.stage === 'result' ? null : msg('compare.presets.needsResult');
       },
     }),
     registerCommand('tab.compareWith', {

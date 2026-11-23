@@ -92,6 +92,14 @@ export const LOCAL_DATA: readonly LocalDataItem[] = [
     cleared: true,
   },
   {
+    // Named comparison presets (M12-21, D-58): names, colours, settings and rectangles only.
+    kind: 'indexedDB',
+    location: `${DB_NAME} › comparePresets`,
+    store: 'comparePresets',
+    what: msg('privacy.data.comparePresets'),
+    cleared: true,
+  },
+  {
     // Each file's last view (M11-08·O3, D-53), by fingerprint: never a name or content.
     kind: 'indexedDB',
     location: `${DB_NAME} › lastViews`,

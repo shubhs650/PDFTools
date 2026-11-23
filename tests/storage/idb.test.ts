@@ -22,6 +22,7 @@ describe('AppDb (M1-12)', () => {
     expect(db.db.version).toBe(MIGRATIONS.length);
     expect([...db.db.objectStoreNames].sort()).toEqual([
       'commentStyles',
+      'comparePresets',
       'ignoreZoneSets',
       'lastViews',
       'profile',
@@ -298,7 +299,7 @@ describe('AppDb v10 (M12-14)', () => {
     const v9 = await AppDb.open({ factory, migrations: MIGRATIONS.slice(0, 9) });
     await v9.putSession({ entries: [], active: -1, savedAt: 1 });
     v9.close();
-    const db = await AppDb.open({ factory });
+    const db = await AppDb.open({ factory, migrations: MIGRATIONS.slice(0, 10) });
     expect(db.db.version).toBe(10);
     expect(await db.getSession()).toEqual({ entries: [], active: -1, savedAt: 1 });
     const set = { id: 's1', name: 'Title block', zones: [{ box: [0, 0, 10, 10], all: true }] };
@@ -309,6 +310,28 @@ describe('AppDb v10 (M12-14)', () => {
     await db.putZoneSet(set);
     await db.clearAll();
     expect(await db.listZoneSets()).toEqual([]);
+    db.close();
+  });
+});
+
+describe('AppDb v11 (M12-21)', () => {
+  it('keeps comparison presets by id, keeps the zone sets, and clears them with the rest', async () => {
+    const factory = new IDBFactory();
+    const v10 = await AppDb.open({ factory, migrations: MIGRATIONS.slice(0, 10) });
+    const set = { id: 's1', name: 'Title block', zones: [] };
+    await v10.putZoneSet(set);
+    v10.close();
+    const db = await AppDb.open({ factory });
+    expect(db.db.version).toBe(11);
+    expect(await db.listZoneSets()).toEqual([set]);
+    const preset = { id: 'p1', name: 'Drawings', type: 'overlay' };
+    await db.putComparePreset(preset);
+    expect(await db.listComparePresets()).toEqual([preset]);
+    await db.deleteComparePreset('p1');
+    expect(await db.listComparePresets()).toEqual([]);
+    await db.putComparePreset(preset);
+    await db.clearAll();
+    expect(await db.listComparePresets()).toEqual([]);
     db.close();
   });
 });

@@ -17,6 +17,13 @@ export interface WorkbookSpec {
   columns: string[];
   snapshotColumn: number;
   rows: string[][];
+  /** Character widths of the columns (default: the CRS's). */
+  widths?: number[];
+  /**
+   * Columns written as numbers when a cell holds a plain number (default: the
+   * CRS's No. and Page, whole numbers only); any other cell stays text.
+   */
+  numberColumns?: number[];
 }
 
 export interface Snapshot {
@@ -29,6 +36,9 @@ export interface Snapshot {
 /** Character widths of the columns (No., Page, Type, …). */
 const WIDTHS = [6, 6, 16, 18, 14, 48, 40, 14, 36, 36, 14];
 const WRAP = { wrapText: true, vertical: 'top' } as const;
+/** A plain number as a cell holds it ("12", "-3.45"). */
+const NUMBER = /^-?\d+(?:\.\d+)?$/u;
+const WHOLE = /^\d+$/u;
 
 export async function buildWorkbook(
   lib: typeof ExcelJS,
@@ -41,7 +51,11 @@ export async function buildWorkbook(
   wb.creator = APP_NAME;
   const ws = wb.addWorksheet(spec.sheetName);
   const n = spec.columns.length;
-  ws.columns = spec.columns.map((_, i) => ({ width: WIDTHS[i] ?? 16 }));
+  const widths = spec.widths ?? WIDTHS;
+  ws.columns = spec.columns.map((_, i) => ({ width: widths[i] ?? 16 }));
+  const numeric = new Set(spec.numberColumns ?? [0, 1]);
+  // The CRS's own No. can be "12.1" (a reply): only whole numbers there.
+  const isNumber = spec.numberColumns ? NUMBER : WHOLE;
 
   ws.addRow([spec.title]);
   ws.mergeCells(1, 1, 1, n);
@@ -67,7 +81,7 @@ export async function buildWorkbook(
 
   for (const [i, cells] of spec.rows.entries()) {
     await checkpoint();
-    const r = ws.addRow(cells.map((v, k) => (k <= 1 && /^\d+$/u.test(v) ? Number(v) : v)));
+    const r = ws.addRow(cells.map((v, k) => (numeric.has(k) && isNumber.test(v) ? Number(v) : v)));
     r.alignment = WRAP;
     const shot = snapshot ? await snapshot(i) : null;
     if (shot) {

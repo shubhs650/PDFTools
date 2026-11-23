@@ -3,7 +3,8 @@
 // status schemes, table templates, the comment tools' default styles and the
 // user's own comment styles (style palette), saved visual signatures, each
 // file's last view (by fingerprint), the files open last time (their handles)
-// and the named sets of ignore zones for comparing drawings.
+// the named sets of ignore zones for comparing drawings and the named
+// comparison presets.
 // Never document bytes:
 // those live in the user's file and, for recovery, in OPFS (§4.3).
 //
@@ -75,6 +76,11 @@ export const MIGRATIONS: readonly Migration[] = [
   // (validate them: zoneSets.ts). They never leave this device.
   (db) => {
     db.createObjectStore('ignoreZoneSets', { keyPath: 'id' });
+  },
+  // v11 (M12-21, D-58): named comparison presets (colours, sensitivity, ignore zones,
+  // header handling), by id (validate them: presets.ts). They never leave this device.
+  (db) => {
+    db.createObjectStore('comparePresets', { keyPath: 'id' });
   },
 ];
 
@@ -326,6 +332,24 @@ export class AppDb {
   async deleteZoneSet(id: string): Promise<void> {
     const tx = this.db.transaction('ignoreZoneSets', 'readwrite');
     tx.objectStore('ignoreZoneSets').delete(id);
+    await done(tx);
+  }
+
+  /** Named comparison presets, as stored (validate them: presets.ts). */
+  async listComparePresets(): Promise<unknown[]> {
+    const tx = this.db.transaction('comparePresets', 'readonly');
+    return request(tx.objectStore('comparePresets').getAll());
+  }
+
+  async putComparePreset(value: { id: string }): Promise<void> {
+    const tx = this.db.transaction('comparePresets', 'readwrite');
+    tx.objectStore('comparePresets').put(value);
+    await done(tx);
+  }
+
+  async deleteComparePreset(id: string): Promise<void> {
+    const tx = this.db.transaction('comparePresets', 'readwrite');
+    tx.objectStore('comparePresets').delete(id);
     await done(tx);
   }
 

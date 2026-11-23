@@ -6477,6 +6477,89 @@ textarea.form-field {
   font-size: var(--font-size-m);
 }
 
+/* The input window's Options (M12-21, D-58): collapsed; the named presets. */
+.compare-options {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+  padding: var(--space-4) var(--space-5);
+  border: var(--border-width) solid var(--color-border);
+  border-radius: var(--radius-xl);
+  background: var(--color-surface);
+}
+
+.compare-options-title {
+  margin: var(--space-0);
+  font-size: var(--font-size-l);
+}
+
+.compare-options-toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  padding: var(--space-1) var(--space-2);
+  margin-inline-start: calc(-1 * var(--space-2));
+  border: none;
+  border-radius: var(--radius-m);
+  background: transparent;
+  color: var(--color-text);
+  font: inherit;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.compare-options-toggle:hover {
+  background: var(--color-hover);
+}
+
+.compare-options-picked {
+  color: var(--color-text-muted);
+  font-weight: 400;
+}
+
+.compare-options-body {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+}
+
+.compare-options-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-3);
+}
+
+.compare-options-row .ui-field-input {
+  min-width: 240px;
+}
+
+.compare-options-note,
+.compare-options-colours {
+  margin: var(--space-0);
+  color: var(--color-text-muted);
+  font-size: var(--font-size-m);
+}
+
+.compare-options-colours {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-4);
+}
+
+.compare-options-swatch {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+}
+
+.compare-options-chip {
+  width: 14px;
+  height: 14px;
+  border: var(--border-width) solid var(--color-border-strong);
+  border-radius: var(--radius-s);
+}
+
 .compare-foot {
   display: flex;
   flex-wrap: wrap;
