@@ -15,11 +15,14 @@ export function OverlayPage({
   content,
   scale,
   onStats,
+  waiting = false,
 }: {
   frame: Size;
   content: TileContent;
   scale: number;
   onStats: (s: PainterStats, viewport: HTMLElement) => void;
+  /** The content asked for is not ready yet (a layer copy being built): reported again when it ends. */
+  waiting?: boolean;
 }) {
   const sheet = useRef<HTMLDivElement>(null);
   const painter = useRef<OverlayPainter | null>(null);
@@ -68,6 +71,10 @@ export function OverlayPage({
   useEffect(() => {
     painter.current?.setZoom(scale);
   }, [scale]);
+
+  useEffect(() => {
+    painter.current?.viewChanged();
+  }, [waiting]);
 
   return <div ref={sheet} className="overlay-sheet-paper overlay-page" aria-hidden="true" />;
 }

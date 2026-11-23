@@ -196,6 +196,8 @@ export interface CompareApi {
   alignImage: MethodSpec<{ cmpId: string; sheet: number; scale: number }, SheetAlignment>;
   /** Records a sheet's alignment (as is, or set by hand later: M12-13). */
   setAlignment: MethodSpec<{ cmpId: string; sheet: number; alignment: SheetAlignment }, null>;
+  /** Forgets a sheet's facts: its analysis starts again (layer switches changed what is drawn). */
+  resetSheet: MethodSpec<{ cmpId: string; sheet: number }, null>;
   /** A sheet's facts once its bands are in. */
   sheetFacts: MethodSpec<{ cmpId: string; sheet: number }, SheetFacts>;
   summary: MethodSpec<{ cmpId: string }, CompareSummary>;

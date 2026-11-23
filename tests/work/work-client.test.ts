@@ -180,6 +180,10 @@ function fakeSpawn(world: FakeWorld) {
       compareRaster: () => {
         throw new Error('not used');
       },
+      compareLayerCopy: () => {
+        throw new Error('not used');
+      },
+      compareLayersRelease: () => null,
     });
     const port = ch.port2;
     port.start();

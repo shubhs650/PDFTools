@@ -62,6 +62,12 @@ export interface OverlaySide {
   place: Affine;
   /** The document's edit count: a change draws its tiles anew. */
   version: number;
+  /**
+   * A layer copy of the document (overlayCopyOpen) to draw the page content
+   * from, with other layers shown (D-59, Q24); its comments still come from
+   * `docId`. Absent: the document's own default layers.
+   */
+  contentId?: string;
 }
 
 export interface OverlayTileRequest {
@@ -280,13 +286,15 @@ export class OverlayTiles {
     if (!(w >= 1 && h >= 1 && w <= MAX_TILE && h <= MAX_TILE) || !(r.scale > 0))
       throw new RpcError('overlay-tile-size', 'The overlay tile is too large');
     const sides = [r.a, r.b] as const;
-    const pages = sides.map((s) => (s ? acquirePage(native, s.docId, s.pageIndex) : null));
+    // The page content comes from the layer copy when there is one (same pages, same frames).
+    const contentOf = (s: OverlaySide): string => s.contentId ?? s.docId;
+    const pages = sides.map((s) => (s ? acquirePage(native, contentOf(s), s.pageIndex) : null));
     try {
       // Layout → tile pixels for each side: the turn to displayed space, the placement, the tile.
       const matrices = sides.map((s, i) => {
         const ref = pages[i];
         if (!s || !ref) return null;
-        const f = frameOf(mod, docPtrOf(native, s.docId), s.pageIndex, ref.pagePtr);
+        const f = frameOf(mod, docPtrOf(native, contentOf(s)), s.pageIndex, ref.pagePtr);
         return thenAffine(f.turn, tileMatrix(r.scale, r.x, r.y, s.place));
       });
       const greys = sides.map((s, i) => {
@@ -294,7 +302,7 @@ export class OverlayTiles {
         const m = matrices[i];
         if (!s || !ref || !m) return null;
         const key = [
-          s.docId,
+          contentOf(s),
           s.pageIndex,
           s.version,
           r.scale,
@@ -329,14 +337,21 @@ export class OverlayTiles {
         const m = matrices[i];
         const shown = i === 0 ? r.comments.a && r.style.showA : r.comments.b && r.style.showB;
         if (!s || !ref || !m || !shown) return;
-        const ck = `${s.docId}\n${String(s.pageIndex)}`;
-        let c = this.comments.get(ck);
-        if (c?.version !== s.version) {
-          c = { ...readComments(mod, ref.pagePtr), version: s.version };
-          this.comments.set(ck, c);
+        // Comments are the document's own, never the layer copy's (Q10).
+        const own = s.contentId ? acquirePage(native, s.docId, s.pageIndex) : null;
+        try {
+          const page = (own ?? ref).pagePtr;
+          const ck = `${s.docId}\n${String(s.pageIndex)}`;
+          let c = this.comments.get(ck);
+          if (c?.version !== s.version) {
+            c = { ...readComments(mod, page), version: s.version };
+            this.comments.set(ck, c);
+          }
+          const layer = renderComments(mod, page, c, m, w, h, r.comments.hideChecks);
+          if (layer) over(out, layer);
+        } finally {
+          own?.release();
         }
-        const layer = renderComments(mod, ref.pagePtr, c, m, w, h, r.comments.hideChecks);
-        if (layer) over(out, layer);
       });
       return out;
     } finally {

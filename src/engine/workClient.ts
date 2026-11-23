@@ -84,7 +84,8 @@ type JobMethod =
   | 'compareGeometry'
   | 'compareText'
   | 'compareOcrRaster'
-  | 'compareRaster';
+  | 'compareRaster'
+  | 'compareLayerCopy';
 
 export interface WorkClientOptions {
   wasmUrl?: string;
@@ -106,6 +107,8 @@ export class WorkClient {
   private rpc!: RpcClient<WorkApi>;
   private ready!: Promise<unknown>;
   private readonly docs = new Map<string, DocRecord>();
+  /** Changes to each document's bytes (bytesRevision). */
+  private readonly revisions = new Map<string, number>();
   /** Opens in flight: jobs on those documents wait for them (the worker needs the copy). */
   private readonly opening = new Map<string, Promise<unknown>>();
   /** Callers waiting for a document's copy to be added (whenAdded). */
@@ -148,6 +151,7 @@ export class WorkClient {
     source: WorkDocSource,
   ): Promise<{ pageCount: number }> {
     this.docs.set(docId, { ...source, tail: undefined });
+    this.bump(docId);
     for (const wake of this.addWaiters.get(docId) ?? []) wake();
     this.addWaiters.delete(docId);
     const opened = (async () => {
@@ -174,10 +178,30 @@ export class WorkClient {
     }
   }
 
+  /**
+   * Counts the changes to a document's bytes here (open, saves, the live
+   * section): a copy built from them (comparison layer switches) is current
+   * while this stays the same.
+   */
+  bytesRevision(docId: string): number {
+    return this.revisions.get(docId) ?? 0;
+  }
+
+  private bump(docId: string): void {
+    this.revisions.set(docId, (this.revisions.get(docId) ?? 0) + 1);
+  }
+
+  /** Closes the layer copies kept for these documents (comparison layer switches, D-59). */
+  async releaseLayers(docIds: string[]): Promise<void> {
+    await this.whenReady();
+    await this.rpc.call('compareLayersRelease', { docIds }).promise;
+  }
+
   /** New incremental tail after a save or edit (§3.1): the worker applies it on its next job. */
   async refresh(docId: string, tail: ArrayBuffer): Promise<void> {
     const d = this.docs.get(docId);
     if (!d) return;
+    this.bump(docId);
     d.tail = tail;
     await this.whenReady();
     await this.rpc.call('refresh', { docId, tail: tail.slice(0) }).promise;
@@ -217,6 +241,7 @@ export class WorkClient {
   async setLive(docId: string, live: ArrayBuffer | null): Promise<void> {
     const d = this.docs.get(docId);
     if (!d) return;
+    this.bump(docId);
     if (live && live.byteLength > 0) d.live = live.slice(0);
     else delete d.live;
     await this.whenReady();
@@ -227,6 +252,7 @@ export class WorkClient {
   async append(docId: string, piece: ArrayBuffer): Promise<void> {
     const d = this.docs.get(docId);
     if (!d) return;
+    this.bump(docId);
     delete d.live;
     d.tail = appendBytes(d.tail, piece);
     await this.whenReady();

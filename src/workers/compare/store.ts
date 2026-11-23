@@ -297,6 +297,15 @@ export class CompareStore {
     }
   }
 
+  /** Forgets a sheet's facts (its analysis runs again with other layers shown). */
+  resetSheet(cmpId: string, sheet: number): void {
+    const c = this.get(cmpId);
+    const acc = c.sheets.get(sheet);
+    if (!acc) return;
+    c.bytes -= sheetBytes(acc);
+    c.sheets.delete(sheet);
+  }
+
   alignment(cmpId: string, sheet: number): SheetAlignment | undefined {
     return this.comparisons.get(cmpId)?.alignments.get(sheet);
   }

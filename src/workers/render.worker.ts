@@ -3,7 +3,13 @@
 // calls are possible (ADR-001 B14). The main thread drives it through
 // EmbedPDF's PdfEngine (src/engine/hostedEngine.ts) over our typed RPC.
 import { PdfiumNative } from '@embedpdf/engines/pdfium';
-import { PDF_FORM_FIELD_FLAG, PdfErrorCode, TaskRejectedError, type Task } from '@embedpdf/models';
+import {
+  PDF_FORM_FIELD_FLAG,
+  PdfErrorCode,
+  TaskRejectedError,
+  type PdfDocumentObject,
+  type Task,
+} from '@embedpdf/models';
 import { init, type WrappedPdfiumModule } from '@embedpdf/pdfium';
 import { RpcError } from '../engine/errors';
 import { Transfer } from '../engine/protocol';
@@ -58,6 +64,8 @@ let native: PdfiumNative | undefined;
 let tracker: SaveTracker | undefined;
 const annotBoxCache = new AnnotBoxCache();
 const overlayTiles = new OverlayTiles();
+/** Layer copies the overlay draws from (comparison layer switches, D-59, Q24). */
+const layerCopies = new Map<string, PdfDocumentObject>();
 
 /** One macrotask: a cancel sent behind a burst of tile requests is read before they draw. */
 const nextTask = (): Promise<void> =>
@@ -369,6 +377,37 @@ const handlers: Handlers<RenderApi> = {
 
   overlayRelease: ({ docIds }) => {
     for (const d of docIds) overlayTiles.drop(d);
+    return null;
+  },
+
+  overlayCopyOpen: async ({ copyId, bytes }) => {
+    const { native: n } = ready();
+    if (layerCopies.has(copyId)) throw new RpcError('copy-open', 'The layer copy is already open');
+    let doc: PdfDocumentObject;
+    try {
+      // Like the app's own copies (normalized rotation): the overlay's frames match.
+      doc = await n
+        .openDocumentBuffer({ id: copyId, content: bytes }, { normalizeRotation: true })
+        .toPromise();
+    } catch (err) {
+      throw toRpcError(err);
+    }
+    layerCopies.set(copyId, doc);
+    return { pageCount: doc.pageCount };
+  },
+
+  overlayCopyClose: async ({ copyIds }) => {
+    const { native: n } = ready();
+    for (const id of copyIds) {
+      const doc = layerCopies.get(id);
+      overlayTiles.drop(id);
+      if (!doc) continue;
+      layerCopies.delete(id);
+      await n
+        .closeDocument(doc)
+        .toPromise()
+        .catch(() => undefined);
+    }
     return null;
   },
 

@@ -12,6 +12,7 @@ import { pairingSession } from '../pairingFlow';
 import { FloatingBar } from './FloatingBar';
 import { OverlayPage } from './OverlayPage';
 import { framePage, useFrame } from './frames';
+import { useLayerContent } from './layerCopies';
 import type { PainterStats, TileContent } from './painter';
 import { drawnStyle, placeOf, updateView, useOverlayView, type Sheet } from './overlayState';
 
@@ -61,6 +62,19 @@ export function OverlayWindow({
   // The sheet is drawn in Document B's frame; a sheet removed from B in A's own.
   const frame = useFrame(framePage(sheet), sheet.b ? versionB : versionA);
 
+  // Layer switches (D-59, Q24): each side drawn from its layer copy once it is open.
+  const layersA = useLayerContent(
+    sheet.a?.docId ?? null,
+    view.layers[sheet.a?.docId ?? ''],
+    versionA,
+  );
+  const layersB = useLayerContent(
+    sheet.b?.docId ?? null,
+    view.layers[sheet.b?.docId ?? ''],
+    versionB,
+  );
+  const layersPending = layersA.pending || layersB.pending;
+
   // The worker works on the sheet in view first (D-66).
   useEffect(() => {
     pairingSession(id)?.focus(sheet.pair);
@@ -75,39 +89,53 @@ export function OverlayWindow({
             pageIndex: sheet.a.page,
             place: sheet.b ? placeOf(view, sheet) : IDENTITY,
             version: versionA,
+            ...(layersA.contentId ? { contentId: layersA.contentId } : {}),
           }
         : null,
       b: sheet.b
-        ? { docId: sheet.b.docId, pageIndex: sheet.b.page, place: IDENTITY, version: versionB }
+        ? {
+            docId: sheet.b.docId,
+            pageIndex: sheet.b.page,
+            place: IDENTITY,
+            version: versionB,
+            ...(layersB.contentId ? { contentId: layersB.contentId } : {}),
+          }
         : null,
       style: drawnStyle(view),
       thicken: view.thicken,
       comments: view.comments,
     };
-  }, [frame, sheet, view, versionA, versionB]);
+  }, [frame, sheet, view, versionA, versionB, layersA.contentId, layersB.contentId]);
   const contentKey = content && frame ? JSON.stringify([frame, content]) : null;
 
   // Drawn: every visible tile of exactly this state is on screen (tests and the spinner).
   // Written straight onto the elements: a tile arriving re-renders nothing.
   const onStats = useCallback(
     (s: PainterStats, vp: HTMLElement) => {
-      const done = s.complete && s.contentKey === contentKey;
+      // A layer copy still being built: the drawing is not the one asked for yet.
+      const done = s.complete && s.contentKey === contentKey && !layersPending;
       vp.setAttribute('data-complete', done ? 'true' : 'false');
       vp.setAttribute('data-tiles', String(s.drawn));
       vp.setAttribute('data-zoom', String(s.zoom));
       host.current?.setAttribute('data-drawing', done ? 'false' : 'true');
     },
-    [contentKey],
+    [contentKey, layersPending],
   );
 
   const pageContent = useCallback(
     (pageIndex: number, pageScale: number) =>
       pageIndex === index && frame && content ? (
-        <OverlayPage frame={frame} content={content} scale={pageScale} onStats={onStats} />
+        <OverlayPage
+          frame={frame}
+          content={content}
+          scale={pageScale}
+          onStats={onStats}
+          waiting={layersPending}
+        />
       ) : null,
     // contentKey stands for frame and content.
     // eslint-disable-next-line react-hooks/exhaustive-deps
-    [index, contentKey, onStats],
+    [index, contentKey, onStats, layersPending],
   );
 
   // Blink: while held, show old and new alone in turn.

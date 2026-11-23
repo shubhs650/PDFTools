@@ -27,6 +27,7 @@ import {
   alignmentOf,
   goSheet,
   overlayStore,
+  overlayView,
   setAligned,
   setLayout,
   setLock,
@@ -37,7 +38,8 @@ import {
 } from './overlayState';
 import { ensureNotes, useNotes } from '../review/notes';
 import { ReviewLayout } from '../review/ReviewLayout';
-import { renderEngine } from '../../view/host';
+import { renderEngine, workClient } from '../../view/host';
+import { closeLayerCopies } from './layerCopies';
 import { documentsOf } from '../model';
 
 let watching = false;
@@ -56,6 +58,11 @@ function watchClosing(c: Comparison): void {
       void renderEngine()
         .rpc.call('overlayRelease', { docIds })
         .promise.catch(() => undefined);
+      // The layer copies of its documents (layer switches, Q24), in both workers.
+      closeLayerCopies(docIds);
+      void workClient()
+        .releaseLayers(docIds)
+        .catch(() => undefined);
     }
   });
 }
@@ -90,6 +97,9 @@ export function OverlayResult({ comparison: c }: { comparison: Comparison }) {
     updateView(c.id, (v) =>
       Object.keys(v.aligned).length || v.manual ? { ...v, aligned: {}, manual: null } : v,
     );
+    // Layer switches stay with the documents: a new session draws with them too (Q24).
+    for (const [docId, states] of Object.entries(overlayView(c.id).layers))
+      session.setLayers(docId, states);
     return session.watchAlignment((pair, al) => {
       updateView(c.id, (v) => setAligned(v, pair, al));
     });

@@ -89,6 +89,12 @@ export function compareHandlers(store: CompareStore): Handlers<CompareApi> {
       });
       return null;
     },
+    resetSheet: ({ cmpId, sheet }) => {
+      guard(() => {
+        store.resetSheet(cmpId, sheet);
+      });
+      return null;
+    },
     sheetFacts: ({ cmpId, sheet }) => guard(() => store.sheetFacts(cmpId, sheet)),
     summary: ({ cmpId }) => guard(() => store.summary(cmpId)),
     release: ({ cmpId }) => ({ freedBytes: store.release(cmpId) }),

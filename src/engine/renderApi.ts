@@ -189,6 +189,14 @@ export interface RenderApi {
   /** Forgets the overlay's cached tiles (a comparison closed). */
   overlayRelease: MethodSpec<{ docIds: string[] }, null>;
   /**
+   * Opens a document's layer copy (comparison layer switches, D-59, Q24: the
+   * Work worker's `compareLayerCopy`) under `copyId`, for overlay tiles whose
+   * side names it as `contentId`. Not a document of the app: no tab, no save.
+   */
+  overlayCopyOpen: MethodSpec<{ copyId: string; bytes: ArrayBuffer }, { pageCount: number }>;
+  /** Closes layer copies and forgets their tiles. */
+  overlayCopyClose: MethodSpec<{ copyIds: string[] }, null>;
+  /**
    * A region of a page as the view shows it (M6-09 snapshot): content, the
    * drawn markups and form fields, at the given rotation; RGBA, transferred.
    * Needs the copy permission.

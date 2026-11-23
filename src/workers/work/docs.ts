@@ -36,6 +36,9 @@ function openOptions(password: string | undefined) {
   return { normalizeRotation: true, ...(password === undefined ? {} : { password }) };
 }
 
+/** Layer copies kept open at once (each holds a whole file in the PDFium heap). */
+export const MAX_LAYERED = 4;
+
 export function concat(a: ArrayBuffer, b: ArrayBuffer | null | undefined): ArrayBuffer {
   if (!b || b.byteLength === 0) return a.slice(0);
   const out = new Uint8Array(a.byteLength + b.byteLength);
@@ -54,6 +57,15 @@ export class WorkDocs {
    * change — minutes of blocking, and stale text in the search cache).
    */
   private readonly retired: PdfDocumentObject[] = [];
+  /**
+   * Copies with other layers shown (comparison layer switches): the current
+   * state plus an update to /OCProperties /D, per document and switches, as of
+   * the document's generation. At most MAX_LAYERED; replaced ones are retired.
+   */
+  private readonly layeredDocs = new Map<
+    string,
+    { docId: string; generation: number; doc: Promise<PdfDocumentObject> }
+  >();
   private verifySeq = 0;
   private readonly native: () => PdfiumNative;
 
@@ -226,6 +238,68 @@ export class WorkDocs {
     return { doc: e.doc, appliedTailBytes: e.appliedTailBytes };
   }
 
+  /**
+   * The document as of now with other layers shown (D-59, Q24): `build` turns
+   * the current bytes (original + tail + live section) into the copy's bytes.
+   * Opened like the kept copy (normalized rotation), so pages and frames match;
+   * kept until the document changes, closes or the copy falls out of the cap.
+   */
+  async layered(
+    docId: string,
+    key: string,
+    build: (bytes: Uint8Array) => Promise<Uint8Array<ArrayBuffer>>,
+  ): Promise<PdfDocumentObject> {
+    await this.get(docId);
+    const e = this.require(docId);
+    const k = `${docId}\n${key}`;
+    const hit = this.layeredDocs.get(k);
+    if (hit?.generation === e.generation) {
+      // Most recently used last (the cap retires the oldest).
+      this.layeredDocs.delete(k);
+      this.layeredDocs.set(k, hit);
+      return hit.doc;
+    }
+    if (hit) this.retireLayered(k);
+    const id = `${docId}#layers${String(++this.verifySeq)}`;
+    const bytes = this.liveBytes(docId);
+    const password = e.password;
+    const doc = (async () => {
+      const copy = await build(bytes);
+      return this.native()
+        .openDocumentBuffer({ id, content: copy.buffer }, openOptions(password))
+        .toPromise();
+    })();
+    const entry = { docId, generation: e.generation, doc };
+    this.layeredDocs.set(k, entry);
+    doc.catch(() => {
+      if (this.layeredDocs.get(k) === entry) this.layeredDocs.delete(k);
+    });
+    while (this.layeredDocs.size > MAX_LAYERED) {
+      const oldest = this.layeredDocs.keys().next().value;
+      if (oldest === undefined) break;
+      this.retireLayered(oldest);
+    }
+    return doc;
+  }
+
+  /** Retires a document's layer copies (all of them without `docId`); closed when idle. */
+  releaseLayered(docId?: string): void {
+    for (const [k, v] of [...this.layeredDocs])
+      if (docId === undefined || v.docId === docId) this.retireLayered(k);
+  }
+
+  private retireLayered(k: string): void {
+    const v = this.layeredDocs.get(k);
+    if (!v) return;
+    this.layeredDocs.delete(k);
+    v.doc.then(
+      (d) => {
+        this.retired.push(d);
+      },
+      () => undefined,
+    );
+  }
+
   /** Closes the copies replaced by reloads; call only while no job runs. */
   async closeRetired(): Promise<void> {
     for (const doc of this.retired.splice(0))
@@ -263,6 +337,7 @@ export class WorkDocs {
   async close(docId: string): Promise<void> {
     const e = this.entries.get(docId);
     if (!e) return;
+    this.releaseLayered(docId);
     this.entries.delete(docId);
     await this.native().closeDocument(e.doc).toPromise();
   }
