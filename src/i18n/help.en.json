@@ -1289,7 +1289,8 @@
             "<b>Thicken thin lines</b> makes hairlines easier to see at small zoom.",
             "<b>Blink</b>: hold the button, or hold <kbd>X</kbd> while the overlay has focus, to flip between the old and the new revision.",
             "<b>Colours</b> offers red and green, red and blue, and magenta and green (safe for colour-blind readers), or <b>Custom colours…</b> with a warning when two colours would not make black where they overlap.",
-            "<b>Comments</b> shows or hides the comments of each document, drawn on top in their own colours. <b>Hide check highlights</b> hides reviewers' highlight marks.",
+            "The <b>colour key</b> at the bottom of the controls says what each colour means, for the colours you chose, such as <b>Red: only in old</b>.",
+            "<b>Comments</b>, in the left pane, shows or hides the comments of each document, drawn on top in their own colours. <b>Hide check highlights</b> hides reviewers' highlight marks.",
             "<b>Layers</b> switches the layers of each file. A notice says when a layer is shown by default in one file and hidden in the other.",
             "<b>Vector overlay (beta)</b> draws the sheet the way the exported overlay PDF draws it."
           ]
@@ -1305,9 +1306,20 @@
         },
         {
           "list": [
-            "<b>Review</b> (the default) shows the overlay on the left, Document A at the top right and Document B below it. Drag the bars between them to resize.",
+            "<b>Side by side</b> (the default) shows the overlay on the left, Document A at the top right and Document B below it. Drag the bars between them to resize.",
             "<b>Overlay only</b> gives the whole tab to the overlay.",
-            "<b>Keep the windows on the same spot</b> keeps the three windows on the same part of the drawing, at matching zoom, as you zoom and scroll any of them. A crosshair shows where the pointer is in the other windows."
+            "<b>Link views</b> keeps the three windows on the same part of the drawing, at matching zoom, as you zoom and scroll any of them. A crosshair shows where the pointer is in the other windows."
+          ]
+        },
+        {
+          "h": "Making room"
+        },
+        {
+          "list": [
+            "The left pane's sections fold to a one-line summary: click a title such as <b>Alignment</b> or <b>Ignore zones</b> to open or fold it. <b>Sheets</b> stays open.",
+            "Each pane has a thin strip on its inner edge. Its arrow folds the pane away and opens it again; drag the strip, or focus it and use the arrow keys, to make the pane wider or narrower. Each comparison remembers its panes.",
+            "<b>Maximise</b> (the arrows at the right of the header) hides the ribbon, the tabs, every pane and the status bar, leaving the windows and the overlay controls. Press <kbd>Esc</kbd> or the same button to bring them back.",
+            "The left pane of {{app}} (Thumbnails, Bookmarks and the others) closes by itself on a comparison tab, and comes back as it was on your documents. Its buttons on the left still open it."
           ]
         },
         {
@@ -1374,7 +1386,7 @@
       "summary": "Go through every change of a PDF overlay, tune what counts as a change, and mark changes with clouds.",
       "body": [
         {
-          "p": "Besides the picture, a PDF overlay finds the differences. The <b>Differences</b> list on the right shows each one as <b>Added</b>, <b>Removed</b> or <b>Changed</b>. Where the text of a drawing changed, an entry shows the old and new text, such as Ø120 → Ø128, and is labelled text, geometry, or both. Thin outlines mark the differences on the overlay."
+          "p": "Besides the picture, a PDF overlay finds the differences. The <b>Differences</b> list on the right shows each one as <b>Added</b>, <b>Removed</b> or <b>Changed</b>. Where the text of a drawing changed, an entry shows the old and new text, such as Ø120 → Ø128, and is labelled text, drawing, or both. Thin outlines mark the differences on the overlay."
         },
         {
           "shot": "compare-differences-1",
@@ -1387,7 +1399,7 @@
           "steps": [
             "Click an entry to show it on the overlay, or press <kbd>F8</kbd> for the next difference and <kbd>Shift+F8</kbd> for the previous one.",
             "Tick an entry once you have checked it. <b>Hide checked</b> leaves only what is still to do, and a sheet whose differences are all ticked shows as done in the sheet list.",
-            "Filter by kind and by text or geometry, choose all sheets or this sheet, or type a word and press <kbd>Enter</kbd> to search the differences' text."
+            "Filter by kind and by text or drawing, choose all sheets or this sheet, or type a word and press <kbd>Enter</kbd> to search the differences' text."
           ]
         },
         {
@@ -1395,9 +1407,9 @@
         },
         {
           "list": [
-            "<b>Sensitivity</b>: Low ignores small shifts, High finds the smallest changes.",
-            "<b>Minimum size</b> leaves out changes smaller than a size you choose.",
-            "<b>Ignore zones</b> leave areas out, such as a title block or a revision table: choose <b>Draw a zone</b> and drag on the overlay, or type the zone in millimetres. A zone applies to this sheet or to all sheets. <b>Save as set</b> keeps the zones under a name for other comparisons."
+            "Under <b>Filters</b>, <b>Sensitivity</b>: Low ignores small shifts, High finds the smallest changes.",
+            "Under <b>Filters</b>, <b>Minimum size</b> leaves out changes smaller than a size you choose.",
+            "<b>Ignore zones</b>, in the left pane, leave areas out, such as a title block or a revision table: choose <b>Draw a zone</b> and drag on the overlay, or type the zone in millimetres. A zone applies to this sheet or to all sheets. <b>Save as set</b> keeps the zones under a name for other comparisons."
           ]
         },
         {
@@ -1432,7 +1444,7 @@
       "summary": "Close out the old revision's comments against the new revision, and add new comments in the comparison.",
       "body": [
         {
-          "p": "In the <b>Review</b> layout, the overlay, Document A and Document B are each a full document window: every comment tool, the Properties pane and every right-click menu work in them. Comments you add to Document A or Document B belong to that file. What you draw on the overlay window is a note of the comparison and stays apart from both documents."
+          "p": "In the <b>Side by side</b> layout, the overlay, Document A and Document B are each a full document window: every comment tool, the Properties pane and every right-click menu work in them. Comments you add to Document A or Document B belong to that file. What you draw on the overlay window is a note of the comparison and stays apart from both documents."
         },
         {
           "p": "A dot after the title <b>Document A (old)</b> or <b>Document B (new)</b> means that document has unsaved comments, and the comparison's tab shows the same dot. <b>Save review</b> (<kbd>Ctrl+S</kbd>) saves them into the files. Comments drawn on the overlay window are kept only by <b>Save Comparison…</b>, so closing the comparison asks first."
@@ -1446,7 +1458,7 @@
         },
         {
           "steps": [
-            "Choose <b>Close-out list</b> above the result. It lists every comment of Document A, the old revision: comments with typed text first (notes, text boxes, callouts), then markup without text, each by page and from the top of the page down.",
+            "Choose <b>Close-out</b> above the result. It lists every comment of Document A, the old revision: comments with typed text first (notes, text boxes, callouts), then markup without text, each by page and from the top of the page down.",
             "Click a comment. The windows zoom to it, so it fills about a third of the window (never past 400 %), and it is selected in Document A and flashes once. In a text comparison both sides scroll to it.",
             "Check the new revision, then choose <b>Close Out As…</b> and one of: <b>Addressed</b> (the new revision makes the change the comment asked for), <b>Carried Over</b> (not done yet: the comment is also copied to the new revision, so it stays open there) or <b>Changed Differently</b> (the place changed, but not the way the comment asked).",
             "The old comment's status becomes Completed, with a reply that says what happened, such as “Carried over to RevB.pdf”, and the place is marked with a check highlight. <b>Reopen</b> undoes it."
@@ -1481,7 +1493,7 @@
       "summary": "See which words, numbers, clauses and table rows changed between two revisions of a document.",
       "body": [
         {
-          "p": "Document A and Document B are shown side by side. Scrolling one scrolls the other by content, not by page number, so an added page does not put them out of step. Bands between them join each change on the two sides. <b>Keep both documents in step by content</b> turns this off."
+          "p": "Document A and Document B are shown side by side. Scrolling one scrolls the other by content, not by page number, so an added page does not put them out of step. Bands between them join each change on the two sides. <b>Link views</b> turns this off. The <b>Changes</b> pane folds away with the arrow on its edge, and <b>Maximise</b> leaves only the two documents until you press <kbd>Esc</kbd>."
         },
         {
           "shot": "compare-text-1",

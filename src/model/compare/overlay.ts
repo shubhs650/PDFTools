@@ -198,6 +198,20 @@ export function rgbOf(hex: string): Rgb {
   return [(n >> 16) & 255, (n >> 8) & 255, n & 255];
 }
 
+/**
+ * The colours of the overlay's key (M12-25, ADR-033): ink only in the old revision, only in
+ * the new, and in both (the two tints multiplied, or Fade unchanged's grey).
+ */
+export function keyColours(style: Pick<OverlayStyle, 'colA' | 'colB' | 'fade'>): {
+  a: Rgb;
+  b: Rgb;
+  both: Rgb;
+} {
+  const mix = (c: 0 | 1 | 2): number =>
+    Math.round(255 * channel(1, 1, style.colA[c] / 255, style.colB[c] / 255, style.fade));
+  return { a: style.colA, b: style.colB, both: [mix(0), mix(1), mix(2)] };
+}
+
 /** Rgb → `#rrggbb`. */
 export const hexOf = (c: Rgb): string =>
   `#${c.map((v) => Math.round(v).toString(16).padStart(2, '0')).join('')}`;

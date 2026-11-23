@@ -21,7 +21,7 @@ test('clicking through the close-out list zooms to each comment without long tas
   await page.setViewportSize({ width: 1920, height: 1080 });
   await overlayOf(page, '19');
   await skipReviewerPrompt(page);
-  await page.getByRole('button', { name: 'Close-out list' }).click();
+  await page.getByRole('button', { name: 'Close-out', exact: true }).click();
   await expect(pane(page)).toBeVisible();
   const rows = pane(page).locator('.closeout-row');
   await expect(rows).toHaveCount(5);
@@ -76,7 +76,7 @@ test('Go to page and a comment far down the 500-page text comparison add no long
     strokeWidth: 1,
     contents: 'Check this clause',
   })) as string;
-  await page.getByRole('button', { name: 'Close-out list' }).click();
+  await page.getByRole('button', { name: 'Close-out', exact: true }).click();
   await expect(pane(page).locator(`.closeout-row[data-id="${id}"]`)).toBeVisible();
   await guard.startMeasuring();
 

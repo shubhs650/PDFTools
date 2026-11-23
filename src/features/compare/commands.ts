@@ -2,6 +2,7 @@
 // None needs an active document: each opens a comparison tab on its input window.
 import { setComparisonCloseGuard } from '../open/openDocument';
 import { guardComparisonClose } from './file/closePrompt';
+import { watchAppPanes } from './layout/appPanes';
 import { addCommandGuard, notify, registerCommand } from '../../app/commands/dispatch';
 import { pairingStore } from './pairingFlow';
 import { textStore } from './text/textFlow';
@@ -108,6 +109,8 @@ export function registerCompareCommands(): () => void {
   const offs = [
     // A comparison's windows keep to their sheet; its notes take comment and view commands.
     addCommandGuard(compareGuard),
+    // The app's left panes close on a comparison tab; Maximise ends with its comparison (M12-25).
+    watchAppPanes(),
     // Review across revisions (M12-15): aligned copy and paste, close-out.
     registerCloseOutCommands(),
     registerCommand('compare.overlay', {

@@ -12,6 +12,13 @@ export interface ToggleButtonProps {
   /** Filled variant of the icon for the pressed state (ADR-010). */
   pressedIcon?: ReactNode;
   iconOnly?: boolean;
+  /**
+   * Icon and visible label, the label hidden visually (still the name) where the bar is
+   * narrow (`.ui-compact-bar`, M12-25); a tooltip always.
+   */
+  compact?: boolean;
+  /** Tooltip text, when it says more than the label (compact buttons). */
+  tooltip?: string;
   disabled?: boolean | undefined;
   size?: 'small' | 'medium' | undefined;
 }
@@ -24,6 +31,8 @@ export function ToggleButton({
   icon,
   pressedIcon,
   iconOnly = false,
+  compact = false,
+  tooltip,
   disabled,
   size,
 }: ToggleButtonProps) {
@@ -34,11 +43,15 @@ export function ToggleButton({
       onPressedChange={onPressedChange}
       disabled={disabled ?? false}
       aria-label={iconOnly ? label : undefined}
-      className={buttonClass('subtle', size, iconOnly ? 'ui-button--icon' : '')}
+      className={buttonClass(
+        'subtle',
+        size,
+        iconOnly ? 'ui-button--icon' : compact ? 'ui-button--compact' : '',
+      )}
     >
       {shown ? <span aria-hidden="true">{shown}</span> : null}
-      {iconOnly ? null : <span>{label}</span>}
+      {iconOnly ? null : <span className={compact ? 'ui-button-label' : undefined}>{label}</span>}
     </Toggle.Root>
   );
-  return iconOnly ? <Tooltip content={label}>{root}</Tooltip> : root;
+  return iconOnly || compact ? <Tooltip content={tooltip ?? label}>{root}</Tooltip> : root;
 }

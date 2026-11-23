@@ -62,7 +62,7 @@ async function closeOutAs(page: Page, name: string): Promise<void> {
 }
 
 async function showList(page: Page): Promise<void> {
-  await page.getByRole('button', { name: 'Close-out list' }).click();
+  await page.getByRole('button', { name: 'Close-out', exact: true }).click();
   await expect(pane(page)).toBeVisible();
 }
 
@@ -356,7 +356,7 @@ test('the close-out list passes axe in light and dark, with a comment closed out
   await overlayOf(page, '19');
   await skipReviewerPrompt(page);
   // The toggle is reached by Tab like the other head buttons.
-  const toggle = page.getByRole('button', { name: 'Close-out list' });
+  const toggle = page.getByRole('button', { name: 'Close-out', exact: true });
   await toggle.focus();
   await page.keyboard.press('Enter');
   await expect(pane(page)).toBeVisible();

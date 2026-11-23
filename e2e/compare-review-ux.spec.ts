@@ -30,7 +30,7 @@ async function docId(page: Page, role: Role): Promise<string> {
 }
 
 async function showList(page: Page): Promise<void> {
-  await page.getByRole('button', { name: 'Close-out list' }).click();
+  await page.getByRole('button', { name: 'Close-out', exact: true }).click();
   await expect(pane(page)).toBeVisible();
 }
 

@@ -19,6 +19,7 @@ import { format, msg, type MessageKey } from '../../../i18n';
 import {
   PRESET_ORDER,
   hexOf,
+  keyColours,
   presetOf,
   rgbOf,
   type ColourPreset,
@@ -53,6 +54,22 @@ const PRESET_LABEL: Record<ColourPreset, MessageKey> = {
 };
 
 const CUSTOM = 'custom';
+
+type ColourName = 'red' | 'green' | 'blue' | 'magenta';
+/** The colours of each preset by name, for the key (custom colours have none). */
+const PRESET_NAMES: Record<ColourPreset, { a: ColourName; b: ColourName }> = {
+  redGreen: { a: 'red', b: 'green' },
+  redBlue: { a: 'red', b: 'blue' },
+  magentaGreen: { a: 'magenta', b: 'green' },
+};
+const COLOUR_NAME: Record<ColourName | 'black' | 'grey', MessageKey> = {
+  red: msg('compare.key.colour_red'),
+  green: msg('compare.key.colour_green'),
+  blue: msg('compare.key.colour_blue'),
+  magenta: msg('compare.key.colour_magenta'),
+  black: msg('compare.key.colour_black'),
+  grey: msg('compare.key.colour_grey'),
+};
 
 /** The swatch of a side's colour, beside its switch. */
 function Swatch({ colour }: { colour: string }) {
@@ -234,8 +251,63 @@ export function FloatingBar({
           }}
         />
       </Group>
+      <ColourKey style={s} preset={preset} />
       <CustomColours id={id} open={custom} onOpenChange={setCustom} />
     </div>
+  );
+}
+
+/**
+ * The colour key (M12-25, ADR-033): "Red: only in old · Green: only in new · Black: same",
+ * following the colours chosen (custom colours show their swatch with no name).
+ */
+function ColourKey({
+  style,
+  preset,
+}: {
+  style: OverlayView['style'];
+  preset: ColourPreset | null;
+}) {
+  const { t } = useTranslation();
+  const colours = keyColours(style);
+  const names = preset ? PRESET_NAMES[preset] : null;
+  const fade = style.fade > 0;
+  const items = [
+    {
+      key: 'a',
+      colour: colours.a,
+      name: names?.a,
+      what: msg('compare.key.a'),
+      alone: msg('compare.key.alone_a'),
+    },
+    {
+      key: 'b',
+      colour: colours.b,
+      name: names?.b,
+      what: msg('compare.key.b'),
+      alone: msg('compare.key.alone_b'),
+    },
+    {
+      key: 'both',
+      colour: colours.both,
+      name: names ? (fade ? 'grey' : 'black') : undefined,
+      what: msg('compare.key.both'),
+      alone: msg('compare.key.alone_both'),
+    },
+  ] as const;
+  return (
+    <ul className="overlay-key" aria-label={t('compare.key.title')} data-testid="overlay-key">
+      {items.map((i) => (
+        <li key={i.key} className="overlay-key-item" data-key={i.key}>
+          <Swatch colour={hexOf(i.colour)} />
+          <span>
+            {i.name
+              ? t('compare.key.named', { colour: t(COLOUR_NAME[i.name]), what: t(i.what) })
+              : t(i.alone)}
+          </span>
+        </li>
+      ))}
+    </ul>
   );
 }
 

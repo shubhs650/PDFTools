@@ -1,7 +1,7 @@
-import { useEffect, useId, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useDocuments } from '../../../app/store/documentStore';
-import { format } from '../../../i18n';
+import { format, msg, type MessageKey } from '../../../i18n';
 import type { LayerList } from '../../../model/ocg';
 import { Button } from '../../../ui/components';
 import { workClient } from '../../view/host';
@@ -20,6 +20,18 @@ import {
   type OverlayView,
   type Sheet,
 } from './overlayState';
+import { FoldSection } from '../layout/FoldSection';
+
+// The section's test id and help topic (M12-25: the FoldSection takes them as props).
+/** The folded Comments line, by which documents' comments are shown (A + 2 × B). */
+const COMMENTS_SUMMARY: readonly [MessageKey, MessageKey, MessageKey, MessageKey] = [
+  msg('compare.fold.comments_none'),
+  msg('compare.fold.comments_a'),
+  msg('compare.fold.comments_b'),
+  msg('compare.fold.comments_both'),
+];
+const COMMENTS_TEST_ID = 'overlay-comments';
+const LAYERS_TEST_ID = 'overlay-layers';
 
 const lists = new Map<string, Promise<LayerList>>();
 
@@ -61,8 +73,6 @@ function useLayers(docId: string | null): LayerList | null {
  */
 export function OverlayLayers({ comparison: c, sheet }: { comparison: Comparison; sheet: Sheet }) {
   const { t } = useTranslation();
-  const commentsId = useId();
-  const layersId = useId();
   const view = useOverlayView(c.id);
   const set = (key: 'a' | 'b' | 'hideChecks', on: boolean): void => {
     updateView(c.id, (v) => ({ ...v, comments: { ...v.comments, [key]: on } }));
@@ -82,10 +92,18 @@ export function OverlayLayers({ comparison: c, sheet }: { comparison: Comparison
   };
   return (
     <>
-      <section className="overlay-switches" aria-labelledby={commentsId}>
-        <h3 id={commentsId} className="overlay-side-title">
-          {t('compare.overlay.comments')}
-        </h3>
+      {/* Comments and Layers fold to one line each (M12-25). */}
+      <FoldSection
+        id={c.id}
+        section="comments"
+        title={t('compare.overlay.comments')}
+        summary={t(
+          COMMENTS_SUMMARY[Number(view.comments.a) + 2 * Number(view.comments.b)] ??
+            COMMENTS_SUMMARY[0],
+        )}
+        className="overlay-switches"
+        testId={COMMENTS_TEST_ID}
+      >
         <label className="overlay-check">
           <input
             type="checkbox"
@@ -121,12 +139,23 @@ export function OverlayLayers({ comparison: c, sheet }: { comparison: Comparison
           />
           <span>{t('compare.overlay.hideChecks')}</span>
         </label>
-      </section>
+      </FoldSection>
       {(la?.layers.length ?? 0) + (lb?.layers.length ?? 0) > 0 || la?.encrypted || lb?.encrypted ? (
-        <section className="overlay-layers" aria-labelledby={layersId} data-testid="overlay-layers">
-          <h3 id={layersId} className="overlay-side-title">
-            {t('compare.overlay.layers')}
-          </h3>
+        <FoldSection
+          id={c.id}
+          section="layers"
+          title={t('compare.overlay.layers')}
+          summary={
+            differ.length > 0
+              ? t('compare.fold.layersDiffer', { count: differ.length })
+              : t('compare.fold.layers', {
+                  count: (la?.layers.length ?? 0) + (docB !== docA ? (lb?.layers.length ?? 0) : 0),
+                })
+          }
+          defaultOpen={differ.length > 0}
+          className="overlay-layers"
+          testId={LAYERS_TEST_ID}
+        >
           {differ.length > 0 ? (
             <p className="overlay-layer-notice" role="note">
               {t('compare.overlay.layerNotice', { names: format.list(differ) })}
@@ -154,7 +183,7 @@ export function OverlayLayers({ comparison: c, sheet }: { comparison: Comparison
               }}
             />
           ) : null}
-        </section>
+        </FoldSection>
       ) : null}
     </>
   );

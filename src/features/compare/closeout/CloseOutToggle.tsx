@@ -13,7 +13,8 @@ export function CloseOutToggle({ id }: { id: string }) {
   return (
     <ToggleButton
       label={t('compare.closeout.toggle')}
-      iconOnly
+      tooltip={t('compare.closeout.toggleTip')}
+      compact
       icon={<TaskListSquareLtr20Regular />}
       pressedIcon={<TaskListSquareLtr20Filled />}
       pressed={open}

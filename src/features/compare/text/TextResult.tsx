@@ -43,6 +43,9 @@ import { TextWindows } from './TextWindows';
 import { CloseOutPane } from '../closeout/CloseOutPane';
 import { CloseOutToggle } from '../closeout/CloseOutToggle';
 import { useCloseOutView } from '../closeout/closeOutStore';
+import { ComparePane } from '../layout/ComparePane';
+import { MaximiseButton } from '../layout/Maximise';
+import { useMaximised } from '../layout/maximised';
 
 const LANGUAGE: Record<OcrLanguage, MessageKey> = {
   eng: msg('ocr.languages.eng'),
@@ -81,6 +84,8 @@ export function TextResult({ comparison: c }: { comparison: Comparison }) {
   const run = useTextRun(c.id);
   const view = useTextView(c.id);
   const closeOutOpen = useCloseOutView(c.id).open;
+  // Maximise leaves the two windows only (M12-25, ADR-033).
+  const max = useMaximised(c.id);
 
   const entries = useMemo(() => entriesOf(run?.result ?? null), [run?.result]);
   const checked = useMemo(() => {
@@ -186,7 +191,7 @@ export function TextResult({ comparison: c }: { comparison: Comparison }) {
       data-status={run?.status ?? 'reading'}
       data-help-topic="compare-text"
     >
-      <header className="overlay-head">
+      <header className="overlay-head ui-compact-bar">
         <span className="overlay-head-icon" aria-hidden="true">
           <CommandIcon id="compare.text" />
         </span>
@@ -198,7 +203,8 @@ export function TextResult({ comparison: c }: { comparison: Comparison }) {
         <div className="overlay-head-layout">
           <ToggleButton
             label={t('compare.text.sync')}
-            iconOnly
+            tooltip={t('compare.text.syncTip')}
+            compact
             icon={<ArrowSync20Regular />}
             pressedIcon={<ArrowSync20Filled />}
             pressed={view.sync}
@@ -218,6 +224,7 @@ export function TextResult({ comparison: c }: { comparison: Comparison }) {
           />
           <CloseOutToggle id={c.id} />
         </div>
+        {run ? <MaximiseButton id={c.id} /> : null}
         <NewComparisonButton id={c.id} />
         <HelpButton topic="compare-text" label={t('compare.help')} />
       </header>
@@ -232,21 +239,29 @@ export function TextResult({ comparison: c }: { comparison: Comparison }) {
             visible={visible}
             selected={selected}
           />
-          <aside className="text-side" aria-label={t('compare.text.list')}>
-            <Legend id={c.id} entries={entries} />
-            <ChangeList
-              id={c.id}
-              entries={entries}
-              visible={visible}
-              selected={selected}
-              checked={checked}
-              pageOf={pageOf}
-              onSelect={select}
-              onStep={step}
-              total={entries.length}
-            />
-          </aside>
-          {closeOutOpen ? <CloseOutPane comparison={c} /> : null}
+          {max ? null : (
+            <ComparePane id={c.id} pane="changes" side="right" name={t('compare.text.list')}>
+              <aside className="text-side" aria-label={t('compare.text.list')}>
+                <Legend id={c.id} entries={entries} />
+                <ChangeList
+                  id={c.id}
+                  entries={entries}
+                  visible={visible}
+                  selected={selected}
+                  checked={checked}
+                  pageOf={pageOf}
+                  onSelect={select}
+                  onStep={step}
+                  total={entries.length}
+                />
+              </aside>
+            </ComparePane>
+          )}
+          {closeOutOpen && !max ? (
+            <ComparePane id={c.id} pane="closeout" side="right" name={t('compare.closeout.title')}>
+              <CloseOutPane comparison={c} />
+            </ComparePane>
+          ) : null}
         </div>
       ) : (
         <div className="overlay-wait" role="status">

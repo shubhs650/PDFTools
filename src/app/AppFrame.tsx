@@ -8,6 +8,8 @@ import { ReviewPanel } from '../features/tables/ReviewPanel';
 import { PendingRedactionsPanel } from '../features/redact/PendingRedactionsPanel';
 import { StatusBar, type StatusBarProps } from './StatusBar';
 import { TabStrip } from './TabStrip';
+import { useApp } from './store/appStore';
+import { useDocuments } from './store/documentStore';
 
 export interface AppFrameProps {
   /** The ribbon, whose first row is the header: mark and name, Quick Access, tabs (M10-08·O3). */
@@ -26,8 +28,16 @@ export interface AppFrameProps {
  */
 export function AppFrame({ ribbon, children, status }: AppFrameProps) {
   const { t } = useTranslation();
+  // Maximise (M12-25, ADR-033): only while the maximised tab is the one in use.
+  const maximised = useApp((s) => s.maximised);
+  const active = useDocuments((s) => s.activeTab);
+  const max = maximised !== null && maximised === active;
   return (
-    <div className="app-frame" data-testid="app-shell">
+    <div
+      className={`app-frame${max ? ' app-frame--maximised' : ''}`}
+      data-testid="app-shell"
+      data-maximised={max ? 'true' : undefined}
+    >
       <header aria-label={t('frame.banner')} className="app-banner">
         {ribbon}
         <TabStrip />
