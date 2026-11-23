@@ -471,25 +471,28 @@ export function DiffPane({
         </div>
       </div>
 
-      <div
-        ref={scroller}
-        className="text-list-rows"
-        role="listbox"
-        aria-label={t('compare.diff.listName')}
-        aria-activedescendant={at >= first && at < last && at >= 0 ? optionId(at) : undefined}
-        tabIndex={0}
-        data-testid="diff-list"
-        onKeyDown={onListKey}
-      >
-        {shown.length === 0 ? (
-          <p className="text-list-empty">
+      {shown.length === 0 ? (
+        // No listbox without options (axe): the reason stands in its place.
+        <div ref={scroller} className="text-list-rows" data-testid="diff-list">
+          <p className="text-list-empty" role="status">
             {detected < paired.length
               ? t('compare.diff.waiting')
               : scoped.length === 0
                 ? t('compare.diff.none')
                 : t('compare.diff.noneShown')}
           </p>
-        ) : (
+        </div>
+      ) : (
+        <div
+          ref={scroller}
+          className="text-list-rows"
+          role="listbox"
+          aria-label={t('compare.diff.listName')}
+          aria-activedescendant={at >= first && at < last && at >= 0 ? optionId(at) : undefined}
+          tabIndex={0}
+          data-testid="diff-list"
+          onKeyDown={onListKey}
+        >
           <div
             style={{ height: `${String(shown.length * DIFF_ROW_HEIGHT)}px`, position: 'relative' }}
           >
@@ -547,8 +550,8 @@ export function DiffPane({
               );
             })}
           </div>
-        )}
-      </div>
+        </div>
+      )}
 
       <div className="overlay-diff-actions">
         <DropdownMenu
