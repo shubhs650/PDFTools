@@ -1,8 +1,9 @@
 # Triya PDF comparison file — format, version 1
 
-**Status: draft from spike S31 (M12-06), proposed in [ADR-032](../adr/032-m12-spike-results.md).**
-It becomes binding when the owner accepts ADR-032, and is **frozen** once M12-20 ships: later
-changes get a new `version`, and the app refuses a version it does not know.
+**Status: version 1, written and read by M12-20** (from spike S31, M12-06; [ADR-032](../adr/032-m12-spike-results.md),
+accepted 2026-11-22). Frozen once M12-20 ships: later changes get a new `version`, and the app
+refuses a version it does not know. Fields may be added within version 1 only where an older
+reader can ignore them (as `leadingPages`).
 
 Written by **Save comparison…** (D-65, §7.16) and read when such a file is opened. A comparison
 file is **one standard PDF** (rule 6): any reader shows its pages, its comments and its
@@ -95,7 +96,7 @@ fields they do not know; a `version` higher than theirs is refused with a plain 
       },
     ],
   },
-  // overlay: one entry per sheet pair, in the pages' order
+  // overlay: one entry per sheet (a page of the file), in the pairing table's order
   "sheets": [
     {
       "a": [0, 0], // [index into documents.A, page index], or null (sheet only in B)
@@ -104,9 +105,21 @@ fields they do not know; a `version` higher than theirs is refused with a plain 
       "status": "asIs", // asIs | aligned | manual | lowConfidence
     },
   ],
-  "options": {}, // colours, sensitivity, minimum size, header handling … (the preset's fields)
-  "ignoreZones": [], // [{ "sheet": 1, "rect": [x0, y0, x1, y1] }] in B's display space
-  "checked": [], // difference ids ticked in the list
+  // overlay: the pairing table as edited (M12-09), indices into the side pages (all files of
+  // a side in order, each file's page range applied)
+  "pairing": [{ "a": 0, "b": 0 }, { "a": 1, "b": null, "excluded": true }],
+  // overlay, an area comparison only (O1): the rectangle on A's page and on B's, displayed pt
+  "area": { "a": [x0, y0, x1, y1], "b": [x0, y0, x1, y1] },
+  // overlay: pages before the first sheet (an optional summary page, M12-21); 0 when absent
+  "leadingPages": 0,
+  // overlay: { style, thicken, layout, lock, vector, comments, layers: { A: { "<file index>":
+  //   { "<OCG object number>": shown } }, B: … }, diff: { sensitivity, minSize, outlines } }
+  // text: { run: { headersFooters, renumbering, bands, ocr }, colours, sync }
+  "options": {},
+  // overlay: { "sheet": 1-based compared sheet, or null for every sheet, "rect": [x0, y0, x1, y1] }
+  // in the sheet's frame (B's displayed page, pt)
+  "ignoreZones": [],
+  "checked": [], // ticks in the list: overlay "<sheet>|<difference key>", text the change keys
   "closeOut": [
     // D-62: the old revision's comments and their outcome (also written into A as status
     // Completed plus a reply)
@@ -126,9 +139,10 @@ fields they do not know; a `version` higher than theirs is refused with a plain 
 }
 ```
 
-The exact fields of `sheets`, `options`, `ignoreZones` and the difference ids are filled in by
-M12-09 … M12-21; the envelope above (`format`, `version`, `kind`, `documents` and `storage`) is
-what this version fixes.
+Each input also records `range` (the page range compared, as typed; empty for every page).
+Alignments found automatically, the differences and the text result are worked out again on
+opening (rules only, D-60, so they come out the same); a placement set by hand is restored from
+`aToB`.
 
 ## Text comparison: Document B as the file's own bytes
 
@@ -181,20 +195,24 @@ what this version fixes.
    - **changed in another program**: more `%%EOF` markers than B's plus ours (text), or
      comments on the overlay pages (overlay) → opened, and Save review warns before it rebuilds
      (text) what another program added after our section;
-   - **B not exact** (text; another program rewrote the whole file): A and the data are still
-     there; B cannot be given back byte for byte, so the comparison opens read-only with the
-     marks, and Export Document B is offered only as "the pages as they are now";
-   - an input attachment missing or not matching: the comparison cannot open; the file still
-     opens as a normal PDF.
+   - **B not exact** (text; another program rewrote the whole file): B cannot be given back
+     byte for byte, so the file opens as the normal PDF it is (its marks and attachments still
+     there), with a notice; (M12-20 does not offer a read-only comparison of such a file);
+   - an input attachment missing or not matching, a newer `version` or data that cannot be
+     read: the comparison cannot open; the file still opens as a normal PDF, with a notice.
+5. The inputs open as documents of their own from the copies (the file's own password is tried
+   first for an input that has one, then the input's own is asked); the comparison opens on its
+   result in the file's place among the tabs, and the file's own tab closes. The comparison
+   stays linked to the file for Save review.
 
 ## Saving into a comparison file (Save review)
 
 - The reviewer's comments go into the **copies of A and B inside**, each by its own
   incremental section (rule 7: a signature in a copy stays valid).
-- **Overlay:** the changed copies are replaced by new embedded file streams under the same file
-  specifications, the data is replaced, the overlay notes are saved like any comment. Ctrl+S
-  appends these as one incremental section; Save comparison… writes the file compacted (only
-  the newest copies), per ADR-032.
+- **Overlay:** the copies with their new sections, the data and the overlay notes (copied onto
+  the overlay pages again) make a new file, written compacted over the comparison file (only
+  the newest copies, ADR-032 decision 3). M12-20 rebuilds on Ctrl+S too rather than appending
+  a section to the comparison file, so the file never holds stale copies.
 - **Text:** B's new section must come straight after B, so the file is rebuilt: the new B, then
   a fresh section of ours. What another program appended after our section would be lost, so
   Save review warns first.

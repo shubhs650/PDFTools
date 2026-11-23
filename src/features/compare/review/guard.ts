@@ -46,14 +46,13 @@ const PAGES = ['organize.'];
  * pages, conversion, security, forms and bookmarks. Comments, editing, the view
  * and measuring work; commands that need no document (Open, Settings, Help) too.
  */
+// Ctrl+S on the notes is Save review (M12-20): the notes go with the comparison.
 const NOT_ON_NOTES = new Set([
-  'file.save',
   'file.saveAs',
   'file.saveOptimized',
   'file.print',
   'file.exportPrintReady',
   'file.properties',
-  'qat.save',
   'qat.print',
   'home.resetForm',
 ]);

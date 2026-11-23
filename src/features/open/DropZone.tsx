@@ -48,11 +48,18 @@ export function DropZone() {
       // JPG and PNG files go to Images to PDF (M11-08·O8); PDFs open.
       void collectDropped(e.dataTransfer).then((files) => openOrConvert(files, 'dropped'));
     };
+    // A drop a comparison's side takes (it stops the event) ends the drag here too.
+    const ended = (): void => {
+      depth = 0;
+      setOver(false);
+    };
+    window.addEventListener('drop', ended, true);
     window.addEventListener('dragenter', enter);
     window.addEventListener('dragover', overFn);
     window.addEventListener('dragleave', leave);
     window.addEventListener('drop', drop);
     return () => {
+      window.removeEventListener('drop', ended, true);
       window.removeEventListener('dragenter', enter);
       window.removeEventListener('dragover', overFn);
       window.removeEventListener('dragleave', leave);

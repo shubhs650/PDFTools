@@ -1521,6 +1521,38 @@ export const COMMANDS: readonly CommandDef[] = [
     shipped: true,
     preview: true,
   },
+  // Save comparison… (M12-20, D-65): one PDF holding both documents and the comparison.
+  {
+    id: 'compare.saveComparison',
+    tab: 'compare',
+    group: 'output',
+    size: 'large',
+    fluent: 'SaveMultiple',
+    milestone: 'M6',
+    shipped: true,
+    preview: true,
+  },
+  // Export Document A / B (M12-20): the copies inside a reopened comparison file.
+  {
+    id: 'compare.exportA',
+    tab: 'compare',
+    group: 'output',
+    size: 'small',
+    fluent: 'DocumentArrowLeft',
+    milestone: 'M6',
+    shipped: true,
+    preview: true,
+  },
+  {
+    id: 'compare.exportB',
+    tab: 'compare',
+    group: 'output',
+    size: 'small',
+    fluent: 'DocumentArrowRight',
+    milestone: 'M6',
+    shipped: true,
+    preview: true,
+  },
   {
     id: 'protect.markRedaction',
     tab: 'protect',

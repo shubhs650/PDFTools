@@ -1,6 +1,9 @@
 // The Compare ribbon tab and Compare with… on a document tab's menu (M12-08, D-58).
 // None needs an active document: each opens a comparison tab on its input window.
-import { addCommandGuard, registerCommand } from '../../app/commands/dispatch';
+import { addCommandGuard, notify, registerCommand } from '../../app/commands/dispatch';
+import { pairingStore } from './pairingFlow';
+import { textStore } from './text/textFlow';
+import { PREVIEWS_ON } from '../../app/commands';
 import { documentStore } from '../../app/store/documentStore';
 import { msg } from '../../i18n';
 import { startComparison } from './compareFlow';
@@ -21,6 +24,17 @@ function areaHost(): string | null {
 import { comparisonSheets, exportBlock, openExportOverlay } from './overlay/vectorOverlay';
 import { openRegister, registerBlock } from './register/changeRegister';
 import { openSavePreset } from './presets/presetStore';
+import { setSaveRedirect } from '../save/save';
+import { setOpenedHook } from '../open/openDocument';
+import {
+  exportDocuments,
+  hasResult,
+  linkedOf,
+  openSaveComparison,
+  reviewRedirect,
+  saveBlock,
+} from './file/fileFlow';
+import { onOpened } from './file/reopen';
 
 /** The comparison in the selected tab, or null. */
 const activeComparison = () => {
@@ -35,6 +49,20 @@ const activeOverlay = () => {
   return c?.type === 'overlay' ? c : null;
 };
 
+/** Why Save Comparison… can't run on the active tab, or null. */
+function saveReason() {
+  const c = activeComparison();
+  if (!c) return msg('compare.file.save.needsComparison');
+  if (!hasResult(c)) return msg('compare.file.save.needsResult');
+  return saveBlock(c) ? msg('compare.file.save.needsPermission') : null;
+}
+
+/** Export Document A / B: a comparison reopened from its file. */
+const exportReason = () => {
+  const c = activeComparison();
+  return c && linkedOf(c.id) ? null : msg('compare.file.export.needsFile');
+};
+
 /** The type Compare with… starts with: the last one started (the window can switch it). */
 let lastType: CompareType = 'overlay';
 
@@ -44,6 +72,20 @@ const start = (type: CompareType, a: readonly string[] = []): void => {
 };
 
 export function registerCompareCommands(): () => void {
+  // Off in release builds until acceptance (D-58): a comparison file then opens as the PDF it is.
+  if (PREVIEWS_ON) setOpenedHook(onOpened);
+  // Save Comparison… waits on the result, which lives in the comparison's own stores.
+  let resultKey = '';
+  const refresh = (): void => {
+    const key = JSON.stringify([
+      Object.entries(textStore.getState().runs).map(([id, r]) => [id, r.status, r.result !== null]),
+      Object.entries(pairingStore.getState().byId).map(([id, p]) => [id, p.status, p.rows.length]),
+    ]);
+    if (key === resultKey) return;
+    resultKey = key;
+    notify();
+  };
+  const offStores = [textStore.subscribe(refresh), pairingStore.subscribe(refresh)];
   const offs = [
     // A comparison's windows keep to their sheet; its notes take comment and view commands.
     addCommandGuard(compareGuard),
@@ -108,6 +150,34 @@ export function registerCompareCommands(): () => void {
         return c.stage === 'result' ? null : msg('compare.presets.needsResult');
       },
     }),
+    // The comparison file (M12-20, D-65): Save Comparison…, Export Document A / B.
+    registerCommand('compare.saveComparison', {
+      run: () => {
+        const c = activeComparison();
+        if (c) openSaveComparison(c.id);
+      },
+      disabledReason: saveReason,
+    }),
+    registerCommand('compare.exportA', {
+      run: () => {
+        const c = activeComparison();
+        if (c) void exportDocuments(c.id, 'a');
+      },
+      disabledReason: exportReason,
+    }),
+    registerCommand('compare.exportB', {
+      run: () => {
+        const c = activeComparison();
+        if (c) void exportDocuments(c.id, 'b');
+      },
+      disabledReason: exportReason,
+    }),
+    // Ctrl+S in a comparison is Save review; a comparison file opened becomes its comparison.
+    setSaveRedirect(reviewRedirect),
+    () => {
+      setOpenedHook(null);
+      for (const off of offStores) off();
+    },
     registerCommand('tab.compareWith', {
       // The tab's document is Document A (old); the window has a swap button.
       run: (_ctx, args) => {

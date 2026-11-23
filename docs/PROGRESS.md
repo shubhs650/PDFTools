@@ -1,6 +1,6 @@
 # Triya PDF — Progress
 
-_Last updated: 2026-11-23 (M12-21: change register and presets; M12-16: the vector overlay; M12-21·O1: compare an area)_
+_Last updated: 2026-11-23 (M12-20: the comparison file; M12-21: change register and presets)_
 
 **Current milestone:** M12 — PDF comparison (PDF overlay for drawings, text comparison for
 documents), version 1.1.0: plan [docs/plan/M12.md](plan/M12.md) and
@@ -56,6 +56,39 @@ interop is in the M6 pack (CHECKLIST §M6 R1–R4). Rev 0 (M0–M4) is complete 
   following the search, text pair 09, a preset saved and used, axe light and dark).
   **Next in M12-21:** the optional summary page as the comparison file's first page, wired into
   Save comparison… after M12-20 merges (M12-20 adds `leadingPages` to the comparison data for it).
+- **M12-20 — the comparison file (D-65, ADR-032 with the owner's four answers).** Compare →
+  **Save Comparison…** writes one standard PDF holding both documents and the comparison; the
+  dialog says in plain words that the file contains both documents (named), that unsaved review
+  comments are included and that the user's own files are not changed. **PDF overlay:** the
+  vector overlay pages (M12-16's builder, with the layer switches) with the overlay notes copied
+  on as comments, Document A and B attached unchanged (a set: `TriyaCompare-A1…`). **Text:**
+  Document B's own bytes plus one incremental section (standard Highlight / Caret / Square
+  markups with appearance streams, `/NM triya-cmp-<n>`, the notes' words localized; deleted text
+  is a caret with the old text in its note, placed through the content sync points), with A
+  attached; a certified B that forbids comments (DocMDP P1/P2), or a protected A over an open B,
+  takes the unsigned-copy route with B attached unchanged. The comparison data
+  (`comparison.json`: documents with SHA-256, sheets with placements, the pairing table, the area
+  of an O1 comparison, options, layer switches, differences settings, ignore zones, ticks,
+  close-out outcomes, text marks; `leadingPages` for M12-21's summary page) and `/PieceInfo`
+  tag as in [the format spec](formats/triya-comparison-v1.md), now version 1. **Permissions
+  (rule 9):** content copying of every input, and commenting in B for text; an owner password
+  unlocks. **A password-protected input** makes the dialog ask for an open password (AES-256,
+  confirmed twice). **Reopening:** a comparison file opened in a tab is recognised in the Work
+  worker (catalog, else the data attachment), its inputs open from the copies inside (byte for
+  byte, checked by SHA-256; the file's own password tried first), and the comparison opens on its
+  result in the file's place with the pairing table, placements set by hand, view switches,
+  layers, differences settings, zones, ticks and overlay notes restored; a newer version, damaged
+  data or a B changed by another program opens as the plain PDF with a notice. **Save review**
+  (Ctrl+S in a comparison, also on its notes) saves A and B incrementally; in a reopened
+  comparison it saves into the copies and writes the comparison file again (rebuilt; a text file
+  another program added to asks first). **Export Document A / B** write the copies out. Behind
+  the Compare build switch. Tests: `tests/compare/comparison-file.test.ts` (14, Work worker in
+  Node: both kinds, sets, notes, unsaved tails, pair 12, signed and certified B, encrypted B,
+  detection fallback), `tests/compare/comparison-file-model.test.ts` (12),
+  `e2e/compare-file.spec.ts` (overlay and text round trips, pair 12, signed / certified B, a set
+  of files). Not done here: a reopened comparison is not kept by session restore (its documents
+  are copies without a file handle; reopen the comparison file), and a text file whose B was
+  rewritten by another program does not open read-only (it opens as a PDF).
 
 - **M12-21·O1 — compare an area (D-60, D-61; optional item O1, accepted).** Done ahead of
   M12-20 and M12-21, which wait on M12-16's vector overlay (built in parallel). In a PDF Overlay

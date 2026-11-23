@@ -2,7 +2,7 @@
 // backstage (§4.2); Save Optimized opens its dialog (M1-23).
 import { registerCommand } from '../../app/commands/dispatch';
 import { documentStore } from '../../app/store/documentStore';
-import { openOptimizeDialog, save, saveAs } from './save';
+import { openOptimizeDialog, saveActive, saveAs } from './save';
 
 function onActive(fn: (docId: string) => Promise<unknown>): () => Promise<void> {
   return async () => {
@@ -13,8 +13,8 @@ function onActive(fn: (docId: string) => Promise<unknown>): () => Promise<void> 
 
 export function registerSaveCommands(): () => void {
   const offs = [
-    registerCommand('file.save', { requiresDocument: true, run: onActive(save) }),
-    registerCommand('qat.save', { requiresDocument: true, run: onActive(save) }),
+    registerCommand('file.save', { requiresDocument: true, run: onActive(saveActive) }),
+    registerCommand('qat.save', { requiresDocument: true, run: onActive(saveActive) }),
     registerCommand('file.saveAs', { requiresDocument: true, run: onActive(saveAs) }),
     registerCommand('file.saveOptimized', {
       requiresDocument: true,

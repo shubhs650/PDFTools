@@ -65,6 +65,14 @@ function watchClosing(): void {
 
 const making = new Map<string, Promise<void>>();
 
+/** Overlay notes read from a comparison file (M12-20), copied onto the next notes made. */
+const seeds = new Map<string, ArrayBuffer>();
+
+/** The notes of a reopened comparison file: a small PDF whose pages hold them, one per sheet. */
+export function seedNotes(id: string, notes: ArrayBuffer): void {
+  seeds.set(id, notes);
+}
+
 /**
  * The comparison's notes for these sheet sizes: made once, made again when the
  * sheets change (the pairing was edited). Resolves when ready or failed.
@@ -81,12 +89,18 @@ export function ensureNotes(id: string, sizes: readonly Size[]): Promise<void> {
       if (old) await closeDocument(old);
       const pages = sizes.map((s) => ({ width: side(s.width), height: side(s.height) }));
       const first = pages[0] ?? { width: 612, height: 792 };
-      const { bytes } = await workClient().run('createBlank', {
+      let { bytes } = await workClient().run('createBlank', {
         width: first.width,
         height: first.height,
         count: pages.length,
         sizes: pages,
       }).promise;
+      const seed = seeds.get(id);
+      if (seed) {
+        seeds.delete(id);
+        bytes = (await workClient().run('compareNotesSeed', { blank: bytes, notes: seed }).promise)
+          .bytes;
+      }
       const file = new File([bytes], t('compare.review.notesName'), { type: 'application/pdf' });
       const [docId] = await openFiles([{ file }], 'created', { notes: true });
       // The comparison closed or the sheets changed meanwhile: these notes are not wanted.
