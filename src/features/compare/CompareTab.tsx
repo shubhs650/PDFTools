@@ -5,7 +5,7 @@ import { ChevronDown16Regular } from '@fluentui/react-icons/svg/chevron-down';
 import { Dismiss16Regular } from '@fluentui/react-icons/svg/dismiss';
 import { useEffect, useId, useState, type DragEvent } from 'react';
 import { useTranslation } from 'react-i18next';
-import { securityOf, useDocuments, type DocumentsState } from '../../app/store/documentStore';
+import { securityOf, useDocuments } from '../../app/store/documentStore';
 import { format, msg, type MessageKey } from '../../i18n';
 import { Button, DropdownMenu, IconButton, TextField } from '../../ui/components';
 import { CommandIcon } from '../../ui/icons/CommandIcon';
@@ -39,6 +39,7 @@ import {
 } from './model';
 import { PairingTable } from './PairingTable';
 import { OverlayResult } from './overlay/OverlayResult';
+import { TextResult } from './text/TextResult';
 import { syncPairing, usePairing } from './pairingFlow';
 import { comparedPairs } from '../../model/compare/pairing';
 import { limitsOf } from './permissions';
@@ -73,14 +74,9 @@ export function CompareTab({ id }: { id: string }) {
   return comparison.type === 'overlay' ? (
     <OverlayResult comparison={comparison} />
   ) : (
-    <ResultStage comparison={comparison} />
+    <TextResult comparison={comparison} />
   );
 }
-
-const pageCountOf =
-  (s: DocumentsState) =>
-  (docId: string): number | undefined =>
-    s.docs[docId]?.meta.pageCount;
 
 function InputWindow({ comparison: c }: { comparison: Comparison }) {
   const { t } = useTranslation();
@@ -426,49 +422,5 @@ function FileItem({
         </div>
       ) : null}
     </li>
-  );
-}
-
-/**
- * The result of a text comparison (a placeholder until the text view arrives, M12-19):
- * what will be compared, and the way back to the inputs.
- */
-function ResultStage({ comparison: c }: { comparison: Comparison }) {
-  const { t } = useTranslation();
-  const titleId = useId();
-  const count = {
-    a: useDocuments((s) => sidePageCount(c.a, pageCountOf(s))),
-    b: useDocuments((s) => sidePageCount(c.b, pageCountOf(s))),
-  };
-  return (
-    <section className="compare" aria-labelledby={titleId} data-testid="compare-result">
-      <div className="compare-column">
-        <header className="compare-head">
-          <span className="start-badge" aria-hidden="true">
-            <CommandIcon id={COMMAND[c.type]} />
-          </span>
-          <div className="compare-head-text">
-            <h2 id={titleId} className="compare-title">
-              {typeLabel(c.type)}
-              <span className="compare-preview">{t('compare.preview')}</span>
-            </h2>
-            <p className="compare-intro">
-              {t('compare.result.pending', {
-                a: t('compare.pages', { count: count.a }),
-                b: t('compare.pages', { count: count.b }),
-              })}
-            </p>
-          </div>
-        </header>
-        <div className="compare-foot">
-          <Button
-            label={t('compare.result.inputs')}
-            onClick={() => {
-              updateInputs(c.id, (cur) => ({ ...cur, stage: 'input' }));
-            }}
-          />
-        </div>
-      </div>
-    </section>
   );
 }

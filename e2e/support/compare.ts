@@ -54,3 +54,29 @@ export async function overlayDrawn(page: Page): Promise<void> {
   ).toBeVisible({ timeout: 30_000 });
   await expect(overlayView(page)).toHaveAttribute('data-complete', 'true', { timeout: 30_000 });
 }
+
+export const textFile = (id: string, s: 'old' | 'new', name: string): DropFile => ({
+  name,
+  b64: b64(corpusBytes(corpusPair('text', id), s)),
+});
+
+/** Opens a text comparison of text corpus pair `id` and waits until it is complete (M12-19). */
+export async function textOf(page: Page, id: string, timeout = 60_000): Promise<void> {
+  await page.goto('/');
+  await page.getByRole('tab', { name: 'Compare', exact: true }).click();
+  await page.getByRole('button', { name: 'Text Comparison' }).click();
+  await dropOn(compareSide(page, 'a'), [textFile(id, 'old', `Pair ${id} RevA.pdf`)]);
+  await expect(compareSide(page, 'a').getByTestId('compare-file')).toHaveCount(1);
+  await dropOn(compareSide(page, 'b'), [textFile(id, 'new', `Pair ${id} RevB.pdf`)]);
+  await expect(compareSide(page, 'b').getByTestId('compare-file')).toHaveCount(1);
+  await page
+    .getByTestId('compare-input')
+    .getByRole('button', { name: 'Compare', exact: true })
+    .click();
+  await expect(page.getByTestId('compare-result')).toHaveAttribute('data-status', 'done', {
+    timeout,
+  });
+  // Both windows laid out, with the list filled.
+  await expect(page.getByTestId('text-view-a').locator('.page').first()).toBeVisible();
+  await expect(page.getByTestId('text-view-b').locator('.page').first()).toBeVisible();
+}

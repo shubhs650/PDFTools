@@ -5351,7 +5351,7 @@ textarea.form-field {
   width: 48px;
   height: 36px;
   overflow: hidden;
-  border-radius: var(--radius-s, 2px);
+  border-radius: var(--radius-s);
   background: var(--color-surface-sunken, var(--color-border));
 }
 
@@ -7246,4 +7246,401 @@ textarea.form-field {
   left: -0.5px;
   width: 1px;
   height: 28px;
+}
+
+/* The text comparison (M12-19, D-64): Document A | gap | Document B, the list on the right. */
+.text-result {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  min-height: 0;
+  background: var(--color-bg);
+  color: var(--color-text);
+}
+
+.text-run {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  margin: var(--space-0);
+  color: var(--color-text-muted);
+  font-size: var(--font-size-s);
+}
+
+.text-run .ui-progress {
+  width: 120px;
+}
+
+.text-notices {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+  padding: var(--space-2) var(--space-4);
+  border-bottom: var(--border-width) solid var(--color-border);
+  background: var(--color-surface-subtle);
+}
+
+.text-notice {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-3);
+  margin: var(--space-0);
+  font-size: var(--font-size-s);
+}
+
+.text-body {
+  display: flex;
+  flex: 1;
+  min-height: 0;
+}
+
+.text-windows {
+  display: flex;
+  flex: 1;
+  min-width: 0;
+  min-height: 0;
+}
+
+.text-window {
+  flex: 1 1 0;
+}
+
+.text-gap {
+  display: block;
+  flex: 0 0 48px;
+  height: 100%;
+  border-inline: var(--border-width) solid var(--color-border);
+  background: var(--color-surface-sunken);
+}
+
+.text-side {
+  display: flex;
+  flex: 0 0 320px;
+  flex-direction: column;
+  gap: var(--space-3);
+  min-height: 0;
+  padding: var(--space-3);
+  border-left: var(--border-width) solid var(--color-border);
+  background: var(--color-surface);
+}
+
+/* The marks on a page: drawn by the view, never comments, never in the pointer's way. */
+.text-marks {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  width: 100%;
+  height: 100%;
+  overflow: visible;
+  pointer-events: none;
+}
+
+.text-mark-fill {
+  mix-blend-mode: multiply;
+}
+
+.text-bands {
+  position: absolute;
+  inset: 0;
+  z-index: 2;
+  pointer-events: none;
+}
+
+.text-band-shade {
+  position: absolute;
+  inset-inline: 0;
+  background: var(--color-accent);
+  opacity: 0.12;
+}
+
+.text-band-line {
+  position: absolute;
+  inset-inline: 0;
+  height: 9px;
+  margin-top: -4px;
+  cursor: row-resize;
+  pointer-events: auto;
+  touch-action: none;
+}
+
+.text-band-line::after {
+  position: absolute;
+  top: 4px;
+  inset-inline: 0;
+  border-top: 1px dashed var(--color-accent);
+  content: '';
+}
+
+.text-band-line:hover::after {
+  border-top-style: solid;
+  border-top-width: 2px;
+}
+
+.text-band-bar {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  padding: var(--space-2) var(--space-4);
+  border-bottom: var(--border-width) solid var(--color-border);
+  background: var(--color-surface-subtle);
+}
+
+.text-band-hint {
+  margin: var(--space-0);
+  color: var(--color-text-muted);
+  font-size: var(--font-size-s);
+}
+
+.text-band-fields {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  gap: var(--space-3);
+}
+
+.text-band-field {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+  font-size: var(--font-size-s);
+}
+
+.text-band-field input {
+  width: 6em;
+}
+
+/* The legend (Q42): each kind's sample, colour, count and switch. */
+.text-legend-list {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+  margin: var(--space-0);
+  padding: var(--space-0);
+  list-style: none;
+}
+
+.text-legend-item {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+}
+
+.text-legend-show {
+  display: grid;
+  flex: 1;
+  grid-template-columns: auto 30px 1fr auto;
+  align-items: center;
+  gap: var(--space-2);
+  min-width: 0;
+  cursor: pointer;
+}
+
+.text-legend-count {
+  color: var(--color-text-muted);
+  font-size: var(--font-size-s);
+  font-variant-numeric: tabular-nums;
+}
+
+.text-legend-pick {
+  flex: 0 0 52px;
+}
+
+.text-legend-sample {
+  display: inline-flex;
+  padding: 1px;
+  border-radius: var(--radius-s);
+  /* The marks are seen over white paper. */
+  background: var(--color-page);
+}
+
+.text-legend-text {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.text-legend-name {
+  font-size: var(--font-size-m);
+}
+
+.text-legend-shape {
+  overflow: hidden;
+  color: var(--color-text-muted);
+  font-size: var(--font-size-xs);
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+.text-list {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  gap: var(--space-2);
+  min-height: 0;
+}
+
+.text-list-head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: var(--space-2);
+}
+
+.text-list-head .overlay-side-title {
+  margin: var(--space-0);
+}
+
+.text-list-count {
+  color: var(--color-text-muted);
+  font-size: var(--font-size-s);
+}
+
+.text-list-tools {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+
+.text-search {
+  display: flex;
+  align-items: center;
+  gap: var(--space-1);
+}
+
+.text-search-input {
+  flex: 1;
+  min-width: 0;
+}
+
+.text-list-nav {
+  display: flex;
+  align-items: center;
+  gap: var(--space-1);
+}
+
+.text-hide-checked {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-1);
+  margin-left: auto;
+  font-size: var(--font-size-s);
+}
+
+.text-list-rows {
+  flex: 1;
+  min-height: 0;
+  overflow: auto;
+  border: var(--border-width) solid var(--color-border);
+  border-radius: var(--radius-m);
+  background: var(--color-bg);
+}
+
+.text-list-rows:focus-visible {
+  outline: var(--focus-width, 2px) solid var(--color-focus);
+  outline-offset: 2px;
+}
+
+.text-list-empty {
+  margin: var(--space-4);
+  color: var(--color-text-muted);
+  font-size: var(--font-size-m);
+}
+
+.text-entry {
+  position: absolute;
+  inset-inline: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  box-sizing: border-box;
+  padding: var(--space-1) var(--space-2);
+  overflow: hidden;
+  border-bottom: var(--border-width) solid var(--color-border);
+  border-inline-start: 4px solid transparent;
+  cursor: pointer;
+}
+
+.text-entry[data-inner] {
+  padding-inline-start: var(--space-5);
+}
+
+.text-entry:hover {
+  background: var(--color-hover);
+}
+
+.text-entry[aria-selected='true'] {
+  background: var(--color-selected);
+  color: var(--color-selected-text);
+}
+
+.text-entry[data-checked] .text-entry-texts {
+  opacity: 0.6;
+}
+
+.text-entry-head {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  font-size: var(--font-size-s);
+}
+
+.text-entry-kind {
+  font-weight: var(--font-weight-semibold);
+}
+
+.text-entry-pages {
+  color: var(--color-text-muted);
+}
+
+.text-entry[aria-selected='true'] .text-entry-pages {
+  color: inherit;
+}
+
+.text-entry-check {
+  display: inline-flex;
+  margin-left: auto;
+  color: var(--color-success-text);
+}
+
+.text-entry-badges {
+  display: flex;
+  gap: var(--space-1);
+  overflow: hidden;
+  font-size: var(--font-size-xs);
+  white-space: nowrap;
+}
+
+.text-entry-badges:empty {
+  display: none;
+}
+
+.text-entry-badge {
+  padding: 0 var(--space-1);
+  border-radius: var(--radius-s);
+  background: var(--color-surface-sunken);
+}
+
+.text-entry-texts {
+  display: flex;
+  gap: var(--space-2);
+  overflow: hidden;
+  font-size: var(--font-size-s);
+  white-space: nowrap;
+}
+
+.text-entry-old,
+.text-entry-new {
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.text-entry-old {
+  flex: 0 1 auto;
+  color: var(--color-text-muted);
+}
+
+.text-entry-new {
+  flex: 1 1 auto;
+  text-decoration: underline;
 }
