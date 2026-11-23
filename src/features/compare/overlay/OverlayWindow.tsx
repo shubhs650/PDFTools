@@ -14,6 +14,7 @@ import { FloatingBar } from './FloatingBar';
 import { OverlayPage } from './OverlayPage';
 import { framePage, useFrame } from './frames';
 import { useLayerContent } from './layerCopies';
+import { useVectorContent } from './vectorOverlay';
 import type { PainterStats, TileContent } from './painter';
 import { drawnStyle, placeOf, updateView, useOverlayView, type Sheet } from './overlayState';
 
@@ -74,7 +75,16 @@ export function OverlayWindow({
     view.layers[sheet.b?.docId ?? ''],
     versionB,
   );
-  const layersPending = layersA.pending || layersB.pending;
+  // The display mode (M12-16): the sheet's vector page once built; the usual drawing meanwhile.
+  const comparison = useDocuments((s) => s.comparisons[id]);
+  const vector = useVectorContent(
+    comparison,
+    sheet,
+    view,
+    [versionA, versionB],
+    view.vector && comparison !== undefined,
+  );
+  const layersPending = layersA.pending || layersB.pending || vector.pending;
 
   // The worker works on the sheet in view first (D-66).
   useEffect(() => {
@@ -103,10 +113,20 @@ export function OverlayWindow({
           }
         : null,
       style: drawnStyle(view),
-      thicken: view.thicken,
+      thicken: view.thicken && !vector.contentId,
       comments: view.comments,
+      ...(vector.contentId ? { vector: { contentId: vector.contentId } } : {}),
     };
-  }, [frame, sheet, view, versionA, versionB, layersA.contentId, layersB.contentId]);
+  }, [
+    frame,
+    sheet,
+    view,
+    versionA,
+    versionB,
+    layersA.contentId,
+    layersB.contentId,
+    vector.contentId,
+  ]);
   const contentKey = content && frame ? JSON.stringify([frame, content]) : null;
 
   // Drawn: every visible tile of exactly this state is on screen (tests and the spinner).
@@ -160,7 +180,8 @@ export function OverlayWindow({
     if (!plain || (e.key !== 'x' && e.key !== 'X') || isEditable(e.target as Element)) return;
     e.preventDefault();
     e.stopPropagation();
-    if (!e.repeat) startBlink();
+    // The vector page is one drawing: Blink is the screen drawing's own.
+    if (!e.repeat && !view.vector) startBlink();
   };
   const onKeyUp = (e: KeyboardEvent<HTMLDivElement>): void => {
     if (e.key === 'x' || e.key === 'X') stopBlink();
@@ -199,9 +220,10 @@ export function OverlayWindow({
       data: {
         'data-preset': preset ?? 'custom',
         'data-blink': view.blink ?? '',
+        'data-display': vector.contentId ? 'vector' : 'raster',
       } as Record<`data-${string}`, string>,
     }),
-    [index, pageContent, decor, layer, label, preset, view.blink],
+    [index, pageContent, decor, layer, label, preset, view.blink, vector.contentId],
   );
 
   return (
@@ -215,6 +237,11 @@ export function OverlayWindow({
       onBlurCapture={stopBlink}
     >
       <DocumentView key={notesId} documentId={notesId} sheet={sheetWindow} />
+      {vector.failed ? (
+        <p className="overlay-vector-failed" role="status">
+          {t('compare.overlay.vectorFailed')}
+        </p>
+      ) : null}
       <span
         className="overlay-drawing ui-spinner"
         role="status"

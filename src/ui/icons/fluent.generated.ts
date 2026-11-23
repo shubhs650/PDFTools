@@ -12,6 +12,7 @@ import { ArrowDownload20Regular } from '@fluentui/react-icons/svg/arrow-download
 import { ArrowEnter20Regular } from '@fluentui/react-icons/svg/arrow-enter';
 import { ArrowExpandAll20Regular } from '@fluentui/react-icons/svg/arrow-expand-all';
 import { ArrowExport20Regular } from '@fluentui/react-icons/svg/arrow-export';
+import { ArrowExportLtr20Regular, ArrowExportLtr32Regular } from '@fluentui/react-icons/svg/arrow-export-ltr';
 import { ArrowImport20Regular } from '@fluentui/react-icons/svg/arrow-import';
 import { ArrowLeft20Regular } from '@fluentui/react-icons/svg/arrow-left';
 import { ArrowNext20Regular } from '@fluentui/react-icons/svg/arrow-next';
@@ -302,6 +303,7 @@ export const FLUENT_GLYPHS: Record<string, FluentGlyphs> = {
   'convert.ocr': { regular: { small: ScanText20Regular, large: ScanText32Regular, largeNative: 32 } },
   'compare.overlay': { regular: { small: SquareMultiple20Regular, large: SquareMultiple32Regular, largeNative: 32 } },
   'compare.text': { regular: { small: DocumentLandscapeSplit20Regular, large: DocumentLandscapeSplit24Regular, largeNative: 24 } },
+  'compare.exportOverlay': { regular: { small: ArrowExportLtr20Regular, large: ArrowExportLtr32Regular, largeNative: 32 } },
   'protect.markRedaction': { regular: { small: TextStrikethrough20Regular, large: TextStrikethrough24Regular, largeNative: 24 }, filled: { small: TextStrikethrough20Filled, large: TextStrikethrough24Filled, largeNative: 24 } },
   'protect.markRedactionArea': { regular: { small: RectangleLandscape20Regular, large: RectangleLandscape32Regular, largeNative: 32 }, filled: { small: RectangleLandscape20Filled, large: RectangleLandscape32Filled, largeNative: 32 } },
   'protect.applyRedactions': { regular: { small: CheckmarkCircle20Regular, large: CheckmarkCircle32Regular, largeNative: 32 } },

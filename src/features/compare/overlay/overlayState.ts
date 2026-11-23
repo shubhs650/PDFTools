@@ -71,6 +71,13 @@ export interface OverlayView {
    * analysis draw the document with them.
    */
   layers: Record<string, LayerStates>;
+  /**
+   * The "Vector overlay (beta)" display mode (M12-16, D-59): the sheet drawn
+   * from the vector overlay PDF's page, as Export Overlay… writes it. Colours,
+   * alignment, layers and show/hide apply; balance, Fade unchanged, Thicken
+   * thin lines and Blink are the screen drawing's own and are off.
+   */
+  vector: boolean;
 }
 
 export const DEFAULT_VIEW: OverlayView = {
@@ -85,10 +92,13 @@ export const DEFAULT_VIEW: OverlayView = {
   aligned: {},
   manual: null,
   layers: {},
+  vector: false,
 };
 
 /** The style the tiles are drawn with: Blink shows one side alone. */
 export function drawnStyle(v: OverlayView): OverlayStyle {
+  // The vector page is drawn as it is; only show/hide decide its comments.
+  if (v.vector) return { ...v.style, balance: 0, fade: 0 };
   if (v.blink === null) return v.style;
   return { ...v.style, showA: v.blink === 'a', showB: v.blink === 'b', balance: 0, fade: 0 };
 }
@@ -102,6 +112,10 @@ export const placeOf = (v: OverlayView, s: Sheet | undefined): Affine =>
   (v.manual && s?.pair === v.manual.pair ? v.manual.place : null) ??
   alignmentOf(v, s)?.place ??
   IDENTITY;
+
+/** The display mode (M12-16): the vector page, or the two tinted revisions. */
+export const setVector = (v: OverlayView, on: boolean): OverlayView =>
+  v.vector === on ? v : { ...v, vector: on, blink: null };
 
 /** A sheet's alignment arrived (the session's watchAlignment). */
 export const setAligned = (v: OverlayView, pair: number, al: SheetAlignment): OverlayView => ({

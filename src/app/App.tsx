@@ -36,6 +36,7 @@ import { BookmarkPropertiesDialog } from '../features/bookmarks/BookmarkProperti
 import { FileDialogs } from '../features/pages/FileDialogs';
 import { PrintDialog } from '../features/print/PrintDialog';
 import { PrintReadyDialog } from '../features/print/PrintReadyDialog';
+import { ExportOverlayDialog } from '../features/compare/overlay/ExportOverlayDialog';
 import { registerReportCommands } from '../features/report/commands';
 import { ReportDialog } from '../features/report/ReportDialog';
 import { ResetFormDialog } from '../features/forms/ResetFormDialog';
@@ -233,6 +234,7 @@ export function App() {
         <ResetFormDialog />
         <PrintDialog />
         <PrintReadyDialog />
+        <ExportOverlayDialog />
         <ExternalLinkDialog />
         <SaveErrorDialog />
         <SaveOptimizedDialog />

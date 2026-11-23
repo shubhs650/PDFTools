@@ -413,6 +413,7 @@ describe('the Compare build switch (M12-08, D-58, plan question 3)', () => {
     expect(compare?.groups.flatMap((g) => g.commands.map((c) => c.id))).toEqual([
       'compare.overlay',
       'compare.text',
+      'compare.exportOverlay',
     ]);
   });
 
@@ -423,6 +424,7 @@ describe('the Compare build switch (M12-08, D-58, plan question 3)', () => {
     expect(preview).toEqual([
       'compare.overlay',
       'compare.text',
+      'compare.exportOverlay',
       'tab.compareWith',
       // Review across revisions (M12-15): context menus of a comparison's windows.
       'compare.copyToNew',

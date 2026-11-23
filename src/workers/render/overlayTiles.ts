@@ -88,6 +88,12 @@ export interface OverlayTileRequest {
   comments: { a: boolean; b: boolean; hideChecks: boolean };
   /** False: the grey tiles are not kept (the alignment magnifier, M12-13: every spot is new). */
   cache?: boolean;
+  /**
+   * The "Vector overlay (beta)" display mode (M12-16, D-59): the sheet's page
+   * of the vector overlay PDF (a copy opened with overlayCopyOpen, page 0) is
+   * drawn instead of the two tinted revisions; comments still come on top.
+   */
+  vector?: { contentId: string; pageIndex?: number };
 }
 
 /** A page's displayed size in points (/Rotate and crop box applied). */
@@ -131,6 +137,37 @@ function renderGrey(
     const out = new Uint8Array(w * h);
     for (let y = 0; y < h; y++) out.set(src.subarray(px + y * stride, px + y * stride + w), y * w);
     return out;
+  } finally {
+    if (bmp) rawCall(mod, 'FPDFBitmap_Destroy', bmp);
+    heap.wasmExports.free(mp);
+    heap.wasmExports.free(px);
+  }
+}
+
+/** FPDF_REVERSE_BYTE_ORDER: RGBA instead of BGRA. */
+const REVERSE_BYTE_ORDER = 0x10;
+
+/** Renders a loaded page's content through `m` (layout → pixels) in colour, as opaque RGBA. */
+function renderColour(
+  mod: WrappedPdfiumModule,
+  page: number,
+  m: Affine,
+  w: number,
+  h: number,
+): Uint8Array {
+  const heap = heapOf(mod);
+  const bytes = w * h * 4;
+  const px = heap.wasmExports.malloc(bytes);
+  const mp = heap.wasmExports.malloc(24 + 16);
+  const cp = mp + 24;
+  const bmp = rawCall(mod, 'FPDFBitmap_CreateEx', w, h, FPDFBitmap_BGRA, px, w * 4);
+  try {
+    if (!bmp) throw new RpcError('overlay-memory', 'The overlay tile could not be allocated');
+    rawCall(mod, 'FPDFBitmap_FillRect', bmp, 0, 0, w, h, 0xffffffff);
+    heap.HEAPF32.set(m, mp >> 2);
+    heap.HEAPF32.set([0, 0, w, h], cp >> 2);
+    rawCall(mod, 'FPDF_RenderPageBitmapWithMatrix', bmp, page, mp, cp, REVERSE_BYTE_ORDER);
+    return heapOf(mod).HEAPU8.slice(px, px + bytes);
   } finally {
     if (bmp) rawCall(mod, 'FPDFBitmap_Destroy', bmp);
     heap.wasmExports.free(mp);
@@ -275,6 +312,85 @@ export class OverlayTiles {
     return this.tables.tables;
   }
 
+  /** Each side's grey tile, from the cache or rendered. */
+  private greys(
+    mod: WrappedPdfiumModule,
+    r: OverlayTileRequest,
+    sides: readonly (OverlaySide | null)[],
+    pages: readonly (ReturnType<typeof acquirePage> | null)[],
+    matrices: readonly (Affine | null)[],
+    signal?: AbortSignal,
+  ): [Uint8Array | null, Uint8Array | null] {
+    const { width: w, height: h } = r;
+    const grey = (i: number): Uint8Array | null => {
+      const s = sides[i];
+      const ref = pages[i];
+      const m = matrices[i];
+      if (!s || !ref || !m) return null;
+      const key = [
+        s.contentId ?? s.docId,
+        s.pageIndex,
+        s.version,
+        r.scale,
+        r.x,
+        r.y,
+        w,
+        h,
+        s.place.join(','),
+        r.thicken ? 1 : 0,
+      ].join('\n');
+      const hit = this.grey.get(key);
+      if (hit) return hit;
+      if (signal?.aborted) throw new AbortError();
+      let g: Uint8Array;
+      if (r.thicken) {
+        // One pixel of margin so neighbouring tiles join without seams (S29).
+        const mg: Affine = [m[0], m[1], m[2], m[3], m[4] + 1, m[5] + 1];
+        g = crop(
+          thicken(renderGrey(mod, ref.pagePtr, mg, w + 2, h + 2), w + 2, h + 2),
+          w + 2,
+          1,
+          w,
+          h,
+        );
+      } else g = renderGrey(mod, ref.pagePtr, m, w, h);
+      if (r.cache !== false) this.grey.set(key, g, g.length);
+      return g;
+    };
+    return [grey(0), grey(1)];
+  }
+
+  /** The sheet's vector overlay page (the display mode), as opaque RGBA. */
+  private vectorTile(
+    mod: WrappedPdfiumModule,
+    native: PdfiumNative,
+    r: OverlayTileRequest,
+    contentId: string,
+    pageIndex: number,
+    signal?: AbortSignal,
+  ): Uint8ClampedArray<ArrayBuffer> {
+    const { width: w, height: h } = r;
+    const key = [contentId, pageIndex, r.scale, r.x, r.y, w, h].join('\n');
+    const hit = this.grey.get(key);
+    if (hit) return new Uint8ClampedArray(hit.slice().buffer);
+    if (signal?.aborted) throw new AbortError();
+    const ref = acquirePage(native, contentId, pageIndex);
+    try {
+      const f = frameOf(mod, docPtrOf(native, contentId), pageIndex, ref.pagePtr);
+      const px = renderColour(
+        mod,
+        ref.pagePtr,
+        thenAffine(f.turn, tileMatrix(r.scale, r.x, r.y)),
+        w,
+        h,
+      );
+      if (r.cache !== false) this.grey.set(key, px, px.length);
+      return new Uint8ClampedArray(px.slice().buffer);
+    } finally {
+      ref.release();
+    }
+  }
+
   /** The composed tile, as opaque RGBA. */
   render(
     mod: WrappedPdfiumModule,
@@ -297,41 +413,14 @@ export class OverlayTiles {
         const f = frameOf(mod, docPtrOf(native, contentOf(s)), s.pageIndex, ref.pagePtr);
         return thenAffine(f.turn, tileMatrix(r.scale, r.x, r.y, s.place));
       });
-      const greys = sides.map((s, i) => {
-        const ref = pages[i];
-        const m = matrices[i];
-        if (!s || !ref || !m) return null;
-        const key = [
-          contentOf(s),
-          s.pageIndex,
-          s.version,
-          r.scale,
-          r.x,
-          r.y,
-          w,
-          h,
-          s.place.join(','),
-          r.thicken ? 1 : 0,
-        ].join('\n');
-        const hit = this.grey.get(key);
-        if (hit) return hit;
-        if (signal?.aborted) throw new AbortError();
-        let g: Uint8Array;
-        if (r.thicken) {
-          // One pixel of margin so neighbouring tiles join without seams (S29).
-          const mg: Affine = [m[0], m[1], m[2], m[3], m[4] + 1, m[5] + 1];
-          g = crop(
-            thicken(renderGrey(mod, ref.pagePtr, mg, w + 2, h + 2), w + 2, h + 2),
-            w + 2,
-            1,
+      const out = r.vector
+        ? this.vectorTile(mod, native, r, r.vector.contentId, r.vector.pageIndex ?? 0, signal)
+        : compose(
+            ...this.greys(mod, r, sides, pages, matrices, signal),
             w,
             h,
+            this.tablesFor(r.style),
           );
-        } else g = renderGrey(mod, ref.pagePtr, m, w, h);
-        if (r.cache !== false) this.grey.set(key, g, g.length);
-        return g;
-      });
-      const out = compose(greys[0] ?? null, greys[1] ?? null, w, h, this.tablesFor(r.style));
       sides.forEach((s, i) => {
         const ref = pages[i];
         const m = matrices[i];
