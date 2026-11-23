@@ -40,6 +40,7 @@ import { notesStore } from '../review/notes';
 import { textStore, DEFAULT_TEXT_VIEW } from '../text/textFlow';
 import { blockFor, type Block } from '../permissions';
 import { overlayFields, sidesOf, textFields } from './data';
+import { overlaySummary } from './summary';
 import { fileWords, markWords } from './words';
 
 // ---- comparisons linked to their comparison file ----
@@ -172,6 +173,7 @@ async function fileRequest(
   signal: AbortSignal,
   onStage: (stage: 'aligning' | 'drawing') => void,
   lock: string | undefined,
+  summary: boolean,
 ): Promise<CompareFileRequest> {
   const created = linkedOf(c.id)?.data.created ?? '';
   const ref = (f: { docId: string; name: string; range: string }): FileInputRef => {
@@ -179,11 +181,12 @@ async function fileRequest(
     return tl ? { ...f, tail: tl.tail, baseLength: tl.baseLength } : f;
   };
   const sides = sidesOf(c);
+  const when = new Date();
   const base = {
     A: sides.A.map(ref),
     B: sides.B.map(ref),
     words: fileWords(),
-    when: new Date().toISOString(),
+    when: when.toISOString(),
     ...(lock === undefined ? {} : { lock }),
   };
   if (c.type === 'overlay') {
@@ -205,6 +208,8 @@ async function fileRequest(
         nameOf,
       ),
       ...(notes ? { notesDocId: notes } : {}),
+      // The summary page (M12-21): overlay files only (a text file is Document B itself).
+      ...(summary ? { summary: overlaySummary(c, when) } : {}),
     };
   }
   onStage('drawing');
@@ -226,6 +231,8 @@ export interface SaveComparisonState {
   id: string | null;
   password: string;
   confirm: string;
+  /** Add the summary page (overlay only, M12-21). */
+  summary: boolean;
   running: {
     stage: 'preparing' | 'aligning' | 'drawing' | 'writing';
     done: number;
@@ -238,6 +245,7 @@ const CLOSED: SaveComparisonState = {
   id: null,
   password: '',
   confirm: '',
+  summary: true,
   running: null,
   error: null,
 };
@@ -250,8 +258,19 @@ export function useSaveComparison<T>(selector: (s: SaveComparisonState) => T): T
 
 let job: AbortController | null = null;
 
+/** The last choice of a summary page in this session (a new file starts with it). */
+let lastSummary = true;
+
+/** Whether a comparison file had a summary page (Save review writes it again). */
+const hadSummary = (f: LinkedFile): boolean => (f.data.leadingPages ?? 0) > 0;
+
 export function openSaveComparison(id: string): void {
-  saveComparisonStore.setState({ ...CLOSED, id });
+  const linkedFile = linkedOf(id);
+  saveComparisonStore.setState({
+    ...CLOSED,
+    id,
+    summary: linkedFile ? hadSummary(linkedFile) : lastSummary,
+  });
 }
 
 export function closeSaveComparison(): void {
@@ -266,6 +285,11 @@ export function cancelSaveComparison(): void {
 
 export function setSavePassword(password: string, confirm: string): void {
   saveComparisonStore.setState({ password, confirm, error: null });
+}
+
+export function setSaveSummary(summary: boolean): void {
+  lastSummary = summary;
+  saveComparisonStore.setState({ summary });
 }
 
 /** Writes `bytes` to the handle, or downloads them (no file handles: Firefox, Safari). */
@@ -338,6 +362,7 @@ export async function startSaveComparison(): Promise<void> {
         progress(s);
       },
       lock,
+      st.summary && c.type === 'overlay',
     );
     const { bytes } = await workClient().run('compareFileSave', req, {
       signal: controller.signal,
@@ -354,6 +379,8 @@ export async function startSaveComparison(): Promise<void> {
         handle,
         name: handle.name,
         ...(lock === undefined ? {} : { password: lock }),
+        // Save review keeps the summary page as chosen here.
+        data: { ...linkedFile.data, leadingPages: st.summary && c.type === 'overlay' ? 1 : 0 },
       });
     const first = c.b[0]?.docId ?? c.a[0]?.docId;
     if (first)
@@ -427,7 +454,14 @@ export async function saveReview(id: string, confirmed = false): Promise<void> {
         const tails = new Map<string, UnsavedTail>(
           [...prepared].map(([d, p]) => [d, { tail: p.tail, baseLength: p.baseLength }]),
         );
-        const req = await fileRequest(c, tails, signal, () => undefined, linkedFile.password);
+        const req = await fileRequest(
+          c,
+          tails,
+          signal,
+          () => undefined,
+          linkedFile.password,
+          linkedFile.kind === 'overlay' && hadSummary(linkedFile),
+        );
         const { bytes } = await workClient().run('compareFileSave', req, { signal }).promise;
         signal.throwIfAborted();
         await writeOut(bytes, linkedFile.handle, linkedFile.name, signal);

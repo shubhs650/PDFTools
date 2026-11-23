@@ -6,7 +6,9 @@ import type { PdfiumNative } from '@embedpdf/engines/pdfium';
 import type { WrappedPdfiumModule } from '@embedpdf/pdfium';
 import { RpcError } from '../../../engine/errors';
 import type { FileKind } from '../../../model/compare/file/format';
+import type { SummarySpec } from '../../../model/compare/summary';
 import { PdfReader } from '../../../model/pdf/reader';
+import type { FaceStore } from '../../render/commentFonts/faces';
 import { docPtrOf } from '../../render/pdfium';
 import { concatBytes } from '../../render/save/bytes';
 import type { WorkDocs } from '../docs';
@@ -27,6 +29,7 @@ import {
 import type { MarkSpec } from './marks';
 import { detect, readComparison, type Detected } from './read';
 import type { Inflate } from './section';
+import { layoutSummary } from './summary';
 
 /** A buffer of exactly these bytes (a Node Buffer's `slice` shares its pool). */
 export function ownBuffer(b: Uint8Array): ArrayBuffer {
@@ -64,6 +67,8 @@ export interface CompareFileRequest {
   notesDocId?: string;
   /** Text: the change marks on B's pages. */
   marks?: MarkSpec[];
+  /** Overlay: the summary page's words (M12-21); none: no summary page. */
+  summary?: SummarySpec;
 }
 
 export interface CompareFileResult {
@@ -82,6 +87,8 @@ export interface FileJobEnv {
   liveReader(docId: string): Promise<PdfReader>;
   slice: JobSlice;
   progress(p: { done: number; total: number }): void;
+  /** The app's own fonts (the summary page), loaded on first use. */
+  faces: FaceStore;
 }
 
 /** An input's bytes as they go into the file: as saved, plus its unsaved review comments. */
@@ -163,6 +170,9 @@ export async function compareFileSave(
   const B = await Promise.all(req.B.map((r) => inputOf(env, r)));
   if (req.kind === 'overlay') {
     const pages = await overlayPages(env, req);
+    const summary = req.summary
+      ? await layoutSummary(env.faces, req.summary, () => env.slice.checkpoint())
+      : undefined;
     const bytes = await buildOverlayFile(fileEnv, {
       pages: pages.bytes,
       A,
@@ -171,6 +181,7 @@ export async function compareFileSave(
       words: req.words,
       when,
       ...(req.lock === undefined ? {} : { lock: req.lock }),
+      ...(summary ? { summary } : {}),
     });
     const total = (req.vector?.sheets.length ?? 0) + 1;
     env.progress({ done: total, total });

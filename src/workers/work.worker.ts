@@ -5,6 +5,7 @@
 import { PdfiumNative } from '@embedpdf/engines/pdfium';
 import { init, type WrappedPdfiumModule } from '@embedpdf/pdfium';
 import oxideWasmUrl from 'pdf-oxide-wasm/wasm?url';
+import subsetWasmUrl from 'harfbuzzjs/dist/harfbuzz-subset.wasm?url';
 import { RpcError } from '../engine/errors';
 import type { WorkApi } from '../engine/workApi';
 import { Transfer } from '../engine/protocol';
@@ -62,6 +63,7 @@ import { copyItems, editObjects, OutlineError, readOutline } from './work/outlin
 import { popupStates } from './work/popups';
 import { LayerCopyError, layerCopy, layerKey, type LayerStates } from './shared/layerCopy';
 import { buildVectorOverlay } from './work/vectorOverlay';
+import { FaceStore, workerFontSource } from './render/commentFonts/faces';
 import {
   compareFileProbe,
   compareFileRead,
@@ -94,13 +96,21 @@ function wasmBytes(): number {
 
 const docs = new WorkDocs(need);
 
+/**
+ * The font library's faces (the comparison file's summary page, M12-21), from
+ * our own origin on first use (rule 4).
+ */
+const faces = new FaceStore(
+  workerFontSource(self.location.origin, new URL(subsetWasmUrl, self.location.href).href),
+);
+
 /** What the comparison file's jobs need (M12-20). */
 function fileEnv(
   slice: JobSlice,
   progress: (p: { done: number; total: number }) => void,
 ): FileJobEnv {
   if (!mod) throw new RpcError('not-initialized', 'The work worker is not initialized');
-  return { mod, native: need(), docs, inflate, liveReader, slice, progress };
+  return { mod, native: need(), docs, inflate, liveReader, slice, progress, faces };
 }
 
 /**

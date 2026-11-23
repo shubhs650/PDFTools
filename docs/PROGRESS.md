@@ -69,7 +69,7 @@ interop is in the M6 pack (CHECKLIST §M6 R1–R4). Rev 0 (M0–M4) is complete 
   on, Esc, comparison tabs, the keyboard path, axe light and dark). Also brought
   `compare-input.spec` up to date with M12-21's Options section in the keyboard order.
 
-- **M12-21 — change register and presets (D-65, D-58, Q34, Q35); the summary page follows M12-20.**
+- **M12-21 — change register, summary page and presets (D-65, D-58, Q34, Q35).**
   **Compare → Export Change Register…** writes the differences the list shows (its kind and
   type filters, search, scope and Hide checked), in its order, as an Excel workbook (Work
   worker, the CRS builder, now with its own column widths and number columns) or a CSV (CRS
@@ -93,8 +93,19 @@ interop is in the M6 pack (CHECKLIST §M6 R1–R4). Rev 0 (M0–M4) is complete 
   `tests/compare/register.test.ts` (TDD, workbook read back), `presets.test.ts`,
   `presets-flow.test.ts`, IndexedDB v11; `e2e/compare-register.spec.ts` (pair 01 Excel and CSV
   following the search, text pair 09, a preset saved and used, axe light and dark).
-  **Next in M12-21:** the optional summary page as the comparison file's first page, wired into
-  Save comparison… after M12-20 merges (M12-20 adds `leadingPages` to the comparison data for it).
+  **Summary page (follow-up, after M12-20):** Save Comparison… of a PDF overlay has **Add a
+  summary page** (on by default; the choice is kept for the session, and Save review keeps what
+  the reopened file had). The page comes first in the comparison file (`leadingPages`, so
+  reopening skips it): the files and page ranges, when it was saved, the app, the counts
+  (sheets compared, only in A or B, with and without differences, not checked yet; differences
+  by kind and type; ticked; how each sheet was placed), the legend (A's colour, B's colour and
+  where both overlap) and the settings (sensitivity, smallest difference, ignore zones by
+  sheet). A4, laid out and drawn in the Work worker (`workers/work/comparisonFile/summary.ts`)
+  in Noto Sans from the font library with its fallbacks (symbols, Devanagari, Chinese), embedded
+  as subsets with ToUnicode and /ActualText like the comment fonts, so it is searchable in any
+  reader; a long list goes on over more pages. Words on the main thread
+  (`features/compare/file/summary.ts`), counts pure (`model/compare/summary.ts`). A text
+  comparison file has no summary page: its pages are Document B's own bytes (ADR-032).
 - **M12-20 — the comparison file (D-65, ADR-032 with the owner's four answers).** Compare →
   **Save Comparison…** writes one standard PDF holding both documents and the comparison; the
   dialog says in plain words that the file contains both documents (named), that unsaved review

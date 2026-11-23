@@ -96,6 +96,17 @@ export class Section {
     return new PdfRef(num, gen);
   }
 
+  /**
+   * Writes an object already serialized (`num 0 obj … endobj`, generation 0):
+   * a new object only, in an unencrypted base (nothing in it is encrypted).
+   */
+  raw(num: number, bytes: Uint8Array): PdfRef {
+    if (this.reader.crypt) throw new Error('raw objects need an unencrypted base');
+    if (this.reader.xref.has(num)) throw new Error('raw objects are new objects only');
+    this.objects.set(num, { num, gen: 0, bytes });
+    return new PdfRef(num, 0);
+  }
+
   /** Writes a stream object; `compress` deflates `data` first. Encrypted for the base's key. */
   stream(num: number, dict: PdfDict, data: Uint8Array, compress = true): PdfRef {
     const gen = this.genOf(num);
