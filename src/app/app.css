@@ -7680,3 +7680,138 @@ textarea.form-field {
   flex: 1 1 auto;
   text-decoration: underline;
 }
+
+/* The close-out list (M12-15, D-62): the old revision's comments and their states. */
+.closeout-pane {
+  display: flex;
+  flex: 0 0 300px;
+  flex-direction: column;
+  gap: var(--space-2);
+  min-width: 0;
+  min-height: 0;
+  padding: var(--space-3);
+  overflow: auto;
+  border-left: var(--border-width) solid var(--color-border);
+  background: var(--color-surface);
+}
+
+.closeout-pane .overlay-side-title {
+  margin: var(--space-0);
+}
+
+.closeout-intro {
+  margin: var(--space-0);
+  color: var(--color-text-muted);
+  font-size: var(--font-size-s);
+}
+
+.closeout-tools {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-2);
+}
+
+.closeout-filter {
+  display: inline-flex;
+  gap: var(--space-1);
+}
+
+.closeout-colour {
+  margin-left: auto;
+}
+
+.closeout-doc {
+  display: flex;
+  flex: 1 1 auto;
+  flex-direction: column;
+  gap: var(--space-1);
+  min-height: 120px;
+}
+
+.closeout-file {
+  overflow: hidden;
+  font-size: var(--font-size-s);
+  font-weight: var(--font-weight-semibold);
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+.closeout-rows {
+  flex: 1 1 auto;
+}
+
+.closeout-row {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: var(--space-1) var(--space-2);
+  border-bottom: var(--border-width) solid var(--color-border);
+  border-inline-start: 4px solid transparent;
+  cursor: pointer;
+}
+
+.closeout-row:not([data-state='open']) {
+  border-inline-start-color: var(--color-success-text);
+}
+
+.closeout-row:hover {
+  background: var(--color-hover);
+}
+
+.closeout-row[aria-selected='true'] {
+  background: var(--color-selected);
+  color: var(--color-selected-text);
+}
+
+.closeout-row-head {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  font-size: var(--font-size-s);
+}
+
+.closeout-row-type {
+  font-weight: var(--font-weight-semibold);
+}
+
+.closeout-state {
+  margin-left: auto;
+  padding: 0 var(--space-1);
+  border-radius: var(--radius-s);
+  background: var(--color-surface-sunken);
+  font-size: var(--font-size-xs);
+  white-space: nowrap;
+}
+
+.closeout-state:not([data-state='open']) {
+  color: var(--color-success-text);
+}
+
+.closeout-row[aria-selected='true'] .closeout-state {
+  color: inherit;
+  background: transparent;
+  outline: var(--border-width) solid currentcolor;
+}
+
+.closeout-row-text {
+  overflow: hidden;
+  font-size: var(--font-size-s);
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+.closeout-row-meta {
+  color: var(--color-text-muted);
+  font-size: var(--font-size-xs);
+}
+
+.closeout-row[aria-selected='true'] .closeout-row-meta {
+  color: inherit;
+}
+
+.closeout-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-1);
+}

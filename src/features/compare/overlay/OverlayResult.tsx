@@ -41,6 +41,9 @@ import { ReviewLayout } from '../review/ReviewLayout';
 import { renderEngine, workClient } from '../../view/host';
 import { closeLayerCopies } from './layerCopies';
 import { documentsOf } from '../model';
+import { CloseOutPane } from '../closeout/CloseOutPane';
+import { CloseOutToggle } from '../closeout/CloseOutToggle';
+import { useCloseOutView } from '../closeout/closeOutStore';
 
 let watching = false;
 const docsOfView = new Map<string, string[]>();
@@ -132,6 +135,7 @@ export function OverlayResult({ comparison: c }: { comparison: Comparison }) {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [c.id, framesKey]);
   const notes = useNotes(c.id);
+  const closeOutOpen = useCloseOutView(c.id).open;
 
   let body;
   if (!pairing || pairing.status === 'reading' || pairing.status === 'matching') {
@@ -180,6 +184,7 @@ export function OverlayResult({ comparison: c }: { comparison: Comparison }) {
             <ProgressBar label={t('compare.review.preparing')} value={null} />
           </div>
         )}
+        {closeOutOpen ? <CloseOutPane comparison={c} /> : null}
       </div>
     );
   }
@@ -257,6 +262,7 @@ export function OverlayResult({ comparison: c }: { comparison: Comparison }) {
                 updateView(c.id, (v) => setLock(v, on));
               }}
             />
+            <CloseOutToggle id={c.id} />
           </div>
         ) : null}
         <Button

@@ -420,7 +420,15 @@ describe('the Compare build switch (M12-08, D-58, plan question 3)', () => {
     const off = ribbonLayout(COMMANDS, (c) => availableIn(c, false));
     expect(off.tabs.map((t) => t.tab)).not.toContain('compare');
     const preview = COMMANDS.filter((c) => c.preview).map((c) => c.id);
-    expect(preview).toEqual(['compare.overlay', 'compare.text', 'tab.compareWith']);
+    expect(preview).toEqual([
+      'compare.overlay',
+      'compare.text',
+      'tab.compareWith',
+      // Review across revisions (M12-15): context menus of a comparison's windows.
+      'compare.copyToNew',
+      'compare.copyToOld',
+      'compare.closeOut',
+    ]);
     expect(COMMANDS.filter((c) => availableIn(c, false) && c.preview)).toEqual([]);
   });
 

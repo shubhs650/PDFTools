@@ -9,6 +9,7 @@ import {
   mul,
   pageBox,
   placement,
+  alignedPlacement,
   skeletonPdf,
   visual,
   type Mat,
@@ -95,5 +96,39 @@ describe('NoRotate and the clipboard skeleton', () => {
       crop: [10, 20, 852, 615],
       rotate: 90,
     });
+  });
+});
+
+// M12-15 (D-62): aligned copy between revisions. The map between the pages as
+// displayed (a sheet's alignment) is folded between the two pages' own spaces.
+describe('aligned placement', () => {
+  it('is the usual placement for the identity map', () => {
+    const r90 = { crop: [0, 0, 842, 595] as [number, number, number, number], rotate: 90 };
+    const a = alignedPlacement(A4, [1, 0, 0, 1, 0, 0], r90);
+    const p = placement(A4, r90);
+    a.forEach((v, i) => {
+      expect(v).toBeCloseTo(p[i] ?? 0, 9);
+    });
+  });
+
+  it('puts a point where the displayed map sends it', () => {
+    // A is shown 20 pt right, 10 pt down and at half size on B (A displayed → B displayed).
+    const d: Mat = [0.5, 0, 0, 0.5, 20, 10];
+    const b = { crop: [0, 0, 842, 595] as [number, number, number, number], rotate: 0 };
+    const m = alignedPlacement(A4, d, b);
+    // A's displayed (100, 200) is user (100, 642); on B displayed (70, 110) is user (70, 485).
+    near(apply(m, 100, 642), [70, 485]);
+  });
+
+  it('follows /Rotate on both sides', () => {
+    const r90 = { crop: [0, 0, 842, 595] as [number, number, number, number], rotate: 90 };
+    const d: Mat = [1, 0, 0, 1, 5, 7];
+    const m = alignedPlacement(r90, d, A4);
+    // r90's user (0, 0) is its displayed top-left (0, 0) → B displayed (5, 7) = user (5, 835).
+    near(apply(m, 0, 0), [5, 835]);
+    // Every point: displayed through d.
+    const [ux, uy] = apply(m, 300, 100);
+    const [dx, dy] = apply(visual(r90), 300, 100);
+    near(apply(visual(A4), ux, uy), [dx + 5, dy + 7]);
   });
 });

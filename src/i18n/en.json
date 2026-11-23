@@ -171,7 +171,10 @@
     },
     "compare": {
       "overlay": "PDF Overlay",
-      "text": "Text Comparison"
+      "text": "Text Comparison",
+      "copyToNew": "Copy to New Revision",
+      "copyToOld": "Copy to Old Revision",
+      "closeOut": "Close Out"
     },
     "protect": {
       "markRedaction": "Mark for Redaction",
@@ -3184,6 +3187,47 @@
         "apply": "Apply",
         "cancel": "Cancel"
       }
+    },
+    "closeout": {
+      "toggle": "Close-out list",
+      "title": "Close-out",
+      "intro": "Every comment of the old revision. Close each one out against the new revision.",
+      "list": "Comments of the old revision",
+      "counts": "{{open}} open, {{closed}} closed",
+      "filter": "Show",
+      "filter_all": "All",
+      "filter_open": "Open",
+      "filter_closed": "Closed",
+      "state_open": "Open",
+      "state_addressed": "Addressed",
+      "state_carried": "Carried over",
+      "state_changed": "Changed differently",
+      "state_completed": "Completed",
+      "action_addressed": "Addressed",
+      "action_carried": "Carried Over",
+      "action_changed": "Changed Differently",
+      "reopen": "Reopen",
+      "actions": "Close out the selected comment",
+      "colour": "Check highlight colour",
+      "empty": "Document A has no comments to close out.",
+      "emptyFilter": "No comments match.",
+      "row": "{{number}}. {{text}}",
+      "rowMeta": "Page {{page}}, {{author}}",
+      "noText": "(no text)",
+      "reply_addressed": "Addressed in {{name}}",
+      "reply_carried": "Carried over to {{name}}",
+      "reply_changed": "Changed differently in {{name}}",
+      "copying": "Copying comments to the other revision…",
+      "copied_one": "{{count}} comment copied to {{name}}.",
+      "copied_other": "{{count}} comments copied to {{name}}.",
+      "done_one": "{{count}} comment closed out.",
+      "done_other": "{{count}} comments closed out.",
+      "reopened_one": "{{count}} comment reopened.",
+      "reopened_other": "{{count}} comments reopened.",
+      "notInComparison": "Use this in a comparison's Document A, Document B or overlay window.",
+      "noMatch": "There is no matching place on the other revision for these comments.",
+      "oldOnly": "Only comments of Document A, the old revision, are closed out.",
+      "noSelection": "Select a comment in the list first."
     }
   }
 }

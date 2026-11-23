@@ -6,6 +6,7 @@ import { msg } from '../../i18n';
 import { startComparison } from './compareFlow';
 import type { CompareType } from './model';
 import { compareGuard } from './review/guard';
+import { registerCloseOutCommands } from './closeout/commands';
 
 /** The type Compare with… starts with: the last one started (the window can switch it). */
 let lastType: CompareType = 'overlay';
@@ -19,6 +20,8 @@ export function registerCompareCommands(): () => void {
   const offs = [
     // A comparison's windows keep to their sheet; its notes take comment and view commands.
     addCommandGuard(compareGuard),
+    // Review across revisions (M12-15): aligned copy and paste, close-out.
+    registerCloseOutCommands(),
     registerCommand('compare.overlay', {
       run: () => {
         start('overlay');

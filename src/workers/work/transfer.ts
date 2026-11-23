@@ -125,6 +125,14 @@ export function visualUp(p: PageBox): Mat {
 /** Source user space → target user space: same place relative to the visible crop box. */
 export const placement = (src: PageBox, tgt: PageBox): Mat => mul(visual(src), invert(visual(tgt)));
 
+/**
+ * Source user space → target user space through `d`, a map between the two
+ * pages as displayed (visual space: the alignment of a comparison's sheet,
+ * M12-15, D-62): the comment lands on the matching spot of the other revision.
+ */
+export const alignedPlacement = (src: PageBox, d: Mat, tgt: PageBox): Mat =>
+  mul(mul(visual(src), d), invert(visual(tgt)));
+
 function mapPairs(arr: PdfValue, m: Mat): PdfValue {
   if (!Array.isArray(arr)) return arr;
   const out: PdfValue[] = [];
@@ -216,6 +224,11 @@ export interface ImportOptions {
   only?: ReadonlySet<number>;
   /** Moved right/down by this much as the target page is displayed (paste onto its own page). */
   shift?: { dx: number; dy: number };
+  /**
+   * Per source page, a map from it as displayed to the target page as displayed
+   * (null: the usual placement). Aligned copy between revisions (M12-15, D-62).
+   */
+  placeOf?: (srcPage: number) => Mat | null;
   /** Count only (the dialog's preview): nothing is copied. */
   dryRun?: boolean;
   /** Between comments: may throw to cancel (rule 2) and report progress. */
@@ -457,7 +470,12 @@ export async function importComments(
     const t = tpi === null ? undefined : tgtPages[tpi];
     if (!s || !t) throw new Error('page');
     const tb = await pageBox(tgt, t.dict);
-    m = opts.noTransform ? IDENTITY : placement(await pageBox(src, s.dict), tb);
+    const aligned = opts.placeOf?.(sp) ?? null;
+    m = opts.noTransform
+      ? IDENTITY
+      : aligned
+        ? alignedPlacement(await pageBox(src, s.dict), aligned, tb)
+        : placement(await pageBox(src, s.dict), tb);
     if (opts.shift) {
       // Right and down as the page is displayed (visual space), whatever its /Rotate.
       const v = visual(tb);

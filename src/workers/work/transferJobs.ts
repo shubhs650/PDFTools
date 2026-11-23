@@ -26,7 +26,17 @@ import {
   type CommentSummary,
   type ImportOptions,
   type ImportReport,
+  type Mat,
 } from './transfer';
+
+/** A page's aligned map, when it is a finite [a b c d e f] that can be inverted. */
+function placeAt(list: readonly (Mat | null)[] | undefined, page: number): Mat | null {
+  // Plain data from the main thread: check it.
+  const m = list?.[page] as readonly number[] | null | undefined;
+  if (m?.length !== 6 || !m.every((v) => Number.isFinite(v))) return null;
+  const [a = 0, b = 0, c = 0, d = 0, e = 0, f = 0] = m;
+  return Math.abs(a * d - b * c) < 1e-9 ? null : [a, b, c, d, e, f];
+}
 
 type Inflate = (bytes: Uint8Array) => Promise<Uint8Array>;
 
@@ -60,6 +70,12 @@ export interface TransferSpec {
   pageMap?: (number | null)[];
   /** Move right/down by this much as displayed (paste onto its own page). */
   shift?: { dx: number; dy: number };
+  /**
+   * Per source page (index as `pageMap`), a map from it as displayed to its
+   * target page as displayed, [a b c d e f] (null: the usual placement): the
+   * aligned copy between a comparison's revisions (M12-15, D-62).
+   */
+  place?: (Mat | null)[];
   /** Count only (the dialog's preview). */
   dryRun?: boolean;
   /** Only these comments (thread roots by /NM): a JSON v2 import's plan (ADR-025). */
@@ -150,6 +166,7 @@ function optionsOf(spec: TransferSpec, slice: JobSlice, progress: Progress): Imp
     ...(spec.newNames ? { newNames: true } : {}),
     ...(map ? { pageMap: (sp: number) => map[sp] ?? null } : {}),
     ...(spec.shift ? { shift: spec.shift } : {}),
+    ...(spec.place ? { placeOf: (sp: number) => placeAt(spec.place, sp) } : {}),
     ...(spec.dryRun ? { dryRun: true } : {}),
     checkpoint: async (done, total) => {
       progress({ done, total });
