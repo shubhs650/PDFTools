@@ -11,7 +11,8 @@ import { useTranslation } from 'react-i18next';
 import { documentStore, useDocuments } from '../../../app/store/documentStore';
 import { format } from '../../../i18n';
 import { toReference, type WindowRole } from '../../../model/compare/link';
-import { DocumentView } from '../../view/DocumentView';
+import { DocumentView, type PageFrameInfo } from '../../view/DocumentView';
+import { AlignPickLayer } from '../align/AlignPickLayer';
 import { tileCache } from '../../view/host';
 import { setViewFocus, setVisibleWindows } from '../../view/tileScheduler';
 import type { Comparison } from '../model';
@@ -94,9 +95,10 @@ export function ReviewLayout({
     };
   }, [review, sides]);
 
-  // The windows on screen: their documents, pages and maps into the overlay's frame.
-  const sheetKey = JSON.stringify([review, notesId, index, sheet.a, sheet.b, place]);
-  const windowsKey = JSON.stringify([sheetKey, sides]);
+  // The windows on screen: their documents, pages and maps into the overlay's frame. A new
+  // placement (an alignment found, or set by hand: M12-13) moves the others; it does not refit.
+  const sheetKey = JSON.stringify([review, notesId, index, sheet.a, sheet.b]);
+  const windowsKey = JSON.stringify([sheetKey, place, sides]);
   /** The sheet the overlay was last fitted to (a side window mounting later does not refit it). */
   const fitted = useRef<string | null>(null);
   const windows = (): LinkedWindow[] => {
@@ -248,7 +250,7 @@ export function ReviewLayout({
           <div ref={column} className="review-column">
             <div className="review-pane" style={{ flexBasis: `${String(view.splits.y * 100)}%` }}>
               {sides >= 1 ? (
-                <SideWindow side="a" sheet={sheet} props={windowProps}>
+                <SideWindow id={c.id} side="a" sheet={sheet} props={windowProps}>
                   <Crosshair link={link} of="a" />
                 </SideWindow>
               ) : (
@@ -268,7 +270,7 @@ export function ReviewLayout({
             />
             <div className="review-pane review-pane-rest">
               {sides >= 2 ? (
-                <SideWindow side="b" sheet={sheet} props={windowProps}>
+                <SideWindow id={c.id} side="b" sheet={sheet} props={windowProps}>
                   <Crosshair link={link} of="b" />
                 </SideWindow>
               ) : (
@@ -290,11 +292,13 @@ type WindowProps = (
 
 /** Document A or B as a live window on the sheet's page, or a note that the sheet has none. */
 function SideWindow({
+  id,
   side,
   sheet,
   props,
   children,
 }: {
+  id: string;
   side: 'a' | 'b';
   sheet: Sheet;
   props: WindowProps;
@@ -320,6 +324,22 @@ function SideWindow({
     page: format.number(p.page + 1),
   });
   const { ref, ...rest } = props(side, p.docId, p.page);
+  const pair = sheet.pair;
+  // Picking alignment points and their marks (M12-13), on the sheet's page.
+  const layer =
+    pair === null
+      ? undefined
+      : (pageIndex: number, frame: PageFrameInfo) =>
+          pageIndex === p.page ? (
+            <AlignPickLayer
+              id={id}
+              side={side}
+              pair={pair}
+              docId={p.docId}
+              pageIndex={pageIndex}
+              frame={frame}
+            />
+          ) : null;
   return (
     <div
       ref={ref}
@@ -335,7 +355,12 @@ function SideWindow({
         <DocumentView
           key={p.docId}
           documentId={p.docId}
-          sheet={{ page: p.page, label: title, testId: `review-view-${side}` }}
+          sheet={{
+            page: p.page,
+            label: title,
+            testId: `review-view-${side}`,
+            ...(layer ? { layer } : {}),
+          }}
         />
       </div>
       {children}

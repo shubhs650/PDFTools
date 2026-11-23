@@ -1,6 +1,6 @@
 # Triya PDF — Progress
 
-_Last updated: 2026-11-22 (M12-12: the Review layout)_
+_Last updated: 2026-11-22 (M12-13: manual alignment)_
 
 **Current milestone:** M12 — PDF comparison (PDF overlay for drawings, text comparison for
 documents), version 1.1.0: plan [docs/plan/M12.md](plan/M12.md) and
@@ -29,6 +29,38 @@ answers Q1–Q7; ARCHITECTURE.md Rev 0.12 after [ADR-024](adr/024-freetext-text-
 interop is in the M6 pack (CHECKLIST §M6 R1–R4). Rev 0 (M0–M4) is complete on the agent side.
 
 ## Done
+
+- **M12-13 — manual alignment (D-60, Q7, Q8).** An overlay result's left pane has an
+  **Alignment** section under the sheet list. **Align by points** switches to Review and makes
+  Document A's and Document B's windows pick points (`src/features/compare/align/`): a click on
+  A then the same spot on B makes a pair (either order; a second click on the same side moves
+  that point), 1 pair shifts the placement in use, 2 give shift, one scale and rotation, 3 a
+  least-squares best fit with each pair's error and the average and largest (pure maths in
+  `src/model/compare/align/manual.ts`; points closer than 20 pt or a scale beyond the aligner's
+  range are refused with a message). Picking **snaps to the drawing** with the app's snap index
+  (`snapPointIn` with `force` and the window's own zoom; Alt held: no snapping) and shows a
+  **magnifier** beside the pointer (an `overlayTile` of that side alone at 4× the window's zoom,
+  in its overlay colour, not cached: `cache: false`); picked points are numbered marks in both
+  windows (`SheetWindow.layer`, a page layer in the laid-out space; marks stay upright on turned
+  pages). **Numeric fine-tune:** X and Y offset (pt), scale (%) and rotation (°), typed in the
+  user's locale or stepped with Arrow Up and Down; a new scale or rotation turns A about the
+  sheet's centre. **Nudge:** arrow keys on the nudge buttons move A 0.1 pt (Shift: 1 pt). The
+  overlay and the linked windows show the placement being set at once (`view.manual`, read by
+  `placeOf`); a new placement no longer refits the overlay. **Apply to** this sheet, all sheets
+  or all low-confidence sheets hands it to the session (`CompareSession.setManual`): the status
+  becomes **Aligned by hand** (`AlignStatus` `'manual'`, the comparison file's `manual`), the
+  Compare worker records it (a new placement drops the sheet's facts) and the sheet is analysed
+  again (an analysis under the old placement stops at its next band); one set before the
+  automatic alignment arrives stays in use. **Use automatic alignment** goes back. Cancel,
+  another sheet or a new pairing leave the placement in use; Overlay only stops picking.
+  `quarterTurn` moved to `src/model/compare/material.ts` (pure). Tests:
+  `tests/compare/manual-align.test.ts`, `manual-state.test.ts`, `manual-session.test.ts` (real
+  PDFium on pair 04); `e2e/compare-align.spec.ts` (pair 04: two pairs give the pairs' rotation and
+  agree with the automatic −1.2°, a third pair 3 pt off shows the error, remove, Apply, back to
+  automatic; nudges, typed values, a bad value, Apply to all sheets; snapping and the magnifier on
+  the /Rotate 90 sheet; axe light and dark). **Open:** picking needs a pointer; the keyboard path
+  is the values and the nudges. Placements set by hand are not kept when the pairing table is
+  edited (a new session) and are saved with the comparison file only from M12-20.
 
 - **M12-12 — the Review layout (D-62, D-59).** An overlay result shows **Overlay only** or
   **Review**: the overlay large on the left, Document A top right and Document B bottom right,
@@ -3616,8 +3648,8 @@ rel="noopener noreferrer">`; the commands `app.home` / `app.reportIssue` open th
   sample packs work in Acrobat Reader and a second desktop editor); ARCHITECTURE.md Rev 0.22.
   M12-07 (the Compare worker and its jobs), M12-08 (the comparison tab and input window), M12-09
   (pairing), M12-10 (automatic alignment), M12-11 (the overlay view; layer switches open),
-  M12-17 (text comparison engine), M12-18 (text structure), M12-12 (the Review layout). Next:
-  the remaining tasks in plan order.
+  M12-17 (text comparison engine), M12-18 (text structure), M12-12 (the Review layout), M12-13
+  (manual alignment). Next: the remaining tasks in plan order.
 - **Agent (M11):** the 18 tasks in [docs/plan/M11.md](plan/M11.md) "Order of work", one thread
   each. Done: M11-01, M11-10, M11-02 (spike S26), M11-03 (tabs: look, hover card, +), M11-04
   (drag to reorder), M11-05 (tab menus), M11-06 (comments in every pointer mode), M11-07 (font
