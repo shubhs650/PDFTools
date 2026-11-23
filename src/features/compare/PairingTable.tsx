@@ -1,10 +1,20 @@
-import { useId } from 'react';
+import { Eye20Regular } from '@fluentui/react-icons/svg/eye';
+import { useEffect, useId, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { useDocuments } from '../../app/store/documentStore';
 import { format } from '../../i18n';
-import { scoreOf, setExcluded, setPartner, type PairRow } from '../../model/compare/pairing';
-import { Button, ProgressBar } from '../../ui/components';
-import type { SidePage } from './engine/session';
+import {
+  rowCheck,
+  scoreOf,
+  setExcluded,
+  setPartner,
+  type PairRow,
+} from '../../model/compare/pairing';
+import { Button, IconButton, ProgressBar } from '../../ui/components';
+import { CheckMark } from './CheckMark';
+import { PagePicker } from './PagePicker';
+import { PagePicture } from './PagePicture';
+import { PairPreview } from './PairPreview';
+import { usePageLabel } from './pairingLabels';
 import {
   editPairing,
   pairingEdited,
@@ -24,6 +34,10 @@ const NONE = '';
  * choose None to mark a page as added (B only) or removed (A only), or leave a
  * sheet out of the comparison. With several files on a side, pages are shown
  * with their file's name.
+ *
+ * M12-24 (ADR-033): each row shows a picture of its A and B page; a picture
+ * opens the page picker; the eye button opens Preview pair; a sheet that
+ * needs a look (a weak match, a page added or removed) is marked "Check".
  */
 export function PairingTable({ id }: { id: string }) {
   const { t } = useTranslation();
@@ -107,21 +121,31 @@ function PairingStatus({ p }: { p: PairingState }) {
   );
 }
 
+/** The box a row's page picture fits in (about 160 px wide, ADR-033). */
+const ROW_BOX = { width: 160, height: 120 };
+
 function Rows({ id, p }: { id: string; p: PairingState }) {
   const { t } = useTranslation();
-  const docs = useDocuments((s) => s.docs);
-  const sets: Record<SideId, boolean> = {
-    a: new Set(p.pages.a.map((x) => x.docId)).size > 1,
-    b: new Set(p.pages.b.map((x) => x.docId)).size > 1,
-  };
-  const label = (side: SideId, k: number): string => {
-    const page: SidePage | undefined = p.pages[side][k];
-    if (!page) return '';
-    const n = format.number(page.page + 1);
-    return sets[side]
-      ? t('compare.pairing.pageOf', { name: docs[page.docId]?.meta.name ?? '', page: n })
-      : t('compare.pairing.page', { page: n });
-  };
+  const label = usePageLabel(p);
+  const [picker, setPicker] = useState<{ row: number; side: SideId } | null>(null);
+  const [preview, setPreview] = useState<number | null>(null);
+  const scroll = useRef<HTMLDivElement>(null);
+  // A pick re-keys the sheet's row: focus goes back to the new row's picture.
+  const [refocus, setRefocus] = useState<{ row: number; side: SideId } | null>(null);
+  useEffect(() => {
+    if (!refocus) return;
+    const timer = setTimeout(() => {
+      const row = scroll.current?.querySelectorAll('tbody tr')[refocus.row];
+      const el = row?.querySelector<HTMLElement>(
+        `[data-testid="compare-pairing-picture-${refocus.side}"]`,
+      );
+      if (el && !el.contains(document.activeElement)) el.focus();
+      setRefocus(null);
+    }, 0);
+    return () => {
+      clearTimeout(timer);
+    };
+  }, [refocus]);
   const edit = (fn: (rows: PairRow[]) => PairRow[]): void => {
     editPairing(id, fn);
   };
@@ -130,7 +154,7 @@ function Rows({ id, p }: { id: string; p: PairingState }) {
   };
   const sideLabel = { a: t('compare.side.a'), b: t('compare.side.b') };
   return (
-    <div className="compare-pairing-scroll">
+    <div ref={scroll} className="compare-pairing-scroll">
       <table className="compare-pairing-table">
         <caption className="ui-visually-hidden">{t('compare.pairing.caption')}</caption>
         <thead>
@@ -147,6 +171,7 @@ function Rows({ id, p }: { id: string; p: PairingState }) {
             const sheet = format.number(i + 1);
             const score = p.result ? scoreOf(p.result, r.a, r.b) : null;
             const paired = r.a !== null && r.b !== null;
+            const check = rowCheck(r, score);
             return (
               <tr
                 key={`${String(r.a)}:${String(r.b)}`}
@@ -154,37 +179,77 @@ function Rows({ id, p }: { id: string; p: PairingState }) {
                 data-a={r.a ?? ''}
                 data-b={r.b ?? ''}
                 data-excluded={r.excluded ? '' : undefined}
+                data-check={check ?? undefined}
               >
                 <th scope="row">{sheet}</th>
-                {SIDES.map((side) => (
-                  <td key={side}>
-                    <select
-                      className="ui-field-input compare-pairing-select"
-                      aria-label={t('compare.pairing.choose', { side: sideLabel[side], sheet })}
-                      value={r[side] === null ? NONE : String(r[side])}
-                      onChange={(e) => {
-                        choose(i, side, e.currentTarget.value);
-                      }}
-                    >
-                      <option value={NONE}>
-                        {side === 'a' ? t('compare.pairing.noneA') : t('compare.pairing.noneB')}
-                      </option>
-                      {partnerOptions(p, side, r).map((k) => (
-                        <option key={k} value={String(k)}>
-                          {label(side, k)}
+                {SIDES.map((side) => {
+                  const k = r[side];
+                  const page = k === null ? undefined : p.pages[side][k];
+                  return (
+                    <td key={side} className="compare-pairing-side">
+                      <button
+                        type="button"
+                        className="compare-pairing-picture ui-focusable"
+                        aria-label={t('compare.picker.open', { side: sideLabel[side], sheet })}
+                        aria-haspopup="dialog"
+                        data-testid={`compare-pairing-picture-${side}`}
+                        onClick={() => {
+                          setPicker({ row: i, side });
+                        }}
+                      >
+                        {page ? (
+                          <PagePicture
+                            docId={page.docId}
+                            page={page.page}
+                            box={ROW_BOX}
+                            priority={i}
+                          />
+                        ) : (
+                          <span className="compare-pairing-nopage" aria-hidden="true">
+                            {t('compare.pairing.none')}
+                          </span>
+                        )}
+                      </button>
+                      <select
+                        className="ui-field-input compare-pairing-select"
+                        aria-label={t('compare.pairing.choose', { side: sideLabel[side], sheet })}
+                        value={k === null ? NONE : String(k)}
+                        onChange={(e) => {
+                          choose(i, side, e.currentTarget.value);
+                        }}
+                      >
+                        <option value={NONE}>
+                          {side === 'a' ? t('compare.pairing.noneA') : t('compare.pairing.noneB')}
                         </option>
-                      ))}
-                    </select>
-                  </td>
-                ))}
+                        {partnerOptions(p, side, r).map((o) => (
+                          <option key={o} value={String(o)}>
+                            {label(side, o)}
+                          </option>
+                        ))}
+                      </select>
+                    </td>
+                  );
+                })}
                 <td className="compare-pairing-match">
-                  {paired
-                    ? score === null
-                      ? ''
-                      : format.percent(Math.min(1, Math.max(0, score)), 0)
-                    : r.a === null
-                      ? t('compare.pairing.added')
-                      : t('compare.pairing.removed')}
+                  <span className="compare-pairing-score">
+                    {paired
+                      ? score === null
+                        ? ''
+                        : format.percent(Math.min(1, Math.max(0, score)), 0)
+                      : r.a === null
+                        ? t('compare.pairing.added')
+                        : t('compare.pairing.removed')}
+                  </span>
+                  {check ? <CheckMark check={check} /> : null}
+                  <IconButton
+                    label={t('compare.pairPreview.open', { sheet })}
+                    icon={<Eye20Regular />}
+                    size="small"
+                    aria-haspopup="dialog"
+                    onClick={() => {
+                      setPreview(i);
+                    }}
+                  />
                 </td>
                 <td>
                   <input
@@ -204,6 +269,27 @@ function Rows({ id, p }: { id: string; p: PairingState }) {
           })}
         </tbody>
       </table>
+      {picker ? (
+        <PagePicker
+          id={id}
+          row={picker.row}
+          side={picker.side}
+          onClose={(picked) => {
+            if (picked) setRefocus(picker);
+            setPicker(null);
+          }}
+        />
+      ) : null}
+      {preview !== null ? (
+        <PairPreview
+          id={id}
+          row={Math.min(preview, p.rows.length - 1)}
+          onRow={setPreview}
+          onClose={() => {
+            setPreview(null);
+          }}
+        />
+      ) : null}
     </div>
   );
 }

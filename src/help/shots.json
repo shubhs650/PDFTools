@@ -43,6 +43,14 @@
     "w": 1038,
     "h": 601
   },
+  "compare-pairing-1": {
+    "w": 972,
+    "h": 829
+  },
+  "compare-pairing-2": {
+    "w": 976,
+    "h": 458
+  },
   "compare-review-1": {
     "w": 1272,
     "h": 701
@@ -57,7 +65,7 @@
   },
   "compare-start-2": {
     "w": 1006,
-    "h": 817
+    "h": 1018
   },
   "compare-text-1": {
     "w": 1038,

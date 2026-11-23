@@ -13,9 +13,9 @@ import { useTranslation } from 'react-i18next';
 import { documentStore, useDocuments } from '../../../app/store/documentStore';
 import { format } from '../../../i18n';
 import { comparedPairs } from '../../../model/compare/pairing';
-import { Button, IconButton, ProgressBar, ToggleButton } from '../../../ui/components';
+import { IconButton, ProgressBar, ToggleButton } from '../../../ui/components';
 import { CommandIcon } from '../../../ui/icons/CommandIcon';
-import { updateInputs } from '../compareFlow';
+import { NewComparisonButton } from '../NewComparisonButton';
 import type { Comparison } from '../model';
 import { pairingInputs, startComparing, syncPairing, usePairing } from '../pairingFlow';
 import { typeLabel } from '../title';
@@ -313,13 +313,7 @@ export function OverlayResult({ comparison: c }: { comparison: Comparison }) {
         ) : null}
         {c.area ? null : (
           // An area comparison's inputs are its rectangles, drawn in another comparison (O1).
-          <Button
-            label={t('compare.result.inputs')}
-            size="small"
-            onClick={() => {
-              updateInputs(c.id, (cur) => ({ ...cur, stage: 'input' }));
-            }}
-          />
+          <NewComparisonButton id={c.id} />
         )}
         <HelpButton topic="compare-overlay" label={t('compare.help')} />
       </header>

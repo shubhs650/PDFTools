@@ -1224,10 +1224,11 @@
         },
         {
           "steps": [
-            "Choose <b>Compare</b> › <b>PDF Overlay</b> for drawings, or <b>Compare</b> › <b>Text Comparison</b> for documents. A comparison tab opens on its input window.",
+            "Choose <b>Compare</b> › <b>PDF Overlay</b> for drawings, or <b>Compare</b> › <b>Text Comparison</b> for documents. A comparison tab opens on its input window. The steps at the top show where you are: <b>Choose files</b>, <b>Check pairs</b> (PDF overlay only) and <b>Compare</b>.",
             "Drop the old revision on <b>Document A (old)</b> and the new one on <b>Document B (new)</b>, or use <b>Choose file…</b>, or <b>Use an open file</b> for a document that is already open in a tab.",
             "Check the thumbnails, and type a page range such as 1-3, 8 to compare only some pages. Leave it empty for all pages.",
-            "Choose <b>Compare</b>. The first sheet or page shows as soon as it is ready, and the rest fills in behind it."
+            "For a PDF overlay, check the <b>Pairing</b> table: each sheet shows its page from Document A and from Document B, and a sheet marked <b>Check</b> needs a look. See [Pairing and alignment](#compare-alignment).",
+            "Choose <b>Compare</b>. It stays at the bottom of the window, however long the table. The first sheet or page shows as soon as it is ready, and the rest fills in behind it."
           ]
         },
         {
@@ -1240,7 +1241,7 @@
             "For a PDF overlay, each side takes several files, compared as one set (for example one file per sheet). The arrows put the files in order.",
             "Right-click a document tab and choose <b>Compare with…</b> to start a comparison with that document as Document A.",
             "Drag a document tab onto another one and hold it there for half a second: let go and choose <b>Compare these two</b>.",
-            "<b>Change inputs</b> in a result goes back to the input window, for example to compare the same files the other way."
+            "<b>New comparison</b> in a result opens a new comparison tab with the same files, pages and settings, for example to compare the same files the other way or with other pages. The result stays open in its own tab."
           ]
         },
         {
@@ -1252,7 +1253,7 @@
         {
           "steps": [
             "In a result, choose <b>Compare</b> › <b>Save as Preset…</b>, type a name and <b>Save</b>.",
-            "In the input window of a new comparison, open <b>Options</b> and pick the preset. It is used when you press <b>Compare</b>."
+            "In the input window of a new comparison, open <b>Options</b> and pick the preset. It is used when you press <b>Compare</b>. A comparison opened with <b>New comparison</b> offers <b>Settings of the earlier result</b> there, and uses them unless you pick something else."
           ]
         },
         {
@@ -1322,14 +1323,24 @@
           "h": "Pairing pages"
         },
         {
-          "p": "{{app}} pairs the pages of the two revisions by how alike they look and read, keeping their order where it can. It also finds sheets that were added, removed or moved to another place. The <b>Pairing</b> table in the input window shows the result before you compare."
+          "p": "{{app}} pairs the pages of the two revisions by how alike they look and read, keeping their order where it can. It also finds sheets that were added, removed or moved to another place. The <b>Pairing</b> table in the input window shows the result before you compare: each sheet shows a picture of its page from Document A and from Document B, and how well they match."
+        },
+        {
+          "shot": "compare-pairing-1",
+          "alt": "The Pairing table, with the pages of each sheet side by side and a removed sheet marked Check"
         },
         {
           "steps": [
-            "To compare a page with another partner, pick the partner in its row. Pick <b>None</b> to mark it as added or removed.",
+            "Look for sheets marked <b>Check</b>: the two pages match under 50 %, or a page is only in one revision (added or removed). Make sure each is right.",
+            "To see a sheet's two pages large, choose the eye button (<b>Preview</b>) in its row. <b>Previous pair</b> and <b>Next pair</b> step through every sheet.",
+            "To compare a page with another partner, click its picture and choose the page from the pictures of that file, or pick it in the list under the picture. The match with the other page is shown under each one. Choose <b>None</b> to mark the page as added or removed.",
             "Clear <b>Compare</b> in a row to leave that sheet out.",
             "<b>Pair automatically</b> undoes your changes to the table."
           ]
+        },
+        {
+          "shot": "compare-pairing-2",
+          "alt": "Choosing the Document B page of a sheet from the pictures of that file, with the match of each page"
         },
         {
           "h": "Automatic alignment"

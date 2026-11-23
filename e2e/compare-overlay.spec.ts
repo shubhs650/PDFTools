@@ -138,9 +138,10 @@ test('pair 01: old red, new green, the same black; the floating bar changes the 
   await page.keyboard.up('x');
   await expect(view(page)).toHaveAttribute('data-blink', '');
 
-  // Back to the inputs and to the result again.
-  await page.getByRole('button', { name: 'Change inputs' }).click();
+  // New comparison: another tab on the same files; this result stays in its own tab.
+  await page.getByRole('button', { name: 'New comparison' }).click();
   await expect(page.getByTestId('compare-input')).toBeVisible();
+  await expect(page.getByTestId('compare-pairing')).toHaveAttribute('data-status', 'done');
 });
 
 test('pair 16 (identical): no red or green anywhere', async ({ page }) => {

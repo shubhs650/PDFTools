@@ -8,6 +8,8 @@ import { documentStore } from '../../app/store/documentStore';
 import { pickPdfFiles, type OpenedFile } from '../../storage/fileAccess';
 import type { DocumentSource } from '../../app/store/documentStore';
 import { openFiles, releaseDocuments } from '../open/openDocument';
+import { pairingStore, restorePairing } from './pairingFlow';
+import { carrySettings } from './presets/presetStore';
 import {
   addFiles,
   documentsOf,
@@ -15,6 +17,7 @@ import {
   newComparisonId,
   type CompareType,
   type Comparison,
+  type SideFile,
   type SideId,
 } from './model';
 
@@ -58,6 +61,28 @@ export function startComparison(
   const id = newComparisonId();
   documentStore.getState().openComparison(newComparison(id, type, a, b), at);
   return id;
+}
+
+/**
+ * New comparison (M12-24, ADR-033, replacing "Change inputs"): a new
+ * comparison tab, right after the selected one, on its input window with the
+ * same files, page ranges, type and settings as comparison `id` (an overlay
+ * also keeps its pairing table). The result stays open in its own tab. The
+ * files stay one document each, shared by both comparisons. Not for an area
+ * comparison, whose inputs are rectangles drawn in another comparison.
+ */
+export function newComparisonFrom(id: string): string | null {
+  const c = documentStore.getState().comparisons[id];
+  if (!c || c.area) return null;
+  const next = newComparisonId();
+  carrySettings(c, next);
+  const p = pairingStore.getState().byId[id];
+  if (c.type === 'overlay' && p?.status === 'done') restorePairing(next, p.rows);
+  const copy = (files: readonly SideFile[]): SideFile[] => files.map((f) => ({ ...f }));
+  documentStore
+    .getState()
+    .openComparison({ id: next, type: c.type, stage: 'input', a: copy(c.a), b: copy(c.b) });
+  return next;
 }
 
 /**
