@@ -1,4 +1,5 @@
 import { Dismiss20Regular } from '@fluentui/react-icons/svg/dismiss';
+import { dialogHelp } from '../../help/openHelp';
 import { useTranslation } from 'react-i18next';
 import { useDocuments } from '../../../app/store/documentStore';
 import { format } from '../../../i18n';
@@ -78,6 +79,7 @@ export function SaveComparisonDialog() {
         if (!open) closeSaveComparison();
       }}
       title={t('compare.file.save.title')}
+      help={dialogHelp('compare-saving')}
       description={t('compare.file.save.description', { name: fileName })}
       closeIcon={<Dismiss20Regular />}
       footer={

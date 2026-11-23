@@ -7696,8 +7696,30 @@ textarea.form-field {
 }
 
 .text-list-count {
+  margin-inline-start: auto;
   color: var(--color-text-muted);
   font-size: var(--font-size-s);
+}
+
+/* "?" on a comparison's window and panes (M12-22): beside the title, at its end. */
+.text-list-head .help-button {
+  align-self: center;
+}
+
+.pane-title-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-2);
+  margin-block-end: var(--space-2);
+}
+
+.pane-title-row .overlay-side-title {
+  margin: var(--space-0);
+}
+
+.compare-head .help-button {
+  align-self: center;
 }
 
 .text-list-tools {

@@ -8,7 +8,9 @@ import { expect, test } from './support/fixtures.ts';
 // moving anything or taking focus. "See what's new" opens About at the list.
 
 const KEY = 'pdftools.whatsNewSeen';
-const LATEST_TITLE = 'Version 1.0.0, the first public release';
+const LATEST_ID = 'v1.1.0';
+const LATEST_TITLE = 'Version 1.1.0: compare revisions';
+const FIRST_TITLE = 'Version 1.0.0, the first public release';
 
 const backstage = (page: Page) => page.getByTestId('backstage');
 const banner = (page: Page) => page.getByTestId('whats-new-banner');
@@ -28,7 +30,7 @@ const axe = async (page: Page) =>
   (await new AxeBuilder({ page }).analyze()).violations.map((v) => v.id);
 
 test(
-  "About lists what's new: 1.0.0 only, no earlier versions (ADR-029)",
+  "About lists what's new: 1.1.0 first, 1.0.0 under earlier versions (ADR-029, M12-22)",
   { tag: '@smoke' },
   async ({ page }) => {
     await page.goto('/');
@@ -41,10 +43,15 @@ test(
     await expect(latest.getByRole('heading', { name: LATEST_TITLE })).toBeVisible();
     await expect(latest).toContainText(/Released \w+ \d+, \d{4}|Released \d+/);
     await expect(latest.getByRole('listitem')).toHaveCount(5);
-    await expect(latest).toContainText('Measure drawings to scale');
+    await expect(latest).toContainText('PDF Overlay');
 
-    // The first public release has no earlier versions to fold.
-    await expect(section.getByTestId('whats-new-earlier')).toHaveCount(0);
+    // 1.0.0, the first public release, is folded under the earlier versions.
+    const earlier = section.getByTestId('whats-new-earlier');
+    await expect(earlier).toHaveCount(1);
+    await earlier.locator('summary').click();
+    await expect(earlier.getByRole('heading', { name: FIRST_TITLE })).toBeVisible();
+    await expect(earlier).toContainText('Measure drawings to scale');
+    await expect(earlier.getByRole('heading')).toHaveCount(1);
 
     // It sits between the actions and Built with.
     const headings = await backstage(page).getByTestId('about').locator('h3').allTextContents();
@@ -59,7 +66,7 @@ test(
   async ({ page }) => {
     await page.goto('/');
     await expect(page.getByRole('tab', { name: 'Home' })).toBeVisible();
-    await expect.poll(() => stored(page)).toBe('v1.0.0');
+    await expect.poll(() => stored(page)).toBe(LATEST_ID);
     await expect(banner(page)).toHaveCount(0);
     await page.reload();
     await expect(page.getByRole('tab', { name: 'Home' })).toBeVisible();
@@ -82,7 +89,7 @@ for (const theme of ['light', 'dark'] as const) {
       await expect(card).toBeVisible();
       await expect(card.getByRole('heading', { name: 'Triya PDF has been updated' })).toBeVisible();
       await expect(card).toContainText(LATEST_TITLE);
-      expect(await stored(page)).toBe('v1.0.0');
+      expect(await stored(page)).toBe(LATEST_ID);
 
       // It takes no focus and no room: over the document area, above the status bar.
       expect(await card.evaluate((el) => el.contains(document.activeElement))).toBe(false);

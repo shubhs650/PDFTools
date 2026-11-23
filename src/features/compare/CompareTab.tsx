@@ -37,6 +37,7 @@ import {
   type SideFile,
   type SideId,
 } from './model';
+import { HelpButton } from '../help/HelpButton';
 import { PairingTable } from './PairingTable';
 import { PresetOptions } from './presets/PresetOptions';
 import { applyPickedPreset } from './presets/presetStore';
@@ -132,6 +133,7 @@ function InputWindow({ comparison: c }: { comparison: Comparison }) {
       aria-labelledby={titleId}
       data-testid="compare-input"
       data-type={c.type}
+      data-help-topic="compare-start"
     >
       <div className="compare-column">
         <header className="compare-head">
@@ -164,6 +166,7 @@ function InputWindow({ comparison: c }: { comparison: Comparison }) {
               </label>
             ))}
           </fieldset>
+          <HelpButton topic="compare-start" label={t('compare.help')} />
         </header>
         <div className="compare-sides">
           <SidePanel comparison={c} side="a" />

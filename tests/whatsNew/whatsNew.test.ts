@@ -1,7 +1,7 @@
 // @vitest-environment jsdom
 // What's new (M10-08·O6, ADR-027): the release list, when the banner shows
 // (once after an update, never on a first visit), and its record on this device.
-import { readdirSync } from 'node:fs';
+import { readdirSync, readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { beforeEach, describe, expect, it } from 'vitest';
 import {
@@ -44,11 +44,25 @@ describe('release list', () => {
     expect(notes).toContain(`${LATEST_RELEASE_ID}.md`);
   });
 
-  it('1.0.0, the first public release, is the only entry (ADR-029)', () => {
-    expect(list.map((r) => r.id)).toEqual(['v1.0.0']);
-    const text = list[0]?.items.join(' ') ?? '';
+  it('1.0.0, the first public release, is the oldest entry (ADR-029)', () => {
+    expect(list.at(-1)?.id).toBe('v1.0.0');
+    const text = list.at(-1)?.items.join(' ') ?? '';
     for (const words of ['tabs', 'Comment', 'Measure', 'forms', 'redact', 'OCR', 'offline'])
       expect(text, words).toContain(words);
+  });
+
+  it('1.1.0 announces Compare (M12-22)', () => {
+    expect(list.map((r) => r.id)).toEqual(['v1.1.0', 'v1.0.0']);
+    const text = list[0]?.items.join(' ') ?? '';
+    for (const words of ['PDF Overlay', 'Text Comparison', 'change register', 'offline'])
+      expect(text, words).toContain(words);
+  });
+
+  it('the newest release is the version in package.json', () => {
+    const pkg = JSON.parse(readFileSync(join(root, 'package.json'), 'utf8')) as {
+      version: string;
+    };
+    expect(LATEST_RELEASE_ID).toBe(`v${pkg.version}`);
   });
 
   it('reads a date as a local calendar date', () => {

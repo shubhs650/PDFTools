@@ -9,6 +9,7 @@ import { OWNER_PW, qpdfEncrypt } from '../fixtures/encrypted.ts';
 import { attachmentsPdf } from '../fixtures/generate.ts';
 import { helpReportPdf } from '../fixtures/help-samples.ts';
 import { cap, darkTheme, drop } from '../support/app.ts';
+import { compareSide, corpusFile, dropOn, overlayDrawn, textFile } from '../support/compare.ts';
 import { expect, test } from '../support/fixtures.ts';
 import { shoot, type Box } from './shoot.ts';
 import {
@@ -737,6 +738,203 @@ test('ocr-1: the Recognize Text (OCR) dialog', async ({ page }) => {
   const d = dialog(page, 'Recognize Text (OCR)');
   await expect(d).toBeVisible();
   await shoot(page, 'ocr-1', { clip: d, pad: 8 });
+});
+
+// --- Compare (M12-22) ---------------------------------------------------------------
+// On the self-made comparison corpus (Synthetic PDF Corpus, M12-01), with
+// names a reader recognises.
+
+const input = (page: Page) => page.getByTestId('compare-input');
+const result = (page: Page) => page.getByTestId('compare-result');
+
+/** A comparison of corpus pair `id` on its input window, both sides filled. */
+async function compareInputs(
+  page: Page,
+  kind: 'overlay' | 'text',
+  id: string,
+  names: [string, string],
+): Promise<void> {
+  await ribbonTab(page, 'Compare').click();
+  await toolbar(page, 'Compare')
+    .getByRole('button', { name: kind === 'overlay' ? 'PDF Overlay' : 'Text Comparison' })
+    .click();
+  const file = kind === 'overlay' ? corpusFile : textFile;
+  await dropOn(compareSide(page, 'a'), [file(id, 'old', names[0])]);
+  await expect(compareSide(page, 'a').getByTestId('compare-file')).toHaveCount(1);
+  await dropOn(compareSide(page, 'b'), [file(id, 'new', names[1])]);
+  await expect(compareSide(page, 'b').getByTestId('compare-file')).toHaveCount(1);
+  if (kind === 'overlay')
+    await expect(page.getByTestId('compare-pairing')).toHaveAttribute('data-status', 'done', {
+      timeout: 30_000,
+    });
+  await expect(input(page).getByRole('button', { name: 'Compare', exact: true })).toBeEnabled();
+}
+
+/** Runs the comparison and waits for its first sheet (overlay) or its end (text). */
+async function runCompare(page: Page, kind: 'overlay' | 'text'): Promise<void> {
+  await input(page).getByRole('button', { name: 'Compare', exact: true }).click();
+  if (kind === 'overlay') await overlayDrawn(page);
+  else await expect(result(page)).toHaveAttribute('data-status', 'done', { timeout: 60_000 });
+}
+
+const FLANGE: [string, string] = ['M-101 Flange RevA.pdf', 'M-101 Flange RevB.pdf'];
+
+/** The flange drawing (corpus pair 01) compared, its differences all found. */
+async function flangeOverlay(page: Page): Promise<void> {
+  await start(page);
+  await compareInputs(page, 'overlay', '01', FLANGE);
+  await runCompare(page, 'overlay');
+  await expect(page.getByTestId('diff-count')).toHaveAttribute('data-detected', '1', {
+    timeout: 30_000,
+  });
+}
+
+test('compare-start-1: the Compare tab', async ({ page }) => {
+  await flangeOverlay(page);
+  await ribbonShot(page, 'compare-start-1', 'Compare', ['Compare', 'Output']);
+});
+
+test('compare-start-2: the input window of a PDF overlay', async ({ page }) => {
+  await page.setViewportSize({ width: 1366, height: 1200 });
+  await start(page);
+  await compareInputs(page, 'overlay', '05', [
+    'W-310 Weldment RevA.pdf',
+    'W-310 Weldment RevB.pdf',
+  ]);
+  await thumbnailsShown(page);
+  const column = input(page).locator('.compare-column');
+  await shoot(page, 'compare-start-2', {
+    clip: column,
+    pad: 8,
+    callouts: [
+      { n: 1, target: compareSide(page, 'a'), at: 'tl', dx: 10, dy: 10 },
+      { n: 2, target: compareSide(page, 'b'), at: 'tl', dx: 10, dy: 10 },
+      {
+        n: 3,
+        target: input(page).getByRole('button', { name: 'Swap Document A and Document B' }),
+        at: 't',
+        dy: -14,
+      },
+      { n: 4, target: page.getByTestId('compare-pairing'), at: 'tl', dx: 10, dy: 10 },
+      {
+        n: 5,
+        target: input(page).getByRole('button', { name: 'Compare', exact: true }),
+        at: 'l',
+        dx: -16,
+      },
+    ],
+  });
+});
+
+/** Waits until the input window's thumbnails have their pictures. */
+async function thumbnailsShown(page: Page): Promise<void> {
+  await expect
+    .poll(() =>
+      input(page)
+        .locator('img')
+        .evaluateAll(
+          (imgs) =>
+            imgs.length > 0 &&
+            imgs.every(
+              (i) => (i as HTMLImageElement).complete && (i as HTMLImageElement).naturalWidth > 0,
+            ),
+        ),
+    )
+    .toBe(true);
+}
+
+test('compare-overlay-1: a PDF overlay with its controls', async ({ page }) => {
+  await flangeOverlay(page);
+  await result(page).getByRole('button', { name: 'Overlay only', exact: true }).click();
+  await overlayDrawn(page);
+  const head = result(page).locator('.overlay-head');
+  await shoot(page, 'compare-overlay-1', {
+    clip: result(page),
+    pad: 0,
+    callouts: [
+      { n: 1, target: page.getByRole('toolbar', { name: 'Overlay controls' }), at: 'l', dx: -16 },
+      { n: 2, target: result(page).locator('.overlay-sheets'), at: 'tr', dx: -16, dy: 12 },
+      { n: 3, target: head.getByRole('group', { name: 'Layout' }), at: 'l', dx: -16 },
+      { n: 4, target: page.getByTestId('diff-pane'), at: 'l', dx: 4 },
+    ],
+  });
+});
+
+test('compare-alignment-1: the sheet list and the Alignment section', async ({ page }) => {
+  await start(page);
+  await compareInputs(page, 'overlay', '04', ['C-120 Site RevA.pdf', 'C-120 Site RevB.pdf']);
+  await runCompare(page, 'overlay');
+  const panel = page.getByTestId('align-panel');
+  await panel.getByRole('button', { name: 'Align by points' }).click();
+  await expect(page.getByTestId('align-instruction')).toContainText('Document A');
+  await shoot(page, 'compare-alignment-1', {
+    clip: [result(page).locator('.overlay-sheets'), panel],
+    pad: 6,
+    callouts: [
+      { n: 1, target: result(page).locator('.overlay-sheet').first(), at: 'tr', dx: -16, dy: 16 },
+      { n: 2, target: panel.getByRole('button', { name: 'Pick points' }), at: 'r', dx: 14 },
+    ],
+  });
+});
+
+test('compare-differences-1: the Differences list', async ({ page }) => {
+  await flangeOverlay(page);
+  const pane = page.getByTestId('diff-pane');
+  await shoot(page, 'compare-differences-1', { clip: pane, pad: 0 });
+});
+
+test('compare-review-1: the Review layout and the Close-out list', async ({ page }) => {
+  await page.setViewportSize({ width: 1600, height: 900 });
+  await start(page);
+  await compareInputs(page, 'overlay', '19', ['S-201 Framing RevA.pdf', 'S-201 Framing RevB.pdf']);
+  await runCompare(page, 'overlay');
+  await result(page).getByRole('button', { name: 'Close-out list', exact: true }).click();
+  const pane = page.getByTestId('closeout-pane');
+  await expect(pane).toBeVisible();
+  const row = pane.locator('.closeout-row').first();
+  await row.click();
+  await pane.getByRole('button', { name: 'Addressed', exact: true }).click();
+  await expect(row).toHaveAttribute('data-state', 'addressed');
+  await pane.locator('.closeout-row').nth(1).click();
+  await page.waitForTimeout(800);
+  await shoot(page, 'compare-review-1', {
+    clip: result(page),
+    pad: 0,
+    callouts: [
+      { n: 1, target: page.getByTestId('review-window-overlay'), at: 'tl', dx: 14, dy: 14 },
+      { n: 2, target: page.getByTestId('review-window-a'), at: 'tr', dx: -14, dy: 44 },
+      { n: 3, target: page.getByTestId('review-window-b'), at: 'tr', dx: -14, dy: 44 },
+      { n: 4, target: pane, at: 'l', dx: 4 },
+    ],
+  });
+});
+
+test('compare-text-1: a text comparison', async ({ page }) => {
+  await start(page);
+  await compareInputs(page, 'text', '01', [
+    'Invoice INV-2207 RevA.pdf',
+    'Invoice INV-2207 RevB.pdf',
+  ]);
+  await runCompare(page, 'text');
+  await page.waitForTimeout(800);
+  await shoot(page, 'compare-text-1', {
+    clip: result(page),
+    pad: 0,
+    callouts: [
+      { n: 1, target: page.getByTestId('text-view-a'), at: 'tl', dx: 14, dy: 14 },
+      { n: 2, target: page.getByTestId('text-view-b'), at: 'tl', dx: 14, dy: 14 },
+      { n: 3, target: page.getByTestId('text-list'), at: 'l', dx: 4 },
+    ],
+  });
+});
+
+test('compare-saving-1: the Save Comparison dialog', async ({ page }) => {
+  await flangeOverlay(page);
+  await ribbonTab(page, 'Compare').click();
+  await toolbar(page, 'Compare').getByRole('button', { name: 'Save Comparison…' }).click();
+  const d = dialog(page, 'Save Comparison');
+  await expect(d).toBeVisible();
+  await shoot(page, 'compare-saving-1', { clip: d, pad: 8 });
 });
 
 // --- Protecting --------------------------------------------------------------------

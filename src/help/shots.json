@@ -31,6 +31,38 @@
     "w": 576,
     "h": 396
   },
+  "compare-alignment-1": {
+    "w": 252,
+    "h": 568
+  },
+  "compare-differences-1": {
+    "w": 337,
+    "h": 560
+  },
+  "compare-overlay-1": {
+    "w": 1038,
+    "h": 601
+  },
+  "compare-review-1": {
+    "w": 1272,
+    "h": 701
+  },
+  "compare-saving-1": {
+    "w": 576,
+    "h": 320
+  },
+  "compare-start-1": {
+    "w": 1093,
+    "h": 160
+  },
+  "compare-start-2": {
+    "w": 1006,
+    "h": 817
+  },
+  "compare-text-1": {
+    "w": 1038,
+    "h": 601
+  },
   "creating-fields-1": {
     "w": 1006,
     "h": 126

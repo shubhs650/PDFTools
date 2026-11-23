@@ -201,6 +201,7 @@ test('the keyboard reaches every control of the input window, in order', async (
   }
   expect(names).toEqual([
     'PDF Overlay', // the type switch (one stop; arrows choose)
+    'Help for comparing documents', // "?" (M12-22)
     'Remove A.pdf',
     'Pages of A.pdf',
     'Add files…', // "Use an open file" is disabled: no file is open in a tab

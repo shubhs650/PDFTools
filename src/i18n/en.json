@@ -14,6 +14,9 @@
     },
     "splitButton": {
       "more": "More options for {{label}}"
+    },
+    "pane": {
+      "help": "Help for this pane"
     }
   },
   "command": {
@@ -2908,6 +2911,7 @@
     },
     "typeLabel": "Comparison type",
     "preview": "Preview",
+    "help": "Help for comparing documents",
     "intro": {
       "overlay": "Lay a new revision of a drawing over the old one: old in red, new in green, what is the same in black. Each side takes one file or a set of files.",
       "text": "Compare the words, numbers and table rows of an old and a new revision of a document, side by side. Each side takes one file."
