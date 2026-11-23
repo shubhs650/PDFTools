@@ -21,7 +21,7 @@ import {
   type MenuEntry,
 } from '../../../ui/components';
 import { CommandIcon } from '../../../ui/icons/CommandIcon';
-import { updateInputs } from '../compareFlow';
+import { NewComparisonButton } from '../NewComparisonButton';
 import type { Comparison } from '../model';
 import { typeLabel } from '../title';
 import { BandBar } from './BandBar';
@@ -218,13 +218,7 @@ export function TextResult({ comparison: c }: { comparison: Comparison }) {
           />
           <CloseOutToggle id={c.id} />
         </div>
-        <Button
-          label={t('compare.result.inputs')}
-          size="small"
-          onClick={() => {
-            updateInputs(c.id, (cur) => ({ ...cur, stage: 'input' }));
-          }}
-        />
+        <NewComparisonButton id={c.id} />
         <HelpButton topic="compare-text" label={t('compare.help')} />
       </header>
       {view.bandEdit ? <BandBar comparison={c} /> : null}

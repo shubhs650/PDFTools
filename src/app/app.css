@@ -6636,6 +6636,73 @@ textarea.form-field {
   gap: var(--space-4);
 }
 
+/* M12-24 (ADR-033): Compare stays in view at the bottom of the window, however long the
+   pairing table; the window's own padding is covered so rows don't show beneath it. */
+.compare .compare-foot {
+  position: sticky;
+  bottom: calc(-1 * var(--space-6));
+  z-index: 2;
+  margin-inline: calc(-1 * var(--space-4));
+  margin-bottom: calc(-1 * var(--space-6));
+  padding: var(--space-3) var(--space-4) var(--space-6);
+  border-top: var(--border-width) solid var(--color-border);
+  background: var(--color-bg);
+}
+
+/* The step guide (M12-24): 1 Choose files · 2 Check pairs · 3 Compare. */
+.compare-steps {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-2) var(--space-5);
+  margin: var(--space-0);
+  padding: var(--space-0);
+  list-style: none;
+  font-size: var(--font-size-m);
+}
+
+.compare-step {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  color: var(--color-text-muted);
+}
+
+.compare-step + .compare-step::before {
+  content: '';
+  width: var(--space-5);
+  margin-inline-end: var(--space-3);
+  border-top: var(--border-width) solid var(--color-border-strong);
+}
+
+.compare-step-number {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 22px;
+  height: 22px;
+  border: var(--border-width) solid var(--color-border-strong);
+  border-radius: var(--radius-round);
+  font-size: var(--font-size-s);
+  font-variant-numeric: tabular-nums;
+}
+
+.compare-step[data-state='current'] {
+  color: var(--color-text);
+  font-weight: var(--font-weight-semibold);
+}
+
+.compare-step[data-state='current'] .compare-step-number {
+  border-color: var(--color-brand);
+  background: var(--color-brand);
+  color: var(--color-text-on-brand);
+}
+
+.compare-step[data-state='done'] .compare-step-number {
+  border-color: var(--color-success-text);
+  color: var(--color-success-text);
+}
+
 .compare-status {
   flex: 1;
   min-width: 200px;
@@ -7229,10 +7296,9 @@ textarea.form-field {
   gap: var(--space-2);
 }
 
-/* A long set scrolls inside the table, its header row kept in view. */
+/* The table scrolls with the window, its header row kept in view, so Compare stays
+   below it (M12-24). */
 .compare-pairing-scroll {
-  max-height: 420px;
-  overflow: auto;
   border: var(--border-width) solid var(--color-border);
   border-radius: var(--radius-m);
 }
@@ -7241,6 +7307,20 @@ textarea.form-field {
   width: 100%;
   border-collapse: collapse;
   font-size: var(--font-size-m);
+  /* Column widths from the header row only: a long set lays out quickly (M12-24). */
+  table-layout: fixed;
+}
+
+.compare-pairing-table thead th:first-child {
+  width: 4em;
+}
+
+.compare-pairing-table thead th:nth-child(4) {
+  width: 13em;
+}
+
+.compare-pairing-table thead th:last-child {
+  width: 6.5em;
 }
 
 .compare-pairing-table th,
@@ -7271,11 +7351,168 @@ textarea.form-field {
 
 .compare-pairing-select {
   width: 100%;
-  min-width: 10em;
 }
 
 .compare-pairing-match {
   white-space: nowrap;
+}
+
+/* M12-24 (ADR-033): the page pictures of the pairing table, the page picker, Preview pair. */
+.compare-pairing-side {
+  overflow: hidden;
+}
+
+.compare-pairing-picture {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 176px;
+  height: 136px;
+  margin-bottom: var(--space-2);
+  padding: var(--space-0);
+  border: var(--border-width) solid var(--color-border);
+  border-radius: var(--radius-m);
+  background: var(--color-surface-sunken);
+  cursor: pointer;
+}
+
+.compare-pairing-picture:hover {
+  border-color: var(--color-border-strong);
+}
+
+.compare-pairing-nopage,
+.compare-pairview-none {
+  color: var(--color-text-muted);
+  font-size: var(--font-size-s);
+}
+
+.compare-picture {
+  position: relative;
+  display: flex;
+  flex: none;
+  align-items: center;
+  justify-content: center;
+  overflow: visible;
+  background: var(--color-page);
+  box-shadow: var(--elevation-1);
+}
+
+.compare-pairing-match > * + * {
+  margin-inline-start: var(--space-2);
+}
+
+.compare-pairing-match .ui-button--icon {
+  vertical-align: middle;
+}
+
+.compare-check {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-1);
+  padding: var(--space-0) var(--space-2);
+  border: var(--border-width) solid var(--color-border-strong);
+  border-radius: var(--radius-round);
+  background: var(--color-note-paper);
+  color: var(--color-note-text);
+  font-size: var(--font-size-s);
+  font-weight: var(--font-weight-semibold);
+  vertical-align: middle;
+}
+
+.ui-dialog.compare-picker-dialog {
+  width: min(960px, calc(100vw - 2 * var(--space-6)));
+  max-width: none;
+}
+
+.compare-picker {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(148px, 1fr));
+  gap: var(--space-3);
+}
+
+.compare-picker-page {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--space-2);
+  padding: var(--space-2);
+  border: var(--focus-width) solid transparent;
+  border-radius: var(--radius-m);
+  background: var(--color-surface);
+  color: var(--color-text);
+  font: inherit;
+  font-size: var(--font-size-s);
+  text-align: center;
+  cursor: pointer;
+}
+
+.compare-picker-page:hover {
+  background: var(--color-hover);
+}
+
+.compare-picker-page[aria-pressed='true'] {
+  border-color: var(--color-brand);
+  background: var(--color-selected);
+  color: var(--color-selected-text);
+}
+
+.compare-picker-frame {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 128px;
+  height: 104px;
+}
+
+.compare-picker-none {
+  width: 72px;
+  height: 96px;
+  border: var(--border-width) dashed var(--color-border-strong);
+  background: var(--color-surface-sunken);
+}
+
+.compare-picker-score {
+  color: var(--color-text-muted);
+}
+
+.ui-dialog.compare-pairview-dialog {
+  width: min(1140px, calc(100vw - 2 * var(--space-6)));
+  max-width: none;
+}
+
+.compare-pairview-match {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  min-height: 1.5em;
+  margin: var(--space-0) var(--space-0) var(--space-3);
+  color: var(--color-text-muted);
+}
+
+.compare-pairview-pair {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: var(--space-4);
+}
+
+.compare-pairview-side {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  margin: var(--space-0);
+}
+
+.compare-pairview-side-name {
+  font-weight: var(--font-weight-semibold);
+}
+
+.compare-pairview-frame {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 460px;
+  border-radius: var(--radius-m);
+  background: var(--color-surface-sunken);
 }
 
 @media (max-width: 900px) {

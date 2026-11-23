@@ -32,15 +32,22 @@ import {
 /** "Default settings" in the picker: the shipped settings, no preset. */
 export const DEFAULT_PRESET = '';
 
+/**
+ * The settings carried over from the result a New comparison was opened from
+ * (M12-24, ADR-033): picked like a preset, not saved on the device.
+ */
+export const CARRIED_PRESET = 'carried';
+
 interface PresetState {
   presets: ComparePreset[];
   loaded: boolean;
   /**
    * Per comparison: the preset picked in its input window, and whether it is
-   * still to be applied (the next Compare applies it once; edits made in the
-   * result are then kept when the inputs are revisited).
+   * still to be applied (Compare applies it once).
    */
   picked: Record<string, { id: string; pending: boolean }>;
+  /** Per comparison opened by New comparison: the earlier result's settings (CARRIED_PRESET). */
+  carried: Record<string, ComparePreset>;
   /** The comparison Save as Preset… is open for. */
   saving: string | null;
 }
@@ -49,6 +56,7 @@ export const presetStore = createStore<PresetState>()(() => ({
   presets: [],
   loaded: false,
   picked: {},
+  carried: {},
   saving: null,
 }));
 
@@ -68,7 +76,7 @@ export async function loadPresets(): Promise<void> {
 
 /** After "Clear all local data": no presets, read again when next needed. */
 export function resetPresets(): void {
-  presetStore.setState({ presets: [], loaded: false, picked: {}, saving: null });
+  presetStore.setState({ presets: [], loaded: false, picked: {}, carried: {}, saving: null });
 }
 
 let seq = 0;
@@ -128,6 +136,44 @@ export async function savePreset(c: Comparison, name: string): Promise<string | 
   return preset.id;
 }
 
+/**
+ * New comparison (M12-24, ADR-033): comparison `toId` starts with the settings
+ * of `from`'s result (colours, sensitivity, minimum size and ignore zones, or
+ * the text comparison's colours and options), applied when it is compared.
+ */
+export function carrySettings(from: Comparison, toId: string): void {
+  const preset: ComparePreset =
+    from.type === 'overlay'
+      ? {
+          id: CARRIED_PRESET,
+          name: '',
+          savedAt: Date.now(),
+          type: 'overlay',
+          overlay: overlaySettings(from.id),
+        }
+      : {
+          id: CARRIED_PRESET,
+          name: '',
+          savedAt: Date.now(),
+          type: 'text',
+          text: textSettings(from.id),
+        };
+  presetStore.setState((s) => ({
+    carried: { ...s.carried, [toId]: preset },
+    picked: { ...s.picked, [toId]: { id: CARRIED_PRESET, pending: true } },
+  }));
+}
+
+/** The settings carried into a comparison by New comparison, if they suit its type. */
+export const carriedFor = (
+  s: PresetState,
+  comparisonId: string,
+  type: Comparison['type'],
+): ComparePreset | null => {
+  const p = s.carried[comparisonId];
+  return p?.type === type ? p : null;
+};
+
 /** Deletes a preset; comparisons that picked it go back to the default settings. */
 export async function deletePreset(presetId: string): Promise<void> {
   await (await appDb()).deleteComparePreset(presetId);
@@ -175,7 +221,10 @@ export function applyPickedPreset(c: Comparison): void {
   const pick = presetStore.getState().picked[c.id];
   if (!pick?.pending) return;
   presetStore.setState((s) => ({ picked: { ...s.picked, [c.id]: { ...pick, pending: false } } }));
-  const preset = presetStore.getState().presets.find((p) => p.id === pick.id);
+  const preset =
+    pick.id === CARRIED_PRESET
+      ? carriedFor(presetStore.getState(), c.id, c.type)
+      : presetStore.getState().presets.find((p) => p.id === pick.id);
   if (c.type === 'overlay') {
     const o = preset?.type === 'overlay' ? preset.overlay : DEFAULT_OVERLAY;
     updateView(c.id, (v) => setColour(setColour(v, 'a', rgbOf(o.colA)), 'b', rgbOf(o.colB)));

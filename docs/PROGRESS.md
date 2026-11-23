@@ -1,6 +1,6 @@
 # Triya PDF — Progress
 
-_Last updated: 2026-11-23 (M12-23: M12 acceptance, M12 complete on the agent side; M12-22: Compare help and release notes; M12-21·O4: drop a tab on a tab; M12-20: the comparison file; M12-21: change register and presets)_
+_Last updated: 2026-11-23 (M12-24: the Compare input window made clearer; M12-23: M12 acceptance, M12 complete on the agent side; M12-22: Compare help and release notes; M12-21·O4: drop a tab on a tab; M12-20: the comparison file; M12-21: change register and presets)_
 
 **Current milestone:** M12 — PDF comparison (PDF overlay for drawings, text comparison for
 documents), version 1.1.0: plan [docs/plan/M12.md](plan/M12.md) and
@@ -29,6 +29,25 @@ answers Q1–Q7; ARCHITECTURE.md Rev 0.12 after [ADR-024](adr/024-freetext-text-
 interop is in the M6 pack (CHECKLIST §M6 R1–R4). Rev 0 (M0–M4) is complete on the agent side.
 
 ## Done
+
+- **M12-24 — The Compare input window (D-58, D-60, ADR-033, plan [M12-ux](plan/M12-ux.md)).**
+  Each pairing row shows its A and B page (fitted to 160 × 120 px, drawn in the Render worker
+  through the thumbnail queue only while on screen, `PagePicture.tsx`); a picture opens the
+  **page picker** (a grid of every page of that side, None first, the current page marked, the
+  match under each; arrows, Home, End, Enter; `PagePicker.tsx`); the eye button opens **Preview
+  pair** (both pages large, Previous pair / Next pair; `PairPreview.tsx`). Sheets that need a
+  look carry a **Check** mark (`rowCheck` in `src/model/compare/pairing.ts`: under 50 %, added,
+  removed). A **step guide** (Choose files · Check pairs · Compare; two steps for a text
+  comparison) and a Compare bar that stays at the bottom of the window; the pairing table now
+  scrolls with the window, its header row sticky, with a fixed table layout. **New
+  comparison** replaces Change inputs in both result headers (`newComparisonFrom` in
+  `compareFlow.ts`): a new tab after the result with the same files, ranges and type, the
+  result's settings carried as a pseudo-preset ("Settings of the earlier result",
+  `carrySettings` in `presetStore.ts`) and an overlay's pairing table as edited; the result
+  never goes back to its inputs. Help: Starting a comparison and Pairing and alignment updated,
+  new shots `compare-pairing-1`, `compare-pairing-2`; a What's new line in 1.1.0 (the e2e now
+  counts the entry's lines from the JSON). New perf scenario `e2e/perf/compare-input.spec.ts`
+  (120 sheets: scroll, picker, Preview pair, no task over 100 ms).
 
 - **M12-23 — M12 acceptance (D-66, ADR-032).** [docs/acceptance/M12.md](acceptance/M12.md).
   **M12 is complete on the agent side**; the owner pack waits (hand check on real files,

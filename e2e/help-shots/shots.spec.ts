@@ -826,6 +826,66 @@ test('compare-start-2: the input window of a PDF overlay', async ({ page }) => {
   });
 });
 
+/** Waits until every page picture on screen (pairing rows, picker, Preview pair) is drawn. */
+async function picturesDrawn(page: Page): Promise<void> {
+  await expect
+    .poll(
+      () =>
+        page.evaluate(() =>
+          [...document.querySelectorAll('.compare-picture[data-drawn]')].every((el) => {
+            const img = el.querySelector('img');
+            return img !== null && img.complete && img.naturalWidth > 0;
+          }),
+        ),
+      { timeout: 30_000 },
+    )
+    .toBe(true);
+}
+
+/** The structural set (corpus pair 17) on its input window: a removed and two swapped sheets. */
+async function setPairing(page: Page): Promise<void> {
+  await page.setViewportSize({ width: 1366, height: 1200 });
+  await start(page);
+  await compareInputs(page, 'overlay', '17', ['S-100 Set RevA.pdf', 'S-100 Set RevB.pdf']);
+}
+
+test('compare-pairing-1: the pairing table with the pages of each sheet', async ({ page }) => {
+  await setPairing(page);
+  const rows = page.getByTestId('compare-pairing-row');
+  const table = page.getByTestId('compare-pairing');
+  // The table at the top of the window, so its rows are clear of the Compare bar.
+  await table.evaluate((el) => {
+    el.scrollIntoView({ block: 'start' });
+  });
+  await picturesDrawn(page);
+  await shoot(page, 'compare-pairing-1', {
+    clip: [table.locator('.compare-pairing-head'), rows.nth(1), rows.nth(2), rows.nth(3)],
+    pad: 8,
+    callouts: [
+      { n: 1, target: rows.nth(1).getByTestId('compare-pairing-picture-b'), at: 'r', dx: 14 },
+      { n: 2, target: rows.nth(2).getByTestId('compare-check'), at: 'b', dy: 14 },
+      {
+        n: 3,
+        target: page.getByRole('button', { name: 'Preview sheet 3' }),
+        at: 'r',
+        dx: 14,
+      },
+    ],
+  });
+});
+
+test('compare-pairing-2: choosing a page from the pictures', async ({ page }) => {
+  await setPairing(page);
+  const row = page.getByTestId('compare-pairing-row').nth(4);
+  await row.scrollIntoViewIfNeeded();
+  await row.getByTestId('compare-pairing-picture-b').click();
+  const picker = page.getByRole('dialog', { name: 'Document B (new) page of sheet 5' });
+  await expect(picker).toBeVisible();
+  await page.mouse.move(0, 0);
+  await picturesDrawn(page);
+  await shoot(page, 'compare-pairing-2', { clip: picker, pad: 8 });
+});
+
 /** Waits until the input window's thumbnails have their pictures. */
 async function thumbnailsShown(page: Page): Promise<void> {
   await expect

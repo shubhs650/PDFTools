@@ -86,7 +86,7 @@ test.describe('compare an area', () => {
     await expect(result.getByRole('heading', { name: /PDF Overlay of an area/ })).toBeVisible();
     await expect(page.getByTestId('area-info')).toBeVisible();
     await expect(page.getByTestId('area-panel')).toHaveCount(0);
-    await expect(result.getByRole('button', { name: 'Change inputs' })).toHaveCount(0);
+    await expect(result.getByRole('button', { name: 'New comparison' })).toHaveCount(0);
     await overlayDrawn(page);
     await expect(page.getByTestId('area-veil')).toBeVisible();
     await expect(page.getByTestId('area-region')).toHaveCount(1);

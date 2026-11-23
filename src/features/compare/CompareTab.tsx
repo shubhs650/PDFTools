@@ -1,6 +1,7 @@
 import { ArrowDown16Regular } from '@fluentui/react-icons/svg/arrow-down';
 import { ArrowSwap20Regular } from '@fluentui/react-icons/svg/arrow-swap';
 import { ArrowUp16Regular } from '@fluentui/react-icons/svg/arrow-up';
+import { Checkmark16Regular } from '@fluentui/react-icons/svg/checkmark';
 import { ChevronDown16Regular } from '@fluentui/react-icons/svg/chevron-down';
 import { Dismiss16Regular } from '@fluentui/react-icons/svg/dismiss';
 import { useEffect, useId, useState, type DragEvent } from 'react';
@@ -68,7 +69,8 @@ const COMMAND: Record<CompareType, string> = { overlay: 'compare.overlay', text:
 
 /**
  * A comparison tab (M12-08, D-58, ARCHITECTURE §7.16): its input window, and the result
- * once Compare is pressed (later tasks fill the result; the inputs can be revisited).
+ * once Compare is pressed. A result never goes back to its inputs (ADR-033): New
+ * comparison opens another tab with the same files instead.
  */
 export function CompareTab({ id }: { id: string }) {
   const comparison = useDocuments((s) => s.comparisons[id]);
@@ -94,6 +96,8 @@ function InputWindow({ comparison: c }: { comparison: Comparison }) {
   }, [c, docs]);
   const pairing = usePairing(c.id);
   const overlay = c.type === 'overlay';
+  // Step 1 is done once both sides have their files, open and with valid pages.
+  const filesIn = inputBlock === null && opening === 0;
   let block: CompareBlock | null = inputBlock;
   if (!block && overlay) {
     if (pairing?.status !== 'done') block = { kind: 'pairing' };
@@ -168,6 +172,10 @@ function InputWindow({ comparison: c }: { comparison: Comparison }) {
           </fieldset>
           <HelpButton topic="compare-start" label={t('compare.help')} />
         </header>
+        <StepGuide
+          overlay={overlay}
+          step={!filesIn ? 0 : overlay && block !== null ? 1 : overlay ? 2 : 1}
+        />
         <div className="compare-sides">
           <SidePanel comparison={c} side="a" />
           <div className="compare-swap">
@@ -184,7 +192,7 @@ function InputWindow({ comparison: c }: { comparison: Comparison }) {
         </div>
         {overlay && !inputBlock ? <PairingTable id={c.id} /> : null}
         {c.area ? null : <PresetOptions comparison={c} />}
-        <footer className="compare-foot">
+        <footer className="compare-foot" data-testid="compare-foot">
           <p id={statusId} className="compare-status" role="status">
             {status}
           </p>
@@ -202,6 +210,46 @@ function InputWindow({ comparison: c }: { comparison: Comparison }) {
         </footer>
       </div>
     </section>
+  );
+}
+
+type StepState = 'done' | 'current' | 'next';
+const STEP_STATES: readonly StepState[] = ['done', 'current', 'next'];
+const stepState = (i: number, step: number): StepState =>
+  STEP_STATES[i < step ? 0 : i === step ? 1 : 2] ?? 'next';
+
+/**
+ * The step guide (M12-24, ADR-033): "1 Choose files · 2 Check pairs · 3 Compare"
+ * for an overlay, "1 Choose files · 2 Compare" for a text comparison. The
+ * current step is marked for assistive tech; done steps carry a tick.
+ */
+function StepGuide({ overlay, step }: { overlay: boolean; step: number }) {
+  const { t } = useTranslation();
+  const steps = overlay
+    ? [t('compare.steps.files'), t('compare.steps.pairs'), t('compare.steps.compare')]
+    : [t('compare.steps.files'), t('compare.steps.compare')];
+  return (
+    <ol className="compare-steps" aria-label={t('compare.steps.label')} data-testid="compare-steps">
+      {steps.map((name, i) => {
+        const state = stepState(i, step);
+        return (
+          <li
+            key={name}
+            className="compare-step"
+            data-state={state}
+            aria-current={state === 'current' ? 'step' : undefined}
+          >
+            <span className="compare-step-number" aria-hidden="true">
+              {state === 'done' ? <Checkmark16Regular /> : format.number(i + 1)}
+            </span>
+            <span className="compare-step-name">{name}</span>
+            {state === 'done' ? (
+              <span className="ui-visually-hidden">{` (${t('compare.steps.done')})`}</span>
+            ) : null}
+          </li>
+        );
+      })}
+    </ol>
   );
 }
 

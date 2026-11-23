@@ -2980,7 +2980,8 @@
       "noneA": "None (added in Document B)",
       "noneB": "None (removed from Document A)",
       "added": "Added",
-      "removed": "Removed"
+      "removed": "Removed",
+      "none": "None"
     },
     "run": "Compare",
     "ready": "Ready: {{a}} against {{b}}.",
@@ -2992,13 +2993,14 @@
       "noSheets": "Choose at least one sheet to compare in the pairing table."
     },
     "result": {
-      "inputs": "Change inputs"
+      "newComparison": "New comparison",
+      "newComparisonHint": "Opens a new comparison tab with the same files and settings. This result stays open."
     },
     "overlay": {
       "window": "Overlay of sheet {{sheet}}: {{a}} in {{colA}}, {{b}} in {{colB}}",
       "pairing": "Pairing pages before the overlay is shown…",
-      "pairingFailed": "The pages couldn't be paired. Change the inputs to try again.",
-      "noSheets": "No sheet is left to compare. Change the inputs to choose sheets.",
+      "pairingFailed": "The pages couldn't be paired. Use New comparison to try again.",
+      "noSheets": "No sheet is left to compare. Use New comparison to choose sheets.",
       "sheets": "Sheets",
       "sheetsList": "Sheets of this comparison",
       "sheetName": "Sheet {{sheet}}",
@@ -3467,7 +3469,8 @@
       "cancel": "Cancel",
       "failed": "The preset couldn't be saved.",
       "needsComparison": "Open a comparison to save its settings as a preset.",
-      "needsResult": "Compare first: a preset is saved from the result."
+      "needsResult": "Compare first: a preset is saved from the result.",
+      "carried": "Settings of the earlier result"
     },
     "file": {
       "fileName": "{{a}} vs {{b}} (comparison).pdf",
@@ -3589,6 +3592,34 @@
         "partial": "The comparison was still finding differences on some sheets: the counts are what had been found.",
         "footer": "The overlay sheets follow this page. Document A and Document B are attached to this file unchanged."
       }
+    },
+    "picker": {
+      "open": "Choose the {{side}} page of sheet {{sheet}} from pictures",
+      "title": "{{side}} page of sheet {{sheet}}",
+      "description": "Choose the page to pair with this sheet. The match with the other side's page is shown under each one.",
+      "pages": "Pages of {{side}}",
+      "match": "{{match}} match"
+    },
+    "pairPreview": {
+      "open": "Preview sheet {{sheet}}",
+      "title": "Sheet {{sheet}} of {{count}}",
+      "match": "Match: {{match}}",
+      "previous": "Previous pair",
+      "next": "Next pair",
+      "noPage": "No page on this side"
+    },
+    "check": {
+      "label": "Check",
+      "low": "The two pages match under 50 %. Check that they are the same sheet.",
+      "added": "This page is only in Document B. Check that it is a new sheet.",
+      "removed": "This page is only in Document A. Check that the sheet was removed."
+    },
+    "steps": {
+      "label": "Steps",
+      "files": "Choose files",
+      "pairs": "Check pairs",
+      "compare": "Compare",
+      "done": "done"
     }
   }
 }

@@ -157,3 +157,26 @@ test('the input window’s Options pass axe in the dark theme', async ({ page })
     .analyze();
   expect(violations.map((v) => v.id)).toEqual([]);
 });
+
+test('New comparison carries the result’s settings into a new tab (M12-24)', async ({ page }) => {
+  await overlayOf(page, '01');
+  await page.getByTestId('diff-sensitivity').selectOption('high');
+  await page.getByTestId('diff-min-size').selectOption('1');
+  await page.getByRole('button', { name: 'New comparison' }).click();
+  const input = page.getByTestId('compare-input');
+  await expect(input).toBeVisible();
+  await expect(page.getByTestId('compare-pairing')).toHaveAttribute('data-status', 'done', {
+    timeout: 30_000,
+  });
+  // Options names the earlier result's settings; they are used by Compare.
+  const toggle = page.getByTestId('compare-options-toggle');
+  await expect(toggle).toContainText('Settings of the earlier result');
+  await toggle.click();
+  await expect(page.getByTestId('compare-preset-summary')).toHaveText(
+    /Sensitivity: High · Minimum size: 1 mm · Ignore zones: 0/,
+  );
+  await expect(page.getByRole('button', { name: 'Delete preset' })).toBeDisabled();
+  await input.getByRole('button', { name: 'Compare', exact: true }).click();
+  await expect(page.getByTestId('diff-sensitivity')).toHaveValue('high');
+  await expect(page.getByTestId('diff-min-size')).toHaveValue('1');
+});
