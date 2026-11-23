@@ -214,6 +214,7 @@ test('the keyboard reaches every control of the input window, in order', async (
     'Compare sheet 1',
     'Document A (old) page of sheet 2',
     'Document B (new) page of sheet 2',
+    'Options', // the presets (M12-21), collapsed
     'Compare',
   ]);
   // Arrow keys choose the type; Enter on Compare runs it.

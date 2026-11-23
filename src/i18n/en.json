@@ -394,7 +394,10 @@
     "tabsSorted": "Tabs sorted by name",
     "nameCopied": "File name copied",
     "nameCopyFailed": "Couldn't copy the file name",
+    "dropOnTab": "Compare these two",
+    "dropOnTabHere": "Let go to compare with {{name}}",
     "menu": {
+      "dropOnTabLabel": "Compare {{a}} (old) with {{b}} (new)",
       "tabLabel": "{{name}} tab",
       "stripLabel": "File tabs",
       "createBlank": "Create Blank PDF…",

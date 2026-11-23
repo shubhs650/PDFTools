@@ -40,8 +40,30 @@ export function tabMenuEntries(canRename: boolean): ContextMenuEntry[] {
   ];
 }
 
-const compareShown = (): boolean =>
+/** Is Compare in this build (the VITE_COMPARE switch, M12-08)? */
+export const compareShown = (): boolean =>
   COMMANDS.some((c) => c.id === 'tab.compareWith' && isAvailable(c));
+
+/**
+ * "Compare these two" (M12-21·O4, D-58): the menu a document tab dropped on another one
+ * opens, run with both documents (`args.pair`).
+ */
+export const DROP_ON_TAB_MENU: readonly ContextMenuEntry[] = [
+  cmd('compare.overlay'),
+  cmd('compare.text'),
+];
+
+/**
+ * Which of two tabs is Document A (old) when one is dropped on the other: the one first in
+ * the strip, as the input window shows A to the left of B. Pure.
+ */
+export function dropPair(
+  order: readonly string[],
+  dragged: string,
+  on: string,
+): readonly [string, string] {
+  return order.indexOf(dragged) <= order.indexOf(on) ? [dragged, on] : [on, dragged];
+}
 
 /** A comparison tab's menu (M12-08): the tab commands that are not about a file. */
 export const COMPARISON_TAB_MENU: readonly ContextMenuEntry[] = [

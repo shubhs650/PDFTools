@@ -23,7 +23,15 @@ import { documentStore, useDocuments } from './store/documentStore';
 import { TabCard } from './TabCard';
 import { tabCardText } from './tabCardText';
 import { canRenameFile, tabStateFor } from './tabCommands';
-import { COMPARISON_TAB_MENU, isTabCommand, STRIP_MENU, tabMenuEntries } from './tabMenu';
+import {
+  COMPARISON_TAB_MENU,
+  compareShown,
+  DROP_ON_TAB_MENU,
+  dropPair,
+  isTabCommand,
+  STRIP_MENU,
+  tabMenuEntries,
+} from './tabMenu';
 import { comparisonTitle, typeLabel } from '../features/compare/title';
 import { CommandIcon } from '../ui/icons/CommandIcon';
 import { beginTabPress, isTabDragging, type TabDragHost } from './tabDragSession';
@@ -109,6 +117,14 @@ export function TabStrip() {
   // The tab the right-click menu was opened on (null: the empty strip, M11-05).
   const [menuTab, setMenuTab] = useState<string | null>(null);
   const [menuOpen, setMenuOpen] = useState(false);
+  // Drop a tab on a tab (M12-21·O4, D-58): the tab the lifted one would drop on, with
+  // where its hint shows, and the "Compare these two" menu's pair (A, B) once let go.
+  const [dropTarget, setDropTarget] = useState<{ id: string; x: number; y: number } | null>(null);
+  const [offer, setOffer] = useState<{ pair: readonly [string, string]; from: string } | null>(
+    null,
+  );
+  // The next `contextmenu` is the offer's (dispatched by the drop), not a right-click.
+  const offering = useRef(false);
   useEffect(
     () => () => {
       clearTimeout(focusTimer.current);
@@ -252,6 +268,7 @@ export function TabStrip() {
     },
     end: () => {
       setDragId(null);
+      setDropTarget(null);
     },
     drop: (id, to) => {
       moveTab(id, to);
@@ -268,6 +285,31 @@ export function TabStrip() {
     menu: (id) => {
       const el = refs.current.get(id);
       if (el) openMenuOn(el);
+    },
+    canDropOn: (id, on) => {
+      const s = documentStore.getState();
+      return id !== on && s.docs[id] !== undefined && s.docs[on] !== undefined && compareShown();
+    },
+    target: (on) => {
+      const el = on ? refs.current.get(on) : undefined;
+      const strip = stripEl?.getBoundingClientRect();
+      if (!on || !el || !strip) {
+        setDropTarget(null);
+        return;
+      }
+      const r = el.getBoundingClientRect();
+      // The hint starts under the target's start (it never runs off the strip's left end).
+      setDropTarget({ id: on, x: Math.max(0, r.left - strip.left), y: r.bottom - strip.top });
+      setMoved(t('frame.dropOnTabHere', { name: nameOf(on) }));
+    },
+    dropOn: (id, on) => {
+      const el = refs.current.get(on);
+      if (!el) return;
+      flushSync(() => {
+        setOffer({ pair: dropPair(documentStore.getState().order, id, on), from: id });
+      });
+      offering.current = true;
+      openMenuOn(el);
     },
   };
   const onPress = (e: PointerEvent<HTMLElement>, id: string): void => {
@@ -299,6 +341,9 @@ export function TabStrip() {
     clearTimeout(focusTimer.current);
     setCardId(null);
     setMenuTab(tabEl?.dataset['tabId'] ?? null);
+    // A right-click after a drop's offer is the tab's own menu again.
+    if (!offering.current) setOffer(null);
+    offering.current = false;
   };
   // A touch held on a tab lifts it for a drag (M11-04); its menu opens when the lifted
   // tab is let go without moving (tabDragSession), never under a lifted tab.
@@ -307,27 +352,45 @@ export function TabStrip() {
       e.preventDefault();
   };
   const menuOn = menuTab !== null && (docs[menuTab] || comparisons[menuTab]) ? menuTab : null;
-  const menuEntries = menuOn
-    ? comparisons[menuOn]
-      ? COMPARISON_TAB_MENU
-      : tabMenuEntries(canRenameFile(menuOn))
-    : STRIP_MENU;
-  const menuState = (id: string) => (isTabCommand(id) ? tabStateFor(id, menuOn) : undefined);
+  // "Compare these two" (O4) while both documents are open.
+  const pair = offer && docs[offer.pair[0]] && docs[offer.pair[1]] ? offer.pair : null;
+  const menuEntries = pair
+    ? DROP_ON_TAB_MENU
+    : menuOn
+      ? comparisons[menuOn]
+        ? COMPARISON_TAB_MENU
+        : tabMenuEntries(canRenameFile(menuOn))
+      : STRIP_MENU;
+  const menuState = (id: string) =>
+    !pair && isTabCommand(id) ? tabStateFor(id, menuOn) : undefined;
+  const menuArgs = pair ? { pair } : menuOn ? { tab: menuOn } : null;
 
   const openKeys = shortcutText('file.open', t);
 
   return (
     <ContextMenu
       label={
-        menuOn ? t('frame.menu.tabLabel', { name: nameOf(menuOn) }) : t('frame.menu.stripLabel')
+        pair
+          ? t('frame.menu.dropOnTabLabel', { a: nameOf(pair[0]), b: nameOf(pair[1]) })
+          : menuOn
+            ? t('frame.menu.tabLabel', { name: nameOf(menuOn) })
+            : t('frame.menu.stripLabel')
       }
+      {...(pair ? { heading: t('frame.dropOnTab') } : {})}
       entries={menuEntries}
-      {...(menuOn ? { args: { tab: menuOn } } : {})}
+      {...(menuArgs ? { args: menuArgs } : {})}
       stateOf={menuState}
       onOpenChange={setMenuOpen}
       onCloseAutoFocus={(e) => {
-        // Back to the tab it was opened on (Shift+F10), when that tab is still open.
-        const el = menuOn ? refs.current.get(menuOn) : undefined;
+        // After "Compare these two": the selected tab (the new comparison's, or the
+        // dragged one when it was put away); else back to the tab it was opened on.
+        const back = offer
+          ? documentStore.getState().comparisons[documentStore.getState().activeTab ?? '']
+            ? documentStore.getState().activeTab
+            : offer.from
+          : menuOn;
+        setOffer(null);
+        const el = back ? refs.current.get(back) : undefined;
         if (!el) return;
         e.preventDefault();
         el.focus({ preventScroll: true });
@@ -348,7 +411,9 @@ export function TabStrip() {
           `order` (the tablist itself is `display: contents`). Keyboard: Tab
           from the active tab reaches its close button. */}
         <div
-          className={`tab-list${dragId ? ' tab-list--dragging' : ''}`}
+          className={`tab-list${dragId ? ' tab-list--dragging' : ''}${
+            dragId && dropTarget ? ' tab-list--drop-on' : ''
+          }`}
           ref={listRef}
           data-key-scope="tabs"
         >
@@ -391,7 +456,9 @@ export function TabStrip() {
                       tabIndex={active ? 0 : -1}
                       className={`tab-button ui-focusable${active ? ' tab--active' : ''}${
                         hovered ? ' tab--hover' : ''
-                      }${id === dragId ? ' tab--dragging' : ''}`}
+                      }${id === dragId ? ' tab--dragging' : ''}${
+                        id === dropTarget?.id ? ' tab--drop-target' : ''
+                      }`}
                       style={{ order: 2 * i }}
                       onClick={() => {
                         if (swallowing.current) return;
@@ -463,7 +530,9 @@ export function TabStrip() {
                 data-tab-id={id}
                 className={`tab-close${active ? ' tab--active' : ''}${
                   id === hoverId || (menuOpen && id === menuTab) ? ' tab--hover' : ''
-                }${id === dragId ? ' tab--dragging' : ''}`}
+                }${id === dragId ? ' tab--dragging' : ''}${
+                  id === dropTarget?.id ? ' tab--drop-target' : ''
+                }`}
                 style={{ order: 2 * i + 1 }}
                 onPointerDown={(e) => {
                   onPress(e, id);
@@ -529,6 +598,17 @@ export function TabStrip() {
         <div className="ui-visually-hidden tab-moved" aria-live="polite" aria-atomic="true">
           {moved}
         </div>
+        {/* Drop a tab on a tab (O4): what letting go here does, under the target tab. */}
+        {dropTarget && dragId ? (
+          <div
+            className="tab-drop-hint"
+            aria-hidden="true"
+            style={{ left: `${String(dropTarget.x)}px`, top: `${String(dropTarget.y)}px` }}
+          >
+            <CommandIcon id="tab.compareWith" />
+            <span>{t('frame.dropOnTab')}</span>
+          </div>
+        ) : null}
         {opening}
         <div className="tab-strip-end">
           <DropdownMenu

@@ -79,3 +79,45 @@ export function edgeSpeed(
   if (x > end - zone) return Math.ceil(max * Math.min(1, (x - (end - zone)) / zone));
   return 0;
 }
+
+/**
+ * Drop a tab on a tab (M12-21·O4, D-58): the lifted tab held still this long over another
+ * document tab makes that tab the drop target ("Compare these two"); moving on reorders.
+ */
+export const COMPARE_HOLD_MS = 500;
+/** The pointer moves less than this while the hold time runs (it is held still). */
+export const COMPARE_STILL_PX = 4;
+/** Once a target is taken, moving this far lets it go and the reorder goes on. */
+export const COMPARE_RELEASE_PX = 12;
+/** The lifted tab covers at least this share of the narrower tab to drop on it. */
+export const COMPARE_COVER = 0.25;
+
+/**
+ * The tab the lifted tab (from `from`, its left edge at `left`, dropping at `to`) is
+ * over, for dropping it on that tab: of the tabs `eligible` accepts, the one it covers
+ * most where they are shown now (each at its slot, moved by `shiftFor`), covering at
+ * least `COMPARE_COVER` of the narrower of the two. Null when none.
+ */
+export function coveredTab(
+  slots: readonly TabSlot[],
+  from: number,
+  to: number,
+  left: number,
+  eligible: (j: number) => boolean = () => true,
+): number | null {
+  const dragged = slots[from];
+  if (!dragged) return null;
+  const right = left + dragged.width;
+  let best: number | null = null;
+  let bestCover = 0;
+  slots.forEach((s, j) => {
+    if (j === from || !eligible(j)) return;
+    const l = s.left + shiftFor(j, from, to, dragged.width);
+    const cover = Math.min(right, l + s.width) - Math.max(left, l);
+    const narrower = Math.min(dragged.width, s.width);
+    if (narrower <= 0 || cover < COMPARE_COVER * narrower || cover <= bestCover) return;
+    best = j;
+    bestCover = cover;
+  });
+  return best;
+}

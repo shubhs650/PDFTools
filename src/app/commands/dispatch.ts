@@ -32,6 +32,11 @@ export interface CommandArgs {
    * document first (D-01: commands act on the active document).
    */
   tab?: string;
+  /**
+   * Drop a tab on a tab (M12-21·O4, D-58): the two documents a Compare command puts on
+   * Document A and Document B, from the "Compare these two" menu.
+   */
+  pair?: readonly [string, string];
 }
 
 export interface CommandHandler {

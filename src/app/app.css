@@ -46,6 +46,7 @@ body {
    (themeContrast.test.ts). Others: no dividers, a raised tint on hover, × on hover and
    focus. The strip keeps its height (32 px): 4 px above, 28 px tabs. */
 .tab-strip {
+  position: relative; /* the drop-on-a-tab hint (M12-21·O4) is placed in it */
   display: flex;
   align-items: flex-end;
   min-height: var(--control-height-m);
@@ -198,6 +199,73 @@ body {
 
 .tab-close.tab--dragging {
   box-shadow: var(--tab-lift-end);
+}
+
+/* Drop a tab on a tab (M12-21·O4, D-58): the tab the lifted one would drop on is tinted
+   and ringed in the accent colour across its two parts, and a hint under it says what
+   letting go does. */
+.tab-button.tab--drop-target,
+.tab-close.tab--drop-target {
+  background: var(--color-selected);
+  color: var(--color-selected-text);
+}
+
+.tab-button.tab--drop-target {
+  box-shadow:
+    inset var(--tab-line-width) var(--space-0) var(--space-0) var(--color-accent),
+    inset var(--space-0) var(--tab-line-width) var(--space-0) var(--color-accent),
+    inset var(--space-0) calc(-1 * var(--tab-line-width)) var(--space-0) var(--color-accent);
+}
+
+.tab-close.tab--drop-target {
+  box-shadow:
+    inset calc(-1 * var(--tab-line-width)) var(--space-0) var(--space-0) var(--color-accent),
+    inset var(--space-0) var(--tab-line-width) var(--space-0) var(--color-accent),
+    inset var(--space-0) calc(-1 * var(--tab-line-width)) var(--space-0) var(--color-accent);
+}
+
+.tab-button.tab--drop-target::before,
+.tab-button.tab--drop-target + .tab-button::before {
+  opacity: 0;
+}
+
+.tab-drop-hint {
+  position: absolute;
+  z-index: var(--z-tooltip);
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  margin-top: var(--space-2);
+  padding: var(--space-1) var(--space-3);
+  border-radius: var(--radius-m);
+  background: var(--color-brand);
+  box-shadow: var(--elevation-2);
+  color: var(--color-text-on-brand);
+  font-size: var(--font-size-s);
+  white-space: nowrap;
+  pointer-events: none;
+}
+
+/* The lifted tab lets the target show through it while it is held there. */
+.tab-list--drop-on .tab--dragging {
+  opacity: 0.6;
+}
+
+.tab-drop-hint svg {
+  width: var(--icon-size-s);
+  height: var(--icon-size-s);
+}
+
+@media (forced-colors: active) {
+  .tab-button.tab--drop-target,
+  .tab-close.tab--drop-target {
+    outline: var(--tab-line-width) solid Highlight;
+    outline-offset: calc(-1 * var(--tab-line-width));
+  }
+
+  .tab-drop-hint {
+    border: var(--border-width) solid CanvasText;
+  }
 }
 
 .tab-button.tab--active.tab--dragging {
