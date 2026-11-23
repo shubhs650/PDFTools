@@ -25,11 +25,12 @@ const SENSITIVITY: Record<Sensitivity, MessageKey> = {
   high: msg('compare.register.sensitivity_high'),
 };
 
-const PLACEMENT: Record<SheetStatus, MessageKey> = {
+const PLACEMENT: Record<SheetStatus | 'checked', MessageKey> = {
   asIs: msg('compare.file.summary.place_asIs'),
   aligned: msg('compare.file.summary.place_aligned'),
   manual: msg('compare.file.summary.place_manual'),
   lowConfidence: msg('compare.file.summary.place_lowConfidence'),
+  checked: msg('compare.file.summary.place_checked'),
 };
 
 const n = (v: number): string => format.number(v, 0);
@@ -38,12 +39,16 @@ const n = (v: number): string => format.number(v, 0);
 export function summaryFacts(c: Comparison): OverlayFacts {
   const view = overlayView(c.id);
   const diff = diffView(c.id);
-  const sheets = (comparisonSheets(c.id) ?? []).map((s) => ({
-    pair: s.pair,
-    a: s.a !== null,
-    b: s.b !== null,
-    status: sheetEntry(view, s).status,
-  }));
+  const sheets = (comparisonSheets(c.id) ?? []).map((s) => {
+    const e = sheetEntry(view, s);
+    return {
+      pair: s.pair,
+      a: s.a !== null,
+      b: s.b !== null,
+      status: e.status,
+      ...(e.checked ? { checked: true } : {}),
+    };
+  });
   const checked = new Set(diff.checked);
   return overlayFacts(
     sheets,
@@ -137,7 +142,7 @@ export function overlaySummary(c: Comparison, when: Date): SummarySpec {
       }),
     });
   }
-  const placement = (Object.keys(PLACEMENT) as SheetStatus[])
+  const placement = (Object.keys(PLACEMENT) as (SheetStatus | 'checked')[])
     .filter((k) => f.placement[k] > 0)
     .map((k) => t(PLACEMENT[k], { n: n(f.placement[k]) }));
   if (placement.length)

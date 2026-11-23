@@ -53,8 +53,18 @@ describe('overlayFacts', () => {
       kinds: { added: 1, removed: 1, changed: 1 },
       types: { text: 1, geometry: 1, both: 1 },
       checked: 1,
-      placement: { asIs: 1, aligned: 1, manual: 1, lowConfidence: 1 },
+      placement: { asIs: 1, aligned: 1, manual: 1, lowConfidence: 1, checked: 0 },
     });
+  });
+
+  it('counts an uncertain alignment the user accepted as "checked by you" (M12-26)', () => {
+    const f = overlayFacts(
+      [...sheets, { pair: 4, a: true, b: true, status: 'lowConfidence', checked: true }],
+      results,
+      () => false,
+      [],
+    );
+    expect(f.placement).toEqual({ asIs: 1, aligned: 1, manual: 1, lowConfidence: 1, checked: 1 });
   });
 
   it('names ignore zones by sheet number (1-based, in the sheet list)', () => {

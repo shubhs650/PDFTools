@@ -11,6 +11,7 @@ import {
 } from '@fluentui/react-icons/svg/line-thickness';
 import { PageFit20Regular } from '@fluentui/react-icons/svg/page-fit';
 import { Shapes20Filled, Shapes20Regular } from '@fluentui/react-icons/svg/shapes';
+import { Target20Filled, Target20Regular } from '@fluentui/react-icons/svg/target';
 import { ZoomIn20Regular } from '@fluentui/react-icons/svg/zoom-in';
 import { ZoomOut20Regular } from '@fluentui/react-icons/svg/zoom-out';
 import { useId, useState, type ReactNode } from 'react';
@@ -33,7 +34,9 @@ import {
   ToggleButton,
   type MenuEntry,
 } from '../../../ui/components';
+import { toggleLineUp } from '../align/manualAlign';
 import {
+  needsCheck,
   overlapWarning,
   setBalance,
   setColour,
@@ -77,9 +80,11 @@ function Swatch({ colour }: { colour: string }) {
 }
 
 /**
- * The floating bar over the overlay (D-59, Q18): show or hide each revision,
- * the balance between them, Fade unchanged, Thicken thin lines, Blink (hold),
- * the colours, the "Vector overlay (beta)" display mode (M12-16) and the zoom.
+ * The floating bar over the overlay (D-59, Q18): **Line up** (M12-26,
+ * ADR-033: the sheet lined up by hand, always in sight), show or hide each
+ * revision, the balance between them, Fade unchanged, Thicken thin lines,
+ * Blink (hold), the colours, the "Vector overlay (beta)" display mode
+ * (M12-16) and the zoom.
  */
 export function FloatingBar({
   id,
@@ -140,8 +145,27 @@ export function FloatingBar({
       },
     },
   ];
+  const lining = sheet.pair !== null && view.manual?.pair === sheet.pair;
   return (
     <div className="overlay-bar" role="toolbar" aria-label={t('compare.overlay.bar')}>
+      <div
+        className="overlay-bar-group overlay-line-up"
+        data-testid="line-up-button"
+        data-attention={needsCheck(view, sheet) ? 'true' : undefined}
+      >
+        <ToggleButton
+          label={t('compare.lineUp.button')}
+          tooltip={t('compare.lineUp.buttonTip')}
+          compact
+          icon={<Target20Regular />}
+          pressedIcon={<Target20Filled />}
+          pressed={lining}
+          disabled={sheet.pair === null}
+          onPressedChange={(on) => {
+            toggleLineUp(id, sheet, on);
+          }}
+        />
+      </div>
       <Group>
         <ToggleButton
           label={t('compare.overlay.showA')}

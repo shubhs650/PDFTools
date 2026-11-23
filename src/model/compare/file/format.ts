@@ -48,6 +48,11 @@ export interface SheetEntry {
   /** A's displayed page → B's (D-60); absent when used as is. */
   aToB?: number[];
   status: SheetStatus;
+  /**
+   * The user looked at an uncertain alignment and accepted it ("It looks
+   * right": "Checked by you", M12-26, ADR-033); absent otherwise.
+   */
+  checked?: boolean;
 }
 
 /** A row of the pairing table (M12-09): side page indices, or null; left out of the comparison. */

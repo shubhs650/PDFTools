@@ -868,7 +868,8 @@
       "whatsNew": "Which version's What's new was last shown, so it shows once after each update",
       "recentFonts": "Comment fonts you chose last (font names only), shown first in the font list",
       "session": "Files open last time: their names and the browser's permission handles, kept only while File › Settings › Start-up reopens them",
-      "closeOutHighlights": "Whether a comparison's close-out list hides highlights"
+      "closeOutHighlights": "Whether a comparison's close-out list hides highlights",
+      "compareTips": "Whether the first-time tips of Compare were seen"
     },
     "clearHint": "To delete this data, use File → Settings → Clear all local data."
   },
@@ -1760,11 +1761,11 @@
     "preset": {
       "tag": "Preset",
       "numeric": {
-        "name": "1 / 2 / 3 / 4",
         "1": "Approved",
         "2": "Approved with comments",
         "3": "Revise and resubmit",
-        "4": "Rejected"
+        "4": "Rejected",
+        "name": "1 / 2 / 3 / 4"
       },
       "alpha": {
         "name": "A / B / C / D",
@@ -3060,22 +3061,21 @@
       "vectorFailed": "The vector overlay couldn't be made for this sheet, so it is drawn the usual way."
     },
     "align": {
-      "asIs": "As is",
-      "auto": "Auto-aligned",
-      "low": "Low confidence",
+      "asIs": "Already lined up",
+      "auto": "Lined up automatically",
+      "low": "Check alignment",
       "values": "Shift {{dx}}, {{dy}} pt · scale {{scale}} · rotation {{deg}}°",
-      "lowHint": "The sheets could not be lined up with certainty. Check the overlay, or align the sheet by points.",
-      "manual": "Aligned by hand"
+      "lowHint": "This sheet may not be lined up correctly. Look at the overlay: if lines show twice, line it up by hand.",
+      "manual": "Lined up by hand",
+      "checked": "Checked by you"
     },
     "manual": {
       "title": "Alignment",
-      "start": "Align by points",
+      "start": "Line up by hand",
       "automatic": "Use automatic alignment",
       "pick": "Pick points",
-      "pickA": "Click a point on Document A. It snaps to the drawing; hold Alt not to snap.",
-      "pickB": "Click the same point on Document B. It snaps to the drawing; hold Alt not to snap.",
-      "full": "Three pairs picked. Remove one to pick another.",
-      "notPicking": "Type the values, or nudge Document A with the arrow keys.",
+      "pickA": "Click a point on the old drawing (Document A). It snaps to the drawing; hold Alt not to snap.",
+      "pickB": "Click the same point on the new drawing (Document B). It snaps to the drawing; hold Alt not to snap.",
       "points": "Point pairs",
       "pair": "{{n}}: A {{a}} → B {{b}}",
       "off": "{{pt}} pt off",
@@ -3100,7 +3100,7 @@
       "applyTo": "Apply to",
       "applyTo_sheet": "This sheet",
       "applyTo_all": "All sheets",
-      "applyTo_low": "All low-confidence sheets",
+      "applyTo_low": "Sheets that need checking",
       "apply": "Apply",
       "cancel": "Cancel"
     },
@@ -3598,10 +3598,10 @@
         "checked": "Ticked as checked",
         "checkedValue": "{{checked}} of {{total}}",
         "placement": "Placement",
-        "place_asIs": "{{n}} as is",
-        "place_aligned": "{{n}} aligned automatically",
-        "place_manual": "{{n}} aligned by hand",
-        "place_lowConfidence": "{{n}} aligned with low confidence",
+        "place_asIs": "{{n}} already lined up",
+        "place_aligned": "{{n}} lined up automatically",
+        "place_manual": "{{n}} lined up by hand",
+        "place_lowConfidence": "{{n}} not checked (alignment uncertain)",
         "legend": "Legend",
         "legendA": "Only in Document A (old)",
         "legendB": "Only in Document B (new)",
@@ -3613,7 +3613,8 @@
         "zonesEvery": "{{n}} on every sheet",
         "zonesSheet": "{{n}} on sheet {{sheet}}",
         "partial": "The comparison was still finding differences on some sheets: the counts are what had been found.",
-        "footer": "The overlay sheets follow this page. Document A and Document B are attached to this file unchanged."
+        "footer": "The overlay sheets follow this page. Document A and Document B are attached to this file unchanged.",
+        "place_checked": "{{n}} checked by the reviewer (alignment uncertain)"
       },
       "close": {
         "title": "Save changes to {{name}}?",
@@ -3692,6 +3693,44 @@
       "colour_magenta": "Magenta",
       "colour_black": "Black",
       "colour_grey": "Grey"
+    },
+    "lineUp": {
+      "button": "Line up",
+      "buttonTip": "Line up this sheet by hand: click the same point on the old and the new drawing",
+      "title": "Line up sheet {{sheet}}",
+      "steps": "Steps to line up the sheet",
+      "step_1": "Point on the old drawing",
+      "step_2": "Same point on the new drawing",
+      "step_3": "Second point (optional)",
+      "step_4": "Apply",
+      "say_1": "Find a point you can see on both drawings, such as a grid crossing or a corner. Click it on the old drawing (Document A, outlined).",
+      "say_2": "Now click the same point on the new drawing (Document B, outlined).",
+      "say_2more": "Click the same point on the new drawing (Document B, outlined).",
+      "say_3": "The overlay now follows your point. If the sheet is also scaled or turned, click a second point far from the first on the old drawing. Otherwise choose Apply.",
+      "say_4": "Check the overlay: when the lines sit on top of each other, choose Apply. A third pair of points gives a best fit.",
+      "say_full": "Three pairs of points picked. Check the overlay, then choose Apply.",
+      "say_paused": "Picking is paused. Choose Pick points to go on, or open Fine-tune in the Alignment section to type the values.",
+      "snap": "Points snap to the drawing; hold Alt not to snap.",
+      "here_a": "Click the point here, on the old drawing",
+      "here_b": "Click the same point here, on the new drawing",
+      "undo": "Undo last point",
+      "fineTune": "Fine-tune",
+      "paneHint": "Follow the steps above the drawings. The points you pick:",
+      "banner": "This sheet may not be lined up correctly.",
+      "bannerMore": "Look at the overlay. If lines show twice, line the sheet up by hand; if it looks right, say so.",
+      "looksRight": "It looks right"
+    },
+    "tips": {
+      "count": "Tip {{n}} of {{count}}",
+      "colours_title": "The colours show what changed",
+      "colours_text": "Lines only in the old drawing are red, lines only in the new drawing are green, and lines in both are black. The key follows the colours you choose.",
+      "differences_title": "Every difference in a list",
+      "differences_text": "The Differences pane lists each change. Click one to go to it, and tick it when you have checked it.",
+      "lineUp_title": "Lines showing twice?",
+      "lineUp_text": "If the two drawings do not sit on top of each other, choose Line up and click the same point on both drawings.",
+      "next": "Next",
+      "done": "Got it",
+      "skip": "Skip tips"
     }
   }
 }

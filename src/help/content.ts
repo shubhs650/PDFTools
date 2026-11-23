@@ -14,6 +14,8 @@ export type Block =
   | { list: string[] }
   | { tip: string }
   | { shot: string; alt: string; caption?: string }
+  /** A button that shows Compare's first-time tips again (M12-26); the string is its label. */
+  | { replayTips: string }
   | { table: 'shortcuts' };
 
 export interface Topic {
@@ -89,6 +91,7 @@ export function blockStrings(b: Block): string[] {
   if ('list' in b) return b.list;
   if ('tip' in b) return [b.tip];
   if ('shot' in b) return b.caption ? [b.caption] : [];
+  if ('replayTips' in b) return [b.replayTips];
   return [];
 }
 

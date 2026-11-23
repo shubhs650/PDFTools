@@ -15,7 +15,8 @@
     "next": "Next",
     "tip": "Tip:",
     "zoomShot": "Show full size",
-    "close": "Close"
+    "close": "Close",
+    "tipsReplayed": "Done. The tips show on the comparison on screen, or on the next one you open."
   },
   "chapters": {
     "start": "Getting started",
@@ -1358,26 +1359,82 @@
           "h": "Automatic alignment"
         },
         {
-          "p": "Each sheet is first compared as it is. Only a sheet that matches poorly is aligned: it is shifted, scaled the same in both directions and rotated, never stretched. Page rotation and page boxes are taken into account. The sheet list shows <b>As is</b>, <b>Auto-aligned</b> (with the shift, scale and rotation found), <b>Aligned by hand</b> or <b>Low confidence</b>. Check a low-confidence sheet, and align it by points if it is not right."
+          "p": "Each sheet is first compared as it is. Only a sheet that matches poorly is lined up: it is shifted, scaled the same in both directions and rotated, never stretched. Page rotation and page boxes are taken into account. The <b>Sheets</b> list and the <b>Alignment</b> section say, for each sheet:"
         },
         {
-          "shot": "compare-alignment-1",
-          "alt": "The Sheets list with a sheet's alignment, and the Alignment section while points are picked"
-        },
-        {
-          "h": "To align a sheet by points"
-        },
-        {
-          "steps": [
-            "Go to the sheet and choose <b>Align by points</b>.",
-            "Click a point on Document A, such as the corner of a grid line, and then the same point on Document B. The pointer snaps to the drawing and a magnifier helps; hold <kbd>Alt</kbd> not to snap.",
-            "One pair shifts the sheet. Two pairs also scale and rotate it. A third pair gives a best fit and shows how far the points are off.",
-            "Fine-tune with <b>X offset</b>, <b>Y offset</b>, <b>Scale</b> and <b>Rotation</b>, or nudge Document A with the arrow keys (with <kbd>Shift</kbd> for bigger steps). <b>Pick points</b> stops and starts picking.",
-            "Under <b>Apply to</b>, choose this sheet, all sheets or all low-confidence sheets, then <b>Apply</b>."
+          "list": [
+            "<b>Already lined up</b>: the two pages matched as they are.",
+            "<b>Lined up automatically</b>, with the shift, scale and rotation found.",
+            "<b>Check alignment</b>: {{app}} is not sure the sheet is lined up. Look at it.",
+            "<b>Lined up by hand</b>: you lined it up with points or values.",
+            "<b>Checked by you</b>: you looked at a sheet marked Check alignment and chose <b>It looks right</b>. This is saved with the comparison."
           ]
         },
         {
-          "p": "<b>Use automatic alignment</b> goes back to the alignment {{app}} found."
+          "shot": "compare-alignment-1",
+          "alt": "The banner over the overlay on a sheet that may not be lined up, with Line up by hand and It looks right"
+        },
+        {
+          "p": "On a sheet that needs checking, a banner across the top says <b>This sheet may not be lined up correctly.</b> Look at the overlay: when lines show twice, side by side in red and green, the sheet is not lined up. Choose <b>Line up by hand</b>, or <b>It looks right</b> if the lines sit on top of each other."
+        },
+        {
+          "h": "To line up a sheet by hand"
+        },
+        {
+          "p": "Choose <b>Line up</b> on the overlay controls (or <b>Line up by hand</b> in the banner or in the <b>Alignment</b> section). The windows change to <b>Side by side</b> and a bar of steps shows above them. The window to click next has an outline and says so."
+        },
+        {
+          "steps": [
+            "On the old drawing (Document A), click a point you can find on both drawings, such as a grid crossing, the corner of the border or the end of a line. The pointer snaps to the drawing and a magnifier helps; hold <kbd>Alt</kbd> not to snap."
+          ]
+        },
+        {
+          "shot": "compare-alignment-2",
+          "alt": "Step 1 of Line up: the old drawing outlined, waiting for a point"
+        },
+        {
+          "steps": [
+            "Click the same point on the new drawing (Document B). A numbered pin marks each point in both windows, and the overlay moves at once to match them."
+          ]
+        },
+        {
+          "shot": "compare-alignment-3",
+          "alt": "Step 2 of Line up: point 1 pinned on the old drawing, the new drawing outlined"
+        },
+        {
+          "steps": [
+            "If the sheet is also scaled or turned, click a second point far from the first, first on the old drawing and then on the new one. Two pairs set the shift, scale and rotation. A third pair gives a best fit and shows how far each point is off."
+          ]
+        },
+        {
+          "shot": "compare-alignment-4",
+          "alt": "Step 3 of Line up: two pairs of points pinned, the overlay lined up"
+        },
+        {
+          "steps": [
+            "Check the overlay. Under <b>Apply to</b>, choose <b>This sheet</b>, <b>All sheets</b> or <b>Sheets that need checking</b>, then choose <b>Apply</b>."
+          ]
+        },
+        {
+          "shot": "compare-alignment-5",
+          "alt": "Step 4 of Line up: Apply, with Fine-tune open in the Alignment section"
+        },
+        {
+          "list": [
+            "<b>Undo last point</b> takes back the last point you clicked; the cross next to a pair in the <b>Alignment</b> section removes the pair.",
+            "<kbd>Esc</kbd> stops picking points; <b>Pick points</b> goes on. <b>Cancel</b> leaves the sheet as it was.",
+            "<b>Fine-tune</b>, in the <b>Alignment</b> section, takes typed values for <b>X offset</b>, <b>Y offset</b>, <b>Scale</b> and <b>Rotation</b>, and nudges the old drawing with the arrow buttons or arrow keys (with <kbd>Shift</kbd> for bigger steps).",
+            "<b>Use automatic alignment</b> goes back to the alignment {{app}} found."
+          ]
+        },
+        {
+          "h": "First-time tips"
+        },
+        {
+          "p": "On your first PDF overlay, three short tips point out the colours, the list of differences and <b>Line up</b>. They show once. To see them again:"
+        },
+        {
+          "replayTips": "Show the Compare tips again"
         }
       ]
     },

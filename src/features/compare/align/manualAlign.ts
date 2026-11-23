@@ -1,5 +1,5 @@
-// Manual alignment of a sheet (M12-13, D-60, Q7, Q8): the state of the
-// alignment being set — the point pairs picked in Document A's and Document
+// Manual alignment of a sheet (M12-13, D-60, Q7, Q8; the guided Line up mode
+// of M12-26, ADR-033): the state of the alignment being set — the point pairs picked in Document A's and Document
 // B's windows, the placement they give (shown on the overlay at once), the
 // fine-tune values and nudges — and Apply to this sheet, all sheets or all
 // low-confidence sheets, which hands the placement to the comparison's
@@ -13,24 +13,29 @@ import {
   type PointPair,
   type Pt,
 } from '../../../model/compare/align/manual';
+import { setSection, updateLayout } from '../layout/layoutStore';
 import { pairingSession } from '../pairingFlow';
 import {
   dropAligned,
   overlayView,
+  pairNeedsCheck,
   placeOf,
   setAligned,
+  setAlignChecked,
   updateView,
   type OverlayView,
   type Sheet,
 } from '../overlay/overlayState';
 
-/** Which sheets Apply sets (Q7). */
+/** Which sheets Apply sets (Q7): this sheet, all sheets, the sheets that need checking. */
 export type ApplyTo = 'sheet' | 'all' | 'low';
 
 /** A pair being picked: a spot on A, on B, or both. */
 export interface PickedPair {
   a: Pt | null;
   b: Pt | null;
+  /** The side clicked first (Undo last point takes the other one first). */
+  first?: 'a' | 'b';
 }
 
 export interface ManualAlign {
@@ -109,7 +114,7 @@ export const pickPoint = (v: OverlayView, side: 'a' | 'b', p: Pt): OverlayView =
     // A pair begun gets this side (a second click on the same side moves its point), else a new pair.
     if (last && !(last.a && last.b)) points[points.length - 1] = { ...last, [side]: p };
     else if (points.length < MAX_PAIRS)
-      points.push({ a: side === 'a' ? p : null, b: side === 'b' ? p : null });
+      points.push({ a: side === 'a' ? p : null, b: side === 'b' ? p : null, first: side });
     else return m;
     const full = points.length === MAX_PAIRS && points.every((q) => q.a && q.b);
     return refit({ ...m, points, picking: !full });
@@ -118,6 +123,42 @@ export const pickPoint = (v: OverlayView, side: 'a' | 'b', p: Pt): OverlayView =
 /** Removes a pair (its markers go; the placement follows the pairs left). */
 export const removePair = (v: OverlayView, index: number): OverlayView =>
   withManual(v, (m) => refit({ ...m, points: m.points.filter((_, i) => i !== index) }));
+
+/**
+ * Undo last point (M12-26): the last spot clicked goes — the second side of a
+ * complete pair, else the pair begun — and picking goes on.
+ */
+export const undoPoint = (v: OverlayView): OverlayView =>
+  withManual(v, (m) => {
+    const last = m.points.at(-1);
+    if (!last) return m;
+    const keep = last.first ?? 'a';
+    const points =
+      last.a && last.b
+        ? [...m.points.slice(0, -1), { ...last, [keep === 'a' ? 'b' : 'a']: null }]
+        : m.points.slice(0, -1);
+    return refit({ ...m, points, picking: true });
+  });
+
+/** The steps of Line up (M12-26, ADR-033) as the step bar numbers them. */
+export type LineUpStep = 1 | 2 | 3 | 4;
+
+/**
+ * The step the user is at: 1 a point on the old drawing, 2 the same point on
+ * the new one, 3 an optional second pair far from the first, 4 Apply (two
+ * pairs or more, or picking paused or full with one pair at least).
+ */
+export function lineUpStep(m: ManualAlign): LineUpStep {
+  const done = completePairs(m).length;
+  const next = nextSide(m);
+  if (done === 0) return next === 'b' ? 2 : 1;
+  if (done >= 2 || next === null || !m.picking) return 4;
+  return 3;
+}
+
+/** Apply is useful: a pair is complete, or the values were typed or nudged. */
+export const canApply = (m: ManualAlign): boolean =>
+  !m.problem && (completePairs(m).length > 0 || m.place.some((x, i) => x !== m.base[i]));
 
 export const setPicking = (v: OverlayView, on: boolean): OverlayView =>
   withManual(v, (m) => (m.picking === on ? m : { ...m, picking: on }));
@@ -137,11 +178,11 @@ export const setApplyTo = (v: OverlayView, applyTo: ApplyTo): OverlayView =>
 export const cancelManual = (v: OverlayView): OverlayView =>
   v.manual ? { ...v, manual: null } : v;
 
-/** The pairs Apply sets: this sheet, every compared sheet, or the low-confidence ones and this. */
+/** The pairs Apply sets: this sheet, every compared sheet, or those that need checking and this. */
 export function applyTargets(v: OverlayView, m: ManualAlign, pairs: number): number[] {
   const all = [...Array(pairs).keys()];
   if (m.applyTo === 'all') return all;
-  if (m.applyTo === 'low') return all.filter((i) => i === m.pair || v.aligned[i]?.status === 'low');
+  if (m.applyTo === 'low') return all.filter((i) => i === m.pair || pairNeedsCheck(v, i));
   return [m.pair];
 }
 
@@ -151,9 +192,26 @@ export function applyManual(id: string, pairs: number): void {
   const session = pairingSession(id);
   if (!v.manual || !session) return;
   const { place } = v.manual;
-  for (const i of applyTargets(v, v.manual, pairs)) session.setManual(i, place);
-  // The session's watchers have set the sheets' alignments by now.
-  updateView(id, cancelManual);
+  const targets = applyTargets(v, v.manual, pairs);
+  for (const i of targets) session.setManual(i, place);
+  // The session's watchers have set the sheets' alignments by now; lined up by hand, not "checked".
+  updateView(id, (w) => cancelManual(targets.reduce((x, i) => setAlignChecked(x, i, false), w)));
+}
+
+/**
+ * Line up (M12-26, ADR-033): starts lining the sheet up by hand in Review,
+ * picking points; again (the floating bar's toggle) leaves without applying.
+ */
+export function toggleLineUp(id: string, sheet: Sheet, on: boolean): void {
+  // The Alignment section stays open afterwards (Use automatic alignment, the status).
+  if (on) updateLayout(id, (l) => setSection(l, 'align', true));
+  updateView(id, (v) =>
+    on
+      ? v.manual?.pair === sheet.pair
+        ? setPicking({ ...v, layout: 'review' }, true)
+        : startManual(v, sheet)
+      : cancelManual(v),
+  );
 }
 
 /** Back to the automatic alignment for a sheet set by hand. */

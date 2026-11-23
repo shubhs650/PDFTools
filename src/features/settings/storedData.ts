@@ -8,6 +8,7 @@ import { msg, type MessageKey } from '../../i18n';
 import { WHATS_NEW_STORAGE_KEY } from '../whatsNew/releases';
 import { RECENT_FONTS_STORAGE_KEY } from '../annotate/fonts/recentFonts';
 import { HIDE_HIGHLIGHTS_STORAGE_KEY } from '../compare/closeout/closeOutStore';
+import { COMPARE_TIPS_STORAGE_KEY } from '../compare/tips/tipsKey';
 import { DB_NAME } from '../../storage/idb';
 import { RECOVERY_DIR } from '../../storage/recoveryTypes';
 
@@ -169,6 +170,14 @@ export const LOCAL_DATA: readonly LocalDataItem[] = [
     location: HIDE_HIGHLIGHTS_STORAGE_KEY,
     store: HIDE_HIGHLIGHTS_STORAGE_KEY,
     what: msg('privacy.data.closeOutHighlights'),
+    cleared: true,
+  },
+  {
+    // Compare's first-time tips were seen or skipped (M12-26), so they show once.
+    kind: 'localStorage',
+    location: COMPARE_TIPS_STORAGE_KEY,
+    store: COMPARE_TIPS_STORAGE_KEY,
+    what: msg('privacy.data.compareTips'),
     cleared: true,
   },
   {
