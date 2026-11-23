@@ -45,12 +45,26 @@ const GOOD: PerfRow[] = [
   row('perf/annotation-export.spec.ts', 'annotation export'),
   row('offline.spec.ts', 'M4 offline: tables, … zero outbound requests'),
   row('export.spec.ts', 'M4 exports offline: PDF Oxide from the cache, zero outbound requests'),
+  row('perf/compare-acceptance.spec.ts', 'overlay times', {
+    'm12-overlay-acceptance': JSON.stringify({
+      '18': { sheets: 1, firstSheetMs: 550, allListedMs: 1400, perSheetMs: 1400 },
+      '17': { sheets: 5, firstSheetMs: 440, allListedMs: 1270, perSheetMs: 254 },
+      '10': { sheets: 4, firstSheetMs: 350, allListedMs: 710, perSheetMs: 178 },
+      '14': { sheets: 1, firstSheetMs: 430, allListedMs: 1280, perSheetMs: 1280 },
+    }),
+  }),
+  row('perf/compare-overlay.spec.ts', 'overlay zoom'),
+  row('perf/compare-text.spec.ts', 'text', {
+    text: JSON.stringify({ firstResultMs: 1060, completeMs: 13_600 }),
+  }),
+  row('perf/compare-worker.spec.ts', 'worker'),
+  row('offline.spec.ts', 'M12 offline: a PDF overlay … zero outbound requests'),
 ];
 
 describe('M1 … M4 acceptance table (M1-28, M2-19, M3-20, M4-22)', () => {
   it('meets every target with good numbers', () => {
     const results = evaluate(GOOD);
-    expect(results).toHaveLength(23);
+    expect(results).toHaveLength(30);
     expect(results.find((r) => r.area.startsWith('Express Extract'))?.measured).toBe('4600 ms');
     expect(results.find((r) => r.area.startsWith('Markdown export'))?.measured).toBe('21500 ms');
     expect(results.find((r) => r.target === 'query round trip p95 ≤ 16 ms')?.measured).toBe(
@@ -105,5 +119,45 @@ describe('M1 … M4 acceptance table (M1-28, M2-19, M3-20, M4-22)', () => {
     );
     expect(byArea(failedExports).get('Offline proof (M4)')).toBe('missed');
     expect(byArea(failedExports).get('Offline proof')).toBe('met');
+  });
+
+  it('M12: a slow first result or sheet misses, a missing file is not measured, M12 offline is its own row', () => {
+    const byArea = (rows: PerfRow[]) => new Map(evaluate(rows).map((r) => [r.area, r.verdict]));
+    const slow = GOOD.map((r) =>
+      r.metrics.text
+        ? { ...r, metrics: { text: JSON.stringify({ firstResultMs: 12_000, completeMs: 61_000 }) } }
+        : r,
+    );
+    const text = [...byArea(slow)].filter(([a]) => a.startsWith('Text comparison'));
+    expect(text.map(([, v]) => v)).toEqual(['missed', 'missed']);
+    const slowSheet = GOOD.map((r) =>
+      r.metrics['m12-overlay-acceptance']
+        ? {
+            ...r,
+            metrics: {
+              'm12-overlay-acceptance': JSON.stringify({
+                '18': { sheets: 1, firstSheetMs: 550, allListedMs: 2600, perSheetMs: 2600 },
+                '17': { sheets: 5, firstSheetMs: 440, allListedMs: 1270, perSheetMs: 254 },
+                '10': { sheets: 4, firstSheetMs: 350, allListedMs: 710, perSheetMs: 178 },
+                '14': { sheets: 1, firstSheetMs: 3400, allListedMs: 5000, perSheetMs: 5000 },
+              }),
+            },
+          }
+        : r,
+    );
+    const v = byArea(slowSheet);
+    expect([...v].find(([a]) => a.startsWith('PDF overlay: first result'))?.[1]).toBe('missed');
+    expect([...v].find(([a]) => a.startsWith('PDF overlay: typical sheet'))?.[1]).toBe('missed');
+    // The dense pair is reported, not a limit.
+    expect([...v].find(([a]) => a.startsWith('PDF overlay: dense A1'))?.[1]).toBe('met');
+    const noWorker = GOOD.filter((r) => !r.file.endsWith('perf/compare-worker.spec.ts'));
+    expect([...byArea(noWorker)].find(([a]) => a.includes('during comparisons'))?.[1]).toBe(
+      'not measured',
+    );
+    const offlineFailed = GOOD.map((r) =>
+      r.title.startsWith('M12 offline') ? { ...r, status: 'failed' as const } : r,
+    );
+    expect(byArea(offlineFailed).get('Offline proof (M12)')).toBe('missed');
+    expect(byArea(offlineFailed).get('Offline proof')).toBe('met');
   });
 });

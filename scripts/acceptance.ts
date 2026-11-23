@@ -1,4 +1,5 @@
-// M1 … M4 acceptance table (M1-28, M2-19, M3-20, M4-22, §12, D-27, ADR-002):
+// M1 … M4 and M12 acceptance table (M1-28, M2-19, M3-20, M4-22, M12-23, §12, D-27, D-66,
+// ADR-002, ADR-032):
 // reads Playwright JSON reports (the perf project, plus the @offline run for the
 // offline proofs) and checks the §12 targets on typical, self-made files. M4's
 // bulk jobs have no §12 time target: their times are reported, and each must
@@ -87,6 +88,25 @@ export const M4_PERF = [
 /** The M4 offline proofs: "M4 offline: …" and "M4 exports offline: …". */
 const M4_OFFLINE = /^M4 [\w ]*offline\b/u;
 
+/** The M12 perf scenarios (e2e/perf/<name>.spec.ts), each a no-long-task gate (D-66). */
+export const M12_PERF = [
+  'compare-acceptance',
+  'compare-overlay',
+  'compare-text',
+  'compare-worker',
+] as const;
+
+/** M12 overlay pairs (corpus ids) whose sheets are typical (CAD-like); pair 14 is the dense A1. */
+const M12_TYPICAL = ['18', '17', '10'] as const;
+const M12_DENSE = '14';
+
+interface OverlayTimes {
+  sheets: number;
+  firstSheetMs: number;
+  allListedMs: number;
+  perSheetMs: number;
+}
+
 export function evaluate(rows: readonly PerfRow[]): TargetResult[] {
   const m = metric(rows);
   const scroll = json(m, 'm1-scroll') as ScrollResult | undefined;
@@ -97,8 +117,17 @@ export function evaluate(rows: readonly PerfRow[]): TargetResult[] {
       r.title.includes('zero outbound requests') &&
       !r.title.startsWith('M2 offline') &&
       !r.title.startsWith('M3 offline') &&
+      !r.title.startsWith('M12 offline') &&
       !M4_OFFLINE.test(r.title),
   );
+  const offlineM12 = rows.filter((r) => r.title.startsWith('M12 offline'));
+  const perfM12 = rows.filter((r) => M12_PERF.some((f) => r.file.endsWith(`perf/${f}.spec.ts`)));
+  const m12Files = new Set(perfM12.map((r) => r.file.replace(/^.*perf\//u, '')));
+  const overlay = json(m, 'm12-overlay-acceptance') as Record<string, OverlayTimes> | undefined;
+  const text = json(m, 'text') as { firstResultMs?: number; completeMs?: number } | undefined;
+  const maxOf = (xs: (number | undefined)[]): number | undefined =>
+    xs.some((x) => x === undefined) || !xs.length ? undefined : Math.max(...(xs as number[]));
+  const overlayAll = overlay ? Object.values(overlay) : [];
   const offlineM2 = rows.filter((r) => r.title.startsWith('M2 offline'));
   const offlineM3 = rows.filter((r) => r.title.startsWith('M3 offline'));
   const offlineM4 = rows.filter((r) => M4_OFFLINE.test(r.title));
@@ -323,6 +352,67 @@ export function evaluate(rows: readonly PerfRow[]): TargetResult[] {
           : 'missed',
       source: 'offline.spec.ts',
     },
+    // M12 (M12-23, D-66, ADR-032 "The acceptance numbers")
+    under(
+      'PDF overlay: first result (corpus pairs 18, 17, 10 and the dense A1 14)',
+      'first sheet aligned and drawn < 3 s',
+      overlayAll.length ? maxOf(overlayAll.map((o) => o.firstSheetMs)) : undefined,
+      3000,
+      'perf/compare-acceptance.spec.ts',
+    ),
+    under(
+      'PDF overlay: typical sheet (A1 and A3, CAD-like; pairs 18, 17, 10)',
+      'aligned and differences listed < 2 s a sheet',
+      overlay ? maxOf(M12_TYPICAL.map((id) => overlay[id]?.perSheetMs)) : undefined,
+      2000,
+      'perf/compare-acceptance.spec.ts',
+    ),
+    reported(
+      'PDF overlay: dense A1 pair (14, 85,000 segments), aligned and listed',
+      'm12-overlay-acceptance',
+      overlay?.[M12_DENSE]?.allListedMs,
+      'perf/compare-acceptance.spec.ts',
+    ),
+    under(
+      'Text comparison, 500-page contract: first result',
+      'first changes shown < 3 s',
+      text?.firstResultMs,
+      3000,
+      'perf/compare-text.spec.ts',
+    ),
+    under(
+      'Text comparison, 500-page contract',
+      'complete < 60 s',
+      text?.completeMs,
+      60_000,
+      'perf/compare-text.spec.ts',
+    ),
+    {
+      area: 'UI responsiveness during comparisons (overlay, zoom and pan, text, search alongside)',
+      target: 'no main-thread task > 100 ms in every M12 perf scenario',
+      measured: perfM12.length
+        ? `${String(perfM12.filter((r) => r.status === 'passed').length)} of ${String(perfM12.length)} scenarios passed (${String(m12Files.size)} of ${String(M12_PERF.length)} files)`
+        : '—',
+      verdict:
+        m12Files.size < M12_PERF.length
+          ? 'not measured'
+          : perfM12.every((r) => r.status === 'passed')
+            ? 'met'
+            : 'missed',
+      source: 'e2e/perf (M12)',
+    },
+    {
+      area: 'Offline proof (M12)',
+      target:
+        'network off → PDF overlay with differences, change register, comparison file, text comparison; zero outbound requests',
+      measured: offlineM12.length ? offlineM12.map((r) => r.status).join(', ') : '—',
+      verdict: !offlineM12.length
+        ? 'not measured'
+        : offlineM12.every((r) => r.status === 'passed')
+          ? 'met'
+          : 'missed',
+      source: 'offline.spec.ts',
+    },
   ];
   return out;
 }
@@ -331,7 +421,7 @@ const MARK: Record<Verdict, string> = { met: '✅', missed: '❌', 'not measured
 
 export function renderAcceptance(results: readonly TargetResult[]): string {
   return [
-    '### M1 … M4 acceptance: §12 targets on typical (self-made) files',
+    '### M1 … M4 and M12 acceptance: §12 and D-66 targets on typical (self-made) files',
     '',
     '| Area | Target | Measured | Result |',
     '| --- | --- | --- | --- |',

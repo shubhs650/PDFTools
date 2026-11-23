@@ -1,6 +1,6 @@
 # Triya PDF — Progress
 
-_Last updated: 2026-11-23 (M12-22: Compare help and release notes; M12-21·O4: drop a tab on a tab; M12-20: the comparison file; M12-21: change register and presets)_
+_Last updated: 2026-11-23 (M12-23: M12 acceptance, M12 complete on the agent side; M12-22: Compare help and release notes; M12-21·O4: drop a tab on a tab; M12-20: the comparison file; M12-21: change register and presets)_
 
 **Current milestone:** M12 — PDF comparison (PDF overlay for drawings, text comparison for
 documents), version 1.1.0: plan [docs/plan/M12.md](plan/M12.md) and
@@ -29,6 +29,22 @@ answers Q1–Q7; ARCHITECTURE.md Rev 0.12 after [ADR-024](adr/024-freetext-text-
 interop is in the M6 pack (CHECKLIST §M6 R1–R4). Rev 0 (M0–M4) is complete on the agent side.
 
 ## Done
+
+- **M12-23 — M12 acceptance (D-66, ADR-032).** [docs/acceptance/M12.md](acceptance/M12.md).
+  **M12 is complete on the agent side**; the owner pack waits (hand check on real files,
+  interop §M12 AB and AC for the summary page), and after it the owner's acceptance, the release
+  build switch (`VITE_COMPARE=off` removed from the release workflow) and the `v1.1.0` tag. The
+  drawings corpus suite (`tests/compare/detect-corpus.test.ts`) now covers all 19 overlay pairs.
+  New `e2e/perf/compare-acceptance.spec.ts` (first sheet, every sheet listed, on pairs 18, 17,
+  10 and 14) and an M12 section in `scripts/acceptance.ts` gate ADR-032's limits in CI (first
+  result 3 s, typical sheet 2 s, the 500-page contract 60 s, dense A1 reported, no long task),
+  plus an "M12 offline" proof in `e2e/offline.spec.ts` (overlay, change register, comparison
+  file, text comparison with zero outbound requests). **Fixed:** a text comparison's early
+  results waited for every page to be read (first change on the 500-page contract at 12–20 s,
+  now about 1 s: `textTasks` runs early matches in phase 0); PDFium's character angle is
+  clockwise, so text reading up a sheet and every line of a /Rotate 90 page were read the wrong
+  way round (pair 04 reported its whole title block as changed; `textOf` in
+  `src/workers/work/compareMaterial.ts`). Install 80.17 MB, core 8.73 / 9 MB.
 
 - **M12-22 — Help and release notes for Compare (D-58 … D-65).** Help has a new chapter,
   **Compare revisions** (`compare` in `src/help/topics.ts`, text in `src/i18n/help.en.json`),
@@ -3940,10 +3956,12 @@ rel="noopener noreferrer">`; the commands `app.home` / `app.reportIssue` open th
   suite starts), M12-21·O1 (compare an area), M12-16 (the vector overlay: Export Overlay… and
   the beta display mode), M12-20 (the comparison file), M12-21 (change register and presets),
   M12-21·O4 (drop a tab on a tab), M12-22 (Help chapter, "?" buttons, What's new, version
-  1.1.0). Next: M12-23 (acceptance, the build switch turned on, the owner pack).
-- **Owner (M12):** the M12-16 interop pack (exported vector overlays with a checklist: colours,
-  layers, Type 3 and spot colours) in Acrobat Reader and a second desktop editor, whenever
-  convenient; it feeds the M12 acceptance.
+  1.1.0), M12-21's summary page, M12-23 (acceptance). **M12 is complete on the agent side.**
+  Next, after the owner's acceptance: turn the Compare build switch on in release builds.
+- **Owner (M12):** the M12 owner pack ([docs/acceptance/M12.md](acceptance/M12.md) §5): a hand
+  check on your own drawings and documents, and interop §M12 (AB, AC: the summary page). Then
+  accept M12 and tag `v1.1.0` once the agent has turned the release build switch on. (The M12-04,
+  M12-06, M12-16 and M12-20 packs passed on 2026-11-22 and 2026-11-23.)
 - **Agent (M11):** the 18 tasks in [docs/plan/M11.md](plan/M11.md) "Order of work", one thread
   each. Done: M11-01, M11-10, M11-02 (spike S26), M11-03 (tabs: look, hover card, +), M11-04
   (drag to reorder), M11-05 (tab menus), M11-06 (comments in every pointer mode), M11-07 (font
@@ -4135,8 +4153,8 @@ rel="noopener noreferrer">`; the commands `app.home` / `app.reportIssue` open th
 
 ## Decisions needed (owner)
 
-- **M12 (PDF comparison).** None now: ADR-032 accepted on 2026-11-22. The next owner gate is
-  the M12-23 owner pack (hand check on real files, interop checklist).
+- **M12 (PDF comparison).** The M12-23 owner pack ([docs/acceptance/M12.md](acceptance/M12.md)
+  §5) and then accepting M12, which turns Compare on in release builds and lets v1.1.0 be tagged.
 
 - **Keyboard text selection (M2-04).** Caret-based selection (Shift+arrows) is not built; the
   keyboard path is Ctrl+A (page text) + Ctrl+C. Accept as an exception to the M2-04 criterion, or

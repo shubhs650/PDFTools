@@ -492,3 +492,33 @@ bottom and 10 mm left and right (A4 becomes 189.9 × 257 mm).
 | --- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------- | ------------ |
 | AA1 | **Organize › Split Document** on a real drawing set, by top-level bookmarks: each part opens in their viewer with the right pages, in order, and its comments.          |         |              |
 | AA2 | **Images to PDF** from phone photos (some taken with the phone turned) and a scan, A4: in their viewer every photo is upright, sharp and inside the page, one per page. |         |              |
+
+## M12 — comparison files (D-65, ADR-032; [M12 acceptance](../../docs/acceptance/M12.md))
+
+Files: in the project's shared folder `m12-23/interop/`, written by the app's own Save
+Comparison… (regenerate them with `SHOTS=1 SHOTS_DIR=<dir> npx playwright test --project=e2e
+e2e/compare-file.spec.ts --workers=1`; they land in `<dir>/files`). The M12-20 pack (overlay and
+text comparison files) and the M12-16 pack (exported vector overlays) passed on 2026-11-23; what
+is new is the overlay file's **summary page** (M12-21, PR #173).
+
+### AB. The overlay comparison file with its summary page
+
+Files: `AB-overlay-pair01-with-summary.pdf` (one sheet), `AB-overlay-set-of-files-with-summary.pdf`
+(several files a side), `AB-overlay-pair12-password-test1234.pdf` (open password `test1234`,
+copied from Document B; owner password `overlay_owner_2026`).
+
+| #   | Check                                                                                                                                                            | Acrobat | Other editor |
+| --- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------- | ------------ |
+| AB1 | Page 1 is "Comparison summary": file names, when it was saved, the counts, the three legend colours and the settings, in Noto Sans, with no missing-font prompt. |         |              |
+| AB2 | Search the summary page for "Legend" and copy a line of it: the text found and pasted is the text shown.                                                         |         |              |
+| AB3 | The overlay sheets follow it: black where the revisions agree, red for A only, green for B only; the attachments panel holds Document A and B, and each opens.   |         |              |
+| AB4 | The password file asks for `test1234` and then opens as AB1 … AB3.                                                                                               |         |              |
+
+### AC. The text comparison file
+
+File: `AC-text-pair05.pdf` (text pair 05: clauses inserted and renumbered, "not" removed from 5.3).
+
+| #   | Check                                                                                                                             | Acrobat | Other editor |
+| --- | --------------------------------------------------------------------------------------------------------------------------------- | ------- | ------------ |
+| AC1 | It shows Document B's pages with the changes marked; the comments list holds the old text of each change. It has no summary page. |         |              |
+| AC2 | The attachments panel holds Document A and B, and each opens.                                                                     |         |              |

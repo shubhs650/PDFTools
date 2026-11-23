@@ -329,9 +329,12 @@ export function textOf(mod: WrappedPdfiumModule, page: number, frame: PageFrame)
       let st = style.get(obj);
       if (!st) {
         // The character's direction (user space, y up) as displayed (y down, the angle counter-clockwise).
+        // PDFium gives the angle clockwise (M12-23: text reading up a page came out as
+        // -90°, and every line of a /Rotate 90 page as 180°, so its words fell apart
+        // and the text comparison left the page out as rotated text).
         const ua = rawCall(mod, 'FPDFText_GetCharAngle', tp, i);
         const ca = Number.isFinite(ua) ? Math.cos(ua) : 1;
-        const sa = Number.isFinite(ua) ? Math.sin(ua) : 0;
+        const sa = Number.isFinite(ua) ? -Math.sin(ua) : 0;
         const dx = m[0] * ca + m[2] * sa;
         const dy = m[1] * ca + m[3] * sa;
         const a = (Math.atan2(-dy, dx) * 180) / Math.PI;
