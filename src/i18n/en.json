@@ -175,6 +175,7 @@
       "copyToNew": "Copy to New Revision",
       "copyToOld": "Copy to Old Revision",
       "closeOut": "Close Out",
+      "area": "Compare an Area",
       "exportOverlay": "Export Overlay…"
     },
     "protect": {
@@ -2906,7 +2907,8 @@
       "name": "{{a}} ↔ {{b}}",
       "more_one": "{{name}} +{{count}}",
       "more_other": "{{name}} +{{count}}",
-      "description": "{{type}}, a comparison of two revisions"
+      "description": "{{type}}, a comparison of two revisions",
+      "area": "{{a}} {{pageA}} ↔ {{b}} {{pageB}} (area)"
     },
     "side": {
       "a": "Document A (old)",
@@ -3319,6 +3321,26 @@
       "setSave": "Save as set",
       "setSaved": "Saved “{{name}}”.",
       "setApplied": "Using “{{name}}”."
+    },
+    "area": {
+      "title": "Compare an area",
+      "hint": "Draw a rectangle round a detail on Document A and one round it on Document B, on this sheet or another. The two are overlaid through an alignment of their own.",
+      "notDrawn": "Not drawn yet",
+      "described": "{{name}}, page {{page}}: {{width}} × {{height}} mm at {{left}}, {{top}} mm",
+      "draw_a": "Draw on Document A",
+      "draw_b": "Draw on Document B",
+      "drawHint_a": "Drag a rectangle on Document A. Escape stops.",
+      "drawHint_b": "Drag a rectangle on Document B. You can move to another sheet first. Escape stops.",
+      "typed": "Or type a rectangle on the sheet shown (mm)",
+      "set_a": "Set on Document A",
+      "set_b": "Set on Document B",
+      "invalid": "Type a left, top, width and height that fit on the page.",
+      "compare": "Compare the areas",
+      "clear": "Clear the areas",
+      "resultTitle": "PDF Overlay of an area",
+      "infoTitle": "Area compared",
+      "missed": "As aligned, the two areas do not meet, so nothing is compared. Align by points.",
+      "needsOverlay": "Open a PDF Overlay result to compare an area of it."
     },
     "export": {
       "title": "Export Overlay",

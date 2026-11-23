@@ -41,6 +41,7 @@ import {
 } from '../../model/compare/detect/entries';
 import { textChanges, type Box } from '../../model/compare/detect/textDiff';
 import type { Affine } from '../../model/compare/material';
+import { alignArea, inRegion, maskRows, type AreaPair } from '../../model/compare/area';
 
 interface Side {
   signatures: Map<number, PageSignature>;
@@ -254,6 +255,32 @@ export class CompareStore {
     return al;
   }
 
+  /** Aligns an area comparison (O1) on the features inside its rectangles and their rasters. */
+  alignArea(
+    cmpId: string,
+    sheet: number,
+    a: number,
+    b: number,
+    area: AreaPair,
+    rasters: { a: RasterBand; b: RasterBand; scale: number } | null,
+    checkpoint?: () => void,
+  ): SheetAlignment {
+    const c = this.get(cmpId);
+    const ink = (r: RasterBand): Ink => {
+      if (r.top !== 0 || r.rows !== r.height) throw new Error('area raster incomplete');
+      return { w: r.width, h: r.height, data: r.data };
+    };
+    const al = alignArea(
+      this.featuresOf(c, 'a', a),
+      this.featuresOf(c, 'b', b),
+      area,
+      rasters ? { a: ink(rasters.a), b: ink(rasters.b), scale: rasters.scale } : null,
+      checkpoint,
+    );
+    c.alignments.set(sheet, al);
+    return al;
+  }
+
   putAlignBand(cmpId: string, sheet: number, side: CompareSide, band: RasterBand): number {
     const c = this.get(cmpId);
     const rasters = c.alignRasters.get(sheet) ?? {};
@@ -344,8 +371,14 @@ export class CompareStore {
     a: RasterBand,
     b: RasterBand,
     inkLevel?: number,
+    clip?: readonly number[],
   ): number {
     const c = this.get(cmpId);
+    // An area comparison (O1): only the region's ink takes part, on both sides.
+    if (clip) {
+      maskRows(a.data, a.width, a.top, a.rows, dpi, clip);
+      maskRows(b.data, b.width, b.top, b.rows, dpi, clip);
+    }
     const old = c.sheets.get(sheet);
     let acc = old;
     const sameFrame = old?.width === b.width && old.height === b.height && old.dpi === dpi;
@@ -391,6 +424,7 @@ export class CompareStore {
     b: number,
     place: Affine,
     scan: boolean,
+    clip?: readonly number[],
   ): number {
     const c = this.get(cmpId);
     const det = c.detectors.get(sheet);
@@ -399,7 +433,9 @@ export class CompareStore {
     const ta = c.sides.a.texts.get(a);
     const tb = c.sides.b.texts.get(b);
     // The text layer is for pages with text (S28); a scan falls back to its regions.
-    const texts = scan ? [] : textChanges(ta, tb, place);
+    const all = scan ? [] : textChanges(ta, tb, place);
+    // An area comparison (O1): the words in its region only.
+    const texts = clip ? all.filter((w) => inRegion(clip, w.cx, w.cy)) : all;
     const k = 72 / det.dpi;
     const m: SheetMaterial = {
       cells,

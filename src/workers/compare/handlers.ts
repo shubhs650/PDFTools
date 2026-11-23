@@ -48,9 +48,9 @@ export function compareHandlers(store: CompareStore): Handlers<CompareApi> {
       );
       return new Transfer(result, [result.sync.buffer as ArrayBuffer]);
     },
-    sheetBand: ({ cmpId, sheet, dpi, a, b, inkLevel }, ctx) => {
+    sheetBand: ({ cmpId, sheet, dpi, a, b, inkLevel, clip }, ctx) => {
       ctx.throwIfAborted();
-      return { rows: guard(() => store.sheetBand(cmpId, sheet, dpi, a, b, inkLevel)) };
+      return { rows: guard(() => store.sheetBand(cmpId, sheet, dpi, a, b, inkLevel, clip)) };
     },
     pairPages: ({ cmpId, a, b, threshold }, ctx) => {
       const result = guard(() =>
@@ -70,6 +70,12 @@ export function compareHandlers(store: CompareStore): Handlers<CompareApi> {
     alignVector: ({ cmpId, sheet, a, b, coarse }, ctx) =>
       guard(() =>
         store.alignVector(cmpId, sheet, a, b, coarse, () => {
+          ctx.throwIfAborted();
+        }),
+      ),
+    alignArea: ({ cmpId, sheet, a, b, area, rasters }, ctx) =>
+      guard(() =>
+        store.alignArea(cmpId, sheet, a, b, area, rasters, () => {
           ctx.throwIfAborted();
         }),
       ),
@@ -95,9 +101,9 @@ export function compareHandlers(store: CompareStore): Handlers<CompareApi> {
       });
       return null;
     },
-    detectSheet: ({ cmpId, sheet, a, b, place, scan }, ctx) => {
+    detectSheet: ({ cmpId, sheet, a, b, place, scan, clip }, ctx) => {
       ctx.throwIfAborted();
-      return { words: guard(() => store.detectSheet(cmpId, sheet, a, b, place, scan)) };
+      return { words: guard(() => store.detectSheet(cmpId, sheet, a, b, place, scan, clip)) };
     },
     differences: ({ cmpId, sheets, sensitivity, minSize }) =>
       guard(() => store.differences(cmpId, sheets, sensitivity, minSize)),

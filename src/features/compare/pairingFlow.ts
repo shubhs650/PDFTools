@@ -146,6 +146,15 @@ export function syncPairing(c: Comparison): void {
       const work = workClient();
       const docIds = new Set([...pages.a, ...pages.b].map((p) => p.docId));
       await Promise.all([...docIds].map((d) => work.whenAdded(d, 10_000)));
+      if (c.area) {
+        // An area comparison (O1): its one page of A goes with its one page of B, as drawn.
+        patch(c.id, key, () => ({
+          status: 'done',
+          result: null,
+          rows: [{ a: 0, b: 0, excluded: false }],
+        }));
+        return;
+      }
       const result = await session.pair();
       patch(c.id, key, () => ({ status: 'done', result, rows: pairingRows(result) }));
     } catch (err) {
@@ -207,7 +216,9 @@ export function pairingSession(id: string): CompareSession | undefined {
  * same inputs; the pairing itself is kept.
  */
 export function startComparing(id: string): CompareSession | undefined {
-  const pairs = sheetsToCompare(id);
+  // An area comparison's one sheet carries its rectangles (O1).
+  const area = documentStore.getState().comparisons[id]?.area;
+  const pairs = sheetsToCompare(id)?.map((p) => (area ? { ...p, area } : p));
   const session = sessions.get(id);
   const inputs = sessionInputs.get(id);
   if (!pairs || !session || !inputs) return undefined;

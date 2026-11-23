@@ -1,6 +1,6 @@
 # Triya PDF — Progress
 
-_Last updated: 2026-11-23 (M12-16: the vector overlay)_
+_Last updated: 2026-11-23 (M12-16: the vector overlay; M12-21·O1: compare an area)_
 
 **Current milestone:** M12 — PDF comparison (PDF overlay for drawings, text comparison for
 documents), version 1.1.0: plan [docs/plan/M12.md](plan/M12.md) and
@@ -30,6 +30,33 @@ interop is in the M6 pack (CHECKLIST §M6 R1–R4). Rev 0 (M0–M4) is complete 
 
 ## Done
 
+- **M12-21·O1 — compare an area (D-60, D-61; optional item O1, accepted).** Done ahead of
+  M12-20 and M12-21, which wait on M12-16's vector overlay (built in parallel). In a PDF Overlay
+  result, the left pane's **Compare an area** (and the Compare ribbon's **Compare an Area**)
+  draws a rectangle on Document A's window and one on Document B's, on the same sheet or on
+  another (the sheet list moves between them; drawing goes on to B by itself), or takes them
+  typed in millimetres on the sheet shown (the keyboard path). **Compare the areas** opens them
+  as **a comparison tab of their own** ("RevA 3 ↔ RevB 5 (area)", `Comparison.area`, one file
+  and one page per side, opened on its result): the overlay controls, Review layout, manual
+  alignment, the differences list, ignore zones, clouds and close-out all work as on any sheet,
+  and the parent comparison's session and notes are untouched. **Alignment** (pure maths in
+  `src/model/compare/area.ts`, run in the Compare worker as `alignArea`): the rectangles' own
+  alignment (centre on centre, one scale from their sizes, 1 when within 15 %), refined on the
+  feature points inside them (closest-point RANSAC and least squares, S28), with the coarse
+  Fourier–Mellin step on the two areas' own rasters when that fails; the image method for an
+  area without line work; low confidence keeps the rectangles' alignment and asks for points.
+  **What is compared**: the region both rectangles cover (B's, and A's as placed), a convex
+  polygon; the Compare worker masks both rasters to it (`sheetBand` `clip`) and keeps the word
+  changes inside it (`detectSheet` `clip`); bands outside it are not rendered at all. **On
+  screen**: the overlay opens zoomed to B's rectangle with the rest of the sheet veiled and the
+  region outlined; A's and B's windows outline their rectangles; a note says when the alignment
+  puts the rectangles apart. Session restore keeps an area comparison whole (both pages) and
+  reopens it on its result. The floating bar now sits over the sheet's marks (z-index). Tests:
+  `tests/compare/area.test.ts` (17, TDD), `tests/compare/area-session.test.ts` (corpus pairs 15
+  A1 against A3 and 17 S-104 on another sheet of the set, whole pipeline on PDFium: aligned
+  within 1 pt, only the change inside the region, an unchanged area reports nothing),
+  `tests/compare/area-flow.test.ts`, session record; `e2e/compare-area.spec.ts` (drawn on pair
+  01, typed across two sheets of pair 10, the ribbon command, axe light and dark).
 - **M12-16 — the vector overlay (D-59, ADR-032 route 2, spike S29).** **Compare → Export
   Overlay…** (`compare.exportOverlay`, ribbon group Output; needs a PDF overlay's result and the
   content-copying permission of every file, rule 9) writes the overlay as a new PDF: one vector
@@ -3800,8 +3827,8 @@ rel="noopener noreferrer">`; the commands `app.home` / `app.reportIssue` open th
   M12-17 (text comparison engine), M12-18 (text structure), M12-12 (the Review layout), M12-13
   (manual alignment), M12-19 (the text comparison view), M12-15 (review across revisions: aligned copy and paste,
   the close-out list, for overlay and text), M12-14 (differences on drawings; the drawings corpus
-  suite starts), M12-16 (the vector overlay: Export Overlay… and the beta display mode). Next:
-  the remaining tasks in plan order.
+  suite starts), M12-21·O1 (compare an area), M12-16 (the vector overlay: Export Overlay… and
+  the beta display mode). Next: the remaining tasks in plan order.
 - **Owner (M12):** the M12-16 interop pack (exported vector overlays with a checklist: colours,
   layers, Type 3 and spot colours) in Acrobat Reader and a second desktop editor, whenever
   convenient; it feeds the M12 acceptance.

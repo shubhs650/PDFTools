@@ -1,6 +1,7 @@
 // A comparison's inputs (M12-08, D-58, ARCHITECTURE §7.16): its type, the files on each
 // side with their page ranges, and whether it shows the input window or the result. Pure:
 // the store transitions and the checks the input window shows, unit-tested without React.
+import type { AreaBox, AreaPair } from '../../model/compare/area';
 import { parseRange, type RangeError } from '../print/options';
 
 /** PDF Overlay (drawings) or Text Comparison (documents). */
@@ -30,6 +31,12 @@ export interface Comparison {
   a: SideFile[];
   /** Document B, the new revision. */
   b: SideFile[];
+  /**
+   * Compare an area (O1, D-60): a rectangle on A's page and one on B's page,
+   * each side one file with that one page as its range. The overlay shows and
+   * compares only what is inside them, through an alignment of their own.
+   */
+  area?: AreaPair;
 }
 
 export const newComparisonId = (): string => `cmp-${crypto.randomUUID()}`;
@@ -43,6 +50,29 @@ export function newComparison(
   const files = (ids: readonly string[]): SideFile[] =>
     (type === 'text' ? ids.slice(0, 1) : ids).map((docId) => ({ docId, range: '' }));
   return { id, type, stage: 'input', a: files(a), b: files(b) };
+}
+
+/** Where an area of a page is: its document, page (0-based) and rectangle (displayed pt). */
+export interface PageArea {
+  docId: string;
+  page: number;
+  box: AreaBox;
+}
+
+/**
+ * An area comparison (O1): an overlay of one page of A and one page of B,
+ * limited to a rectangle on each. It opens on its result: its inputs are the
+ * two rectangles, drawn in another comparison.
+ */
+export function newAreaComparison(id: string, a: PageArea, b: PageArea): Comparison {
+  return {
+    id,
+    type: 'overlay',
+    stage: 'result',
+    a: [{ docId: a.docId, range: String(a.page + 1) }],
+    b: [{ docId: b.docId, range: String(b.page + 1) }],
+    area: { a: a.box, b: b.box },
+  };
 }
 
 /** Every document the comparison uses, A's then B's, each once. */
@@ -99,7 +129,7 @@ export function setRange(c: Comparison, side: SideId, docId: string, range: stri
 
 /** Swap: A becomes B and B becomes A, with their ranges. */
 export function swapSides(c: Comparison): Comparison {
-  return { ...c, a: c.b, b: c.a };
+  return { ...c, a: c.b, b: c.a, ...(c.area ? { area: { a: c.area.b, b: c.area.a } } : {}) };
 }
 
 /**

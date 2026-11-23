@@ -1477,6 +1477,17 @@ export const COMMANDS: readonly CommandDef[] = [
     shipped: true,
     preview: true,
   },
+  // Compare an area (O1, D-60): inside a PDF Overlay result, a rectangle on each revision.
+  {
+    id: 'compare.area',
+    tab: 'compare',
+    group: 'compare',
+    size: 'large',
+    fluent: 'ScanDash',
+    milestone: 'M6',
+    shipped: true,
+    preview: true,
+  },
   // Export Overlay… (M12-16, D-59): the active PDF overlay as a vector PDF, one page per sheet.
   {
     id: 'compare.exportOverlay',

@@ -9,6 +9,7 @@ import type { HfBands } from '../model/compare/text/headers';
 import type { OcrLine } from '../model/ocr/types';
 import type { AsIsCheck, SheetAlignment } from '../model/compare/align/aligner';
 import type { PairingResult } from '../model/compare/pairing';
+import type { AreaPair } from '../model/compare/area';
 import type { TextComparison } from '../model/compare/text/match';
 import type { Box } from '../model/compare/detect/textDiff';
 import type { Sensitivity, SheetDiff } from '../model/compare/detect/entries';
@@ -150,7 +151,19 @@ export interface CompareApi {
    * into B's frame): folded into the sheet's facts, then dropped.
    */
   sheetBand: MethodSpec<
-    { cmpId: string; sheet: number; dpi: number; a: RasterBand; b: RasterBand; inkLevel?: number },
+    {
+      cmpId: string;
+      sheet: number;
+      dpi: number;
+      a: RasterBand;
+      b: RasterBand;
+      inkLevel?: number;
+      /**
+       * An area comparison (O1): the region compared, a convex polygon in B's
+       * page (pt, x, y pairs). Ink outside it is left out on both sides.
+       */
+      clip?: number[];
+    },
     { rows: number }
   >;
   /**
@@ -194,6 +207,23 @@ export interface CompareApi {
     { cmpId: string; sheet: number; side: CompareSide; band: RasterBand },
     { bytes: number }
   >;
+  /**
+   * Aligns an area comparison (O1): the features put before inside the two
+   * rectangles, and both areas' rasters (each in its rectangle's own space, at
+   * `rasters.scale` px per pt, one band each). The result, A's page → B's
+   * page, is kept as the sheet's alignment.
+   */
+  alignArea: MethodSpec<
+    {
+      cmpId: string;
+      sheet: number;
+      a: number;
+      b: number;
+      area: AreaPair;
+      rasters: { a: RasterBand; b: RasterBand; scale: number } | null;
+    },
+    SheetAlignment
+  >;
   /** Aligns a sheet by the image method on the bands put (at `scale` px per pt), then drops them. */
   alignImage: MethodSpec<{ cmpId: string; sheet: number; scale: number }, SheetAlignment>;
   /** Records a sheet's alignment (as is, or set by hand later: M12-13). */
@@ -208,7 +238,16 @@ export interface CompareApi {
    * word changes.
    */
   detectSheet: MethodSpec<
-    { cmpId: string; sheet: number; a: number; b: number; place: Affine; scan: boolean },
+    {
+      cmpId: string;
+      sheet: number;
+      a: number;
+      b: number;
+      place: Affine;
+      scan: boolean;
+      /** An area comparison's region (O1): word changes outside it are left out. */
+      clip?: number[];
+    },
     { words: number }
   >;
   /**

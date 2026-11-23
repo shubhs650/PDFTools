@@ -236,6 +236,63 @@ describe('comparisons in the record (M12-08, D-58)', () => {
     expect(sameSession(record, changed)).toBe(false);
   });
 
+  it('keeps an area comparison (O1) whole, with its rectangles', () => {
+    const area = {
+      a: [10, 20, 110, 90] as [number, number, number, number],
+      b: [5, 5, 99, 80] as [number, number, number, number],
+    };
+    const { comparisons } = comparisonsOf([
+      {
+        type: 'overlay',
+        index: 1,
+        a: [doc('a.pdf', '3')],
+        b: [doc('b.pdf', '5')],
+        active: false,
+        area,
+      },
+      // One page can't be reopened: the area comparison is not kept at all.
+      {
+        type: 'overlay',
+        index: 2,
+        a: [doc('a.pdf', '3')],
+        b: [doc('n.pdf', '1', false)],
+        active: false,
+        area,
+      },
+    ]);
+    expect(comparisons).toHaveLength(1);
+    const record = { entries: [], active: -1, comparisons, activeComparison: -1, savedAt: 1 };
+    const back = parseSession(JSON.parse(JSON.stringify(record)));
+    expect(back?.comparisons?.[0]).toMatchObject({ type: 'overlay', area, a: [{ range: '3' }] });
+    expect(sameSession(record, { ...record, savedAt: 9 })).toBe(true);
+    const moved = {
+      ...record,
+      comparisons: comparisons.map((c) => ({
+        ...c,
+        area: { ...area, b: [6, 5, 99, 80] as [number, number, number, number] },
+      })),
+    };
+    expect(sameSession(record, moved)).toBe(false);
+    // Rectangles that are not rectangles, or an area on a text comparison, are not kept.
+    const file = { name: 'a.pdf', handle: { kind: 'file' }, fp: 'f', source: 'picked', range: '1' };
+    const bad = parseSession({
+      entries: [],
+      active: -1,
+      comparisons: [
+        {
+          type: 'overlay',
+          index: 0,
+          a: [file],
+          b: [file],
+          area: { a: [1, 2, 3], b: [0, 0, 5, 5] },
+        },
+        { type: 'text', index: 0, a: [file], b: [file], area },
+        { type: 'overlay', index: 0, a: [file, file], b: [file], area },
+      ],
+    });
+    expect(bad?.comparisons).toBeUndefined();
+  });
+
   it('ignores what is not a comparison, and keeps one file per side of a text comparison', () => {
     const file = { name: 'a.pdf', handle: { kind: 'file' }, fp: 'f', source: 'picked', range: '' };
     const back = parseSession({
