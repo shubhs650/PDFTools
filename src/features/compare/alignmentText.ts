@@ -18,6 +18,7 @@ const STATUS = {
   'as-is': msg('compare.align.asIs'),
   auto: msg('compare.align.auto'),
   low: msg('compare.align.low'),
+  manual: msg('compare.align.manual'),
 } as const;
 
 export function alignmentText(al: SheetAlignment, format: Formatters = appFormat): AlignmentText {

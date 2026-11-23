@@ -58,6 +58,27 @@ export interface PageFrame {
   toDisplay: Affine;
 }
 
+/**
+ * The clockwise quarter turn of a page as PDFium lays it out (`width` ×
+ * `height`, y down) → displayed space, and the displayed size.
+ */
+export function quarterTurn(
+  turns: number,
+  width: number,
+  height: number,
+): { turn: Affine; width: number; height: number } {
+  switch (turns & 3) {
+    case 1:
+      return { turn: [0, 1, -1, 0, height, 0], width: height, height: width };
+    case 2:
+      return { turn: [-1, 0, 0, -1, width, height], width, height };
+    case 3:
+      return { turn: [0, -1, 1, 0, 0, width], width: height, height: width };
+    default:
+      return { turn: IDENTITY, width, height };
+  }
+}
+
 /** Side length of the signature's ink picture (S28: 32 × 32). */
 export const SIGNATURE_GRID = 32;
 

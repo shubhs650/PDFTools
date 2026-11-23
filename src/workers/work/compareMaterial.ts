@@ -19,6 +19,7 @@ import {
   TEXT_INVISIBLE,
   applyAffine,
   inkPicture,
+  quarterTurn,
   thenAffine,
   wordsOf,
   type Affine,
@@ -28,6 +29,8 @@ import {
   type RasterBand,
 } from '../../model/compare/material';
 import { rawCall } from '../render/pdfium';
+
+export { quarterTurn };
 
 interface Heap {
   wasmExports: { malloc(n: number): number; free(p: number): void };
@@ -48,27 +51,6 @@ const FPDF_RENDER_NO_SMOOTHPATH = 0x4000;
 const SIGNATURE_SIDE = 256;
 /** Pixels one call may return (a band of a 16,000 px wide sheet, 1,024 rows). */
 export const MAX_BAND_PIXELS = 16_000 * 1_024;
-
-/**
- * The clockwise quarter turn of a page as PDFium lays it out (`width` ×
- * `height`, y down) → displayed space, and the displayed size.
- */
-export function quarterTurn(
-  turns: number,
-  width: number,
-  height: number,
-): { turn: Affine; width: number; height: number } {
-  switch (turns & 3) {
-    case 1:
-      return { turn: [0, 1, -1, 0, height, 0], width: height, height: width };
-    case 2:
-      return { turn: [-1, 0, 0, -1, width, height], width, height };
-    case 3:
-      return { turn: [0, -1, 1, 0, 0, width], width: height, height: width };
-    default:
-      return { turn: IDENTITY, width, height };
-  }
-}
 
 /** A loaded page's frame, with the turn from PDFium's layout to displayed space. */
 export interface LoadedFrame extends PageFrame {
