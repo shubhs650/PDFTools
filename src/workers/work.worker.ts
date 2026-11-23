@@ -60,6 +60,7 @@ import type { PdfDocumentObject } from '@embedpdf/models';
 import { installFontReadback } from './render/freeTextFonts';
 import { copyItems, editObjects, OutlineError, readOutline } from './work/outline';
 import { popupStates } from './work/popups';
+import { LayerCopyError, layerCopy, layerKey, type LayerStates } from './shared/layerCopy';
 
 let mod: WrappedPdfiumModule | undefined;
 let native: PdfiumNative | undefined;
@@ -163,6 +164,23 @@ function onComparePage<T>(
   } finally {
     ref.release();
   }
+}
+
+/** A layer copy's own errors cross the boundary with their codes (layer switches, Q24). */
+async function layerCall<T>(fn: () => Promise<T>): Promise<T> {
+  try {
+    return await fn();
+  } catch (err) {
+    if (err instanceof LayerCopyError) throw new RpcError(err.code, err.message);
+    throw err;
+  }
+}
+
+/** The document with other layers shown, opened once per state and generation. */
+function layeredDoc(docId: string, layers: LayerStates): Promise<PdfDocumentObject> {
+  return layerCall(() =>
+    docs.layered(docId, layerKey(layers), (bytes) => layerCopy(bytes, layers, inflate)),
+  );
 }
 
 /** Snap geometry per document and page (M3-18): extracted once, reused at every zoom. */
@@ -710,11 +728,14 @@ serve<WorkApi>(self, {
       }
     }),
 
-  compareRaster: ({ docId, pageIndex, ...req }, ctx) =>
+  compareRaster: ({ docId, pageIndex, layers, ...req }, ctx) =>
     scheduler.run('compare', ctx.signal, async (slice) => {
       if (!mod) throw new RpcError('not-initialized', 'The work worker is not initialized');
       const m = mod;
-      const { doc } = await docs.get(docId);
+      // Layer switches (D-59, Q24): drawn from the copy with those layers shown.
+      const doc = layerKey(layers)
+        ? await layeredDoc(docId, layers ?? {})
+        : (await docs.get(docId)).doc;
       const ptr = docPtrOf(need(), doc.id);
       if (pageIndex < 0 || pageIndex >= doc.pageCount)
         throw new RpcError('page-out-of-range', 'No such page');
@@ -784,6 +805,18 @@ serve<WorkApi>(self, {
 
   listLayers: ({ docId }, ctx) =>
     scheduler.run('interactive', ctx.signal, () => readLayers(docs.bytes(docId), inflate)),
+
+  compareLayerCopy: ({ docId, layers }, ctx) =>
+    scheduler.run('interactive', ctx.signal, async () => {
+      await docs.get(docId);
+      const bytes = await layerCall(() => layerCopy(docs.liveBytes(docId), layers, inflate));
+      return new Transfer({ bytes: bytes.buffer }, [bytes.buffer]);
+    }),
+
+  compareLayersRelease: ({ docIds }) => {
+    for (const d of docIds) docs.releaseLayered(d);
+    return null;
+  },
 
   formFacts: ({ docId }, ctx) =>
     scheduler.run('interactive', ctx.signal, () => readFormFacts(docs.bytes(docId), inflate)),

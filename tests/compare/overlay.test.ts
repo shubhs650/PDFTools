@@ -52,6 +52,9 @@ import {
   sheetsOf,
   toggleSide,
   differingDefaults,
+  layerShown,
+  resetLayers,
+  setLayer,
 } from '../../src/features/compare/overlay/overlayState';
 
 const px = (rgba: Uint8ClampedArray, i: number) => [...rgba.subarray(i * 4, i * 4 + 4)];
@@ -312,19 +315,38 @@ describe('layers', () => {
     const a = {
       encrypted: false,
       layers: [
-        { name: 'HVAC', on: true },
-        { name: 'FIRE', on: false },
+        { name: 'HVAC', on: true, id: 1 },
+        { name: 'FIRE', on: false, id: 2 },
       ],
     };
     const b = {
       encrypted: false,
       layers: [
-        { name: 'HVAC', on: true },
-        { name: 'FIRE', on: true },
-        { name: 'CLOUDS', on: true },
+        { name: 'HVAC', on: true, id: 7 },
+        { name: 'FIRE', on: true, id: 8 },
+        { name: 'CLOUDS', on: true, id: 9 },
       ],
     };
     expect(differingDefaults(a, b)).toEqual(['FIRE']);
     expect(differingDefaults(a, null)).toEqual([]);
+  });
+
+  it('keeps only the switches that differ from a file’s defaults (Q24)', () => {
+    const fire = { id: 8, on: false };
+    const hvac = { id: 7, on: true };
+    let v = setLayer(DEFAULT_VIEW, 'docA', fire, true);
+    expect(v.layers).toEqual({ docA: { 8: true } });
+    expect(layerShown(v, 'docA', fire)).toBe(true);
+    expect(layerShown(v, 'docA', hvac)).toBe(true);
+    v = setLayer(v, 'docA', hvac, false);
+    expect(v.layers).toEqual({ docA: { 7: false, 8: true } });
+    // Back to the default: the switch is dropped; no switches, no entry.
+    v = setLayer(v, 'docA', fire, false);
+    expect(v.layers).toEqual({ docA: { 7: false } });
+    v = setLayer(v, 'docA', hvac, true);
+    expect(v.layers).toEqual({});
+    v = setLayer(setLayer(v, 'docB', fire, true), 'docA', hvac, false);
+    expect(resetLayers(v, 'docA').layers).toEqual({ docB: { 8: true } });
+    expect(resetLayers(DEFAULT_VIEW, 'docA')).toBe(DEFAULT_VIEW);
   });
 });

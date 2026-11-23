@@ -1,6 +1,6 @@
 # Triya PDF — Progress
 
-_Last updated: 2026-11-23 (M12-19: the text comparison view)_
+_Last updated: 2026-11-23 (M12 follow-up: overlay layer switches)_
 
 **Current milestone:** M12 — PDF comparison (PDF overlay for drawings, text comparison for
 documents), version 1.1.0: plan [docs/plan/M12.md](plan/M12.md) and
@@ -29,6 +29,38 @@ answers Q1–Q7; ARCHITECTURE.md Rev 0.12 after [ADR-024](adr/024-freetext-text-
 interop is in the M6 pack (CHECKLIST §M6 R1–R4). Rev 0 (M0–M4) is complete on the agent side.
 
 ## Done
+
+- **M12 follow-up — overlay layer switches (D-59, Q24).** Owner's choice (2026-11-23, after
+  M12-11 found PDFium can't switch layers, ADR-012): render from a copy with `/OCProperties /D`
+  patched. The overlay result's **Layers** section now has a check box per layer of each file
+  (its name and "shown/hidden by default"), and **Use the file's default layers** per file once
+  one is switched. The notice for layers whose default differs stays. A switch draws that
+  document from a **layer copy**: `layerPatch` (`src/workers/shared/layerCopy.ts`, object
+  layer) appends one incremental update to the document's current bytes (original + saved tail +
+  live section) that rewrites the object holding /D (the /D object, else /OCProperties, else the
+  catalog) with `/BaseState /ON`, every layer in `/ON` or `/OFF`, and no `/AS` (an automatic
+  state by usage would override the switch). The file itself is never changed. **Overlay:** the
+  Work worker builds the copy's bytes (`compareLayerCopy`), the main thread passes them on
+  untouched (transferred) to the Render worker (`overlayCopyOpen`), and the overlay side's
+  `contentId` makes the tiles draw the page content from the copy; comments still come from the
+  document (Q10). `src/features/compare/overlay/layerCopies.ts` keeps up to 4 copies (keyed by
+  document, switches and `workClient.bytesRevision`, so comment edits don't rebuild them; saves
+  and page operations do), keeps the previous drawing while a copy builds (`data-complete` false),
+  and closes them when the comparison closes. **Differences:** `CompareSession.setLayers(docId,
+states)` re-queues the analysis of every sheet of that document (an analysis under way stops at
+  its next band); the analysis rasters take `layers` and the Work worker draws them from its own
+  layer copy (`WorkDocs.layered`, normalized like the kept copy, at most 4, retired and closed
+  when idle); the Compare worker's new `resetSheet` starts the sheet's facts again. The alignment
+  found stays (it is found with each file's default layers); A and B's own windows and the
+  alignment magnifier show the files as they are. Encrypted files: listed as before ("can't be
+  read"), no switches; a copy that can't be built shows a note and the file's defaults. Tests:
+  `tests/compare/layer-copy.test.ts` (inline and indirect /D, /AS dropped, an update after an xref
+  stream passes `qpdf --check`, PDFium draws the chosen layers, pair 11 FIRE_PROTECTION, overlay
+  tiles from `contentId`), `tests/compare/layer-session.test.ts` (pair 11: facts start again with
+  more ink in A, back to the defaults gives the first facts, alignment kept), overlay state
+  transitions; `e2e/compare-overlay.spec.ts` pair 11 (FIRE_PROTECTION on in A turns green to
+  black, REV_CLOUDS off in B, reset to the defaults). **Open:** M12-16's vector overlay and M12-20's
+  comparison file should take the switches into account when they are built.
 
 - **M12-19 — the text comparison view (D-64).** A text comparison's result
   (`src/features/compare/text/`): Document A and Document B side by side as **live windows in
@@ -3687,7 +3719,8 @@ rel="noopener noreferrer">`; the commands `app.home` / `app.reportIssue` open th
   M12-05). **ADR-032 accepted** by the owner (2026-11-22, the four recommended answers; both
   sample packs work in Acrobat Reader and a second desktop editor); ARCHITECTURE.md Rev 0.22.
   M12-07 (the Compare worker and its jobs), M12-08 (the comparison tab and input window), M12-09
-  (pairing), M12-10 (automatic alignment), M12-11 (the overlay view; layer switches open),
+  (pairing), M12-10 (automatic alignment), M12-11 (the overlay view; layer switches as a
+  follow-up, done 2026-11-23),
   M12-17 (text comparison engine), M12-18 (text structure), M12-12 (the Review layout), M12-13
   (manual alignment), M12-19 (the text comparison view; aligned copy and close-out for text left
   to M12-15). Next: the remaining tasks in plan order.

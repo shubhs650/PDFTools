@@ -6650,11 +6650,47 @@ textarea.form-field {
 }
 
 .overlay-layer {
-  padding: var(--space-1) var(--space-0);
+  padding: var(--space-0);
 }
 
-.overlay-layer[data-on='false'] {
+.overlay-layer .overlay-check {
+  align-items: flex-start;
+  padding: var(--space-1) var(--space-0);
+  font-size: var(--font-size-s);
+}
+
+.overlay-layer .overlay-check input {
+  margin-top: 2px;
+}
+
+.overlay-layer-text {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.overlay-layer-name {
+  color: var(--color-text);
+  overflow-wrap: anywhere;
+}
+
+.overlay-layer-default {
+  color: var(--color-text-muted);
   font-style: italic;
+}
+
+.overlay-layer-default[data-changed='true'] {
+  font-weight: var(--font-weight-semibold);
+}
+
+.overlay-layer-group + .overlay-layer-group,
+.overlay-layer-group + .overlay-layer-empty,
+.overlay-layer-empty + .overlay-layer-group {
+  margin-top: var(--space-3);
+}
+
+.overlay-layer-reset {
+  margin-top: var(--space-1);
 }
 
 .overlay-layer-notice {

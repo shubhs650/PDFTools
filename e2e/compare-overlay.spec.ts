@@ -9,7 +9,8 @@ import { expect, test } from './support/fixtures.ts';
 // what is the same is black; the floating bar shows and hides each side,
 // balances, fades, thickens, blinks and changes the colours; the sheet list
 // moves between sheets; comments of both documents are drawn on top with
-// their switches; each file's layers are listed with the notice.
+// their switches; each file's layers are listed with the notice and switched
+// (the overlay is drawn from a copy with the layers shown or hidden).
 
 const view = overlayView;
 const drawn = overlayDrawn;
@@ -52,6 +53,35 @@ async function colours(page: Page): Promise<Counts> {
       }
     }
     return out;
+  });
+}
+
+/**
+ * Pixels where green (new only) dominates: at a fit zoom thin lines are
+ * smoothed, so this counts the tint rather than pure green.
+ */
+async function greenish(page: Page): Promise<number> {
+  return view(page).evaluate((el) => {
+    const layers = el.querySelectorAll('.overlay-tiles');
+    const top = layers[layers.length - 1];
+    let n = 0;
+    if (!top) return n;
+    for (const c of top.querySelectorAll('canvas')) {
+      const copy = document.createElement('canvas');
+      copy.width = c.width;
+      copy.height = c.height;
+      const ctx = copy.getContext('2d');
+      if (!ctx) continue;
+      ctx.drawImage(c, 0, 0);
+      const px = ctx.getImageData(0, 0, c.width, c.height).data;
+      for (let i = 0; i < px.length; i += 4) {
+        const r = px[i] ?? 0;
+        const g = px[i + 1] ?? 0;
+        const b = px[i + 2] ?? 0;
+        if (g - r > 80 && g - b > 80) n++;
+      }
+    }
+    return n;
   });
 }
 
@@ -178,18 +208,56 @@ test('pair 08: Thicken thin lines makes the hairlines heavier', async ({ page })
   ).toHaveCount(3);
 });
 
-test('pair 11: each file’s layers are listed, with the notice for a layer whose default differs', async ({
+test('pair 11: each file’s layers are listed and switched, with the notice for a layer whose default differs', async ({
   page,
 }) => {
   await overlayOf(page, '11');
   const layers = page.getByTestId('overlay-layers');
   await expect(layers.getByRole('note')).toContainText('FIRE_PROTECTION');
-  await expect(layers.getByRole('list', { name: 'Layers of Pair 11 RevA.pdf' })).toContainText(
-    'FIRE_PROTECTION: hidden by default',
+  const listA = layers.getByRole('list', { name: 'Layers of Pair 11 RevA.pdf' });
+  const listB = layers.getByRole('list', { name: 'Layers of Pair 11 RevB.pdf' });
+  await expect(listA).toContainText('FIRE_PROTECTION');
+  await expect(listB).toContainText('REV_CLOUDS');
+  const fireA = listA.getByRole('checkbox', { name: /FIRE_PROTECTION/ });
+  const cloudsB = listB.getByRole('checkbox', { name: /REV_CLOUDS/ });
+  await expect(fireA).toHaveAccessibleName('FIRE_PROTECTION hidden by default');
+  await expect(fireA).not.toBeChecked();
+  await expect(cloudsB).toBeChecked();
+  const base = await greenish(page);
+  const settled = async (): Promise<number> => {
+    await drawn(page);
+    return greenish(page);
+  };
+
+  // FIRE_PROTECTION shown in A too: what was new only (green) is now in both.
+  await fireA.check();
+  await expect.poll(settled, { timeout: 30_000 }).toBeLessThan(base - 300);
+  const fire = await greenish(page);
+
+  // REV_CLOUDS hidden in B: less green again.
+  await cloudsB.uncheck();
+  await expect.poll(settled, { timeout: 30_000 }).toBeLessThan(fire - 50);
+  // The switches and the reset buttons pass axe in light and dark.
+  const axe = async (): Promise<void> => {
+    const r = await new AxeBuilder({ page }).include('[data-testid="overlay-layers"]').analyze();
+    expect(r.violations).toEqual([]);
+  };
+  await axe();
+  await darkTheme(page);
+  await axe();
+
+  // Back to each file's defaults: the first drawing again.
+  for (const name of ['Pair 11 RevA.pdf', 'Pair 11 RevB.pdf'])
+    await layers
+      .getByRole('group', { name })
+      .getByRole('button', { name: "Use the file's default layers" })
+      .click();
+  await expect(fireA).not.toBeChecked();
+  await expect(cloudsB).toBeChecked();
+  await expect(layers.getByRole('button', { name: "Use the file's default layers" })).toHaveCount(
+    0,
   );
-  await expect(layers.getByRole('list', { name: 'Layers of Pair 11 RevB.pdf' })).toContainText(
-    'REV_CLOUDS: shown by default',
-  );
+  await expect.poll(settled, { timeout: 30_000 }).toBe(base);
 });
 
 test('pair 19: comments are drawn on top and can be switched off; check highlights hide', async ({

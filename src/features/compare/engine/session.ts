@@ -61,6 +61,7 @@ import {
 } from '../../../model/compare/material';
 import type { PairingResult } from '../../../model/compare/pairing';
 import type { TextComparison } from '../../../model/compare/text/match';
+import { layerKey, type LayerStates } from '../../../workers/shared/layerCopy';
 import { CompareQueue, type QueueProgress, type QueueTask } from './jobQueue';
 
 /** One file of a side. */
@@ -215,6 +216,10 @@ export class CompareSession {
   private readonly placeRev = new Map<number, number>();
   /** The key of each sheet's latest analysis task. */
   private readonly sheetTask = new Map<number, string>();
+  /** Layer switches per document (D-59, Q24): the analysis rasters are drawn with them. */
+  private readonly layers = new Map<string, LayerStates>();
+  /** The layer switches each sheet's facts were gathered under. */
+  private readonly factsLayers = new Map<number, string>();
   private readonly alignWatchers = new Set<(sheet: number, alignment: SheetAlignment) => void>();
   private closed = false;
   private started = false;
@@ -593,12 +598,51 @@ export class CompareSession {
           this.opts.compare.call('setAlignment', { cmpId: this.id, sheet, alignment: al }).promise,
       )
       .catch(() => undefined);
+    this.reanalyse(sheet);
+  }
+
+  /** A document's layer switches (D-59, Q24): only those that differ from its defaults. */
+  layersOf(docId: string): LayerStates | undefined {
+    return this.layers.get(docId);
+  }
+
+  /**
+   * Sets a document's layer switches (D-59, Q24; null or none: its defaults).
+   * Every sheet the document is in is analysed again with them; the alignment
+   * found stays (it was found with each file's default layers).
+   */
+  setLayers(docId: string, states: LayerStates | null): void {
+    if (this.closed) return;
+    const was = layerKey(this.layers.get(docId));
+    if (states && layerKey(states)) this.layers.set(docId, { ...states });
+    else this.layers.delete(docId);
+    if (layerKey(this.layers.get(docId)) === was) return;
+    this.sheetPairs.forEach((pair, sheet) => {
+      if (this.pages.a[pair.a]?.docId !== docId && this.pages.b[pair.b]?.docId !== docId) return;
+      // An analysis under way stops at its next band; the sheet's facts start again.
+      this.placeRev.set(sheet, (this.placeRev.get(sheet) ?? 0) + 1);
+      this.reanalyse(sheet);
+    });
+  }
+
+  /** Layer switches of both sides of a sheet, as one key (what its facts were gathered under). */
+  private sheetLayers(pair: SheetPair): string {
+    const a = this.pages.a[pair.a];
+    const b = this.pages.b[pair.b];
+    return `${layerKey(a ? this.layers.get(a.docId) : undefined)}|${layerKey(b ? this.layers.get(b.docId) : undefined)}`;
+  }
+
+  /** Queues a sheet's analysis again (a pending one reads the new state when it starts). */
+  private reanalyse(sheet: number): void {
     // A pending analysis reads the placement when it starts; one under way or over runs again.
     const key = this.sheetTask.get(sheet) ?? `sheet:${String(sheet)}`;
     const state = this.queue.state(key);
     if (state === undefined || state === 'pending' || this.queue.isCancelled) return;
+    const rev = this.placeRev.get(sheet) ?? 0;
     const next = `sheet:${String(sheet)}@${String(rev)}`;
+    if (this.queue.state(next) !== undefined) return;
     const pair = this.sheetPairs[sheet];
+    if (!pair) return;
     this.sheetTask.set(sheet, next);
     this.releaseWork ??= this.opts.work.hold();
     this.queue.add([
@@ -737,17 +781,25 @@ export class CompareSession {
     const pa = this.pages.a[pair.a];
     const pb = this.pages.b[pair.b];
     if (!pa || !pb) throw new Error('sheet page missing');
+    // Facts gathered with other layer switches start again (D-59, Q24).
+    const layers = this.sheetLayers(pair);
+    const was = this.factsLayers.get(sheet);
+    if (was !== undefined && was !== layers)
+      await this.opts.compare.call('resetSheet', { cmpId: this.id, sheet }, { signal }).promise;
+    this.factsLayers.set(sheet, layers);
+    const la = this.layers.get(pa.docId);
+    const lb = this.layers.get(pb.docId);
     for (const range of bandRanges(size.height, this.opts.bandRows ?? BAND_ROWS)) {
       const req = { dpi, width: size.width, height: size.height, ...range };
       // Both reads are queued in the Work worker at once; it renders them one after the other.
       const ja = this.opts.work.run(
         'compareRaster',
-        { docId: pa.docId, pageIndex: pa.page, ...req, place },
+        { docId: pa.docId, pageIndex: pa.page, ...req, place, ...(la ? { layers: la } : {}) },
         { signal },
       );
       const jb = this.opts.work.run(
         'compareRaster',
-        { docId: pb.docId, pageIndex: pb.page, ...req },
+        { docId: pb.docId, pageIndex: pb.page, ...req, ...(lb ? { layers: lb } : {}) },
         { signal },
       );
       const [a, b] = await Promise.all([ja.promise, jb.promise]);

@@ -12,6 +12,8 @@ export interface Layer {
   name: string;
   /** Visible in the document's default configuration (/D). */
   on: boolean;
+  /** The optional content group's object number (what a layer switch names). */
+  id: number;
 }
 
 export interface LayerList {
@@ -247,6 +249,7 @@ async function layersFromReader(bytes: Uint8Array, inflate: Inflate): Promise<La
     layers.push({
       name: name instanceof PdfString ? name.text() : '',
       on: baseOff ? on.has(num) : !off.has(num),
+      id: num,
     });
   }
   return { encrypted: false, layers };
@@ -315,6 +318,7 @@ async function scanLayers(bytes: Uint8Array, inflate: Inflate): Promise<LayerLis
     layers: seq.map((num) => ({
       name: nameOf(object(num) ?? ''),
       on: baseOff ? on.has(num) : !off.has(num),
+      id: num,
     })),
   };
 }

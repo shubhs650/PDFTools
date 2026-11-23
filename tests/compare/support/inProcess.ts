@@ -54,6 +54,8 @@ export function fakeWork(
   mod: WrappedPdfiumModule,
   native: PdfiumNative,
   log: string[],
+  /** Layer switches (D-59, Q24): the id of a document opened with them shown. */
+  layered?: (docId: string, layers: Readonly<Record<number, boolean>>) => Promise<string>,
 ): Pick<WorkClient, 'run' | 'hold'> & { held: number } {
   const page = <T>(docId: string, index: number, fn: (p: number) => T): T => {
     const ref = acquirePage(native, docId, index);
@@ -104,12 +106,19 @@ export function fakeWork(
         turn: loaded.turn,
       };
     },
-    compareRaster: ({ docId, pageIndex, ...req }: ArgsOf<WorkApi, 'compareRaster'>) =>
-      page(docId, pageIndex, (p) =>
+    compareRaster: async ({
+      docId: own,
+      pageIndex,
+      layers,
+      ...req
+    }: ArgsOf<WorkApi, 'compareRaster'>) => {
+      const docId = layers && layered ? await layered(own, layers) : own;
+      return page(docId, pageIndex, (p) =>
         analysisBand(mod, p, frameOf(mod, docPtrOf(native, docId), pageIndex, p).turn, req, () =>
           Promise.resolve(),
         ),
-      ),
+      );
+    },
   };
   const fake = {
     held: 0,

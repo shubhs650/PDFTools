@@ -18,6 +18,7 @@ import {
 import { DEFAULT_SPLITS, type Splits } from '../../../model/compare/link';
 import type { PairRow } from '../../../model/compare/pairing';
 import type { LayerList } from '../../../model/ocg';
+import type { LayerStates } from '../../../workers/shared/layerCopy';
 import type { SidePage } from '../engine/session';
 import type { ManualAlign } from '../align/manualAlign';
 
@@ -64,6 +65,12 @@ export interface OverlayView {
   aligned: Record<number, SheetAlignment>;
   /** Manual alignment of the sheet shown, while it is being set (M12-13); null otherwise. */
   manual: ManualAlign | null;
+  /**
+   * Layer switches per document (D-59, Q24): a layer's object number → shown,
+   * only where it differs from the file's default. The overlay and the
+   * analysis draw the document with them.
+   */
+  layers: Record<string, LayerStates>;
 }
 
 export const DEFAULT_VIEW: OverlayView = {
@@ -77,6 +84,7 @@ export const DEFAULT_VIEW: OverlayView = {
   blink: null,
   aligned: {},
   manual: null,
+  layers: {},
 };
 
 /** The style the tiles are drawn with: Blink shows one side alone. */
@@ -190,6 +198,42 @@ export function dropView(id: string): void {
     byId: Object.fromEntries(Object.entries(s.byId).filter(([k]) => k !== id)),
   }));
 }
+
+/**
+ * Shows or hides a layer of a document (D-59, Q24). A switch back to the
+ * file's default is dropped, so a document with every layer at its default
+ * has no entry (and is drawn from the file itself).
+ */
+export function setLayer(
+  v: OverlayView,
+  docId: string,
+  layer: { id: number; on: boolean },
+  shown: boolean,
+): OverlayView {
+  const cur = Object.fromEntries(
+    Object.entries(v.layers[docId] ?? {}).filter(([k]) => k !== String(layer.id)),
+  ) as Record<number, boolean>;
+  if (shown !== layer.on) cur[layer.id] = shown;
+  const layers = Object.fromEntries(Object.entries(v.layers).filter(([k]) => k !== docId));
+  if (Object.keys(cur).length) layers[docId] = cur;
+  return { ...v, layers };
+}
+
+/** Every layer of a document back to the file's defaults. */
+export function resetLayers(v: OverlayView, docId: string): OverlayView {
+  if (!(docId in v.layers)) return v;
+  return {
+    ...v,
+    layers: Object.fromEntries(Object.entries(v.layers).filter(([k]) => k !== docId)),
+  };
+}
+
+/** Whether a layer is shown in the overlay: its switch, else the file's default. */
+export const layerShown = (
+  v: OverlayView,
+  docId: string,
+  layer: { id: number; on: boolean },
+): boolean => v.layers[docId]?.[layer.id] ?? layer.on;
 
 /** Names of layers that are on by default in one list and off in the other (D-59, Q24). */
 export function differingDefaults(a: LayerList | null, b: LayerList | null): string[] {

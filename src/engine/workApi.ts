@@ -9,6 +9,7 @@ import type { PageVp } from '../workers/work/viewports';
 import type { Band, BandRequest } from '../workers/work/print';
 import type { FlattenOptions } from '../workers/work/flatten';
 import type { LayerList } from '../model/ocg';
+import type { LayerStates } from '../workers/shared/layerCopy';
 import type { DocProperties } from '../workers/work/properties';
 import type { SignatureInfo } from '../workers/work/signatures';
 import type {
@@ -523,9 +524,19 @@ export interface WorkApi {
       rows: number;
       place?: Affine;
       aliased?: boolean;
+      /** Layer switches (D-59, Q24): drawn from a copy with these layers shown or hidden. */
+      layers?: LayerStates;
     },
     RasterBand
   >;
+  /**
+   * The document's current bytes plus an update that makes `layers` its default
+   * layer visibility (comparison layer switches, D-59, Q24): the Render worker
+   * draws the overlay from it. The file is not changed; the bytes are transferred.
+   */
+  compareLayerCopy: MethodSpec<{ docId: string; layers: LayerStates }, { bytes: ArrayBuffer }>;
+  /** Closes the layer copies of these documents kept for the analysis rasters. */
+  compareLayersRelease: MethodSpec<{ docIds: string[] }, null>;
   textStats: MethodSpec<
     { docId: string; priority?: WorkPriority },
     { pages: number; chars: number; ms: number },

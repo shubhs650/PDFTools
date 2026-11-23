@@ -27,8 +27,8 @@ describe('readLayers', () => {
     expect(await readLayers(layersPdf(), inflate)).toEqual({
       encrypted: false,
       layers: [
-        { name: 'Dimensions', on: true },
-        { name: 'Hidden notes', on: false },
+        { name: 'Dimensions', on: true, id: 5 },
+        { name: 'Hidden notes', on: false, id: 6 },
       ],
     });
   });
@@ -49,8 +49,8 @@ describe('readLayers', () => {
     expect(await readLayers(bytes, inflate)).toEqual({
       encrypted: false,
       layers: [
-        { name: 'Beta', on: true },
-        { name: 'Alpha (A)', on: false },
+        { name: 'Beta', on: true, id: 6 },
+        { name: 'Alpha (A)', on: false, id: 5 },
       ],
     });
   });
@@ -75,7 +75,9 @@ describe('readLayers', () => {
     spawnSync('qpdf', ['--object-streams=generate', join(dir, 'in.pdf'), join(dir, 'out.pdf')]);
     const packed = new Uint8Array(readFileSync(join(dir, 'out.pdf')));
     expect(new TextDecoder('latin1').decode(packed)).toContain('/ObjStm');
-    expect((await readLayers(packed, inflate)).layers).toEqual([
+    expect(
+      (await readLayers(packed, inflate)).layers.map(({ name, on }) => ({ name, on })),
+    ).toEqual([
       { name: 'Dimensions', on: true },
       { name: 'Hidden notes', on: false },
     ]);

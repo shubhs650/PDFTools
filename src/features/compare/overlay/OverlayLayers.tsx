@@ -3,9 +3,23 @@ import { useTranslation } from 'react-i18next';
 import { useDocuments } from '../../../app/store/documentStore';
 import { format } from '../../../i18n';
 import type { LayerList } from '../../../model/ocg';
+import { Button } from '../../../ui/components';
 import { workClient } from '../../view/host';
 import type { Comparison } from '../model';
-import { differingDefaults, updateView, useOverlayView, type Sheet } from './overlayState';
+import type { LayerStates } from '../../../workers/shared/layerCopy';
+import { pairingSession } from '../pairingFlow';
+import { useLayerCopyFailed } from './layerCopies';
+import {
+  differingDefaults,
+  layerShown,
+  overlayView,
+  resetLayers,
+  setLayer,
+  updateView,
+  useOverlayView,
+  type OverlayView,
+  type Sheet,
+} from './overlayState';
 
 const lists = new Map<string, Promise<LayerList>>();
 
@@ -39,10 +53,11 @@ function useLayers(docId: string | null): LayerList | null {
 /**
  * The left pane's switches below the sheet list (D-59): comments of each
  * document on top of the overlay and Hide check highlights (Q10, Q11), and
- * each file's layers with their default visibility (Q24). Each file is drawn
- * with its own default layers; a notice names the layers whose default differs
- * between the two files. The engine cannot switch layers (ADR-012), so the
- * list shows them as the files set them.
+ * each file's layers (Q24). Each file starts with its own default layers; a
+ * notice names the layers whose default differs between the two files. A
+ * layer switch draws that document from a copy with the layer shown or hidden
+ * (PDFium can't switch layers, ADR-012): the overlay and the differences
+ * follow; the file itself is not changed.
  */
 export function OverlayLayers({ comparison: c, sheet }: { comparison: Comparison; sheet: Sheet }) {
   const { t } = useTranslation();
@@ -60,6 +75,11 @@ export function OverlayLayers({ comparison: c, sheet }: { comparison: Comparison
   const nameB = useDocuments((s) => (docB ? (s.docs[docB]?.meta.name ?? '') : ''));
   const differ = differingDefaults(la, lb);
   const hint = t('compare.overlay.hideChecksHint');
+  // A switch changes the view, then the comparison analyses the document's sheets again.
+  const change = (docId: string, fn: (v: OverlayView) => OverlayView): void => {
+    updateView(c.id, fn);
+    pairingSession(c.id)?.setLayers(docId, overlayView(c.id).layers[docId] ?? null);
+  };
   return (
     <>
       <section className="overlay-switches" aria-labelledby={commentsId}>
@@ -112,30 +132,101 @@ export function OverlayLayers({ comparison: c, sheet }: { comparison: Comparison
               {t('compare.overlay.layerNotice', { names: format.list(differ) })}
             </p>
           ) : null}
-          <LayerGroup name={nameA} list={la} />
-          <LayerGroup name={nameB} list={lb} />
+          {docA ? (
+            <LayerGroup
+              docId={docA}
+              name={nameA}
+              list={la}
+              view={view}
+              onChange={(fn) => {
+                change(docA, fn);
+              }}
+            />
+          ) : null}
+          {docB && docB !== docA ? (
+            <LayerGroup
+              docId={docB}
+              name={nameB}
+              list={lb}
+              view={view}
+              onChange={(fn) => {
+                change(docB, fn);
+              }}
+            />
+          ) : null}
         </section>
       ) : null}
     </>
   );
 }
 
-function LayerGroup({ name, list }: { name: string; list: LayerList | null }) {
+function LayerGroup({
+  docId,
+  name,
+  list,
+  view,
+  onChange,
+}: {
+  docId: string;
+  name: string;
+  list: LayerList | null;
+  view: OverlayView;
+  onChange: (fn: (v: OverlayView) => OverlayView) => void;
+}) {
   const { t } = useTranslation();
+  const states: LayerStates | undefined = view.layers[docId];
+  const failed = useLayerCopyFailed(docId, states);
   if (!list) return null;
   if (list.encrypted)
     return <p className="overlay-layer-empty">{t('compare.overlay.layersEncrypted', { name })}</p>;
   if (list.layers.length === 0)
     return <p className="overlay-layer-empty">{t('compare.overlay.noLayers', { name })}</p>;
+  const switched = states !== undefined;
   return (
-    <ul className="overlay-layer-list" aria-label={t('compare.overlay.layersOf', { name })}>
-      {list.layers.map((l, i) => (
-        <li key={i} className="overlay-layer" data-on={l.on ? 'true' : 'false'}>
-          {l.on
-            ? t('compare.overlay.layerOn', { name: l.name })
-            : t('compare.overlay.layerOff', { name: l.name })}
-        </li>
-      ))}
-    </ul>
+    <div className="overlay-layer-group" role="group" aria-label={name}>
+      <ul className="overlay-layer-list" aria-label={t('compare.overlay.layersOf', { name })}>
+        {list.layers.map((l, i) => {
+          const shown = layerShown(view, docId, l);
+          return (
+            <li key={i} className="overlay-layer" data-on={shown ? 'true' : 'false'}>
+              <label className="overlay-check">
+                <input
+                  type="checkbox"
+                  className="ui-focusable"
+                  checked={shown}
+                  onChange={(e) => {
+                    const on = e.currentTarget.checked;
+                    onChange((v) => setLayer(v, docId, l, on));
+                  }}
+                />
+                <span className="overlay-layer-text">
+                  <span className="overlay-layer-name">{l.name}</span>{' '}
+                  <span className="overlay-layer-default" data-changed={shown !== l.on}>
+                    {l.on
+                      ? t('compare.overlay.layerDefaultOn')
+                      : t('compare.overlay.layerDefaultOff')}
+                  </span>
+                </span>
+              </label>
+            </li>
+          );
+        })}
+      </ul>
+      {failed ? (
+        <p className="overlay-layer-notice" role="note">
+          {t('compare.overlay.layersFailed', { name })}
+        </p>
+      ) : null}
+      {switched ? (
+        <Button
+          size="small"
+          className="overlay-layer-reset"
+          label={t('compare.overlay.layersReset')}
+          onClick={() => {
+            onChange((v) => resetLayers(v, docId));
+          }}
+        />
+      ) : null}
+    </div>
   );
 }

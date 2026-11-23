@@ -63,6 +63,8 @@ function executorWith(
       throw new Error('not used');
     },
     overlayRelease: () => null,
+    overlayCopyOpen: () => ({ pageCount: 0 }),
+    overlayCopyClose: () => null,
     snapshot: () => {
       throw new Error('not used');
     },
