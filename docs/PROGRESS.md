@@ -1,6 +1,6 @@
 # Triya PDF — Progress
 
-_Last updated: 2026-11-23 (M12-21·O4: drop a tab on a tab; M12-20: the comparison file; M12-21: change register and presets)_
+_Last updated: 2026-11-23 (M12-22: Compare help and release notes; M12-21·O4: drop a tab on a tab; M12-20: the comparison file; M12-21: change register and presets)_
 
 **Current milestone:** M12 — PDF comparison (PDF overlay for drawings, text comparison for
 documents), version 1.1.0: plan [docs/plan/M12.md](plan/M12.md) and
@@ -29,6 +29,24 @@ answers Q1–Q7; ARCHITECTURE.md Rev 0.12 after [ADR-024](adr/024-freetext-text-
 interop is in the M6 pack (CHECKLIST §M6 R1–R4). Rev 0 (M0–M4) is complete on the agent side.
 
 ## Done
+
+- **M12-22 — Help and release notes for Compare (D-58 … D-65).** Help has a new chapter,
+  **Compare revisions** (`compare` in `src/help/topics.ts`, text in `src/i18n/help.en.json`),
+  with eight topics: Starting a comparison, The PDF overlay, Pairing and alignment, Differences
+  on drawings (with Compare an area), Reviewing across revisions, Text comparison, Saving a
+  comparison, and What other PDF viewers show; eight new screenshots
+  (`npm run help:screenshots -- --grep compare-`, on the self-made comparison corpus). The
+  chapter follows the Compare build switch: `chaptersFor(false)` leaves it out, so a release
+  build with `VITE_COMPARE=off` shows no Compare help and its addresses open the start page.
+  **"?" buttons:** the input window and both result headers ("Help for comparing documents"),
+  the Alignment, Compare an area, Differences, Changes and Close-out panes ("Help for this
+  pane", `src/features/help/HelpButton.tsx`), and the Save Comparison, Export Overlay, Export
+  Change Register, Save as Preset and Overlay colours dialogs. F1 now also follows the focused
+  part of the window (`data-help-topic` on a comparison's panes) and the Compare ribbon tab
+  (`compare-start`). **Version 1.1.0:** package.json, the What's new entry `v1.1.0`
+  (`src/i18n/whatsnew.en.json`) and [docs/release-notes/v1.1.0.md](release-notes/v1.1.0.md); a
+  unit test now checks that the newest What's new entry is the package version. The release
+  build still turns Compare off until M12-23; the owner tags v1.1.0 after the hand check.
 
 - **M12-21·O4 — drop a tab on a tab (D-58; optional item O4, accepted).** A document tab lifted
   and **held still for half a second** while it covers at least a quarter of another document
@@ -3909,7 +3927,9 @@ rel="noopener noreferrer">`; the commands `app.home` / `app.reportIssue` open th
   (manual alignment), M12-19 (the text comparison view), M12-15 (review across revisions: aligned copy and paste,
   the close-out list, for overlay and text), M12-14 (differences on drawings; the drawings corpus
   suite starts), M12-21·O1 (compare an area), M12-16 (the vector overlay: Export Overlay… and
-  the beta display mode). Next: the remaining tasks in plan order.
+  the beta display mode), M12-20 (the comparison file), M12-21 (change register and presets),
+  M12-21·O4 (drop a tab on a tab), M12-22 (Help chapter, "?" buttons, What's new, version
+  1.1.0). Next: M12-23 (acceptance, the build switch turned on, the owner pack).
 - **Owner (M12):** the M12-16 interop pack (exported vector overlays with a checklist: colours,
   layers, Type 3 and spot colours) in Acrobat Reader and a second desktop editor, whenever
   convenient; it feeds the M12 acceptance.

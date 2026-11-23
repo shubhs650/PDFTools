@@ -1,4 +1,5 @@
 import { Dismiss20Regular } from '@fluentui/react-icons/svg/dismiss';
+import { dialogHelp } from '../../help/openHelp';
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { recordError } from '../../../app/diagnostics';
@@ -56,6 +57,7 @@ function SaveForm({ id, type }: { id: string; type: 'overlay' | 'text' }) {
         if (!open) closeSavePreset();
       }}
       title={t('compare.presets.saveTitle')}
+      help={dialogHelp('compare-start')}
       description={t('compare.presets.saveDescription')}
       closeIcon={<Dismiss20Regular />}
       footer={

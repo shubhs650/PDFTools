@@ -1,3 +1,4 @@
+import { HelpButton } from '../../help/HelpButton';
 import { ArrowDown20Regular } from '@fluentui/react-icons/svg/arrow-down';
 import { ArrowUp20Regular } from '@fluentui/react-icons/svg/arrow-up';
 import { Checkmark16Filled } from '@fluentui/react-icons/svg/checkmark';
@@ -310,7 +311,12 @@ export function ChangeList({
   };
 
   return (
-    <section className="text-list" aria-labelledby={headingId} data-testid="text-list">
+    <section
+      className="text-list"
+      aria-labelledby={headingId}
+      data-testid="text-list"
+      data-help-topic="compare-text"
+    >
       <div className="text-list-head">
         <h3 id={headingId} className="overlay-side-title">
           {t('compare.text.list')}
@@ -328,6 +334,7 @@ export function ChangeList({
                 count: format.number(total),
               })}
         </span>
+        <HelpButton topic="compare-text" />
       </div>
       <div className="text-list-tools">
         <div className="text-search">

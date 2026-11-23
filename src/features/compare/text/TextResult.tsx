@@ -1,4 +1,5 @@
 import { ArrowSync20Filled, ArrowSync20Regular } from '@fluentui/react-icons/svg/arrow-sync';
+import { HelpButton } from '../../help/HelpButton';
 import { ChevronDown16Regular } from '@fluentui/react-icons/svg/chevron-down';
 import { useEffect, useId, useMemo, useRef } from 'react';
 import { useTranslation } from 'react-i18next';
@@ -183,6 +184,7 @@ export function TextResult({ comparison: c }: { comparison: Comparison }) {
       data-testid="compare-result"
       data-type="text"
       data-status={run?.status ?? 'reading'}
+      data-help-topic="compare-text"
     >
       <header className="overlay-head">
         <span className="overlay-head-icon" aria-hidden="true">
@@ -223,6 +225,7 @@ export function TextResult({ comparison: c }: { comparison: Comparison }) {
             updateInputs(c.id, (cur) => ({ ...cur, stage: 'input' }));
           }}
         />
+        <HelpButton topic="compare-text" label={t('compare.help')} />
       </header>
       {view.bandEdit ? <BandBar comparison={c} /> : null}
       {run ? <Notices comparison={c} run={run} /> : null}

@@ -26,6 +26,7 @@
     "forms": "Forms",
     "pages": "Pages",
     "convert": "Convert",
+    "compare": "Compare revisions",
     "protect": "Protect and sign",
     "save": "Save, print and recover",
     "reference": "Reference"
@@ -1204,6 +1205,380 @@
             "Pages that already have text are skipped unless you choose otherwise.",
             "English is ready offline; other languages download the first time you use them."
           ]
+        }
+      ]
+    },
+    "compare-start": {
+      "title": "Starting a comparison",
+      "summary": "Compare an old and a new revision: a PDF overlay for drawings, a text comparison for documents.",
+      "body": [
+        {
+          "p": "{{app}} compares two revisions of a file in two ways. The <b>PDF Overlay</b> lays the new revision of a drawing over the old one: the old in red, the new in green, and what is the same in black. The <b>Text Comparison</b> shows an old and a new revision of a document side by side, with every changed word, number and table row marked. A comparison is a tab of its own, next to your documents, and several can be open at once."
+        },
+        {
+          "shot": "compare-start-1",
+          "alt": "The Compare tab of the ribbon"
+        },
+        {
+          "h": "To start a comparison"
+        },
+        {
+          "steps": [
+            "Choose <b>Compare</b> › <b>PDF Overlay</b> for drawings, or <b>Compare</b> › <b>Text Comparison</b> for documents. A comparison tab opens on its input window.",
+            "Drop the old revision on <b>Document A (old)</b> and the new one on <b>Document B (new)</b>, or use <b>Choose file…</b>, or <b>Use an open file</b> for a document that is already open in a tab.",
+            "Check the thumbnails, and type a page range such as 1-3, 8 to compare only some pages. Leave it empty for all pages.",
+            "Choose <b>Compare</b>. The first sheet or page shows as soon as it is ready, and the rest fills in behind it."
+          ]
+        },
+        {
+          "shot": "compare-start-2",
+          "alt": "The input window of a PDF overlay, with a file on each side and the pairing table"
+        },
+        {
+          "list": [
+            "The swap button between the two sides exchanges Document A and Document B.",
+            "For a PDF overlay, each side takes several files, compared as one set (for example one file per sheet). The arrows put the files in order.",
+            "Right-click a document tab and choose <b>Compare with…</b> to start a comparison with that document as Document A.",
+            "Drag a document tab onto another one and hold it there for half a second: let go and choose <b>Compare these two</b>.",
+            "<b>Change inputs</b> in a result goes back to the input window, for example to compare the same files the other way."
+          ]
+        },
+        {
+          "h": "Presets"
+        },
+        {
+          "p": "A preset keeps the settings of a comparison you liked: the colours, the sensitivity, the minimum size and the ignore zones of an overlay, or the mark colours and the header, footer and renumbering choices of a text comparison. Presets stay on this device."
+        },
+        {
+          "steps": [
+            "In a result, choose <b>Compare</b> › <b>Save as Preset…</b>, type a name and <b>Save</b>.",
+            "In the input window of a new comparison, open <b>Options</b> and pick the preset. It is used when you press <b>Compare</b>."
+          ]
+        },
+        {
+          "h": "Protected files"
+        },
+        {
+          "p": "Each file keeps its own restrictions. Looking at a comparison is always allowed. Adding comments needs the file's permission to comment. Copying text, Export Overlay, the change register and Save Comparison need permission to copy content in both files. The input window says which file blocks what, and <b>Unlock</b> takes the permissions password. See [Protected files](#protected-files)."
+        },
+        {
+          "tip": "Nothing is uploaded: the comparison runs on this device, in the background, and works offline."
+        }
+      ]
+    },
+    "compare-overlay": {
+      "title": "The PDF overlay",
+      "summary": "See what moved, was added or was removed on a drawing: old in red, new in green, the same in black.",
+      "body": [
+        {
+          "p": "Each revision is drawn without its comments, tinted with its colour, and the two are multiplied: where both revisions have ink the result is black, and where only one has ink it keeps that revision's colour. So red is only in the old revision (removed), green is only in the new one (added), and black did not change."
+        },
+        {
+          "shot": "compare-overlay-1",
+          "alt": "A PDF overlay of two revisions of a drawing, with the overlay controls above it"
+        },
+        {
+          "h": "The overlay controls"
+        },
+        {
+          "list": [
+            "<b>Show Document A (old)</b> and <b>Show Document B (new)</b> show or hide each revision.",
+            "The <b>balance</b> slider goes from the old revision only, through both, to the new one only.",
+            "<b>Fade unchanged</b> dims the black, so the colours stand out.",
+            "<b>Thicken thin lines</b> makes hairlines easier to see at small zoom.",
+            "<b>Blink</b>: hold the button, or hold <kbd>X</kbd> while the overlay has focus, to flip between the old and the new revision.",
+            "<b>Colours</b> offers red and green, red and blue, and magenta and green (safe for colour-blind readers), or <b>Custom colours…</b> with a warning when two colours would not make black where they overlap.",
+            "<b>Comments</b> shows or hides the comments of each document, drawn on top in their own colours. <b>Hide check highlights</b> hides reviewers' highlight marks.",
+            "<b>Layers</b> switches the layers of each file. A notice says when a layer is shown by default in one file and hidden in the other.",
+            "<b>Vector overlay (beta)</b> draws the sheet the way the exported overlay PDF draws it."
+          ]
+        },
+        {
+          "h": "Sheets"
+        },
+        {
+          "p": "A sheet is one page of Document A with its partner in Document B, or a page that is only on one side. The <b>Sheets</b> list on the left shows each one with its alignment and how much changed; <b>Most changed first</b> sorts it. The arrows above the overlay go to the previous and next sheet."
+        },
+        {
+          "h": "Layouts"
+        },
+        {
+          "list": [
+            "<b>Review</b> (the default) shows the overlay on the left, Document A at the top right and Document B below it. Drag the bars between them to resize.",
+            "<b>Overlay only</b> gives the whole tab to the overlay.",
+            "<b>Keep the windows on the same spot</b> keeps the three windows on the same part of the drawing, at matching zoom, as you zoom and scroll any of them. A crosshair shows where the pointer is in the other windows."
+          ]
+        },
+        {
+          "tip": "Comments that were flattened into a page are part of the drawing, so they are compared like any other line."
+        }
+      ]
+    },
+    "compare-alignment": {
+      "title": "Pairing and alignment",
+      "summary": "Check which pages are compared with which, and line up sheets that moved, scaled or rotated.",
+      "body": [
+        {
+          "h": "Pairing pages"
+        },
+        {
+          "p": "{{app}} pairs the pages of the two revisions by how alike they look and read, keeping their order where it can. It also finds sheets that were added, removed or moved to another place. The <b>Pairing</b> table in the input window shows the result before you compare."
+        },
+        {
+          "steps": [
+            "To compare a page with another partner, pick the partner in its row. Pick <b>None</b> to mark it as added or removed.",
+            "Clear <b>Compare</b> in a row to leave that sheet out.",
+            "<b>Pair automatically</b> undoes your changes to the table."
+          ]
+        },
+        {
+          "h": "Automatic alignment"
+        },
+        {
+          "p": "Each sheet is first compared as it is. Only a sheet that matches poorly is aligned: it is shifted, scaled the same in both directions and rotated, never stretched. Page rotation and page boxes are taken into account. The sheet list shows <b>As is</b>, <b>Auto-aligned</b> (with the shift, scale and rotation found), <b>Aligned by hand</b> or <b>Low confidence</b>. Check a low-confidence sheet, and align it by points if it is not right."
+        },
+        {
+          "shot": "compare-alignment-1",
+          "alt": "The Sheets list with a sheet's alignment, and the Alignment section while points are picked"
+        },
+        {
+          "h": "To align a sheet by points"
+        },
+        {
+          "steps": [
+            "Go to the sheet and choose <b>Align by points</b>.",
+            "Click a point on Document A, such as the corner of a grid line, and then the same point on Document B. The pointer snaps to the drawing and a magnifier helps; hold <kbd>Alt</kbd> not to snap.",
+            "One pair shifts the sheet. Two pairs also scale and rotate it. A third pair gives a best fit and shows how far the points are off.",
+            "Fine-tune with <b>X offset</b>, <b>Y offset</b>, <b>Scale</b> and <b>Rotation</b>, or nudge Document A with the arrow keys (with <kbd>Shift</kbd> for bigger steps). <b>Pick points</b> stops and starts picking.",
+            "Under <b>Apply to</b>, choose this sheet, all sheets or all low-confidence sheets, then <b>Apply</b>."
+          ]
+        },
+        {
+          "p": "<b>Use automatic alignment</b> goes back to the alignment {{app}} found."
+        }
+      ]
+    },
+    "compare-differences": {
+      "title": "Differences on drawings",
+      "summary": "Go through every change of a PDF overlay, tune what counts as a change, and mark changes with clouds.",
+      "body": [
+        {
+          "p": "Besides the picture, a PDF overlay finds the differences. The <b>Differences</b> list on the right shows each one as <b>Added</b>, <b>Removed</b> or <b>Changed</b>. Where the text of a drawing changed, an entry shows the old and new text, such as Ø120 → Ø128, and is labelled text, geometry, or both. Thin outlines mark the differences on the overlay."
+        },
+        {
+          "shot": "compare-differences-1",
+          "alt": "The Differences list with its settings, filters and entries"
+        },
+        {
+          "h": "To go through the differences"
+        },
+        {
+          "steps": [
+            "Click an entry to show it on the overlay, or press <kbd>F8</kbd> for the next difference and <kbd>Shift+F8</kbd> for the previous one.",
+            "Tick an entry once you have checked it. <b>Hide checked</b> leaves only what is still to do, and a sheet whose differences are all ticked shows as done in the sheet list.",
+            "Filter by kind and by text or geometry, choose all sheets or this sheet, or type a word and press <kbd>Enter</kbd> to search the differences' text."
+          ]
+        },
+        {
+          "h": "What counts as a change"
+        },
+        {
+          "list": [
+            "<b>Sensitivity</b>: Low ignores small shifts, High finds the smallest changes.",
+            "<b>Minimum size</b> leaves out changes smaller than a size you choose.",
+            "<b>Ignore zones</b> leave areas out, such as a title block or a revision table: choose <b>Draw a zone</b> and drag on the overlay, or type the zone in millimetres. A zone applies to this sheet or to all sheets. <b>Save as set</b> keeps the zones under a name for other comparisons."
+          ]
+        },
+        {
+          "p": "These settings apply at once, without comparing again. A sheet with no difference is marked <b>Unchanged</b>."
+        },
+        {
+          "h": "To mark changes with cloud comments"
+        },
+        {
+          "steps": [
+            "Select a difference, or filter the list to the ones you want.",
+            "Choose <b>Make cloud comments</b>, then <b>On the selected difference</b> or <b>On the differences shown</b>. Real cloud comments are added to Document B, each with the change in its text."
+          ]
+        },
+        {
+          "h": "To compare an area"
+        },
+        {
+          "p": "When a detail moved to another place on the sheet, or to another sheet, compare just that detail."
+        },
+        {
+          "steps": [
+            "In a PDF overlay, choose <b>Compare</b> › <b>Compare an Area</b>.",
+            "Choose <b>Draw on Document A</b> and drag a rectangle round the detail. Then choose <b>Draw on Document B</b> and drag one round the same detail, on this sheet or another.",
+            "Choose <b>Compare the areas</b>. The two areas open in a comparison tab of their own, aligned to each other, with the overlay controls and a differences list."
+          ]
+        }
+      ]
+    },
+    "compare-review": {
+      "title": "Reviewing across revisions",
+      "summary": "Close out the old revision's comments against the new revision, and add new comments in the comparison.",
+      "body": [
+        {
+          "p": "In the <b>Review</b> layout, the overlay, Document A and Document B are each a full document window: every comment tool, the Properties pane and every right-click menu work in them. Comments you add to Document A or Document B belong to that file. What you draw on the overlay window is a note of the comparison and stays apart from both documents."
+        },
+        {
+          "shot": "compare-review-1",
+          "alt": "The Review layout with the overlay, Document A, Document B and the Close-out list"
+        },
+        {
+          "h": "To close out the old revision's comments"
+        },
+        {
+          "steps": [
+            "Choose <b>Close-out list</b> above the result. It lists every comment of Document A, the old revision.",
+            "Select a comment. The windows go to its place on both revisions.",
+            "Check the new revision, then choose one: <b>Addressed</b> (it was fixed), <b>Carried Over</b> (it was not, so the comment is also copied to the new revision) or <b>Changed Differently</b>.",
+            "The old comment's status becomes Completed, with a reply that says what happened, such as “Carried over to RevB.pdf”, and the place is marked with a check highlight. <b>Reopen</b> undoes it."
+          ]
+        },
+        {
+          "p": "The status and the replies are ordinary comment data, so they show in other PDF viewers and in the comment list exports (see [Copying, exporting and importing comments](#comment-transfer))."
+        },
+        {
+          "h": "To copy comments between revisions"
+        },
+        {
+          "list": [
+            "Right-click a comment and choose <b>Copy to New Revision</b> (or <b>Copy to Old Revision</b>). The copy goes to the matching spot of the other revision, through the alignment.",
+            "Copying and pasting between the comparison's windows also lands at the matching spot."
+          ]
+        },
+        {
+          "tip": "The same close-out list and copying work in a text comparison, where the matching spot is the same text in the other revision."
+        }
+      ]
+    },
+    "compare-text": {
+      "title": "Text comparison",
+      "summary": "See which words, numbers, clauses and table rows changed between two revisions of a document.",
+      "body": [
+        {
+          "p": "Document A and Document B are shown side by side. Scrolling one scrolls the other by content, not by page number, so an added page does not put them out of step. Bands between them join each change on the two sides. <b>Keep both documents in step by content</b> turns this off."
+        },
+        {
+          "shot": "compare-text-1",
+          "alt": "A text comparison with both documents side by side and the list of changes"
+        },
+        {
+          "h": "The marks"
+        },
+        {
+          "list": [
+            "<b>Deleted</b>: red and struck through, in Document A.",
+            "<b>Inserted</b>: green and underlined, in Document B.",
+            "<b>Replaced</b>: amber, struck through in A and underlined in B.",
+            "<b>Moved</b>: blue on both sides, joined by a band. An edit inside the moved text is shown too.",
+            "<b>Changed figure</b>: a blue frame round a picture on both sides."
+          ]
+        },
+        {
+          "p": "The legend at the top of the <b>Changes</b> list shows them, and each one's colour can be changed there. A change of font or size alone is not reported. The marks are drawn by {{app}}; they are not comments and are never saved into either document."
+        },
+        {
+          "h": "To go through the changes"
+        },
+        {
+          "steps": [
+            "Click a change in the list to centre it on both sides, or press <kbd>F8</kbd> and <kbd>Shift+F8</kbd> for the next and previous change.",
+            "Tick a change once you have checked it, and use <b>Hide checked</b> to see what is left.",
+            "Use the legend's switches to show only some kinds, or type a word and press <kbd>Enter</kbd> to search the changes."
+          ]
+        },
+        {
+          "h": "How the text is compared"
+        },
+        {
+          "list": [
+            "Numbers, dimensions, dates and codes such as 1,450.00 mm or P-101A are compared whole, and a changed number shows its change in percent.",
+            "Where a table is recognised, rows are compared as rows: a changed cell is reported with its row and column.",
+            "Under <b>Options</b>, <b>Leave out headers and footers</b> skips text that repeats on every page, and reports a changed header once. <b>Header and footer bands…</b> lets you draw where they are. <b>Report clause renumbering once</b> reports an inserted clause once instead of every number after it, and flags references that did not follow. Both are experimental.",
+            "Scanned pages have no text. {{app}} offers <b>Read by OCR</b> for the comparison only (your files are not changed); such changes are labelled <b>From OCR</b>, and likely misreadings, such as 0 and O, are labelled <b>Possible OCR error</b>.",
+            "Every script is compared, including languages written without spaces and right-to-left text. Pages whose text cannot be read reliably are named under <b>Limited support</b>."
+          ]
+        }
+      ]
+    },
+    "compare-saving": {
+      "title": "Saving a comparison",
+      "summary": "Save your review comments into the documents, save the whole comparison as one PDF, or export the results.",
+      "body": [
+        {
+          "h": "Save review"
+        },
+        {
+          "p": "Press <kbd>{{save}}</kbd> in a comparison tab to save the comments you added into Document A and Document B, like a normal save of each file (see [Saving](#saving)). With a set of files, each file gets its own comments. The comparison's colours and marks are never saved into the documents."
+        },
+        {
+          "h": "To save the comparison as one file"
+        },
+        {
+          "steps": [
+            "Choose <b>Compare</b> › <b>Save Comparison…</b>.",
+            "Read the note: the comparison file <b>contains both documents</b>, so anyone you share it with can open both.",
+            "For a PDF overlay, keep <b>Add a summary page</b> for a first page with the file names, the date, the counts, the colours and the settings used.",
+            "Choose <b>Save…</b>. If a document needs a password to open, the comparison file asks for one too."
+          ]
+        },
+        {
+          "shot": "compare-saving-1",
+          "alt": "The Save Comparison dialog"
+        },
+        {
+          "p": "Open a comparison file in {{app}} and the live comparison comes back: the pairing, the alignment, the settings, the ticks, the close-out states and your notes. <b>Save review</b> then updates the documents inside it, and <b>Compare</b> › <b>Export Document A…</b> or <b>Export Document B…</b> saves them out as ordinary files. Any other PDF viewer shows it as a plain PDF (see [What other PDF viewers show](#compare-other-readers))."
+        },
+        {
+          "h": "Other outputs"
+        },
+        {
+          "list": [
+            "<b>Export Overlay…</b> saves a PDF overlay as a new PDF, one page per sheet in vector form, for all sheets or the one shown.",
+            "<b>Export Change Register…</b> saves the differences or changes as an Excel workbook or a CSV file: number, sheet or page, kind, old and new text, percent change and whether you ticked it. It lists what the list shows, with its filters and search.",
+            "<b>Save as Preset…</b> keeps the settings for later comparisons (see [Starting a comparison](#compare-start))."
+          ]
+        }
+      ]
+    },
+    "compare-other-readers": {
+      "title": "What other PDF viewers show",
+      "summary": "Comparison files and exported overlays are standard PDFs that anyone can open.",
+      "body": [
+        {
+          "p": "Everything {{app}} saves from a comparison is a standard PDF. Acrobat Reader, other desktop PDF editors and the PDF viewers built into Chrome, Edge and Firefox open it without {{app}}."
+        },
+        {
+          "h": "A PDF overlay comparison file"
+        },
+        {
+          "list": [
+            "Its pages are the overlay, one page per sheet, in vector form: the old revision in its colour, the new in its colour, and the same in black. The summary page comes first when you added one.",
+            "The notes drawn on the overlay window are ordinary comments on those pages.",
+            "Document A and Document B are attached, exactly as they were, with a small file of comparison data. Open the viewer's attachments list to save them."
+          ]
+        },
+        {
+          "h": "A text comparison file"
+        },
+        {
+          "list": [
+            "Its pages are Document B, the new revision, with every change marked by standard highlights, strike-outs and notes. A note keeps the old text, such as “was: 1,450.00”.",
+            "Document A, the old revision, is attached, with the comparison data."
+          ]
+        },
+        {
+          "h": "An exported overlay"
+        },
+        {
+          "p": "The same overlay pages as a comparison file, without the attachments. It shows black where the revisions agree in viewers that support PDF transparency, which all of the viewers named above do."
+        },
+        {
+          "tip": "A comparison file holds both documents. Before you send one, make sure the reader may see both revisions."
         }
       ]
     },
