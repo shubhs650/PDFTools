@@ -10,6 +10,8 @@ export type MenuEntry =
       id: string;
       /** Translated text (rule 11); the item's accessible name. */
       label: string;
+      /** A line under the label saying what the item does (translated); its accessible description. */
+      description?: string;
       icon?: ReactNode;
       disabled?: boolean;
       onSelect: () => void;
@@ -145,16 +147,34 @@ function Entries({ entries }: { entries: readonly MenuEntry[] }) {
         return (
           <Menu.Item
             key={e.id}
-            className="ui-menu-item"
+            className={`ui-menu-item${e.description ? ' ui-menu-item--described' : ''}`}
             disabled={e.disabled ?? false}
             onSelect={e.onSelect}
+            data-menu-id={e.id}
+            {...(e.description
+              ? {
+                  'aria-labelledby': `ui-menu-${e.id}-label`,
+                  'aria-describedby': `ui-menu-${e.id}-description`,
+                }
+              : {})}
           >
             {e.icon ? (
               <span className="ui-menu-icon" aria-hidden="true">
                 {e.icon}
               </span>
             ) : null}
-            <span className="ui-menu-label">{e.label}</span>
+            {e.description ? (
+              <span className="ui-menu-text">
+                <span id={`ui-menu-${e.id}-label`} className="ui-menu-label">
+                  {e.label}
+                </span>
+                <span id={`ui-menu-${e.id}-description`} className="ui-menu-description">
+                  {e.description}
+                </span>
+              </span>
+            ) : (
+              <span className="ui-menu-label">{e.label}</span>
+            )}
           </Menu.Item>
         );
     }

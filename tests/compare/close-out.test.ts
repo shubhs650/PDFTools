@@ -1,7 +1,9 @@
 // M12-15 (D-62, Q16; the plan's question 1): the close-out list of the old
 // revision. Each comment has a state: open, Addressed, Carried over, Changed
 // differently (closed out here: Completed + an automatic reply + a grouped
-// check highlight), or Completed some other way. Check marks are not listed.
+// check highlight), or Completed some other way. M12-27 (ADR-033): comments with
+// text first, then markup without text, by page and place; highlight-type
+// comments (the reviewer's check marks among them) are marked for Hide highlights.
 import {
   PdfAnnotationReplyType,
   PdfAnnotationState as St,
@@ -22,6 +24,8 @@ import {
   counts,
   filterRows,
   isCheckMark,
+  isHighlightType,
+  withoutHighlights,
   isCloseOutPart,
   outcomeOf,
   partIds,
@@ -111,9 +115,21 @@ function close(
 }
 
 describe('the close-out list', () => {
-  it('lists every comment of the old revision, not the check marks or replies', () => {
-    const rows = closeOutRows(OLD);
+  it('lists every comment of the old revision, not the replies; Hide highlights leaves out the check marks', () => {
+    const all = closeOutRows(OLD);
+    expect(all.map((r) => r.id)).toEqual([
+      'C1-cloud',
+      'C2-cloud',
+      'C3-note',
+      'C4-note',
+      'K1',
+      'K3',
+      'K4',
+    ]);
+    expect(all.filter((r) => r.highlight).map((r) => r.id)).toEqual(['K1', 'K3', 'K4']);
+    const rows = withoutHighlights(all, true);
     expect(rows.map((r) => r.id)).toEqual(['C1-cloud', 'C2-cloud', 'C3-note', 'C4-note']);
+    expect(withoutHighlights(all, false)).toHaveLength(7);
     expect(rows.every((r) => r.state === 'open')).toBe(true);
     // The Comments pane's numbers, so the list and the CRS agree.
     const nums = new Map(commentsOf(OLD).map((c) => [c.id, c.number]));
@@ -127,6 +143,50 @@ describe('the close-out list', () => {
       isCheckMark(a({ id: 'b', type: S.INK, blendMode: PdfBlendMode.Multiply } as never)),
     ).toBe(true);
     expect(isCheckMark(a({ id: 'c', type: S.POLYGON, opacity: 1 } as never))).toBe(false);
+  });
+
+  it('marks highlights, see-through and blended markups as highlight-type, never notes or text boxes', () => {
+    expect(isHighlightType(a({ id: 'h', type: S.HIGHLIGHT }))).toBe(true);
+    expect(isHighlightType(a({ id: 'o', type: S.SQUARE, opacity: 0.8 } as never))).toBe(true);
+    expect(
+      isHighlightType(a({ id: 'b', type: S.INK, blendMode: PdfBlendMode.Multiply } as never)),
+    ).toBe(true);
+    expect(isHighlightType(a({ id: 'c', type: S.POLYGON, opacity: 1 } as never))).toBe(false);
+    expect(isHighlightType(a({ id: 'u', type: S.UNDERLINE }))).toBe(false);
+    expect(isHighlightType(a({ id: 'n', type: S.TEXT, opacity: 0.5 } as never))).toBe(false);
+    expect(isHighlightType(a({ id: 'f', type: S.FREETEXT, opacity: 0.5 } as never))).toBe(false);
+  });
+
+  it('lists comments with text first, then markup without text, each by page and place', () => {
+    const at = (x: number, y: number) => ({ origin: { x, y }, size: { width: 10, height: 10 } });
+    const all = [
+      a({ id: 'cloud-p2', type: S.POLYGON, pageIndex: 1, rect: at(50, 50) }),
+      a({ id: 'note-p2', pageIndex: 1, rect: at(10, 300), contents: 'Check' }),
+      a({ id: 'box-p1-low', type: S.FREETEXT, rect: at(20, 400), contents: 'Fix' }),
+      a({ id: 'arrow-p1', type: S.LINE, rect: at(300, 20) }),
+      a({ id: 'note-p1-right', rect: at(300, 100), contents: 'B' }),
+      a({ id: 'note-p1-left', rect: at(100, 100), contents: 'A' }),
+      a({ id: 'empty-text', type: S.SQUARE, rect: at(5, 5), contents: '   ' }),
+    ];
+    const rows = closeOutRows(all);
+    expect(rows.map((r) => r.id)).toEqual([
+      'note-p1-left',
+      'note-p1-right',
+      'box-p1-low',
+      'note-p2',
+      'empty-text',
+      'arrow-p1',
+      'cloud-p2',
+    ]);
+    expect(rows.map((r) => r.group)).toEqual([
+      'text',
+      'text',
+      'text',
+      'text',
+      'markup',
+      'markup',
+      'markup',
+    ]);
   });
 
   it('closes a comment out: Completed, the automatic reply and a grouped check highlight', () => {
@@ -162,7 +222,7 @@ describe('the close-out list', () => {
     all = close(all, 'C2-cloud', 'changed');
     all = close(all, 'C3-note', 'carried');
     all = close(all, 'C4-note', 'carried');
-    const rows = closeOutRows(all);
+    const rows = withoutHighlights(closeOutRows(all), true);
     expect(rows.map((r) => [r.id, r.state])).toEqual([
       ['C1-cloud', 'addressed'],
       ['C2-cloud', 'changed'],
@@ -210,9 +270,21 @@ describe('the close-out list', () => {
 
   it('filters open and closed comments', () => {
     const rows = closeOutRows(close(OLD, 'C1-cloud', 'addressed'));
-    expect(filterRows(rows, 'open').map((r) => r.id)).toEqual(['C2-cloud', 'C3-note', 'C4-note']);
-    expect(filterRows(rows, 'closed').map((r) => r.id)).toEqual(['C1-cloud']);
-    expect(filterRows(rows, 'all')).toHaveLength(4);
+    expect(filterRows(rows, 'open', true).map((r) => r.id)).toEqual([
+      'C2-cloud',
+      'C3-note',
+      'C4-note',
+    ]);
+    expect(filterRows(rows, 'closed', true).map((r) => r.id)).toEqual(['C1-cloud']);
+    expect(filterRows(rows, 'all', true)).toHaveLength(4);
+    expect(filterRows(rows, 'open', false).map((r) => r.id)).toEqual([
+      'C2-cloud',
+      'C3-note',
+      'C4-note',
+      'K1',
+      'K3',
+      'K4',
+    ]);
   });
 
   it('knows what Reopen takes away', () => {

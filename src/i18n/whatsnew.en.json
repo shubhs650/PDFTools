@@ -9,6 +9,7 @@
         "Text Comparison: see every changed word, number, clause and table row of two revisions side by side.",
         "Check which sheets are compared before you start: each one shows both pages, with a page picker, a large preview of each pair, and a mark on sheets that need a look. New comparison opens another comparison with the same files.",
         "Review across revisions: close out the old revision's comments against the new one, and copy comments to the matching place.",
+        "Close-out list: comments with text come first, highlights can be hidden, a click zooms to the comment, and Close Out As… says what each outcome means. Window titles show unsaved changes, and a text comparison shows the page in view, with Go to page.",
         "Save a comparison as one PDF that anyone can open, export the overlay, or export a change register to Excel.",
         "All of it on this device and offline. Help has a new chapter, Compare revisions."
       ]

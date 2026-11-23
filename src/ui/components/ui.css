@@ -62,7 +62,8 @@
   color: var(--color-text-on-brand);
 }
 
-.ui-button--primary:hover:not(:disabled) {
+.ui-button--primary:hover:not(:disabled),
+.ui-button--primary[data-state='open'] {
   background: var(--color-brand-hover);
 }
 
@@ -153,6 +154,29 @@
 .ui-menu-item[data-disabled] {
   color: var(--color-text-disabled);
   cursor: default;
+}
+
+/* An item with a line saying what it does (M12-27: Close Out As…). */
+.ui-menu-item--described {
+  align-items: flex-start;
+  max-width: var(--menu-described-max-width);
+  padding-block: var(--space-2);
+}
+
+.ui-menu-text {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+}
+
+.ui-menu-description {
+  color: var(--color-text-muted);
+  font-size: var(--font-size-s);
+  line-height: 1.35;
+}
+
+.ui-menu-item[data-disabled] .ui-menu-description {
+  color: var(--color-text-disabled);
 }
 
 /* Context menus (M6-02): icon, label, shortcut at the end; checked toggles get the Filled icon. */

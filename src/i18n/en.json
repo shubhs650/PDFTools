@@ -867,7 +867,8 @@
       "density": "Density (Comfortable or Compact)",
       "whatsNew": "Which version's What's new was last shown, so it shows once after each update",
       "recentFonts": "Comment fonts you chose last (font names only), shown first in the font list",
-      "session": "Files open last time: their names and the browser's permission handles, kept only while File › Settings › Start-up reopens them"
+      "session": "Files open last time: their names and the browser's permission handles, kept only while File › Settings › Start-up reopens them",
+      "closeOutHighlights": "Whether a comparison's close-out list hides highlights"
     },
     "clearHint": "To delete this data, use File → Settings → Clear all local data."
   },
@@ -3118,7 +3119,8 @@
       "splitY": "Resize Document A and Document B",
       "notesName": "Comparison notes.pdf",
       "preparing": "Preparing the windows…",
-      "notesFailed": "The overlay window couldn't be prepared. Change the inputs to try again."
+      "notesFailed": "The overlay window couldn't be prepared. Change the inputs to try again.",
+      "unsaved": ", unsaved changes"
     },
     "text": {
       "continuousOnly": "Not in a text comparison: both documents stay in continuous scroll, upright, so their content stays in step.",
@@ -3208,7 +3210,14 @@
         "line_bottom": "Footer line of {{side}}",
         "apply": "Apply",
         "cancel": "Cancel"
-      }
+      },
+      "page": "Page {{page}} of {{count}}",
+      "pageButton": "Page {{page}} of {{count}}. Go to a page",
+      "goToPageHint": "Go to page",
+      "goToPage": "Go to page, 1 to {{count}}",
+      "pageWord": "Page",
+      "pageOf": "of {{count}}",
+      "pageInvalid": "Type a page number from 1 to {{count}}."
     },
     "closeout": {
       "toggle": "Close-out list",
@@ -3249,7 +3258,14 @@
       "notInComparison": "Use this in a comparison's Document A, Document B or overlay window.",
       "noMatch": "There is no matching place on the other revision for these comments.",
       "oldOnly": "Only comments of Document A, the old revision, are closed out.",
-      "noSelection": "Select a comment in the list first."
+      "noSelection": "Select a comment in the list first.",
+      "hideHighlights": "Hide highlights",
+      "closeOutAs": "Close Out As…",
+      "hint_addressed": "The new revision makes the change this comment asked for.",
+      "hint_carried": "Not done yet: the comment is copied to the new revision, so it stays open there.",
+      "hint_changed": "The new revision changes this place, but not the way the comment asked.",
+      "group_text": "Comments with text ({{count}})",
+      "group_markup": "Markup without text ({{count}})"
     },
     "diff": {
       "title": "Differences",
@@ -3591,6 +3607,15 @@
         "zonesSheet": "{{n}} on sheet {{sheet}}",
         "partial": "The comparison was still finding differences on some sheets: the counts are what had been found.",
         "footer": "The overlay sheets follow this page. Document A and Document B are attached to this file unchanged."
+      },
+      "close": {
+        "title": "Save changes to {{name}}?",
+        "notes": "The comments you drew on the overlay are not saved. Only a comparison file keeps them: choose Save Comparison… to keep them.",
+        "review": "The review comments in this comparison file are not saved.",
+        "saveFile": "Save Comparison…",
+        "saveReview": "Save review",
+        "discard": "Don't save",
+        "cancel": "Cancel"
       }
     },
     "picker": {

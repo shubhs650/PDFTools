@@ -22,6 +22,7 @@ import {
   type Pt,
   type WindowRole,
 } from '../../../model/compare/link';
+import { laidToDisplayed } from '../../../model/compare/align/manual';
 import type { Affine } from '../../../model/compare/material';
 import { capability, hostStore } from '../../view/host';
 
@@ -52,6 +53,26 @@ function displayedSize(docId: string, page: number): { width: number; height: nu
   if (!doc || !p) return null;
   const turned = (p.rotation + doc.rotation) % 2 === 1;
   return turned ? { width: p.size.height, height: p.size.width } : p.size;
+}
+
+/**
+ * A box on a page as the viewer lays it out (an annotation's rectangle: points,
+ * top left, the page unturned) → the page's displayed space, where the
+ * alignment and the windows' link work; null before the page is known.
+ */
+export function laidBoxToDisplayed(
+  docId: string,
+  page: number,
+  box: readonly [number, number, number, number],
+): [number, number, number, number] | null {
+  const registry = hostStore.getState().registry;
+  const doc = registry?.getStore().getState().core.documents[docId];
+  const p = doc?.document?.pages[page];
+  if (!doc || !p) return null;
+  const turns = (p.rotation + doc.rotation) % 4;
+  const a = laidToDisplayed(turns, p.size.width, p.size.height, { x: box[0], y: box[1] });
+  const b = laidToDisplayed(turns, p.size.width, p.size.height, { x: box[2], y: box[3] });
+  return [Math.min(a.x, b.x), Math.min(a.y, b.y), Math.max(a.x, b.x), Math.max(a.y, b.y)];
 }
 
 function zoomCap(): ZoomCapability | null {
@@ -431,6 +452,8 @@ export async function centreOnBox(
   box: readonly [number, number, number, number],
   /** How much of the window the box takes (an area comparison's area, O1: most of it). */
   share = BOX_SHARE,
+  /** The most it zooms in (a zoom level, 4 = 400 %: a comment of the close-out list, M12-27). */
+  maxZoom = Infinity,
 ): Promise<boolean> {
   if (!(await settled(w))) return false;
   const fit = fitScale(w, 'page');
@@ -441,7 +464,7 @@ export async function centreOnBox(
   const bw = Math.max(box[2] - box[0], 6);
   const bh = Math.max(box[3] - box[1], 6);
   const want = Math.min((vp.clientWidth * share) / bw, (vp.clientHeight * share) / bh);
-  const target = Math.max(fit, Math.min(want, fit * BOX_MAX_OVER_FIT));
+  const target = Math.min(maxZoom, Math.max(fit, Math.min(want, fit * BOX_MAX_OVER_FIT)));
   const shows = bw * now.scale <= vp.clientWidth * 0.9 && bh * now.scale <= vp.clientHeight * 0.9;
   if (!shows || now.scale < target / 2) {
     zoom.forDocument(w.docId).requestZoom(target);

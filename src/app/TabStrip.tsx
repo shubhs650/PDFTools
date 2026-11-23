@@ -33,6 +33,7 @@ import {
   tabMenuEntries,
 } from './tabMenu';
 import { comparisonTitle, typeLabel } from '../features/compare/title';
+import { comparisonUnsaved } from '../features/compare/unsaved';
 import { CommandIcon } from '../ui/icons/CommandIcon';
 import { beginTabPress, isTabDragging, type TabDragHost } from './tabDragSession';
 import { moveTab, onTabNews, setTabAnimator } from './tabMove';
@@ -423,7 +424,8 @@ export function TabStrip() {
               const comparison = comparisons[id];
               if (!d && !comparison) return null;
               const name = nameOf(id);
-              const dirty = d?.dirty === true;
+              // A comparison's tab shows the dot while A, B or its notes are unsaved (M12-27).
+              const dirty = comparison ? comparisonUnsaved(comparison, docs) : d?.dirty === true;
               const active = id === activeId;
               // The tab whose menu is open keeps the hover tint, so it is clear which it is for.
               const hovered = id === hoverId || (menuOpen && id === menuTab);

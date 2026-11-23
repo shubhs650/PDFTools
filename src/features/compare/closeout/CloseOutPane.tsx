@@ -1,39 +1,46 @@
-// The close-out list (M12-15, D-62, Q16, Q43): every comment of the old
-// revision with its state, in the comparison result's right pane. Selecting a
-// comment shows it (its sheet in an overlay, its text on both sides in a text
-// comparison) and selects it in Document A; the buttons below close it out as
-// Addressed, Carried Over (copied to the new revision first) or Changed
-// Differently, reopen it, or copy it to the new revision. The check
-// highlight's colour comes from the standard swatch picker.
+// The close-out list (M12-15, D-62, Q16, Q43; ADR-033): every comment of the
+// old revision with its state, in the comparison result's right pane:
+// comments with typed text first, then markup without text, each by page and
+// place; Hide highlights leaves out the highlight-type ones. Selecting a
+// comment brings it into view (its sheet zoomed to it in an overlay, its text
+// on both sides in a text comparison), selects it in Document A and flashes
+// it. Close Out As… closes it out as Addressed, Carried Over (copied to the
+// new revision first) or Changed Differently, each with a line saying what it
+// means; Reopen undoes it. The check highlight's colour comes from the
+// standard swatch picker.
 import { HelpButton } from '../../help/HelpButton';
 import { useId, useMemo, type KeyboardEvent } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useDocuments } from '../../../app/store/documentStore';
 import { format, msg, type MessageKey } from '../../../i18n';
-import { matchPlace, sheetOf } from '../../../model/compare/alignedCopy';
-import { stackY } from '../../../model/compare/textView';
-import { Button, ColorPicker, ToggleButton } from '../../../ui/components';
+import { Button, ColorPicker, DropdownMenu, ToggleButton } from '../../../ui/components';
 import { annotationTypeKey } from '../../annotate/annotationTypes';
 import { objectsOf, useAnnotationMap, type ByUid } from '../../annotate/comments/commentsStore';
-import { annotationCapability } from '../../annotate/selection';
 import type { Comparison } from '../model';
-import { goSheet, updateView } from '../overlay/overlayState';
-import { textLinkOf } from '../text/textLink';
 import { closeOut, closeOutBlocked, copyToBlocked, copyToRevision, reopen } from './actions';
 import {
   CLOSE_OUT_FILTERS,
+  CLOSE_OUT_GROUPS,
   OUTCOMES,
   canReopen,
   closeOutRows,
   counts,
   filterRows,
+  withoutHighlights,
   type CloseOutFilter,
+  type CloseOutGroup,
   type CloseOutRow,
   type CloseOutState,
   type Outcome,
 } from './closeOutModel';
-import { setCheckColour, updateCloseOut, useCloseOut, useCloseOutView } from './closeOutStore';
-import { notesOf, sheetsOfComparison } from './context';
+import {
+  setCheckColour,
+  setHideHighlights,
+  updateCloseOut,
+  useCloseOut,
+  useCloseOutView,
+} from './closeOutStore';
+import { revealComment } from './reveal';
 
 const STATE: Record<CloseOutState, MessageKey> = {
   open: msg('compare.closeout.state_open'),
@@ -55,6 +62,18 @@ const ACTION: Record<Outcome, MessageKey> = {
   changed: msg('compare.closeout.action_changed'),
 };
 
+/** What each outcome means, under it in Close Out As… (ADR-033). */
+const ACTION_HINT: Record<Outcome, MessageKey> = {
+  addressed: msg('compare.closeout.hint_addressed'),
+  carried: msg('compare.closeout.hint_carried'),
+  changed: msg('compare.closeout.hint_changed'),
+};
+
+const GROUP: Record<CloseOutGroup, MessageKey> = {
+  text: msg('compare.closeout.group_text'),
+  markup: msg('compare.closeout.group_markup'),
+};
+
 /** Rows per document of the old revision, built once per annotation map. */
 const rowsCache = new WeakMap<ByUid, CloseOutRow[]>();
 
@@ -68,37 +87,13 @@ function rowsOf(byUid: ByUid | null): CloseOutRow[] {
   return rows;
 }
 
-/** Shows a comment of A: its sheet (overlay) or its text on both sides (text), selected in A. */
-function reveal(c: Comparison, docId: string, row: CloseOutRow): void {
-  if (c.type === 'overlay') {
-    const sheets = sheetsOfComparison(c.id);
-    const i = sheetOf(sheets, notesOf(c.id), { docId, page: row.page });
-    if (i >= 0) updateView(c.id, (v) => goSheet(v, i, sheets.length));
-  } else {
-    // The comment's text on both sides: the matching place of its middle (as Copy finds it).
-    const link = textLinkOf(c.id);
-    const stack = link?.stack('a');
-    const r = row.annot.rect;
-    const top = stack ? stackY(stack, row.page, r.origin.y) : undefined;
-    const placed = link?.located();
-    if (link && top !== undefined && placed) {
-      const half = r.size.height / 2;
-      const b = matchPlace(placed.curve, placed.places, 'a', top + half);
-      link.centreOn({
-        a: { top, bottom: top + 2 * half },
-        b: { top: b - half, bottom: b + half },
-      });
-    }
-  }
-  annotationCapability()?.forDocument(docId).selectAnnotation(row.page, row.id);
-}
-
 /** The close-out pane of a comparison result. */
 export function CloseOutPane({ comparison: c }: { comparison: Comparison }) {
   const { t } = useTranslation();
   const headingId = useId();
   const view = useCloseOutView(c.id);
   const colour = useCloseOut((s) => s.colour);
+  const hideHighlights = useCloseOut((s) => s.hideHighlights);
   const files = c.a.map((f) => f.docId);
   return (
     <aside
@@ -127,6 +122,18 @@ export function CloseOutPane({ comparison: c }: { comparison: Comparison }) {
             />
           ))}
         </div>
+        <label className="closeout-hide-highlights">
+          <input
+            type="checkbox"
+            className="ui-focusable"
+            checked={hideHighlights}
+            data-testid="closeout-hide-highlights"
+            onChange={(e) => {
+              setHideHighlights(e.currentTarget.checked);
+            }}
+          />
+          <span>{t('compare.closeout.hideHighlights')}</span>
+        </label>
         <span className="closeout-colour">
           <ColorPicker
             label={t('compare.closeout.colour')}
@@ -155,17 +162,22 @@ function CloseOutList({
 }) {
   const { t } = useTranslation();
   const view = useCloseOutView(c.id);
+  const hideHighlights = useCloseOut((s) => s.hideHighlights);
   const byUid = useAnnotationMap(docId);
   const name = useDocuments((s) => s.docs[docId]?.meta.name ?? '');
   const all = rowsOf(byUid);
-  const rows = useMemo(() => filterRows(all, view.filter), [all, view.filter]);
-  const n = counts(all);
+  const listed = useMemo(() => withoutHighlights(all, hideHighlights), [all, hideHighlights]);
+  const rows = useMemo(
+    () => filterRows(all, view.filter, hideHighlights),
+    [all, view.filter, hideHighlights],
+  );
+  const n = counts(listed);
   const selected = view.selected?.docId === docId ? view.selected.id : null;
   const optionId = (id: string): string => `${c.id}-closeout-${docId}-${id}`;
   const pick = (row: CloseOutRow | undefined): void => {
     if (!row) return;
     updateCloseOut(c.id, (v) => ({ ...v, selected: { docId, id: row.id } }));
-    reveal(c, docId, row);
+    revealComment(c, docId, row);
   };
   const onKey = (e: KeyboardEvent): void => {
     const at = rows.findIndex((r) => r.id === selected);
@@ -205,45 +217,67 @@ function CloseOutList({
             {all.length === 0 ? t('compare.closeout.empty') : t('compare.closeout.emptyFilter')}
           </p>
         ) : (
-          rows.map((r) => (
-            // eslint-disable-next-line jsx-a11y/click-events-have-key-events -- the listbox handles the keys
-            <div
-              key={r.id}
-              id={optionId(r.id)}
-              role="option"
-              tabIndex={-1}
-              aria-selected={r.id === selected}
-              className="closeout-row"
-              data-state={r.state}
-              data-id={r.id}
-              onClick={() => {
-                pick(r);
-              }}
-            >
-              <span className="closeout-row-head">
-                <span className="closeout-row-type">{t(annotationTypeKey(r.annot))}</span>
-                <span className="closeout-state" data-state={r.state}>
-                  {t(STATE[r.state])}
-                </span>
-              </span>
-              <span className="closeout-row-text">
-                {t('compare.closeout.row', {
-                  number: format.number(r.number),
-                  text: r.firstLine || t('compare.closeout.noText'),
-                })}
-              </span>
-              <span className="closeout-row-meta">
-                {t('compare.closeout.rowMeta', {
-                  page: format.number(r.page + 1),
-                  author: r.author,
-                })}
-              </span>
-            </div>
-          ))
+          CLOSE_OUT_GROUPS.map((g) => {
+            const inGroup = rows.filter((r) => r.group === g);
+            if (inGroup.length === 0) return null;
+            const groupId = `${c.id}-closeout-${docId}-group-${g}`;
+            return (
+              <div
+                key={g}
+                role="group"
+                aria-labelledby={groupId}
+                className="closeout-group"
+                data-group={g}
+              >
+                <p id={groupId} aria-hidden="true" className="closeout-group-title">
+                  {t(GROUP[g], { count: inGroup.length })}
+                </p>
+                {inGroup.map(row)}
+              </div>
+            );
+          })
         )}
       </div>
     </section>
   );
+
+  function row(r: CloseOutRow) {
+    return (
+      // eslint-disable-next-line jsx-a11y/click-events-have-key-events -- the listbox handles the keys
+      <div
+        key={r.id}
+        id={optionId(r.id)}
+        role="option"
+        tabIndex={-1}
+        aria-selected={r.id === selected}
+        className="closeout-row"
+        data-state={r.state}
+        data-id={r.id}
+        onClick={() => {
+          pick(r);
+        }}
+      >
+        <span className="closeout-row-head">
+          <span className="closeout-row-type">{t(annotationTypeKey(r.annot))}</span>
+          <span className="closeout-state" data-state={r.state}>
+            {t(STATE[r.state])}
+          </span>
+        </span>
+        <span className="closeout-row-text">
+          {t('compare.closeout.row', {
+            number: format.number(r.number),
+            text: r.firstLine || t('compare.closeout.noText'),
+          })}
+        </span>
+        <span className="closeout-row-meta">
+          {t('compare.closeout.rowMeta', {
+            page: format.number(r.page + 1),
+            author: r.author,
+          })}
+        </span>
+      </div>
+    );
+  }
 }
 
 /** The buttons that act on the selected comment of the list. */
@@ -265,18 +299,27 @@ function CloseOutActions({ comparison: c }: { comparison: Comparison }) {
       aria-label={t('compare.closeout.actions')}
       data-testid="closeout-actions"
     >
-      {OUTCOMES.map((o) => (
-        <Button
-          key={o}
-          label={t(ACTION[o])}
-          size="small"
-          disabled={!row || !!blocked || (o === 'carried' && !!copyWhy)}
-          title={why(noRow ?? blocked ?? (o === 'carried' ? copyWhy : null))}
-          onClick={() => {
+      <DropdownMenu
+        trigger={
+          <Button
+            label={t('compare.closeout.closeOutAs')}
+            size="small"
+            variant="primary"
+            disabled={!row || !!blocked}
+            title={why(noRow ?? blocked)}
+          />
+        }
+        entries={OUTCOMES.map((o) => ({
+          id: `closeout-${o}`,
+          label: t(ACTION[o]),
+          description:
+            o === 'carried' && copyWhy ? `${t(ACTION_HINT[o])} ${t(copyWhy)}` : t(ACTION_HINT[o]),
+          disabled: o === 'carried' && !!copyWhy,
+          onSelect: () => {
             if (sel && row) void closeOut(sel.docId, [row.annot], o);
-          }}
-        />
-      ))}
+          },
+        }))}
+      />
       <Button
         label={t('compare.closeout.reopen')}
         size="small"

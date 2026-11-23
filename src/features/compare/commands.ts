@@ -1,5 +1,7 @@
 // The Compare ribbon tab and Compare with… on a document tab's menu (M12-08, D-58).
 // None needs an active document: each opens a comparison tab on its input window.
+import { setComparisonCloseGuard } from '../open/openDocument';
+import { guardComparisonClose } from './file/closePrompt';
 import { addCommandGuard, notify, registerCommand } from '../../app/commands/dispatch';
 import { pairingStore } from './pairingFlow';
 import { textStore } from './text/textFlow';
@@ -191,6 +193,8 @@ export function registerCompareCommands(): () => void {
     }),
     // Ctrl+S in a comparison is Save review; a comparison file opened becomes its comparison.
     setSaveRedirect(reviewRedirect),
+    // Closing a comparison asks about what only a comparison file keeps (M12-27).
+    setComparisonCloseGuard(guardComparisonClose),
     () => {
       setOpenedHook(null);
       for (const off of offStores) off();

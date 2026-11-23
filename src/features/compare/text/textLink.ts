@@ -342,6 +342,38 @@ export class TextLink {
     this.refresh();
   }
 
+  /**
+   * Zooms both windows to `level` (M12-27: a small comment of the close-out
+   * list), B first and A on the next frame (one window's new layout per task,
+   * rule 1); resolves once both are laid out at it and the link has settled.
+   */
+  async zoomTo(level: number): Promise<boolean> {
+    const zoom = zoomCap();
+    if (!zoom) return false;
+    this.quietUntil = performance.now() + 1500;
+    for (const side of ['b', 'a'] as const) {
+      const w = this.windows.get(side);
+      if (!w) return false;
+      if (!sameScale(zoom.forDocument(w.docId).getState().currentZoomLevel, level))
+        zoom.forDocument(w.docId).requestZoom(level);
+      await nextFrame();
+    }
+    for (let i = 0; i < 90; i++) {
+      const done = (['a', 'b'] as const).every((side) => {
+        const l = this.laid(side);
+        return !!l && sameScale(l.scale, level);
+      });
+      if (done) {
+        // The link's own settle drives once both are laid out: let it, then centre.
+        await nextFrame();
+        await nextFrame();
+        return true;
+      }
+      await nextFrame();
+    }
+    return false;
+  }
+
   /** Centres entry `id` on both sides; false when the windows are not laid out yet. */
   centreEntry(id: number): boolean {
     const p = this.located()?.places[id];
