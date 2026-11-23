@@ -35,9 +35,13 @@ async function exportAs(page: Page, format: 'Excel workbook (.xlsx)' | 'CSV (.cs
   return { name: file.suggestedFilename(), bytes: readFileSync(await file.path()) };
 }
 
-/** The CSV's lines (BOM dropped; a quoted cell may hold a line break, so count records by number). */
+/** The CSV's lines, BOM dropped (the cells checked here hold no line breaks). */
 const csvLines = (bytes: Buffer): string[] =>
-  bytes.toString('utf8').replace(/^﻿/u, '').split('\r\n').filter(Boolean);
+  bytes
+    .toString('utf8')
+    .replace(/^\uFEFF/u, '')
+    .split('\r\n')
+    .filter(Boolean);
 
 /** Waits until every sheet is detected; the number of differences the list shows. */
 async function listed(page: Page): Promise<number> {
