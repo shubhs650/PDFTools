@@ -49,11 +49,14 @@ export function ReviewLayout({
   sheet,
   index,
   notesId,
+  fitKey = '',
 }: {
   comparison: Comparison;
   sheet: Sheet;
   index: number;
   notesId: string;
+  /** Changes when a side pane is shown or hidden: the overlay is fitted again. */
+  fitKey?: string;
 }) {
   const { t } = useTranslation();
   const view = useOverlayView(c.id);
@@ -98,7 +101,7 @@ export function ReviewLayout({
 
   // The windows on screen: their documents, pages and maps into the overlay's frame. A new
   // placement (an alignment found, or set by hand: M12-13) moves the others; it does not refit.
-  const sheetKey = JSON.stringify([review, notesId, index, sheet.a, sheet.b]);
+  const sheetKey = JSON.stringify([review, notesId, index, sheet.a, sheet.b, fitKey]);
   const windowsKey = JSON.stringify([sheetKey, place, sides]);
   /** The sheet the overlay was last fitted to (a side window mounting later does not refit it). */
   const fitted = useRef<string | null>(null);

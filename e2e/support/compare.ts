@@ -45,6 +45,16 @@ export async function overlayOf(page: Page, id: string): Promise<void> {
 }
 
 /**
+ * Hides the differences pane (M12-14), for tests that measure the overlay at
+ * the width it had before the pane, and waits for the drawing again.
+ */
+export async function hideDifferences(page: Page): Promise<void> {
+  await page.getByRole('button', { name: 'Differences list', exact: true }).click();
+  await expect(page.getByTestId('diff-pane')).toHaveCount(0);
+  await overlayDrawn(page);
+}
+
+/**
  * Waits until the sheet shown is aligned (its overlay is then drawn through the
  * alignment, M12-10) and every visible tile of the current state is on screen.
  */

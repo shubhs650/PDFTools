@@ -200,7 +200,13 @@ export function OverlayResult({ comparison: c }: { comparison: Comparison }) {
           <IgnoreZones id={c.id} sheets={sheets} current={index} />
         </aside>
         {notes?.status === 'ready' && notes.docId ? (
-          <ReviewLayout comparison={c} sheet={sheet} index={index} notesId={notes.docId} />
+          <ReviewLayout
+            comparison={c}
+            sheet={sheet}
+            index={index}
+            notesId={notes.docId}
+            fitKey={`${String(diffPane)}|${String(closeOutOpen)}`}
+          />
         ) : notes?.status === 'failed' ? (
           <p className="overlay-wait" role="status">
             {t('compare.review.notesFailed')}

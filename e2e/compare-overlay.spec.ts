@@ -1,7 +1,7 @@
 import AxeBuilder from '@axe-core/playwright';
 import type { Page } from '@playwright/test';
 import { darkTheme } from './support/app.ts';
-import { overlayDrawn, overlayOf, overlayView } from './support/compare.ts';
+import { hideDifferences, overlayDrawn, overlayOf, overlayView } from './support/compare.ts';
 import { expect, test } from './support/fixtures.ts';
 
 // M12-11 (D-59): the overlay view. Both revisions are drawn by the Render
@@ -89,6 +89,7 @@ test('pair 01: old red, new green, the same black; the floating bar changes the 
   page,
 }) => {
   await overlayOf(page, '01');
+  await hideDifferences(page);
   await expect(view(page)).toHaveAccessibleName(
     'Overlay of sheet 1: Pair 01 RevA.pdf in red, Pair 01 RevB.pdf in green',
   );
@@ -264,6 +265,7 @@ test('pair 19: comments are drawn on top and can be switched off; check highligh
   page,
 }) => {
   await overlayOf(page, '19');
+  await hideDifferences(page);
   // The checker's yellow marks (Highlight, and Multiply ink over the drawing) are comments of A.
   const shown = await colours(page);
   expect(shown.yellow).toBeGreaterThan(500);
