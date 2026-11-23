@@ -184,6 +184,7 @@ function fakeSpawn(world: FakeWorld) {
         throw new Error('not used');
       },
       compareLayersRelease: () => null,
+      compareVectorOverlay: () => ({ bytes: new ArrayBuffer(0), stats: {} as never }),
     });
     const port = ch.port2;
     port.start();

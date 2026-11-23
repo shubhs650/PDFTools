@@ -10,6 +10,7 @@ import type { Band, BandRequest } from '../workers/work/print';
 import type { FlattenOptions } from '../workers/work/flatten';
 import type { LayerList } from '../model/ocg';
 import type { LayerStates } from '../workers/shared/layerCopy';
+import type { VectorOverlayRequest, VectorOverlayStats } from '../workers/work/vectorOverlay';
 import type { DocProperties } from '../workers/work/properties';
 import type { SignatureInfo } from '../workers/work/signatures';
 import type {
@@ -537,6 +538,19 @@ export interface WorkApi {
   compareLayerCopy: MethodSpec<{ docId: string; layers: LayerStates }, { bytes: ArrayBuffer }>;
   /** Closes the layer copies of these documents kept for the analysis rasters. */
   compareLayersRelease: MethodSpec<{ docIds: string[] }, null>;
+  /**
+   * The vector overlay PDF of a PDF overlay's sheets (M12-16, D-59, ADR-032
+   * route 2): one page per sheet, A recoloured and aligned, B multiplied over
+   * it, the layers merged as the overlay shows them. `exported`: the file
+   * leaves the app (Export Overlay…), so every file's content-copying
+   * permission is required (rule 9); the beta display mode is viewing.
+   * Progress counts sheets; the bytes are transferred.
+   */
+  compareVectorOverlay: MethodSpec<
+    VectorOverlayRequest & { exported: boolean },
+    { bytes: ArrayBuffer; stats: VectorOverlayStats },
+    { done: number; total: number }
+  >;
   textStats: MethodSpec<
     { docId: string; priority?: WorkPriority },
     { pages: number; chars: number; ms: number },

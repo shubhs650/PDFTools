@@ -9,6 +9,7 @@ import {
   LineThickness20Regular,
 } from '@fluentui/react-icons/svg/line-thickness';
 import { PageFit20Regular } from '@fluentui/react-icons/svg/page-fit';
+import { Shapes20Filled, Shapes20Regular } from '@fluentui/react-icons/svg/shapes';
 import { ZoomIn20Regular } from '@fluentui/react-icons/svg/zoom-in';
 import { ZoomOut20Regular } from '@fluentui/react-icons/svg/zoom-out';
 import { useId, useState, type ReactNode } from 'react';
@@ -36,6 +37,7 @@ import {
   setColour,
   setFade,
   setPreset,
+  setVector,
   toggleSide,
   updateView,
   useOverlayView,
@@ -59,7 +61,7 @@ function Swatch({ colour }: { colour: string }) {
 /**
  * The floating bar over the overlay (D-59, Q18): show or hide each revision,
  * the balance between them, Fade unchanged, Thicken thin lines, Blink (hold),
- * the colours, and the zoom.
+ * the colours, the "Vector overlay (beta)" display mode (M12-16) and the zoom.
  */
 export function FloatingBar({
   id,
@@ -85,6 +87,8 @@ export function FloatingBar({
   };
   const s = view.style;
   const both = sheet.a !== null && sheet.b !== null;
+  // The vector page is one drawing (M12-16): the screen drawing's own controls are off.
+  const screenOnly = view.vector;
   const preset = presetOf(s.colA, s.colB);
   const balanceText =
     s.balance <= -1
@@ -136,7 +140,7 @@ export function FloatingBar({
         <BalanceSlider
           value={s.balance}
           valueText={balanceText}
-          disabled={!both}
+          disabled={!both || screenOnly}
           onChange={(b) => {
             set((v) => setBalance(v, b));
           }}
@@ -160,7 +164,7 @@ export function FloatingBar({
           iconOnly
           icon={<Blur20Regular />}
           pressed={s.fade > 0}
-          disabled={!both}
+          disabled={!both || screenOnly}
           onPressedChange={(on) => {
             set((v) => setFade(v, on));
           }}
@@ -171,14 +175,29 @@ export function FloatingBar({
           icon={<LineThickness20Regular />}
           pressedIcon={<LineThickness20Filled />}
           pressed={view.thicken}
+          disabled={screenOnly}
           onPressedChange={(on) => {
             set((v) => ({ ...v, thicken: on }));
           }}
         />
-        <BlinkButton disabled={!both} active={view.blink !== null} onBlink={onBlink} />
+        <BlinkButton
+          disabled={!both || screenOnly}
+          active={view.blink !== null}
+          onBlink={onBlink}
+        />
         <DropdownMenu
           trigger={<IconButton label={t('compare.overlay.colours')} icon={<Color20Regular />} />}
           entries={colourEntries}
+        />
+        <ToggleButton
+          label={t('compare.overlay.vector')}
+          iconOnly
+          icon={<Shapes20Regular />}
+          pressedIcon={<Shapes20Filled />}
+          pressed={view.vector}
+          onPressedChange={(on) => {
+            set((v) => setVector(v, on));
+          }}
         />
       </Group>
       <Group>

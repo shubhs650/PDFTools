@@ -174,7 +174,8 @@
       "text": "Text Comparison",
       "copyToNew": "Copy to New Revision",
       "copyToOld": "Copy to Old Revision",
-      "closeOut": "Close Out"
+      "closeOut": "Close Out",
+      "exportOverlay": "Export Overlay…"
     },
     "protect": {
       "markRedaction": "Mark for Redaction",
@@ -340,7 +341,8 @@
         "ocr": "OCR"
       },
       "compare": {
-        "compare": "Compare"
+        "compare": "Compare",
+        "output": "Output"
       },
       "protect": {
         "redact": "Redact",
@@ -3035,7 +3037,9 @@
       "colourName_blue": "blue",
       "colourName_magenta": "magenta",
       "colourName_custom": "its own colour",
-      "drawing": "Drawing the overlay…"
+      "drawing": "Drawing the overlay…",
+      "vector": "Vector overlay (beta): draw the sheet as the exported PDF draws it",
+      "vectorFailed": "The vector overlay couldn't be made for this sheet, so it is drawn the usual way."
     },
     "align": {
       "asIs": "As is",
@@ -3315,6 +3319,30 @@
       "setSave": "Save as set",
       "setSaved": "Saved “{{name}}”.",
       "setApplied": "Using “{{name}}”."
+    },
+    "export": {
+      "title": "Export Overlay",
+      "description": "Save the overlay as a new PDF: {{name}}.",
+      "details": "Each sheet becomes one page in vector form: Document A (old) and Document B (new) in their colours, what is the same in black, through the alignment and with the layers as shown. Comments, notes and the two files themselves are not included.",
+      "fileName": "{{a}} vs {{b}} (overlay).pdf",
+      "layersOld": "Old — {{name}}",
+      "layersNew": "New — {{name}}",
+      "scope": "Sheets",
+      "scope_all_one": "All sheets ({{n}})",
+      "scope_all_other": "All sheets ({{n}})",
+      "scope_sheet": "The sheet shown",
+      "export": "Export…",
+      "close": "Close",
+      "cancel": "Cancel",
+      "progressName": "Drawing the overlay",
+      "aligning": "Waiting until every sheet is aligned…",
+      "progress": "Drawing sheets: {{done}} of {{total}}",
+      "failed": "The overlay couldn't be exported.",
+      "denied": "A file of this comparison doesn't allow copying content, so the overlay can't be exported.",
+      "blocked": "{{name}} doesn't allow copying content, so the overlay can't be exported. Unlock it with its permissions password first.",
+      "needsOverlay": "Open a PDF overlay to export it.",
+      "needsResult": "Compare first: the overlay is exported from the result.",
+      "needsCopy": "A file of this comparison doesn't allow copying content."
     }
   }
 }

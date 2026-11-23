@@ -40,6 +40,7 @@ import { ensureNotes, useNotes } from '../review/notes';
 import { ReviewLayout } from '../review/ReviewLayout';
 import { renderEngine, workClient } from '../../view/host';
 import { closeLayerCopies } from './layerCopies';
+import { closeVectorPages } from './vectorOverlay';
 import { documentsOf } from '../model';
 import { CloseOutPane } from '../closeout/CloseOutPane';
 import { CloseOutToggle } from '../closeout/CloseOutToggle';
@@ -77,6 +78,8 @@ function watchClosing(c: Comparison): void {
         .promise.catch(() => undefined);
       // The layer copies of its documents (layer switches, Q24), in both workers.
       closeLayerCopies(docIds);
+      // Its vector overlay pages (the display mode, M12-16).
+      closeVectorPages(id);
       void workClient()
         .releaseLayers(docIds)
         .catch(() => undefined);

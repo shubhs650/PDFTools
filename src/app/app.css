@@ -6952,6 +6952,21 @@ textarea.form-field {
   right: var(--space-4);
 }
 
+/* The vector overlay (beta) could not be built for this sheet (M12-16). */
+.overlay-vector-failed {
+  position: absolute;
+  top: var(--space-3);
+  left: var(--space-4);
+  max-width: 40ch;
+  margin: var(--space-0);
+  padding: var(--space-1) var(--space-3);
+  border: var(--border-width) solid var(--color-border);
+  border-radius: var(--radius-m);
+  background: var(--color-surface-raised);
+  color: var(--color-text);
+  box-shadow: var(--elevation-2);
+}
+
 .overlay-bar {
   position: absolute;
   right: var(--space-4);
