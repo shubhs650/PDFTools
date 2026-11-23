@@ -29,6 +29,8 @@ export interface ContextMenuProps {
   onOpenChange?: (open: boolean) => void;
   /** Where focus goes when the menu closes (default: back to where it was). */
   onCloseAutoFocus?: (e: Event) => void;
+  /** A heading shown above the items (M12-21·O4: "Compare these two"); translated. */
+  heading?: string;
 }
 
 const NOT_READY = { enabled: false, pressed: false, reason: msg('ribbon.notReady') } as const;
@@ -64,6 +66,7 @@ export function ContextMenu({
   stateOf,
   onOpenChange,
   onCloseAutoFocus,
+  heading,
 }: ContextMenuProps) {
   return (
     <CM.Root modal {...(onOpenChange ? { onOpenChange } : {})}>
@@ -76,6 +79,7 @@ export function ContextMenu({
           loop
           {...(onCloseAutoFocus ? { onCloseAutoFocus } : {})}
         >
+          {heading ? <CM.Label className="ui-menu-heading">{heading}</CM.Label> : null}
           <Body kit={CONTEXT_KIT} entries={entries} args={args} stateOf={stateOf} />
         </CM.Content>
       </CM.Portal>

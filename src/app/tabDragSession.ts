@@ -6,8 +6,16 @@
 // along the row, the others slide out of its way (CSS transitions on `transform`),
 // the row scrolls near its ends, Esc puts everything back. Positions are measured once
 // at the lift; each move only sets transforms (no layout per frame, rule 1).
+//
+// M12-21·O4 (D-58): held still for half a second while it covers another document tab,
+// the lifted tab takes that tab as its drop target (the order stops changing); let go
+// there, the strip offers "Compare these two". Moving on lets the target go.
 import {
   clampLeft,
+  COMPARE_HOLD_MS,
+  COMPARE_RELEASE_PX,
+  COMPARE_STILL_PX,
+  coveredTab,
   DRAG_THRESHOLD_PX,
   dropIndex,
   edgeSpeed,
@@ -44,6 +52,12 @@ export interface TabDragHost {
    * its menu, as a long press does in a touch browser's tab strip.
    */
   menu(id: string): void;
+  /** Can tab `id` be dropped on tab `on` (two documents, Compare shown; O4)? */
+  canDropOn(id: string, on: string): boolean;
+  /** The tab the lifted tab would drop on (null: none), to show it. */
+  target(on: string | null): void;
+  /** Let go on tab `on` (O4): offer "Compare these two". */
+  dropOn(id: string, on: string): void;
 }
 
 type Phase = 'pressed' | 'panning' | 'dragging' | 'done';
@@ -78,6 +92,7 @@ export function beginTabPress(
   const startX = e.clientX;
   const startY = e.clientY;
   let lastX = startX;
+  let lastY = startY;
   let phase: Phase = 'pressed';
   let panX = 0;
   let panScroll = 0;
@@ -93,10 +108,16 @@ export function beginTabPress(
   let rowEnd = 0;
   let listLeft = 0;
   let raf = 0;
-  let hold: ReturnType<typeof setTimeout> | undefined;
+  let holdTimer: ReturnType<typeof setTimeout> | undefined;
   // Touch: did the lifted tab move (a drag), or was it held and let go (its menu)?
   let liftX = 0;
   let movedSinceLift = false;
+  // Drop on a tab (O4): the hold timer, where the pointer was held, and the target.
+  let still: ReturnType<typeof setTimeout> | undefined;
+  let stillX = 0;
+  let stillY = 0;
+  let targetX = 0;
+  let onto = -1;
 
   try {
     target.setPointerCapture(pointerId);
@@ -106,11 +127,15 @@ export function beginTabPress(
 
   const contentX = (x: number): number => x - listLeft + list.scrollLeft;
 
+  const leftNow = (): number => clampLeft(slots, from, contentX(lastX) - grab);
+
+  /** The lifted tab follows the pointer; while it has a drop target the order holds. */
   const place = (): void => {
     const slot = slots[from];
     if (!slot) return;
-    const left = clampLeft(slots, from, contentX(lastX) - grab);
+    const left = leftNow();
     setX(els[from] ?? [], left - slot.left);
+    if (onto >= 0) return;
     const next = dropIndex(slots, from, left);
     if (next === to) return;
     to = next;
@@ -119,9 +144,42 @@ export function beginTabPress(
     });
   };
 
+  const setTarget = (j: number): void => {
+    if (j === onto) return;
+    onto = j;
+    host.target(j >= 0 ? (ids[j] ?? null) : null);
+  };
+
+  /** Held still: the tab the lifted one covers becomes its drop target (O4). */
+  const hold = (): void => {
+    still = undefined;
+    if (phase !== 'dragging' || onto >= 0) return;
+    // Held by either end of a long row, the row scrolls: that is not a drop on a tab.
+    if (list.scrollWidth > list.clientWidth && edgeSpeed(lastX, rowStart, rowEnd) !== 0) return;
+    const dragged = ids[from];
+    if (dragged === undefined) return;
+    const j = coveredTab(slots, from, to, leftNow(), (k) => {
+      const on = ids[k];
+      return on !== undefined && host.canDropOn(dragged, on);
+    });
+    if (j === null) return;
+    targetX = lastX;
+    setTarget(j);
+  };
+
+  /** Restarts the hold time when the pointer moved (each move, and at the lift). */
+  const watchStill = (x: number, y: number, force = false): void => {
+    if (!force && still !== undefined && Math.hypot(x - stillX, y - stillY) < COMPARE_STILL_PX)
+      return;
+    clearTimeout(still);
+    stillX = x;
+    stillY = y;
+    still = setTimeout(hold, COMPARE_HOLD_MS);
+  };
+
   const tick = (): void => {
     raf = 0;
-    if (phase !== 'dragging' || list.scrollWidth <= list.clientWidth) return;
+    if (phase !== 'dragging' || onto >= 0 || list.scrollWidth <= list.clientWidth) return;
     const v = edgeSpeed(lastX, rowStart, rowEnd);
     if (v === 0) return;
     const before = list.scrollLeft;
@@ -176,6 +234,7 @@ export function beginTabPress(
     movedSinceLift = false;
     host.lift(id);
     place();
+    watchStill(lastX, lastY, true);
   };
 
   const putBack = (): void => {
@@ -189,7 +248,8 @@ export function beginTabPress(
   function finish(drop: boolean): void {
     const was = phase;
     phase = 'done';
-    clearTimeout(hold);
+    clearTimeout(holdTimer);
+    clearTimeout(still);
     if (raf) cancelAnimationFrame(raf);
     window.removeEventListener('pointermove', onMove, true);
     window.removeEventListener('pointerup', onUp, true);
@@ -202,10 +262,19 @@ export function beginTabPress(
     if (was === 'panning') host.swallowClick();
     if (was !== 'dragging') return;
     host.swallowClick();
+    const on = onto >= 0 ? ids[onto] : undefined;
+    if (on !== undefined) host.target(null);
     if (drop && touch && !movedSinceLift) {
       host.end();
       putBack();
       host.menu(id);
+      return;
+    }
+    // Let go on a tab (O4): the order stays as it was, and the strip offers to compare.
+    if (on !== undefined) {
+      host.end();
+      putBack();
+      if (drop && ids.join('\n') === host.order().join('\n')) host.dropOn(id, on);
       return;
     }
     // The order changed under the drag (a file closed): nothing to drop into.
@@ -219,11 +288,12 @@ export function beginTabPress(
   function onMove(ev: PointerEvent): void {
     if (ev.pointerId !== pointerId) return;
     lastX = ev.clientX;
+    lastY = ev.clientY;
     if (phase === 'pressed') {
       const moved = Math.hypot(ev.clientX - startX, ev.clientY - startY);
       if (touch) {
         if (moved < TOUCH_SLOP_PX) return;
-        clearTimeout(hold);
+        clearTimeout(holdTimer);
         phase = 'panning';
         panX = ev.clientX;
         panScroll = list.scrollLeft;
@@ -237,6 +307,8 @@ export function beginTabPress(
     if (phase !== 'dragging') return;
     ev.preventDefault();
     if (Math.abs(ev.clientX - liftX) >= TOUCH_SLOP_PX) movedSinceLift = true;
+    if (onto >= 0 && Math.abs(ev.clientX - targetX) >= COMPARE_RELEASE_PX) setTarget(-1);
+    watchStill(ev.clientX, ev.clientY);
     place();
     if (!raf) raf = requestAnimationFrame(tick);
   }
@@ -263,7 +335,10 @@ export function beginTabPress(
   }
 
   function onScroll(): void {
-    if (phase === 'dragging') place();
+    if (phase !== 'dragging') return;
+    place();
+    // The tabs moved under the pointer: the hold time starts again.
+    if (onto < 0) watchStill(lastX, lastY, true);
   }
 
   const session = {
@@ -281,7 +356,7 @@ export function beginTabPress(
   list.addEventListener('scroll', onScroll, { passive: true });
   target.addEventListener('lostpointercapture', onCancel);
   if (touch)
-    hold = setTimeout(() => {
+    holdTimer = setTimeout(() => {
       if (phase === 'pressed') lift();
     }, TOUCH_HOLD_MS);
 }

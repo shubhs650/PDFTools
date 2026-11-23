@@ -158,6 +158,25 @@ describe('commands for comparison tabs (M12-08)', () => {
     expect(commandState('tab.compareWith', undefined, { tab: id }).enabled).toBe(false);
   });
 
+  it('Compare these two (a tab dropped on a tab, O4) puts both documents on the sides', async () => {
+    store().open(meta('rev-a'));
+    store().open(meta('rev-b'));
+    expect(await runCommand('compare.text', { pair: ['rev-a', 'rev-b'] })).toBe(true);
+    const id = store().activeTab ?? '';
+    expect(store().comparisons[id]).toMatchObject({ type: 'text', stage: 'input' });
+    expect(tabName(id)).toBe('rev-a ↔ rev-b');
+    // Both documents keep their own tabs (one document each, D-58).
+    expect(store().order).toEqual(['rev-a', 'rev-b', id]);
+    // The comparison's tab goes right after the later of the two, wherever the selection is.
+    store().open(meta('rev-c'));
+    expect(await runCommand('compare.overlay', { pair: ['rev-a', 'rev-b'] })).toBe(true);
+    expect(store().order.indexOf(store().activeTab ?? '')).toBe(2);
+    // A document closed meanwhile: an empty comparison, as from the ribbon.
+    expect(await runCommand('compare.overlay', { pair: ['rev-a', 'gone'] })).toBe(true);
+    const next = store().activeTab ?? '';
+    expect(store().comparisons[next]).toMatchObject({ type: 'overlay', a: [], b: [] });
+  });
+
   it('a comparison tab’s menu has the tab commands, which work on it', async () => {
     store().open(meta('a'));
     store().openComparison(newComparison('cmp', 'overlay'));

@@ -1,6 +1,8 @@
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 import { documentStore, type DocumentSlice } from '../../src/app/store/documentStore';
 import {
+  DROP_ON_TAB_MENU,
+  dropPair,
   renameTarget,
   sortedByName,
   STRIP_MENU,
@@ -229,5 +231,23 @@ describe('closed tabs list (M11-05)', () => {
     });
     await closeDocument('h');
     expect(takeLastClosed()).toMatchObject({ name: 'h.pdf' });
+  });
+});
+
+// M12-21·O4 (D-58): a document tab dropped on another one offers "Compare these two".
+describe('dropPair', () => {
+  const order = ['a', 'b', 'c'];
+
+  it('puts the tab first in the strip on Document A (old), whichever was dragged', () => {
+    expect(dropPair(order, 'a', 'c')).toEqual(['a', 'c']);
+    expect(dropPair(order, 'c', 'a')).toEqual(['a', 'c']);
+    expect(dropPair(order, 'b', 'c')).toEqual(['b', 'c']);
+  });
+
+  it('offers both comparison types', () => {
+    expect(DROP_ON_TAB_MENU.map((e) => (e.kind === 'command' ? e.id : ''))).toEqual([
+      'compare.overlay',
+      'compare.text',
+    ]);
   });
 });

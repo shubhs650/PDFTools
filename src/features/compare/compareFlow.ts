@@ -45,16 +45,18 @@ export const openingCount = (s: CompareUiState, id: string, side: SideId): numbe
   s.opening[openingKey(id, side)] ?? 0;
 
 /**
- * Opens a comparison tab on its input window, after the selected tab, and selects it.
- * `a`, `b`: open documents to put on the sides (Compare with…).
+ * Opens a comparison tab on its input window, after the selected tab (or at index `at`
+ * of the strip), and selects it. `a`, `b`: open documents to put on the sides (Compare
+ * with…, Compare these two).
  */
 export function startComparison(
   type: CompareType,
   a: readonly string[] = [],
   b: readonly string[] = [],
+  at?: number,
 ): string {
   const id = newComparisonId();
-  documentStore.getState().openComparison(newComparison(id, type, a, b));
+  documentStore.getState().openComparison(newComparison(id, type, a, b), at);
   return id;
 }
 
