@@ -75,7 +75,7 @@ describe('picking point pairs', () => {
     let v = started();
     v = pickPoint(v, 'b', { x: 50, y: 50 });
     v = pickPoint(v, 'b', { x: 60, y: 50 });
-    expect(v.manual?.points).toEqual([{ a: null, b: { x: 60, y: 50 } }]);
+    expect(v.manual?.points).toEqual([{ a: null, b: { x: 60, y: 50 }, first: 'b' }]);
     expect(v.manual && nextSide(v.manual)).toBe('a');
     v = pickPoint(v, 'a', { x: 40, y: 50 });
     expect(v.manual?.place).toEqual([1, 0, 0, 1, 20, 0]);

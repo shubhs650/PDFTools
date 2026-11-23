@@ -221,6 +221,19 @@ describe('reopening restores', () => {
     expect([...r.manual]).toEqual([[0, [1, 0, 0, 1, 5, 6]]]);
   });
 
+  it('the sheets whose uncertain alignment the user accepted ("Checked by you", M12-26)', () => {
+    const r = overlayRestore(overlay, {
+      ...base(),
+      sheets: [
+        { a: [0, 0], b: [0, 0], status: 'lowConfidence', checked: true },
+        { a: [1, 0], b: [0, 1], status: 'lowConfidence' },
+        { a: [1, 1], b: [0, 2], aToB: [1, 0, 0, 1, 2, 3], status: 'manual', checked: true },
+      ],
+    });
+    expect([...r.checked]).toEqual([0]);
+    expect([...r.manual.keys()]).toEqual([2]);
+  });
+
   it('ignores options of the wrong type', () => {
     const r = overlayRestore(overlay, {
       ...base(),

@@ -434,12 +434,18 @@ describe('alignment against the corpus manifest', () => {
 
 describe('what the status says', () => {
   const fmt = createFormatters('en-US');
-  it('as is, auto-aligned with its values, low confidence with a hint', () => {
+  it('plain words (M12-26): already lined up, lined up automatically with its values, check alignment with a hint', () => {
     const asIsText = alignmentText(
       { status: 'as-is', method: 'vector', place: [1, 0, 0, 1, 0, 0], score: 1 },
+      false,
       fmt,
     );
-    expect(asIsText).toEqual({ status: 'As is', values: null, hint: null });
+    expect(asIsText).toEqual({
+      status: 'Already lined up',
+      shown: 'as-is',
+      values: null,
+      hint: null,
+    });
     const auto = alignmentText(
       {
         status: 'auto',
@@ -447,15 +453,26 @@ describe('what the status says', () => {
         place: simToAffine(simFrom(0.982, -1.2, 14, -0.001)),
         score: 0.98,
       },
+      false,
       fmt,
     );
-    expect(auto.status).toBe('Auto-aligned');
+    expect(auto.status).toBe('Lined up automatically');
     expect(auto.values).toBe('Shift 14.0, 0.0 pt · scale 98.2% · rotation -1.20°');
-    const low = alignmentText(
-      { status: 'low', method: 'image', place: [1, 0, 0, 1, 0, 0], score: 2 },
-      fmt,
+    const lowAl: SheetAlignment = {
+      status: 'low',
+      method: 'image',
+      place: [1, 0, 0, 1, 0, 0],
+      score: 2,
+    };
+    const low = alignmentText(lowAl, false, fmt);
+    expect(low.status).toBe('Check alignment');
+    expect(low.hint).toMatch(/line it up by hand/);
+    // "It looks right": Checked by you, no hint.
+    const checked = alignmentText(lowAl, true, fmt);
+    expect(checked).toMatchObject({ status: 'Checked by you', shown: 'checked', hint: null });
+    // Checked only stands for an uncertain alignment; by hand stays by hand.
+    expect(alignmentText({ ...lowAl, status: 'manual' }, true, fmt).status).toBe(
+      'Lined up by hand',
     );
-    expect(low.status).toBe('Low confidence');
-    expect(low.hint).toMatch(/align the sheet by points/);
   });
 });

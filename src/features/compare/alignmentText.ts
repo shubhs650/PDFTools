@@ -1,13 +1,26 @@
-// What a sheet's alignment says to the user (M12-10, D-60): its status — as
-// is, auto-aligned with the shift, scale and rotation found, or low
-// confidence — for the sheet list of the result (M12-11).
+// What a sheet's alignment says to the user (M12-10, D-60; plain words since
+// M12-26, ADR-033): Already lined up, Lined up automatically (with the shift,
+// scale and rotation found), Check alignment, Lined up by hand, or Checked by
+// you — for the sheet list, the Alignment section and the banner.
 import { format as appFormat, msg, t } from '../../i18n';
 import type { Formatters } from '../../i18n/format';
-import { alignmentValues, type SheetAlignment } from '../../model/compare/align/aligner';
+import {
+  alignmentValues,
+  type AlignStatus,
+  type SheetAlignment,
+} from '../../model/compare/align/aligner';
+
+/** The status the user sees: the alignment's own, or "Checked by you" (M12-26). */
+export type ShownStatus = AlignStatus | 'checked';
+
+/** "Checked by you" stands for an uncertain alignment the user accepted. */
+export const shownStatus = (al: SheetAlignment, checked: boolean): ShownStatus =>
+  checked && al.status === 'low' ? 'checked' : al.status;
 
 export interface AlignmentText {
-  /** "As is", "Auto-aligned" or "Low confidence". */
+  /** "Already lined up", "Lined up automatically", "Check alignment", "Lined up by hand", "Checked by you". */
   status: string;
+  shown: ShownStatus;
   /** The values found ("Shift 14.0, 9.0 pt · scale 98.2% · rotation 0.00°"), or null as is. */
   values: string | null;
   /** What to do about a low-confidence sheet, or null. */
@@ -19,9 +32,15 @@ const STATUS = {
   auto: msg('compare.align.auto'),
   low: msg('compare.align.low'),
   manual: msg('compare.align.manual'),
+  checked: msg('compare.align.checked'),
 } as const;
 
-export function alignmentText(al: SheetAlignment, format: Formatters = appFormat): AlignmentText {
+export function alignmentText(
+  al: SheetAlignment,
+  checked = false,
+  format: Formatters = appFormat,
+): AlignmentText {
+  const shown = shownStatus(al, checked);
   const v = alignmentValues(al.place);
   // −0.00 reads as a sign the user never asked for.
   const fixed = (n: number, digits: number): string =>
@@ -36,8 +55,9 @@ export function alignmentText(al: SheetAlignment, format: Formatters = appFormat
           deg: fixed(v.deg, 2),
         });
   return {
-    status: t(STATUS[al.status]),
+    status: t(STATUS[shown]),
+    shown,
     values,
-    hint: al.status === 'low' ? t('compare.align.lowHint') : null,
+    hint: shown === 'low' ? t('compare.align.lowHint') : null,
   };
 }

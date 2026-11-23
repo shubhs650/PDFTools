@@ -30,6 +30,8 @@ export interface SummarySheet {
   a: boolean;
   b: boolean;
   status: SheetStatus;
+  /** An uncertain alignment the user accepted ("Checked by you", M12-26). */
+  checked?: boolean;
 }
 
 /** What a compared pair's differences are, once found. */
@@ -58,7 +60,7 @@ export interface OverlayFacts {
   /** Differences ticked as checked. */
   checked: number;
   /** Compared sheets by how their placement was found. */
-  placement: Record<SheetStatus, number>;
+  placement: Record<SheetStatus | 'checked', number>;
   /** Ignore zones on every sheet, and per sheet (1-based sheet number, in order). */
   zones: { every: number; sheets: [number, number][] };
 }
@@ -87,7 +89,7 @@ export function overlayFacts(
     kinds: { added: 0, removed: 0, changed: 0 },
     types: { text: 0, geometry: 0, both: 0 },
     checked: 0,
-    placement: { asIs: 0, aligned: 0, manual: 0, lowConfidence: 0 },
+    placement: { asIs: 0, aligned: 0, manual: 0, lowConfidence: 0, checked: 0 },
     zones: { every: 0, sheets: [] },
   };
   const sheetOfPair = new Map<number, number>();
@@ -99,7 +101,7 @@ export function overlayFacts(
     }
     sheetOfPair.set(s.pair, i + 1);
     f.compared++;
-    f.placement[s.status]++;
+    f.placement[s.checked ? 'checked' : s.status]++;
     const r = results[s.pair];
     if (!r) {
       f.pending++;

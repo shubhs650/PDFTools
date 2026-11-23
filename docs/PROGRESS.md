@@ -1,6 +1,6 @@
 # Triya PDF — Progress
 
-_Last updated: 2026-11-23 (M12-27: review in a comparison made easier; M12-25: room to work in a comparison; M12-24: the Compare input window made clearer; M12-23: M12 acceptance, M12 complete on the agent side; M12-22: Compare help and release notes; M12-21·O4: drop a tab on a tab; M12-20: the comparison file; M12-21: change register and presets)_
+_Last updated: 2026-11-23 (M12-26: alignment made easy to find and first-time tips; M12-27: review in a comparison made easier; M12-25: room to work in a comparison; M12-24: the Compare input window made clearer; M12-23: M12 acceptance, M12 complete on the agent side; M12-22: Compare help and release notes; M12-21·O4: drop a tab on a tab; M12-20: the comparison file; M12-21: change register and presets)_
 
 **Current milestone:** M12 — PDF comparison (PDF overlay for drawings, text comparison for
 documents), version 1.1.0: plan [docs/plan/M12.md](plan/M12.md) and
@@ -49,6 +49,29 @@ interop is in the M6 pack (CHECKLIST §M6 R1–R4). Rev 0 (M0–M4) is complete 
   `close-out.test.ts`, `e2e/compare-review-ux.spec.ts` (axe light and dark),
   `e2e/perf/compare-review.spec.ts`; Help topics compare-review and compare-text with new shots;
   a What's new 1.1.0 line.
+- **M12-26 — Alignment made easy to find, and first-time tips (ADR-033 decisions 3 and 7, D-60;
+  plan [M12-ux](plan/M12-ux.md) task C).** Plain status words per sheet (`alignmentText.ts`):
+  Already lined up, Lined up automatically, Check alignment, Lined up by hand, and the new
+  **Checked by you** (`OverlayView.alignChecked`; saved as `checked: true` beside the sheet's
+  status in the comparison data, restored on reopening; the summary page counts it). **Line up**
+  on the floating bar (marked while the sheet needs checking), a **banner** over the windows on a
+  sheet that needs checking (`align/AlignBanner.tsx`: Line up by hand / It looks right), and the
+  guided **step bar** (`align/LineUpBar.tsx`: 1 old point, 2 same point on the new drawing,
+  3 optional second pair, 4 Apply; Undo last point, Pick points, Apply to This sheet / All
+  sheets / Sheets that need checking, Apply, Cancel). The window to click is outlined and says
+  so (`data-line-up`); numbered pins in both windows as before. The Alignment section shows the
+  status and the point pairs, with **Fine-tune** (values, nudges) folded. The maths is unchanged
+  (`manualAlign.ts` gained `undoPoint`, `lineUpStep`, `canApply`, `toggleLineUp`).
+  **First-time tips** (`tips/`): three cards on the first overlay result (colours, differences
+  list, Line up), Next / Got it / Skip tips / Esc, shown until seen to the end or skipped
+  (`localStorage` `pdftools.compareTipsSeen`, listed on the Privacy page, cleared by Clear all);
+  Help's `compare-alignment` topic has a **Show the Compare tips again** button (new Help block
+  `replayTips`), which a result on screen hears at once (storage event). Help topic rewritten with
+  one picture per step (compare-alignment-1 … 5); What's new v1.1.0 line. E2E: the guard fixture
+  marks the tips seen; `showCompareTips()` and `uncertainOverlay()` (pair 01 old against pair 18
+  new, paired by hand: "Check alignment") in `e2e/support/compare.ts`. Tests:
+  `tests/compare/line-up.test.ts`, `e2e/compare-line-up.spec.ts`, `e2e/compare-align.spec.ts`,
+  perf `e2e/perf/compare-line-up.spec.ts`.
 - **M12-25 — Room to work in a comparison (ADR-033, D-62; plan [M12-ux](plan/M12-ux.md) task B).**
   Every comparison pane (the overlay's left pane, Differences, Close-out, the text view's
   Changes) has an edge strip like the app's side panes: its arrow folds the pane to the strip

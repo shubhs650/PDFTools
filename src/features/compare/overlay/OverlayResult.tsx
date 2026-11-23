@@ -20,7 +20,10 @@ import type { Comparison } from '../model';
 import { pairingInputs, startComparing, syncPairing, usePairing } from '../pairingFlow';
 import { typeLabel } from '../title';
 import { alignmentText } from '../alignmentText';
+import { AlignBanner } from '../align/AlignBanner';
 import { AlignPanel } from '../align/AlignPanel';
+import { LineUpBar } from '../align/LineUpBar';
+import { CompareTips } from '../tips/CompareTips';
 import { AreaInfo, AreaPanel } from '../area/AreaPanel';
 import { OverlayLayers } from './OverlayLayers';
 import { frameOf, framePage } from './frames';
@@ -28,6 +31,7 @@ import {
   dropView,
   alignmentOf,
   goSheet,
+  isAlignChecked,
   overlayStore,
   overlayView,
   setAligned,
@@ -122,7 +126,9 @@ export function OverlayResult({ comparison: c }: { comparison: Comparison }) {
     const session = startComparing(c.id);
     if (!session) return;
     updateView(c.id, (v) =>
-      Object.keys(v.aligned).length || v.manual ? { ...v, aligned: {}, manual: null } : v,
+      Object.keys(v.aligned).length || Object.keys(v.alignChecked).length || v.manual
+        ? { ...v, aligned: {}, alignChecked: {}, manual: null }
+        : v,
     );
     // Layer switches stay with the documents: a new session draws with them too (Q24).
     for (const [docId, states] of Object.entries(overlayView(c.id).layers))
@@ -177,6 +183,7 @@ export function OverlayResult({ comparison: c }: { comparison: Comparison }) {
   // Maximise and folded panes leave the windows more room (M12-25, ADR-033).
   const max = useMaximised(c.id);
   const folds = foldKey(useLayout(c.id));
+  const pairCount = sheets.filter((s) => s.pair !== null).length;
 
   let body;
   if (!pairing || pairing.status === 'reading' || pairing.status === 'matching') {
@@ -209,11 +216,7 @@ export function OverlayResult({ comparison: c }: { comparison: Comparison }) {
             <aside className="overlay-side" aria-label={t('compare.overlay.sheets')}>
               <SheetList comparison={c} sheets={sheets} current={index} />
               {c.area ? <AreaInfo comparison={c} sheet={sheet} /> : null}
-              <AlignPanel
-                id={c.id}
-                sheet={sheet}
-                pairs={sheets.filter((s) => s.pair !== null).length}
-              />
+              <AlignPanel id={c.id} sheet={sheet} />
               {c.area ? null : <AreaPanel id={c.id} sheet={sheet} />}
               <OverlayLayers comparison={c} sheet={sheet} />
               <IgnoreZones id={c.id} sheets={sheets} current={index} />
@@ -221,13 +224,20 @@ export function OverlayResult({ comparison: c }: { comparison: Comparison }) {
           </ComparePane>
         )}
         {notes?.status === 'ready' && notes.docId ? (
-          <ReviewLayout
-            comparison={c}
-            sheet={sheet}
-            index={index}
-            notesId={notes.docId}
-            fitKey={`${String(diffPane)}|${String(closeOutOpen)}|${folds}|${String(max)}`}
-          />
+          // The banner of a sheet that needs checking, or the Line up step bar, above the windows (M12-26).
+          <div className="overlay-main">
+            <AlignBanner id={c.id} sheet={sheet} />
+            <LineUpBar id={c.id} sheetNumber={index + 1} pairs={pairCount} />
+            <ReviewLayout
+              comparison={c}
+              sheet={sheet}
+              index={index}
+              notesId={notes.docId}
+              fitKey={`${String(diffPane)}|${String(closeOutOpen)}|${folds}|${String(max)}`}
+            />
+            {/* The first-time tips, once the result is on screen (M12-26). */}
+            <CompareTips id={c.id} />
+          </div>
         ) : notes?.status === 'failed' ? (
           <p className="overlay-wait" role="status">
             {t('compare.review.notesFailed')}
@@ -436,7 +446,7 @@ function SheetList({
                 ? t('compare.overlay.sheetAdded', { b: label(s.b) })
                 : t('compare.overlay.sheetRemoved', { a: label(s.a) });
           const al = alignmentOf(view, s);
-          const alText = al ? alignmentText(al) : null;
+          const alText = al ? alignmentText(al, isAlignChecked(view, s)) : null;
           return (
             // eslint-disable-next-line jsx-a11y/click-events-have-key-events -- the listbox handles the keys
             <div
@@ -456,14 +466,15 @@ function SheetList({
               </span>
               <span className="overlay-sheet-detail">{detail}</span>
               {alText ? (
-                <span className="overlay-sheet-align" data-status={al?.status}>
-                  {i === current && alText.values
+                <span className="overlay-sheet-align" data-status={alText.shown}>
+                  {/* An uncertain alignment's values mean little (the banner says what to do). */}
+                  {i === current &&
+                  alText.values &&
+                  alText.shown !== 'low' &&
+                  alText.shown !== 'checked'
                     ? `${alText.status} · ${alText.values}`
                     : alText.status}
                 </span>
-              ) : null}
-              {i === current && alText?.hint ? (
-                <span className="overlay-sheet-hint">{alText.hint}</span>
               ) : null}
               <SheetStatus state={sheetState(diff, s)} />
             </div>

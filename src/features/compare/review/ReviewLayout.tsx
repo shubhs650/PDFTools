@@ -9,10 +9,11 @@ import {
 } from 'react';
 import { useTranslation } from 'react-i18next';
 import { documentStore, useDocuments } from '../../../app/store/documentStore';
-import { format } from '../../../i18n';
+import { format, msg } from '../../../i18n';
 import { toReference, type WindowRole } from '../../../model/compare/link';
 import { DocumentView, type PageFrameInfo } from '../../view/DocumentView';
 import { AlignPickLayer } from '../align/AlignPickLayer';
+import { nextSide } from '../align/manualAlign';
 import { AreaDrawLayer, AreaMark } from '../area/AreaLayers';
 import { useAreaPick } from '../area/areaPick';
 import { tileCache } from '../../view/host';
@@ -351,6 +352,7 @@ function SideWindow({
   const name = useDocuments((s) => (p ? (s.docs[p.docId]?.meta.name ?? '') : ''));
   const area = useDocuments((s) => s.comparisons[id]?.area ?? null);
   const pick = useAreaPick(id);
+  const manual = useOverlayView(id).manual;
   useWindowPlace(p?.docId ?? null);
   const sideName = t(side === 'a' ? 'compare.side.a' : 'compare.side.b');
   if (!p)
@@ -369,6 +371,9 @@ function SideWindow({
   });
   const { ref, ...rest } = props(side, p.docId, p.page);
   const pair = sheet.pair;
+  // Line up (M12-26): the window to click next is outlined and says so.
+  const clickHere =
+    pair !== null && manual?.pair === pair && manual.picking && nextSide(manual) === side;
   // Picking alignment points and their marks (M12-13), and drawing an area's
   // rectangle (O1, not in an area comparison itself), on the sheet's page.
   const layer =
@@ -415,12 +420,18 @@ function SideWindow({
       className="review-window"
       data-testid={`review-window-${side}`}
       data-doc-id={p.docId}
+      data-line-up={clickHere ? 'true' : undefined}
       {...rest}
     >
       <p className="review-window-title" data-side={side}>
         <span className="review-window-name">{title}</span>
         <UnsavedDot docId={p.docId} testId={`review-unsaved-${side}`} />
       </p>
+      {clickHere ? (
+        <p className="line-up-here" aria-hidden="true">
+          {t(side === 'a' ? msg('compare.lineUp.here_a') : msg('compare.lineUp.here_b'))}
+        </p>
+      ) : null}
       <div className="review-window-view">
         <DocumentView
           key={p.docId}

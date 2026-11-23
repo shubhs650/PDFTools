@@ -66,6 +66,12 @@ export interface OverlayView {
   /** Manual alignment of the sheet shown, while it is being set (M12-13); null otherwise. */
   manual: ManualAlign | null;
   /**
+   * Compared pairs whose uncertain automatic alignment the user looked at and
+   * accepted ("It looks right": "Checked by you", M12-26, ADR-033). Saved
+   * with the comparison.
+   */
+  alignChecked: Record<number, true>;
+  /**
    * Layer switches per document (D-59, Q24): a layer's object number → shown,
    * only where it differs from the file's default. The overlay and the
    * analysis draw the document with them.
@@ -91,6 +97,7 @@ export const DEFAULT_VIEW: OverlayView = {
   blink: null,
   aligned: {},
   manual: null,
+  alignChecked: {},
   layers: {},
   vector: false,
 };
@@ -106,6 +113,32 @@ export function drawnStyle(v: OverlayView): OverlayStyle {
 /** The sheet's alignment, once found (pairs only). */
 export const alignmentOf = (v: OverlayView, s: Sheet | undefined): SheetAlignment | undefined =>
   s?.pair === null || s?.pair === undefined ? undefined : v.aligned[s.pair];
+
+/** The user accepted the sheet's uncertain alignment ("Checked by you", M12-26). */
+export const isAlignChecked = (v: OverlayView, s: Sheet | undefined): boolean =>
+  s?.pair !== null && s?.pair !== undefined && v.alignChecked[s.pair] === true;
+
+/**
+ * A pair whose alignment needs a look (M12-26, ADR-033): the automatic
+ * alignment is uncertain and the user has not accepted it or lined it up by hand.
+ */
+export const pairNeedsCheck = (v: OverlayView, pair: number): boolean =>
+  v.aligned[pair]?.status === 'low' && v.alignChecked[pair] !== true;
+
+/** The sheet shown needs a look at its alignment (the banner over the overlay). */
+export const needsCheck = (v: OverlayView, s: Sheet | undefined): boolean =>
+  s?.pair !== null && s?.pair !== undefined && pairNeedsCheck(v, s.pair);
+
+/** "It looks right": the sheet's alignment is accepted as found (or forgotten again with `on` false). */
+export const setAlignChecked = (v: OverlayView, pair: number, on = true): OverlayView => {
+  if ((v.alignChecked[pair] === true) === on) return v;
+  const alignChecked = on
+    ? { ...v.alignChecked, [pair]: true as const }
+    : (Object.fromEntries(
+        Object.entries(v.alignChecked).filter(([k]) => k !== String(pair)),
+      ) as Record<number, true>);
+  return { ...v, alignChecked };
+};
 
 /** Where A is drawn in B's frame: the alignment being set by hand, the alignment found, else as is (D-60). */
 export const placeOf = (v: OverlayView, s: Sheet | undefined): Affine =>

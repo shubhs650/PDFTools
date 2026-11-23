@@ -27,6 +27,7 @@ import type { Comparison } from '../model';
 import { pairingStore } from '../pairingFlow';
 import {
   alignmentOf,
+  isAlignChecked,
   overlayView,
   placeOf,
   type OverlayView,
@@ -55,6 +56,7 @@ export function sheetEntry(view: OverlayView, s: Sheet): SheetEntry {
     b: s.b ? [s.b.file, s.b.page] : null,
     ...(isIdentity(place) ? {} : { aToB: [...place] }),
     status: al ? STATUS[al.status] : 'asIs',
+    ...(al?.status === 'low' && isAlignChecked(view, s) ? { checked: true } : {}),
   };
 }
 

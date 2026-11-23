@@ -164,7 +164,7 @@ test('pair 15 (A1 against A3): the sheet is aligned automatically and drawn thro
   await overlayOf(page, '15');
   const sheet = page.getByRole('option', { name: /Sheet 1/ });
   await expect(sheet.locator('.overlay-sheet-align')).toHaveAttribute('data-status', 'auto');
-  await expect(sheet).toContainText('Auto-aligned · Shift');
+  await expect(sheet).toContainText('Lined up automatically · Shift');
   const aligned = await colours(page);
   // Drawn through the alignment, the two revisions mostly agree (the A3 plot's pens
   // are heavier relative to the sheet, S29); as is, they would not line up at all.

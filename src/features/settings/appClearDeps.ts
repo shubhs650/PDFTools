@@ -16,6 +16,7 @@ import { resetSession } from '../session/session';
 import { resetZoneSets } from '../compare/diff/zoneSetsStore';
 import { resetPresets } from '../compare/presets/presetStore';
 import { resetHideHighlights } from '../compare/closeout/closeOutStore';
+import { resetCompareTips } from '../compare/tips/tipsStore';
 import type { ClearDeps } from './clearAll';
 
 const hasCaches = (): boolean => typeof caches !== 'undefined';
@@ -54,5 +55,7 @@ export const appClearDeps: ClearDeps = {
     resetPresets();
     // Hide highlights in the close-out list (M12-27).
     resetHideHighlights();
+    // Compare's first-time tips show again (M12-26).
+    resetCompareTips();
   },
 };

@@ -32,8 +32,24 @@
     "h": 396
   },
   "compare-alignment-1": {
-    "w": 236,
-    "h": 568
+    "w": 1311,
+    "h": 601
+  },
+  "compare-alignment-2": {
+    "w": 1311,
+    "h": 601
+  },
+  "compare-alignment-3": {
+    "w": 1311,
+    "h": 601
+  },
+  "compare-alignment-4": {
+    "w": 1311,
+    "h": 601
+  },
+  "compare-alignment-5": {
+    "w": 981,
+    "h": 572
   },
   "compare-differences-1": {
     "w": 320,

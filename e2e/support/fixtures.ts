@@ -220,6 +220,12 @@ export const test = base.extend<{ guard: Guard }, { appServer: string; pdfs: Pdf
         if (isThirdParty(r.url(), appServer)) guard.thirdPartyRequests.push(r.url());
       });
       await page.addInitScript(installPageProbe);
+      // Compare's first-time tips (M12-26) are taken as seen, so they cover nothing in other
+      // tests; `showCompareTips` (support/compare.ts) lets a test see them.
+      await page.addInitScript(() => {
+        if (!sessionStorage.getItem('e2e.compareTips'))
+          localStorage.setItem('pdftools.compareTipsSeen', '1');
+      });
 
       await use(guard);
 
