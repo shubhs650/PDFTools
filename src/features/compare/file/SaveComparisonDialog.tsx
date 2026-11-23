@@ -12,10 +12,13 @@ import {
   protectedInput,
   saveBlock,
   setSavePassword,
+  setSaveSummary,
   startSaveComparison,
   useReviewSave,
   useSaveComparison,
 } from './fileFlow';
+
+const SUMMARY_NOTE_ID = 'save-comparison-summary-note';
 
 /**
  * Compare → Save Comparison… (M12-20, D-65): the comparison as one PDF that
@@ -28,6 +31,7 @@ export function SaveComparisonDialog() {
   const id = useSaveComparison((s) => s.id);
   const password = useSaveComparison((s) => s.password);
   const confirm = useSaveComparison((s) => s.confirm);
+  const summary = useSaveComparison((s) => s.summary);
   const running = useSaveComparison((s) => s.running);
   const error = useSaveComparison((s) => s.error);
   const c = useDocuments((s) => (id ? s.comparisons[id] : undefined));
@@ -102,6 +106,26 @@ export function SaveComparisonDialog() {
           {c.type === 'text' ? t('compare.file.save.text') : t('compare.file.save.overlay')}
         </p>
         {unsaved ? <p className="print-note">{t('compare.file.save.unsaved')}</p> : null}
+        {c.type === 'overlay' ? (
+          <div>
+            <label className="print-option">
+              <input
+                type="checkbox"
+                className="ui-focusable"
+                checked={summary}
+                disabled={running !== null}
+                aria-describedby={SUMMARY_NOTE_ID}
+                onChange={(e) => {
+                  setSaveSummary(e.currentTarget.checked);
+                }}
+              />
+              {t('compare.file.save.summary')}
+            </label>
+            <p id={SUMMARY_NOTE_ID} className="print-note">
+              {t('compare.file.save.summaryNote')}
+            </p>
+          </div>
+        ) : null}
         {needsLock !== null ? (
           <fieldset disabled={running !== null}>
             <legend>{t('compare.file.save.lockTitle')}</legend>

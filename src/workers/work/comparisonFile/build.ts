@@ -3,9 +3,10 @@
 // (rule 1); the job in work.worker.ts gathers the inputs first.
 //
 // Overlay: the vector overlay pages (M12-16's builder) with the overlay notes
-//   copied onto them as comments, then one section by our object layer:
-//   every file of side A and side B attached unchanged, the comparison data,
-//   the catalog tagged.
+//   copied onto them as comments, then one section by our object layer: the
+//   optional summary page put first (M12-21, `leadingPages`), every file of
+//   side A and side B attached unchanged, the comparison data, the catalog
+//   tagged.
 // Text, "prefix" route: Document B's own bytes, then one section: the change
 //   marks on B's pages, Document A and the data attached, the catalog tagged.
 //   B comes back as the file's first `length` bytes, checked by SHA-256, and
@@ -38,6 +39,7 @@ import { docPtrOf } from '../../render/pdfium';
 import { FPDF_NO_INCREMENTAL, saveWithFlags } from '../../render/save/writer';
 import { writeMarks, type MarkSpec } from './marks';
 import { Section, type Inflate } from './section';
+import { writeSummary, type LaidOut } from './summary';
 
 /** An input file as it goes into the comparison file. */
 export interface InputFile {
@@ -203,12 +205,20 @@ export interface OverlayFileRequest {
   when: Date;
   /** The open password of a comparison file that must be locked (a protected input). */
   lock?: string;
+  /** The summary page(s), laid out (M12-21): put before the sheets. */
+  summary?: LaidOut;
 }
 
 /** The overlay comparison file. */
 export async function buildOverlayFile(env: FileEnv, req: OverlayFileRequest): Promise<Uint8Array> {
+  const sec = await Section.open(req.pages, undefined, env.inflate);
+  // The summary first: the data says how many pages come before the sheets.
+  const lead = req.summary ? await writeSummary(sec, req.summary) : 0;
+  const fields: DataFields = { ...req.fields };
+  delete fields.leadingPages;
   const data: ComparisonData = {
-    ...baseData('overlay', req.fields, req.when),
+    ...baseData('overlay', fields, req.when),
+    ...(lead > 0 ? { leadingPages: lead } : {}),
     documents: {
       A: await Promise.all(
         req.A.map((f, i) => stored(f, { attachment: keyOf('A', i, req.A.length) })),
@@ -219,7 +229,6 @@ export async function buildOverlayFile(env: FileEnv, req: OverlayFileRequest): P
     },
   };
   await env.checkpoint();
-  const sec = await Section.open(req.pages, undefined, env.inflate);
   await attachAll(
     sec,
     [

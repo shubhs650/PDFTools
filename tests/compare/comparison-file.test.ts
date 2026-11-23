@@ -6,6 +6,7 @@
 // comments, and the permission rule.
 import { readFileSync } from 'node:fs';
 import { createRequire } from 'node:module';
+import { join } from 'node:path';
 import { inflateSync } from 'node:zlib';
 import { PdfiumNative } from '@embedpdf/engines/pdfium';
 import { init, type WrappedPdfiumModule } from '@embedpdf/pdfium';
@@ -41,8 +42,22 @@ import {
 import type { MarkSpec } from '../../src/workers/work/comparisonFile/marks';
 import type { VectorSheet } from '../../src/workers/work/vectorOverlay';
 import { checkSignatures } from '../../src/workers/work/signatures';
+import { FaceStore } from '../../src/workers/render/commentFonts/faces';
+import { docPtrOf, rawCall } from '../../src/workers/render/pdfium';
+import type { SummarySpec } from '../../src/model/compare/summary';
 
 const require = createRequire(import.meta.url);
+const VENDOR = join(import.meta.dirname, '..', '..', 'vendor', 'fonts', 'files');
+const fontsLoaded: string[] = [];
+const faces = new FaceStore({
+  harfbuzz: () => import('harfbuzzjs'),
+  subsetWasm: () =>
+    Promise.resolve(readFileSync(require.resolve('harfbuzzjs/dist/harfbuzz-subset.wasm'))),
+  fontFile: (file) => {
+    fontsLoaded.push(file);
+    return Promise.resolve(new Uint8Array(readFileSync(join(VENDOR, file))));
+  },
+});
 let mod: WrappedPdfiumModule;
 let native: PdfiumNative;
 let docs: WorkDocs;
@@ -73,6 +88,7 @@ function env(progress: { done: number; total: number }[] = []): FileJobEnv {
     },
     slice,
     progress: (p) => progress.push(p),
+    faces,
   };
 }
 
@@ -282,6 +298,117 @@ describe('the overlay comparison file', () => {
     expect(data.created).toBe('2026-11-23T10:00:00.000Z');
     expect(read.notes).toBeNull();
     expect(read.foreignRevisions).toBe(0);
+  });
+
+  it('puts the summary page first, in a font shipped with the app, and reopens past it', async () => {
+    const a = await openCorpus('overlay', '01', 'old');
+    const b = await openCorpus('overlay', '01', 'new');
+    const geo = await PdfReader.open(b.bytes, inflate);
+    const box = (await geo.resolve((await geo.pages())[0]?.dict.get('MediaBox'))) as number[];
+    const notes = await open(
+      buildPdf([
+        '<< /Type /Catalog /Pages 2 0 R >>',
+        '<< /Type /Pages /Kids [3 0 R] /Count 1 >>',
+        `<< /Type /Page /Parent 2 0 R /MediaBox [${box.join(' ')}] /Annots [4 0 R] >>`,
+        '<< /Type /Annot /Subtype /Text /Rect [100 100 120 120] /Contents (On the sheet) /NM (note-1) /T (Reviewer) /F 4 >>',
+      ]),
+    );
+    const summary: SummarySpec = {
+      blocks: [
+        { kind: 'title', text: 'Comparison summary' },
+        { kind: 'row', label: 'Document A (old)', value: 'Flange Ø120 – रेखाचित्र 图纸.pdf' },
+        { kind: 'heading', text: 'Legend' },
+        { kind: 'swatch', colour: [255, 0, 0], text: 'Only in Document A (old)' },
+        { kind: 'note', text: 'The overlay sheets follow this page.' },
+      ],
+    };
+    const r = await compareFileSave(
+      env(),
+      overlayRequest([a], [b], [sheet(a.id, b.id)], {
+        notesDocId: notes,
+        summary,
+        fields: fields({ leadingPages: 5 }),
+      }),
+    );
+    const bytes = new Uint8Array(r.bytes);
+    expect(await pdfiumPages(bytes)).toBe(2);
+    // The note stays on the sheet (now page 2); the summary page has none.
+    expect(await annotations(bytes)).toEqual([
+      expect.objectContaining({ page: 1, subtype: 'Text', contents: 'On the sheet' }),
+    ]);
+    // Library fonts only (Noto Sans, and the fallbacks the file name needs), embedded.
+    expect(fontsLoaded).toEqual(
+      expect.arrayContaining(['notosans-regular.ttf', 'notosans-bold.ttf']),
+    );
+    expect(fontsLoaded.every((f) => f.startsWith('noto'))).toBe(true);
+    // The page's text reads back as typed (searchable, copyable).
+    const id = await open(bytes);
+    const { doc } = await docs.get(id);
+    const page = rawCall(mod, 'FPDF_LoadPage', docPtrOf(native, doc.id), 0);
+    const tp = rawCall(mod, 'FPDFText_LoadPage', page);
+    const n = rawCall(mod, 'FPDFText_CountChars', tp);
+    const heap = mod.pdfium as unknown as {
+      wasmExports: { malloc(n: number): number; free(p: number): void };
+      UTF16ToString(p: number): string;
+    };
+    const buf = heap.wasmExports.malloc((n + 1) * 2);
+    rawCall(mod, 'FPDFText_GetText', tp, 0, n, buf);
+    const text = heap.UTF16ToString(buf);
+    heap.wasmExports.free(buf);
+    rawCall(mod, 'FPDFText_ClosePage', tp);
+    rawCall(mod, 'FPDF_ClosePage', page);
+    for (const s of ['Comparison summary', 'Flange Ø120', 'Legend', 'follow this page'])
+      expect(text).toContain(s);
+    const fonts =
+      Buffer.from(bytes)
+        .toString('latin1')
+        .match(/\/FontFile2/g) ?? [];
+    expect(fonts.length).toBeGreaterThanOrEqual(2);
+    // Reopened: the data says one page comes first; the notes are the sheet's.
+    const { read, data } = await reopen(r.bytes);
+    expect(data.leadingPages).toBe(1);
+    expect(read.notes).not.toBeNull();
+    const seeded = await PdfReader.open(new Uint8Array(read.notes ?? new ArrayBuffer(0)), inflate);
+    expect((await seeded.pages()).length).toBe(1);
+    expect(new Uint8Array(read.B[0]?.bytes ?? new ArrayBuffer(0))).toEqual(b.bytes);
+  });
+
+  it('goes on over more pages when its lists are long; every one comes before the sheets', async () => {
+    const a = await openCorpus('overlay', '01', 'old');
+    const b = await openCorpus('overlay', '01', 'new');
+    const zones = Array.from(
+      { length: 160 },
+      (_, i) => `${String(i + 1)} on sheet ${String(i + 2)}`,
+    );
+    const r = await compareFileSave(
+      env(),
+      overlayRequest([a], [b], [sheet(a.id, b.id)], {
+        summary: {
+          blocks: [
+            { kind: 'title', text: 'Comparison summary' },
+            { kind: 'heading', text: 'Settings' },
+            { kind: 'row', label: 'Ignore zones', value: zones.join('\n') },
+            { kind: 'note', text: 'The overlay sheets follow this page.' },
+          ],
+        },
+      }),
+    );
+    const pages = await pdfiumPages(new Uint8Array(r.bytes));
+    const { data } = await reopen(r.bytes);
+    expect(data.leadingPages).toBeGreaterThanOrEqual(3);
+    expect(pages).toBe((data.leadingPages ?? 0) + 1);
+  });
+
+  it('writes no summary page and no leadingPages unless asked', async () => {
+    const a = await openCorpus('overlay', '01', 'old');
+    const b = await openCorpus('overlay', '01', 'new');
+    const r = await compareFileSave(
+      env(),
+      overlayRequest([a], [b], [sheet(a.id, b.id)], { fields: fields({ leadingPages: 2 }) }),
+    );
+    expect(await pdfiumPages(new Uint8Array(r.bytes))).toBe(1);
+    const { data } = await reopen(r.bytes);
+    expect(data.leadingPages).toBeUndefined();
   });
 
   it('keeps a set of several files per side, each byte for byte', async () => {

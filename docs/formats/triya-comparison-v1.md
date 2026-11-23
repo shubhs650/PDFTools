@@ -13,13 +13,13 @@ except the data attachment, which is plain JSON, and one page-piece dictionary, 
 
 ## The two kinds
 
-|                       | PDF overlay (`kind: "overlay"`)                                                      | Text comparison (`kind: "text"`)                                                                      |
-| --------------------- | ------------------------------------------------------------------------------------ | ----------------------------------------------------------------------------------------------------- |
-| Pages                 | The **vector overlay** (S29, route 2), one page per sheet pair                       | **Document B's own pages**, with the changes as standard markups                                      |
-| Comments on the pages | Overlay notes (the comparison's own comments, D-62)                                  | The change marks (below); never the reviewer's comments, which belong to A or B                       |
-| Attachments           | Every file of side A and side B, **unchanged**, and the data                         | Document A, **unchanged**, and the data                                                               |
-| Document B            | An attachment                                                                        | **The file's own first bytes** ("prefix"), checked by SHA-256                                         |
-| Writing               | PDFium builds the pages; our object layer adds one section (attachments and catalog) | B's bytes as they are, then **one incremental section** by our object layer (marks, attachments, tag) |
+|                       | PDF overlay (`kind: "overlay"`)                                                                            | Text comparison (`kind: "text"`)                                                                      |
+| --------------------- | ---------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------- |
+| Pages                 | An optional **summary page** (M12-21), then the **vector overlay** (S29, route 2), one page per sheet pair | **Document B's own pages**, with the changes as standard markups                                      |
+| Comments on the pages | Overlay notes (the comparison's own comments, D-62)                                                        | The change marks (below); never the reviewer's comments, which belong to A or B                       |
+| Attachments           | Every file of side A and side B, **unchanged**, and the data                                               | Document A, **unchanged**, and the data                                                               |
+| Document B            | An attachment                                                                                              | **The file's own first bytes** ("prefix"), checked by SHA-256                                         |
+| Writing               | PDFium builds the pages; our object layer adds one section (attachments and catalog)                       | B's bytes as they are, then **one incremental section** by our object layer (marks, attachments, tag) |
 
 ## Catalog entries
 

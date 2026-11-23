@@ -1,5 +1,6 @@
 import AxeBuilder from '@axe-core/playwright';
 import { mkdirSync, readFileSync, writeFileSync } from 'node:fs';
+import { inflateSync } from 'node:zlib';
 import type { Page } from '@playwright/test';
 import { drop } from './support/app.ts';
 import {
@@ -301,4 +302,79 @@ test('a set of several files on each side comes back as the same set', async ({ 
     Buffer.from(corpusBytes(corpusPair('overlay', '07'), 'old')),
   ];
   expect(files.map((f) => want.findIndex((w) => w.equals(f))).sort()).toEqual([0, 1]);
+});
+
+/** Every deflated stream of a file, inflated, as Latin-1 text. */
+function streamsText(bytes: Buffer): string {
+  const text = bytes.toString('latin1');
+  const out: string[] = [];
+  const re = /stream\r?\n/g;
+  let m: RegExpExecArray | null;
+  while ((m = re.exec(text))) {
+    const start = m.index + m[0].length;
+    const end = text.indexOf('endstream', start);
+    if (end < 0) break;
+    try {
+      out.push(inflateSync(bytes.subarray(start, end)).toString('latin1'));
+    } catch {
+      // not deflated
+    }
+  }
+  return out.join('\n');
+}
+
+test('M12-21: the summary page comes first in an overlay comparison file, as chosen', async ({
+  page,
+}) => {
+  await downloads(page);
+  await page.setViewportSize({ width: 1600, height: 1000 });
+  await overlayOf(page, '01');
+  await compareRibbon(page);
+  await page.getByRole('button', { name: 'Save Comparison…' }).click();
+  const box = dialog(page).getByRole('checkbox', { name: 'Add a summary page' });
+  await expect(box).toBeChecked();
+  await shot(page, '5-save-comparison-summary');
+  await dialog(page).getByRole('button', { name: 'Close' }).last().click();
+  const withPage = await saveComparison(page);
+  const data = streamsText(withPage.bytes);
+  expect(data).toContain('"leadingPages":1');
+  // Its words in a font shipped with the app, embedded (no system font).
+  const utf16 = (t: string): string =>
+    Array.from({ length: t.length }, (_, i) =>
+      t.charCodeAt(i).toString(16).padStart(4, '0').toUpperCase(),
+    ).join('');
+  expect(data).toContain(`/ActualText <FEFF${utf16('Comparison summary')}>`);
+  expect(withPage.bytes.toString('latin1')).toMatch(/\/BaseFont \/[A-Z]{6}\+NotoSans-/);
+
+  // Unticked: no summary page (and the choice is kept for the next file).
+  await compareRibbon(page);
+  await page.getByRole('button', { name: 'Save Comparison…' }).click();
+  await dialog(page).getByRole('checkbox', { name: 'Add a summary page' }).uncheck();
+  await dialog(page).getByRole('button', { name: 'Close' }).last().click();
+  const without = await saveComparison(page);
+  expect(streamsText(without.bytes)).not.toContain('leadingPages":1');
+  await compareRibbon(page);
+  await page.getByRole('button', { name: 'Save Comparison…' }).click();
+  await expect(
+    dialog(page).getByRole('checkbox', { name: 'Add a summary page' }),
+  ).not.toBeChecked();
+  await dialog(page).getByRole('button', { name: 'Close' }).last().click();
+
+  // Reopened, the summary page is not a sheet: the comparison has its one sheet.
+  await page.goto('/');
+  await drop(page, [{ name: withPage.name, b64: b64(withPage.bytes) }]);
+  await resultShown(page);
+  await overlayDrawn(page);
+  await expect(page.getByRole('tab', { name: /Pair 01 RevA.*Pair 01 RevB/ })).toBeVisible();
+});
+
+test('M12-21: a text comparison file has no summary option (it is Document B itself)', async ({
+  page,
+}) => {
+  await page.setViewportSize({ width: 1600, height: 1000 });
+  await textOf(page, '05');
+  await compareRibbon(page);
+  await page.getByRole('button', { name: 'Save Comparison…' }).click();
+  await expect(dialog(page)).toBeVisible();
+  await expect(dialog(page).getByRole('checkbox', { name: 'Add a summary page' })).toHaveCount(0);
 });
