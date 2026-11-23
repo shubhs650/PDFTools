@@ -1,6 +1,11 @@
 # Triya PDF — Progress
 
-_Last updated: 2026-11-23 (M12-23: M12 acceptance, M12 complete on the agent side; M12-22: Compare help and release notes; M12-21·O4: drop a tab on a tab; M12-20: the comparison file; M12-21: change register and presets)_
+_Last updated: 2026-11-23 (M12-ux plan approved: Compare made easier to use, tasks M12-24 … M12-27, ADR-033, ARCHITECTURE.md Rev 0.23; M12-23: M12 acceptance, M12 complete on the agent side; M12-22: Compare help and release notes; M12-21·O4: drop a tab on a tab; M12-20: the comparison file; M12-21: change register and presets)_
+
+**Next (approved 2026-11-23):** [docs/plan/M12-ux.md](plan/M12-ux.md) — the owner's hand check found
+M12 correct but asked for usability changes before v1.1.0 ([ADR-033](adr/033-m12-compare-usability.md),
+ARCHITECTURE.md Rev 0.23): M12-24 input window, M12-25 room to work, M12-26 alignment and tips,
+M12-27 review. v1.1.0 (Compare on in release builds, the tag) waits for them and the owner's re-check.
 
 **Current milestone:** M12 — PDF comparison (PDF overlay for drawings, text comparison for
 documents), version 1.1.0: plan [docs/plan/M12.md](plan/M12.md) and
