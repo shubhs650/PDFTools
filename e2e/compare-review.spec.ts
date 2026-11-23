@@ -1,7 +1,7 @@
 import AxeBuilder from '@axe-core/playwright';
 import type { Page } from '@playwright/test';
 import { cap, darkTheme } from './support/app.ts';
-import { overlayDrawn, overlayOf, overlayView } from './support/compare.ts';
+import { hideDifferences, overlayDrawn, overlayOf, overlayView } from './support/compare.ts';
 import { expect, test } from './support/fixtures.ts';
 import { skipReviewerPrompt } from './support/shots.ts';
 
@@ -179,6 +179,7 @@ test('three live windows: comments, the Properties pane, the context menu and un
 }) => {
   await page.setViewportSize({ width: 1600, height: 1000 });
   await overlayOf(page, '01');
+  await hideDifferences(page);
   await skipReviewerPrompt(page);
   for (const role of ROLES) await expect(win(page, role)).toBeVisible();
   await expect(win(page, 'a')).toContainText('Document A (old): Pair 01 RevA.pdf, page 1');
@@ -296,6 +297,7 @@ test('each comment tool, the note and text box keys and the page menu work in ea
   test.slow();
   await page.setViewportSize({ width: 1600, height: 1000 });
   await overlayOf(page, '01');
+  await hideDifferences(page);
   await skipReviewerPrompt(page);
   const ids = await docIds(page);
   for (const role of ROLES) {

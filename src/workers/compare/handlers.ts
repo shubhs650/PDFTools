@@ -95,6 +95,12 @@ export function compareHandlers(store: CompareStore): Handlers<CompareApi> {
       });
       return null;
     },
+    detectSheet: ({ cmpId, sheet, a, b, place, scan }, ctx) => {
+      ctx.throwIfAborted();
+      return { words: guard(() => store.detectSheet(cmpId, sheet, a, b, place, scan)) };
+    },
+    differences: ({ cmpId, sheets, sensitivity, minSize }) =>
+      guard(() => store.differences(cmpId, sheets, sensitivity, minSize)),
     sheetFacts: ({ cmpId, sheet }) => guard(() => store.sheetFacts(cmpId, sheet)),
     summary: ({ cmpId }) => guard(() => store.summary(cmpId)),
     release: ({ cmpId }) => ({ freedBytes: store.release(cmpId) }),

@@ -10,6 +10,8 @@ import type { OcrLine } from '../model/ocr/types';
 import type { AsIsCheck, SheetAlignment } from '../model/compare/align/aligner';
 import type { PairingResult } from '../model/compare/pairing';
 import type { TextComparison } from '../model/compare/text/match';
+import type { Box } from '../model/compare/detect/textDiff';
+import type { Sensitivity, SheetDiff } from '../model/compare/detect/entries';
 import type { MethodSpec } from './protocol';
 
 /**
@@ -198,6 +200,32 @@ export interface CompareApi {
   setAlignment: MethodSpec<{ cmpId: string; sheet: number; alignment: SheetAlignment }, null>;
   /** Forgets a sheet's facts: its analysis starts again (layer switches changed what is drawn). */
   resetSheet: MethodSpec<{ cmpId: string; sheet: number }, null>;
+  /**
+   * Ends a sheet's detection (M12-14, D-61) once its bands are in: the
+   * detector's counts are kept and the text layer compares the positioned
+   * words of A (side page `a`, moved by `place` into B's frame) and B (side
+   * page `b`). `scan` picks the scan tolerances. Resolves with the number of
+   * word changes.
+   */
+  detectSheet: MethodSpec<
+    { cmpId: string; sheet: number; a: number; b: number; place: Affine; scan: boolean },
+    { words: number }
+  >;
+  /**
+   * The differences of sheets at the settings in use (D-61, Q22): applied to
+   * the counts kept, so a new sensitivity, minimum size or ignore zone needs
+   * no new analysis. Sheets not detected yet are left out.
+   */
+  differences: MethodSpec<
+    {
+      cmpId: string;
+      sheets: { sheet: number; zones: Box[] }[];
+      sensitivity: Sensitivity;
+      /** Smallest difference kept: its larger side in pt (0: all). */
+      minSize: number;
+    },
+    { sheet: number; diff: SheetDiff }[]
+  >;
   /** A sheet's facts once its bands are in. */
   sheetFacts: MethodSpec<{ cmpId: string; sheet: number }, SheetFacts>;
   summary: MethodSpec<{ cmpId: string }, CompareSummary>;

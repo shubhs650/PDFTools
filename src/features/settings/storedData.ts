@@ -84,6 +84,14 @@ export const LOCAL_DATA: readonly LocalDataItem[] = [
     cleared: true,
   },
   {
+    // Named sets of ignore zones for comparisons (M12-14, D-61): names and rectangles only.
+    kind: 'indexedDB',
+    location: `${DB_NAME} › ignoreZoneSets`,
+    store: 'ignoreZoneSets',
+    what: msg('privacy.data.ignoreZoneSets'),
+    cleared: true,
+  },
+  {
     // Each file's last view (M11-08·O3, D-53), by fingerprint: never a name or content.
     kind: 'indexedDB',
     location: `${DB_NAME} › lastViews`,

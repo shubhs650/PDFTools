@@ -26,7 +26,8 @@ import {
 } from '../overlay/overlayState';
 import { Splitter } from './Splitter';
 import { useWindowPlace } from './windowPlace';
-import { WindowLink, fitWindow, showPage, type LinkedWindow } from './windowLink';
+import { WindowLink, centreOnBox, fitWindow, showPage, type LinkedWindow } from './windowLink';
+import { focusers, pendingFocus, type Box } from './overlayFocus';
 
 const SPLIT_TEST_ID = { x: 'review-split-x', y: 'review-split-y' } as const;
 
@@ -48,11 +49,14 @@ export function ReviewLayout({
   sheet,
   index,
   notesId,
+  fitKey = '',
 }: {
   comparison: Comparison;
   sheet: Sheet;
   index: number;
   notesId: string;
+  /** Changes when a side pane is shown or hidden: the overlay is fitted again. */
+  fitKey?: string;
 }) {
   const { t } = useTranslation();
   const view = useOverlayView(c.id);
@@ -97,7 +101,7 @@ export function ReviewLayout({
 
   // The windows on screen: their documents, pages and maps into the overlay's frame. A new
   // placement (an alignment found, or set by hand: M12-13) moves the others; it does not refit.
-  const sheetKey = JSON.stringify([review, notesId, index, sheet.a, sheet.b]);
+  const sheetKey = JSON.stringify([review, notesId, index, sheet.a, sheet.b, fitKey]);
   const windowsKey = JSON.stringify([sheetKey, place, sides]);
   /** The sheet the overlay was last fitted to (a side window mounting later does not refit it). */
   const fitted = useRef<string | null>(null);
@@ -136,6 +140,12 @@ export function ReviewLayout({
       }
       if (view.lock) link.drive(link.leaderRole ?? 'overlay');
       else for (const w of list) if (w.role !== 'overlay') void fitWindow(w, 'page');
+      // A difference picked on another sheet is shown once its sheet is (M12-14).
+      const box = pendingFocus.get(c.id);
+      if (box) {
+        pendingFocus.delete(c.id);
+        focusers.get(c.id)?.(box);
+      }
     })();
     return () => {
       run.stopped = true;
@@ -143,6 +153,23 @@ export function ReviewLayout({
     // windowsKey stands for the windows; the lock's later changes do not refit.
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [windowsKey, link]);
+
+  // The differences list brings a box of the overlay into view (M12-14).
+  useEffect(() => {
+    const focus = (box: Box): void => {
+      const w = link.window('overlay');
+      if (!w) return;
+      void centreOnBox(w, box).then((ok) => {
+        if (!ok) return;
+        link.lead('overlay');
+        if (link.enabled) link.drive('overlay');
+      });
+    };
+    focusers.set(c.id, focus);
+    return () => {
+      if (focusers.get(c.id) === focus) focusers.delete(c.id);
+    };
+  }, [c.id, link]);
 
   // Turning the lock on brings the others to the window last used.
   useEffect(() => {

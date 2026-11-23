@@ -44,6 +44,19 @@ import { documentsOf } from '../model';
 import { CloseOutPane } from '../closeout/CloseOutPane';
 import { CloseOutToggle } from '../closeout/CloseOutToggle';
 import { useCloseOutView } from '../closeout/closeOutStore';
+import { DiffPane } from '../diff/DiffPane';
+import { DiffToggle } from '../diff/DiffToggle';
+import { IgnoreZones } from '../diff/IgnoreZones';
+import { watchDifferences } from '../diff/diffFlow';
+import {
+  dropDiff,
+  sheetOrder,
+  sheetState,
+  updateDiff,
+  useDiffPart,
+  useDiffView,
+  type SheetState,
+} from '../diff/diffState';
 
 let watching = false;
 const docsOfView = new Map<string, string[]>();
@@ -58,6 +71,7 @@ function watchClosing(c: Comparison): void {
       if (s.comparisons[id]) continue;
       docsOfView.delete(id);
       if (overlayStore.getState().byId[id]) dropView(id);
+      dropDiff(id);
       void renderEngine()
         .rpc.call('overlayRelease', { docIds })
         .promise.catch(() => undefined);
@@ -103,9 +117,20 @@ export function OverlayResult({ comparison: c }: { comparison: Comparison }) {
     // Layer switches stay with the documents: a new session draws with them too (Q24).
     for (const [docId, states] of Object.entries(overlayView(c.id).layers))
       session.setLayers(docId, states);
-    return session.watchAlignment((pair, al) => {
+    // Each sheet's differences as its detection ends (M12-14, D-61); none kept from other pairs.
+    updateDiff(c.id, (v) =>
+      Object.keys(v.results).length || v.selected !== null
+        ? { ...v, results: {}, selected: null }
+        : v,
+    );
+    const offDiffs = watchDifferences(c.id, session);
+    const offAlign = session.watchAlignment((pair, al) => {
       updateView(c.id, (v) => setAligned(v, pair, al));
     });
+    return () => {
+      offAlign();
+      offDiffs();
+    };
   }, [c.id, pairsKey]);
   const view = useOverlayView(c.id);
   const index = Math.min(view.sheet, Math.max(0, sheets.length - 1));
@@ -136,6 +161,7 @@ export function OverlayResult({ comparison: c }: { comparison: Comparison }) {
   }, [c.id, framesKey]);
   const notes = useNotes(c.id);
   const closeOutOpen = useCloseOutView(c.id).open;
+  const diffPane = useDiffPart(c.id, (v) => v.pane);
 
   let body;
   if (!pairing || pairing.status === 'reading' || pairing.status === 'matching') {
@@ -171,9 +197,16 @@ export function OverlayResult({ comparison: c }: { comparison: Comparison }) {
             pairs={sheets.filter((s) => s.pair !== null).length}
           />
           <OverlayLayers comparison={c} sheet={sheet} />
+          <IgnoreZones id={c.id} sheets={sheets} current={index} />
         </aside>
         {notes?.status === 'ready' && notes.docId ? (
-          <ReviewLayout comparison={c} sheet={sheet} index={index} notesId={notes.docId} />
+          <ReviewLayout
+            comparison={c}
+            sheet={sheet}
+            index={index}
+            notesId={notes.docId}
+            fitKey={`${String(diffPane)}|${String(closeOutOpen)}`}
+          />
         ) : notes?.status === 'failed' ? (
           <p className="overlay-wait" role="status">
             {t('compare.review.notesFailed')}
@@ -184,6 +217,7 @@ export function OverlayResult({ comparison: c }: { comparison: Comparison }) {
             <ProgressBar label={t('compare.review.preparing')} value={null} />
           </div>
         )}
+        {diffPane ? <DiffPane id={c.id} sheets={sheets} current={index} /> : null}
         {closeOutOpen ? <CloseOutPane comparison={c} /> : null}
       </div>
     );
@@ -262,6 +296,7 @@ export function OverlayResult({ comparison: c }: { comparison: Comparison }) {
                 updateView(c.id, (v) => setLock(v, on));
               }}
             />
+            <DiffToggle id={c.id} />
             <CloseOutToggle id={c.id} />
           </div>
         ) : null}
@@ -307,16 +342,33 @@ function SheetList({
   const id = comparison.id;
   const { t } = useTranslation();
   const view = useOverlayView(id);
+  const diff = useDiffView(id);
   const headingId = useId();
   const label = usePageLabel(comparison);
   const go = (i: number): void => {
     updateView(id, (v) => goSheet(v, i, sheets.length));
   };
+  // Shown in order of percent changed when asked (D-61); the arrows follow the order shown.
+  const order = sheetOrder(diff, sheets);
+  const at = order.indexOf(current);
   return (
     <section className="overlay-sheets" aria-labelledby={headingId}>
       <h3 id={headingId} className="overlay-side-title">
         {t('compare.overlay.sheets')}
       </h3>
+      <label className="overlay-check overlay-sheet-sort">
+        <input
+          type="checkbox"
+          className="ui-focusable"
+          data-testid="sheet-sort"
+          checked={diff.sortByChange}
+          onChange={(e) => {
+            const on = e.currentTarget.checked;
+            updateDiff(id, (v) => ({ ...v, sortByChange: on }));
+          }}
+        />
+        <span>{t('compare.diff.sortByChange')}</span>
+      </label>
       <div
         className="overlay-sheet-list"
         role="listbox"
@@ -334,10 +386,17 @@ function SheetList({
           const d = step[e.key];
           if (d === undefined) return;
           e.preventDefault();
-          go(Number.isFinite(d) ? current + d : d > 0 ? sheets.length - 1 : 0);
+          const k = Number.isFinite(d)
+            ? Math.max(0, Math.min(order.length - 1, at + d))
+            : d > 0
+              ? order.length - 1
+              : 0;
+          go(order[k] ?? current);
         }}
       >
-        {sheets.map((s, i) => {
+        {order.map((i) => {
+          const s = sheets[i];
+          if (!s) return null;
           const detail =
             s.a && s.b
               ? t('compare.overlay.sheetPages', { a: label(s.a), b: label(s.b) })
@@ -345,7 +404,7 @@ function SheetList({
                 ? t('compare.overlay.sheetAdded', { b: label(s.b) })
                 : t('compare.overlay.sheetRemoved', { a: label(s.a) });
           const al = alignmentOf(view, s);
-          const at = al ? alignmentText(al) : null;
+          const alText = al ? alignmentText(al) : null;
           return (
             // eslint-disable-next-line jsx-a11y/click-events-have-key-events -- the listbox handles the keys
             <div
@@ -364,18 +423,48 @@ function SheetList({
                 {t('compare.overlay.sheetName', { sheet: format.number(i + 1) })}
               </span>
               <span className="overlay-sheet-detail">{detail}</span>
-              {at ? (
+              {alText ? (
                 <span className="overlay-sheet-align" data-status={al?.status}>
-                  {i === current && at.values ? `${at.status} · ${at.values}` : at.status}
+                  {i === current && alText.values
+                    ? `${alText.status} · ${alText.values}`
+                    : alText.status}
                 </span>
               ) : null}
-              {i === current && at?.hint ? (
-                <span className="overlay-sheet-hint">{at.hint}</span>
+              {i === current && alText?.hint ? (
+                <span className="overlay-sheet-hint">{alText.hint}</span>
               ) : null}
+              <SheetStatus state={sheetState(diff, s)} />
             </div>
           );
         })}
       </div>
     </section>
+  );
+}
+
+/** A sheet's differences in the sheet list (D-61): unchanged, how many and how much, or done. */
+function SheetStatus({ state }: { state: SheetState | null }) {
+  const { t } = useTranslation();
+  if (!state) return null;
+  const percent = 'percent' in state ? format.percent(state.percent / 100) : '';
+  let text: string;
+  switch (state.status) {
+    case 'pending':
+      text = t('compare.diff.sheetPending');
+      break;
+    case 'unchanged':
+      text = t('compare.diff.sheetUnchanged');
+      break;
+    case 'changed':
+      text = t('compare.diff.sheetChanged', { count: state.count, percent });
+      break;
+    case 'done':
+      text = t('compare.diff.sheetDone', { count: state.count });
+      break;
+  }
+  return (
+    <span className="overlay-sheet-diff" data-status={state.status} data-testid="sheet-diff">
+      {text}
+    </span>
   );
 }

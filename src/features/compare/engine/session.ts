@@ -62,6 +62,9 @@ import {
 import type { PairingResult } from '../../../model/compare/pairing';
 import type { TextComparison } from '../../../model/compare/text/match';
 import { layerKey, type LayerStates } from '../../../workers/shared/layerCopy';
+import type { Box } from '../../../model/compare/detect/textDiff';
+import type { Sensitivity, SheetDiff } from '../../../model/compare/detect/entries';
+import { INK_LEVEL, SCAN_INK_LEVEL } from '../../../model/compare/detect/detector';
 import { CompareQueue, type QueueProgress, type QueueTask } from './jobQueue';
 
 /** One file of a side. */
@@ -221,6 +224,9 @@ export class CompareSession {
   /** The layer switches each sheet's facts were gathered under. */
   private readonly factsLayers = new Map<number, string>();
   private readonly alignWatchers = new Set<(sheet: number, alignment: SheetAlignment) => void>();
+  /** Sheets analysed and detected (M12-14), with their facts. */
+  private readonly detected = new Map<number, SheetFacts>();
+  private readonly sheetWatchers = new Set<(sheet: number, facts: SheetFacts) => void>();
   private closed = false;
   private started = false;
   private text: { result: TextComparison; state: TextState } | null = null;
@@ -483,11 +489,13 @@ export class CompareSession {
           after: sigs,
           run: (signal) => this.alignSheet(sheet, pair, signal),
         });
+      // Detection's text layer reads both pages' positioned text (D-61).
+      const texts = [`text:a:${String(pair.a)}`, `text:b:${String(pair.b)}`];
       out.push({
         key: `sheet:${String(sheet)}`,
         sheet,
         phase: 1,
-        after: aligned ? [...sigs, `align:${String(sheet)}`] : sigs,
+        after: aligned ? [...sigs, ...texts, `align:${String(sheet)}`] : [...sigs, ...texts],
         run: (signal) => this.analyseSheet(sheet, pair, signal),
       });
     });
@@ -680,6 +688,39 @@ export class CompareSession {
     };
   }
 
+  /**
+   * Calls `fn` with each sheet as its detection ends (M12-14; again after a
+   * new placement), and at once with those already done.
+   */
+  watchSheets(fn: (sheet: number, facts: SheetFacts) => void): () => void {
+    this.sheetWatchers.add(fn);
+    for (const [sheet, facts] of this.detected) fn(sheet, facts);
+    return () => {
+      this.sheetWatchers.delete(fn);
+    };
+  }
+
+  /** Whether a sheet's detection has ended. */
+  isDetected(sheet: number): boolean {
+    return this.detected.has(sheet);
+  }
+
+  /** The differences of the sheets detected so far, at the settings given (D-61, Q22). */
+  async differences(
+    sheets: { sheet: number; zones: Box[] }[],
+    settings: { sensitivity: Sensitivity; minSize: number },
+  ): Promise<{ sheet: number; diff: SheetDiff }[]> {
+    const want = sheets.filter((s) => this.detected.has(s.sheet));
+    if (this.closed || want.length === 0) return [];
+    return this.opts.compare.call('differences', { cmpId: this.id, sheets: want, ...settings })
+      .promise;
+  }
+
+  /** Whether a sheet is a scan: aligned by the image method (S28: its own tolerances). */
+  private isScanSheet(sheet: number): boolean {
+    return this.aligned.get(sheet)?.method === 'image';
+  }
+
   /** Checks a sheet as it is and, when it matches poorly, aligns it (D-60, S28). */
   private async alignSheet(sheet: number, pair: SheetPair, signal: AbortSignal): Promise<void> {
     const pa = this.pages.a[pair.a];
@@ -789,6 +830,9 @@ export class CompareSession {
     this.factsLayers.set(sheet, layers);
     const la = this.layers.get(pa.docId);
     const lb = this.layers.get(pb.docId);
+    const scan = this.isScanSheet(sheet);
+    const inkLevel = scan ? SCAN_INK_LEVEL : INK_LEVEL;
+    this.detected.delete(sheet);
     for (const range of bandRanges(size.height, this.opts.bandRows ?? BAND_ROWS)) {
       const req = { dpi, width: size.width, height: size.height, ...range };
       // Both reads are queued in the Work worker at once; it renders them one after the other.
@@ -807,12 +851,21 @@ export class CompareSession {
       if ((this.placeRev.get(sheet) ?? 0) !== rev) return;
       await this.opts.compare.call(
         'sheetBand',
-        { cmpId: this.id, sheet, dpi, a, b },
+        { cmpId: this.id, sheet, dpi, a, b, inkLevel },
         { signal, transfer: [a.data.buffer as ArrayBuffer, b.data.buffer as ArrayBuffer] },
       ).promise;
     }
+    // Detection (M12-14, D-61): the counts are kept, and the text layer compares the words.
+    await this.opts.compare.call(
+      'detectSheet',
+      { cmpId: this.id, sheet, a: pair.a, b: pair.b, place, scan },
+      { signal },
+    ).promise;
     const facts = await this.opts.compare.call('sheetFacts', { cmpId: this.id, sheet }, { signal })
       .promise;
-    if (!signal.aborted) this.opts.onSheet?.(sheet, facts);
+    if (signal.aborted || (this.placeRev.get(sheet) ?? 0) !== rev) return;
+    this.detected.set(sheet, facts);
+    this.opts.onSheet?.(sheet, facts);
+    for (const fn of this.sheetWatchers) fn(sheet, facts);
   }
 }

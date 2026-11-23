@@ -31,7 +31,16 @@ import { buildDoc } from '../../model/compare/text/document';
 import { layoutBytes, pageLayout, type PageLayout } from '../../model/compare/text/layout';
 import { matchText, type TextComparison } from '../../model/compare/text/match';
 import { Interner } from '../../model/compare/text/myers';
-import { SheetAccumulator } from './sheetFacts';
+import { INK_LEVEL, SheetAccumulator } from './sheetFacts';
+import { cellsBytes, DiffDetector } from '../../model/compare/detect/detector';
+import {
+  sheetDiff,
+  type Sensitivity,
+  type SheetDiff,
+  type SheetMaterial,
+} from '../../model/compare/detect/entries';
+import { textChanges, type Box } from '../../model/compare/detect/textDiff';
+import type { Affine } from '../../model/compare/material';
 
 interface Side {
   signatures: Map<number, PageSignature>;
@@ -56,6 +65,10 @@ class Comparison {
   /** Token and paragraph keys of a text comparison, shared by both sides. */
   readonly words = new Interner();
   readonly sheets = new Map<number, SheetAccumulator>();
+  /** Each sheet's difference detector while its bands come in (M12-14, D-61). */
+  readonly detectors = new Map<number, DiffDetector>();
+  /** Each detected sheet's counts and word changes. */
+  readonly diffs = new Map<number, SheetMaterial>();
   /** Each sheet's alignment (M12-10, D-60). */
   readonly alignments = new Map<number, SheetAlignment>();
   /** Rasters of the image method, per sheet, until it has run. */
@@ -65,6 +78,9 @@ class Comparison {
 
 /** Accumulator state per sheet: the seen-rows map (one byte per raster row). */
 const sheetBytes = (s: SheetAccumulator): number => s.height + 64;
+
+/** A sheet's detected material: its counts and its word changes. */
+const materialBytes = (m: SheetMaterial): number => cellsBytes(m.cells) + m.texts.length * 96;
 
 export class CompareStore {
   private readonly comparisons = new Map<string, Comparison>();
@@ -290,17 +306,27 @@ export class CompareStore {
     const c = this.get(cmpId);
     const was = c.alignments.get(sheet);
     c.alignments.set(sheet, alignment);
+    if (was?.place.join(',') === alignment.place.join(',')) return;
     const acc = c.sheets.get(sheet);
-    if (acc && was?.place.join(',') !== alignment.place.join(',')) {
+    if (acc) {
       c.bytes -= sheetBytes(acc);
       c.sheets.delete(sheet);
     }
+    this.dropDiff(c, sheet);
+  }
+
+  private dropDiff(c: Comparison, sheet: number): void {
+    c.detectors.delete(sheet);
+    const m = c.diffs.get(sheet);
+    if (m) c.bytes -= materialBytes(m);
+    c.diffs.delete(sheet);
   }
 
   /** Forgets a sheet's facts (its analysis runs again with other layers shown). */
   resetSheet(cmpId: string, sheet: number): void {
     const c = this.get(cmpId);
     const acc = c.sheets.get(sheet);
+    this.dropDiff(c, sheet);
     if (!acc) return;
     c.bytes -= sheetBytes(acc);
     c.sheets.delete(sheet);
@@ -331,7 +357,79 @@ export class CompareStore {
       c.bytes += sheetBytes(acc);
     }
     acc.add(a, b, inkLevel);
+    // The detector: a new frame or ink level, or the sheet from its top again, starts it over.
+    const level = inkLevel ?? INK_LEVEL;
+    let det = c.detectors.get(sheet);
+    if (
+      det?.width !== b.width ||
+      det.height !== b.height ||
+      det.dpi !== dpi ||
+      det.inkLevel !== level
+    ) {
+      det = new DiffDetector(b.width, b.height, dpi, level);
+      c.detectors.set(sheet, det);
+    }
+    // A new analysis of the sheet: the differences found before go.
+    const before = c.diffs.get(sheet);
+    if (a.top === 0 && before) {
+      c.bytes -= materialBytes(before);
+      c.diffs.delete(sheet);
+    }
+    det.add(a, b);
     return acc.facts().rows;
+  }
+
+  /**
+   * Ends a sheet's detection (M12-14): keeps the detector's counts and the
+   * word changes of side pages `a` and `b` (A moved by `place`), drops the
+   * detector. Returns the number of word changes.
+   */
+  detectSheet(
+    cmpId: string,
+    sheet: number,
+    a: number,
+    b: number,
+    place: Affine,
+    scan: boolean,
+  ): number {
+    const c = this.get(cmpId);
+    const det = c.detectors.get(sheet);
+    if (!det?.complete) throw new Error('sheet bands incomplete');
+    const cells = det.cells();
+    const ta = c.sides.a.texts.get(a);
+    const tb = c.sides.b.texts.get(b);
+    // The text layer is for pages with text (S28); a scan falls back to its regions.
+    const texts = scan ? [] : textChanges(ta, tb, place);
+    const k = 72 / det.dpi;
+    const m: SheetMaterial = {
+      cells,
+      texts,
+      scan,
+      width: det.width * k,
+      height: det.height * k,
+    };
+    const old = c.diffs.get(sheet);
+    if (old) c.bytes -= materialBytes(old);
+    c.diffs.set(sheet, m);
+    c.bytes += materialBytes(m);
+    c.detectors.delete(sheet);
+    return texts.length;
+  }
+
+  /** The differences of the sheets detected so far, at the settings given (D-61, Q22). */
+  differences(
+    cmpId: string,
+    sheets: { sheet: number; zones: Box[] }[],
+    sensitivity: Sensitivity,
+    minSize: number,
+  ): { sheet: number; diff: SheetDiff }[] {
+    const c = this.get(cmpId);
+    const out: { sheet: number; diff: SheetDiff }[] = [];
+    for (const { sheet, zones } of sheets) {
+      const m = c.diffs.get(sheet);
+      if (m) out.push({ sheet, diff: sheetDiff(m, { sensitivity, minSize, zones }) });
+    }
+    return out;
   }
 
   sheetFacts(cmpId: string, sheet: number): SheetFacts {
