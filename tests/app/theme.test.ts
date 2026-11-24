@@ -302,6 +302,8 @@ describe('where the theme is reached', () => {
       'pdftools.closeOutHideHighlights',
       // Compare's first-time tips were seen (M12-26).
       'pdftools.compareTipsSeen',
+      // The Measure loupe and automatic snapping choices (M13-02).
+      'pdftools.measureLoupe',
     ]);
     expect(items.every((d) => d.cleared)).toBe(true);
   });

@@ -1,5 +1,4 @@
-import { useEffect, useRef, useState } from 'react';
-import { createPortal } from 'react-dom';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useDocuments } from '../../../app/store/documentStore';
 import { format, msg } from '../../../i18n';
@@ -9,13 +8,17 @@ import { clearSnapMarker, snapPointIn } from '../../measure/snapping';
 import type { PageFrameInfo } from '../../view/DocumentView';
 import { renderEngine } from '../../view/host';
 import { updateView, useOverlayView } from '../overlay/overlayState';
-import type { TileJob } from '../overlay/painter';
+import { Loupe, type LoupeJob } from '../../view/loupe/Loupe';
+import type { LoupeRegion } from '../../view/loupe/loupeModel';
 import { nextSide, pickPoint, setPicking } from './manualAlign';
+
+/** For the tests: the loupe's own element. */
+const MAGNIFIER_TEST_ID = 'align-magnifier';
 
 /** The magnifier's side (CSS px) and how much larger it shows the drawing than the window. */
 const MAG_SIZE = 128;
 const MAG_FACTOR = 4;
-/** Device pixels per point the magnifier never goes past (a zoomed-in window needs no more). */
+/** CSS px per point the magnifier never goes past (a zoomed-in window needs no more). */
 const MAG_MAX_SCALE = 48;
 
 /**
@@ -144,28 +147,25 @@ export function AlignPickLayer({
           </span>
         );
       })}
-      {picking && lens
-        ? createPortal(
-            <Magnifier
-              id={id}
-              side={side}
-              docId={docId}
-              pageIndex={pageIndex}
-              client={lens.client}
-              at={laidToDisplayed(rotation, width, height, lens.at)}
-              windowScale={scale}
-            />,
-            document.body,
-          )
-        : null}
+      {picking && lens ? (
+        <Magnifier
+          id={id}
+          side={side}
+          docId={docId}
+          pageIndex={pageIndex}
+          client={lens.client}
+          at={laidToDisplayed(rotation, width, height, lens.at)}
+          windowScale={scale}
+        />
+      ) : null}
     </>
   );
 }
 
 /**
- * The magnifier beside the pointer: the spot under it drawn larger by the
- * Render worker (one request at a time, the latest spot wins; no pixel work
- * here), in the side's overlay colour, with a cross at the spot picked.
+ * The magnifier beside the pointer: the shared loupe (M13-02, D-68) showing
+ * the spot under it drawn larger by the Render worker, in the side's overlay
+ * colour, with a cross at the spot picked.
  */
 function Magnifier({
   id,
@@ -184,75 +184,47 @@ function Magnifier({
   at: Pt;
   windowScale: number;
 }) {
-  const canvas = useRef<HTMLCanvasElement>(null);
   const view = useOverlayView(id);
   const version = useDocuments((s) => s.docs[docId]?.edits ?? 0);
-  const job = useRef<TileJob | null>(null);
-  const wanted = useRef<(() => void) | null>(null);
-  const dpr = window.devicePixelRatio || 1;
-  const px = Math.round(MAG_SIZE * dpr);
-  const scale = Math.min(MAG_MAX_SCALE, windowScale * MAG_FACTOR) * dpr;
-  const x = Math.round(at.x * scale - px / 2);
-  const y = Math.round(at.y * scale - px / 2);
   const { style, thicken } = view;
-
-  useEffect(() => {
-    const go = (): void => {
+  const draw = useCallback(
+    (r: LoupeRegion): LoupeJob => {
       const s = { docId, pageIndex, place: IDENTITY, version };
       const j = renderEngine().rpc.call('overlayTile', {
         a: side === 'a' ? s : null,
         b: side === 'b' ? s : null,
-        scale,
-        x,
-        y,
-        width: px,
-        height: px,
+        scale: r.scale,
+        x: r.x,
+        y: r.y,
+        width: r.width,
+        height: r.height,
         style: { ...style, showA: true, showB: true, balance: 0, fade: 0 },
         thicken,
         comments: { a: false, b: false, hideChecks: false },
         cache: false,
       });
-      job.current = j;
-      j.promise
-        .then(
-          (r) => {
-            const ctx = canvas.current?.getContext('bitmaprenderer');
-            if (ctx) ctx.transferFromImageBitmap(r.bitmap);
-            else r.bitmap.close();
-          },
-          () => undefined,
-        )
-        .finally(() => {
-          if (job.current === j) job.current = null;
-          const next = wanted.current;
-          wanted.current = null;
-          next?.();
-        });
-    };
-    if (job.current) wanted.current = go;
-    else go();
-  }, [docId, pageIndex, side, version, scale, x, y, px, style, thicken]);
-
-  useEffect(
-    () => () => {
-      wanted.current = null;
-      job.current?.cancel();
+      return {
+        promise: j.promise.then((x) => x.bitmap),
+        cancel: () => {
+          j.cancel();
+        },
+      };
     },
-    [],
+    [docId, pageIndex, side, version, style, thicken],
   );
-
-  // Above and to the right of the pointer, kept inside the window.
-  const gap = 24;
-  const left = Math.min(window.innerWidth - MAG_SIZE - 4, client.x + gap);
-  const top = client.y - gap - MAG_SIZE < 4 ? client.y + gap : client.y - gap - MAG_SIZE;
+  const key = useMemo(
+    () => JSON.stringify([docId, pageIndex, side, version, style, thicken]),
+    [docId, pageIndex, side, version, style, thicken],
+  );
   return (
-    <div
-      className="align-magnifier"
-      data-testid="align-magnifier"
-      aria-hidden="true"
-      style={{ left, top, width: MAG_SIZE, height: MAG_SIZE }}
-    >
-      <canvas ref={canvas} width={px} height={px} />
-    </div>
+    <Loupe
+      client={client}
+      side={MAG_SIZE}
+      center={at}
+      zoom={Math.min(MAG_MAX_SCALE, windowScale * MAG_FACTOR)}
+      sourceKey={key}
+      draw={draw}
+      data-testid={MAGNIFIER_TEST_ID}
+    />
   );
 }

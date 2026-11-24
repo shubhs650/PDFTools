@@ -11,6 +11,7 @@ import { installMeasurements } from '../measure/measurements';
 import { installMeasureTools } from '../measure/measureTools';
 import { installViewportTool } from '../measure/viewports';
 import { installSnapping } from '../measure/snapping';
+import { installMeasureLoupe } from '../measure/loupePointer';
 import { installHistoryJoin } from '../annotate/historyJoin';
 import { installTextEdit } from '../annotate/textEdit';
 import { installNoteDoubleClick } from '../annotate/notes/openNote';
@@ -47,6 +48,7 @@ const onInitialized = (registry: Parameters<typeof setRegistry>[0]): Promise<voi
     installViewportTool(registry);
     installMeasurements(registry);
     installSnapping();
+    installMeasureLoupe();
     installAttachmentRefresh(registry);
     installSignTools(registry);
     installFieldTools(registry);

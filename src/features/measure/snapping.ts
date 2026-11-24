@@ -5,6 +5,8 @@
 // the Snap worker's latest answer; queries are coalesced to ≤ 1 in flight per
 // animation frame, so snapping never waits for PDFium and the main thread only
 // converts coordinates (rule 1). Alt held: no snapping for that move.
+// Picking a measuring tool turns snapping on and its end turns it back off
+// unless the person switched it meanwhile (M13-02, D-68, ADR-034).
 import { createStore, useStore } from 'zustand';
 import { recordError } from '../../app/diagnostics';
 import { appStore } from '../../app/store/appStore';
@@ -14,6 +16,10 @@ import { RpcClient } from '../../engine/rpc';
 import { SNAP_KINDS, type Snap, type SnapKind } from '../../model/snapIndex';
 import type { Pt } from '../../model/scale';
 import { appDb } from '../../storage/appDb';
+import { t } from '../../i18n';
+import { onSnapToggled, onToolChange, type AutoSnapSession } from '../../model/autoSnap';
+import { showStatusToast } from '../snapshot/snapshot';
+import { loupeSettingsStore } from './loupeSettings';
 import { setSnapper } from '../annotate/tools/drawTools';
 import { workClient } from '../view/host';
 import { frameOf } from './viewports';
@@ -221,7 +227,13 @@ export function clearSnapMarker(): void {
 
 // ---- switches ---------------------------------------------------------------------
 
-export async function setSnapping(on: boolean): Promise<void> {
+/**
+ * Automatic snapping while measuring (M13-02, D-68, P3): the session that
+ * turned snapping on, so the tool's end can turn it back off.
+ */
+let autoSession: AutoSnapSession | null = null;
+
+function applySnapping(on: boolean): void {
   snapStore.setState({ enabled: on, ...(on ? {} : { marker: null }) });
   last = null;
   if (on) {
@@ -229,17 +241,50 @@ export async function setSnapping(on: boolean): Promise<void> {
     const id = d.activeId;
     if (id) void ensurePage(id, d.docs[id]?.view.page ?? 0);
   }
+}
+
+/** Kept on the device: the person's own choice, never a measuring session's automatic one. */
+async function persist(): Promise<void> {
+  const s = snapStore.getState();
+  const a = autoSession;
+  const on = a?.turnedOn && !a.touched ? a.before : s.enabled;
   try {
-    await (await appDb()).setSetting(SETTINGS_KEY, { on, kinds: snapStore.getState().kinds });
+    await (await appDb()).setSetting(SETTINGS_KEY, { on, kinds: s.kinds });
   } catch (err) {
     recordError('snap.settings', err);
   }
 }
 
+/** The person switches snapping (status bar, ribbon): their choice, kept on the device. */
+export async function setSnapping(on: boolean): Promise<void> {
+  autoSession = onSnapToggled(autoSession);
+  applySnapping(on);
+  await persist();
+}
+
 export function toggleKind(kind: SnapKind): void {
   snapStore.setState((s) => ({ kinds: { ...s.kinds, [kind]: !s.kinds[kind] } }));
   last = null;
-  void setSnapping(snapStore.getState().enabled);
+  void persist();
+}
+
+/** A tool change: picking a measuring tool turns snapping on, its end turns it back (D-68). */
+function followTool(from: string, to: string): void {
+  const step = onToolChange(autoSession, {
+    from,
+    to,
+    enabled: snapStore.getState().enabled,
+    autoSnap: loupeSettingsStore.getState().autoSnap,
+  });
+  autoSession = step.session;
+  if (step.set !== null) applySnapping(step.set);
+  const docId = documentStore.getState().activeId;
+  if (step.note && docId) showStatusToast(docId, t('snap.autoOn'), true);
+}
+
+/** Tests: no measuring session. */
+export function resetAutoSnap(): void {
+  autoSession = null;
 }
 
 /** Called once at start: the remembered switches; snapping follows the current page. */
@@ -256,7 +301,9 @@ export function installSnapping(): () => void {
     }
   })();
   const offTool = appStore.subscribe((s, prev) => {
-    if (s.tool !== prev.tool) clearSnapMarker();
+    if (s.tool === prev.tool) return;
+    clearSnapMarker();
+    followTool(prev.tool, s.tool);
   });
   const off = documentStore.subscribe((s, prev) => {
     if (s.activeId !== prev.activeId) clearSnapMarker();

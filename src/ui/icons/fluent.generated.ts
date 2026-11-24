@@ -279,6 +279,7 @@ export const FLUENT_GLYPHS: Record<string, FluentGlyphs> = {
   'measure.scaleViewport': { regular: { small: SelectObject20Regular, large: SelectObject24Regular, largeNative: 24 }, filled: { small: SelectObject20Filled, large: SelectObject24Filled, largeNative: 24 } },
   'measure.units': { regular: { small: NumberSymbol20Regular } },
   'measure.snapping': { regular: { small: Target20Regular }, filled: { small: Target20Filled } },
+  'measure.loupe': { regular: { small: SearchSquare20Regular }, filled: { small: SearchSquare20Filled } },
   'measure.snapEndpoint': { regular: { small: Square20Regular }, filled: { small: Square20Filled } },
   'measure.snapMidpoint': { regular: { small: Triangle20Regular }, filled: { small: Triangle20Filled } },
   'measure.snapIntersection': { regular: { small: Dismiss20Regular }, filled: { small: Dismiss20Filled } },

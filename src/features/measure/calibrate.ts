@@ -12,6 +12,7 @@ import { appStore } from '../../app/store/appStore';
 import { capability } from '../view/host';
 import { scaleStore } from './scaleStore';
 import { snapPoint } from './snapping';
+import { trackLoupe } from './loupePointer';
 
 let first: { page: number; x: number; y: number } | null = null;
 
@@ -20,10 +21,12 @@ const handler: HandlerFactory<PdfAnnotationObject> = {
   create(context) {
     return {
       onPointerMove: (p, evt) => {
-        // Keeps the snap marker live (M3-18); the click takes the snapped point.
+        // Keeps the snap marker and the loupe live (M3-18, M13-02); the click takes the snapped point.
+        trackLoupe('calibrate', context.pageIndex, p, evt);
         snapPoint(context.pageIndex, p, evt);
       },
       onClick: (p, evt) => {
+        trackLoupe('calibrate', context.pageIndex, p, evt);
         const pos = snapPoint(context.pageIndex, p, evt);
         if (first?.page !== context.pageIndex) {
           first = { page: context.pageIndex, ...pos };

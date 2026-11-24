@@ -18,6 +18,7 @@ import { stampStore } from '../stamps/stampStore';
 import { loadScales, openScaleDialog, scaleStore } from '../measure/scaleStore';
 import { MEASURE_COMMANDS } from '../measure/measureTools';
 import { setSnapping, snapStore, toggleKind } from '../measure/snapping';
+import { loupeSettingsStore, setLoupeSettings } from '../measure/loupeSettings';
 import { openCrs } from '../crs/crsExport';
 import { capability, hostStore } from '../view/host';
 import { annotationCapability, annotationState } from './selection';
@@ -496,6 +497,13 @@ export function registerAnnotateCommands(): () => void {
       },
       isPressed: () => snapStore.getState().enabled,
     }),
+    // The Measure loupe (M13-02, D-68): shown with the measuring tools, kept on this device.
+    registerCommand('measure.loupe', {
+      run: () => {
+        setLoupeSettings({ on: !loupeSettingsStore.getState().on });
+      },
+      isPressed: () => loupeSettingsStore.getState().on,
+    }),
     ...(
       [
         ['measure.snapEndpoint', 'endpoint'],
@@ -728,6 +736,9 @@ export function registerAnnotateCommands(): () => void {
   const offSnap = snapStore.subscribe((s, prev) => {
     if (s.enabled !== prev.enabled || s.kinds !== prev.kinds) notify();
   });
+  const offLoupe = loupeSettingsStore.subscribe((s, prev) => {
+    if (s.on !== prev.on) notify();
+  });
   // Paste is enabled once something is copied (M4-21).
   const offClip = clipboardStore.subscribe(notify);
   // The text menu's commands (M7-05).
@@ -737,6 +748,7 @@ export function registerAnnotateCommands(): () => void {
     offRegistry();
     offPlugins();
     offSnap();
+    offLoupe();
     offClip();
     for (const off of offs) off();
   };
