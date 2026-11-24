@@ -3,6 +3,8 @@ import { HelpButton } from '../../help/HelpButton';
 import { ChevronDown16Regular } from '@fluentui/react-icons/svg/chevron-down';
 import { useEffect, useId, useMemo, useRef } from 'react';
 import { useTranslation } from 'react-i18next';
+import { BAR_CLOSE_CLASS, BarCloseButton } from '../../../app/BarCloseButton';
+import { useClosedBars } from '../../../app/infoBars';
 import { documentStore, useDocuments } from '../../../app/store/documentStore';
 import { format, msg, type MessageKey } from '../../../i18n';
 import type { OcrLanguage } from '../../../model/ocr/languages';
@@ -305,10 +307,15 @@ function RunStatus({ id, run }: { id: string; run: TextRun | undefined }) {
   return null;
 }
 
+/** The comparison header's first button: the focus once the last note is closed. */
+const HEADER_BUTTON = 'header button';
+
 /** Scans to read by OCR (Q29), pages of limited support, and early results. */
 function Notices({ comparison: c, run }: { comparison: Comparison; run: TextRun }) {
   const { t } = useTranslation();
   const view = useTextView(c.id);
+  const closed = useClosedBars();
+  const box = useRef<HTMLDivElement>(null);
   const r = run.result;
   if (!r) return null;
   const notes: { key: string; text: string; action?: { label: string; run: () => void } }[] = [];
@@ -358,13 +365,25 @@ function Notices({ comparison: c, run }: { comparison: Comparison; run: TextRun 
         pages: format.number(Math.max(run.state.pages.a, run.state.pages.b)),
       }),
     });
-  if (notes.length === 0) return null;
+  // Each note has a × that closes it for this comparison (M13-04).
+  const shown = notes.filter((n) => !closed.has(`text-notice:${c.id}:${n.key}`));
+  if (shown.length === 0) return null;
   return (
-    <div className="text-notices">
-      {notes.map((n) => (
+    <div className="text-notices" ref={box}>
+      {shown.map((n) => (
         <p key={n.key} className="text-notice" data-testid={`text-notice-${n.key}`}>
           <span>{n.text}</span>
           {n.action ? <Button label={n.action.label} size="small" onClick={n.action.run} /> : null}
+          <BarCloseButton
+            barKey={`text-notice:${c.id}:${n.key}`}
+            afterClose={() => {
+              // The next note's ×, or the comparison's header when none is left.
+              const next =
+                box.current?.querySelector<HTMLElement>(`.${BAR_CLOSE_CLASS}`) ??
+                box.current?.parentElement?.querySelector<HTMLElement>(HEADER_BUTTON);
+              next?.focus();
+            }}
+          />
         </p>
       ))}
     </div>

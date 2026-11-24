@@ -391,6 +391,7 @@
     "properties": "Properties",
     "closeProperties": "Close the Properties pane",
     "statusBar": "Status bar",
+    "closeMessage": "Close this message",
     "closePane": "Close the navigation pane",
     "resizePane": "Resize the navigation pane",
     "hideLeftPane": "Hide left pane",

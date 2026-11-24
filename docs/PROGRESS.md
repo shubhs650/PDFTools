@@ -108,7 +108,13 @@ interop is in the M6 pack (CHECKLIST §M6 R1–R4). Rev 0 (M0–M4) is complete 
   `tests/model/plainNumbers.test.ts`, `tests/annotate/line-ending-appearance.test.ts` (real
   PDFium: heads drawn, kept through Ctrl+S), `e2e/view-history.spec.ts` (page box and thumbnails
   → back / forward, tab switches, closing a tab, the toggle by mouse and keyboard, the fold, the
-  open arrows, axe light and dark). Screenshots: `/mnt/project-files/m13-04/`.
+  open arrows, axe light and dark). **Owner bug:** information bars can be closed (×, "Close this
+  message"; `app/infoBars.ts`, `app/BarCloseButton.tsx`): the digital signatures, document
+  restrictions and XFA bars for that document, and the notes above a text comparison for that
+  comparison, while the window is open (nothing stored). The recovery bar ("Not now"), What's
+  new (its ×) and the alignment check (a decision) keep their own buttons. e2e in
+  `signatures.spec.ts`, `protect.spec.ts`, `forms.spec.ts`, `compare-text.spec.ts`. Screenshots:
+  `/mnt/project-files/m13-04/`.
 
 - **M13-03 — Spike S32, the Thin Lines rendering route (ADR-034 Amendment 2, D-69; plan
   [M13](plan/M13.md) §3).** Works, **route b**: while Thin Lines is on, the Render worker draws

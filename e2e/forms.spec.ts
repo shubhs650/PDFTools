@@ -168,6 +168,12 @@ test('XFA: a full XFA form shows the banner and no fields; a hybrid still fills 
   await expect(page.getByTestId('xfa-banner')).toHaveText('XFA forms are not supported.');
   await page.waitForTimeout(500); // past the form layer's settle delay
   await expect(page.locator('[data-form-control]')).toHaveCount(0);
+  // Its × closes it for this document (M13-04).
+  await page
+    .getByRole('region', { name: 'XFA form' })
+    .getByRole('button', { name: 'Close this message' })
+    .click();
+  await expect(page.getByTestId('xfa-banner')).toHaveCount(0);
 
   await page.goto('/');
   await drop(page, [{ name: 'hybrid.pdf', b64: Buffer.from(xfaPdf(false)).toString('base64') }]);
