@@ -4484,6 +4484,14 @@ textarea.form-field {
   pointer-events: none;
 }
 
+.measure-leaders {
+  position: absolute;
+  inset: var(--space-0);
+  width: 100%;
+  height: 100%;
+  overflow: visible;
+}
+
 .measure-live {
   position: absolute;
   transform: translate(var(--space-3), var(--space-3));

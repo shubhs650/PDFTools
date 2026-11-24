@@ -69,6 +69,8 @@ async function distance(page: Page, id: string, a: [number, number], b: [number,
   await page.mouse.down();
   await page.mouse.move(q.x, q.y, { steps: 5 });
   await page.mouse.up();
+  // M13-10: a click on the second point places it with no offset.
+  await page.mouse.click(q.x, q.y);
   await page.keyboard.press('Escape');
   let m: Obj | undefined;
   await expect

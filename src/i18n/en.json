@@ -1475,7 +1475,10 @@
       "placeholder": "Type here"
     },
     "toolHint": {
-      "callout": "Drag from the point to the text box position"
+      "callout": "Drag from the point to the text box position",
+      "distance": "Click two points, move sideways to set the dimension line, then click. Esc cancels.",
+      "perimeter": "Click each point, then double-click or press Enter. Esc cancels.",
+      "area": "Click each corner, then click the first one, double-click or press Enter. Esc cancels."
     },
     "link": {
       "title": "Link",

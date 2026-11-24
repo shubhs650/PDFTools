@@ -1,7 +1,7 @@
-# Triya PDF — Architecture & Product Specification (Rev 0.24)
+# Triya PDF — Architecture & Product Specification (Rev 0.25)
 
 **App:** Triya PDF (formerly PDFTools, D-41) · **URL:** `app.triyapdf.com` and `triya-pdf.openengtools.com` (D-28) · **Platform:** Open Engineering Tools (OET)
-**Status:** Approved for implementation · **Last updated:** 24-Nov-2026 (Rev 0.24)
+**Status:** Approved for implementation · **Last updated:** 24-Nov-2026 (Rev 0.25)
 **Companion file:** `CLAUDE.md` (standing rules for the coding agent — read it first)
 
 > This document is the single source of truth. Where code and this document disagree, this document wins until it is deliberately amended. Decisions are numbered (D-xx) so commits, issues and ADRs can reference them.
@@ -25,6 +25,8 @@
 > **Rev 0.17 amendment** — [ADR-028](docs/adr/028-m11-tabs-fonts-select.md) (owner-approved 2026-11-17, all optional items accepted): **M11** — document tabs v2 (D-50), comments selectable in every pointer mode (D-51), a self-hosted font library for text comments with our own appearance streams (D-52), pick up where you left off (D-53), fonts installed on the computer (D-54), split, images to PDF and crop (D-55), resizable panes with edge arrows (D-56) (§2, §3.2, §7.1, §7.8, §8, §8.1, §9, §10.3, §13 M11).
 
 > **Rev 0.18 amendment** — [ADR-028](docs/adr/028-m11-tabs-fonts-select.md) amendment (owner, 2026-11-18): **D-54 withdrawn** — fonts installed on the user's computer are not supported (a cross-compatibility risk); text comments use only the fonts that ship with the app (D-52), and the library may grow later on user request (§2, §7.1, §10.3, §13 M11).
+
+> **Rev 0.25 amendment** — [ADR-034](docs/adr/034-m13-final-improvements.md) Amendment 3 (owner, 2026-11-24): **measuring by clicks** — Distance is click, click, move sideways to set its dimension line, click, stored as the standard leader line entries `/LL` and `/LLE` with an appearance that draws them; Perimeter and Area by clicks (D-72) (§7.4).
 
 > **Rev 0.24 amendment** — [ADR-034](docs/adr/034-m13-final-improvements.md) (owner, 2026-11-24): **M13 — final improvements for 1.1.0** — sample comparisons shipped with the app (D-67); a loupe and automatic snapping for Measure (D-68); **Thin Lines** on screen (D-69); labelled status bar toggles, Previous view / Next view in the status bar and one view history for the window (D-70); **CRS export into project Excel templates** (D-71) (§2, §5, §7.4, §7.5, §7.16, §8.1, §13).
 
@@ -156,6 +158,7 @@ Tablet/phone UI · Safari parity · PDF text/content editing · form design beyo
 | D-69 | **Thin Lines** (ADR-034): Ctrl+5, View ribbon and status bar toggle; every stroked page line drawn 1 device pixel wide on screen only (comments, files, print and exports untouched); one setting stored on the device; route by spike S32 |
 | D-70 | **Status bar** (ADR-034): labelled toggles (icon plus text) for Thin Lines and Enable Snapping; Previous view / Next view beside the page buttons; one view history for the whole window, including tab switches and opened documents |
 | D-71 | **CRS project templates** (ADR-034): Export CRS fills a project's own `.xlsx` form stored on the device (sheet, start row, detected pre-drawn rows then inserted rows copying format, formulas and drop-downs, detail cells, file-name rule, field list with column numbers, reply fields, status words, type ticks, Ignore highlights, one sheet per page or per document, snapshots fitted to their column), set up in guided steps with a live sheet preview, shared as a template file; the Standard CRS stays the default; limits by spike S33 |
+| D-72 | **Measuring by clicks** (ADR-034 Amendment 3): Distance by click, click, a sideways move that sets the dimension line beside the points (leader lines to it), and a click; Enter places, Esc drops, the old drag still gives the points; stored as the Line's `/LL`, `/LLE` (`/L` stays on the measured points) with an appearance drawn by the Render worker; Perimeter and Area by clicks |
 | D-34 | **OCR** (Rev 1 item 1, ADR-020): Tesseract WASM core in its own worker, five languages (English precached, the rest on first use), invisible text layer written by our object layer with a glyphless font, pages with text skipped unless asked; needs the modify permission |
 
 ---
@@ -376,6 +379,8 @@ First markup triggers a dialog: name, initials, discipline, company (optional). 
 - **Scale viewports**: user draws regions with their own scale (e.g. Detail A 1:5). Measurement uses the viewport containing it; outside any viewport → page default scale; no scale → shows "uncalibrated"; spanning viewports → flagged warning.
 - Persist using standard PDF measurement structures (Measure / Viewport dictionaries). EmbedPDF/PDFium cannot write or read these, so a narrow **own PDF object layer** (reader, serializer, patch writer) in the Render worker adds `/Measure`, `/IT`, `/Cap`, `/Contents` and page `/VP`, merged into the single Ctrl+S revision (ADR-007). Encrypted files: the Standard security handler is implemented in M3; until then, measurements in encrypted PDFs are shown but not saved, with a message (ADR-007). Label strategy and viewport semantics for viewer-made files follow the owner's interop run (ADR-007 decisions 2–3).
 - **Snapping** to vector geometry (endpoints, midpoints, intersections, nearest-on-segment). Geometry for each visible page is extracted whole in the Work worker (page parsing dominates, so region extraction does not pay off — ADR-008), spatially indexed, cached per page. Queries are answered by the Snap worker (§3.1, ADR-008).
+
+- **Measuring by clicks** (D-72, ADR-034 Amendment 3): Distance is click, click, move sideways to set the dimension line, click; Perimeter and Area click each point and finish with a double-click or Enter (an area also on its first corner); Esc drops. A Distance's offset is the standard `/LL` and `/LLE` of its Line annotation, drawn in its appearance by the Render worker.
 
 - **Loupe and auto-snap** (D-68, ADR-034): a loupe beside the pointer while a Measure tool, Calibrate or Scale Viewport is active; snapping turns on with those tools and returns to its earlier state when they end.
 

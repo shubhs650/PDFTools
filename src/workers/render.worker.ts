@@ -35,6 +35,8 @@ import { imageUnder } from './shared/pageImages';
 import { dropCustom, keepAuthor, nameTargets, writeMarkupIntent } from './render/annotIds';
 import { installFontReadback } from './render/freeTextFonts';
 import { applyTextColors, takeTextColorFallbacks } from './render/freeTextColors';
+import { applyDimensionAppearance } from './render/dimensionAppearance';
+import { installLeaderReadback } from './render/leaderReadback';
 import { fixLineEndingAppearance } from './render/lineEndingAppearance';
 import subsetWasmUrl from 'harfbuzzjs/dist/harfbuzz-subset.wasm?url';
 import {
@@ -152,6 +154,8 @@ const handlers: Handlers<RenderApi> = {
     native = new PdfiumNative(mod, { fontFallback });
     // Text boxes keep their standard font when read back (M6-06).
     installFontReadback(native);
+    // A line's leader lines (/LL) come back as its `leader` (M13-10).
+    installLeaderReadback(mod, native);
     const t = new SaveTracker(mod, native);
     tracker = t;
     thinCopies = new ThinCopies(mod, native, {
@@ -240,6 +244,8 @@ const handlers: Handlers<RenderApi> = {
       applyTextColors(m, n, method, callArgs, faces !== null);
       // Its text in a library font, shaped and embedded (M11-07, D-52).
       applyCommentFont(m, n, method, callArgs, faces);
+      // A Distance with an offset: its dimension line and leader lines (M13-10).
+      applyDimensionAppearance(m, n, method, callArgs);
       // Arrow heads on level and upright lines, readable (M13-04).
       fixLineEndingAppearance(m, n, method, callArgs);
     }

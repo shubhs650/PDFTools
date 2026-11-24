@@ -72,6 +72,8 @@ test('snapped distance: exact value between two known endpoints; Alt turns snapp
   await expect(page.getByTestId('snap-marker')).toHaveAttribute('data-kind', 'endpoint');
   await page.mouse.move(b.x, b.y);
   await page.mouse.up();
+  // M13-10: a click on the second point places it with no offset.
+  await page.mouse.click(b.x, b.y);
   await expect
     .poll(async () =>
       ((await cap(page, 'annotate', 'list', id)) as { type: number; contents: string | null }[])

@@ -1,6 +1,9 @@
 // Distance, Perimeter and Area (M3-16, §7.4, ADR-007): EmbedPDF's line,
 // polyline and polygon tools with a dimension intent (/IT), so PDFium draws
-// the geometry (B7) and the plugin previews, commits and undoes as usual. The
+// the geometry (B7) and the plugin previews, commits and undoes as usual. All
+// three are placed by clicks (M13-10): Distance with our own handler (two
+// points, then the offset of its dimension line, dimensionTool.ts); Perimeter
+// and Area with the plugin's click-by-click polyline and polygon. The
 // plugin's previews feed the live value next to the pointer (measureStore);
 // the value, label and measure keys follow on commit (measurements.ts).
 import type { PluginRegistry } from '@embedpdf/core';
@@ -11,6 +14,7 @@ import type { Pt } from '../../model/scale';
 import type { DrawTool } from '../annotate/tools/drawModel';
 import { wrapFactory, type HandlerContext } from '../annotate/tools/drawTools';
 import { capability } from '../view/host';
+import { dimensionHandlerFactory, withLeaderRect, type Patch } from './dimensionTool';
 import { setLive } from './measureStore';
 
 export const MEASURE_TOOLS = {
@@ -82,7 +86,8 @@ export function installMeasureTools(registry: PluginRegistry): void {
   }
   for (const [id, kind] of Object.entries(MEASURE_TOOLS) as [MeasureTool, MeasureKind][]) {
     const base = cap.getTool(BASE[id]);
-    const handler = base?.pointerHandler;
+    // Distance is placed by clicks with an offset (M13-10, dimensionTool.ts).
+    const handler = kind === 'distance' ? dimensionHandlerFactory : base?.pointerHandler;
     if (!base || !handler) continue;
     // A distance is drawn like a dimension line, an open arrow at each end (owner,
     // 2026-11-24, M13-04); a perimeter keeps plain (butt) ends.
@@ -98,9 +103,17 @@ export function installMeasureTools(registry: PluginRegistry): void {
       // Above the base tool's score, so a measurement is edited as one.
       matchScore: (a: PdfAnnotationObject) => (measureKind(a) === kind ? 30 : 0),
       defaults: { ...base.defaults, ...STYLE, ...ends, intent: MEASURE_INTENT[kind] },
-      // No click-to-place default length: a measurement is always drawn.
-      ...(kind === 'distance' ? { clickBehavior: { enabled: false, defaultLength: 0 } } : {}),
-      pointerHandler: wrapFactory(id, handler, watching(kind)),
+      // No click-to-place default length: a measurement is always drawn. Its
+      // leader lines stay inside its rect when a point is dragged (M13-10).
+      ...(kind === 'distance'
+        ? {
+            clickBehavior: { enabled: false, defaultLength: 0 },
+            transform: withLeaderRect(base.transform as Patch | undefined),
+          }
+        : {}),
+      // Distance keeps the live value itself (its offset too); the others watch the previews.
+      pointerHandler:
+        kind === 'distance' ? wrapFactory(id, handler) : wrapFactory(id, handler, watching(kind)),
     });
   }
 }

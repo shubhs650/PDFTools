@@ -124,12 +124,27 @@ export function wrapFactory(
       };
       const out: Handlers = { ...h };
       if (vertices) {
+        // Distance by clicks (M13-10) says when nothing is half placed any more.
+        const drawing = (h as { drawing?: () => boolean }).drawing;
         out.onClick = (pos, evt, mode) => {
           const p = fix(pos, evt);
           h.onClick?.(p, evt, mode);
           anchor = p;
-          inProgress.add(entry);
+          if (drawing && !drawing()) {
+            anchor = null;
+            inProgress.delete(entry);
+          } else inProgress.add(entry);
         };
+        if (drawing) {
+          // Its press-and-drag (the second point on release) snaps too.
+          out.onPointerDown = (pos, evt, mode) => {
+            h.onPointerDown?.(fix(pos, evt), evt, mode);
+          };
+          out.onPointerUp = (pos, evt, mode) => {
+            h.onPointerUp?.(fix(pos, evt), evt, mode);
+            if (drawing()) inProgress.add(entry);
+          };
+        }
         out.onPointerMove = (pos, evt, mode) => {
           h.onPointerMove?.(fix(pos, evt), evt, mode);
         };

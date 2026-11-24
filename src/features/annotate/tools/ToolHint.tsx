@@ -7,6 +7,10 @@ import { msg, type MessageKey } from '../../../i18n';
 const HINTS: Partial<Record<string, MessageKey>> = {
   // M7-03 (ADR-023 D-43 f, B11): one drag, or the three clicks.
   freeTextCallout: msg('annotate.toolHint.callout'),
+  // M13-10: every Measure tool is placed by clicks.
+  measureDistance: msg('annotate.toolHint.distance'),
+  measurePerimeter: msg('annotate.toolHint.perimeter'),
+  measureArea: msg('annotate.toolHint.area'),
 };
 
 /** Status bar (§5): the active tool's hint. */

@@ -33,6 +33,7 @@ import {
   valueText,
   type MeasureKind,
 } from '../../model/measurement';
+import { leaderOf } from '../../model/dimension';
 import { measureFromPdf, ratioLabel, type ScaleChoice, type Scale } from '../../model/scale';
 import { layoutOf, scaleChoice, scaleOfChoice } from '../../model/scaleViewport';
 import { toUserSpace } from '../../model/measurement';
@@ -174,7 +175,14 @@ function refresh(registry: PluginRegistry, docId: string, id: string, how: 'join
   const s = scaleForMeasurement(docId, a);
   const text = measurementText(kind, a, s);
   const label = LABEL.freeText ? labelOf(scope, a.id) : null;
-  const rect = labelRect(kind, measurePoints(a), text, pageSize(registry, docId, a.pageIndex));
+  const rect = labelRect(
+    kind,
+    measurePoints(a),
+    text,
+    pageSize(registry, docId, a.pageIndex),
+    undefined,
+    leaderOf(a),
+  );
   const apply = (): void => {
     if (a.contents !== text) scope.updateAnnotation(a.pageIndex, a.id, { contents: text });
     if (!LABEL.freeText) return;
