@@ -544,14 +544,15 @@ export const COMMANDS: readonly CommandDef[] = [
     toggle: true,
   },
   {
+    // View → Loupe (M13-02·O1, D-68, ADR-034): the Measure loupe in every tool.
     id: 'view.loupe',
     tab: 'view',
     group: 'zoom',
     size: 'small',
     fluent: 'SearchSquare',
-    milestone: 'later',
+    milestone: 'M3',
     toggle: true,
-    customPending: true,
+    shipped: true,
   },
   {
     id: 'view.panZoom',

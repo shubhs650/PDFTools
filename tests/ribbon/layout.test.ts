@@ -79,7 +79,7 @@ describe('ribbon layout from the command table (§8, ADR-001 B6, M1-Q2)', () => 
   it('omits unavailable commands instead of disabling them', () => {
     const ids = m1.tabs.flatMap((t) => t.groups.flatMap((g) => g.commands.map((c) => c.id)));
     expect(ids).toContain('home.advancedSearch'); // shipped in M2-09
-    expect(ids).not.toContain('view.loupe');
+    expect(ids).not.toContain('view.panZoom');
     expect(ids).toContain('view.continuousFacing');
   });
 

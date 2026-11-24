@@ -564,6 +564,8 @@ export function DocumentView({ documentId, sheet }: { documentId: string; sheet?
           data-testid={sheet?.testId ?? VIEW_TEST_ID}
           data-document-view=""
           data-doc-id={documentId}
+          // The overlay window draws its own page: no View → Loupe there (M13-02·O1).
+          data-loupe-off={sheet?.content ? '' : undefined}
           role={REGION}
           aria-label={name}
           aria-busy={restoring || undefined}
