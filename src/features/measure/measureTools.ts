@@ -84,15 +84,11 @@ export function installMeasureTools(registry: PluginRegistry): void {
     const base = cap.getTool(BASE[id]);
     const handler = base?.pointerHandler;
     if (!base || !handler) continue;
-    const ends =
-      kind === 'area'
-        ? {}
-        : {
-            lineEndings: {
-              start: PdfAnnotationLineEnding.Butt,
-              end: PdfAnnotationLineEnding.Butt,
-            },
-          };
+    // A distance is drawn like a dimension line, an open arrow at each end (owner,
+    // 2026-11-24, M13-04); a perimeter keeps plain (butt) ends.
+    const end =
+      kind === 'distance' ? PdfAnnotationLineEnding.OpenArrow : PdfAnnotationLineEnding.Butt;
+    const ends = kind === 'area' ? {} : { lineEndings: { start: end, end } };
     cap.addTool({
       ...base,
       id,

@@ -115,3 +115,66 @@ as written.** The owner opened the sample files (project files, `m13-06/`) in Ex
 8. **Left to M13-07:** a table (list object) on the chosen sheet below the start row (warn, or
    move its range by the same rule with a test), tests for notes and hyperlinks in moved rows, and
    relative references in custom drop-down formulas.
+
+## Amendment 2 — S32: the Thin Lines rendering route (M13-03, 2026-11-24)
+
+Spike S32 ([`spikes/s32-thin-lines/`](../../spikes/s32-thin-lines/),
+[RESULTS.md](../../spikes/s32-thin-lines/RESULTS.md)) compared the three routes of plan §3 on the
+app's pinned engine (`@embedpdf/pdfium` and `@embedpdf/engines` 2.15.1) with the Render worker's
+own save code, on overlay corpus pairs 08, 12, 14 and 16, a self-made A0 CAD sheet (128,016 page
+objects, one path per line, 2,000 placed symbols in form XObjects), the e2e A0 sheet and a
+120 MB file. **Verdict: works, route b. No new dependency; D-69 stands as written.**
+
+1. **How a line is thinned.** Every stroked path of the page, including those inside form
+   XObjects at any depth, gets stroke width 0 (`FPDFPageObj_SetStrokeWidth`), which PDFium draws
+   exactly 1 device pixel wide at every zoom (3 pt: 3 → 1 px at 100 %, 48 → 1 px at 1600 %),
+   dashes kept. Fills, images, shadings, text in fonts (also drawn as stroked outlines) and
+   comments are not page objects that change and draw exactly as before. Lettering drawn as
+   lines (common in CAD files) thins like any other line. Not reached: lines inside tiling
+   pattern cells and Type 3 glyphs (PDFium gives no access); Help says so with the filled-outline
+   note. The walk calls the WASM exports directly (21 ms for 128,016 objects; the wrapped
+   functions take 9× longer).
+2. **Route a (toggle widths on the app's own document) is rejected.** PDFium keeps a "changed"
+   mark on every object whose width was set, and putting the width back does not clear it.
+   EmbedPDF calls `FPDFPage_GenerateContent` on the cached page for every comment added, changed
+   or removed, so one thin tile followed by one comment edit makes Ctrl+S, keep-all, the
+   snapshot, Save Optimized and Flatten-then-save write the page's content streams again (pair
+   14's Ctrl+S tail: 925 bytes → 297 KB), and PDFium's content writer is not lossless for every
+   stream. Dropping the page after every thin tile keeps the bytes identical but parses the page
+   for every tile (+100 – 170 ms per tile on A0 sheets).
+3. **Route c (Work worker tiles) is rejected.** The Work worker gives way only between pages and
+   some of its jobs draw a whole page in one call (an A0 sheet at 150 dpi: 0.8 – 1.6 s), its copy
+   of the document is the one redaction rewrites (so it would need a separate thin copy anyway),
+   and tiles would need a new path to it.
+4. **Route b (chosen): a view-only copy in the Render worker.** While Thin Lines is on, the Render
+   worker opens a second, read-only copy of each document being viewed and draws page tiles (and
+   the progressive preview) from it; comment tiles, snapshots, print, exports, the CRS and every
+   save keep using the document itself, which Thin Lines never touches.
+   - **Bytes of the copy:** the file as opened, read straight from the document's own buffer in
+     the WASM heap (`FPDF_LoadCustomDocument`, so the file is never held twice), plus, only when
+     the page content changed since opening, PDFium's incremental section for the current state.
+     Comments and form values do not count (tiles have no comments), so the usual case opens in
+     1 – 4 ms. The copy is registered in EmbedPDF's document cache (in `pdfium.ts`, the one file
+     allowed into its internals) and drawn with the same `renderPageRect`, so rotation and tiles
+     line up exactly; it is closed before its document.
+   - **Kept thin:** each page of the copy is walked once per load and its widths set to 0; the
+     copy is never edited otherwise and never saved.
+   - **Kept current:** reopened after anything that changes page content or pages — page
+     operations and their undo, Flatten Comments, object and OCR-layer transfers, redaction —
+     the moments the app already calls `syncLive` for the Work worker; the tile cache is keyed by
+     the setting and dropped for those pages. Reopening after a change costs one PDFium save of
+     the document (a few ms on drawings, 3.3 s on a 120 MB image file), never per tile.
+   - **Measured:** all six save paths byte-identical on four files; the copy with its widths put
+     back draws the original byte for byte (an AES-256 file too); tiles cost what normal tiles
+     cost (A0 CAD sheet at fit: 10.5 ms against 9.9 ms); the first tile of a page adds the walk
+     (21 ms on the CAD sheet); memory adds the copy's own parsed pages (about 36 MB for the CAD
+     sheet's one page, at most 10 pages per document) and its image cache, only while Thin Lines
+     is on.
+5. **Left to M13-05:** close copies when Thin Lines is turned off or a document closes; use the
+   copy for the Measure loupe too (it shows the view as drawn) but not for snapshots; decide
+   whether thumbnails follow Thin Lines (they draw through the normal path today); a unit test
+   that a 3 pt line draws 1 device pixel and that saves stay byte-identical with Thin Lines on
+   (`spikes/s32-thin-lines/s32.test.ts` shows how).
+6. **Found on the way:** Ctrl+S on an image-heavy file is slow once its pages were drawn (PDFium
+   writes the decoded image streams again and the narrow tail then drops them: 8.4 s instead of
+   0.15 s for a 120 MB image). Today's behaviour, unrelated to Thin Lines; reported to the owner, not fixed here.

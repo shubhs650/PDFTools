@@ -586,7 +586,9 @@
     "pageOf": "of {{total}}",
     "zoom": "Zoom",
     "zoomLevels": "Zoom levels",
-    "viewMode": "View mode"
+    "viewMode": "View mode",
+    "viewHistory": "Previous and next view",
+    "withReason": "{{label}}: {{reason}}"
   },
   "recent": {
     "title": "Recent files",

@@ -1,6 +1,6 @@
 # Triya PDF — Progress
 
-_Last updated: 2026-11-24 (M13-07: the CRS project template engine; M13-02: the Measure loupe and automatic snapping; M13-06: spike S33, CRS project templates with ExcelJS, works with workaround, ADR-034 Amendment 1; M13-01: sample comparisons in the Compare input window; M13 plan approved: final improvements for 1.1.0, tasks M13-01 … M13-09, ADR-034, ARCHITECTURE.md Rev 0.24; M12-ux plan and ADR-033 recorded (tasks M12-24 … M12-27 all merged); M12-26: alignment made easy to find and first-time tips; M12-27: review in a comparison made easier; M12-25: room to work in a comparison; M12-24: the Compare input window made clearer; M12-23: M12 acceptance, M12 complete on the agent side; M12-22: Compare help and release notes; M12-21·O4: drop a tab on a tab; M12-20: the comparison file; M12-21: change register and presets)_
+_Last updated: 2026-11-24 (M13-07: the CRS project template engine and the CRS review corpus; M13-04: labelled status bar toggles, Previous / Next View in the status bar, one view history for the window, Distance with open arrows; M13-03: spike S32, Thin Lines route b, a view-only copy kept thin, ADR-034 Amendment 2; M13-02: the Measure loupe and automatic snapping; M13-06: spike S33, CRS project templates with ExcelJS, works with workaround, ADR-034 Amendment 1; M13-01: sample comparisons in the Compare input window; M13 plan approved: final improvements for 1.1.0, tasks M13-01 … M13-09, ADR-034, ARCHITECTURE.md Rev 0.24; M12-ux plan and ADR-033 recorded (tasks M12-24 … M12-27 all merged); M12-26: alignment made easy to find and first-time tips; M12-27: review in a comparison made easier; M12-25: room to work in a comparison; M12-24: the Compare input window made clearer; M12-23: M12 acceptance, M12 complete on the agent side; M12-22: Compare help and release notes; M12-21·O4: drop a tab on a tab; M12-20: the comparison file; M12-21: change register and presets)_
 
 **Next (approved 2026-11-24):** [docs/plan/M13.md](plan/M13.md) — final improvements before
 v1.1.0 ([ADR-034](adr/034-m13-final-improvements.md), D-67 … D-71, ARCHITECTURE.md Rev 0.24):
@@ -81,6 +81,51 @@ interop is in the M6 pack (CHECKLIST §M6 R1–R4). Rev 0 (M0–M4) is complete 
   with the page (`displayBox`, Standard CRS too); a template snapshot shows at least 160 × 100
   pt round the markup, so a sticky note or an underlined word comes with what is round it.
 
+- **M13-04 — Status bar: labelled Enable Snapping, Previous / Next View, one view history for
+  the window (ADR-034, D-70; plan [M13](plan/M13.md) §4, §5).** A shared labelled status toggle
+  (`src/ui/components/StatusToggle.tsx`: icon and always-visible words, 28 px tall, the whole
+  button clickable, pressed = accent tint, accent outline and the Filled icon, `aria-pressed`,
+  Highlight pair in forced colours); Enable Snapping uses it, "Preparing snapping…" stays beside
+  it. Right side: scale, [Thin Lines joins in M13-05], Enable Snapping, a divider, view modes,
+  zoom. The page buttons stay centred while both halves fit; a wider right side takes room from
+  the left (the tool hint shortens). The window is never narrower than 1280 px (§8), so the fold
+  (`src/app/statusFold.ts`, measured in `StatusBar.tsx`) only acts when the bar's parts outgrow
+  it: view modes into one menu first, then the toggles' words (names stay). Previous View / Next
+  View (Fluent Arrow Left / Right) after a divider right of the page buttons, greyed with the
+  reason when there is nowhere to go, tooltips with Alt+Left / Alt+Right; shown on a comparison
+  tab too. **One history for the window** (owner choice P2, `view/history.ts` pure,
+  `view/viewHistory.ts` stateful): page box, bookmarks, links, search results, Zoom to Area,
+  thumbnails (new), tab switches and opened documents are steps; scrolling and Next / Previous
+  Page are not; closing a tab forgets its places; a comparison tab is a tab only (jumps inside it
+  are not recorded); a document left before it was laid out is kept as its tab. **Owner
+  addition:** a Distance starts and ends with an open arrow (Perimeter keeps butt ends). **Found
+  on the way:** PDFium wrote an arrow head's turn on an exactly level or upright line as
+  `8.74228e-08` (no exponents in PDF numbers), so that head never drew, here or in other viewers,
+  for any line comment; the Render worker now rewrites such numbers after each line or polyline
+  is drawn (`model/pdf/plainNumbers.ts`, `workers/render/lineEndingAppearance.ts`, set back the
+  way text colours are). A line from another file with no appearance, when flattened, is not
+  covered yet (open issue below). Tests: `tests/view/viewHistory.test.ts`, `tests/app/statusFold.test.ts`,
+  `tests/model/plainNumbers.test.ts`, `tests/annotate/line-ending-appearance.test.ts` (real
+  PDFium: heads drawn, kept through Ctrl+S), `e2e/view-history.spec.ts` (page box and thumbnails
+  → back / forward, tab switches, closing a tab, the toggle by mouse and keyboard, the fold, the
+  open arrows, axe light and dark). Screenshots: `/mnt/project-files/m13-04/`.
+
+- **M13-03 — Spike S32, the Thin Lines rendering route (ADR-034 Amendment 2, D-69; plan
+  [M13](plan/M13.md) §3).** Works, **route b**: while Thin Lines is on, the Render worker draws
+  page tiles from a second, view-only copy of the document whose stroked paths (into form
+  XObjects at any depth) have width 0, which PDFium draws 1 device pixel wide at every zoom; the
+  copy reads the opened file straight from the document's buffer in the WASM heap
+  (`FPDF_LoadCustomDocument`, no second copy of the file), adds PDFium's incremental section only
+  after page-content changes, and is never edited or saved. Route a (toggling widths on the
+  document itself) is rejected: PDFium's change marks survive the restore and EmbedPDF's comment
+  edits call `FPDFPage_GenerateContent`, so Ctrl+S rewrote the page content (pair 14: 925 bytes
+  → 297 KB). Route c (Work worker) is rejected: it gives way only between pages (an A0 page at
+  150 dpi takes up to 1.6 s). Measured on overlay pairs 08, 12, 14, 16, a self-made A0 CAD sheet
+  (128,016 objects), the e2e A0 sheet and a 120 MB file: six save paths byte-identical, tiles as
+  fast as normal ones, copy in sync byte for byte. `spikes/s32-thin-lines/` (`run-node.ts`,
+  `s32.test.ts`, [RESULTS.md](../spikes/s32-thin-lines/RESULTS.md)); pictures in project files
+  `m13-03/`. Found on the way: Ctrl+S on an image-heavy file is slow once its pages were drawn
+  (PDFium writes decoded image streams again; 8.4 s for a 120 MB image); reported to the owner, not fixed here.
 - **M13-02 — Measure loupe and automatic snapping (ADR-034, D-68; plan [M13](plan/M13.md) §2).**
   M12-13's alignment magnifier became one shared loupe (`src/features/view/loupe/`: `Loupe.tsx`,
   pure geometry in `loupeModel.ts`): the Render worker draws the region (one request in flight, at
@@ -4200,6 +4245,12 @@ rel="noopener noreferrer">`; the commands `app.home` / `app.reportIssue` open th
    and A0 through the S3 harness; S8 Firefox check and Pages preview.
 
 ## Open issues
+
+- **Flatten and arrow heads (M13-04):** for a line comment that came with no appearance (from
+  another file), flatten asks PDFium to make one (`EPDFAnnot_GenerateAppearance`), which writes
+  exponent numbers again for an arrow head on an exactly level or upright line; that head would
+  be missing from the flattened page. Lines drawn here already carry the fixed appearance. Apply
+  `plainNumbers` there too (small follow-up).
 
 - **Form field design limits (M6-14; in the M6 interop pack, CHECKLIST P12).** EmbedPDF's `shareField` (radio buttons
   joining a group) leaves an empty field in /Fields, and deleting a widget leaves its field
