@@ -1755,6 +1755,15 @@ body {
   vertical-align: top;
 }
 
+.shortcut-sheet .shortcut-group {
+  padding-top: var(--space-4);
+  font-weight: var(--font-weight-semibold);
+}
+
+.shortcut-hold {
+  color: var(--color-text-muted);
+}
+
 .shortcut-sheet kbd {
   padding: var(--space-0) var(--space-2);
   border: var(--border-width) solid var(--color-border-strong);

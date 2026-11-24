@@ -235,9 +235,9 @@
           "list": [
             "<kbd>{{zoomIn}}</kbd> and <kbd>{{zoomOut}}</kbd>, or hold <kbd>{{mod}}</kbd> and turn the mouse wheel.",
             "<kbd>{{fitPage}}</kbd> fits the whole page, <kbd>{{fitWidth}}</kbd> fits its width and <kbd>{{actualSize}}</kbd> shows it at its actual size.",
-            "<b>View</b> › <b>Zoom to Area</b>: drag a rectangle around the part you want to see, and it fills the window. A click zooms in one step at that point and <kbd>Alt</kbd>+click zooms out. The tool stays on until you press <kbd>Esc</kbd>; <b>Previous View</b> (<kbd>{{prevView}}</kbd>) goes back to where you were.",
+            "<b>View</b> › <b>Zoom to Area</b>: drag a rectangle around the part you want to see, and it fills the window. A click zooms in one step at that point and <kbd>Alt</kbd>+click zooms out. The tool stays on until you press <kbd>Esc</kbd>; <b>Previous View</b> (<kbd>{{prevView}}</kbd>) goes back to where you were (see [Previous view and next view](#view-history)).",
             "With the Hand tool, hold <kbd>Z</kbd> and drag a rectangle to zoom to it; let go of <kbd>Z</kbd> to pan again.",
-            "<b>View</b> › <b>Loupe</b> magnifies the area under the pointer, and <b>Pan and Zoom Window</b> shows where you are on a large drawing."
+            "<b>View</b> › <b>Loupe</b> shows the spot under the pointer larger, in every tool (see [The loupe and automatic snapping](#loupe)). <b>View</b> › <b>Thin Lines</b> draws every line one pixel wide (see [Thin Lines](#thin-lines))."
           ]
         },
         {
@@ -252,8 +252,8 @@
         },
         {
           "shot": "zoom-and-pages-2",
-          "alt": "The status bar with page navigation, view mode and zoom",
-          "caption": "The status bar: 1 Page number · 2 View mode · 3 Zoom"
+          "alt": "The status bar with page navigation, Previous and Next View, Thin Lines, Enable Snapping, view mode and zoom",
+          "caption": "The status bar: 1 Page number · 2 Previous and next view · 3 Thin Lines · 4 Enable Snapping · 5 View mode · 6 Zoom"
         },
         {
           "h": "Rotating the view"
@@ -272,6 +272,86 @@
         },
         {
           "p": "<kbd>{{fullScreen}}</kbd> or the full-screen button at the top right shows the whole app full screen. <kbd>Esc</kbd> leaves full screen. <b>View</b> › <b>Collapse Ribbon</b> gives the pages more room."
+        }
+      ]
+    },
+    "thin-lines": {
+      "title": "Thin Lines",
+      "summary": "Draw every line of the page one screen pixel wide, at any zoom, to see the fine detail of a dense drawing. The file does not change.",
+      "body": [
+        {
+          "p": "On a dense drawing, thick lines can hide what is between them, and at a high zoom every line gets thicker on screen. <b>Thin Lines</b> draws each line of the page as thin as the screen can show it, whatever its width in the file and whatever the zoom."
+        },
+        {
+          "shot": "thin-lines-1",
+          "alt": "A drawing with Thin Lines on, and the Thin Lines button pressed in the status bar",
+          "caption": "1 Thin Lines in the status bar · 2 Every line of the page one pixel wide"
+        },
+        {
+          "h": "To turn Thin Lines on or off"
+        },
+        {
+          "list": [
+            "Choose <b>Thin Lines</b> in the status bar, at the bottom right. It is tinted while it is on.",
+            "Or choose <b>View</b> › <b>Thin Lines</b>, in the Page Display group.",
+            "Or press <kbd>{{thinLines}}</kbd>. In the installed app, <kbd>{{thinLinesApp}}</kbd> works too; in a browser tab the browser keeps that key for its own tabs.",
+            "Or type <b>thin</b> in <b>Tell me</b>."
+          ]
+        },
+        {
+          "p": "It stays on for every document until you turn it off, and {{app}} remembers it on this device."
+        },
+        {
+          "h": "What it changes"
+        },
+        {
+          "list": [
+            "Only the screen. Saving, printing, exports, snapshots and the comment review sheet use the lines as they are in the file.",
+            "The page's own lines, including those inside a drawing's blocks. Comments, measurements and markups keep their widths.",
+            "Lines that a CAD program exported as filled shapes, and text, stay as they are: they are not lines in the file.",
+            "Thumbnails keep the page's own lines. In a comparison, Document A and Document B show thin lines; the overlay has its own <b>Thicken thin lines</b> switch."
+          ]
+        },
+        {
+          "tip": "Thin Lines and the [loupe](#loupe) work well together: the loupe shows the thin lines larger."
+        }
+      ]
+    },
+    "view-history": {
+      "title": "Previous view and next view",
+      "summary": "Go back to where you were, and forward again, across pages, zoom and documents, like the back and forward buttons of a browser.",
+      "body": [
+        {
+          "p": "{{app}} keeps one list of the places you went to in this window. <b>Previous View</b> takes you back one step, <b>Next View</b> forward again."
+        },
+        {
+          "shot": "view-history-1",
+          "alt": "The status bar with the page buttons, then the Previous View and Next View buttons",
+          "caption": "1 Page buttons · 2 Previous View and Next View"
+        },
+        {
+          "h": "To go back and forward"
+        },
+        {
+          "list": [
+            "Choose the left or right arrow after the page buttons in the status bar.",
+            "Or press <kbd>{{prevView}}</kbd> and <kbd>{{nextView}}</kbd>.",
+            "Or choose <b>View</b> › <b>Previous View</b> or <b>Next View</b>.",
+            "A greyed-out button has nowhere to go. Point at it to see why."
+          ]
+        },
+        {
+          "h": "What is a step"
+        },
+        {
+          "p": "A step is each jump you make: a page number typed in the status bar, <b>Go to Page</b>, a bookmark, a link, a search result, a thumbnail, <b>Zoom to Area</b>, and a switch to another tab or a newly opened document. Scrolling and the next and previous page buttons are not steps, so going back skips over them."
+        },
+        {
+          "list": [
+            "Going back to a step in another document switches to its tab, at the page and zoom you left it at.",
+            "Closing a tab removes its steps.",
+            "A comparison tab is one step: jumps inside a comparison have their own buttons (see [Differences on drawings](#compare-differences))."
+          ]
         }
       ]
     },
@@ -776,8 +856,61 @@
             "<b>Options</b> sorts, groups and filters the cards by page, author, type or status.",
             "<b>Find</b> (press <kbd>Enter</kbd>) looks through the comments' text and replies.",
             "Click a card to go to its comment. <kbd>F2</kbd> edits its text.",
-            "<b>Comment</b> › <b>Export CRS (Excel)</b> builds a comment resolution sheet."
+            "<b>Comment</b> › <b>Export CRS (Excel)</b> builds a comment review sheet, in the Standard CRS or your project's own Excel form (see [Comment review sheets (CRS) and project templates](#crs-templates))."
           ]
+        }
+      ]
+    },
+    "crs-templates": {
+      "title": "Comment review sheets (CRS) and project templates",
+      "summary": "Export the comments as a comment review sheet in Excel, in the Standard CRS or in your project's own Excel form.",
+      "body": [
+        {
+          "p": "<b>Comment</b> › <b>Export CRS (Excel)</b> lists the comments of a document in an Excel workbook, one row per comment, ready to send for responses. It uses the <b>Standard CRS</b>, or a <b>project template</b>: your project's own Excel form, imported once, which the export then fills in."
+        },
+        {
+          "shot": "crs-templates-1",
+          "alt": "The Export Comment Review Sheet dialog with a project template chosen and two documents",
+          "caption": "1 Template · 2 The documents and their details · 3 Which comments"
+        },
+        {
+          "h": "To export a CRS"
+        },
+        {
+          "steps": [
+            "Choose <b>Comment</b> › <b>Export CRS (Excel)</b>.",
+            "Choose the <b>Template</b>: the Standard CRS or one of your project templates. The last one you used is chosen.",
+            "With a project template, tick the open documents to include. Each gets its own sheet, with its document number, revision and title, filled in from last time, from the stamps or from the template's file-name rule. Check them, and the reviewer and date.",
+            "Choose which comments go in: the ones the template takes, or only those the Comments pane shows. Then choose Excel or CSV and <b>Export</b>, and where to save."
+          ]
+        },
+        {
+          "h": "To set up a project template"
+        },
+        {
+          "steps": [
+            "In the export dialog choose <b>Templates…</b> › <b>Import Excel form…</b>, and pick the project's empty form (.xlsx or .xltx).",
+            "Four short steps follow, beside a preview of the sheet as Excel shows it. {{app}} suggests what it can read from the sheet's headings; check each suggestion.",
+            "<b>Sheet and start row</b>: the sheet to fill and the first empty row of the comment table. Rows already drawn below it are filled first; then rows styled like the start row are added, and what is below them moves down.",
+            "<b>Document details</b>: the cells for the document name, number, revision, title, reviewer, date and the like, and an optional file-name rule such as {docNo}_Rev{rev}.",
+            "<b>Columns</b>: tick each field the form has and click its column in the preview (or type its number or letter).",
+            "<b>Comments and options</b>: which comment types go in, Ignore highlights, your project's status words, the snapshot height and one sheet per page. Then <b>Save template</b>."
+          ]
+        },
+        {
+          "shot": "crs-templates-2",
+          "alt": "Setting up a CRS template: the steps on the left and the sheet preview on the right, with the start row and the fields marked"
+        },
+        {
+          "list": [
+            "Click a cell in the preview to place what the step is asking for; the preview marks the start row, the rows already drawn, every field and every detail cell. The arrow keys move through the cells and <kbd>Enter</kbd> places.",
+            "Rows added for more comments copy the start row's format, formulas, drop-down lists and conditional formatting. Other sheets of the workbook are kept and never written.",
+            "A form with macros (.xlsm), an old .xls file or a password is refused, with what to do instead. Parts that exported files do not keep are named when you import.",
+            "<b>Templates…</b> (also in <b>File</b> › <b>Settings</b> › <b>CRS templates</b>) edits, renames, duplicates and deletes templates. <b>Export template file</b> saves one to share with a colleague, who adds it with <b>Import template file…</b>."
+          ]
+        },
+        {
+          "tip": "Templates and their forms stay on this device. Nothing is uploaded."
         }
       ]
     },
@@ -969,7 +1102,7 @@
           "steps": [
             "Set the scale first (see [Setting the scale](#measure-scale)).",
             "Choose <b>Distance</b>, <b>Perimeter</b> or <b>Area</b> on the <b>Measure</b> tab.",
-            "For Distance, drag from one point to the other. For Perimeter and Area, click each corner and double-click (or press <kbd>Enter</kbd>) to finish.",
+            "For Distance, drag from one point to the other: the line has an open arrow at each end, like a dimension line. For Perimeter and Area, click each corner and double-click (or press <kbd>Enter</kbd>) to finish. The [loupe](#loupe) beside the pointer shows each point larger.",
             "The value shows on the page and in the Properties pane."
           ]
         },
@@ -988,14 +1121,55 @@
       "body": [
         {
           "steps": [
-            "Turn snapping on with the magnet in the status bar, or <b>Measure</b> › <b>Enable Snapping</b>.",
+            "Turn snapping on with <b>Enable Snapping</b> in the status bar, or <b>Measure</b> › <b>Enable Snapping</b>. Distance, Perimeter, Area, Calibrate and Scale Viewport turn it on for you (see [The loupe and automatic snapping](#loupe)).",
             "Choose what to snap to on the <b>Measure</b> tab: endpoints, midpoints, intersections and nearest point on a line.",
-            "Move the pointer near the drawing. A marker shows the point it will snap to."
+            "Move the pointer near the drawing. A marker shows the point it will snap to, and the loupe shows it larger. Hold <kbd>Alt</kbd> while you click for a point that does not snap."
           ]
         },
         {
           "shot": "snapping-1",
           "alt": "The snapping options on the Measure tab"
+        }
+      ]
+    },
+    "loupe": {
+      "title": "The loupe and automatic snapping",
+      "summary": "See the spot under the pointer larger while you measure, so each point lands where you mean, and let snapping switch itself on.",
+      "body": [
+        {
+          "p": "While you measure, a <b>loupe</b> beside the pointer shows the spot under it larger, with a crosshair. With snapping on, it also shows the point you will snap to and what it is: an endpoint, a midpoint, an intersection or the nearest point on a line."
+        },
+        {
+          "shot": "loupe-1",
+          "alt": "Measuring a distance on a drawing, with the loupe beside the pointer showing a snapped endpoint",
+          "caption": "1 The loupe · 2 The point it will snap to, and its kind"
+        },
+        {
+          "h": "Where it shows"
+        },
+        {
+          "list": [
+            "With <b>Distance</b>, <b>Perimeter</b>, <b>Area</b>, <b>Calibrate</b> and <b>Scale Viewport</b>, and with the <b>Line</b>, <b>Arrow</b>, <b>Polyline</b> and <b>Callout</b> comments, while <b>Measure</b> › <b>Loupe</b> (in the Snap group) is on. It is on at first.",
+            "With every tool while <b>View</b> › <b>Loupe</b> is on, for example to read small text with Select or Hand. It is off at first.",
+            "Press <kbd>{{loupe}}</kbd> in the document to show or hide it in the tool you are using.",
+            "It moves to the other side of the pointer near the edge of the window, and hides off the page."
+          ]
+        },
+        {
+          "h": "Automatic snapping"
+        },
+        {
+          "p": "Picking <b>Distance</b>, <b>Perimeter</b>, <b>Area</b>, <b>Calibrate</b> or <b>Scale Viewport</b> turns snapping on, and a short note in the status bar says so. When you finish measuring (<kbd>Esc</kbd> or another tool), snapping goes back to how it was, unless you switched it yourself in the meantime. Hold <kbd>Alt</kbd> while you click for a point that does not snap."
+        },
+        {
+          "h": "Settings"
+        },
+        {
+          "p": "<b>File</b> › <b>Settings</b> › <b>Measure</b> sets the loupe's size (small, medium or large), how much it magnifies (2×, 4× or 8×) and whether measuring turns snapping on. These choices are kept on this device."
+        },
+        {
+          "shot": "loupe-2",
+          "alt": "The Measure card of Settings, with the loupe size, magnification and automatic snapping"
         }
       ]
     },
@@ -1238,7 +1412,7 @@
         },
         {
           "list": [
-            "No files to hand? Under the two sides, <b>Try a sample</b> fills Document A and Document B with one of the samples that come with {{app}}, two for each type, and a line says what to look for. Then choose <b>Compare</b> as usual. A sample is not a file on your computer, so saving comments on it asks where to save, as <b>Save As</b> does.",
+            "No files to hand? Under the two sides, <b>Try a sample</b> (see [Trying a sample comparison](#compare-samples)) fills Document A and Document B with one of the samples that come with {{app}}, two for each type, and a line says what to look for. Then choose <b>Compare</b> as usual. A sample is not a file on your computer, so saving comments on it asks where to save, as <b>Save As</b> does.",
             "The swap button between the two sides exchanges Document A and Document B.",
             "For a PDF overlay, each side takes several files, compared as one set (for example one file per sheet). The arrows put the files in order.",
             "Right-click a document tab and choose <b>Compare with…</b> to start a comparison with that document as Document A.",
@@ -1266,6 +1440,38 @@
         },
         {
           "tip": "Nothing is uploaded: the comparison runs on this device, in the background, and works offline."
+        }
+      ]
+    },
+    "compare-samples": {
+      "title": "Trying a sample comparison",
+      "summary": "No revisions to hand? Try each kind of comparison on samples that come with {{app}}.",
+      "body": [
+        {
+          "p": "{{app}} comes with two pairs of sample revisions for each kind of comparison. They are made for Help, contain nothing private, and work offline."
+        },
+        {
+          "shot": "compare-samples-1",
+          "alt": "The input window of a PDF overlay with the sample menu open",
+          "caption": "1 Try a sample · 2 The samples, each with what it shows"
+        },
+        {
+          "h": "To try a sample"
+        },
+        {
+          "steps": [
+            "Choose <b>Compare</b> › <b>PDF Overlay</b> or <b>Compare</b> › <b>Text Comparison</b>.",
+            "Under the two sides, choose <b>Try a sample</b> and pick one. Document A and Document B fill in, each tagged <b>Sample</b>, and a line says what to look for.",
+            "Choose <b>Compare</b>."
+          ]
+        },
+        {
+          "list": [
+            "PDF overlay: a <b>flange drawing</b> (a bigger bolt circle, more holes, a new keyway and a revision cloud) and a <b>checked print</b> whose old revision has a checker's comments to close out.",
+            "Text comparison: an <b>EPC tender</b> (inserted clauses with renumbering, a changed damages cap, a removed \"not\") and a <b>commercial invoice</b> (changed figures and totals).",
+            "With no document open, the start screen offers <b>Try comparing two revisions</b>: it opens a PDF overlay with the flange drawing filled in.",
+            "A sample is not a file on your computer, so saving comments on it asks where to save, as <b>Save As</b> does."
+          ]
         }
       ]
     },
@@ -1836,7 +2042,7 @@
       "summary": "Every keyboard shortcut in {{app}}, for this computer. Help › Keyboard Shortcuts in the app shows the same list, ready to print.",
       "body": [
         {
-          "p": "Single-letter keys, such as <kbd>{{hand}}</kbd> for Hand, work while the document has focus. Keys marked as reserved by the browser work in the installed app; use the other key shown in a browser tab."
+          "p": "Single-letter keys, such as <kbd>{{hand}}</kbd> for Hand, work while the document has focus. Keys marked as reserved by the browser work in the installed app; use the other key shown in a browser tab. The last part of the list, <b>Keys in a pane or window</b>, has the keys that work in one place only, such as <kbd>F8</kbd> in a comparison, and the keys you hold down."
         },
         {
           "table": "shortcuts"

@@ -48,6 +48,7 @@ import { useCloseOutView } from '../closeout/closeOutStore';
 import { ComparePane } from '../layout/ComparePane';
 import { MaximiseButton } from '../layout/Maximise';
 import { useMaximised } from '../layout/maximised';
+import { NEXT_DIFFERENCE_KEY } from '../../../app/keys/windowKeys';
 
 const LANGUAGE: Record<OcrLanguage, MessageKey> = {
   eng: msg('ocr.languages.eng'),
@@ -58,7 +59,7 @@ const LANGUAGE: Record<OcrLanguage, MessageKey> = {
 };
 
 /** Next change; with Shift, the previous one (owner's answer: F8, Shift+F8). */
-const NEXT_KEY = 'F8';
+const NEXT_KEY = NEXT_DIFFERENCE_KEY;
 
 const LIMITED: Record<Side, MessageKey> = {
   a: msg('compare.text.limitedPages_a'),

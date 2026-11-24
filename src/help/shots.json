@@ -60,7 +60,7 @@
     "h": 601
   },
   "compare-pairing-1": {
-    "w": 972,
+    "w": 1103,
     "h": 829
   },
   "compare-pairing-2": {
@@ -75,6 +75,10 @@
     "w": 378,
     "h": 672
   },
+  "compare-samples-1": {
+    "w": 1145,
+    "h": 458
+  },
   "compare-saving-1": {
     "w": 576,
     "h": 394
@@ -84,7 +88,7 @@
     "h": 160
   },
   "compare-start-2": {
-    "w": 1006,
+    "w": 1137,
     "h": 1018
   },
   "compare-text-1": {
@@ -92,15 +96,23 @@
     "h": 601
   },
   "creating-fields-1": {
-    "w": 1006,
+    "w": 1093,
     "h": 126
   },
   "creating-fields-2": {
     "w": 840,
     "h": 598
   },
+  "crs-templates-1": {
+    "w": 656,
+    "h": 868
+  },
+  "crs-templates-2": {
+    "w": 1334,
+    "h": 868
+  },
   "export-documents-1": {
-    "w": 1006,
+    "w": 1093,
     "h": 126
   },
   "extract-tables-1": {
@@ -128,15 +140,23 @@
     "h": 556
   },
   "home-tab-1": {
-    "w": 1006,
+    "w": 1093,
     "h": 167
+  },
+  "loupe-1": {
+    "w": 321,
+    "h": 301
+  },
+  "loupe-2": {
+    "w": 856,
+    "h": 347
   },
   "measure-scale-1": {
     "w": 536,
     "h": 524
   },
   "measure-tools-1": {
-    "w": 1006,
+    "w": 1093,
     "h": 167
   },
   "measure-tools-2": {
@@ -153,7 +173,7 @@
   },
   "opening-files-1": {
     "w": 551,
-    "h": 464
+    "h": 534
   },
   "opening-files-2": {
     "w": 900,
@@ -251,16 +271,24 @@
     "w": 1366,
     "h": 800
   },
+  "thin-lines-1": {
+    "w": 1366,
+    "h": 800
+  },
+  "view-history-1": {
+    "w": 315,
+    "h": 65
+  },
   "welcome-1": {
     "w": 1366,
     "h": 800
   },
   "zoom-and-pages-1": {
-    "w": 1150,
+    "w": 1245,
     "h": 133
   },
   "zoom-and-pages-2": {
-    "w": 806,
+    "w": 963,
     "h": 65
   }
 }

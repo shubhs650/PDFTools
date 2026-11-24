@@ -162,6 +162,9 @@ export const KEYMAP: readonly Binding[] = [
   b('comment.cloud', ['C'], 'document'),
   b('comment.pencil', ['D'], 'document'),
   { ...b('tool.enter', ['Enter'], 'document'), preventWhenDisabled: false },
+  // The loupe (M13-09, D-68): M shows or hides it in the tool in use — the Measure ribbon's
+  // Loupe in the tools it serves, View › Loupe in any other (toggleLoupeHere).
+  b('loupe.toggle', ['M'], 'document'),
   // A selected text comment: F2 (or Enter, above) edits it (M7-03).
   b('annotation.editText', ['F2'], 'document'),
   // The Bookmarks pane's tree (M6-11, §7.15): the same keys as in the document

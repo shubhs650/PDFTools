@@ -159,3 +159,38 @@ for (const dark of [false, true])
       .analyze();
     expect(r.violations).toEqual([]);
   });
+
+// M13-09 (D-68): M shows or hides the loupe where the person is — View → Loupe in
+// a tool the Measure loupe does not serve, the Measure loupe in Distance.
+test('M shows or hides the loupe in the tool in use', async ({ page }) => {
+  await open(page);
+  await page.getByTestId('document-view').focus();
+  await page.keyboard.press('m');
+  await expect(button(page)).toHaveAttribute('aria-pressed', 'true');
+  await hover(page, 0.5, 0.5);
+  await expect(loupe(page)).toBeVisible();
+  await page.keyboard.press('m');
+  await expect(button(page)).toHaveAttribute('aria-pressed', 'false');
+  await hover(page, 0.45, 0.45);
+  await expect(loupe(page)).toHaveCount(0);
+
+  await page.getByRole('tab', { name: 'Measure' }).click();
+  const measure = page.getByRole('toolbar', { name: 'Measure commands' });
+  const measureLoupe = measure.getByRole('button', { name: 'Loupe', exact: true });
+  await expect(measureLoupe).toHaveAttribute('aria-pressed', 'true');
+  await measure.getByRole('button', { name: 'Distance', exact: true }).click();
+  await hover(page, 0.6, 0.4);
+  await expect(loupe(page)).toBeVisible();
+  await page.getByTestId('document-view').focus();
+  await page.keyboard.press('m');
+  await expect(measureLoupe).toHaveAttribute('aria-pressed', 'false');
+  await hover(page, 0.55, 0.45);
+  await expect(loupe(page)).toHaveCount(0);
+  await page.keyboard.press('m');
+  await expect(measureLoupe).toHaveAttribute('aria-pressed', 'true');
+  await hover(page, 0.6, 0.4);
+  await expect(loupe(page)).toBeVisible();
+  // View → Loupe stayed off: the key turned the Measure loupe back on.
+  await page.getByRole('tab', { name: 'View' }).click();
+  await expect(button(page)).toHaveAttribute('aria-pressed', 'false');
+});

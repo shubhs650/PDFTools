@@ -373,6 +373,15 @@ kbd {
   vertical-align: top;
 }
 
+.shortcut-sheet .shortcut-group {
+  padding-top: var(--space-4);
+  font-weight: var(--font-weight-semibold);
+}
+
+.shortcut-hold {
+  color: var(--color-text-muted);
+}
+
 .shortcut-sheet thead th {
   color: var(--color-text-muted);
   font-size: var(--font-size-s);

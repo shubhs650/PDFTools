@@ -58,6 +58,12 @@ describe('release list', () => {
       expect(text, words).toContain(words);
   });
 
+  it('1.1.0 also announces the final improvements (M13-09)', () => {
+    const text = list[0]?.items.join(' ') ?? '';
+    for (const words of ['sample', 'loupe', 'Thin Lines', 'Previous View', 'Excel form'])
+      expect(text, words).toContain(words);
+  });
+
   it('the newest release is the version in package.json', () => {
     const pkg = JSON.parse(readFileSync(join(root, 'package.json'), 'utf8')) as {
       version: string;

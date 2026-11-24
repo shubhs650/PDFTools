@@ -517,7 +517,8 @@
       "annotationNudgeFar": "Move Selected Comments (10 pt)",
       "toolEnter": "Place a note, text box or typewriter, edit the selected text comment, or finish a polyline",
       "annotationEditText": "Edit the Selected Text Comment",
-      "menuContext": "Context Menu"
+      "menuContext": "Context Menu",
+      "loupeToggle": "Show or Hide the Loupe"
     },
     "key": {
       "ctrl": "Ctrl",
@@ -538,7 +539,22 @@
       "tab": "Tab",
       "plus": "Plus",
       "minus": "Minus",
-      "menu": "Menu key"
+      "menu": "Menu key",
+      "space": "Space"
+    },
+    "more": "Keys in a pane or window",
+    "held": "hold",
+    "window": {
+      "spaceHand": "Hand while held (in the document)",
+      "zoomHold": "Zoom to Area while held, with the Hand tool",
+      "noSnap": "No snapping for this click, while measuring or drawing a line",
+      "nextDifference": "Next Difference or Change (in a comparison)",
+      "prevDifference": "Previous Difference or Change (in a comparison)",
+      "blink": "Blink between Old and New (in a PDF overlay)",
+      "tableMerge": "Merge Cells (Review & Extract)",
+      "tableUnmerge": "Split Merged Cell (Review & Extract)",
+      "tableHeader": "Header Rows up to the Selection (Review & Extract)",
+      "tableDivider": "Add a Divider (Review & Extract, on a divider)"
     }
   },
   "open": {

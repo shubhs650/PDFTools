@@ -95,6 +95,8 @@ export const INTERNAL_ACTIONS = [
   'tool.enter',
   // A selected text comment: F2 edits it (M7-03; Enter does too, via tool.enter).
   'annotation.editText',
+  // M shows or hides the loupe in the tool in use (M13-09, D-68): the Measure loupe or View › Loupe.
+  'loupe.toggle',
 ] as const;
 export type InternalAction = (typeof INTERNAL_ACTIONS)[number];
 

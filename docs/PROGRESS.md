@@ -1,14 +1,12 @@
 # Triya PDF — Progress
 
-_Last updated: 2026-11-24 (M13-08: the CRS template screens, the export dialog with project templates, four guided set-up steps beside a live sheet preview, the template manager; M13-02·O2: the loupe and snapping for Line, Arrow, Polyline and Callout comments; M13-02·O1: View › Loupe, the loupe in every tool; M13-01·O5: "Try comparing two revisions" on the start screen; M13-05: Thin Lines, every page line 1 device pixel wide on screen only, from a view-only copy in the Render worker; M13-07: the CRS project template engine and the CRS review corpus; M13-04: labelled status bar toggles, Previous / Next View in the status bar, one view history for the window, Distance with open arrows; M13-03: spike S32, Thin Lines route b, a view-only copy kept thin, ADR-034 Amendment 2; M13-02: the Measure loupe and automatic snapping; M13-06: spike S33, CRS project templates with ExcelJS, works with workaround, ADR-034 Amendment 1; M13-01: sample comparisons in the Compare input window; M13 plan approved: final improvements for 1.1.0, tasks M13-01 … M13-09, ADR-034, ARCHITECTURE.md Rev 0.24; M12-ux plan and ADR-033 recorded (tasks M12-24 … M12-27 all merged); M12-26: alignment made easy to find and first-time tips; M12-27: review in a comparison made easier; M12-25: room to work in a comparison; M12-24: the Compare input window made clearer; M12-23: M12 acceptance, M12 complete on the agent side; M12-22: Compare help and release notes; M12-21·O4: drop a tab on a tab; M12-20: the comparison file; M12-21: change register and presets)_
+_Last updated: 2026-11-24 (M13-09: Help for M13 with every picture made again, the loupe's key M, a shortcut sheet that lists every key, What's new and release notes for 1.1.0, Compare on in release builds, the release checks and the owner pack; M13 complete on the agent side; M13-08: the CRS template screens, the export dialog with project templates, four guided set-up steps beside a live sheet preview, the template manager; M13-02·O2: the loupe and snapping for Line, Arrow, Polyline and Callout comments; M13-02·O1: View › Loupe, the loupe in every tool; M13-01·O5: "Try comparing two revisions" on the start screen; M13-05: Thin Lines, every page line 1 device pixel wide on screen only, from a view-only copy in the Render worker; M13-07: the CRS project template engine and the CRS review corpus; M13-04: labelled status bar toggles, Previous / Next View in the status bar, one view history for the window, Distance with open arrows; M13-03: spike S32, Thin Lines route b, a view-only copy kept thin, ADR-034 Amendment 2; M13-02: the Measure loupe and automatic snapping; M13-06: spike S33, CRS project templates with ExcelJS, works with workaround, ADR-034 Amendment 1; M13-01: sample comparisons in the Compare input window; M13 plan approved: final improvements for 1.1.0, tasks M13-01 … M13-09, ADR-034, ARCHITECTURE.md Rev 0.24; M12-ux plan and ADR-033 recorded (tasks M12-24 … M12-27 all merged); M12-26: alignment made easy to find and first-time tips; M12-27: review in a comparison made easier; M12-25: room to work in a comparison; M12-24: the Compare input window made clearer; M12-23: M12 acceptance, M12 complete on the agent side; M12-22: Compare help and release notes; M12-21·O4: drop a tab on a tab; M12-20: the comparison file; M12-21: change register and presets)_
 
-**Next (approved 2026-11-24):** [docs/plan/M13.md](plan/M13.md) — final improvements before
-v1.1.0 ([ADR-034](adr/034-m13-final-improvements.md), D-67 … D-71, ARCHITECTURE.md Rev 0.24):
-sample comparisons, the Measure loupe and auto-snap, Thin Lines (spike S32 first), labelled
-status bar toggles with Previous / Next view, CRS project templates (spike S33 first), then Help
-and the release checks (M13-09). Two threads at a time: lane 1 M13-01 → M13-05, lane 2
-M13-06 → M13-08. The Compare usability round ([M12-ux](plan/M12-ux.md), ADR-033, Rev 0.23) is
-done (M12-24 … M12-27 merged).
+**Next:** the owner pack of [M13 acceptance](acceptance/M13.md) §4 (samples, loupe, Thin Lines,
+view history, a real project CRS template opened in Excel), then the owner tags `v1.1.0` and
+approves the deploy ([docs/deploy/release.md](deploy/release.md)). **M13 is complete on the agent
+side** (M13-01 … M13-09 and O1, O2, O5 merged); plan [docs/plan/M13.md](plan/M13.md),
+[ADR-034](adr/034-m13-final-improvements.md), ARCHITECTURE.md Rev 0.24.
 
 **Current milestone:** M12 — PDF comparison (PDF overlay for drawings, text comparison for
 documents), version 1.1.0: plan [docs/plan/M12.md](plan/M12.md) and
@@ -37,6 +35,21 @@ answers Q1–Q7; ARCHITECTURE.md Rev 0.12 after [ADR-024](adr/024-freetext-text-
 interop is in the M6 pack (CHECKLIST §M6 R1–R4). Rev 0 (M0–M4) is complete on the agent side.
 
 ## Done
+
+- **M13-09 — Help, shortcuts, About, What's new and the 1.1.0 release checks (plan
+  [M13](plan/M13.md) §7; [acceptance](acceptance/M13.md)).** Five new Help topics: `thin-lines`,
+  `view-history`, `loupe`, `crs-templates`, `compare-samples`, linked from the topics around
+  them; Snapping, Measuring, Zoom and Starting a comparison updated. Every Help picture made
+  again (`npm run help:screenshots`, 73 with 7 new). The loupe's key **M** (`loupe.toggle`,
+  document scope): shows or hides the loupe in the tool in use (`toggleLoupeHere` in
+  `view/loupe/loupeModel.ts`: the Measure loupe in the tools it serves, View › Loupe otherwise;
+  both Loupe commands name it through `KEY_OF` in `app/keys/labels.ts`). The shortcut sheet's
+  second part, _Keys in a pane or window_ (`app/keys/windowKeys.ts`: Space, Z, Alt held; F8 /
+  Shift+F8; X held; Review & Extract's M, U, H, Insert; the compare listeners import their keys
+  from it); `tests/keys/everyKeyListed.test.tsx` checks every key is on the sheet and scans `src/`
+  for listeners reading an unlisted key. What's new 1.1.0 covers M13 (dated 2026-11-24), release
+  notes have the M13 sections, README features and What's new link updated. `VITE_COMPARE: 'off'`
+  removed from `release.yml`: Compare ships in 1.1.0.
 
 - **M13-08 — CRS template screens (D-71; ADR-034; plan [M13](plan/M13.md) §6, the owner's
   answers C1 – C15).** Comment → Export CRS: a **Template** drop-down (Standard CRS and the

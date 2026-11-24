@@ -10,7 +10,7 @@ import { expect, test } from './support/fixtures.ts';
 
 const KEY = 'pdftools.whatsNewSeen';
 const LATEST_ID = 'v1.1.0';
-const LATEST_TITLE = 'Version 1.1.0: compare revisions';
+const LATEST_TITLE = 'Version 1.1.0: compare revisions, and more for drawings and reviews';
 const FIRST_TITLE = 'Version 1.0.0, the first public release';
 /** How many lines the newest release has (each PR of a release may add one). */
 const LATEST_ITEMS = (
