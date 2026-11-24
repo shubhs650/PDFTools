@@ -175,16 +175,55 @@ function recolorAppearance(mod: WrappedPdfiumModule, annot: number, hex: string)
   } catch {
     return 'fallback';
   }
+  return setAppearanceFromFile(mod, annot, file) ? 'recolored' : 'fallback';
+}
+
+/**
+ * PDFium's appearance of `annot` exported as a one-page document, with its decoded
+ * content; null when the export is not what we expect.
+ */
+export function exportAppearance(
+  mod: WrappedPdfiumModule,
+  annot: number,
+): { bytes: Uint8Array; ex: Exported } | null {
+  const exported = rawCall(mod, 'EPDFAnnot_ExportAppearanceAsDocument', annot);
+  if (!exported) return null;
+  try {
+    const bytes = saveWithFlags(mod, exported, FPDF_NO_INCREMENTAL);
+    const ex = readExport(bytes);
+    return ex ? { bytes, ex } : null;
+  } catch {
+    return null;
+  } finally {
+    rawCall(mod, 'FPDF_CloseDocument', exported);
+  }
+}
+
+/** `content` set as `annot`'s appearance, with the export's /BBox, /Matrix and /Resources. */
+export function setAppearanceContent(
+  mod: WrappedPdfiumModule,
+  annot: number,
+  exported: { bytes: Uint8Array; ex: Exported },
+  content: string,
+): boolean {
+  let file: Uint8Array;
+  try {
+    file = pageDrawing(exported.bytes, exported.ex, encodeLatin1(content));
+  } catch {
+    return false;
+  }
+  return setAppearanceFromFile(mod, annot, file);
+}
+
+function setAppearanceFromFile(mod: WrappedPdfiumModule, annot: number, file: Uint8Array): boolean {
   const heap = mod.pdfium as unknown as Heap;
   const ptr = heap.wasmExports.malloc(file.length);
   try {
     heap.HEAPU8.set(file, ptr);
     const tmp = rawCall(mod, 'FPDF_LoadMemDocument', ptr, file.length, '');
-    if (!tmp) return 'fallback';
+    if (!tmp) return false;
     try {
-      return rawCall(mod, 'EPDFAnnot_SetAppearanceFromPage', annot, tmp, 0)
-        ? 'recolored'
-        : 'fallback';
+      return !!rawCall(mod, 'EPDFAnnot_SetAppearanceFromPage', annot, tmp, 0);
     } finally {
       rawCall(mod, 'FPDF_CloseDocument', tmp);
     }

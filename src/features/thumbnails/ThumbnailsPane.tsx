@@ -17,6 +17,7 @@ import { usePages as usePageOps } from '../pages/pageOps';
 import { clickPage, setSelection, usePageSelection } from '../pages/selection';
 import { PageMenu } from './PageMenu';
 import { goToPage } from '../view/controller';
+import { recordJump } from '../view/viewHistory';
 import { thumbLayout, visibleRange } from './layout';
 import { thumbnails } from './loader';
 import { ThumbImage } from './ThumbImage';
@@ -235,10 +236,12 @@ export function ThumbnailsPane() {
       },
       Enter: () => {
         if (documentId) clickPage(documentId, focused, { shift: false, toggle: false });
+        recordJump();
         goToPage(focused);
       },
       ' ': () => {
         if (documentId) clickPage(documentId, focused, { shift: false, toggle: false });
+        recordJump();
         goToPage(focused);
       },
     };
@@ -361,7 +364,10 @@ export function ThumbnailsPane() {
           setFocused(i);
           const mods = { shift: e.shiftKey, toggle: e.ctrlKey || e.metaKey };
           if (documentId) clickPage(documentId, i, mods);
-          if (!mods.shift && !mods.toggle) goToPage(i);
+          if (!mods.shift && !mods.toggle) {
+            recordJump(); // a thumbnail is a step for Previous View (M13-04, D-70)
+            goToPage(i);
+          }
         }}
         onContextMenu={(e: MouseEvent) => {
           const item = (e.target as HTMLElement).closest<HTMLElement>('[data-thumb]');

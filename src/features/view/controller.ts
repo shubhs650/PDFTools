@@ -5,6 +5,7 @@ import type { DocumentManagerCapability } from '@embedpdf/plugin-document-manage
 import type { RotateCapability } from '@embedpdf/plugin-rotate';
 import type { ScrollCapability, ScrollScope } from '@embedpdf/plugin-scroll';
 import { SpreadMode, type SpreadCapability } from '@embedpdf/plugin-spread';
+import type { ViewportCapability } from '@embedpdf/plugin-viewport';
 import { ZoomMode, type ZoomCapability, type ZoomScope } from '@embedpdf/plugin-zoom';
 import {
   documentStore,
@@ -176,8 +177,10 @@ export async function setZoom(target: ZoomTarget): Promise<void> {
   else a.zoom.requestZoom(target === 'actualSize' ? 1 : clampZoom(target));
 }
 
-function viewportElement(): HTMLElement | null {
-  return document.querySelector<HTMLElement>('#document-panel .viewport');
+function viewportElement(docId?: string): HTMLElement | null {
+  if (typeof document === 'undefined') return null;
+  const only = docId === undefined ? '' : `[data-doc-id="${docId.replace(/["\\]/g, '\\$&')}"]`;
+  return document.querySelector<HTMLElement>(`#document-panel .viewport${only}`);
 }
 
 /** Fit visible (§5): the current page's content fills the width, margins scroll off. */
@@ -273,19 +276,34 @@ export function goToTarget(t: ViewTarget): void {
 
 /** The active document's view as a history entry (M2-10). */
 export function currentView(): { docId: string; entry: ViewEntry } | null {
-  const a = active();
-  const vp = viewportElement();
-  const page = a ? documentStore.getState().docs[a.docId]?.view.page : undefined;
-  if (!a || !vp || page === undefined) return null;
-  return {
-    docId: a.docId,
-    entry: {
-      page,
-      scale: a.zoom.getState().currentZoomLevel,
-      scrollLeft: vp.scrollLeft,
-      scrollTop: vp.scrollTop,
-    },
-  };
+  const docId = documentStore.getState().activeId;
+  const entry = docId ? viewOf(docId) : null;
+  return docId && entry ? { docId, entry } : null;
+}
+
+/**
+ * A document's view as a history entry (M13-04: the tab being left, too): its
+ * window's scroll while it is on screen, else the viewport plugin's last metrics.
+ */
+export function viewOf(docId: string): ViewEntry | null {
+  const a = active(docId);
+  const page = documentStore.getState().docs[docId]?.view.page;
+  if (!a || page === undefined) return null;
+  const vp = viewportElement(docId);
+  let scroll = vp ? { scrollLeft: vp.scrollLeft, scrollTop: vp.scrollTop } : null;
+  if (!scroll) {
+    const registry = hostStore.getState().registry;
+    if (!registry) return null;
+    const m = capability<ViewportCapability>(registry, 'viewport').forDocument(docId).getMetrics();
+    scroll = { scrollLeft: m.scrollLeft, scrollTop: m.scrollTop };
+  }
+  return { page, scale: a.zoom.getState().currentZoomLevel, ...scroll };
+}
+
+/** True once `docId`'s window is on screen with its pages laid out (a tab just selected). */
+export function viewReady(docId: string): boolean {
+  const vp = viewportElement(docId);
+  return !!vp && vp.scrollHeight > vp.clientHeight / 2 && !!active(docId);
 }
 
 /** Previous / Next View: the zoom, then the exact scroll position. */
@@ -293,11 +311,12 @@ export function restoreView(e: ViewEntry): void {
   const a = active();
   if (!a) return;
   const place = (): void => {
-    const vp = viewportElement();
+    const vp = viewportElement(a.docId);
     if (!vp) return;
     vp.scrollLeft = e.scrollLeft;
     vp.scrollTop = e.scrollTop;
   };
+  stopKeepingPlace();
   documentStore.getState().setView(a.docId, { page: e.page });
   if (Math.abs(a.zoom.getState().currentZoomLevel - e.scale) < 1e-6) {
     place();
