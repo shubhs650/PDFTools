@@ -765,3 +765,50 @@ test(
     }
   },
 );
+
+test(
+  'M13 offline: every sample comparison opens from the cache and compares; zero outbound requests',
+  { tag: '@offline' },
+  async ({ page, context }) => {
+    // M13-01 (D-67, rule 4): the samples come from the background precache.
+    test.setTimeout(120_000);
+    await page.goto('/?sw');
+    await expect(status(page).getByText('✓ Ready offline')).toBeVisible({ timeout: 60_000 });
+
+    await context.setOffline(true);
+    const outbound: string[] = [];
+    page.on('requestfailed', (r) => {
+      if (/^https?:/.test(r.url())) outbound.push(`failed ${r.url()}`);
+    });
+    page.on('response', (r) => {
+      if (/^https?:/.test(r.url()) && !r.fromServiceWorker()) outbound.push(r.url());
+    });
+    const input = page.getByTestId('compare-input');
+    try {
+      await page.reload();
+      await expect(page.getByTestId('start-screen')).toBeVisible();
+      const samples = [
+        ['PDF Overlay', 'Flange drawing, Rev A → Rev B'],
+        ['PDF Overlay', 'Checked print with review comments'],
+        ['Text Comparison', 'EPC tender, 6 pages'],
+        ['Text Comparison', 'Commercial invoice, 1 page'],
+      ] as const;
+      for (const [type, title] of samples) {
+        await page.getByRole('tab', { name: 'Compare', exact: true }).click();
+        await page.getByRole('button', { name: type }).click();
+        await input.getByRole('button', { name: 'Try a sample' }).click();
+        await page.getByRole('menuitem', { name: title }).click();
+        for (const s of ['a', 'b'] as const)
+          await expect(compareSide(page, s).getByTestId('compare-file')).toHaveCount(1);
+        await expect(page.getByTestId('compare-sample-look')).toBeVisible();
+      }
+      // The last one compares, as any comparison does offline.
+      await input.getByRole('button', { name: 'Compare', exact: true }).click();
+      const result = page.locator('[data-testid="compare-result"][data-type="text"]');
+      await expect(result).toHaveAttribute('data-status', 'done', { timeout: 60_000 });
+      expect(outbound).toEqual([]);
+    } finally {
+      await context.setOffline(false);
+    }
+  },
+);

@@ -4,6 +4,7 @@
 // precache is decided in M1-25 (CORE_FONT_PACKAGES). Since M5 (ADR-020 d2) also
 // the OCR language data under /ocr/ (English in the background precache, the rest on demand),
 // and since M11-07 (D-52) the comment font library under /fonts/lib/ from vendor/fonts/.
+// Since M13-01 (D-67) also the sample comparisons under /samples/, from `Synthetic PDF Corpus/`.
 import { readFileSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -20,6 +21,7 @@ import { FONT_LIBRARY, fontLibraryPath, libraryFiles } from '../src/model/fonts/
 import { fontFile, fontLicense } from './fonts/manifest.ts';
 import { NOTICES_FILE, builtWith, collectNotices, licenseData, renderNotices } from './notices.ts';
 import { BUILT_WITH_PACKAGES } from '../src/app/about/components.ts';
+import { SAMPLES, samplePath, sampleSource } from '../src/model/compare/samples.ts';
 
 const root = join(dirname(fileURLToPath(import.meta.url)), '..');
 const pkgDir = (pkg: FontPackage): string =>
@@ -56,6 +58,13 @@ export function selfHostedAssets(): Plugin {
         ),
       ),
     );
+  // Sample comparisons (M13-01, D-67): copied from the corpus at build time, so they cannot
+  // go stale; background precache (src/sw/precacheSplit.ts).
+  for (const sample of SAMPLES)
+    for (const side of ['a', 'b'] as const)
+      files.set(samplePath(sample, side), () =>
+        readFileSync(join(root, 'Synthetic PDF Corpus', sampleSource(sample, side))),
+      );
   return {
     name: 'pdftools-self-hosted-assets',
     configureServer(server) {

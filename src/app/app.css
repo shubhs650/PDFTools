@@ -6485,6 +6485,53 @@ textarea.form-field {
   white-space: nowrap;
 }
 
+/* M13-01 (D-67): a file that ships with the app as a sample. */
+.compare-file-tag {
+  padding: var(--space-0) var(--space-2);
+  border: var(--border-width) solid var(--color-accent);
+  border-radius: var(--radius-round);
+  color: var(--color-selected-text);
+  font-size: var(--font-size-xs);
+  font-weight: var(--font-weight-semibold);
+  white-space: nowrap;
+}
+
+/* M13-01 (D-67): "No files to hand? Try a sample", and what to look for in it. */
+.compare-sample {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+}
+
+.compare-sample-offer {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-3);
+  color: var(--color-text-muted);
+  font-size: var(--font-size-m);
+}
+
+.compare-sample-look {
+  flex-basis: 100%;
+  margin: var(--space-0);
+  padding: var(--space-3) var(--space-4);
+  border-left: 3px solid var(--color-accent);
+  border-radius: var(--radius-s);
+  background: var(--color-surface-sunken);
+  font-size: var(--font-size-m);
+}
+
+.compare-sample-look-label {
+  font-weight: var(--font-weight-semibold);
+}
+
+.compare-sample-failed {
+  margin: var(--space-0);
+  color: var(--color-danger);
+  font-size: var(--font-size-m);
+}
+
 .compare-thumbs {
   display: flex;
   flex-wrap: wrap;
