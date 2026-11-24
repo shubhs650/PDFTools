@@ -517,10 +517,12 @@ const squareAppearance = (w: number, h: number): PdfObject => ({
 /**
  * The contract stand-in with `perPage` square markups on every page (M3-01:
  * 2,000 pages × 5 = 10,000 markups), each with /NM, /T, dates and an appearance.
+ * With `labelled`, the pages carry page labels A-101, A-102, … (M13-07).
  */
-export function markedContractPdf(pages = 2000, perPage = 5): Uint8Array {
+export function markedContractPdf(pages = 2000, perPage = 5, labelled = false): Uint8Array {
   const rand = rng(42);
-  const objs: PdfObject[] = ['<< /Type /Catalog /Pages 2 0 R >>', ''];
+  const labels = labelled ? ' /PageLabels << /Nums [0 << /S /D /P (A-) /St 101 >>] >>' : '';
+  const objs: PdfObject[] = [`<< /Type /Catalog /Pages 2 0 R${labels} >>`, ''];
   const font = 3;
   const ap = 4;
   objs.push('<< /Type /Font /Subtype /Type1 /BaseFont /Times-Roman /Encoding /WinAnsiEncoding >>');

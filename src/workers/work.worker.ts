@@ -42,6 +42,11 @@ import { checkSignatures } from './work/signatures';
 import { extractGeometry } from './work/geometry';
 import { mayHoldTables, pageObjects, tablesOf } from './work/compareStructure';
 import { exportCrs } from './work/crs';
+import { exportTemplateCrs } from './work/crsTemplate/job';
+import { inspectTemplate } from './work/crsTemplate/inspect';
+import { workbookKind } from './work/crsTemplate/kind';
+import { readPageLabels } from './work/pageLabels';
+import { readTemplateFile, writeTemplateFile } from '../model/crs/templateFile';
 import { buildGrid, DENSE_BYTES, DENSE_SEGMENTS, thin } from '../model/snapIndex';
 import { OxideHost, webLoader } from './work/oxide';
 import { requireCapability, securityOf } from './work/permissionGate';
@@ -828,6 +833,75 @@ serve<WorkApi>(self, {
         if (copy) await docs.closeCandidate(copy.candidateId);
         wasmBytes(); // a large workbook grows the heap (ADR-004 respawn policy)
       }
+    }),
+
+  crsTemplate: ({ template, spec, docs: list, shots }, ctx) =>
+    scheduler.run('interactive', ctx.signal, async (slice) => {
+      if (!mod) throw new RpcError('not-initialized', 'The work worker is not initialized');
+      const m = mod;
+      // Snapshots come from a separate copy of each document with its unsaved edits.
+      const wanted = new Set(shots?.flatMap((g) => g.map((s) => s?.doc ?? -1)) ?? []);
+      const copies: ({ candidateId: string } | null)[] = [];
+      try {
+        for (const [i, d] of list.entries()) {
+          copies.push(wanted.has(i) ? await docs.openCandidate(d.docId, d.piece ?? null) : null);
+        }
+        const out = await exportTemplateCrs(
+          m,
+          copies.map((c) => (c ? docPtrOf(need(), c.candidateId) : null)),
+          template,
+          spec,
+          shots,
+          slice,
+          (p) => {
+            ctx.progress(p);
+          },
+        );
+        return new Transfer(out, [out.bytes]);
+      } finally {
+        for (const c of copies) if (c) await docs.closeCandidate(c.candidateId);
+        wasmBytes(); // a large workbook grows the heap (ADR-004 respawn policy)
+      }
+    }),
+
+  crsTemplateInspect: ({ bytes, probe }, ctx) =>
+    scheduler.run('interactive', ctx.signal, async () => {
+      const { default: lib } = await import('exceljs');
+      return inspectTemplate(lib, bytes, probe);
+    }),
+
+  crsTemplateFileWrite: ({ template }, ctx) =>
+    scheduler.run('interactive', ctx.signal, () => {
+      const bytes = new TextEncoder().encode(writeTemplateFile(template)).buffer;
+      return Promise.resolve(new Transfer({ bytes }, [bytes]));
+    }),
+
+  crsTemplateFileRead: ({ bytes, appStatus }, ctx) =>
+    scheduler.run('interactive', ctx.signal, async () => {
+      let text: string;
+      try {
+        text = new TextDecoder('utf-8', { fatal: true }).decode(bytes);
+      } catch {
+        return { ok: false as const, reason: 'not-template' as const };
+      }
+      const read = readTemplateFile(text, appStatus);
+      if (!read.ok) return read;
+      const kind = workbookKind(new Uint8Array(read.template.workbook));
+      if (kind !== 'xlsx' && kind !== 'xltx')
+        return { ok: false as const, reason: 'damaged' as const };
+      const { default: lib } = await import('exceljs');
+      const check = await inspectTemplate(lib, read.template.workbook, null);
+      if (!check.ok) return { ok: false as const, reason: 'damaged' as const };
+      return new Transfer({ ...read, template: { ...read.template, kind } }, [
+        read.template.workbook,
+      ]);
+    }),
+
+  pageLabels: ({ docId, pages }, ctx) =>
+    scheduler.run('interactive', ctx.signal, async () => {
+      if (!mod) throw new RpcError('not-initialized', 'The work worker is not initialized');
+      const { doc } = await docs.get(docId);
+      return readPageLabels(mod, docPtrOf(need(), doc.id), pages);
     }),
 
   listLayers: ({ docId }, ctx) =>

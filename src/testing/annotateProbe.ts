@@ -32,7 +32,47 @@ import {
   commentStylesStore,
   loadCommentStyles,
 } from '../features/annotate/tools/commentStylesStore';
+import { fromBase64, toBase64 } from '../model/base64';
+import { settingsOf, type CrsTemplate } from '../model/crs/template';
+import {
+  addCrsTemplate,
+  appStatusWords,
+  crsTemplateStore,
+  exportTemplateFile,
+  importTemplateFile,
+  inspectWorkbook,
+  loadCrsTemplates,
+} from '../features/crs/templates/crsTemplateStore';
+import {
+  buildTemplateCrs,
+  type TemplateExportOptions,
+} from '../features/crs/templates/templateExport';
 import type { TestHook } from './hook';
+
+/** A CRS template from base64 and settings, not stored (M13-07 probes). */
+function probeTemplate(b64: string, settings: unknown): CrsTemplate {
+  const bytes = fromBase64(b64);
+  const s = settingsOf(settings, appStatusWords());
+  if (!bytes || !s) throw new Error('bad probe template');
+  return {
+    ...s,
+    id: 'probe',
+    name: 'Probe',
+    fileName: 'probe.xlsx',
+    kind: 'xlsx',
+    workbook: bytes.slice().buffer,
+    created: 0,
+    modified: 0,
+  };
+}
+
+const PROBE_DETAILS = {
+  docNumber: 'PA-1200-ME-DWG-0042',
+  revision: 'B',
+  title: 'Pump skid',
+  reviewer: 'Ana de Vries',
+  reviewDate: '24/11/2026',
+};
 
 function history(): HistoryCapability | null {
   const registry = hostStore.getState().registry;
@@ -121,6 +161,77 @@ export function registerAnnotateProbe(hook: TestHook): void {
       let bin = '';
       for (const b of f.bytes) bin += String.fromCharCode(b);
       return { name: f.name, b64: btoa(bin) };
+    },
+    /**
+     * M13-07: Export CRS into a project template through the Work worker; the
+     * file as base64, the sheet names and how many progress reports came.
+     * `cancelAfter` aborts after that many reports (the result is then the error's code).
+     */
+    crsTemplateExport: async (
+      docIds: string[],
+      b64: string,
+      settings: unknown,
+      o: TemplateExportOptions,
+      cancelAfter = -1,
+    ) => {
+      const ac = new AbortController();
+      let reports = 0;
+      try {
+        const out = await buildTemplateCrs(
+          probeTemplate(b64, settings),
+          docIds.map((docId) => ({ docId, details: PROBE_DETAILS })),
+          o,
+          ac.signal,
+          () => {
+            reports++;
+            if (reports === cancelAfter) ac.abort();
+          },
+        );
+        return { b64: toBase64(out.bytes), names: out.names, reports };
+      } catch (err) {
+        return {
+          error: (err as { code?: string; name?: string }).code ?? (err as Error).name,
+          reports,
+        };
+      }
+    },
+    /**
+     * M13-07: import a workbook (inspected in the Work worker), keep it on the
+     * device, export it as a template file and import that again.
+     */
+    crsTemplateRoundTrip: async (b64: string, settings: unknown) => {
+      const tpl = probeTemplate(b64, settings);
+      const inspection = await inspectWorkbook(tpl.workbook, {
+        sheet: tpl.sheet,
+        startRow: tpl.startRow,
+        columns: tpl.columns.flatMap((c) => (c.on && c.col !== null ? [c.col] : [])),
+        lastPreDrawn: null,
+      });
+      const saved = await addCrsTemplate({
+        name: 'Project CRS',
+        fileName: 'project.xlsx',
+        kind: 'xlsx',
+        workbook: tpl.workbook,
+        settings: tpl,
+        sheet: tpl.sheet,
+        startRow: tpl.startRow,
+      });
+      crsTemplateStore.setState({ loaded: false, templates: [] });
+      await loadCrsTemplates();
+      const file = await exportTemplateFile(saved.id);
+      if (!file) return null;
+      const back = await importTemplateFile(file.bytes);
+      const bad = await importTemplateFile(new TextEncoder().encode('{"format":"x"}').buffer);
+      return {
+        inspection,
+        fileName: file.name,
+        names: crsTemplateStore.getState().templates.map((x) => x.name),
+        same:
+          back.ok &&
+          back.template.workbook.byteLength === saved.workbook.byteLength &&
+          JSON.stringify(back.template.columns) === JSON.stringify(saved.columns),
+        bad,
+      };
     },
     /** The last annotation export made (M4-08): name and bytes as base64. */
     lastAnnotationExport: async () => {

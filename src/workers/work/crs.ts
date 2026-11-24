@@ -32,11 +32,17 @@ async function toPng(data: Uint8ClampedArray<ArrayBuffer>, width: number, height
   return (await canvas.convertToBlob({ type: 'image/png' })).arrayBuffer();
 }
 
-/** The markup's region with a margin, clipped to the page; the whole page when rotated. */
-function snapshotOf(
+/**
+ * The markup's region with a margin, clipped to the page; the whole page when
+ * rotated. At most `maxW` × `maxH` pixels (a project template asks for its
+ * Snapshot column's size, M13-07).
+ */
+export function snapshotOf(
   mod: WrappedPdfiumModule,
   docPtr: number,
   r: SnapshotRegion,
+  maxW = MAX_W,
+  maxH = MAX_H,
 ): () => Promise<Snapshot> {
   return async () => {
     const box = pageBox(mod, docPtr, r.page);
@@ -53,7 +59,7 @@ function snapshotOf(
             };
           })()
         : { x: 0, y: 0, width: box.width, height: box.height };
-    const scale = Math.min(MAX_SCALE, MAX_W / region.width, MAX_H / region.height);
+    const scale = Math.min(MAX_SCALE, maxW / region.width, maxH / region.height);
     const rows = Math.max(1, Math.round(region.height * scale));
     const band = renderBand(mod, docPtr, {
       pageIndex: r.page,

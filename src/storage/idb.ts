@@ -3,8 +3,8 @@
 // status schemes, table templates, the comment tools' default styles and the
 // user's own comment styles (style palette), saved visual signatures, each
 // file's last view (by fingerprint), the files open last time (their handles)
-// the named sets of ignore zones for comparing drawings and the named
-// comparison presets.
+// the named sets of ignore zones for comparing drawings, the named
+// comparison presets and the CRS project templates (their workbooks too).
 // Never document bytes:
 // those live in the user's file and, for recovery, in OPFS (§4.3).
 //
@@ -81,6 +81,12 @@ export const MIGRATIONS: readonly Migration[] = [
   // header handling), by id (validate them: presets.ts). They never leave this device.
   (db) => {
     db.createObjectStore('comparePresets', { keyPath: 'id' });
+  },
+  // v12 (M13-07, D-71): CRS project templates (the project's own workbook and its
+  // settings), by id (validate them: model/crs/template.ts). They never leave this
+  // device except in a template file the person exports, and are never in an error report.
+  (db) => {
+    db.createObjectStore('crsTemplates', { keyPath: 'id' });
   },
 ];
 
@@ -350,6 +356,24 @@ export class AppDb {
   async deleteComparePreset(id: string): Promise<void> {
     const tx = this.db.transaction('comparePresets', 'readwrite');
     tx.objectStore('comparePresets').delete(id);
+    await done(tx);
+  }
+
+  /** CRS project templates, as stored (validate them: model/crs/template.ts). */
+  async listCrsTemplates(): Promise<unknown[]> {
+    const tx = this.db.transaction('crsTemplates', 'readonly');
+    return request(tx.objectStore('crsTemplates').getAll());
+  }
+
+  async putCrsTemplate(value: { id: string }): Promise<void> {
+    const tx = this.db.transaction('crsTemplates', 'readwrite');
+    tx.objectStore('crsTemplates').put(value);
+    await done(tx);
+  }
+
+  async deleteCrsTemplate(id: string): Promise<void> {
+    const tx = this.db.transaction('crsTemplates', 'readwrite');
+    tx.objectStore('crsTemplates').delete(id);
     await done(tx);
   }
 

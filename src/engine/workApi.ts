@@ -33,6 +33,11 @@ import type { SecurityCheck, SecurityVerifyResult } from '../workers/work/verify
 import type { GridIndex } from '../model/snapIndex';
 import type { SnapshotRegion } from '../workers/work/crs';
 import type { WorkbookSpec } from '../workers/work/crsWorkbook';
+import type { TemplateFillSpec } from '../workers/work/crsTemplate/fill';
+import type { TemplateInspection, TemplateProbe } from '../workers/work/crsTemplate/inspect';
+import type { TemplateShot } from '../workers/work/crsTemplate/job';
+import type { CrsTemplate, StatusWord } from '../model/crs/template';
+import type { TemplateFileRead } from '../model/crs/templateFile';
 import type { ExtractOptions } from '../workers/work/extract';
 import type {
   SourceSummary,
@@ -375,6 +380,44 @@ export interface WorkApi {
     { bytes: ArrayBuffer },
     { done: number; total: number }
   >;
+  /**
+   * CRS export into a project template (M13-07, D-71): the template's
+   * workbook filled (ExcelJS, lazy), one sheet per group; a snapshot per row
+   * where `shots` names one, rendered from a copy of that document (`docs`,
+   * each with its unsaved edits as `piece`). Progress per row; cancellable
+   * between rows; the file's bytes come back transferred.
+   */
+  crsTemplate: MethodSpec<
+    {
+      template: ArrayBuffer;
+      spec: TemplateFillSpec;
+      docs: { docId: string; piece?: ArrayBuffer }[];
+      shots: (TemplateShot | null)[][] | null;
+    },
+    { bytes: ArrayBuffer; names: string[] },
+    { done: number; total: number }
+  >;
+  /**
+   * A picked CRS template (M13-07): its kind from the bytes, whether it
+   * loads, its sheets, the parts it would lose, and with `probe` the last
+   * pre-drawn row (C3). Names and counts only.
+   */
+  crsTemplateInspect: MethodSpec<
+    { bytes: ArrayBuffer; probe: TemplateProbe | null },
+    TemplateInspection
+  >;
+  /** The template file (C14): one JSON file with the workbook and the settings. */
+  crsTemplateFileWrite: MethodSpec<
+    { template: Omit<CrsTemplate, 'id' | 'created' | 'modified'> },
+    { bytes: ArrayBuffer }
+  >;
+  /** Reads a template file; its workbook must be an .xlsx or .xltx that loads. */
+  crsTemplateFileRead: MethodSpec<
+    { bytes: ArrayBuffer; appStatus: Record<StatusWord, string> },
+    TemplateFileRead
+  >;
+  /** The PDF's page labels (/PageLabels) of `pages`, null where a page has none (M13-07). */
+  pageLabels: MethodSpec<{ docId: string; pages: number[] }, (string | null)[]>;
   /** Form facts EmbedPDF doesn't give: /Tabs per page, /DV per field (M2-14). */
   formFacts: MethodSpec<{ docId: string }, FormFacts>;
   /**

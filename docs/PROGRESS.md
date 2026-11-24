@@ -1,6 +1,6 @@
 # Triya PDF — Progress
 
-_Last updated: 2026-11-24 (M13-02: the Measure loupe and automatic snapping; M13-06: spike S33, CRS project templates with ExcelJS, works with workaround, ADR-034 Amendment 1; M13-01: sample comparisons in the Compare input window; M13 plan approved: final improvements for 1.1.0, tasks M13-01 … M13-09, ADR-034, ARCHITECTURE.md Rev 0.24; M12-ux plan and ADR-033 recorded (tasks M12-24 … M12-27 all merged); M12-26: alignment made easy to find and first-time tips; M12-27: review in a comparison made easier; M12-25: room to work in a comparison; M12-24: the Compare input window made clearer; M12-23: M12 acceptance, M12 complete on the agent side; M12-22: Compare help and release notes; M12-21·O4: drop a tab on a tab; M12-20: the comparison file; M12-21: change register and presets)_
+_Last updated: 2026-11-24 (M13-07: the CRS project template engine; M13-02: the Measure loupe and automatic snapping; M13-06: spike S33, CRS project templates with ExcelJS, works with workaround, ADR-034 Amendment 1; M13-01: sample comparisons in the Compare input window; M13 plan approved: final improvements for 1.1.0, tasks M13-01 … M13-09, ADR-034, ARCHITECTURE.md Rev 0.24; M12-ux plan and ADR-033 recorded (tasks M12-24 … M12-27 all merged); M12-26: alignment made easy to find and first-time tips; M12-27: review in a comparison made easier; M12-25: room to work in a comparison; M12-24: the Compare input window made clearer; M12-23: M12 acceptance, M12 complete on the agent side; M12-22: Compare help and release notes; M12-21·O4: drop a tab on a tab; M12-20: the comparison file; M12-21: change register and presets)_
 
 **Next (approved 2026-11-24):** [docs/plan/M13.md](plan/M13.md) — final improvements before
 v1.1.0 ([ADR-034](adr/034-m13-final-improvements.md), D-67 … D-71, ARCHITECTURE.md Rev 0.24):
@@ -37,6 +37,38 @@ answers Q1–Q7; ARCHITECTURE.md Rev 0.12 after [ADR-024](adr/024-freetext-text-
 interop is in the M6 pack (CHECKLIST §M6 R1–R4). Rev 0 (M0–M4) is complete on the agent side.
 
 ## Done
+
+- **M13-07 — CRS project template engine (D-71; ADR-034 Amendment 1; plan [M13](plan/M13.md)
+  §6, the owner's answers C1 – C15).** No screens yet (M13-08). Model in `src/model/crs/`
+  (pure): `template.ts` (fields, detail cells, status words, comment types, defaults, the
+  set-up's checks such as two fields on one column or a detail cell inside the comment rows,
+  validation of stored records), `a1.ts` (the S33 reference rules, typed cells and columns as
+  number or letter), `sheetName.ts` (Excel's sheet-name rules), `fileNameRule.ts` (C10,
+  `{docNo}_Rev{rev}`, `{title}`, `{*}`), `templateFile.ts` (C14: versioned JSON
+  `triya-crs-template` v1 with the workbook as base64). Rows in
+  `src/features/crs/templates/`: `templateRows.ts` (C8 type ticks, C12 Ignore highlights =
+  under 70 % opacity, order by page with typed text first then top to bottom and left to right;
+  every field incl. All/First/Last reply, Last reply author, status words, Comment ID = the
+  annotation's /NM), `templateSheets.ts` (sheets per document C15 and per commented page C5,
+  named by page label else "Page 3", Sr. No. per sheet C6, detail values, comment count per
+  sheet, the fill spec, CSV with the same columns and no pictures). Engine in the Work worker
+  (`src/workers/work/crsTemplate/`): the S33 method (model-level insert, sheet copies from a
+  model taken before filling, the four write fixes) plus Excel tables on the chosen sheet grown
+  or moved with the rows, cells cut to Excel's 32,767 characters, dates written as the local
+  day (template number format kept, `yyyy-mm-dd` when it has none), snapshots rendered at twice
+  the size shown in their column; refusals by bytes, lost parts named (`kind.ts`), inspection
+  with the detected last pre-drawn row (`inspect.ts`). New Work worker methods `crsTemplate`
+  (progress per row, Cancel between rows), `crsTemplateInspect`, `crsTemplateFileWrite` /
+  `crsTemplateFileRead`, `pageLabels` (PDF page labels via `FPDF_GetPageLabel`). IndexedDB v12
+  store `crsTemplates` (Privacy page, Clear all local data), `crsTemplateStore.ts` (add, edit,
+  rename, duplicate, delete, last used, template file export and import),
+  `templateExport.ts` (`buildTemplateCrs`, for the M13-08 dialog). The Standard CRS is
+  unchanged. Tests: `tests/crs/template-{model,rows,fill}.test.ts` (workbooks read back with
+  ExcelJS), `e2e/crs-templates.spec.ts` (through the real worker: labelled pages, snapshots,
+  Cancel, two documents, CSV, template file round trip); script-made templates in
+  `e2e/fixtures/crsTemplates.ts` (rule 13). Found: ExcelJS drops a note on an empty cell at
+  load (a note on a cell with text survives a row move). Sample files for a look in Excel:
+  project files `m13-07/`.
 
 - **M13-02 — Measure loupe and automatic snapping (ADR-034, D-68; plan [M13](plan/M13.md) §2).**
   M12-13's alignment magnifier became one shared loupe (`src/features/view/loupe/`: `Loupe.tsx`,
