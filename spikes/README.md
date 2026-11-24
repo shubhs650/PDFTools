@@ -4,31 +4,32 @@ Throwaway spike code for [docs/plan/M0.md](../docs/plan/M0.md) (S1–S8) and M1-
 [docs/plan/M1.md](../docs/plan/M1.md)). Nothing here is imported by
 `/src` or shipped. Each spike ends with an ADR in `docs/adr/`.
 
-| Spike   | Folder                                                   | ADR                                                                                           | Outcome               |
-| ------- | -------------------------------------------------------- | --------------------------------------------------------------------------------------------- | --------------------- |
-| S8      | [`s8-csp/`](s8-csp/)                                     | [ADR-003](../docs/adr/003-s8-csp-wasm-workers-sw.md)                                          | Works with workaround |
-| S3      | [`s3-two-engines/`](s3-two-engines/)                     | [ADR-004](../docs/adr/004-s3-two-engines.md)                                                  | Works with workaround |
-| S1      | [`s1-save/`](s1-save/)                                   | [ADR-005](../docs/adr/005-s1-incremental-save.md)                                             | Works with workaround |
-| S5      | [`s5-search/`](s5-search/)                               | [ADR-006](../docs/adr/006-s5-search-work-worker.md)                                           | Works with workaround |
-| S2      | [`s2-measure/`](s2-measure/)                             | [ADR-007](../docs/adr/007-s2-measure-viewport.md)                                             | Works with workaround |
-| S7      | [`s7-snap/`](s7-snap/)                                   | [ADR-008](../docs/adr/008-s7-snap-geometry.md)                                                | Works with workaround |
-| S4      | [`s4-oxide/`](s4-oxide/)                                 | [ADR-009](../docs/adr/009-s4-pdf-oxide.md)                                                    | Works with workaround |
-| S6      | [`s6-icons/`](s6-icons/)                                 | [ADR-010](../docs/adr/010-s6-fluent-icons.md)                                                 | Works with workaround |
-| S9      | [`s9-plugins/`](s9-plugins/) (M1-01)                     | [ADR-011](../docs/adr/011-m1-embedpdf-plugins.md)                                             | Works with workaround |
-| S12     | [`s12-annotate/`](s12-annotate/) (M3-01)                 | [ADR-014](../docs/adr/014-m3-annotations.md)                                                  | Works with workaround |
-| S14     | [`s14-pages/`](s14-pages/) (M4-01)                       | [ADR-016](../docs/adr/016-m4-page-operations.md)                                              | Works with workaround |
-| S15     | [`s15-redaction/`](s15-redaction/) (M4-02)               | [ADR-017](../docs/adr/017-m4-redaction.md)                                                    | Works with workaround |
-| S16     | [`s16-comment-transfer/`](s16-comment-transfer/) (M4-19) | [ADR-018](../docs/adr/018-m4-comment-transfer.md)                                             | Works with workaround |
-| S17     | [`s17-ocr/`](s17-ocr/) (M5-01)                           | [ADR-020](../docs/adr/020-m5-ocr.md)                                                          | Works with workaround |
-| S18–S22 | [`s18-s22-m6/`](s18-s22-m6/) (M6-04)                     | [ADR-022](../docs/adr/022-m6-spikes-s18-s22.md)                                               | Works with workaround |
-| S23     | [`s23-popup/`](s23-popup/) (M7-06)                       | [ADR-023](../docs/adr/023-m7-second-beta-review.md)                                           | Works                 |
-| S25     | [`s25-freetext-colors/`](s25-freetext-colors/) (M7)      | [ADR-024](../docs/adr/024-freetext-text-and-border-colours.md)                                | Works with workaround |
-| S26     | [`s26-freetext-fonts/`](s26-freetext-fonts/) (M11-02)    | [ADR-028](../docs/adr/028-m11-tabs-fonts-select.md)                                           | Works (route R2)      |
-| S27     | [`s27-linked-views/`](s27-linked-views/) (M12-02)        | [ADR-032](../docs/adr/032-m12-spike-results.md); [RESULTS.md](s27-linked-views/RESULTS.md)    | Works with workaround |
-| S28     | [`s28-alignment/`](s28-alignment/) (M12-03)              | [ADR-032](../docs/adr/032-m12-spike-results.md); [RESULTS.md](s28-alignment/RESULTS.md)       | Works (route 1)       |
-| S29     | [`s29-overlay/`](s29-overlay/) (M12-04)                  | [ADR-032](../docs/adr/032-m12-spike-results.md); [RESULTS.md](s29-overlay/RESULTS.md)         | Works with workaround |
-| S30     | [`s30-text-diff/`](s30-text-diff/) (M12-05)              | [ADR-032](../docs/adr/032-m12-spike-results.md); [RESULTS.md](s30-text-diff/RESULTS.md)       | Works (own code)      |
-| S31     | [`s31-comparison-file/`](s31-comparison-file/) (M12-06)  | [ADR-032](../docs/adr/032-m12-spike-results.md); [RESULTS.md](s31-comparison-file/RESULTS.md) | Works                 |
+| Spike   | Folder                                                   | ADR                                                                                                          | Outcome               |
+| ------- | -------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------ | --------------------- |
+| S8      | [`s8-csp/`](s8-csp/)                                     | [ADR-003](../docs/adr/003-s8-csp-wasm-workers-sw.md)                                                         | Works with workaround |
+| S3      | [`s3-two-engines/`](s3-two-engines/)                     | [ADR-004](../docs/adr/004-s3-two-engines.md)                                                                 | Works with workaround |
+| S1      | [`s1-save/`](s1-save/)                                   | [ADR-005](../docs/adr/005-s1-incremental-save.md)                                                            | Works with workaround |
+| S5      | [`s5-search/`](s5-search/)                               | [ADR-006](../docs/adr/006-s5-search-work-worker.md)                                                          | Works with workaround |
+| S2      | [`s2-measure/`](s2-measure/)                             | [ADR-007](../docs/adr/007-s2-measure-viewport.md)                                                            | Works with workaround |
+| S7      | [`s7-snap/`](s7-snap/)                                   | [ADR-008](../docs/adr/008-s7-snap-geometry.md)                                                               | Works with workaround |
+| S4      | [`s4-oxide/`](s4-oxide/)                                 | [ADR-009](../docs/adr/009-s4-pdf-oxide.md)                                                                   | Works with workaround |
+| S6      | [`s6-icons/`](s6-icons/)                                 | [ADR-010](../docs/adr/010-s6-fluent-icons.md)                                                                | Works with workaround |
+| S9      | [`s9-plugins/`](s9-plugins/) (M1-01)                     | [ADR-011](../docs/adr/011-m1-embedpdf-plugins.md)                                                            | Works with workaround |
+| S12     | [`s12-annotate/`](s12-annotate/) (M3-01)                 | [ADR-014](../docs/adr/014-m3-annotations.md)                                                                 | Works with workaround |
+| S14     | [`s14-pages/`](s14-pages/) (M4-01)                       | [ADR-016](../docs/adr/016-m4-page-operations.md)                                                             | Works with workaround |
+| S15     | [`s15-redaction/`](s15-redaction/) (M4-02)               | [ADR-017](../docs/adr/017-m4-redaction.md)                                                                   | Works with workaround |
+| S16     | [`s16-comment-transfer/`](s16-comment-transfer/) (M4-19) | [ADR-018](../docs/adr/018-m4-comment-transfer.md)                                                            | Works with workaround |
+| S17     | [`s17-ocr/`](s17-ocr/) (M5-01)                           | [ADR-020](../docs/adr/020-m5-ocr.md)                                                                         | Works with workaround |
+| S18–S22 | [`s18-s22-m6/`](s18-s22-m6/) (M6-04)                     | [ADR-022](../docs/adr/022-m6-spikes-s18-s22.md)                                                              | Works with workaround |
+| S23     | [`s23-popup/`](s23-popup/) (M7-06)                       | [ADR-023](../docs/adr/023-m7-second-beta-review.md)                                                          | Works                 |
+| S25     | [`s25-freetext-colors/`](s25-freetext-colors/) (M7)      | [ADR-024](../docs/adr/024-freetext-text-and-border-colours.md)                                               | Works with workaround |
+| S26     | [`s26-freetext-fonts/`](s26-freetext-fonts/) (M11-02)    | [ADR-028](../docs/adr/028-m11-tabs-fonts-select.md)                                                          | Works (route R2)      |
+| S27     | [`s27-linked-views/`](s27-linked-views/) (M12-02)        | [ADR-032](../docs/adr/032-m12-spike-results.md); [RESULTS.md](s27-linked-views/RESULTS.md)                   | Works with workaround |
+| S28     | [`s28-alignment/`](s28-alignment/) (M12-03)              | [ADR-032](../docs/adr/032-m12-spike-results.md); [RESULTS.md](s28-alignment/RESULTS.md)                      | Works (route 1)       |
+| S29     | [`s29-overlay/`](s29-overlay/) (M12-04)                  | [ADR-032](../docs/adr/032-m12-spike-results.md); [RESULTS.md](s29-overlay/RESULTS.md)                        | Works with workaround |
+| S30     | [`s30-text-diff/`](s30-text-diff/) (M12-05)              | [ADR-032](../docs/adr/032-m12-spike-results.md); [RESULTS.md](s30-text-diff/RESULTS.md)                      | Works (own code)      |
+| S31     | [`s31-comparison-file/`](s31-comparison-file/) (M12-06)  | [ADR-032](../docs/adr/032-m12-spike-results.md); [RESULTS.md](s31-comparison-file/RESULTS.md)                | Works                 |
+| S33     | [`s33-crs-templates/`](s33-crs-templates/) (M13-06)      | [ADR-034](../docs/adr/034-m13-final-improvements.md) Amendment 1; [RESULTS.md](s33-crs-templates/RESULTS.md) | Works with workaround |
 
 ## Shared pieces (`shared/`)
 
@@ -80,6 +81,13 @@ SPIKE=s29 npm run spikes -- --project=s29                                # → t
 # encrypted and signed inputs, Save review; sample pack → spikes/s31-comparison-file/out/pack/
 # (qpdf, Poppler and PDFJS_DIR optional, see RESULTS.md)
 node --import ./spikes/shared/ts-ext.ts spikes/s31-comparison-file/run-node.ts   # → test-results/s31-node.json
+
+# S33 project CRS templates (M13-06): self-made templates, fills, sheet copies, 2,000 rows; results
+# opened in LibreOffice and openpyxl when installed → spikes/s33-crs-templates/out/; then the same
+# fill in a worker under the CSP
+node --expose-gc --import ./spikes/shared/ts-ext.ts spikes/s33-crs-templates/run-node.ts
+npx vitest run spikes/s33-crs-templates
+SPIKE=s33 npm run spikes -- --project=s33                                         # → test-results/s33-results.json
 
 # S30 text matching (M12-05): Node, PDFium WASM, PDF Oxide, tesseract.js-core, the corpus;
 # numbers → spikes/s30-text-diff/out/, findings in s30-text-diff/RESULTS.md. The jsdiff

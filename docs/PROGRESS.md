@@ -1,6 +1,6 @@
 # Triya PDF — Progress
 
-_Last updated: 2026-11-24 (M13-01: sample comparisons in the Compare input window; M13 plan approved: final improvements for 1.1.0, tasks M13-01 … M13-09, ADR-034, ARCHITECTURE.md Rev 0.24; M12-ux plan and ADR-033 recorded (tasks M12-24 … M12-27 all merged); M12-26: alignment made easy to find and first-time tips; M12-27: review in a comparison made easier; M12-25: room to work in a comparison; M12-24: the Compare input window made clearer; M12-23: M12 acceptance, M12 complete on the agent side; M12-22: Compare help and release notes; M12-21·O4: drop a tab on a tab; M12-20: the comparison file; M12-21: change register and presets)_
+_Last updated: 2026-11-24 (M13-06: spike S33, CRS project templates with ExcelJS, works with workaround, ADR-034 Amendment 1; M13-01: sample comparisons in the Compare input window; M13 plan approved: final improvements for 1.1.0, tasks M13-01 … M13-09, ADR-034, ARCHITECTURE.md Rev 0.24; M12-ux plan and ADR-033 recorded (tasks M12-24 … M12-27 all merged); M12-26: alignment made easy to find and first-time tips; M12-27: review in a comparison made easier; M12-25: room to work in a comparison; M12-24: the Compare input window made clearer; M12-23: M12 acceptance, M12 complete on the agent side; M12-22: Compare help and release notes; M12-21·O4: drop a tab on a tab; M12-20: the comparison file; M12-21: change register and presets)_
 
 **Next (approved 2026-11-24):** [docs/plan/M13.md](plan/M13.md) — final improvements before
 v1.1.0 ([ADR-034](adr/034-m13-final-improvements.md), D-67 … D-71, ARCHITECTURE.md Rev 0.24):
@@ -38,6 +38,24 @@ interop is in the M6 pack (CHECKLIST §M6 R1–R4). Rev 0 (M0–M4) is complete 
 
 ## Done
 
+- **M13-06 — Spike S33: project Excel templates with ExcelJS (D-71; ADR-034 Amendment 1).**
+  In `spikes/s33-crs-templates/` ([RESULTS.md](../spikes/s33-crs-templates/RESULTS.md)). **Works
+  with workaround, no new dependency.** Self-made templates by script (a full project form with
+  logo, merged header, detail cells, totals, 15 pre-drawn rows, a shared "Days open" formula,
+  drop-downs, conditional formatting, sign-off block, print area and titles, frozen panes; a
+  one-row form; `.xltx`, `.xlsm`, `.xls` and text-box variants; one with a chart, note, table,
+  sparkline and an Excel 2010 drop-down made with openpyxl). Rows are inserted on the worksheet
+  model in one pass with one reference rule (rows below move, ranges reaching the last pre-drawn
+  row grow) instead of ExcelJS's `insertRows`, which leaves new rows bare and does not grow
+  totals, formatting or the print area. Sheet copies per page and per document from a model taken
+  before filling; the template sheet renamed with references rewritten; safe sheet names. Four
+  ExcelJS write problems found and fixed (overlapping drop-down ranges across row 9 → 10, a width
+  of 9 dropped, stale formula results shown by LibreOffice, merges kept on model set). Lost at
+  import (to warn about): shapes, charts, sparklines, Excel 2010 drop-downs, named style names;
+  macros refused. Every result opens in LibreOffice 24.2 (formulas recalculated to the right
+  totals) and openpyxl; 2,000 rows with 200 pictures in about 0.5 s in a browser worker under the CSP.
+  11 unit tests (`spikes/s33-crs-templates/s33.test.ts`), the `s33` spike project. Sample files
+  in the project files (`m13-06/`): the owner opened them in Excel without errors (2026-11-24).
 - **M13-01 — Sample comparisons (ADR-034, D-67; plan [M13](plan/M13.md) §1).** Two self-made
   corpus pairs per type ship with the app (`src/model/compare/samples.ts`): PDF Overlay pair 01
   (flange) and 19 (checked print with review comments), Text Comparison pair 05 (EPC tender) and
