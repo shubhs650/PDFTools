@@ -33,8 +33,7 @@ Excel's "repair" prompt finds nothing. No new dependency.
 - **Fast:** 2,000 rows with 200 pictures in about **0.5 s** in a browser worker under the app's
   CSP (the same in Node), 2,000 pictures in about 1.5 s (6.4 MB file), 2,000 rows over 50 sheet
   copies in about 1.7 s; no main-thread long task, no CSP violation, at most 55 MB of heap.
-- **Owner's check still open:** open the sample files in Excel (no repair prompt, layout as
-  expected). They are in the project files under `m13-06/`, and `run-node.ts` makes them again.
+- **Owner's check done (2026-11-24):** the sample files open in Excel without errors.
 
 ## How it was tested
 

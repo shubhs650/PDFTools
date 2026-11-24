@@ -55,7 +55,7 @@ interop is in the M6 pack (CHECKLIST §M6 R1–R4). Rev 0 (M0–M4) is complete 
   macros refused. Every result opens in LibreOffice 24.2 (formulas recalculated to the right
   totals) and openpyxl; 2,000 rows with 200 pictures in about 0.5 s in a browser worker under the CSP.
   11 unit tests (`spikes/s33-crs-templates/s33.test.ts`), the `s33` spike project. Sample files
-  for the owner's Excel check in the project files (`m13-06/`).
+  in the project files (`m13-06/`): the owner opened them in Excel without errors (2026-11-24).
 - **M13-01 — Sample comparisons (ADR-034, D-67; plan [M13](plan/M13.md) §1).** Two self-made
   corpus pairs per type ship with the app (`src/model/compare/samples.ts`): PDF Overlay pair 01
   (flange) and 19 (checked print with review comments), Text Comparison pair 05 (EPC tender) and
@@ -4277,10 +4277,6 @@ rel="noopener noreferrer">`; the commands `app.home` / `app.reportIssue` open th
   Drawings are supplied locally by the owner anyway (ADR-002).
 
 ## Decisions needed (owner)
-
-- **M13-06 (S33) Excel check.** Open the sample files in the project files (`m13-06/`) in Excel:
-  no repair prompt, layout as expected (sign-off block moved down, totals counting every row,
-  one sheet per page and per document). M13-07 builds on the method meanwhile.
 
 - **M12 (PDF comparison).** The M12-23 owner pack ([docs/acceptance/M12.md](acceptance/M12.md)
   §5) and then accepting M12, which turns Compare on in release builds and lets v1.1.0 be tagged.

@@ -62,8 +62,8 @@ release checks. The CRS item was settled in fifteen questions asked one at a tim
 Spike S33 ([`spikes/s33-crs-templates/`](../../spikes/s33-crs-templates/),
 [RESULTS.md](../../spikes/s33-crs-templates/RESULTS.md)) checked D-71 against ExcelJS 4.4.0 on
 self-made templates (rule 13). **Verdict: works with workaround; no new dependency; D-71 stands
-as written.** The owner's check in Excel (no repair prompt) is still open, with the sample files
-in the project files (`m13-06/`).
+as written.** The owner opened the sample files (project files, `m13-06/`) in Excel on
+2026-11-24: they open without errors.
 
 1. **Files taken.** `.xlsx` and `.xltx` only, told apart by their bytes (OLE2 signature, else the
    zip's main content type), never by the file name. Refused with a plain message: macro-enabled
