@@ -28,9 +28,26 @@ export interface LoupeSettings {
   mag: LoupeMag;
   /** Picking a measuring tool turns snapping on (and back afterwards). */
   autoSnap: boolean;
+  /** View → Loupe (M13-02·O1): the loupe in every tool, off by default. */
+  anywhere: boolean;
 }
 
-export const DEFAULT_LOUPE: LoupeSettings = { on: true, size: 'medium', mag: 4, autoSnap: true };
+export const DEFAULT_LOUPE: LoupeSettings = {
+  on: true,
+  size: 'medium',
+  mag: 4,
+  autoSnap: true,
+  anywhere: false,
+};
+
+/**
+ * Is the loupe shown with `tool`? In every tool while View → Loupe is on
+ * (M13-02·O1); otherwise with the tools it serves (`served`: Measure,
+ * Calibrate, Scale Viewport) while the Measure ribbon's Loupe is on.
+ */
+export function loupeShown(s: LoupeSettings, tool: string, served: ReadonlySet<string>): boolean {
+  return s.anywhere || (s.on && served.has(tool));
+}
 
 /** Stored settings (localStorage JSON) → settings; anything not valid falls back to the default. */
 export function parseLoupeSettings(raw: string | null): LoupeSettings {
@@ -56,6 +73,7 @@ export function parseLoupeSettings(raw: string | null): LoupeSettings {
         ? (mag as LoupeMag)
         : DEFAULT_LOUPE.mag,
     autoSnap: typeof o['autoSnap'] === 'boolean' ? o['autoSnap'] : DEFAULT_LOUPE.autoSnap,
+    anywhere: typeof o['anywhere'] === 'boolean' ? o['anywhere'] : DEFAULT_LOUPE.anywhere,
   };
 }
 

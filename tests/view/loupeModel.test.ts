@@ -5,6 +5,7 @@ import {
   covers,
   loupePlace,
   loupeRegion,
+  loupeShown,
   parseLoupeSettings,
 } from '../../src/features/view/loupe/loupeModel';
 
@@ -54,7 +55,13 @@ describe('loupe region', () => {
 
 describe('loupe settings', () => {
   it('defaults: on, medium, 4×, snapping turned on when measuring', () => {
-    expect(DEFAULT_LOUPE).toEqual({ on: true, size: 'medium', mag: 4, autoSnap: true });
+    expect(DEFAULT_LOUPE).toEqual({
+      on: true,
+      size: 'medium',
+      mag: 4,
+      autoSnap: true,
+      anywhere: false,
+    });
     expect(parseLoupeSettings(null)).toEqual(DEFAULT_LOUPE);
   });
   it('keeps valid stored values and drops anything else', () => {
@@ -63,12 +70,33 @@ describe('loupe settings', () => {
       size: 'large',
       mag: 8,
       autoSnap: false,
+      anywhere: false, // stored before View → Loupe (M13-02·O1)
     });
+    expect(parseLoupeSettings('{"anywhere":true}')).toEqual({ ...DEFAULT_LOUPE, anywhere: true });
+    expect(parseLoupeSettings('{"anywhere":1}')).toEqual(DEFAULT_LOUPE);
     expect(parseLoupeSettings('{"size":"huge","mag":3,"on":"yes"}')).toEqual(DEFAULT_LOUPE);
     expect(parseLoupeSettings('not json')).toEqual(DEFAULT_LOUPE);
   });
   it('has three sizes, growing', () => {
     expect(LOUPE_SIDES.small).toBeLessThan(LOUPE_SIDES.medium);
     expect(LOUPE_SIDES.medium).toBeLessThan(LOUPE_SIDES.large);
+  });
+});
+
+// M13-02·O1 (D-68): View → Loupe shows the loupe in every tool; otherwise it
+// shows only with the tools it serves, while the Measure ribbon's Loupe is on.
+describe('loupeShown', () => {
+  const served = new Set(['measureDistance', 'calibrate']);
+  it('shows with the served tools while the Measure loupe is on', () => {
+    expect(loupeShown(DEFAULT_LOUPE, 'measureDistance', served)).toBe(true);
+    expect(loupeShown(DEFAULT_LOUPE, 'calibrate', served)).toBe(true);
+    expect(loupeShown(DEFAULT_LOUPE, 'select', served)).toBe(false);
+    expect(loupeShown({ ...DEFAULT_LOUPE, on: false }, 'measureDistance', served)).toBe(false);
+  });
+  it('shows in every tool with View → Loupe, whatever the Measure loupe says', () => {
+    const any = { ...DEFAULT_LOUPE, anywhere: true };
+    for (const tool of ['select', 'hand', 'highlight', 'measureDistance'])
+      expect(loupeShown(any, tool, served)).toBe(true);
+    expect(loupeShown({ ...any, on: false }, 'measureDistance', served)).toBe(true);
   });
 });

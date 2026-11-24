@@ -192,6 +192,7 @@ test('Settings → Measure and the ribbon toggle: size, magnification, auto-snap
     size: 'large',
     mag: 8,
     autoSnap: false,
+    anywhere: false,
   });
   await open(page);
   await expect(

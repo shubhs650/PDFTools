@@ -504,6 +504,13 @@ export function registerAnnotateCommands(): () => void {
       },
       isPressed: () => loupeSettingsStore.getState().on,
     }),
+    // View → Loupe (M13-02·O1, D-68): the same loupe in every tool, off by default.
+    registerCommand('view.loupe', {
+      run: () => {
+        setLoupeSettings({ anywhere: !loupeSettingsStore.getState().anywhere });
+      },
+      isPressed: () => loupeSettingsStore.getState().anywhere,
+    }),
     ...(
       [
         ['measure.snapEndpoint', 'endpoint'],
@@ -737,7 +744,7 @@ export function registerAnnotateCommands(): () => void {
     if (s.enabled !== prev.enabled || s.kinds !== prev.kinds) notify();
   });
   const offLoupe = loupeSettingsStore.subscribe((s, prev) => {
-    if (s.on !== prev.on) notify();
+    if (s.on !== prev.on || s.anywhere !== prev.anywhere) notify();
   });
   // Paste is enabled once something is copied (M4-21).
   const offClip = clipboardStore.subscribe(notify);

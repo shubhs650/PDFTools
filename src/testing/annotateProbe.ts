@@ -18,6 +18,7 @@ import { capability, hostStore } from '../features/view/host';
 import { diagnostics } from '../app/diagnostics';
 import { ensurePage, rtts, snapStore } from '../features/measure/snapping';
 import { loupeStats } from '../features/view/loupe/loupeModel';
+import { loupeStore } from '../features/measure/loupePointer';
 import { lastCrs } from '../features/crs/crsExport';
 import { lastAnnotationExport } from '../features/annotate/export/annotationExport';
 import { placeDynamicStamp } from '../features/stamps/stampTools';
@@ -149,6 +150,11 @@ export function registerAnnotateProbe(hook: TestHook): void {
     }),
     /** The loupe's requests to the Render worker and pictures shown so far (M13-02). */
     loupe: () => ({ ...loupeStats }),
+    /** Where the loupe's pointer is: page and page points, unturned (M13-02·O1). */
+    loupePointer: () => {
+      const p = loupeStore.getState().pointer;
+      return p ? { docId: p.docId, page: p.page, x: p.pos.x, y: p.pos.y } : null;
+    },
     /** Starts a page's geometry extraction (the Work worker gets busy with it). */
     snapPrepare: (docId: string, page: number) => {
       void ensurePage(docId, page);

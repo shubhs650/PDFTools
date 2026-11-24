@@ -739,7 +739,7 @@
       "magValue": "{{value}}×",
       "autoSnap": "Turn on snapping when measuring",
       "autoSnapHint": "Distance, Perimeter, Area, Calibrate and Scale Viewport turn snapping on; it goes back to how it was when you finish, unless you switch it yourself meanwhile.",
-      "note": "The loupe shows the spot under the pointer larger while you measure. Switch it on or off on the Measure tab, in the Snap group. These choices are kept on this device only."
+      "note": "The loupe shows the spot under the pointer larger while you measure. Switch it on or off on the Measure tab, in the Snap group; View › Loupe shows it with every tool. These choices are kept on this device only."
     }
   },
   "about": {
@@ -898,7 +898,7 @@
       "session": "Files open last time: their names and the browser's permission handles, kept only while File › Settings › Start-up reopens them",
       "closeOutHighlights": "Whether a comparison's close-out list hides highlights",
       "compareTips": "Whether the first-time tips of Compare were seen",
-      "measureLoupe": "The Measure loupe and snapping choices: loupe on or off, size, magnification",
+      "measureLoupe": "The Measure loupe and snapping choices: loupe on or off, size, magnification, View › Loupe",
       "thinLines": "Whether Thin Lines is on"
     },
     "clearHint": "To delete this data, use File → Settings → Clear all local data."
