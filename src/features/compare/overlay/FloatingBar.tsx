@@ -11,6 +11,7 @@ import {
 } from '@fluentui/react-icons/svg/line-thickness';
 import { PageFit20Regular } from '@fluentui/react-icons/svg/page-fit';
 import { Shapes20Filled, Shapes20Regular } from '@fluentui/react-icons/svg/shapes';
+import { Target20Filled, Target20Regular } from '@fluentui/react-icons/svg/target';
 import { ZoomIn20Regular } from '@fluentui/react-icons/svg/zoom-in';
 import { ZoomOut20Regular } from '@fluentui/react-icons/svg/zoom-out';
 import { useId, useState, type ReactNode } from 'react';
@@ -19,6 +20,7 @@ import { format, msg, type MessageKey } from '../../../i18n';
 import {
   PRESET_ORDER,
   hexOf,
+  keyColours,
   presetOf,
   rgbOf,
   type ColourPreset,
@@ -32,7 +34,9 @@ import {
   ToggleButton,
   type MenuEntry,
 } from '../../../ui/components';
+import { toggleLineUp } from '../align/manualAlign';
 import {
+  needsCheck,
   overlapWarning,
   setBalance,
   setColour,
@@ -54,15 +58,33 @@ const PRESET_LABEL: Record<ColourPreset, MessageKey> = {
 
 const CUSTOM = 'custom';
 
+type ColourName = 'red' | 'green' | 'blue' | 'magenta';
+/** The colours of each preset by name, for the key (custom colours have none). */
+const PRESET_NAMES: Record<ColourPreset, { a: ColourName; b: ColourName }> = {
+  redGreen: { a: 'red', b: 'green' },
+  redBlue: { a: 'red', b: 'blue' },
+  magentaGreen: { a: 'magenta', b: 'green' },
+};
+const COLOUR_NAME: Record<ColourName | 'black' | 'grey', MessageKey> = {
+  red: msg('compare.key.colour_red'),
+  green: msg('compare.key.colour_green'),
+  blue: msg('compare.key.colour_blue'),
+  magenta: msg('compare.key.colour_magenta'),
+  black: msg('compare.key.colour_black'),
+  grey: msg('compare.key.colour_grey'),
+};
+
 /** The swatch of a side's colour, beside its switch. */
 function Swatch({ colour }: { colour: string }) {
   return <span className="overlay-swatch" style={{ background: colour }} aria-hidden="true" />;
 }
 
 /**
- * The floating bar over the overlay (D-59, Q18): show or hide each revision,
- * the balance between them, Fade unchanged, Thicken thin lines, Blink (hold),
- * the colours, the "Vector overlay (beta)" display mode (M12-16) and the zoom.
+ * The floating bar over the overlay (D-59, Q18): **Line up** (M12-26,
+ * ADR-033: the sheet lined up by hand, always in sight), show or hide each
+ * revision, the balance between them, Fade unchanged, Thicken thin lines,
+ * Blink (hold), the colours, the "Vector overlay (beta)" display mode
+ * (M12-16) and the zoom.
  */
 export function FloatingBar({
   id,
@@ -123,8 +145,27 @@ export function FloatingBar({
       },
     },
   ];
+  const lining = sheet.pair !== null && view.manual?.pair === sheet.pair;
   return (
     <div className="overlay-bar" role="toolbar" aria-label={t('compare.overlay.bar')}>
+      <div
+        className="overlay-bar-group overlay-line-up"
+        data-testid="line-up-button"
+        data-attention={needsCheck(view, sheet) ? 'true' : undefined}
+      >
+        <ToggleButton
+          label={t('compare.lineUp.button')}
+          tooltip={t('compare.lineUp.buttonTip')}
+          compact
+          icon={<Target20Regular />}
+          pressedIcon={<Target20Filled />}
+          pressed={lining}
+          disabled={sheet.pair === null}
+          onPressedChange={(on) => {
+            toggleLineUp(id, sheet, on);
+          }}
+        />
+      </div>
       <Group>
         <ToggleButton
           label={t('compare.overlay.showA')}
@@ -234,8 +275,63 @@ export function FloatingBar({
           }}
         />
       </Group>
+      <ColourKey style={s} preset={preset} />
       <CustomColours id={id} open={custom} onOpenChange={setCustom} />
     </div>
+  );
+}
+
+/**
+ * The colour key (M12-25, ADR-033): "Red: only in old · Green: only in new · Black: same",
+ * following the colours chosen (custom colours show their swatch with no name).
+ */
+function ColourKey({
+  style,
+  preset,
+}: {
+  style: OverlayView['style'];
+  preset: ColourPreset | null;
+}) {
+  const { t } = useTranslation();
+  const colours = keyColours(style);
+  const names = preset ? PRESET_NAMES[preset] : null;
+  const fade = style.fade > 0;
+  const items = [
+    {
+      key: 'a',
+      colour: colours.a,
+      name: names?.a,
+      what: msg('compare.key.a'),
+      alone: msg('compare.key.alone_a'),
+    },
+    {
+      key: 'b',
+      colour: colours.b,
+      name: names?.b,
+      what: msg('compare.key.b'),
+      alone: msg('compare.key.alone_b'),
+    },
+    {
+      key: 'both',
+      colour: colours.both,
+      name: names ? (fade ? 'grey' : 'black') : undefined,
+      what: msg('compare.key.both'),
+      alone: msg('compare.key.alone_both'),
+    },
+  ] as const;
+  return (
+    <ul className="overlay-key" aria-label={t('compare.key.title')} data-testid="overlay-key">
+      {items.map((i) => (
+        <li key={i.key} className="overlay-key-item" data-key={i.key}>
+          <Swatch colour={hexOf(i.colour)} />
+          <span>
+            {i.name
+              ? t('compare.key.named', { colour: t(COLOUR_NAME[i.name]), what: t(i.what) })
+              : t(i.alone)}
+          </span>
+        </li>
+      ))}
+    </ul>
   );
 }
 

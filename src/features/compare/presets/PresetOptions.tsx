@@ -11,7 +11,9 @@ import { presetsFor, type ComparePreset } from '../../../model/compare/presets';
 import { IconButton } from '../../../ui/components';
 import type { Comparison } from '../model';
 import {
+  CARRIED_PRESET,
   DEFAULT_PRESET,
+  carriedFor,
   deletePreset,
   loadPresets,
   pickPreset,
@@ -59,13 +61,19 @@ export function PresetOptions({ comparison: c }: { comparison: Comparison }) {
   const loaded = usePresets((s) => s.loaded);
   const all = usePresets((s) => s.presets);
   const picked = usePresets((s) => pickedPreset(s, c.id));
+  // New comparison (M12-24): the earlier result's settings, offered first.
+  const carried = usePresets((s) => carriedFor(s, c.id, c.type));
   useEffect(() => {
     if (!loaded) void loadPresets();
   }, [loaded]);
   const presets = presetsFor(all, c.type);
-  const preset = presets.find((p) => p.id === picked) ?? null;
+  const preset =
+    picked === CARRIED_PRESET
+      ? carried && { ...carried, name: t('compare.presets.carried') }
+      : (presets.find((p) => p.id === picked) ?? null);
+  const saved = preset !== null && preset.id !== CARRIED_PRESET;
   const remove = async (): Promise<void> => {
-    if (!preset) return;
+    if (!preset || !saved) return;
     try {
       await deletePreset(preset.id);
       setNotice(t('compare.presets.deleted', { name: preset.name }));
@@ -108,6 +116,9 @@ export function PresetOptions({ comparison: c }: { comparison: Comparison }) {
               }}
             >
               <option value={DEFAULT_PRESET}>{t('compare.presets.default')}</option>
+              {carried ? (
+                <option value={CARRIED_PRESET}>{t('compare.presets.carried')}</option>
+              ) : null}
               {presets.map((p) => (
                 <option key={p.id} value={p.id}>
                   {p.name}
@@ -117,7 +128,7 @@ export function PresetOptions({ comparison: c }: { comparison: Comparison }) {
             <IconButton
               label={t('compare.presets.delete')}
               icon={<Delete20Regular />}
-              disabled={!preset}
+              disabled={!saved}
               onClick={() => {
                 void remove();
               }}
@@ -135,7 +146,7 @@ export function PresetOptions({ comparison: c }: { comparison: Comparison }) {
                 {summaryOf(t, preset)} {t('compare.presets.applies')}
               </p>
             </>
-          ) : presets.length === 0 ? (
+          ) : presets.length === 0 && !carried ? (
             <p className="compare-options-note">{t('compare.presets.none')}</p>
           ) : null}
           {notice ? (

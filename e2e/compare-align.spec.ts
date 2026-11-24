@@ -1,17 +1,18 @@
 import AxeBuilder from '@axe-core/playwright';
 import type { Page } from '@playwright/test';
 import { darkTheme } from './support/app.ts';
-import { overlayDrawn, overlayOf, overlayView } from './support/compare.ts';
+import { overlayDrawn, overlayOf, overlayView, unfold } from './support/compare.ts';
 import { expect, test } from './support/fixtures.ts';
 
-// M12-13 (D-60, Q7, Q8): manual alignment on corpus pair 04 (sheet 1: a 1.2°
-// skew the automatic alignment finds; sheet 2: Rev B stored landscape with
-// /Rotate 90). Align by points picks 1 to 3 pairs in Document A's and
-// Document B's windows — snapped to the drawing, with a magnifier, Alt for
-// no snapping — and the overlay shows the placement at once; three pairs
-// show the error; the values can be typed and Document A nudged with the
-// arrow keys; Apply sets it on this sheet, all sheets or the low-confidence
-// ones, and Use automatic alignment goes back.
+// M12-13 (D-60, Q7, Q8; M12-26, ADR-033): manual alignment on corpus pair 04
+// (sheet 1: a 1.2° skew the automatic alignment finds; sheet 2: Rev B stored
+// landscape with /Rotate 90). Line up, on the overlay's floating bar, starts
+// the guided steps: 1 to 3 pairs picked in Document A's and Document B's
+// windows — snapped to the drawing, with a magnifier, Alt for no snapping —
+// and the overlay shows the placement at once; three pairs show the error;
+// Undo last point; Fine-tune takes typed values and nudges Document A with
+// the arrow keys; Apply sets it on this sheet, all sheets or the sheets that
+// need checking, and Use automatic alignment goes back.
 
 type Side = 'a' | 'b';
 interface Pt {
@@ -20,6 +21,9 @@ interface Pt {
 }
 
 const panel = (page: Page) => page.getByTestId('align-panel');
+const stepBar = (page: Page) => page.getByTestId('line-up-bar');
+const lineUp = (page: Page) =>
+  page.getByRole('toolbar', { name: 'Overlay controls' }).getByRole('button', { name: 'Line up' });
 const pickLayer = (page: Page, s: Side) => page.getByTestId(`align-pick-${s}`);
 const currentStatus = (page: Page) =>
   page.locator('.overlay-sheet[aria-selected="true"] .overlay-sheet-align');
@@ -89,18 +93,35 @@ async function marked(page: Page, s: Side, n: number): Promise<Pt> {
 async function startAligning(page: Page): Promise<void> {
   await overlayOf(page, '04');
   await expect(page.getByTestId('review-window-b').locator('.page')).not.toHaveCount(0);
-  await panel(page).getByRole('button', { name: 'Align by points' }).click();
+  // Line up is on the floating bar, always in sight; the Alignment section opens itself.
+  await lineUp(page).click();
+  await expect(lineUp(page)).toHaveAttribute('aria-pressed', 'true');
+  await expect(stepBar(page)).toBeVisible();
+  await expect(page.getByTestId('fold-align')).toHaveAttribute('aria-expanded', 'true');
   await expect(pickLayer(page, 'a')).toBeVisible();
   await expect(pickLayer(page, 'b')).toBeVisible();
+}
+
+/** Opens Fine-tune in the Alignment section (folded by default, M12-26). */
+async function fineTune(page: Page): Promise<void> {
+  const button = page.getByTestId('align-finetune');
+  await expect(button).toHaveAttribute('aria-expanded', 'false');
+  await button.click();
+  await expect(page.getByTestId('align-values')).toBeVisible();
 }
 
 test.describe('manual alignment (pair 04)', () => {
   test('two point pairs line up the skewed sheet; three show the error', async ({ page }) => {
     await startAligning(page);
-    await expect(currentStatus(page)).toHaveText(/^Auto-aligned/);
+    await expect(currentStatus(page)).toHaveText(/^Lined up automatically/);
     const auto = await placeShown(page);
     expect(degOf(auto)).toBeCloseTo(-1.2, 1);
     await expect(page.getByTestId('align-instruction')).toContainText('Document A');
+    // Step 1: the old drawing's window is outlined and says what to do.
+    await expect(stepBar(page)).toHaveAttribute('data-step', '1');
+    await expect(page.getByTestId('review-window-a')).toHaveAttribute('data-line-up', 'true');
+    await expect(page.getByTestId('review-window-b')).not.toHaveAttribute('data-line-up', 'true');
+    await expect(stepBar(page).getByRole('button', { name: 'Apply', exact: true })).toBeDisabled();
 
     // Each pair: a spot on A, then the same spot on B (where the automatic alignment puts it).
     const picked: { a: Pt; b: Pt }[] = [];
@@ -111,6 +132,7 @@ test.describe('manual alignment (pair 04)', () => {
       await pickAt(page, 'a', await inView(page, 'a', fx, fy));
       const a = await marked(page, 'a', n);
       await expect(page.getByTestId('align-instruction')).toContainText('Document B');
+      await expect(page.getByTestId('review-window-b')).toHaveAttribute('data-line-up', 'true');
       await pickAt(page, 'b', apply(auto, a));
       picked.push({ a, b: await marked(page, 'b', n) });
     }
@@ -138,25 +160,38 @@ test.describe('manual alignment (pair 04)', () => {
     await expect(page.getByTestId('align-error')).toContainText('Best fit');
     await expect(page.getByTestId('align-pair-error')).toHaveCount(3);
     await expect(page.getByTestId('align-instruction')).toContainText('Three pairs');
+    await expect(stepBar(page)).toHaveAttribute('data-step', '4');
     await expect(pickLayer(page, 'a')).toHaveCount(0);
+    // Undo last point takes back B's third point and picks again; the error goes.
+    await stepBar(page).getByRole('button', { name: 'Undo last point' }).click();
+    await expect(page.getByTestId('align-point-b-3')).toHaveCount(0);
+    await expect(page.getByTestId('align-point-a-3')).toBeAttached();
+    await expect(pickLayer(page, 'b')).toBeVisible();
+    await expect(page.getByTestId('align-error')).toHaveCount(0);
+    await pickAt(page, 'b', { x: b3.x + 3, y: b3.y });
+    await expect(page.getByTestId('align-error')).toContainText('Best fit');
     // Removing the third pair goes back to the two.
     await panel(page).getByRole('button', { name: 'Remove pair 3' }).click();
     await expect(page.getByTestId('align-error')).toHaveCount(0);
     expect(degOf(await placeShown(page))).toBeCloseTo(want, 5);
 
-    // Apply: the sheet is aligned by hand; Use automatic alignment goes back.
-    await panel(page).getByRole('button', { name: 'Apply', exact: true }).click();
-    await expect(currentStatus(page)).toContainText('Aligned by hand');
+    // Apply: the sheet is lined up by hand; Use automatic alignment goes back.
+    await stepBar(page).getByRole('button', { name: 'Apply', exact: true }).click();
+    await expect(currentStatus(page)).toContainText('Lined up by hand');
     await expect(page.getByTestId('align-editor')).toHaveCount(0);
+    await expect(stepBar(page)).toHaveCount(0);
+    await expect(lineUp(page)).toHaveAttribute('aria-pressed', 'false');
     await overlayDrawn(page);
     await panel(page).getByRole('button', { name: 'Use automatic alignment' }).click();
-    await expect(currentStatus(page)).toHaveText(/^Auto-aligned/);
+    await expect(currentStatus(page)).toHaveText(/^Lined up automatically/);
   });
 
   test('values, nudges and Apply to all sheets', async ({ page }) => {
     await startAligning(page);
-    await panel(page).getByRole('button', { name: 'Pick points' }).click();
+    await stepBar(page).getByRole('button', { name: 'Pick points' }).click();
     await expect(pickLayer(page, 'a')).toHaveCount(0);
+    await expect(page.getByTestId('align-instruction')).toContainText('paused');
+    await fineTune(page);
     const before = await placeShown(page);
 
     // Arrow keys on a nudge button: 0.1 pt a press, 1 pt with Shift.
@@ -199,13 +234,13 @@ test.describe('manual alignment (pair 04)', () => {
     await overlayDrawn(page);
 
     // Apply to all sheets: the /Rotate 90 sheet is set by hand too.
-    await panel(page).getByLabel('Apply to').selectOption('all');
-    await panel(page).getByRole('button', { name: 'Apply', exact: true }).click();
-    await expect(currentStatus(page)).toContainText('Aligned by hand');
+    await stepBar(page).getByLabel('Apply to').selectOption('all');
+    await stepBar(page).getByRole('button', { name: 'Apply', exact: true }).click();
+    await expect(currentStatus(page)).toContainText('Lined up by hand');
     const sheets = page.getByTestId('overlay-sheets');
     await sheets.focus();
     await page.keyboard.press('ArrowDown');
-    await expect(currentStatus(page)).toContainText('Aligned by hand');
+    await expect(currentStatus(page)).toContainText('Lined up by hand');
     await expect(currentStatus(page)).toContainText('rotation -1.50°');
   });
 
@@ -215,7 +250,9 @@ test.describe('manual alignment (pair 04)', () => {
     await sheets.focus();
     await page.keyboard.press('ArrowDown');
     await overlayDrawn(page);
-    await panel(page).getByRole('button', { name: 'Align by points' }).click();
+    // The Alignment section's own button starts Line up too.
+    await unfold(page, 'align');
+    await panel(page).getByRole('button', { name: 'Line up by hand' }).click();
     await expect(pickLayer(page, 'b')).toBeVisible();
     // Move over B's drawing until the pointer snaps (Rev B is stored landscape, shown turned).
     const box = await pickLayer(page, 'b').boundingBox();
@@ -257,12 +294,15 @@ test.describe('manual alignment (pair 04)', () => {
   });
 
   for (const theme of ['light', 'dark'] as const)
-    test(`the alignment pane passes axe (${theme}) @a11y`, async ({ page }) => {
+    test(`the alignment pane and the Line up steps pass axe (${theme}) @a11y`, async ({ page }) => {
       if (theme === 'dark') await darkTheme(page);
       await startAligning(page);
       await pickAt(page, 'a', await inView(page, 'a', 0.3, 0.3));
+      await fineTune(page);
       const results = await new AxeBuilder({ page })
         .include('[data-testid="align-panel"]')
+        .include('[data-testid="line-up-bar"]')
+        .include('[data-testid="line-up-button"]')
         .analyze();
       expect(results.violations).toEqual([]);
     });

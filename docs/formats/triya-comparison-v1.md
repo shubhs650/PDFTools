@@ -103,6 +103,7 @@ fields they do not know; a `version` higher than theirs is refused with a plain 
       "b": [0, 0], // or null (sheet only in A)
       "aToB": [1, 0, 0, 1, 0, 0], // A's display space → B's (D-60), absent when used as is
       "status": "asIs", // asIs | aligned | manual | lowConfidence
+      "checked": true, // optional (M12-26): the user accepted an uncertain alignment ("Checked by you")
     },
   ],
   // overlay: the pairing table as edited (M12-09), indices into the side pages (all files of

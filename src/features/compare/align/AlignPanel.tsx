@@ -3,10 +3,14 @@ import { ArrowDown20Regular } from '@fluentui/react-icons/svg/arrow-down';
 import { ArrowLeft20Regular } from '@fluentui/react-icons/svg/arrow-left';
 import { ArrowRight20Regular } from '@fluentui/react-icons/svg/arrow-right';
 import { ArrowUp20Regular } from '@fluentui/react-icons/svg/arrow-up';
+import { Checkmark20Regular } from '@fluentui/react-icons/svg/checkmark';
+import { ChevronDown12Regular } from '@fluentui/react-icons/svg/chevron-down';
+import { ChevronRight12Regular } from '@fluentui/react-icons/svg/chevron-right';
 import { Dismiss20Regular } from '@fluentui/react-icons/svg/dismiss';
+import { Target20Regular } from '@fluentui/react-icons/svg/target';
 import { useId, useState, type KeyboardEvent } from 'react';
 import { useTranslation } from 'react-i18next';
-import { format, msg, type MessageKey } from '../../../i18n';
+import { format, msg } from '../../../i18n';
 import { parseLocaleNumber } from '../../../i18n/format';
 import {
   NUDGE_LARGE,
@@ -18,29 +22,31 @@ import {
   type PlaceValues,
   type Pt,
 } from '../../../model/compare/align/manual';
-import { Button, IconButton, ToggleButton } from '../../../ui/components';
+import { Button, IconButton } from '../../../ui/components';
 import { useFrame, framePage } from '../overlay/frames';
-import { alignmentOf, updateView, useOverlayView, type Sheet } from '../overlay/overlayState';
+import { alignmentText } from '../alignmentText';
+import { FoldSection } from '../layout/FoldSection';
 import {
-  applyManual,
+  alignmentOf,
+  isAlignChecked,
+  needsCheck,
+  setAlignChecked,
+  updateView,
+  useOverlayView,
+  type Sheet,
+} from '../overlay/overlayState';
+import {
   backToAutomatic,
-  cancelManual,
   completePairs,
-  nextSide,
   nudgeManual,
   removePair,
-  setApplyTo,
   setManualPlace,
-  setPicking,
-  startManual,
-  type ApplyTo,
+  toggleLineUp,
 } from './manualAlign';
 
-const APPLY_TO: readonly { to: ApplyTo; label: MessageKey }[] = [
-  { to: 'sheet', label: msg('compare.manual.applyTo_sheet') },
-  { to: 'all', label: msg('compare.manual.applyTo_all') },
-  { to: 'low', label: msg('compare.manual.applyTo_low') },
-];
+// The section's test id and help topic (M12-25: the FoldSection takes them as props).
+const ALIGN_TEST_ID = 'align-panel';
+const ALIGN_HELP = 'compare-alignment';
 
 const NUDGES = [
   {
@@ -74,55 +80,67 @@ const NUDGES = [
 ] as const;
 
 /**
- * Manual alignment of the sheet shown (M12-13, D-60, Q7, Q8), in the left
- * pane under the sheet list: Align by points starts it in Review, where clicks
- * in Document A's and Document B's windows pick 1 to 3 point pairs (one
- * shifts, two give shift, scale and rotation, three a best fit with its
- * error); the values can be typed (X and Y offset, scale %, rotation °) and
- * Document A nudged with the arrow keys; the overlay shows the result at once.
- * Apply sets it on this sheet, all sheets or all low-confidence sheets.
+ * The Alignment section of the overlay's left pane (M12-13, D-60; M12-26,
+ * ADR-033): the sheet's status in plain words with the values found, **Line
+ * up by hand** (the guided Line up mode, LineUpBar), **It looks right** on a
+ * sheet that needs checking, **Use automatic alignment** on a sheet lined up
+ * by hand. While lining up: the point pairs picked (with how far each is off
+ * once there are three) and **Fine-tune**, folded: X and Y offset, scale %,
+ * rotation ° and nudges of Document A with the arrow keys.
  */
-export function AlignPanel({
-  id,
-  sheet,
-  pairs,
-}: {
-  id: string;
-  sheet: Sheet;
-  /** How many sheets are compared (Apply to all). */
-  pairs: number;
-}) {
+export function AlignPanel({ id, sheet }: { id: string; sheet: Sheet }) {
   const { t } = useTranslation();
-  const headingId = useId();
   const view = useOverlayView(id);
   const frame = useFrame(framePage(sheet), 0);
   if (sheet.pair === null) return null;
   const pair = sheet.pair;
   const al = alignmentOf(view, sheet);
+  const text = al ? alignmentText(al, isAlignChecked(view, sheet)) : null;
   const manual = view.manual?.pair === pair ? view.manual : null;
 
   return (
-    <section
+    // Folds to the sheet's alignment status (M12-25); open while lining up.
+    <FoldSection
+      id={id}
+      section="align"
+      title={t('compare.manual.title')}
+      summary={text ? text.status : t('compare.fold.aligning')}
+      help={<HelpButton topic="compare-alignment" />}
+      forceOpen={manual !== null}
       className="overlay-align"
-      aria-labelledby={headingId}
-      data-testid="align-panel"
-      data-help-topic="compare-alignment"
+      testId={ALIGN_TEST_ID}
+      helpTopic={ALIGN_HELP}
     >
-      <div className="pane-title-row">
-        <h3 id={headingId} className="overlay-side-title">
-          {t('compare.manual.title')}
-        </h3>
-        <HelpButton topic="compare-alignment" />
-      </div>
+      {text ? (
+        <p className="overlay-align-status" data-status={text.shown} data-testid="align-status">
+          <span className="overlay-align-word">{text.status}</span>
+          {text.hint ? (
+            <span className="overlay-align-values-found">{text.hint}</span>
+          ) : text.values ? (
+            <span className="overlay-align-values-found">{text.values}</span>
+          ) : null}
+        </p>
+      ) : null}
       {!manual ? (
         <div className="overlay-align-actions">
           <Button
             label={t('compare.manual.start')}
+            icon={<Target20Regular />}
             size="small"
             onClick={() => {
-              updateView(id, (v) => startManual(v, sheet));
+              toggleLineUp(id, sheet, true);
             }}
           />
+          {needsCheck(view, sheet) ? (
+            <Button
+              label={t('compare.lineUp.looksRight')}
+              icon={<Checkmark20Regular />}
+              size="small"
+              onClick={() => {
+                updateView(id, (v) => setAlignChecked(v, pair));
+              }}
+            />
+          ) : null}
           {al?.status === 'manual' ? (
             <Button
               label={t('compare.manual.automatic')}
@@ -136,31 +154,24 @@ export function AlignPanel({
       ) : (
         <ManualEditor
           id={id}
-          pairs={pairs}
           centre={frame ? { x: frame.width / 2, y: frame.height / 2 } : { x: 0, y: 0 }}
         />
       )}
-    </section>
+    </FoldSection>
   );
 }
 
-function ManualEditor({ id, pairs, centre }: { id: string; pairs: number; centre: Pt }) {
+function ManualEditor({ id, centre }: { id: string; centre: Pt }) {
   const { t } = useTranslation();
   const view = useOverlayView(id);
-  const applyId = useId();
+  const [fine, setFine] = useState(false);
+  const fineId = useId();
   const m = view.manual;
   if (!m) return null;
   const done = completePairs(m);
   const err = done.length > 0 ? pointError(done, m.place) : null;
-  const next = nextSide(m);
   const values = placeValues(m.place);
   const pt = (n: number): string => format.fixed(Math.abs(n) < 0.005 ? 0 : n, 2);
-
-  let instruction: string;
-  if (next === null) instruction = t('compare.manual.full');
-  else if (!m.picking) instruction = t('compare.manual.notPicking');
-  else if (next === 'a') instruction = t('compare.manual.pickA');
-  else instruction = t('compare.manual.pickB');
 
   const set = (key: keyof PlaceValues, value: number): boolean => {
     const place = withValue(m.place, key, value, centre);
@@ -181,18 +192,7 @@ function ManualEditor({ id, pairs, centre }: { id: string; pairs: number; centre
 
   return (
     <div className="overlay-align-editor" data-testid="align-editor">
-      <ToggleButton
-        label={t('compare.manual.pick')}
-        size="small"
-        pressed={m.picking}
-        disabled={next === null && !m.picking}
-        onPressedChange={(on) => {
-          updateView(id, (v) => setPicking(on ? { ...v, layout: 'review' } : v, on));
-        }}
-      />
-      <p className="overlay-align-hint" role="status" data-testid="align-instruction">
-        {instruction}
-      </p>
+      <p className="overlay-align-hint">{t('compare.lineUp.paneHint')}</p>
       {m.points.length > 0 ? (
         <ol className="overlay-align-points" aria-label={t('compare.manual.points')}>
           {m.points.map((p, i) => {
@@ -230,116 +230,88 @@ function ManualEditor({ id, pairs, centre }: { id: string; pairs: number; centre
           {t('compare.manual.error', { rms: pt(err.rms), max: pt(err.max) })}
         </p>
       ) : null}
-      {m.problem ? (
-        <p className="overlay-align-problem" role="alert">
-          {m.problem.reason === 'scale'
-            ? t('compare.manual.badScale')
-            : m.problem.side === 'a'
-              ? t('compare.manual.tooClose_a')
-              : t('compare.manual.tooClose_b')}
-        </p>
-      ) : null}
-      <div
-        className="overlay-align-values"
-        role="group"
-        aria-label={t('compare.manual.values')}
-        data-testid="align-values"
-        data-place={m.place.join(',')}
+      <button
+        type="button"
+        className="cmp-fold-button overlay-align-fine ui-focusable"
+        aria-expanded={fine}
+        aria-controls={fine ? fineId : undefined}
+        data-testid="align-finetune"
+        onClick={() => {
+          setFine(!fine);
+        }}
       >
-        <ValueField
-          label={t('compare.manual.dx')}
-          unit={t('compare.manual.unitPt')}
-          value={values.dx}
-          digits={2}
-          step={NUDGE_STEP}
-          onCommit={(n) => set('dx', n)}
-        />
-        <ValueField
-          label={t('compare.manual.dy')}
-          unit={t('compare.manual.unitPt')}
-          value={values.dy}
-          digits={2}
-          step={NUDGE_STEP}
-          onCommit={(n) => set('dy', n)}
-        />
-        <ValueField
-          label={t('compare.manual.scale')}
-          unit="%"
-          value={values.scale * 100}
-          digits={3}
-          step={0.01}
-          onCommit={(n) => set('scale', n / 100)}
-        />
-        <ValueField
-          label={t('compare.manual.deg')}
-          unit="°"
-          value={values.deg}
-          digits={3}
-          step={0.01}
-          onCommit={(n) => set('deg', n)}
-        />
-      </div>
-      <div
-        className="overlay-align-nudge"
-        role="group"
-        aria-label={t('compare.manual.nudge', {
-          step: format.number(NUDGE_STEP, 1),
-          large: format.number(NUDGE_LARGE),
-        })}
-        data-testid="align-nudge"
-      >
-        <span className="overlay-align-nudge-label" aria-hidden="true">
-          {t('compare.manual.nudgeShort')}
+        <span aria-hidden="true">
+          {fine ? <ChevronDown12Regular /> : <ChevronRight12Regular />}
         </span>
-        {NUDGES.map(({ dir, label, Icon, dx, dy }) => (
-          <IconButton
-            key={dir}
-            label={t(label)}
-            icon={<Icon />}
-            size="small"
-            data-testid={`align-nudge-${dir}`}
-            onClick={() => {
-              nudge(dx, dy);
-            }}
-            onKeyDown={onNudgeKey}
-          />
-        ))}
-      </div>
-      <div className="overlay-align-apply">
-        <label htmlFor={applyId} className="ui-field-label">
-          {t('compare.manual.applyTo')}
-        </label>
-        <select
-          id={applyId}
-          className="ui-field-input"
-          value={m.applyTo}
-          onChange={(e) => {
-            const to = e.currentTarget.value as ApplyTo;
-            updateView(id, (v) => setApplyTo(v, to));
-          }}
+        <span>{t('compare.lineUp.fineTune')}</span>
+      </button>
+      {/* The values stay in the page while folded: the placement shown is read from them. */}
+      <div id={fineId} className="overlay-align-fine-body" hidden={!fine}>
+        <div
+          className="overlay-align-values"
+          role="group"
+          aria-label={t('compare.manual.values')}
+          data-testid="align-values"
+          data-place={m.place.join(',')}
         >
-          {APPLY_TO.map(({ to, label }) => (
-            <option key={to} value={to}>
-              {t(label)}
-            </option>
+          <ValueField
+            label={t('compare.manual.dx')}
+            unit={t('compare.manual.unitPt')}
+            value={values.dx}
+            digits={2}
+            step={NUDGE_STEP}
+            onCommit={(n) => set('dx', n)}
+          />
+          <ValueField
+            label={t('compare.manual.dy')}
+            unit={t('compare.manual.unitPt')}
+            value={values.dy}
+            digits={2}
+            step={NUDGE_STEP}
+            onCommit={(n) => set('dy', n)}
+          />
+          <ValueField
+            label={t('compare.manual.scale')}
+            unit="%"
+            value={values.scale * 100}
+            digits={3}
+            step={0.01}
+            onCommit={(n) => set('scale', n / 100)}
+          />
+          <ValueField
+            label={t('compare.manual.deg')}
+            unit="°"
+            value={values.deg}
+            digits={3}
+            step={0.01}
+            onCommit={(n) => set('deg', n)}
+          />
+        </div>
+        <div
+          className="overlay-align-nudge"
+          role="group"
+          aria-label={t('compare.manual.nudge', {
+            step: format.number(NUDGE_STEP, 1),
+            large: format.number(NUDGE_LARGE),
+          })}
+          data-testid="align-nudge"
+        >
+          <span className="overlay-align-nudge-label" aria-hidden="true">
+            {t('compare.manual.nudgeShort')}
+          </span>
+          {NUDGES.map(({ dir, label, Icon, dx, dy }) => (
+            <IconButton
+              key={dir}
+              label={t(label)}
+              icon={<Icon />}
+              size="small"
+              data-testid={`align-nudge-${dir}`}
+              onClick={() => {
+                nudge(dx, dy);
+              }}
+              onKeyDown={onNudgeKey}
+            />
           ))}
-        </select>
-        <div className="overlay-align-actions">
-          <Button
-            label={t('compare.manual.apply')}
-            size="small"
-            variant="primary"
-            onClick={() => {
-              applyManual(id, pairs);
-            }}
-          />
-          <Button
-            label={t('compare.manual.cancel')}
-            size="small"
-            onClick={() => {
-              updateView(id, cancelManual);
-            }}
-          />
         </div>
       </div>
     </div>

@@ -1,11 +1,6 @@
 # Triya PDF — Progress
 
-_Last updated: 2026-11-23 (M12-ux plan approved: Compare made easier to use, tasks M12-24 … M12-27, ADR-033, ARCHITECTURE.md Rev 0.23; M12-23: M12 acceptance, M12 complete on the agent side; M12-22: Compare help and release notes; M12-21·O4: drop a tab on a tab; M12-20: the comparison file; M12-21: change register and presets)_
-
-**Next (approved 2026-11-23):** [docs/plan/M12-ux.md](plan/M12-ux.md) — the owner's hand check found
-M12 correct but asked for usability changes before v1.1.0 ([ADR-033](adr/033-m12-compare-usability.md),
-ARCHITECTURE.md Rev 0.23): M12-24 input window, M12-25 room to work, M12-26 alignment and tips,
-M12-27 review. v1.1.0 (Compare on in release builds, the tag) waits for them and the owner's re-check.
+_Last updated: 2026-11-23 (M12-26: alignment made easy to find and first-time tips; M12-27: review in a comparison made easier; M12-25: room to work in a comparison; M12-24: the Compare input window made clearer; M12-23: M12 acceptance, M12 complete on the agent side; M12-22: Compare help and release notes; M12-21·O4: drop a tab on a tab; M12-20: the comparison file; M12-21: change register and presets)_
 
 **Current milestone:** M12 — PDF comparison (PDF overlay for drawings, text comparison for
 documents), version 1.1.0: plan [docs/plan/M12.md](plan/M12.md) and
@@ -34,6 +29,88 @@ answers Q1–Q7; ARCHITECTURE.md Rev 0.12 after [ADR-024](adr/024-freetext-text-
 interop is in the M6 pack (CHECKLIST §M6 R1–R4). Rev 0 (M0–M4) is complete on the agent side.
 
 ## Done
+
+- **M12-27 — Review in a comparison (ADR-033 decisions 4–6, D-62, D-64; plan [M12-ux](plan/M12-ux.md) task D).**
+  The close-out list shows comments with typed text first, then markup without text, each group
+  by page then position (`closeOutModel.ts`). A **Hide highlights** box (on by default, kept on
+  this device as `pdftools.closeOutHideHighlights`) leaves out see-through check marks; they were
+  always left out before, so the default behaves as it did. A click on a row zooms the linked
+  windows so the comment fills about a third of the window (never past 400 %), selects it and
+  flashes it once (`closeout/reveal.ts`, `view/pageFlash.ts`); in a text comparison both sides
+  scroll to it and zoom in when it is small (`TextLink.zoomTo`). The three outcome buttons became
+  one **Close Out As…** menu with a line explaining each outcome (`DropdownMenu` items take a
+  `description`). Document A and B window titles and the comparison's tab carry the unsaved dot
+  (`compare/unsaved.ts`, `UnsavedDot.tsx`); closing a comparison whose overlay comments live
+  only in it asks first (Save Comparison… / Save review, Don't save, Cancel:
+  `file/closePrompt.ts`, `CloseComparisonDialog.tsx`, `setComparisonCloseGuard` in
+  `openDocument.ts`). Each text comparison window shows "Page n of m", updated as it scrolls; a
+  click turns it into a box, Enter goes to the page and the other side follows
+  (`text/PageCounter.tsx`, `model/compare/pageCounter.ts`). Tests: `tests/compare/review-ux.test.ts`,
+  `close-out.test.ts`, `e2e/compare-review-ux.spec.ts` (axe light and dark),
+  `e2e/perf/compare-review.spec.ts`; Help topics compare-review and compare-text with new shots;
+  a What's new 1.1.0 line.
+- **M12-26 — Alignment made easy to find, and first-time tips (ADR-033 decisions 3 and 7, D-60;
+  plan [M12-ux](plan/M12-ux.md) task C).** Plain status words per sheet (`alignmentText.ts`):
+  Already lined up, Lined up automatically, Check alignment, Lined up by hand, and the new
+  **Checked by you** (`OverlayView.alignChecked`; saved as `checked: true` beside the sheet's
+  status in the comparison data, restored on reopening; the summary page counts it). **Line up**
+  on the floating bar (marked while the sheet needs checking), a **banner** over the windows on a
+  sheet that needs checking (`align/AlignBanner.tsx`: Line up by hand / It looks right), and the
+  guided **step bar** (`align/LineUpBar.tsx`: 1 old point, 2 same point on the new drawing,
+  3 optional second pair, 4 Apply; Undo last point, Pick points, Apply to This sheet / All
+  sheets / Sheets that need checking, Apply, Cancel). The window to click is outlined and says
+  so (`data-line-up`); numbered pins in both windows as before. The Alignment section shows the
+  status and the point pairs, with **Fine-tune** (values, nudges) folded. The maths is unchanged
+  (`manualAlign.ts` gained `undoPoint`, `lineUpStep`, `canApply`, `toggleLineUp`).
+  **First-time tips** (`tips/`): three cards on the first overlay result (colours, differences
+  list, Line up), Next / Got it / Skip tips / Esc, shown until seen to the end or skipped
+  (`localStorage` `pdftools.compareTipsSeen`, listed on the Privacy page, cleared by Clear all);
+  Help's `compare-alignment` topic has a **Show the Compare tips again** button (new Help block
+  `replayTips`), which a result on screen hears at once (storage event). Help topic rewritten with
+  one picture per step (compare-alignment-1 … 5); What's new v1.1.0 line. E2E: the guard fixture
+  marks the tips seen; `showCompareTips()` and `uncertainOverlay()` (pair 01 old against pair 18
+  new, paired by hand: "Check alignment") in `e2e/support/compare.ts`. Tests:
+  `tests/compare/line-up.test.ts`, `e2e/compare-line-up.spec.ts`, `e2e/compare-align.spec.ts`,
+  perf `e2e/perf/compare-line-up.spec.ts`.
+- **M12-25 — Room to work in a comparison (ADR-033, D-62; plan [M12-ux](plan/M12-ux.md) task B).**
+  Every comparison pane (the overlay's left pane, Differences, Close-out, the text view's
+  Changes) has an edge strip like the app's side panes: its arrow folds the pane to the strip
+  and opens it again, and the strip is a splitter (drag, arrow keys, Home/End; 160–480 px).
+  Folds and widths are kept per comparison for the session (`src/features/compare/layout/`:
+  `layoutStore.ts`, `ComparePane.tsx`). The left pane's sections fold to a one-line summary
+  (`FoldSection.tsx`): Sheets stays open; Alignment, Compare an area, Comments, Layers and
+  Ignore zones start folded (Layers open when a layer's default differs), and stay open while
+  points are picked or an area or zone is drawn. **Maximise** (header, `Maximise.tsx`,
+  `appStore.maximised`) hides the ribbon, the tabs, the app's panes, the comparison's panes and
+  the status bar; Esc or the button restores, unless Esc has another job first (a dialog or
+  menu, a field, picking or drawing, a comment tool). The app's left pane closes when a
+  comparison tab comes into use and comes back as it was on a document tab (`appPanes.ts`).
+  Header toggles carry labels ("Side by side", "Overlay only", "Link views", "Differences",
+  "Close-out"; text view "Link views"), hidden to icons below a 1240 px header (container query,
+  `ToggleButton compact`). The floating bar has a colour key following the colours chosen
+  (`keyColours` in `src/model/compare/overlay.ts`). The differences list says "Drawing" and
+  "Text and drawing"; Sensitivity and Minimum size fold under **Filters**. Help (overlay,
+  differences, review, text) and six Help screenshots updated; What's new v1.1.0 has a line.
+  Tests: `tests/compare/room-layout.test.ts`, `e2e/compare-room.spec.ts`; Compare e2e use
+  `unfold()` / `openFilters()` from `e2e/support/compare.ts`.
+- **M12-24 — The Compare input window (D-58, D-60, ADR-033, plan [M12-ux](plan/M12-ux.md)).**
+  Each pairing row shows its A and B page (fitted to 160 × 120 px, drawn in the Render worker
+  through the thumbnail queue only while on screen, `PagePicture.tsx`); a picture opens the
+  **page picker** (a grid of every page of that side, None first, the current page marked, the
+  match under each; arrows, Home, End, Enter; `PagePicker.tsx`); the eye button opens **Preview
+  pair** (both pages large, Previous pair / Next pair; `PairPreview.tsx`). Sheets that need a
+  look carry a **Check** mark (`rowCheck` in `src/model/compare/pairing.ts`: under 50 %, added,
+  removed). A **step guide** (Choose files · Check pairs · Compare; two steps for a text
+  comparison) and a Compare bar that stays at the bottom of the window; the pairing table now
+  scrolls with the window, its header row sticky, with a fixed table layout. **New
+  comparison** replaces Change inputs in both result headers (`newComparisonFrom` in
+  `compareFlow.ts`): a new tab after the result with the same files, ranges and type, the
+  result's settings carried as a pseudo-preset ("Settings of the earlier result",
+  `carrySettings` in `presetStore.ts`) and an overlay's pairing table as edited; the result
+  never goes back to its inputs. Help: Starting a comparison and Pairing and alignment updated,
+  new shots `compare-pairing-1`, `compare-pairing-2`; a What's new line in 1.1.0 (the e2e now
+  counts the entry's lines from the JSON). New perf scenario `e2e/perf/compare-input.spec.ts`
+  (120 sheets: scroll, picker, Preview pair, no task over 100 ms).
 
 - **M12-23 — M12 acceptance (D-66, ADR-032).** [docs/acceptance/M12.md](acceptance/M12.md).
   **M12 is complete on the agent side**; the owner pack waits (hand check on real files,

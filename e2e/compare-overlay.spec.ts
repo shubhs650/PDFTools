@@ -1,7 +1,13 @@
 import AxeBuilder from '@axe-core/playwright';
 import type { Page } from '@playwright/test';
 import { darkTheme } from './support/app.ts';
-import { hideDifferences, overlayDrawn, overlayOf, overlayView } from './support/compare.ts';
+import {
+  hideDifferences,
+  overlayDrawn,
+  overlayOf,
+  overlayView,
+  unfold,
+} from './support/compare.ts';
 import { expect, test } from './support/fixtures.ts';
 
 // M12-11 (D-59): the overlay view. Both revisions are drawn by the Render
@@ -138,9 +144,10 @@ test('pair 01: old red, new green, the same black; the floating bar changes the 
   await page.keyboard.up('x');
   await expect(view(page)).toHaveAttribute('data-blink', '');
 
-  // Back to the inputs and to the result again.
-  await page.getByRole('button', { name: 'Change inputs' }).click();
+  // New comparison: another tab on the same files; this result stays in its own tab.
+  await page.getByRole('button', { name: 'New comparison' }).click();
   await expect(page.getByTestId('compare-input')).toBeVisible();
+  await expect(page.getByTestId('compare-pairing')).toHaveAttribute('data-status', 'done');
 });
 
 test('pair 16 (identical): no red or green anywhere', async ({ page }) => {
@@ -157,7 +164,7 @@ test('pair 15 (A1 against A3): the sheet is aligned automatically and drawn thro
   await overlayOf(page, '15');
   const sheet = page.getByRole('option', { name: /Sheet 1/ });
   await expect(sheet.locator('.overlay-sheet-align')).toHaveAttribute('data-status', 'auto');
-  await expect(sheet).toContainText('Auto-aligned · Shift');
+  await expect(sheet).toContainText('Lined up automatically · Shift');
   const aligned = await colours(page);
   // Drawn through the alignment, the two revisions mostly agree (the A3 plot's pens
   // are heavier relative to the sheet, S29); as is, they would not line up at all.
@@ -269,6 +276,7 @@ test('pair 19: comments are drawn on top and can be switched off; check highligh
   // The checker's yellow marks (Highlight, and Multiply ink over the drawing) are comments of A.
   const shown = await colours(page);
   expect(shown.yellow).toBeGreaterThan(500);
+  await unfold(page, 'comments');
   await page.getByRole('checkbox', { name: 'Hide check highlights' }).check();
   await drawn(page);
   const noChecks = await colours(page);

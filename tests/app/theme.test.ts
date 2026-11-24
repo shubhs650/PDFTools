@@ -298,6 +298,10 @@ describe('where the theme is reached', () => {
       'pdftools.whatsNewSeen',
       // The comment fonts chosen last (M11-07), not a look-and-feel choice either.
       'pdftools.recentFonts',
+      // The close-out list's Hide highlights choice (M12-27).
+      'pdftools.closeOutHideHighlights',
+      // Compare's first-time tips were seen (M12-26).
+      'pdftools.compareTipsSeen',
     ]);
     expect(items.every((d) => d.cleared)).toBe(true);
   });

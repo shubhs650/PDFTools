@@ -1,3 +1,4 @@
+import { CloseComparisonDialog } from '../features/compare/file/CloseComparisonDialog';
 import { lazy, Suspense, useEffect, useState } from 'react';
 import { followPanes } from './panePlace';
 import { CloseDocumentDialog, OpenErrorDialog } from '../features/open/dialogs';
@@ -245,6 +246,7 @@ export function App() {
         <SavePresetDialog />
         <SaveComparisonDialog />
         <RebuildComparisonDialog />
+        <CloseComparisonDialog />
         <ExternalLinkDialog />
         <SaveErrorDialog />
         <SaveOptimizedDialog />

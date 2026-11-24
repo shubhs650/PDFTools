@@ -867,7 +867,9 @@
       "density": "Density (Comfortable or Compact)",
       "whatsNew": "Which version's What's new was last shown, so it shows once after each update",
       "recentFonts": "Comment fonts you chose last (font names only), shown first in the font list",
-      "session": "Files open last time: their names and the browser's permission handles, kept only while File › Settings › Start-up reopens them"
+      "session": "Files open last time: their names and the browser's permission handles, kept only while File › Settings › Start-up reopens them",
+      "closeOutHighlights": "Whether a comparison's close-out list hides highlights",
+      "compareTips": "Whether the first-time tips of Compare were seen"
     },
     "clearHint": "To delete this data, use File → Settings → Clear all local data."
   },
@@ -1759,11 +1761,11 @@
     "preset": {
       "tag": "Preset",
       "numeric": {
-        "name": "1 / 2 / 3 / 4",
         "1": "Approved",
         "2": "Approved with comments",
         "3": "Revise and resubmit",
-        "4": "Rejected"
+        "4": "Rejected",
+        "name": "1 / 2 / 3 / 4"
       },
       "alpha": {
         "name": "A / B / C / D",
@@ -2980,7 +2982,8 @@
       "noneA": "None (added in Document B)",
       "noneB": "None (removed from Document A)",
       "added": "Added",
-      "removed": "Removed"
+      "removed": "Removed",
+      "none": "None"
     },
     "run": "Compare",
     "ready": "Ready: {{a}} against {{b}}.",
@@ -2992,13 +2995,14 @@
       "noSheets": "Choose at least one sheet to compare in the pairing table."
     },
     "result": {
-      "inputs": "Change inputs"
+      "newComparison": "New comparison",
+      "newComparisonHint": "Opens a new comparison tab with the same files and settings. This result stays open."
     },
     "overlay": {
       "window": "Overlay of sheet {{sheet}}: {{a}} in {{colA}}, {{b}} in {{colB}}",
       "pairing": "Pairing pages before the overlay is shown…",
-      "pairingFailed": "The pages couldn't be paired. Change the inputs to try again.",
-      "noSheets": "No sheet is left to compare. Change the inputs to choose sheets.",
+      "pairingFailed": "The pages couldn't be paired. Use New comparison to try again.",
+      "noSheets": "No sheet is left to compare. Use New comparison to choose sheets.",
       "sheets": "Sheets",
       "sheetsList": "Sheets of this comparison",
       "sheetName": "Sheet {{sheet}}",
@@ -3057,22 +3061,21 @@
       "vectorFailed": "The vector overlay couldn't be made for this sheet, so it is drawn the usual way."
     },
     "align": {
-      "asIs": "As is",
-      "auto": "Auto-aligned",
-      "low": "Low confidence",
+      "asIs": "Already lined up",
+      "auto": "Lined up automatically",
+      "low": "Check alignment",
       "values": "Shift {{dx}}, {{dy}} pt · scale {{scale}} · rotation {{deg}}°",
-      "lowHint": "The sheets could not be lined up with certainty. Check the overlay, or align the sheet by points.",
-      "manual": "Aligned by hand"
+      "lowHint": "This sheet may not be lined up correctly. Look at the overlay: if lines show twice, line it up by hand.",
+      "manual": "Lined up by hand",
+      "checked": "Checked by you"
     },
     "manual": {
       "title": "Alignment",
-      "start": "Align by points",
+      "start": "Line up by hand",
       "automatic": "Use automatic alignment",
       "pick": "Pick points",
-      "pickA": "Click a point on Document A. It snaps to the drawing; hold Alt not to snap.",
-      "pickB": "Click the same point on Document B. It snaps to the drawing; hold Alt not to snap.",
-      "full": "Three pairs picked. Remove one to pick another.",
-      "notPicking": "Type the values, or nudge Document A with the arrow keys.",
+      "pickA": "Click a point on the old drawing (Document A). It snaps to the drawing; hold Alt not to snap.",
+      "pickB": "Click the same point on the new drawing (Document B). It snaps to the drawing; hold Alt not to snap.",
       "points": "Point pairs",
       "pair": "{{n}}: A {{a}} → B {{b}}",
       "off": "{{pt}} pt off",
@@ -3097,7 +3100,7 @@
       "applyTo": "Apply to",
       "applyTo_sheet": "This sheet",
       "applyTo_all": "All sheets",
-      "applyTo_low": "All low-confidence sheets",
+      "applyTo_low": "Sheets that need checking",
       "apply": "Apply",
       "cancel": "Cancel"
     },
@@ -3106,9 +3109,9 @@
       "pagesInTab": "Pages can't be changed in a comparison. Open the document in its own tab to change its pages.",
       "notOnNotes": "Not on the overlay window: what you draw there is a note of the comparison, kept apart from Document A and Document B.",
       "layout": "Layout",
-      "layout_review": "Review",
+      "layout_review": "Side by side",
       "layout_overlay": "Overlay only",
-      "lock": "Keep the windows on the same spot",
+      "lock": "Link views",
       "windowTitle": "{{side}}: {{name}}, page {{page}}",
       "noPage_a": "This sheet isn't in Document A.",
       "noPage_b": "This sheet isn't in Document B.",
@@ -3116,7 +3119,11 @@
       "splitY": "Resize Document A and Document B",
       "notesName": "Comparison notes.pdf",
       "preparing": "Preparing the windows…",
-      "notesFailed": "The overlay window couldn't be prepared. Change the inputs to try again."
+      "notesFailed": "The overlay window couldn't be prepared. Change the inputs to try again.",
+      "unsaved": ", unsaved changes",
+      "layout_reviewTip": "Side by side: Document A and Document B beside the overlay",
+      "layout_overlayTip": "Overlay only: the overlay fills the room",
+      "lockTip": "Link views: keep the windows on the same spot"
     },
     "text": {
       "continuousOnly": "Not in a text comparison: both documents stay in continuous scroll, upright, so their content stays in step.",
@@ -3129,7 +3136,7 @@
       "cancelled": "Stopped. The changes found so far are shown.",
       "progress": "Comparison progress",
       "cancel": "Stop",
-      "sync": "Keep both documents in step by content",
+      "sync": "Link views",
       "options": "Options",
       "headersFooters": "Leave out headers and footers (experimental)",
       "renumbering": "Report clause renumbering once (experimental)",
@@ -3206,10 +3213,18 @@
         "line_bottom": "Footer line of {{side}}",
         "apply": "Apply",
         "cancel": "Cancel"
-      }
+      },
+      "page": "Page {{page}} of {{count}}",
+      "pageButton": "Page {{page}} of {{count}}. Go to a page",
+      "goToPageHint": "Go to page",
+      "goToPage": "Go to page, 1 to {{count}}",
+      "pageWord": "Page",
+      "pageOf": "of {{count}}",
+      "pageInvalid": "Type a page number from 1 to {{count}}.",
+      "syncTip": "Link views: keep both documents in step by content"
     },
     "closeout": {
-      "toggle": "Close-out list",
+      "toggle": "Close-out",
       "title": "Close-out",
       "intro": "Every comment of the old revision. Close each one out against the new revision.",
       "list": "Comments of the old revision",
@@ -3247,11 +3262,19 @@
       "notInComparison": "Use this in a comparison's Document A, Document B or overlay window.",
       "noMatch": "There is no matching place on the other revision for these comments.",
       "oldOnly": "Only comments of Document A, the old revision, are closed out.",
-      "noSelection": "Select a comment in the list first."
+      "noSelection": "Select a comment in the list first.",
+      "hideHighlights": "Hide highlights",
+      "closeOutAs": "Close Out As…",
+      "hint_addressed": "The new revision makes the change this comment asked for.",
+      "hint_carried": "Not done yet: the comment is copied to the new revision, so it stays open there.",
+      "hint_changed": "The new revision changes this place, but not the way the comment asked.",
+      "group_text": "Comments with text ({{count}})",
+      "group_markup": "Markup without text ({{count}})",
+      "toggleTip": "Show or hide the close-out list"
     },
     "diff": {
       "title": "Differences",
-      "toggle": "Differences list",
+      "toggle": "Differences",
       "count_one": "{{count}} difference",
       "count_other": "{{count}} differences",
       "shown": "{{shown}} of {{count}} shown",
@@ -3278,8 +3301,8 @@
       "kind_removed": "Removed",
       "kind_changed": "Changed",
       "type_text": "Text",
-      "type_geometry": "Geometry",
-      "type_both": "Text and geometry",
+      "type_geometry": "Drawing",
+      "type_both": "Text and drawing",
       "search": "Search the differences' text",
       "searchHint": "Search, then press Enter",
       "clearSearch": "Clear the search",
@@ -3333,7 +3356,9 @@
       "setName": "Name for this set",
       "setSave": "Save as set",
       "setSaved": "Saved “{{name}}”.",
-      "setApplied": "Using “{{name}}”."
+      "setApplied": "Using “{{name}}”.",
+      "toggleTip": "Show or hide the list of differences",
+      "showGroup": "What to show"
     },
     "area": {
       "title": "Compare an area",
@@ -3467,7 +3492,8 @@
       "cancel": "Cancel",
       "failed": "The preset couldn't be saved.",
       "needsComparison": "Open a comparison to save its settings as a preset.",
-      "needsResult": "Compare first: a preset is saved from the result."
+      "needsResult": "Compare first: a preset is saved from the result.",
+      "carried": "Settings of the earlier result"
     },
     "file": {
       "fileName": "{{a}} vs {{b}} (comparison).pdf",
@@ -3568,14 +3594,14 @@
         "differencesValue": "{{total}}: {{added}} added, {{removed}} removed, {{changed}} changed",
         "none": "None",
         "byType": "By type",
-        "byTypeValue": "Text {{text}}, geometry {{geometry}}, both {{both}}",
+        "byTypeValue": "Text {{text}}, drawing {{geometry}}, both {{both}}",
         "checked": "Ticked as checked",
         "checkedValue": "{{checked}} of {{total}}",
         "placement": "Placement",
-        "place_asIs": "{{n}} as is",
-        "place_aligned": "{{n}} aligned automatically",
-        "place_manual": "{{n}} aligned by hand",
-        "place_lowConfidence": "{{n}} aligned with low confidence",
+        "place_asIs": "{{n}} already lined up",
+        "place_aligned": "{{n}} lined up automatically",
+        "place_manual": "{{n}} lined up by hand",
+        "place_lowConfidence": "{{n}} not checked (alignment uncertain)",
         "legend": "Legend",
         "legendA": "Only in Document A (old)",
         "legendB": "Only in Document B (new)",
@@ -3587,8 +3613,124 @@
         "zonesEvery": "{{n}} on every sheet",
         "zonesSheet": "{{n}} on sheet {{sheet}}",
         "partial": "The comparison was still finding differences on some sheets: the counts are what had been found.",
-        "footer": "The overlay sheets follow this page. Document A and Document B are attached to this file unchanged."
+        "footer": "The overlay sheets follow this page. Document A and Document B are attached to this file unchanged.",
+        "place_checked": "{{n}} checked by the reviewer (alignment uncertain)"
+      },
+      "close": {
+        "title": "Save changes to {{name}}?",
+        "notes": "The comments you drew on the overlay are not saved. Only a comparison file keeps them: choose Save Comparison… to keep them.",
+        "review": "The review comments in this comparison file are not saved.",
+        "saveFile": "Save Comparison…",
+        "saveReview": "Save review",
+        "discard": "Don't save",
+        "cancel": "Cancel"
       }
+    },
+    "picker": {
+      "open": "Choose the {{side}} page of sheet {{sheet}} from pictures",
+      "title": "{{side}} page of sheet {{sheet}}",
+      "description": "Choose the page to pair with this sheet. The match with the other side's page is shown under each one.",
+      "pages": "Pages of {{side}}",
+      "match": "{{match}} match"
+    },
+    "pairPreview": {
+      "open": "Preview sheet {{sheet}}",
+      "title": "Sheet {{sheet}} of {{count}}",
+      "match": "Match: {{match}}",
+      "previous": "Previous pair",
+      "next": "Next pair",
+      "noPage": "No page on this side"
+    },
+    "check": {
+      "label": "Check",
+      "low": "The two pages match under 50 %. Check that they are the same sheet.",
+      "added": "This page is only in Document B. Check that it is a new sheet.",
+      "removed": "This page is only in Document A. Check that the sheet was removed."
+    },
+    "steps": {
+      "label": "Steps",
+      "files": "Choose files",
+      "pairs": "Check pairs",
+      "compare": "Compare",
+      "done": "done"
+    },
+    "maximise": "Maximise",
+    "maximiseTip": "Maximise: hide the ribbon and the panes (Esc brings them back)",
+    "pane": {
+      "hide": "Fold the {{pane}} pane",
+      "show": "Open the {{pane}} pane",
+      "resize": "Resize the {{pane}} pane"
+    },
+    "fold": {
+      "aligning": "Finding the alignment…",
+      "areaNone": "Draw a box on both drawings to compare just that part.",
+      "areaOne": "One box drawn; draw the other to compare.",
+      "areaBoth": "Both boxes drawn: ready to compare.",
+      "comments_none": "No comments shown on the overlay",
+      "comments_a": "Comments of Document A shown",
+      "comments_b": "Comments of Document B shown",
+      "comments_both": "Comments of both documents shown",
+      "layers_one": "{{count}} layer",
+      "layers_other": "{{count}} layers",
+      "layersDiffer_one": "{{count}} layer starts differently in the two files",
+      "layersDiffer_other": "{{count}} layers start differently in the two files",
+      "zones_one": "{{count}} ignore zone",
+      "zones_other": "{{count}} ignore zones",
+      "filters": "{{sensitivity}} · {{size}}"
+    },
+    "key": {
+      "title": "Colour key",
+      "named": "{{colour}}: {{what}}",
+      "a": "only in old",
+      "b": "only in new",
+      "both": "same",
+      "alone_a": "Only in old",
+      "alone_b": "Only in new",
+      "alone_both": "Same in both",
+      "colour_red": "Red",
+      "colour_green": "Green",
+      "colour_blue": "Blue",
+      "colour_magenta": "Magenta",
+      "colour_black": "Black",
+      "colour_grey": "Grey"
+    },
+    "lineUp": {
+      "button": "Line up",
+      "buttonTip": "Line up this sheet by hand: click the same point on the old and the new drawing",
+      "title": "Line up sheet {{sheet}}",
+      "steps": "Steps to line up the sheet",
+      "step_1": "Point on the old drawing",
+      "step_2": "Same point on the new drawing",
+      "step_3": "Second point (optional)",
+      "step_4": "Apply",
+      "say_1": "Find a point you can see on both drawings, such as a grid crossing or a corner. Click it on the old drawing (Document A, outlined).",
+      "say_2": "Now click the same point on the new drawing (Document B, outlined).",
+      "say_2more": "Click the same point on the new drawing (Document B, outlined).",
+      "say_3": "The overlay now follows your point. If the sheet is also scaled or turned, click a second point far from the first on the old drawing. Otherwise choose Apply.",
+      "say_4": "Check the overlay: when the lines sit on top of each other, choose Apply. A third pair of points gives a best fit.",
+      "say_full": "Three pairs of points picked. Check the overlay, then choose Apply.",
+      "say_paused": "Picking is paused. Choose Pick points to go on, or open Fine-tune in the Alignment section to type the values.",
+      "snap": "Points snap to the drawing; hold Alt not to snap.",
+      "here_a": "Click the point here, on the old drawing",
+      "here_b": "Click the same point here, on the new drawing",
+      "undo": "Undo last point",
+      "fineTune": "Fine-tune",
+      "paneHint": "Follow the steps above the drawings. The points you pick:",
+      "banner": "This sheet may not be lined up correctly.",
+      "bannerMore": "Look at the overlay. If lines show twice, line the sheet up by hand; if it looks right, say so.",
+      "looksRight": "It looks right"
+    },
+    "tips": {
+      "count": "Tip {{n}} of {{count}}",
+      "colours_title": "The colours show what changed",
+      "colours_text": "Lines only in the old drawing are red, lines only in the new drawing are green, and lines in both are black. The key follows the colours you choose.",
+      "differences_title": "Every difference in a list",
+      "differences_text": "The Differences pane lists each change. Click one to go to it, and tick it when you have checked it.",
+      "lineUp_title": "Lines showing twice?",
+      "lineUp_text": "If the two drawings do not sit on top of each other, choose Line up and click the same point on both drawings.",
+      "next": "Next",
+      "done": "Got it",
+      "skip": "Skip tips"
     }
   }
 }

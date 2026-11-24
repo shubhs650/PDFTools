@@ -55,8 +55,14 @@ const row = (page: Page, id: string) => pane(page).locator(`.closeout-row[data-i
 const action = (page: Page, name: string) =>
   page.getByTestId('closeout-actions').getByRole('button', { name, exact: true });
 
+/** Close Out As… and one of its outcomes (M12-27: one menu, a line under each). */
+async function closeOutAs(page: Page, name: string): Promise<void> {
+  await action(page, 'Close Out As…').click();
+  await page.getByRole('menuitem', { name, exact: true }).click();
+}
+
 async function showList(page: Page): Promise<void> {
-  await page.getByRole('button', { name: 'Close-out list' }).click();
+  await page.getByRole('button', { name: 'Close-out', exact: true }).click();
   await expect(pane(page)).toBeVisible();
 }
 
@@ -93,12 +99,13 @@ test("closes out the old revision's comments, following the owner's three cases 
   await expect.poll(async () => (await objects(page, a)).length).toBeGreaterThan(5);
   expect(await objects(page, b)).toEqual([]);
 
-  // The list: every checker comment of Rev A; the see-through check marks close nothing.
+  // The list: every checker comment of Rev A, by place on the sheet (M12-27); the
+  // see-through check marks close nothing and Hide highlights (on at first) leaves them out.
   await showList(page);
   const ids = await pane(page)
     .locator('.closeout-row')
     .evaluateAll((els) => els.map((e) => e.getAttribute('data-id')));
-  expect(ids).toEqual(['C1-cloud', 'C1-text', 'C2-cloud', 'C3-note', 'C4-note']);
+  expect(ids).toEqual(['C3-note', 'C2-cloud', 'C1-text', 'C1-cloud', 'C4-note']);
   await expect(pane(page).getByTestId('closeout-counts')).toHaveText('5 open, 0 closed');
 
   // Case 1, addressed (Rev B has W360x51): one click.
@@ -108,7 +115,7 @@ test("closes out the old revision's comments, following the owner's three cases 
   await expect
     .poll(async () => (await cap(page, 'annotate', 'selected', a)) as string[])
     .toEqual(['C1-cloud']);
-  await action(page, 'Addressed').click();
+  await closeOutAs(page, 'Addressed');
   await expect(row(page, 'C1-cloud')).toHaveAttribute('data-state', 'addressed');
   await expect(row(page, 'C1-cloud')).toContainText('Addressed');
   const c1 = await parts(page, a, 'C1-cloud');
@@ -136,7 +143,7 @@ test("closes out the old revision's comments, following the owner's three cases 
   await pane(page).getByRole('button', { name: 'Check highlight colour' }).click();
   await page.getByRole('button', { name: 'Light green', exact: true }).click();
   await row(page, 'C2-cloud').click();
-  await action(page, 'Changed Differently').click();
+  await closeOutAs(page, 'Changed Differently');
   await expect(row(page, 'C2-cloud')).toHaveAttribute('data-state', 'changed');
   const c2 = await parts(page, a, 'C2-cloud');
   expect(c2.find((p) => p.id.startsWith('closeout-changed-'))?.contents).toBe(
@@ -148,7 +155,7 @@ test("closes out the old revision's comments, following the owner's three cases 
   // designer's reply, to the same spot of Rev B, then closes it out.
   for (const id of ['C3-note', 'C4-note']) {
     await row(page, id).click();
-    await action(page, 'Carried Over').click();
+    await closeOutAs(page, 'Carried Over');
     await expect(row(page, id)).toHaveAttribute('data-state', 'carried');
   }
   await expect(pane(page).getByTestId('closeout-counts')).toHaveText('1 open, 4 closed');
@@ -206,7 +213,8 @@ test("closes out the old revision's comments, following the owner's three cases 
   await row(page, 'C1-cloud').click();
   await action(page, 'Reopen').click();
   await expect(row(page, 'C1-cloud')).toHaveAttribute('data-state', 'open');
-  expect(await parts(page, a, 'C1-cloud')).toEqual([]);
+  // (Its three parts go one after another: the state first.)
+  await expect.poll(() => parts(page, a, 'C1-cloud')).toEqual([]);
   await viewport(page, 'a').focus();
   await page.keyboard.press('Control+z');
   await expect(row(page, 'C1-cloud')).toHaveAttribute('data-state', 'addressed');
@@ -215,9 +223,9 @@ test("closes out the old revision's comments, following the owner's three cases 
   // The list by keyboard: arrows move and show the comment.
   await pane(page).getByTestId('closeout-list').focus();
   await page.keyboard.press('Home');
-  await expect(row(page, 'C1-cloud')).toHaveAttribute('aria-selected', 'true');
+  await expect(row(page, 'C3-note')).toHaveAttribute('aria-selected', 'true');
   await page.keyboard.press('ArrowDown');
-  await expect(row(page, 'C1-text')).toHaveAttribute('aria-selected', 'true');
+  await expect(row(page, 'C2-cloud')).toHaveAttribute('aria-selected', 'true');
 });
 
 test('Copy to New Revision lands on the matching spot through the alignment; paste between the windows too (pair 03: scale and shift)', async ({
@@ -335,7 +343,7 @@ test('text comparison: Copy to New Revision lands on the matching text; the clos
   expect(copy.rect.origin.x).toBeCloseTo(80, 0);
 
   // Close-out in a text comparison: Carried Over copies once more and closes it out.
-  await action(page, 'Carried Over').click();
+  await closeOutAs(page, 'Carried Over');
   await expect(row(page, id)).toHaveAttribute('data-state', 'carried');
   await expect
     .poll(async () => (await objects(page, b)).filter((o) => o.type === T.SQUARE).length)
@@ -349,12 +357,12 @@ test('the close-out list passes axe in light and dark, with a comment closed out
   await overlayOf(page, '19');
   await skipReviewerPrompt(page);
   // The toggle is reached by Tab like the other head buttons.
-  const toggle = page.getByRole('button', { name: 'Close-out list' });
+  const toggle = page.getByRole('button', { name: 'Close-out', exact: true });
   await toggle.focus();
   await page.keyboard.press('Enter');
   await expect(pane(page)).toBeVisible();
   await row(page, 'C1-cloud').click();
-  await action(page, 'Addressed').click();
+  await closeOutAs(page, 'Addressed');
   await expect(row(page, 'C1-cloud')).toHaveAttribute('data-state', 'addressed');
   const axe = async (): Promise<void> => {
     const r = await new AxeBuilder({ page }).include('[data-testid="closeout-pane"]').analyze();
@@ -366,7 +374,7 @@ test('the close-out list passes axe in light and dark, with a comment closed out
   // Into the list and its buttons by keyboard.
   await pane(page).getByTestId('closeout-list').focus();
   await page.keyboard.press('ArrowDown');
-  await expect(row(page, 'C1-text')).toHaveAttribute('aria-selected', 'true');
+  await expect(row(page, 'C4-note')).toHaveAttribute('aria-selected', 'true');
   await page.keyboard.press('Tab');
   await expect(pane(page).locator(':focus')).toHaveCount(1);
 });

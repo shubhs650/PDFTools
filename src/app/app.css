@@ -6636,6 +6636,73 @@ textarea.form-field {
   gap: var(--space-4);
 }
 
+/* M12-24 (ADR-033): Compare stays in view at the bottom of the window, however long the
+   pairing table; the window's own padding is covered so rows don't show beneath it. */
+.compare .compare-foot {
+  position: sticky;
+  bottom: calc(-1 * var(--space-6));
+  z-index: 2;
+  margin-inline: calc(-1 * var(--space-4));
+  margin-bottom: calc(-1 * var(--space-6));
+  padding: var(--space-3) var(--space-4) var(--space-6);
+  border-top: var(--border-width) solid var(--color-border);
+  background: var(--color-bg);
+}
+
+/* The step guide (M12-24): 1 Choose files · 2 Check pairs · 3 Compare. */
+.compare-steps {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-2) var(--space-5);
+  margin: var(--space-0);
+  padding: var(--space-0);
+  list-style: none;
+  font-size: var(--font-size-m);
+}
+
+.compare-step {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  color: var(--color-text-muted);
+}
+
+.compare-step + .compare-step::before {
+  content: '';
+  width: var(--space-5);
+  margin-inline-end: var(--space-3);
+  border-top: var(--border-width) solid var(--color-border-strong);
+}
+
+.compare-step-number {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 22px;
+  height: 22px;
+  border: var(--border-width) solid var(--color-border-strong);
+  border-radius: var(--radius-round);
+  font-size: var(--font-size-s);
+  font-variant-numeric: tabular-nums;
+}
+
+.compare-step[data-state='current'] {
+  color: var(--color-text);
+  font-weight: var(--font-weight-semibold);
+}
+
+.compare-step[data-state='current'] .compare-step-number {
+  border-color: var(--color-brand);
+  background: var(--color-brand);
+  color: var(--color-text-on-brand);
+}
+
+.compare-step[data-state='done'] .compare-step-number {
+  border-color: var(--color-success-text);
+  color: var(--color-success-text);
+}
+
 .compare-status {
   flex: 1;
   min-width: 200px;
@@ -6670,8 +6737,9 @@ textarea.form-field {
 
 .overlay-head-title {
   display: flex;
-  flex: 1;
+  flex: 1 0 auto;
   align-items: center;
+  white-space: nowrap;
   gap: var(--space-3);
   margin: var(--space-0);
   font-size: var(--font-size-l);
@@ -6693,7 +6761,7 @@ textarea.form-field {
 }
 
 .overlay-head-sheet {
-  min-width: 8em;
+  min-width: 6.5em;
   text-align: center;
   font-size: var(--font-size-m);
 }
@@ -6783,12 +6851,16 @@ textarea.form-field {
   color: inherit;
 }
 
-.overlay-sheet-align,
-.overlay-sheet-hint {
+.overlay-sheet-align {
   font-size: var(--font-size-s);
 }
 
 .overlay-sheet-align[data-status='low'] {
+  align-self: start;
+  padding: var(--space-0) var(--space-1);
+  border-radius: var(--radius-s);
+  background: var(--color-note-paper);
+  color: var(--color-note-text);
   font-weight: var(--font-weight-semibold);
 }
 
@@ -7229,10 +7301,9 @@ textarea.form-field {
   gap: var(--space-2);
 }
 
-/* A long set scrolls inside the table, its header row kept in view. */
+/* The table scrolls with the window, its header row kept in view, so Compare stays
+   below it (M12-24). */
 .compare-pairing-scroll {
-  max-height: 420px;
-  overflow: auto;
   border: var(--border-width) solid var(--color-border);
   border-radius: var(--radius-m);
 }
@@ -7241,6 +7312,20 @@ textarea.form-field {
   width: 100%;
   border-collapse: collapse;
   font-size: var(--font-size-m);
+  /* Column widths from the header row only: a long set lays out quickly (M12-24). */
+  table-layout: fixed;
+}
+
+.compare-pairing-table thead th:first-child {
+  width: 4em;
+}
+
+.compare-pairing-table thead th:nth-child(4) {
+  width: 13em;
+}
+
+.compare-pairing-table thead th:last-child {
+  width: 6.5em;
 }
 
 .compare-pairing-table th,
@@ -7271,11 +7356,168 @@ textarea.form-field {
 
 .compare-pairing-select {
   width: 100%;
-  min-width: 10em;
 }
 
 .compare-pairing-match {
   white-space: nowrap;
+}
+
+/* M12-24 (ADR-033): the page pictures of the pairing table, the page picker, Preview pair. */
+.compare-pairing-side {
+  overflow: hidden;
+}
+
+.compare-pairing-picture {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 176px;
+  height: 136px;
+  margin-bottom: var(--space-2);
+  padding: var(--space-0);
+  border: var(--border-width) solid var(--color-border);
+  border-radius: var(--radius-m);
+  background: var(--color-surface-sunken);
+  cursor: pointer;
+}
+
+.compare-pairing-picture:hover {
+  border-color: var(--color-border-strong);
+}
+
+.compare-pairing-nopage,
+.compare-pairview-none {
+  color: var(--color-text-muted);
+  font-size: var(--font-size-s);
+}
+
+.compare-picture {
+  position: relative;
+  display: flex;
+  flex: none;
+  align-items: center;
+  justify-content: center;
+  overflow: visible;
+  background: var(--color-page);
+  box-shadow: var(--elevation-1);
+}
+
+.compare-pairing-match > * + * {
+  margin-inline-start: var(--space-2);
+}
+
+.compare-pairing-match .ui-button--icon {
+  vertical-align: middle;
+}
+
+.compare-check {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-1);
+  padding: var(--space-0) var(--space-2);
+  border: var(--border-width) solid var(--color-border-strong);
+  border-radius: var(--radius-round);
+  background: var(--color-note-paper);
+  color: var(--color-note-text);
+  font-size: var(--font-size-s);
+  font-weight: var(--font-weight-semibold);
+  vertical-align: middle;
+}
+
+.ui-dialog.compare-picker-dialog {
+  width: min(960px, calc(100vw - 2 * var(--space-6)));
+  max-width: none;
+}
+
+.compare-picker {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(148px, 1fr));
+  gap: var(--space-3);
+}
+
+.compare-picker-page {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--space-2);
+  padding: var(--space-2);
+  border: var(--focus-width) solid transparent;
+  border-radius: var(--radius-m);
+  background: var(--color-surface);
+  color: var(--color-text);
+  font: inherit;
+  font-size: var(--font-size-s);
+  text-align: center;
+  cursor: pointer;
+}
+
+.compare-picker-page:hover {
+  background: var(--color-hover);
+}
+
+.compare-picker-page[aria-pressed='true'] {
+  border-color: var(--color-brand);
+  background: var(--color-selected);
+  color: var(--color-selected-text);
+}
+
+.compare-picker-frame {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 128px;
+  height: 104px;
+}
+
+.compare-picker-none {
+  width: 72px;
+  height: 96px;
+  border: var(--border-width) dashed var(--color-border-strong);
+  background: var(--color-surface-sunken);
+}
+
+.compare-picker-score {
+  color: var(--color-text-muted);
+}
+
+.ui-dialog.compare-pairview-dialog {
+  width: min(1140px, calc(100vw - 2 * var(--space-6)));
+  max-width: none;
+}
+
+.compare-pairview-match {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  min-height: 1.5em;
+  margin: var(--space-0) var(--space-0) var(--space-3);
+  color: var(--color-text-muted);
+}
+
+.compare-pairview-pair {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: var(--space-4);
+}
+
+.compare-pairview-side {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  margin: var(--space-0);
+}
+
+.compare-pairview-side-name {
+  font-weight: var(--font-weight-semibold);
+}
+
+.compare-pairview-frame {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 460px;
+  border-radius: var(--radius-m);
+  background: var(--color-surface-sunken);
 }
 
 @media (max-width: 900px) {
@@ -7339,7 +7581,11 @@ textarea.form-field {
 }
 
 .review-window-title {
+  display: flex;
   flex: none;
+  align-items: center;
+  gap: var(--space-2);
+  min-height: 24px;
   margin: var(--space-0);
   padding: var(--space-1) var(--space-3);
   overflow: hidden;
@@ -7348,7 +7594,51 @@ textarea.form-field {
   color: var(--color-text);
   font-size: var(--font-size-s);
   white-space: nowrap;
+}
+
+/* The window's name gives way first; the unsaved dot and the page counter stay (M12-27). */
+.review-window-name {
+  min-width: 0;
+  overflow: hidden;
   text-overflow: ellipsis;
+}
+
+.text-page-counter {
+  display: inline-flex;
+  flex: none;
+  align-items: center;
+  gap: var(--space-1);
+  margin-left: auto;
+  font-size: var(--font-size-s);
+}
+
+.text-page-button {
+  padding: 0 var(--space-2);
+  border: var(--border-width) solid var(--color-border-strong);
+  border-radius: var(--radius-s);
+  background: var(--color-surface);
+  color: var(--color-text);
+  font: inherit;
+  cursor: pointer;
+}
+
+.text-page-button:hover {
+  background: var(--color-hover);
+}
+
+.text-page-input {
+  width: auto;
+  padding: 0 var(--space-1);
+  border: var(--border-width) solid var(--color-border-strong);
+  border-radius: var(--radius-s);
+  background: var(--color-surface);
+  color: var(--color-text);
+  font: inherit;
+  text-align: right;
+}
+
+.text-page-input[aria-invalid='true'] {
+  border-color: var(--color-danger);
 }
 
 .review-window-view {
@@ -7871,6 +8161,178 @@ textarea.form-field {
   text-decoration: underline;
 }
 
+/* Room to work (M12-25, ADR-033): Maximise hides everything but the comparison. */
+.app-frame--maximised {
+  grid-template-rows: minmax(0, 1fr);
+}
+
+.app-frame--maximised .app-body {
+  grid-template-columns: minmax(0, 1fr);
+}
+
+/* On a comparison tab the comparison's own pane strips sit at the edge: the app's left pane
+   strip is left out while that pane is closed (the rail's first button still opens it). */
+.app-body:has(.compare-result) .left-rail--collapsed > .pane-edge {
+  display: none;
+}
+
+.app-frame--maximised .app-banner,
+.app-frame--maximised .left-rail,
+.app-frame--maximised .properties-dock,
+.app-frame--maximised .status-bar {
+  display: none;
+}
+
+/* A bar whose compact buttons (ToggleButton `compact`) drop their labels when it is narrow:
+   the label stays the button's name, hidden visually; the tooltip still says it. */
+.ui-compact-bar {
+  container: compact-bar / inline-size;
+}
+
+@container compact-bar (max-width: 1240px) {
+  .ui-button--compact {
+    min-width: var(--control-height-m);
+    padding-inline: var(--space-0);
+  }
+
+  .ui-button--compact .ui-button-label {
+    position: absolute;
+    width: var(--border-width);
+    height: var(--border-width);
+    overflow: hidden;
+    clip-path: inset(50%);
+    white-space: nowrap;
+  }
+}
+
+/* A comparison pane that folds and resizes: its body (width set inline) and an edge strip
+   like the app's side panes (D-56), the splitter in it while the pane is open. */
+.cmp-pane {
+  display: flex;
+  flex: none;
+  min-height: 0;
+}
+
+.cmp-pane > .cmp-pane-body {
+  display: flex;
+  min-width: 0;
+  min-height: 0;
+}
+
+.cmp-pane > .cmp-pane-body > * {
+  flex: 1 1 0;
+  min-width: 0;
+  border-inline: 0;
+}
+
+.cmp-pane-edge--left {
+  border-right: var(--border-width) solid var(--color-border);
+}
+
+.cmp-pane-edge--left.pane-edge--open {
+  border-left: var(--border-width) solid var(--color-border);
+}
+
+.cmp-pane-edge--right {
+  border-left: var(--border-width) solid var(--color-border);
+}
+
+.cmp-pane-edge--right.pane-edge--open {
+  border-right: var(--border-width) solid var(--color-border);
+}
+
+/* A left-pane section that folds to a one-line summary; its title is the button. */
+.cmp-fold-title {
+  margin: var(--space-0);
+}
+
+.cmp-fold-button {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-1);
+  margin: calc(-1 * var(--space-1));
+  padding: var(--space-1);
+  border: 0;
+  border-radius: var(--radius-s);
+  background: none;
+  color: inherit;
+  font: inherit;
+  letter-spacing: inherit;
+  text-align: start;
+  text-transform: inherit;
+  cursor: pointer;
+}
+
+.cmp-fold-button:hover:not(:disabled) {
+  background: var(--color-hover);
+}
+
+.cmp-fold-button:disabled {
+  cursor: default;
+}
+
+.cmp-fold-chevron {
+  display: flex;
+  color: var(--color-icon);
+}
+
+.cmp-fold-summary {
+  margin: var(--space-0);
+  color: var(--color-text-muted);
+  font-size: var(--font-size-s);
+}
+
+.cmp-fold[data-open='false'] > .pane-title-row {
+  margin-block-end: var(--space-1);
+}
+
+.cmp-fold > .pane-title-row > .overlay-side-title {
+  margin: var(--space-0);
+}
+
+/* Filters in the Differences pane: Sensitivity and Minimum size, folded by default. */
+.cmp-filters-head {
+  display: flex;
+  flex-wrap: wrap;
+  grid-column: 1 / -1;
+  align-items: center;
+  gap: var(--space-2);
+  font-size: var(--font-size-s);
+  font-weight: var(--font-weight-semibold);
+}
+
+.cmp-filters-summary {
+  color: var(--color-text-muted);
+  font-weight: var(--font-weight-regular);
+}
+
+.cmp-filters-body {
+  display: grid;
+  grid-column: 1 / -1;
+  grid-template-columns: 1fr 1fr;
+  gap: var(--space-2);
+}
+
+/* The overlay's colour key, the floating bar's last line. */
+.overlay-key {
+  display: flex;
+  flex-basis: 100%;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: var(--space-1) var(--space-3);
+  margin: var(--space-0);
+  padding: var(--space-0) var(--space-0) var(--space-1);
+  list-style: none;
+  color: var(--color-text-muted);
+  font-size: var(--font-size-s);
+}
+
+.overlay-key-item {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-1);
+}
+
 /* The close-out list (M12-15, D-62): the old revision's comments and their states. */
 .closeout-pane {
   display: flex;
@@ -7907,8 +8369,30 @@ textarea.form-field {
   gap: var(--space-1);
 }
 
+.closeout-hide-highlights {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-1);
+  font-size: var(--font-size-s);
+  white-space: nowrap;
+}
+
 .closeout-colour {
   margin-left: auto;
+}
+
+/* Comments with text first, then markup (M12-27): each group under a small title. */
+.closeout-group-title {
+  position: sticky;
+  top: 0;
+  z-index: 1;
+  margin: var(--space-0);
+  padding: var(--space-1) var(--space-2);
+  border-bottom: var(--border-width) solid var(--color-border);
+  background: var(--color-surface-sunken);
+  color: var(--color-text-muted);
+  font-size: var(--font-size-xs);
+  font-weight: var(--font-weight-semibold);
 }
 
 .closeout-doc {
@@ -8307,5 +8791,342 @@ textarea.form-field {
 
   .area-veil {
     fill: Canvas;
+  }
+}
+
+/* ---- Compare review (M12-27, ADR-033) ---------------------------------------------- */
+
+/* A comment the close-out list brought into view, flashed once (opacity only). */
+.comment-flash {
+  position: absolute;
+  z-index: 3;
+  box-sizing: content-box;
+  margin: -6px 0 0 -6px;
+  padding: 3px;
+  border: 3px solid var(--color-accent);
+  border-radius: var(--radius-m);
+  pointer-events: none;
+  animation: comment-flash var(--duration-slow) var(--ease-out) 5 alternate;
+}
+
+@keyframes comment-flash {
+  from {
+    opacity: 0;
+  }
+
+  to {
+    opacity: 1;
+  }
+}
+
+@media (forced-colors: active) {
+  .comment-flash {
+    border-color: Highlight;
+  }
+}
+
+/* Alignment made easy to find (M12-26, ADR-033, D-60): the windows' column with the banner
+   of a sheet that needs checking or the Line up step bar above it, the window to click,
+   the Line up button on the floating bar, and the first-time tips. */
+.overlay-main {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  min-width: 0;
+  min-height: 0;
+}
+
+.overlay-align-status {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+  margin: var(--space-0);
+  font-size: var(--font-size-s);
+}
+
+.overlay-align-word {
+  font-weight: var(--font-weight-semibold);
+}
+
+.overlay-align-status[data-status='low'] .overlay-align-word {
+  align-self: start;
+  padding: var(--space-0) var(--space-1);
+  border-radius: var(--radius-s);
+  background: var(--color-note-paper);
+  color: var(--color-note-text);
+}
+
+.overlay-align-values-found {
+  color: var(--color-text-muted);
+}
+
+.overlay-align-fine {
+  font-size: var(--font-size-s);
+  font-weight: var(--font-weight-semibold);
+}
+
+.overlay-align-fine-body {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+
+.overlay-align-fine-body[hidden] {
+  display: none;
+}
+
+.align-banner {
+  display: flex;
+  flex: none;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-2) var(--space-3);
+  padding: var(--space-2) var(--space-3);
+  border-bottom: var(--border-width) solid var(--color-border-strong);
+  background: var(--color-note-paper);
+  color: var(--color-note-text);
+}
+
+.align-banner-icon {
+  display: inline-flex;
+}
+
+.align-banner-text {
+  flex: 1 1 280px;
+  min-width: 0;
+}
+
+.align-banner-title {
+  margin: var(--space-0);
+  font-size: var(--font-size-m);
+  font-weight: var(--font-weight-semibold);
+}
+
+.align-banner-more {
+  margin: var(--space-0);
+  font-size: var(--font-size-s);
+}
+
+.align-banner-actions,
+.line-up-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-2);
+}
+
+.line-up-bar {
+  display: flex;
+  flex: none;
+  flex-direction: column;
+  gap: var(--space-2);
+  padding: var(--space-2) var(--space-3);
+  border-bottom: var(--border-width) solid var(--color-border);
+  border-left: 4px solid var(--color-accent);
+  background: var(--color-surface);
+}
+
+.line-up-head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-2) var(--space-4);
+}
+
+.line-up-title {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  margin: var(--space-0);
+  font-size: var(--font-size-m);
+  font-weight: var(--font-weight-semibold);
+}
+
+.line-up-icon {
+  display: inline-flex;
+  color: var(--color-accent);
+}
+
+.line-up-steps {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-1) var(--space-3);
+  margin: var(--space-0);
+  padding: var(--space-0);
+  list-style: none;
+  font-size: var(--font-size-s);
+}
+
+.line-up-step {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-1);
+  color: var(--color-text-muted);
+}
+
+.line-up-step-n {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 20px;
+  height: 20px;
+  border: var(--border-width) solid var(--color-border-strong);
+  border-radius: var(--radius-round);
+}
+
+.line-up-step[data-state='current'] {
+  color: var(--color-text);
+  font-weight: var(--font-weight-semibold);
+}
+
+.line-up-step[data-state='current'] .line-up-step-n {
+  border-color: var(--color-brand);
+  background: var(--color-brand);
+  color: var(--color-text-on-brand);
+}
+
+.line-up-step[data-state='done'] .line-up-step-n {
+  border-color: var(--color-accent);
+  color: var(--color-accent);
+}
+
+.line-up-body {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-2) var(--space-4);
+}
+
+.line-up-say {
+  flex: 1 1 360px;
+  min-width: 0;
+  margin: var(--space-0);
+}
+
+.line-up-problem {
+  flex-basis: 100%;
+  margin: var(--space-0);
+  padding: var(--space-1) var(--space-2);
+  border-left: 3px solid var(--color-danger);
+  background: var(--color-surface-sunken);
+  font-size: var(--font-size-s);
+}
+
+.line-up-apply {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-1);
+  font-size: var(--font-size-s);
+}
+
+.review-window[data-line-up='true'] {
+  outline: 3px solid var(--color-accent);
+  outline-offset: -3px;
+}
+
+.line-up-here {
+  position: absolute;
+  top: 34px;
+  left: 50%;
+  z-index: 4;
+  margin: var(--space-0);
+  padding: var(--space-1) var(--space-3);
+  transform: translateX(-50%);
+  border-radius: var(--radius-round);
+  background: var(--color-accent);
+  color: var(--color-text-on-brand);
+  font-size: var(--font-size-s);
+  font-weight: var(--font-weight-semibold);
+  white-space: nowrap;
+  pointer-events: none;
+}
+
+.overlay-line-up {
+  position: relative;
+}
+
+.overlay-line-up[data-attention='true']::after {
+  position: absolute;
+  top: 2px;
+  right: 2px;
+  width: 8px;
+  height: 8px;
+  border-radius: var(--radius-round);
+  background: var(--color-danger);
+  content: '';
+}
+
+.compare-tip {
+  position: fixed;
+  z-index: 60;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  width: 300px;
+  padding: var(--space-3) var(--space-4);
+  border: var(--border-width) solid var(--color-border-strong);
+  border-radius: var(--radius-l);
+  background: var(--color-surface-raised);
+  box-shadow: var(--elevation-3);
+  color: var(--color-text);
+}
+
+.compare-tip-count {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-1);
+  margin: var(--space-0);
+  color: var(--color-text-muted);
+  font-size: var(--font-size-s);
+}
+
+.compare-tip-icon {
+  display: inline-flex;
+  color: var(--color-accent);
+}
+
+.compare-tip-title {
+  margin: var(--space-0);
+  font-size: var(--font-size-m);
+  font-weight: var(--font-weight-semibold);
+}
+
+.compare-tip-text {
+  margin: var(--space-0);
+  font-size: var(--font-size-s);
+}
+
+.compare-tip-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: var(--space-2);
+}
+
+[data-tip-target='true'] {
+  outline: 2px solid var(--color-accent);
+  outline-offset: 2px;
+}
+
+@media (forced-colors: active) {
+  .align-banner,
+  .line-up-bar,
+  .compare-tip {
+    border: var(--border-width) solid CanvasText;
+  }
+
+  .review-window[data-line-up='true'],
+  [data-tip-target='true'] {
+    outline-color: Highlight;
+  }
+
+  .line-up-here,
+  .line-up-step[data-state='current'] .line-up-step-n {
+    background: Highlight;
+    color: HighlightText;
+    forced-color-adjust: none;
+  }
+
+  .overlay-line-up[data-attention='true']::after {
+    background: Highlight;
   }
 }

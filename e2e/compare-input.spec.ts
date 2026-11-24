@@ -93,16 +93,31 @@ test('Compare → PDF Overlay: a comparison tab with both sides; drop, open tab,
   await expect(side(page, 'b').getByLabel('Pages of RevA.pdf')).toHaveValue('2-3');
   await expect(cmpTab).toHaveAccessibleName('RevB ↔ RevA');
 
-  // Compare turns the tab into the result; the inputs can be revisited.
+  // Compare turns the tab into the result. A result never goes back to its inputs
+  // (ADR-033): New comparison opens another tab with the same files and ranges.
   await compare.click();
   await expect(page.getByTestId('compare-result')).toBeVisible();
-  await page.getByRole('button', { name: 'Change inputs' }).click();
+  await expect(page.getByRole('button', { name: 'Change inputs' })).toHaveCount(0);
+  await page.getByRole('button', { name: 'New comparison' }).click();
   await expect(input(page)).toBeVisible();
+  await expect(tabs(page)).toHaveCount(3);
+  const newTab = tabs(page).nth(2);
+  await expect(newTab).toHaveAccessibleName('RevB ↔ RevA');
+  await expect(newTab).toHaveAttribute('aria-selected', 'true');
+  await expect(side(page, 'a').getByTestId('compare-file')).toContainText('RevB.pdf');
+  await expect(side(page, 'b').getByLabel('Pages of RevA.pdf')).toHaveValue('2-3');
+  await expect(compare).toBeEnabled();
 
   // The other type keeps one file per side.
   await input(page).getByRole('radio', { name: 'Text Comparison' }).check();
   await expect(input(page)).toHaveAttribute('data-type', 'text');
-  await expect(cmpTab).toHaveAccessibleName('RevB ↔ RevA');
+  await expect(newTab).toHaveAccessibleName('RevB ↔ RevA');
+
+  // Closing the new comparison keeps the result, which still uses RevA.
+  await page.getByRole('button', { name: 'Close RevB ↔ RevA' }).nth(1).click();
+  await expect(tabs(page)).toHaveCount(2);
+  await cmpTab.click();
+  await expect(page.getByTestId('compare-result')).toBeVisible();
 
   // Closing the comparison closes RevA (no tab of its own) and keeps RevB's tab.
   await page.getByRole('button', { name: 'Close RevB ↔ RevA' }).click();
@@ -184,7 +199,7 @@ test('the keyboard reaches every control of the input window, in order', async (
   // From the comparison's tab, Tab walks the window.
   await tabs(page).first().focus();
   const names: string[] = [];
-  for (let i = 0; i < 30; i++) {
+  for (let i = 0; i < 40; i++) {
     await page.keyboard.press('Tab');
     const name = await page.evaluate(() => {
       const el = document.activeElement as HTMLInputElement | null;
@@ -210,11 +225,19 @@ test('the keyboard reaches every control of the input window, in order', async (
     'Pages of B.pdf',
     'Add files…',
     // The pairing table (M12-09): "Pair automatically" is off until the table is edited.
+    // Each page has its picture, which opens the page picker, and each sheet a Preview
+    // button (M12-24).
+    'Choose the Document A (old) page of sheet 1 from pictures',
     'Document A (old) page of sheet 1',
+    'Choose the Document B (new) page of sheet 1 from pictures',
     'Document B (new) page of sheet 1',
+    'Preview sheet 1',
     'Compare sheet 1',
+    'Choose the Document A (old) page of sheet 2 from pictures',
     'Document A (old) page of sheet 2',
+    'Choose the Document B (new) page of sheet 2 from pictures',
     'Document B (new) page of sheet 2',
+    'Preview sheet 2',
     'Options', // the presets (M12-21), collapsed
     'Compare',
   ]);

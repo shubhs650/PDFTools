@@ -13,14 +13,17 @@ import { useTranslation } from 'react-i18next';
 import { documentStore, useDocuments } from '../../../app/store/documentStore';
 import { format } from '../../../i18n';
 import { comparedPairs } from '../../../model/compare/pairing';
-import { Button, IconButton, ProgressBar, ToggleButton } from '../../../ui/components';
+import { IconButton, ProgressBar, ToggleButton } from '../../../ui/components';
 import { CommandIcon } from '../../../ui/icons/CommandIcon';
-import { updateInputs } from '../compareFlow';
+import { NewComparisonButton } from '../NewComparisonButton';
 import type { Comparison } from '../model';
 import { pairingInputs, startComparing, syncPairing, usePairing } from '../pairingFlow';
 import { typeLabel } from '../title';
 import { alignmentText } from '../alignmentText';
+import { AlignBanner } from '../align/AlignBanner';
 import { AlignPanel } from '../align/AlignPanel';
+import { LineUpBar } from '../align/LineUpBar';
+import { CompareTips } from '../tips/CompareTips';
 import { AreaInfo, AreaPanel } from '../area/AreaPanel';
 import { OverlayLayers } from './OverlayLayers';
 import { frameOf, framePage } from './frames';
@@ -28,6 +31,7 @@ import {
   dropView,
   alignmentOf,
   goSheet,
+  isAlignChecked,
   overlayStore,
   overlayView,
   setAligned,
@@ -48,6 +52,10 @@ import { documentsOf } from '../model';
 import { CloseOutPane } from '../closeout/CloseOutPane';
 import { CloseOutToggle } from '../closeout/CloseOutToggle';
 import { useCloseOutView } from '../closeout/closeOutStore';
+import { ComparePane } from '../layout/ComparePane';
+import { foldKey, useLayout } from '../layout/layoutStore';
+import { MaximiseButton } from '../layout/Maximise';
+import { useMaximised } from '../layout/maximised';
 import { DiffPane } from '../diff/DiffPane';
 import { DiffToggle } from '../diff/DiffToggle';
 import { IgnoreZones } from '../diff/IgnoreZones';
@@ -118,7 +126,9 @@ export function OverlayResult({ comparison: c }: { comparison: Comparison }) {
     const session = startComparing(c.id);
     if (!session) return;
     updateView(c.id, (v) =>
-      Object.keys(v.aligned).length || v.manual ? { ...v, aligned: {}, manual: null } : v,
+      Object.keys(v.aligned).length || Object.keys(v.alignChecked).length || v.manual
+        ? { ...v, aligned: {}, alignChecked: {}, manual: null }
+        : v,
     );
     // Layer switches stay with the documents: a new session draws with them too (Q24).
     for (const [docId, states] of Object.entries(overlayView(c.id).layers))
@@ -170,6 +180,10 @@ export function OverlayResult({ comparison: c }: { comparison: Comparison }) {
   const notes = useNotes(c.id);
   const closeOutOpen = useCloseOutView(c.id).open;
   const diffPane = useDiffPart(c.id, (v) => v.pane);
+  // Maximise and folded panes leave the windows more room (M12-25, ADR-033).
+  const max = useMaximised(c.id);
+  const folds = foldKey(useLayout(c.id));
+  const pairCount = sheets.filter((s) => s.pair !== null).length;
 
   let body;
   if (!pairing || pairing.status === 'reading' || pairing.status === 'matching') {
@@ -197,26 +211,33 @@ export function OverlayResult({ comparison: c }: { comparison: Comparison }) {
   } else {
     body = (
       <div className="overlay-body">
-        <aside className="overlay-side" aria-label={t('compare.overlay.sheets')}>
-          <SheetList comparison={c} sheets={sheets} current={index} />
-          {c.area ? <AreaInfo comparison={c} sheet={sheet} /> : null}
-          <AlignPanel
-            id={c.id}
-            sheet={sheet}
-            pairs={sheets.filter((s) => s.pair !== null).length}
-          />
-          {c.area ? null : <AreaPanel id={c.id} sheet={sheet} />}
-          <OverlayLayers comparison={c} sheet={sheet} />
-          <IgnoreZones id={c.id} sheets={sheets} current={index} />
-        </aside>
+        {max ? null : (
+          <ComparePane id={c.id} pane="sheets" side="left" name={t('compare.overlay.sheets')}>
+            <aside className="overlay-side" aria-label={t('compare.overlay.sheets')}>
+              <SheetList comparison={c} sheets={sheets} current={index} />
+              {c.area ? <AreaInfo comparison={c} sheet={sheet} /> : null}
+              <AlignPanel id={c.id} sheet={sheet} />
+              {c.area ? null : <AreaPanel id={c.id} sheet={sheet} />}
+              <OverlayLayers comparison={c} sheet={sheet} />
+              <IgnoreZones id={c.id} sheets={sheets} current={index} />
+            </aside>
+          </ComparePane>
+        )}
         {notes?.status === 'ready' && notes.docId ? (
-          <ReviewLayout
-            comparison={c}
-            sheet={sheet}
-            index={index}
-            notesId={notes.docId}
-            fitKey={`${String(diffPane)}|${String(closeOutOpen)}`}
-          />
+          // The banner of a sheet that needs checking, or the Line up step bar, above the windows (M12-26).
+          <div className="overlay-main">
+            <AlignBanner id={c.id} sheet={sheet} />
+            <LineUpBar id={c.id} sheetNumber={index + 1} pairs={pairCount} />
+            <ReviewLayout
+              comparison={c}
+              sheet={sheet}
+              index={index}
+              notesId={notes.docId}
+              fitKey={`${String(diffPane)}|${String(closeOutOpen)}|${folds}|${String(max)}`}
+            />
+            {/* The first-time tips, once the result is on screen (M12-26). */}
+            <CompareTips id={c.id} />
+          </div>
         ) : notes?.status === 'failed' ? (
           <p className="overlay-wait" role="status">
             {t('compare.review.notesFailed')}
@@ -227,8 +248,16 @@ export function OverlayResult({ comparison: c }: { comparison: Comparison }) {
             <ProgressBar label={t('compare.review.preparing')} value={null} />
           </div>
         )}
-        {diffPane ? <DiffPane id={c.id} sheets={sheets} current={index} /> : null}
-        {closeOutOpen ? <CloseOutPane comparison={c} /> : null}
+        {diffPane && !max ? (
+          <ComparePane id={c.id} pane="diffs" side="right" name={t('compare.diff.title')}>
+            <DiffPane id={c.id} sheets={sheets} current={index} />
+          </ComparePane>
+        ) : null}
+        {closeOutOpen && !max ? (
+          <ComparePane id={c.id} pane="closeout" side="right" name={t('compare.closeout.title')}>
+            <CloseOutPane comparison={c} />
+          </ComparePane>
+        ) : null}
       </div>
     );
   }
@@ -241,7 +270,7 @@ export function OverlayResult({ comparison: c }: { comparison: Comparison }) {
       data-type="overlay"
       data-help-topic="compare-overlay"
     >
-      <header className="overlay-head">
+      <header className="overlay-head ui-compact-bar">
         <span className="overlay-head-icon" aria-hidden="true">
           <CommandIcon id="compare.overlay" />
         </span>
@@ -279,7 +308,8 @@ export function OverlayResult({ comparison: c }: { comparison: Comparison }) {
           <div className="overlay-head-layout" role="group" aria-label={t('compare.review.layout')}>
             <ToggleButton
               label={t('compare.review.layout_review')}
-              iconOnly
+              tooltip={t('compare.review.layout_reviewTip')}
+              compact
               icon={<LayoutColumnTwoSplitRight20Regular />}
               pressedIcon={<LayoutColumnTwoSplitRight20Filled />}
               pressed={view.layout === 'review'}
@@ -289,7 +319,8 @@ export function OverlayResult({ comparison: c }: { comparison: Comparison }) {
             />
             <ToggleButton
               label={t('compare.review.layout_overlay')}
-              iconOnly
+              tooltip={t('compare.review.layout_overlayTip')}
+              compact
               icon={<Square20Regular />}
               pressedIcon={<Square20Filled />}
               pressed={view.layout === 'overlay'}
@@ -299,7 +330,8 @@ export function OverlayResult({ comparison: c }: { comparison: Comparison }) {
             />
             <ToggleButton
               label={t('compare.review.lock')}
-              iconOnly
+              tooltip={t('compare.review.lockTip')}
+              compact
               icon={<LockOpen20Regular />}
               pressedIcon={<LockClosed20Filled />}
               pressed={view.lock}
@@ -311,15 +343,10 @@ export function OverlayResult({ comparison: c }: { comparison: Comparison }) {
             <CloseOutToggle id={c.id} />
           </div>
         ) : null}
+        {sheets.length > 0 ? <MaximiseButton id={c.id} /> : null}
         {c.area ? null : (
           // An area comparison's inputs are its rectangles, drawn in another comparison (O1).
-          <Button
-            label={t('compare.result.inputs')}
-            size="small"
-            onClick={() => {
-              updateInputs(c.id, (cur) => ({ ...cur, stage: 'input' }));
-            }}
-          />
+          <NewComparisonButton id={c.id} />
         )}
         <HelpButton topic="compare-overlay" label={t('compare.help')} />
       </header>
@@ -419,7 +446,7 @@ function SheetList({
                 ? t('compare.overlay.sheetAdded', { b: label(s.b) })
                 : t('compare.overlay.sheetRemoved', { a: label(s.a) });
           const al = alignmentOf(view, s);
-          const alText = al ? alignmentText(al) : null;
+          const alText = al ? alignmentText(al, isAlignChecked(view, s)) : null;
           return (
             // eslint-disable-next-line jsx-a11y/click-events-have-key-events -- the listbox handles the keys
             <div
@@ -439,14 +466,15 @@ function SheetList({
               </span>
               <span className="overlay-sheet-detail">{detail}</span>
               {alText ? (
-                <span className="overlay-sheet-align" data-status={al?.status}>
-                  {i === current && alText.values
+                <span className="overlay-sheet-align" data-status={alText.shown}>
+                  {/* An uncertain alignment's values mean little (the banner says what to do). */}
+                  {i === current &&
+                  alText.values &&
+                  alText.shown !== 'low' &&
+                  alText.shown !== 'checked'
                     ? `${alText.status} · ${alText.values}`
                     : alText.status}
                 </span>
-              ) : null}
-              {i === current && alText?.hint ? (
-                <span className="overlay-sheet-hint">{alText.hint}</span>
               ) : null}
               <SheetStatus state={sheetState(diff, s)} />
             </div>

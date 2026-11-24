@@ -45,13 +45,60 @@ export async function overlayOf(page: Page, id: string): Promise<void> {
 }
 
 /**
+ * A PDF overlay whose one sheet needs checking (M12-26): two different
+ * drawings (pair 01's old flange against pair 18's new framing plan) paired by
+ * hand, so the automatic alignment finds nothing it can trust ("Check
+ * alignment"). Waits for the sheet's status.
+ */
+export async function uncertainOverlay(page: Page): Promise<void> {
+  await page.goto('/');
+  await page.getByRole('tab', { name: 'Compare', exact: true }).click();
+  await page.getByRole('button', { name: 'PDF Overlay' }).click();
+  await dropOn(compareSide(page, 'a'), [corpusFile('01', 'old', 'Flange RevA.pdf')]);
+  await expect(compareSide(page, 'a').getByTestId('compare-file')).toHaveCount(1);
+  await dropOn(compareSide(page, 'b'), [corpusFile('18', 'new', 'Framing RevD.pdf')]);
+  const table = page.getByTestId('compare-pairing');
+  await expect(table).toHaveAttribute('data-status', 'done', { timeout: 30_000 });
+  await table
+    .getByRole('combobox', { name: 'Document B (new) page of sheet 1' })
+    .selectOption({ label: 'Page 1' });
+  await page
+    .getByTestId('compare-input')
+    .getByRole('button', { name: 'Compare', exact: true })
+    .click();
+  await expect(
+    page.locator('.overlay-sheet[aria-selected="true"] .overlay-sheet-align'),
+  ).toHaveAttribute('data-status', 'low', { timeout: 30_000 });
+}
+
+/**
  * Hides the differences pane (M12-14), for tests that measure the overlay at
  * the width it had before the pane, and waits for the drawing again.
  */
 export async function hideDifferences(page: Page): Promise<void> {
-  await page.getByRole('button', { name: 'Differences list', exact: true }).click();
+  await page.getByRole('button', { name: 'Differences', exact: true }).click();
   await expect(page.getByTestId('diff-pane')).toHaveCount(0);
   await overlayDrawn(page);
+}
+
+/**
+ * Opens a folded section of the overlay's left pane (M12-25): align, area, comments,
+ * layers or zones.
+ */
+export async function unfold(
+  page: Page,
+  section: 'align' | 'area' | 'comments' | 'layers' | 'zones',
+): Promise<void> {
+  const button = page.getByTestId(`fold-${section}`);
+  if ((await button.getAttribute('aria-expanded')) !== 'true') await button.click();
+  await expect(button).toHaveAttribute('aria-expanded', 'true');
+}
+
+/** Opens the Differences pane's Filters (Sensitivity, Minimum size; M12-25). */
+export async function openFilters(page: Page): Promise<void> {
+  const button = page.getByTestId('diff-filters');
+  if ((await button.getAttribute('aria-expanded')) !== 'true') await button.click();
+  await expect(page.getByTestId('diff-sensitivity')).toBeVisible();
 }
 
 /**
@@ -89,4 +136,17 @@ export async function textOf(page: Page, id: string, timeout = 60_000): Promise<
   // Both windows laid out, with the list filled.
   await expect(page.getByTestId('text-view-a').locator('.page').first()).toBeVisible();
   await expect(page.getByTestId('text-view-b').locator('.page').first()).toBeVisible();
+}
+
+/**
+ * Lets this test see Compare's first-time tips (M12-26): the device starts as
+ * if it never saw them (the guard fixture marks them seen otherwise). Call
+ * before `page.goto`; a reload keeps what the app recorded.
+ */
+export async function showCompareTips(page: Page): Promise<void> {
+  await page.addInitScript(() => {
+    if (sessionStorage.getItem('e2e.compareTips')) return;
+    sessionStorage.setItem('e2e.compareTips', '1');
+    localStorage.removeItem('pdftools.compareTipsSeen');
+  });
 }

@@ -2,7 +2,7 @@ import { useEffect, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
 import { useTranslation } from 'react-i18next';
 import { useDocuments } from '../../../app/store/documentStore';
-import { format } from '../../../i18n';
+import { format, msg } from '../../../i18n';
 import { displayedToLaid, laidToDisplayed, type Pt } from '../../../model/compare/align/manual';
 import { IDENTITY } from '../../../model/compare/material';
 import { clearSnapMarker, snapPointIn } from '../../measure/snapping';
@@ -117,7 +117,7 @@ export function AlignPickLayer({
           className="align-pick-layer"
           data-testid={`align-pick-${side}`}
           data-scale={scale}
-          title={t(side === 'a' ? 'compare.manual.pickA' : 'compare.manual.pickB')}
+          title={t(side === 'a' ? msg('compare.manual.pickA') : msg('compare.manual.pickB'))}
         />
       ) : null}
       {manual.points.map((p, i) => {

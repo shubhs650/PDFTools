@@ -9,10 +9,11 @@ import {
 } from 'react';
 import { useTranslation } from 'react-i18next';
 import { documentStore, useDocuments } from '../../../app/store/documentStore';
-import { format } from '../../../i18n';
+import { format, msg } from '../../../i18n';
 import { toReference, type WindowRole } from '../../../model/compare/link';
 import { DocumentView, type PageFrameInfo } from '../../view/DocumentView';
 import { AlignPickLayer } from '../align/AlignPickLayer';
+import { nextSide } from '../align/manualAlign';
 import { AreaDrawLayer, AreaMark } from '../area/AreaLayers';
 import { useAreaPick } from '../area/areaPick';
 import { tileCache } from '../../view/host';
@@ -26,10 +27,11 @@ import {
   useOverlayView,
   type Sheet,
 } from '../overlay/overlayState';
+import { UnsavedDot } from '../UnsavedDot';
 import { Splitter } from './Splitter';
 import { useWindowPlace } from './windowPlace';
 import { WindowLink, centreOnBox, fitWindow, showPage, type LinkedWindow } from './windowLink';
-import { focusers, pendingFocus, type Box } from './overlayFocus';
+import { focusers, pendingFocus, type Box, type FocusOptions } from './overlayFocus';
 
 const SPLIT_TEST_ID = { x: 'review-split-x', y: 'review-split-y' } as const;
 
@@ -149,10 +151,10 @@ export function ReviewLayout({
       if (view.lock) link.drive(link.leaderRole ?? 'overlay');
       else for (const w of list) if (w.role !== 'overlay') void fitWindow(w, 'page');
       // A difference picked on another sheet is shown once its sheet is (M12-14).
-      const box = pendingFocus.get(c.id);
-      if (box) {
+      const pending = pendingFocus.get(c.id);
+      if (pending) {
         pendingFocus.delete(c.id);
-        focusers.get(c.id)?.(box);
+        focusers.get(c.id)?.(pending.box, pending.options);
       }
     })();
     return () => {
@@ -162,16 +164,22 @@ export function ReviewLayout({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [windowsKey, link]);
 
-  // The differences list brings a box of the overlay into view (M12-14).
+  // The differences list brings a box of the overlay into view (M12-14); the
+  // close-out list a comment, at most 400 %, then flashes it (M12-27).
   useEffect(() => {
-    const focus = (box: Box): void => {
+    const focus = (box: Box, o: FocusOptions = {}): void => {
       const w = link.window('overlay');
       if (!w) return;
-      void centreOnBox(w, box).then((ok) => {
-        if (!ok) return;
+      void (async () => {
+        if (!(await centreOnBox(w, box, undefined, o.maxZoom))) return;
         link.lead('overlay');
         if (link.enabled) link.drive('overlay');
-      });
+        else {
+          const a = link.window('a');
+          if (a && o.a) await centreOnBox(a, o.a, undefined, o.maxZoom);
+        }
+        o.onShown?.();
+      })();
     };
     focusers.set(c.id, focus);
     return () => {
@@ -344,6 +352,7 @@ function SideWindow({
   const name = useDocuments((s) => (p ? (s.docs[p.docId]?.meta.name ?? '') : ''));
   const area = useDocuments((s) => s.comparisons[id]?.area ?? null);
   const pick = useAreaPick(id);
+  const manual = useOverlayView(id).manual;
   useWindowPlace(p?.docId ?? null);
   const sideName = t(side === 'a' ? 'compare.side.a' : 'compare.side.b');
   if (!p)
@@ -362,6 +371,9 @@ function SideWindow({
   });
   const { ref, ...rest } = props(side, p.docId, p.page);
   const pair = sheet.pair;
+  // Line up (M12-26): the window to click next is outlined and says so.
+  const clickHere =
+    pair !== null && manual?.pair === pair && manual.picking && nextSide(manual) === side;
   // Picking alignment points and their marks (M12-13), and drawing an area's
   // rectangle (O1, not in an area comparison itself), on the sheet's page.
   const layer =
@@ -408,11 +420,18 @@ function SideWindow({
       className="review-window"
       data-testid={`review-window-${side}`}
       data-doc-id={p.docId}
+      data-line-up={clickHere ? 'true' : undefined}
       {...rest}
     >
       <p className="review-window-title" data-side={side}>
-        {title}
+        <span className="review-window-name">{title}</span>
+        <UnsavedDot docId={p.docId} testId={`review-unsaved-${side}`} />
       </p>
+      {clickHere ? (
+        <p className="line-up-here" aria-hidden="true">
+          {t(side === 'a' ? msg('compare.lineUp.here_a') : msg('compare.lineUp.here_b'))}
+        </p>
+      ) : null}
       <div className="review-window-view">
         <DocumentView
           key={p.docId}

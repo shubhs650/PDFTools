@@ -9,7 +9,14 @@ import { OWNER_PW, qpdfEncrypt } from '../fixtures/encrypted.ts';
 import { attachmentsPdf } from '../fixtures/generate.ts';
 import { helpReportPdf } from '../fixtures/help-samples.ts';
 import { cap, darkTheme, drop } from '../support/app.ts';
-import { compareSide, corpusFile, dropOn, overlayDrawn, textFile } from '../support/compare.ts';
+import {
+  compareSide,
+  corpusFile,
+  dropOn,
+  overlayDrawn,
+  textFile,
+  uncertainOverlay,
+} from '../support/compare.ts';
 import { expect, test } from '../support/fixtures.ts';
 import { shoot, type Box } from './shoot.ts';
 import {
@@ -826,6 +833,66 @@ test('compare-start-2: the input window of a PDF overlay', async ({ page }) => {
   });
 });
 
+/** Waits until every page picture on screen (pairing rows, picker, Preview pair) is drawn. */
+async function picturesDrawn(page: Page): Promise<void> {
+  await expect
+    .poll(
+      () =>
+        page.evaluate(() =>
+          [...document.querySelectorAll('.compare-picture[data-drawn]')].every((el) => {
+            const img = el.querySelector('img');
+            return img !== null && img.complete && img.naturalWidth > 0;
+          }),
+        ),
+      { timeout: 30_000 },
+    )
+    .toBe(true);
+}
+
+/** The structural set (corpus pair 17) on its input window: a removed and two swapped sheets. */
+async function setPairing(page: Page): Promise<void> {
+  await page.setViewportSize({ width: 1366, height: 1200 });
+  await start(page);
+  await compareInputs(page, 'overlay', '17', ['S-100 Set RevA.pdf', 'S-100 Set RevB.pdf']);
+}
+
+test('compare-pairing-1: the pairing table with the pages of each sheet', async ({ page }) => {
+  await setPairing(page);
+  const rows = page.getByTestId('compare-pairing-row');
+  const table = page.getByTestId('compare-pairing');
+  // The table at the top of the window, so its rows are clear of the Compare bar.
+  await table.evaluate((el) => {
+    el.scrollIntoView({ block: 'start' });
+  });
+  await picturesDrawn(page);
+  await shoot(page, 'compare-pairing-1', {
+    clip: [table.locator('.compare-pairing-head'), rows.nth(1), rows.nth(2), rows.nth(3)],
+    pad: 8,
+    callouts: [
+      { n: 1, target: rows.nth(1).getByTestId('compare-pairing-picture-b'), at: 'r', dx: 14 },
+      { n: 2, target: rows.nth(2).getByTestId('compare-check'), at: 'b', dy: 14 },
+      {
+        n: 3,
+        target: page.getByRole('button', { name: 'Preview sheet 3' }),
+        at: 'r',
+        dx: 14,
+      },
+    ],
+  });
+});
+
+test('compare-pairing-2: choosing a page from the pictures', async ({ page }) => {
+  await setPairing(page);
+  const row = page.getByTestId('compare-pairing-row').nth(4);
+  await row.scrollIntoViewIfNeeded();
+  await row.getByTestId('compare-pairing-picture-b').click();
+  const picker = page.getByRole('dialog', { name: 'Document B (new) page of sheet 5' });
+  await expect(picker).toBeVisible();
+  await page.mouse.move(0, 0);
+  await picturesDrawn(page);
+  await shoot(page, 'compare-pairing-2', { clip: picker, pad: 8 });
+});
+
 /** Waits until the input window's thumbnails have their pictures. */
 async function thumbnailsShown(page: Page): Promise<void> {
   await expect
@@ -860,19 +927,116 @@ test('compare-overlay-1: a PDF overlay with its controls', async ({ page }) => {
   });
 });
 
-test('compare-alignment-1: the sheet list and the Alignment section', async ({ page }) => {
+test('compare-alignment-1: the banner on a sheet that needs checking', async ({ page }) => {
+  await start(page);
+  await uncertainOverlay(page);
+  await overlayDrawn(page);
+  const bar = page.getByRole('toolbar', { name: 'Overlay controls' });
+  await shoot(page, 'compare-alignment-1', {
+    clip: result(page),
+    pad: 0,
+    callouts: [
+      { n: 1, target: page.getByTestId('align-banner'), at: 'l', dx: 14 },
+      { n: 2, target: result(page).locator('.overlay-sheet-align').first(), at: 'r', dx: 14 },
+      { n: 3, target: bar.getByRole('button', { name: 'Line up' }), at: 'l', dx: -14 },
+    ],
+  });
+});
+
+/** Pair 04 (a 1.2° skew) compared, Line up started on its first sheet. */
+async function lineUpStarted(page: Page): Promise<void> {
   await start(page);
   await compareInputs(page, 'overlay', '04', ['C-120 Site RevA.pdf', 'C-120 Site RevB.pdf']);
   await runCompare(page, 'overlay');
+  await expect(page.getByTestId('review-window-b').locator('.page')).not.toHaveCount(0);
+  await page
+    .getByRole('toolbar', { name: 'Overlay controls' })
+    .getByRole('button', { name: 'Line up' })
+    .click();
+  await expect(page.getByTestId('line-up-bar')).toBeVisible();
+}
+
+/** Clicks a side's window at fractions of the part of the sheet in view (Alt: no snapping). */
+async function pickIn(page: Page, side: 'a' | 'b', fx: number, fy: number): Promise<void> {
+  const layer = page.getByTestId(`align-pick-${side}`);
+  await expect(layer).toBeVisible();
+  const vp = await page.getByTestId(`review-window-${side}`).locator('.viewport').boundingBox();
+  const r = await layer.boundingBox();
+  if (!vp || !r) throw new Error('no window');
+  const left = Math.max(vp.x, r.x);
+  const right = Math.min(vp.x + vp.width, r.x + r.width);
+  const top = Math.max(vp.y, r.y);
+  const bottom = Math.min(vp.y + vp.height, r.y + r.height);
+  await page.keyboard.down('Alt');
+  await page.mouse.click(left + (right - left) * fx, top + (bottom - top) * fy);
+  await page.keyboard.up('Alt');
+}
+
+test('compare-alignment-2: Line up, step 1', async ({ page }) => {
+  await lineUpStarted(page);
+  await shoot(page, 'compare-alignment-2', {
+    clip: result(page),
+    pad: 0,
+    callouts: [
+      { n: 1, target: page.getByRole('button', { name: 'Line up' }), at: 'l', dx: -14 },
+      { n: 2, target: page.getByTestId('line-up-bar'), at: 'l', dx: 14 },
+      { n: 3, target: page.getByTestId('review-window-a'), at: 'tl', dx: 14, dy: 44 },
+    ],
+  });
+});
+
+test('compare-alignment-3: Line up, step 2', async ({ page }) => {
+  await lineUpStarted(page);
+  await pickIn(page, 'a', 0.25, 0.3);
+  await expect(page.getByTestId('line-up-bar')).toHaveAttribute('data-step', '2');
+  await shoot(page, 'compare-alignment-3', {
+    clip: result(page),
+    pad: 0,
+    callouts: [
+      { n: 1, target: page.getByTestId('align-point-a-1'), at: 'r', dx: 18 },
+      { n: 2, target: page.getByTestId('review-window-b'), at: 'tl', dx: 14, dy: 44 },
+    ],
+  });
+});
+
+test('compare-alignment-4: Line up, step 3', async ({ page }) => {
+  await lineUpStarted(page);
+  for (const [fx, fy] of [
+    [0.25, 0.3],
+    [0.75, 0.7],
+  ] as const) {
+    await pickIn(page, 'a', fx, fy);
+    await pickIn(page, 'b', fx, fy);
+  }
+  await expect(page.getByTestId('line-up-bar')).toHaveAttribute('data-step', '4');
+  await overlayDrawn(page);
+  await shoot(page, 'compare-alignment-4', {
+    clip: result(page),
+    pad: 0,
+    callouts: [
+      { n: 1, target: page.getByTestId('align-point-a-2'), at: 'r', dx: 18 },
+      { n: 2, target: page.getByTestId('align-point-b-2'), at: 'r', dx: 18 },
+      { n: 3, target: page.getByTestId('review-window-overlay'), at: 'tl', dx: 14, dy: 14 },
+    ],
+  });
+});
+
+test('compare-alignment-5: Line up, step 4 with Fine-tune', async ({ page }) => {
+  await lineUpStarted(page);
+  await pickIn(page, 'a', 0.25, 0.3);
+  await pickIn(page, 'b', 0.25, 0.3);
+  await page.getByTestId('line-up-bar').getByRole('button', { name: 'Pick points' }).click();
+  await page.getByTestId('align-finetune').click();
+  await overlayDrawn(page);
   const panel = page.getByTestId('align-panel');
-  await panel.getByRole('button', { name: 'Align by points' }).click();
-  await expect(page.getByTestId('align-instruction')).toContainText('Document A');
-  await shoot(page, 'compare-alignment-1', {
-    clip: [result(page).locator('.overlay-sheets'), panel],
+  const bar = page.getByTestId('line-up-bar');
+  await shoot(page, 'compare-alignment-5', {
+    clip: [panel, bar],
     pad: 6,
     callouts: [
-      { n: 1, target: result(page).locator('.overlay-sheet').first(), at: 'tr', dx: -16, dy: 16 },
-      { n: 2, target: panel.getByRole('button', { name: 'Pick points' }), at: 'r', dx: 14 },
+      { n: 1, target: bar.getByLabel('Apply to'), at: 't', dy: -4 },
+      { n: 2, target: bar.getByRole('button', { name: 'Apply', exact: true }), at: 't', dy: -4 },
+      { n: 3, target: page.getByTestId('align-finetune'), at: 'r', dx: 14 },
     ],
   });
 });
@@ -888,12 +1052,13 @@ test('compare-review-1: the Review layout and the Close-out list', async ({ page
   await start(page);
   await compareInputs(page, 'overlay', '19', ['S-201 Framing RevA.pdf', 'S-201 Framing RevB.pdf']);
   await runCompare(page, 'overlay');
-  await result(page).getByRole('button', { name: 'Close-out list', exact: true }).click();
+  await result(page).getByRole('button', { name: 'Close-out', exact: true }).click();
   const pane = page.getByTestId('closeout-pane');
   await expect(pane).toBeVisible();
   const row = pane.locator('.closeout-row').first();
   await row.click();
-  await pane.getByRole('button', { name: 'Addressed', exact: true }).click();
+  await pane.getByRole('button', { name: 'Close Out As…', exact: true }).click();
+  await page.getByRole('menuitem', { name: 'Addressed', exact: true }).click();
   await expect(row).toHaveAttribute('data-state', 'addressed');
   await pane.locator('.closeout-row').nth(1).click();
   await page.waitForTimeout(800);
@@ -905,6 +1070,30 @@ test('compare-review-1: the Review layout and the Close-out list', async ({ page
       { n: 2, target: page.getByTestId('review-window-a'), at: 'tr', dx: -14, dy: 44 },
       { n: 3, target: page.getByTestId('review-window-b'), at: 'tr', dx: -14, dy: 44 },
       { n: 4, target: pane, at: 'l', dx: 4 },
+    ],
+  });
+});
+
+test('compare-review-2: Close Out As…, a line under each outcome', async ({ page }) => {
+  await page.setViewportSize({ width: 1600, height: 900 });
+  await start(page);
+  await compareInputs(page, 'overlay', '19', ['S-201 Framing RevA.pdf', 'S-201 Framing RevB.pdf']);
+  await runCompare(page, 'overlay');
+  await result(page).getByRole('button', { name: 'Close-out', exact: true }).click();
+  const pane = page.getByTestId('closeout-pane');
+  await expect(pane).toBeVisible();
+  await pane.locator('.closeout-row').nth(1).click();
+  await pane.getByRole('button', { name: 'Close Out As…', exact: true }).click();
+  const menu = page.getByRole('menu');
+  await expect(menu.getByRole('menuitem')).toHaveCount(3);
+  await page.waitForTimeout(800);
+  await shoot(page, 'compare-review-2', {
+    clip: [pane, menu],
+    pad: 6,
+    callouts: [
+      { n: 1, target: pane.locator('.closeout-hide-highlights'), at: 'b', dy: 12 },
+      { n: 2, target: pane.locator('.closeout-group-title').first(), at: 'r', dx: -16 },
+      { n: 3, target: menu, at: 'tr', dx: -16, dy: 16 },
     ],
   });
 });

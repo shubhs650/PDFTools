@@ -1,3 +1,4 @@
+import { readFileSync } from 'node:fs';
 import AxeBuilder from '@axe-core/playwright';
 import type { Page } from '@playwright/test';
 import { darkTheme } from './support/app.ts';
@@ -11,6 +12,12 @@ const KEY = 'pdftools.whatsNewSeen';
 const LATEST_ID = 'v1.1.0';
 const LATEST_TITLE = 'Version 1.1.0: compare revisions';
 const FIRST_TITLE = 'Version 1.0.0, the first public release';
+/** How many lines the newest release has (each PR of a release may add one). */
+const LATEST_ITEMS = (
+  JSON.parse(readFileSync('src/i18n/whatsnew.en.json', 'utf8')) as {
+    releases: { items: string[] }[];
+  }
+).releases[0]?.items.length;
 
 const backstage = (page: Page) => page.getByTestId('backstage');
 const banner = (page: Page) => page.getByTestId('whats-new-banner');
@@ -42,7 +49,7 @@ test(
     const latest = section.getByTestId('whats-new-latest');
     await expect(latest.getByRole('heading', { name: LATEST_TITLE })).toBeVisible();
     await expect(latest).toContainText(/Released \w+ \d+, \d{4}|Released \d+/);
-    await expect(latest.getByRole('listitem')).toHaveCount(5);
+    await expect(latest.getByRole('listitem')).toHaveCount(LATEST_ITEMS ?? 0);
     await expect(latest).toContainText('PDF Overlay');
 
     // 1.0.0, the first public release, is folded under the earlier versions.

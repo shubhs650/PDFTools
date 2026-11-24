@@ -454,6 +454,24 @@ export function scoreOf(r: PairingResult, a: number | null, b: number | null): n
   return r.sim[a * r.nb + b] ?? null;
 }
 
+/** A paired sheet matching below this is marked "Check" in the input window (ADR-033). */
+export const CHECK_BELOW = 0.5;
+
+/** Why a sheet of the pairing table needs a look, or null. */
+export type RowCheck = 'low' | 'added' | 'removed';
+
+/**
+ * Whether a sheet needs a look before Compare (M12-24, ADR-033): a page added
+ * in B or removed from A, or a pair matching below CHECK_BELOW. A sheet left
+ * out of the comparison, or with no score (an area comparison), is not marked.
+ */
+export function rowCheck(row: PairRow, score: number | null): RowCheck | null {
+  if (row.a === null) return 'added';
+  if (row.b === null) return 'removed';
+  if (row.excluded || score === null) return null;
+  return score < CHECK_BELOW ? 'low' : null;
+}
+
 /**
  * Candidates for the partner of a page, best first: the other side's pages by
  * similarity (at most `limit`), always including `keep` (the current partner).

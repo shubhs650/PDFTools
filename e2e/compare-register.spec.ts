@@ -2,7 +2,14 @@ import AxeBuilder from '@axe-core/playwright';
 import { readFileSync } from 'node:fs';
 import type { Download, Page } from '@playwright/test';
 import { darkTheme } from './support/app.ts';
-import { compareSide, corpusFile, dropOn, overlayOf, textOf } from './support/compare.ts';
+import {
+  compareSide,
+  corpusFile,
+  dropOn,
+  openFilters,
+  overlayOf,
+  textOf,
+} from './support/compare.ts';
 import { expect, test } from './support/fixtures.ts';
 
 // M12-21 (D-65, D-58, Q34, Q35): Compare → Export Change Register… writes
@@ -111,6 +118,7 @@ test('a preset saved from a result is picked in a new comparison’s Options and
 }) => {
   await overlayOf(page, '01');
   // The result's settings: high sensitivity and red/blue.
+  await openFilters(page);
   await page.getByTestId('diff-sensitivity').selectOption('high');
   await page.getByTestId('diff-min-size').selectOption('1');
   await page.getByRole('tab', { name: 'Compare', exact: true }).click();
@@ -141,6 +149,7 @@ test('a preset saved from a result is picked in a new comparison’s Options and
   const axe = await new AxeBuilder({ page }).include('[data-testid="compare-input"]').analyze();
   expect(axe.violations.map((v) => v.id)).toEqual([]);
   await input.getByRole('button', { name: 'Compare', exact: true }).click();
+  await openFilters(page);
   await expect(page.getByTestId('diff-sensitivity')).toHaveValue('high');
   await expect(page.getByTestId('diff-min-size')).toHaveValue('1');
 });
@@ -156,4 +165,29 @@ test('the input window’s Options pass axe in the dark theme', async ({ page })
     .include('[data-testid="compare-options"]')
     .analyze();
   expect(violations.map((v) => v.id)).toEqual([]);
+});
+
+test('New comparison carries the result’s settings into a new tab (M12-24)', async ({ page }) => {
+  await overlayOf(page, '01');
+  await openFilters(page);
+  await page.getByTestId('diff-sensitivity').selectOption('high');
+  await page.getByTestId('diff-min-size').selectOption('1');
+  await page.getByRole('button', { name: 'New comparison' }).click();
+  const input = page.getByTestId('compare-input');
+  await expect(input).toBeVisible();
+  await expect(page.getByTestId('compare-pairing')).toHaveAttribute('data-status', 'done', {
+    timeout: 30_000,
+  });
+  // Options names the earlier result's settings; they are used by Compare.
+  const toggle = page.getByTestId('compare-options-toggle');
+  await expect(toggle).toContainText('Settings of the earlier result');
+  await toggle.click();
+  await expect(page.getByTestId('compare-preset-summary')).toHaveText(
+    /Sensitivity: High · Minimum size: 1 mm · Ignore zones: 0/,
+  );
+  await expect(page.getByRole('button', { name: 'Delete preset' })).toBeDisabled();
+  await input.getByRole('button', { name: 'Compare', exact: true }).click();
+  await openFilters(page);
+  await expect(page.getByTestId('diff-sensitivity')).toHaveValue('high');
+  await expect(page.getByTestId('diff-min-size')).toHaveValue('1');
 });

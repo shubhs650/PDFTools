@@ -12,7 +12,13 @@ import type { LayerStates } from '../../../workers/shared/layerCopy';
 import { updateDiff, type DiffView, type IgnoreZone } from '../diff/diffState';
 import type { Comparison } from '../model';
 import type { CompareSession } from '../engine/session';
-import { DEFAULT_VIEW, updateView, type OverlayView, type Sheet } from '../overlay/overlayState';
+import {
+  DEFAULT_VIEW,
+  setAlignChecked,
+  updateView,
+  type OverlayView,
+  type Sheet,
+} from '../overlay/overlayState';
 import { restorePairing } from '../pairingFlow';
 import { DEFAULT_TEXT_VIEW, updateTextView, type TextView } from '../text/textFlow';
 import type { OverlayOptions, TextOptions } from './data';
@@ -67,6 +73,8 @@ export interface OverlayRestore {
   rows: PairRow[] | null;
   /** Placements set by hand, by sheet index in the file (pairs only). */
   manual: Map<number, Affine>;
+  /** Sheets whose uncertain alignment the user accepted ("Checked by you"), by sheet index. */
+  checked: Set<number>;
 }
 
 /** What a PDF overlay's data restores (pure). */
@@ -96,11 +104,13 @@ export function overlayRestore(c: Comparison, data: ComparisonData): OverlayRest
   const rows =
     data.pairing?.map((r) => ({ a: r.a, b: r.b, excluded: r.excluded === true })) ?? null;
   const manual = new Map<number, Affine>();
+  const checked = new Set<number>();
   data.sheets?.forEach((s, i) => {
     if (s.status === 'manual' && Array.isArray(s.aToB) && s.aToB.length === 6)
       manual.set(i, [...s.aToB] as unknown as Affine);
+    else if (s.checked === true) checked.add(i);
   });
-  return { view, diff, rows, manual };
+  return { view, diff, rows, manual, checked };
 }
 
 /** What a text comparison's data restores (pure). */
@@ -120,8 +130,8 @@ export function textRestore(data: ComparisonData): Partial<TextView> {
   };
 }
 
-/** Placements set by hand still to apply once the comparison's session starts. */
-const pendingManual = new Map<string, Map<number, Affine>>();
+/** Placements set by hand, and sheets checked by the user, still to apply once the session starts. */
+const pendingManual = new Map<string, { manual: Map<number, Affine>; checked: Set<number> }>();
 
 /** Sets the stores of a comparison about to open from a comparison file. */
 export function restoreComparison(c: Comparison, data: ComparisonData): void {
@@ -134,23 +144,30 @@ export function restoreComparison(c: Comparison, data: ComparisonData): void {
   updateView(c.id, (cur) => ({ ...cur, ...r.view }));
   updateDiff(c.id, (cur) => ({ ...cur, ...r.diff }));
   if (r.rows && !c.area) restorePairing(c.id, r.rows);
-  if (r.manual.size) pendingManual.set(c.id, r.manual);
+  if (r.manual.size || r.checked.size)
+    pendingManual.set(c.id, { manual: r.manual, checked: r.checked });
 }
 
 /**
  * Once the comparison's session starts on the restored pairing: the sheets
- * placed by hand get their placement back (the result's start calls this).
+ * placed by hand get their placement back, and the sheets the user checked
+ * are "Checked by you" again (the result's start calls this).
  */
 export function applyRestoredPlaces(
   id: string,
   session: CompareSession,
   sheets: readonly Sheet[],
 ): void {
-  const manual = pendingManual.get(id);
-  if (!manual) return;
+  const pending = pendingManual.get(id);
+  if (!pending) return;
   pendingManual.delete(id);
-  for (const [i, place] of manual) {
+  for (const [i, place] of pending.manual) {
     const pair = sheets[i]?.pair;
     if (pair !== null && pair !== undefined) session.setManual(pair, place);
   }
+  const pairs = [...pending.checked].flatMap((i) => {
+    const pair = sheets[i]?.pair;
+    return pair === null || pair === undefined ? [] : [pair];
+  });
+  if (pairs.length) updateView(id, (v) => pairs.reduce((w, p) => setAlignChecked(w, p), v));
 }

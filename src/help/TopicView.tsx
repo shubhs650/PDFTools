@@ -3,8 +3,9 @@
 // native modal <dialog> (focus trapped, Esc closes).
 import { Dismiss20Regular } from '@fluentui/react-icons/svg/dismiss';
 import { Lightbulb20Regular } from '@fluentui/react-icons/svg/lightbulb';
-import { useRef, type ReactNode } from 'react';
+import { useRef, useState, type ReactNode } from 'react';
 import { ShortcutTable } from '../app/keys/ShortcutTable';
+import { replayTips } from '../features/compare/tips/tipsKey';
 import { parseInline, plain, shotUrl, type Block, type HelpText, type Vars } from './content';
 import shots from './shots.json';
 import { chapterOf, type TopicId } from './topics';
@@ -159,7 +160,36 @@ function BlockView({ block, text, vars }: { block: Block; text: HelpText; vars: 
         closeLabel={plain(text.ui.close, vars)}
       />
     );
+  if ('replayTips' in block)
+    return (
+      <ReplayTips label={plain(block.replayTips, vars)} done={plain(text.ui.tipsReplayed, vars)} />
+    );
   return <ShortcutTable testId={SHORTCUTS_TEST_ID} />;
+}
+
+/**
+ * "Show the Compare tips again" (M12-26): forgets that the tips were seen; a
+ * comparison on screen in the app shows them at once, else the next one does.
+ */
+function ReplayTips({ label, done }: { label: string; done: string }) {
+  const [replayed, setReplayed] = useState(false);
+  return (
+    <p className="help-replay">
+      <button
+        type="button"
+        className="help-button"
+        data-testid="help-replay-tips"
+        onClick={() => {
+          replayTips();
+          setReplayed(true);
+        }}
+      >
+        <Lightbulb20Regular aria-hidden="true" />
+        {label}
+      </button>{' '}
+      <span role="status">{replayed ? done : ''}</span>
+    </p>
+  );
 }
 
 export function TopicView({ id, text, vars }: { id: TopicId; text: HelpText; vars: Vars }) {

@@ -2,6 +2,9 @@
 // and selected comment per comparison, and the check highlight's colour (Q16:
 // green, changed through the standard swatch picker). Held while the app
 // runs; presets (M12-21) and the comparison file (M12-20) keep them later.
+// Hide highlights (ADR-033) is one choice for every comparison, kept on this
+// device (localStorage; listed on the Privacy page, removed by Clear all local
+// data).
 import { createStore, useStore } from 'zustand';
 import { DEFAULT_CHECK_COLOUR, type CloseOutFilter } from './closeOutModel';
 
@@ -16,13 +19,47 @@ export const DEFAULT_CLOSE_OUT_VIEW: CloseOutView = { open: false, filter: 'all'
 
 interface CloseOutState {
   colour: string;
+  /** Hide highlight-type comments in the list (on until changed, then remembered). */
+  hideHighlights: boolean;
   byId: Record<string, CloseOutView>;
+}
+
+/** localStorage key (storage names keep "pdftools", D-41). */
+export const HIDE_HIGHLIGHTS_STORAGE_KEY = 'pdftools.closeOutHideHighlights';
+
+function readHideHighlights(): boolean {
+  try {
+    return localStorage.getItem(HIDE_HIGHLIGHTS_STORAGE_KEY) !== 'false';
+  } catch {
+    return true;
+  }
 }
 
 export const closeOutStore = createStore<CloseOutState>()(() => ({
   colour: DEFAULT_CHECK_COLOUR,
+  hideHighlights: readHideHighlights(),
   byId: {},
 }));
+
+/** Hide highlights on or off, for every comparison, remembered on this device. */
+export function setHideHighlights(on: boolean): void {
+  closeOutStore.setState({ hideHighlights: on });
+  try {
+    localStorage.setItem(HIDE_HIGHLIGHTS_STORAGE_KEY, String(on));
+  } catch {
+    // Not kept (private window): the choice holds until the app closes.
+  }
+}
+
+/** Clear all local data. */
+export function resetHideHighlights(): void {
+  closeOutStore.setState({ hideHighlights: true });
+  try {
+    localStorage.removeItem(HIDE_HIGHLIGHTS_STORAGE_KEY);
+  } catch {
+    // nothing stored
+  }
+}
 
 export function useCloseOut<T>(fn: (s: CloseOutState) => T): T {
   return useStore(closeOutStore, fn);
