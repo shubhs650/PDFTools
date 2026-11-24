@@ -29,6 +29,7 @@ Throwaway spike code for [docs/plan/M0.md](../docs/plan/M0.md) (S1–S8) and M1-
 | S29     | [`s29-overlay/`](s29-overlay/) (M12-04)                  | [ADR-032](../docs/adr/032-m12-spike-results.md); [RESULTS.md](s29-overlay/RESULTS.md)                        | Works with workaround |
 | S30     | [`s30-text-diff/`](s30-text-diff/) (M12-05)              | [ADR-032](../docs/adr/032-m12-spike-results.md); [RESULTS.md](s30-text-diff/RESULTS.md)                      | Works (own code)      |
 | S31     | [`s31-comparison-file/`](s31-comparison-file/) (M12-06)  | [ADR-032](../docs/adr/032-m12-spike-results.md); [RESULTS.md](s31-comparison-file/RESULTS.md)                | Works                 |
+| S32     | [`s32-thin-lines/`](s32-thin-lines/) (M13-03)            | [ADR-034](../docs/adr/034-m13-final-improvements.md) Amendment 2; [RESULTS.md](s32-thin-lines/RESULTS.md)    | Works (route b)       |
 | S33     | [`s33-crs-templates/`](s33-crs-templates/) (M13-06)      | [ADR-034](../docs/adr/034-m13-final-improvements.md) Amendment 1; [RESULTS.md](s33-crs-templates/RESULTS.md) | Works with workaround |
 
 ## Shared pieces (`shared/`)

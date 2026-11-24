@@ -1,6 +1,6 @@
 # Triya PDF — Progress
 
-_Last updated: 2026-11-24 (M13-02: the Measure loupe and automatic snapping; M13-06: spike S33, CRS project templates with ExcelJS, works with workaround, ADR-034 Amendment 1; M13-01: sample comparisons in the Compare input window; M13 plan approved: final improvements for 1.1.0, tasks M13-01 … M13-09, ADR-034, ARCHITECTURE.md Rev 0.24; M12-ux plan and ADR-033 recorded (tasks M12-24 … M12-27 all merged); M12-26: alignment made easy to find and first-time tips; M12-27: review in a comparison made easier; M12-25: room to work in a comparison; M12-24: the Compare input window made clearer; M12-23: M12 acceptance, M12 complete on the agent side; M12-22: Compare help and release notes; M12-21·O4: drop a tab on a tab; M12-20: the comparison file; M12-21: change register and presets)_
+_Last updated: 2026-11-24 (M13-03: spike S32, Thin Lines route b, a view-only copy kept thin, ADR-034 Amendment 2; M13-02: the Measure loupe and automatic snapping; M13-06: spike S33, CRS project templates with ExcelJS, works with workaround, ADR-034 Amendment 1; M13-01: sample comparisons in the Compare input window; M13 plan approved: final improvements for 1.1.0, tasks M13-01 … M13-09, ADR-034, ARCHITECTURE.md Rev 0.24; M12-ux plan and ADR-033 recorded (tasks M12-24 … M12-27 all merged); M12-26: alignment made easy to find and first-time tips; M12-27: review in a comparison made easier; M12-25: room to work in a comparison; M12-24: the Compare input window made clearer; M12-23: M12 acceptance, M12 complete on the agent side; M12-22: Compare help and release notes; M12-21·O4: drop a tab on a tab; M12-20: the comparison file; M12-21: change register and presets)_
 
 **Next (approved 2026-11-24):** [docs/plan/M13.md](plan/M13.md) — final improvements before
 v1.1.0 ([ADR-034](adr/034-m13-final-improvements.md), D-67 … D-71, ARCHITECTURE.md Rev 0.24):
@@ -38,6 +38,22 @@ interop is in the M6 pack (CHECKLIST §M6 R1–R4). Rev 0 (M0–M4) is complete 
 
 ## Done
 
+- **M13-03 — Spike S32, the Thin Lines rendering route (ADR-034 Amendment 2, D-69; plan
+  [M13](plan/M13.md) §3).** Works, **route b**: while Thin Lines is on, the Render worker draws
+  page tiles from a second, view-only copy of the document whose stroked paths (into form
+  XObjects at any depth) have width 0, which PDFium draws 1 device pixel wide at every zoom; the
+  copy reads the opened file straight from the document's buffer in the WASM heap
+  (`FPDF_LoadCustomDocument`, no second copy of the file), adds PDFium's incremental section only
+  after page-content changes, and is never edited or saved. Route a (toggling widths on the
+  document itself) is rejected: PDFium's change marks survive the restore and EmbedPDF's comment
+  edits call `FPDFPage_GenerateContent`, so Ctrl+S rewrote the page content (pair 14: 925 bytes
+  → 297 KB). Route c (Work worker) is rejected: it gives way only between pages (an A0 page at
+  150 dpi takes up to 1.6 s). Measured on overlay pairs 08, 12, 14, 16, a self-made A0 CAD sheet
+  (128,016 objects), the e2e A0 sheet and a 120 MB file: six save paths byte-identical, tiles as
+  fast as normal ones, copy in sync byte for byte. `spikes/s32-thin-lines/` (`run-node.ts`,
+  `s32.test.ts`, [RESULTS.md](../spikes/s32-thin-lines/RESULTS.md)); pictures in project files
+  `m13-03/`. Found on the way: Ctrl+S on an image-heavy file is slow once its pages were drawn
+  (PDFium writes decoded image streams again; 8.4 s for a 120 MB image); reported to the owner, not fixed here.
 - **M13-02 — Measure loupe and automatic snapping (ADR-034, D-68; plan [M13](plan/M13.md) §2).**
   M12-13's alignment magnifier became one shared loupe (`src/features/view/loupe/`: `Loupe.tsx`,
   pure geometry in `loupeModel.ts`): the Render worker draws the region (one request in flight, at
