@@ -91,3 +91,28 @@ test('changed after signing (a later revision), and our own Ctrl+S keeps it inta
   await expect(items(page).first()).toContainText('Revision 1 of 3', { timeout: 15_000 });
   await expect(items(page).first()).toContainText('Unchanged since signing');
 });
+
+test('the signatures bar closes for that document; Show Signatures still works (owner, M13-04)', async ({
+  page,
+}) => {
+  const alice = await makeSigner('Alice Tester');
+  await page.goto('/');
+  await drop(page, [{ name: 'signed.pdf', b64: b64(await signedPdf(alice)) }]);
+  await page.locator('[data-page="0"] img.page-preview').waitFor();
+  const banner = page.getByRole('region', { name: 'Digital signatures' });
+  const close = banner.getByRole('button', { name: 'Close this message' });
+  // Reached by keyboard from Show Signatures; Enter closes it and focus goes to the page.
+  await banner.getByRole('button', { name: 'Show Signatures' }).focus();
+  await page.keyboard.press('Tab');
+  await expect(close).toBeFocused();
+  await page.keyboard.press('Enter');
+  await expect(banner).toHaveCount(0);
+  await expect(page.getByTestId('document-view')).toBeFocused();
+  // Protect → Signatures still lists it.
+  await page.getByRole('tab', { name: 'Protect' }).click();
+  await page
+    .getByRole('toolbar', { name: 'Protect commands' })
+    .getByRole('button', { name: 'Signatures' })
+    .click();
+  await expect(items(page)).toHaveCount(1, { timeout: 15_000 });
+});

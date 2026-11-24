@@ -65,6 +65,10 @@ test('open password: wrong, then right; the document opens restricted with a ban
   await expect(banner(page)).toContainText('printing');
   await expect(banner(page)).toContainText('filling in forms');
   await axeClean(page, '.permission-banner');
+  // Its × closes it for this document (M13-04); the restrictions still hold.
+  await banner(page).getByRole('button', { name: 'Close this message' }).click();
+  await expect(banner(page)).toBeHidden();
+  await expect(page.getByTestId('document-view')).toBeFocused();
 });
 
 test('Cancel on the password prompt opens nothing and shows no error', async ({ page }) => {
