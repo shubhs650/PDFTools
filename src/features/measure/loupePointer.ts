@@ -16,8 +16,27 @@ import { setPointerTap } from '../annotate/tools/drawTools';
 import { hostStore } from '../view/host';
 import { loupeSettingsStore } from './loupeSettings';
 
-/** The tools the loupe serves: the same as automatic snapping's (Measure, Calibrate, Scale Viewport). */
-export const LOUPE_TOOLS: ReadonlySet<string> = AUTO_SNAP_TOOLS;
+/**
+ * The line comment tools the loupe also serves (M13-02·O2, D-68): Line, Arrow,
+ * Polyline and Callout, whose points snap to the page's geometry. Picking one
+ * does not turn snapping on (that stays with the measuring tools, P3).
+ */
+export const LINE_COMMENT_TOOLS: ReadonlySet<string> = new Set([
+  'line',
+  'lineArrow',
+  'polyline',
+  'freeTextCallout',
+]);
+
+/**
+ * The tools the loupe serves (their pointer handlers report where the
+ * pointer is): automatic snapping's (Measure, Calibrate, Scale Viewport) and
+ * the line comments (O2).
+ */
+export const LOUPE_TOOLS: ReadonlySet<string> = new Set([
+  ...AUTO_SNAP_TOOLS,
+  ...LINE_COMMENT_TOOLS,
+]);
 
 export interface LoupePointer {
   docId: string;

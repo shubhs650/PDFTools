@@ -739,7 +739,7 @@
       "magValue": "{{value}}×",
       "autoSnap": "Turn on snapping when measuring",
       "autoSnapHint": "Distance, Perimeter, Area, Calibrate and Scale Viewport turn snapping on; it goes back to how it was when you finish, unless you switch it yourself meanwhile.",
-      "note": "The loupe shows the spot under the pointer larger while you measure. Switch it on or off on the Measure tab, in the Snap group; View › Loupe shows it with every tool. These choices are kept on this device only."
+      "note": "The loupe shows the spot under the pointer larger while you measure or draw a line, arrow, polyline or callout. Switch it on or off on the Measure tab, in the Snap group; View › Loupe shows it with every tool. These choices are kept on this device only."
     },
     "crsTemplates": {
       "title": "CRS templates",

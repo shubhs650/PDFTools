@@ -176,11 +176,22 @@ const CALLOUT_CLICK = 5;
 function calloutHandlers(h: Handlers, context: HandlerContext): Handlers {
   let phase: 'arrow' | 'knee' | 'textbox' = 'arrow';
   let down: Pt | null = null;
+  // Where the press was before snapping (a click is told from a drag by it).
+  let downRaw: Pt | null = null;
   let dragging = false;
   const onPage = (p: Pt): Pt => ({
     x: Math.min(Math.max(p.x, 0), context.pageSize.width),
     y: Math.min(Math.max(p.y, 0), context.pageSize.height),
   });
+  // The loupe follows the pointer (M13-02·O2); the arrow tip and the knee snap
+  // to the page's geometry when snapping is on, as Line and Arrow do. The box
+  // does not.
+  const placing = (): boolean => phase === 'knee' || (phase === 'arrow' && !dragging);
+  const at = (pos: Pt, evt: Evt): Pt => {
+    tap?.('freeTextCallout', context.pageIndex, pos, evt);
+    const p = onPage(pos);
+    return placing() && snapper ? onPage(snapper(context.pageIndex, p, evt)) : p;
+  };
   const isClick = (a: Pt, b: Pt): boolean =>
     Math.abs(a.x - b.x) < CALLOUT_CLICK && Math.abs(a.y - b.y) < CALLOUT_CLICK;
   const preview = (tip: Pt, end: Pt) => {
@@ -203,24 +214,29 @@ function calloutHandlers(h: Handlers, context: HandlerContext): Handlers {
   return {
     ...h,
     onPointerDown: (pos, evt, mode) => {
-      const p = onPage(pos);
-      down = p;
       dragging = false;
+      downRaw = onPage(pos);
+      const p = at(pos, evt);
+      down = p;
       h.onPointerDown?.(p, evt, mode);
     },
     onPointerMove: (pos, evt, mode) => {
-      const p = onPage(pos);
       if (phase === 'arrow' && down) {
-        if (!dragging && !isClick(down, p)) dragging = true;
-        if (dragging) preview(down, p);
+        const raw = onPage(pos);
+        tap?.('freeTextCallout', context.pageIndex, pos, evt);
+        if (!dragging && downRaw && !isClick(downRaw, raw)) dragging = true;
+        if (dragging) preview(down, raw);
         return;
       }
-      h.onPointerMove?.(p, evt, mode);
+      h.onPointerMove?.(at(pos, evt), evt, mode);
     },
     onPointerUp: (pos, evt, mode) => {
-      const p = onPage(pos);
+      const raw = onPage(pos);
       const from = down;
+      // A click places the (snapped) point it pressed: the plugin takes the release.
+      const p = placing() && from && downRaw && isClick(downRaw, raw) ? from : at(pos, evt);
       down = null;
+      downRaw = null;
       if (phase === 'arrow' && from && dragging) {
         dragging = false;
         // The plugin's three clicks: the tip (already pressed), the knee, the box.
@@ -243,6 +259,7 @@ function calloutHandlers(h: Handlers, context: HandlerContext): Handlers {
     onPointerCancel: (pos, evt, mode) => {
       phase = 'arrow';
       down = null;
+      downRaw = null;
       dragging = false;
       h.onPointerCancel?.(pos, evt, mode);
     },
