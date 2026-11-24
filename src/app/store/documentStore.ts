@@ -14,7 +14,8 @@ export type ZoomSetting = number | 'fitPage' | 'fitWidth' | 'fitVisible';
  * Where a document came from (M11-03, D-50): shown on the tab's hover card instead of a
  * folder path, which a web app never learns. 'saved': Save As or Save Optimized wrote it
  * to a file the user picked; 'downloaded': a new file that went to the browser's
- * downloads (no file handle); 'created': built in the app and not saved yet.
+ * downloads (no file handle); 'created': built in the app and not saved yet; 'sample': a
+ * sample comparison file that ships with the app (M13-01, D-67; no file handle).
  */
 export type DocumentSource =
   | 'picked'
@@ -25,7 +26,8 @@ export type DocumentSource =
   | 'attachment'
   | 'created'
   | 'saved'
-  | 'downloaded';
+  | 'downloaded'
+  | 'sample';
 
 export interface DocumentMeta {
   id: string;

@@ -2,7 +2,7 @@
 // worker caches at install (the core: shell, UI and its Inter font, Render worker, PDFium WASM,
 // Latin/Arabic/Hebrew fonts) and what it caches in the background after the
 // first render (Work and Snap workers, CJK fonts, ExcelJS, PDF Oxide, the Word
-// builder, the OCR worker with its WASM and data) and the third-party notices with About's license list (File → About). Shared by the service worker and its unit test.
+// builder, the OCR worker with its WASM and data) and the third-party notices with About's license list (File → About), and the sample comparisons (M13-01). Shared by the service worker and its unit test.
 
 export interface PrecacheEntry {
   url: string;
@@ -43,6 +43,8 @@ const BACKGROUND = [
   /(^|\/)assets\/licenseData-[\w-]+\.js$/,
   // The Help window (M9, ADR-026 D-46): its page, script, style and screenshots.
   HELP_FILE,
+  // Sample comparisons (M13-01, D-67): only for "Try a sample" in Compare's input window.
+  /(^|\/)samples\/[\w-]+\.pdf$/,
 ];
 
 /**
@@ -73,6 +75,8 @@ export const PRECACHE_EXTENSIONS = [
   'txt',
   // The OCR language data (M5), inflated by the OCR worker itself.
   'gz',
+  // The sample comparisons (M13-01, D-67), the only PDF files the app ships.
+  'pdf',
 ] as const;
 
 export function splitPrecache(entries: readonly PrecacheEntry[]): {

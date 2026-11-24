@@ -5,11 +5,18 @@
 // tab, no comparison) is closed, with the unsaved-changes prompt.
 import { createStore, useStore } from 'zustand';
 import { documentStore } from '../../app/store/documentStore';
+import { recordError } from '../../app/diagnostics';
 import { pickPdfFiles, type OpenedFile } from '../../storage/fileAccess';
 import type { DocumentSource } from '../../app/store/documentStore';
 import { openFiles, releaseDocuments } from '../open/openDocument';
 import { pairingStore, restorePairing } from './pairingFlow';
 import { carrySettings } from './presets/presetStore';
+import {
+  samplePath,
+  type PlacedSample,
+  type Sample,
+  type SampleSide,
+} from '../../model/compare/samples';
 import {
   addFiles,
   documentsOf,
@@ -24,9 +31,17 @@ import {
 interface CompareUiState {
   /** Files being opened into a side, by `<comparison id>:<side>`. */
   opening: Record<string, number>;
+  /** The sample each comparison was filled with (M13-01), by comparison id. */
+  samples: Record<string, PlacedSample>;
+  /** Comparisons whose last sample could not be opened (M13-01). */
+  sampleFailed: Record<string, true>;
 }
 
-export const compareUiStore = createStore<CompareUiState>()(() => ({ opening: {} }));
+export const compareUiStore = createStore<CompareUiState>()(() => ({
+  opening: {},
+  samples: {},
+  sampleFailed: {},
+}));
 
 export function useCompareUi<T>(selector: (s: CompareUiState) => T): T {
   return useStore(compareUiStore, selector);
@@ -136,4 +151,60 @@ export function addOpenDocument(id: string, side: SideId, docId: string): void {
 export async function pickFilesFor(id: string, side: SideId): Promise<void> {
   const files = await pickPdfFiles(window);
   await addFilesTo(id, side, files, 'picked');
+}
+
+/** What a sample's file is called in the app (translated by the caller). */
+export type SampleFileName = (sample: Sample, side: SampleSide) => string;
+
+const without = <T>(rec: Record<string, T>, key: string): Record<string, T> =>
+  Object.fromEntries(Object.entries(rec).filter(([k]) => k !== key));
+
+/**
+ * Try a sample (M13-01, D-67): fetches the sample's two files from our own
+ * origin (the service worker has them once the background precache ran, so
+ * this works offline), opens them without tabs and puts them on the sides in
+ * place of what was there. They have no file handle: Save review saves them
+ * with Save As. Resolves false when a file could not be opened.
+ */
+export async function loadSample(
+  id: string,
+  sample: Sample,
+  fileName: SampleFileName,
+): Promise<boolean> {
+  if (!documentStore.getState().comparisons[id]) return false;
+  compareUiStore.setState((s) => ({ sampleFailed: without(s.sampleFailed, id) }));
+  const sides = ['a', 'b'] as const;
+  for (const side of sides) countOpening(id, side, 1);
+  let ids: (string | undefined)[] = [];
+  try {
+    const files = await Promise.all(
+      sides.map(async (side) => {
+        const res = await fetch(`${import.meta.env.BASE_URL}${samplePath(sample, side)}`);
+        if (!res.ok) throw new Error(`sample ${String(res.status)}`);
+        const blob = await res.blob();
+        return { file: new File([blob], fileName(sample, side), { type: 'application/pdf' }) };
+      }),
+    );
+    ids = await openFiles(files, 'sample', { tab: false });
+  } catch (err) {
+    recordError('compare.sample', err);
+  } finally {
+    for (const side of sides) countOpening(id, side, -1);
+  }
+  const [a, b] = ids;
+  if (!documentStore.getState().comparisons[id] || !a || !b) {
+    releaseDocuments(ids.filter((d): d is string => d !== undefined));
+    if (documentStore.getState().comparisons[id])
+      compareUiStore.setState((s) => ({ sampleFailed: { ...s.sampleFailed, [id]: true } }));
+    return false;
+  }
+  updateInputs(id, (cur) => ({
+    ...cur,
+    a: [{ docId: a, range: '' }],
+    b: [{ docId: b, range: '' }],
+  }));
+  compareUiStore.setState((s) => ({
+    samples: { ...s.samples, [id]: { sample: sample.id, a, b } },
+  }));
+  return true;
 }

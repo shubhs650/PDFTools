@@ -18,6 +18,7 @@ const SOURCE: Readonly<Record<DocumentSource, MessageKey>> = {
   created: msg('tabCard.source.created'),
   saved: msg('tabCard.source.saved'),
   downloaded: msg('tabCard.source.downloaded'),
+  sample: msg('tabCard.source.sample'),
 };
 
 export type TabStatus = 'unsaved' | 'protected' | 'restricted' | 'signed';

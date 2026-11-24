@@ -47,6 +47,7 @@ export type ModuleId =
   | 'harfbuzz'
   | 'uiFont'
   | 'help'
+  | 'samples'
   | 'shell';
 
 export const MODULES: readonly { id: ModuleId; label: string; test: RegExp }[] = [
@@ -92,6 +93,8 @@ export const MODULES: readonly { id: ModuleId; label: string; test: RegExp }[] =
     label: 'Help window (page and screenshots)',
     test: /^(help\.html|assets\/help-[\w-]+\.(js|css)|help-img\/.*)$/,
   },
+  // M13-01 (D-67): the sample comparisons (four corpus pairs), background.
+  { id: 'samples', label: 'Sample comparisons (PDF)', test: /^samples\/[\w-]+\.pdf$/ },
   { id: 'app', label: 'App JS and CSS', test: /^assets\/[^/]+\.(js|css)$/ },
   { id: 'shell', label: 'Shell (HTML, manifest, icons, notices)', test: /.*/ },
 ];
