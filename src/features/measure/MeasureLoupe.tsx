@@ -5,12 +5,12 @@ import { useDocuments } from '../../app/store/documentStore';
 import { msg, type MessageKey } from '../../i18n';
 import { displayedToLaid, laidToDisplayed } from '../../model/compare/align/manual';
 import type { SnapKind } from '../../model/snapIndex';
-import { hostStore, renderEngine } from '../view/host';
+import { renderEngine } from '../view/host';
 import { Loupe, type LoupeJob } from '../view/loupe/Loupe';
-import { LOUPE_SIDES, type LoupeRegion } from '../view/loupe/loupeModel';
+import { LOUPE_SIDES, loupeShown, type LoupeRegion } from '../view/loupe/loupeModel';
 import { useThinLines } from '../view/thinLines';
 import { useLoupeSettings } from './loupeSettings';
-import { LOUPE_TOOLS, useLoupePointer } from './loupePointer';
+import { LOUPE_TOOLS, pageFrame, useLoupePointer } from './loupePointer';
 import { useSnapping } from './snapping';
 
 /** For the tests: the loupe's own element. */
@@ -28,21 +28,6 @@ const KIND_LABEL: Record<SnapKind, MessageKey> = {
   nearest: msg('snap.kind.nearest'),
 };
 
-/** The page as the view lays it out: size (points, unturned), turns, zoom, crop origin. */
-function pageFrame(docId: string, page: number) {
-  const d = hostStore.getState().registry?.getStore().getState().core.documents[docId];
-  const p = d?.document?.pages[page];
-  if (!d || !p) return null;
-  return {
-    width: p.size.width,
-    height: p.size.height,
-    rotation: (p.rotation + d.rotation) % 4,
-    zoom: d.scale,
-    originX: p.boxes?.crop.left ?? 0,
-    originY: p.boxes?.crop.bottom ?? 0,
-  };
-}
-
 /**
  * The Measure loupe (M13-02, D-68, ADR-034): with Distance, Perimeter, Area,
  * Calibrate or drawing a Scale Viewport, the spot under the pointer larger
@@ -51,7 +36,7 @@ function pageFrame(docId: string, page: number) {
  * the lens. The Render worker draws it (the `loupe` request, as a snapshot
  * of the view: content, comments, form fields, the view's turn). Visual
  * only: the snapped point is what the tool uses, and the values are the
- * comments' text.
+ * comments' text. View → Loupe (M13-02·O1) shows it in every tool.
  */
 export function MeasureLoupe() {
   const { t } = useTranslation();
@@ -66,7 +51,9 @@ export function MeasureLoupe() {
       : null,
   );
   const frame =
-    settings.on && pointer && LOUPE_TOOLS.has(tool) ? pageFrame(pointer.docId, pointer.page) : null;
+    pointer && loupeShown(settings, tool, LOUPE_TOOLS)
+      ? pageFrame(pointer.docId, pointer.page)
+      : null;
   const page = pointer?.page ?? 0;
   const thin = useThinLines();
   const draw = useCallback(
