@@ -29,6 +29,26 @@
   --color-page-shine: rgb(255 255 255 / 0.9);
   --color-form-field: #e3ecfa; /* fillable form fields over the page (M2-14) */
   --color-form-text: #000000;
+  /* The CRS template set-up's sheet preview (M13-08): paper, ink, gridlines and headings
+     as a spreadsheet draws them, and the set-up's marks over them; the same in every
+     theme, like a page. */
+  --color-sheet-paper: #ffffff;
+  --color-sheet-ink: #000000;
+  --color-sheet-grid: #e2e4e8;
+  --color-sheet-head: #eef0f3;
+  --color-sheet-head-line: #c8ccd2;
+  --color-sheet-head-text: #334155;
+  --color-sheet-muted: #475569;
+  --color-sheet-picture: #f1f5f9;
+  --color-sheet-mark: #2563eb;
+  --color-sheet-mark-strong: #1d4ed8;
+  --color-sheet-mark-soft: #dbeafe;
+  --color-sheet-mark-medium: #bfdbfe;
+  --color-sheet-start: rgb(37 99 235 / 0.3);
+  --color-sheet-predrawn: rgb(37 99 235 / 0.1);
+  --color-sheet-focus-halo: rgb(37 99 235 / 0.35);
+  --color-sheet-detail: #9a3412;
+  --color-sheet-chip-text: #ffffff;
   /* A sticky note's window (M7-06): paper and ink over the white page, as the note itself. */
   --color-note-paper: #ffffff;
   --color-note-text: #1f1f1f;
@@ -279,6 +299,24 @@
   --color-page-shine: rgb(255 255 255 / 0.9);
   --color-form-field: #e3ecfa; /* on the white page in every theme */
   --color-form-text: #000000;
+  /* The CRS sheet preview (M13-08): paper in every theme. */
+  --color-sheet-paper: #ffffff;
+  --color-sheet-ink: #000000;
+  --color-sheet-grid: #e2e4e8;
+  --color-sheet-head: #eef0f3;
+  --color-sheet-head-line: #c8ccd2;
+  --color-sheet-head-text: #334155;
+  --color-sheet-muted: #475569;
+  --color-sheet-picture: #f1f5f9;
+  --color-sheet-mark: #2563eb;
+  --color-sheet-mark-strong: #1d4ed8;
+  --color-sheet-mark-soft: #dbeafe;
+  --color-sheet-mark-medium: #bfdbfe;
+  --color-sheet-start: rgb(37 99 235 / 0.3);
+  --color-sheet-predrawn: rgb(37 99 235 / 0.1);
+  --color-sheet-focus-halo: rgb(37 99 235 / 0.35);
+  --color-sheet-detail: #9a3412;
+  --color-sheet-chip-text: #ffffff;
   --color-note-paper: #ffffff; /* on the white page in every theme */
   --color-note-text: #1f1f1f;
   --color-note-ink-dark: #1f1f1f;
@@ -353,6 +391,23 @@
     --color-page-shine: rgb(255 255 255 / 0.9);
     --color-form-field: #e3ecfa;
     --color-form-text: #000000;
+    --color-sheet-paper: #ffffff;
+    --color-sheet-ink: #000000;
+    --color-sheet-grid: #e2e4e8;
+    --color-sheet-head: #eef0f3;
+    --color-sheet-head-line: #c8ccd2;
+    --color-sheet-head-text: #334155;
+    --color-sheet-muted: #475569;
+    --color-sheet-picture: #f1f5f9;
+    --color-sheet-mark: #2563eb;
+    --color-sheet-mark-strong: #1d4ed8;
+    --color-sheet-mark-soft: #dbeafe;
+    --color-sheet-mark-medium: #bfdbfe;
+    --color-sheet-start: rgb(37 99 235 / 0.3);
+    --color-sheet-predrawn: rgb(37 99 235 / 0.1);
+    --color-sheet-focus-halo: rgb(37 99 235 / 0.35);
+    --color-sheet-detail: #9a3412;
+    --color-sheet-chip-text: #ffffff;
     --color-note-paper: #ffffff;
     --color-note-text: #1f1f1f;
     --color-note-ink-dark: #1f1f1f;
@@ -534,6 +589,23 @@
     --color-page-shine: transparent;
     --color-form-field: Field;
     --color-form-text: FieldText;
+    --color-sheet-paper: Canvas;
+    --color-sheet-ink: CanvasText;
+    --color-sheet-grid: GrayText;
+    --color-sheet-head: Canvas;
+    --color-sheet-head-line: CanvasText;
+    --color-sheet-head-text: CanvasText;
+    --color-sheet-muted: CanvasText;
+    --color-sheet-picture: Canvas;
+    --color-sheet-mark: Highlight;
+    --color-sheet-mark-strong: Highlight;
+    --color-sheet-mark-soft: Canvas;
+    --color-sheet-mark-medium: Canvas;
+    --color-sheet-start: transparent;
+    --color-sheet-predrawn: transparent;
+    --color-sheet-focus-halo: transparent;
+    --color-sheet-detail: Highlight;
+    --color-sheet-chip-text: HighlightText;
     --color-note-paper: Canvas;
     --color-note-text: CanvasText;
     --color-note-ink-dark: CanvasText;

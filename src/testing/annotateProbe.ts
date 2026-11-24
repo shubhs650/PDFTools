@@ -19,6 +19,7 @@ import { diagnostics } from '../app/diagnostics';
 import { ensurePage, rtts, snapStore } from '../features/measure/snapping';
 import { loupeStats } from '../features/view/loupe/loupeModel';
 import { lastCrs } from '../features/crs/crsExport';
+import { lastTemplateCrs } from '../features/crs/templates/templateExportFlow';
 import { lastAnnotationExport } from '../features/annotate/export/annotationExport';
 import { placeDynamicStamp } from '../features/stamps/stampTools';
 import { MEASURE_INTENT, type MeasureKind } from '../model/measurement';
@@ -162,6 +163,11 @@ export function registerAnnotateProbe(hook: TestHook): void {
       let bin = '';
       for (const b of f.bytes) bin += String.fromCharCode(b);
       return { name: f.name, b64: btoa(bin) };
+    },
+    /** The last CRS file made from a project template by the dialog (M13-08): name, sheets, base64. */
+    lastTemplateCrs: () => {
+      const f = lastTemplateCrs;
+      return f ? { name: f.name, sheets: f.sheets, b64: toBase64(f.bytes) } : null;
     },
     /**
      * M13-07: Export CRS into a project template through the Work worker; the

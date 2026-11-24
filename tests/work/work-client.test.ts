@@ -89,6 +89,9 @@ function fakeSpawn(world: FakeWorld) {
       crsTemplateInspect: () => {
         throw new Error('not used');
       },
+      crsTemplatePreview: () => {
+        throw new Error('not used');
+      },
       crsTemplateFileWrite: () => {
         throw new Error('not used');
       },

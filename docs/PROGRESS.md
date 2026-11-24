@@ -1,6 +1,6 @@
 # Triya PDF — Progress
 
-_Last updated: 2026-11-24 (M13-01·O5: "Try comparing two revisions" on the start screen; M13-05: Thin Lines, every page line 1 device pixel wide on screen only, from a view-only copy in the Render worker; M13-07: the CRS project template engine and the CRS review corpus; M13-04: labelled status bar toggles, Previous / Next View in the status bar, one view history for the window, Distance with open arrows; M13-03: spike S32, Thin Lines route b, a view-only copy kept thin, ADR-034 Amendment 2; M13-02: the Measure loupe and automatic snapping; M13-06: spike S33, CRS project templates with ExcelJS, works with workaround, ADR-034 Amendment 1; M13-01: sample comparisons in the Compare input window; M13 plan approved: final improvements for 1.1.0, tasks M13-01 … M13-09, ADR-034, ARCHITECTURE.md Rev 0.24; M12-ux plan and ADR-033 recorded (tasks M12-24 … M12-27 all merged); M12-26: alignment made easy to find and first-time tips; M12-27: review in a comparison made easier; M12-25: room to work in a comparison; M12-24: the Compare input window made clearer; M12-23: M12 acceptance, M12 complete on the agent side; M12-22: Compare help and release notes; M12-21·O4: drop a tab on a tab; M12-20: the comparison file; M12-21: change register and presets)_
+_Last updated: 2026-11-24 (M13-08: the CRS template screens, the export dialog with project templates, four guided set-up steps beside a live sheet preview, the template manager; M13-01·O5: "Try comparing two revisions" on the start screen; M13-05: Thin Lines, every page line 1 device pixel wide on screen only, from a view-only copy in the Render worker; M13-07: the CRS project template engine and the CRS review corpus; M13-04: labelled status bar toggles, Previous / Next View in the status bar, one view history for the window, Distance with open arrows; M13-03: spike S32, Thin Lines route b, a view-only copy kept thin, ADR-034 Amendment 2; M13-02: the Measure loupe and automatic snapping; M13-06: spike S33, CRS project templates with ExcelJS, works with workaround, ADR-034 Amendment 1; M13-01: sample comparisons in the Compare input window; M13 plan approved: final improvements for 1.1.0, tasks M13-01 … M13-09, ADR-034, ARCHITECTURE.md Rev 0.24; M12-ux plan and ADR-033 recorded (tasks M12-24 … M12-27 all merged); M12-26: alignment made easy to find and first-time tips; M12-27: review in a comparison made easier; M12-25: room to work in a comparison; M12-24: the Compare input window made clearer; M12-23: M12 acceptance, M12 complete on the agent side; M12-22: Compare help and release notes; M12-21·O4: drop a tab on a tab; M12-20: the comparison file; M12-21: change register and presets)_
 
 **Next (approved 2026-11-24):** [docs/plan/M13.md](plan/M13.md) — final improvements before
 v1.1.0 ([ADR-034](adr/034-m13-final-improvements.md), D-67 … D-71, ARCHITECTURE.md Rev 0.24):
@@ -37,6 +37,46 @@ answers Q1–Q7; ARCHITECTURE.md Rev 0.12 after [ADR-024](adr/024-freetext-text-
 interop is in the M6 pack (CHECKLIST §M6 R1–R4). Rev 0 (M0–M4) is complete on the agent side.
 
 ## Done
+
+- **M13-08 — CRS template screens (D-71; ADR-034; plan [M13](plan/M13.md) §6, the owner's
+  answers C1 – C15).** Comment → Export CRS: a **Template** drop-down (Standard CRS and the
+  project templates, the last used selected; a template just set up is chosen) and
+  **Templates…** (the manager); with a project template, the open documents to include (C15,
+  each with its own number, revision and title, prefilled from last time, the stamps or the
+  template's file-name rule, C10), shared reviewer and date, "The comments the template takes"
+  or "Only those the Comments pane shows", Ignore highlights (from the template), Excel or CSV,
+  snapshots only when the template has a Snapshot column; the save target first, then the Work
+  worker with progress and Cancel (`templates/templateExportFlow.ts`, `countTemplateRows`
+  checks for comments before asking). Import → **four guided steps** (`TemplateSetup.tsx`):
+  1 name, sheet, start row (required), pre-drawn rows detected with "Set the last pre-drawn row
+  myself"; 2 detail cells and the file-name rule; 3 columns (tick, number or letter shown as
+  "3 (C)", Fixed text, two fields on one column flagged); 4 comment types, Ignore highlights,
+  status words, snapshot height limit, one sheet per page. Beside them the **live sheet
+  preview** (`SheetPreviewGrid.tsx`): the sheet's first rows (60, more when the start row is
+  further down) as Excel draws them — merged cells, borders, fills, fonts, column widths, row
+  heights, where pictures sit, ƒx for formulas — parsed in the Work worker (new method
+  `crsTemplatePreview`, `workers/work/crsTemplate/preview.ts`, the loaded workbook kept for
+  its key in `previewCache.ts`), on white paper in every theme (`--color-sheet-*` tokens). A
+  click on a cell places what is being set (the start row, a detail cell, a field's column)
+  and moves on to the next one not placed; arrows, Home/End, Ctrl+Home/End, PageUp/Down move
+  through the cells (a merge is one stop) and Enter or Space places (rule 12). The preview
+  marks the start row, the pre-drawn rows, where rows are added, every field on its column and
+  every detail cell. A fresh import starts with **suggestions** (`model/crs/guess.ts`, pure):
+  the header row (the row with most bold, filled or ruled headings) and the start row under it,
+  fields from the header's words (left to right, each once; Response and Days open stay free),
+  detail cells right of their labels (not where the form computes the value itself); a note
+  asks the person to check them. Step rules in `model/crs/setup.ts` (place, next target, each
+  step's issues; Save jumps to the first step with an issue). Refusals at import (macro,
+  binary, old .xls or password, not a workbook, unreadable) say what to do; parts that are
+  not kept (S33) are named. **Template manager** (`TemplateManager.tsx`, from the export dialog
+  and File → Settings → CRS templates): Edit (the same steps), Rename, Duplicate, Export
+  template file, Delete (asks, Keep has the focus), Import Excel form…, Import template file….
+  Tests: `tests/crs/template-preview.test.ts` (preview read with ExcelJS, colours, cache,
+  suggestions), `tests/crs/template-setup.test.ts` (TDD for the step rules),
+  `e2e/crs-template-screens.spec.ts` (import from Export CRS with the CRS review corpus and
+  template A, suggestions checked, fields placed by click, export read back; two documents;
+  the keyboard path through every step; the manager from Settings; axe light and dark).
+  Screenshots: project files `m13-08/`.
 
 - **M13-01·O5 — Try comparing two revisions from the start screen (D-67; plan
   [M13](plan/M13.md) §1).** With no document open, the start screen's quick actions end with a

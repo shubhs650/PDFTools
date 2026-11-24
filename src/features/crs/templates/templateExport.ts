@@ -36,6 +36,37 @@ export class EmptyExportError extends Error {
   }
 }
 
+/** The rows of one open document as the template takes them, with these page labels. */
+function rowsOf(
+  docId: string,
+  tpl: CrsTemplate,
+  o: TemplateExportOptions,
+  pageLabel: (page: number) => string | null,
+): TemplateRow[] {
+  const st = annotationState(docId);
+  const all: PdfAnnotationObject[] = st ? objectsOf(st.byUid) : [];
+  const profile = profileStore.getState().profile;
+  return templateRows(all, {
+    settings: tpl,
+    filter: o.scope === 'filtered' ? viewOf(commentsStore.getState(), docId).filter : null,
+    ignoreHighlights: o.ignoreHighlights,
+    typeLabel: (a) => t(TYPE_KEYS[crsTypeId(a)]),
+    date: (x) => format.date(x),
+    discipline: (author) => (author === profile?.name ? profile.discipline : ''),
+    noAuthor: t('annotate.noAuthor'),
+    pageLabel,
+  });
+}
+
+/** How many comments the export would write (M13-08: checked before the save target is asked). */
+export function countTemplateRows(
+  tpl: CrsTemplate,
+  docIds: readonly string[],
+  o: TemplateExportOptions,
+): number {
+  return docIds.reduce((n, docId) => n + rowsOf(docId, tpl, o, () => null).length, 0);
+}
+
 /** The rows of one open document as the template takes them. */
 async function docRows(
   docId: string,
@@ -47,18 +78,7 @@ async function docRows(
   const pages = [...new Set(commentsOf(all).map((c) => c.page))];
   const list = pages.length ? await workClient().run('pageLabels', { docId, pages }).promise : [];
   const labels = new Map(pages.map((p, i) => [p, list[i] ?? null]));
-  const profile = profileStore.getState().profile;
-  const rows = templateRows(all, {
-    settings: tpl,
-    filter: o.scope === 'filtered' ? viewOf(commentsStore.getState(), docId).filter : null,
-    ignoreHighlights: o.ignoreHighlights,
-    typeLabel: (a) => t(TYPE_KEYS[crsTypeId(a)]),
-    date: (x) => format.date(x),
-    discipline: (author) => (author === profile?.name ? profile.discipline : ''),
-    noAuthor: t('annotate.noAuthor'),
-    pageLabel: (p) => labels.get(p) ?? null,
-  });
-  return { rows, labels };
+  return { rows: rowsOf(docId, tpl, o, (p) => labels.get(p) ?? null), labels };
 }
 
 /**

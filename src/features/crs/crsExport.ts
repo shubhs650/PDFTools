@@ -23,6 +23,12 @@ import { activeScheme } from '../stamps/schemes/schemeStore';
 import { stampStore } from '../stamps/stampStore';
 import { renderEngine, workClient } from '../view/host';
 import { buildCrsRows, CRS_COLUMNS, rowCells, type CrsColumn } from './crsModel';
+import {
+  loadCrsTemplates,
+  setLastCrsTemplate,
+  STANDARD_TEMPLATE,
+} from './templates/crsTemplateStore';
+import { templateUi } from './templates/templateUi';
 import { toCsv } from './csv';
 
 export interface CrsOptions {
@@ -74,10 +80,35 @@ export let lastCrs: { name: string; bytes: Uint8Array } | null = null;
 
 let job: AbortController | null = null;
 
+/** One export run: its signal, and `done()` when it has ended (M13-08 shares it). */
+export interface CrsJob {
+  signal: AbortSignal;
+  done(): void;
+}
+
+/** Starts a run the dialog's Cancel and Close abort. */
+export function setCrsJob(): CrsJob {
+  const controller = new AbortController();
+  job = controller;
+  return {
+    signal: controller.signal,
+    done: () => {
+      if (job === controller) job = null;
+    },
+  };
+}
+
+/** A run wrote its file: the dialog closes. */
+export function finishCrs(): void {
+  crsStore.setState({ docId: null, initial: null, running: null, error: null });
+}
+
 /** Opens the dialog with the document's details prefilled. */
 export async function openCrs(docId: string): Promise<void> {
   const d = documentStore.getState().docs[docId];
   if (!d) return;
+  void loadCrsTemplates();
+  templateUi.setState({ saved: null });
   const info = stampStore.getState().docInfo[docId];
   let title = '';
   try {
@@ -234,9 +265,10 @@ export async function startCrs(o: CrsOptions): Promise<void> {
     stampStore.setState((s) => ({
       docInfo: { ...s.docInfo, [docId]: { docNo: o.docNumber, rev: o.revision } },
     }));
+    void setLastCrsTemplate(STANDARD_TEMPLATE);
     if (handle) await writeToHandle(handle, bytes, controller.signal);
     else downloadBytes(bytes, fileName);
-    crsStore.setState({ docId: null, initial: null, running: null, error: null });
+    finishCrs();
   } catch (err) {
     const cancelled = controller.signal.aborted;
     if (!cancelled) recordError('crs.export', err);

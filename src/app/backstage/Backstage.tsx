@@ -12,6 +12,7 @@ import { AppearanceSection } from '../../features/settings/AppearanceSection';
 import { LocalData } from '../../features/settings/LocalData';
 import { StartupSection } from '../../features/settings/StartupSection';
 import { MeasureSection } from '../../features/settings/MeasureSection';
+import { CrsTemplatesSection } from '../../features/settings/CrsTemplatesSection';
 import { ProfileSection } from '../../features/settings/profile/ProfileSection';
 import { About } from '../about/About';
 import { Privacy } from './Privacy';
@@ -176,6 +177,7 @@ export function Backstage({ open, section: initial, onOpenChange }: BackstagePro
                   <AppearanceSection />
                   <StartupSection />
                   <MeasureSection />
+                  <CrsTemplatesSection />
                   <ProfileSection />
                   <LocalData />
                 </div>
