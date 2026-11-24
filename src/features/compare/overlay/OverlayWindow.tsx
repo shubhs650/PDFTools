@@ -18,6 +18,7 @@ import { framePage, useFrame } from './frames';
 import { useLayerContent } from './layerCopies';
 import { useVectorContent } from './vectorOverlay';
 import type { PainterStats, TileContent } from './painter';
+import { BLINK_KEY } from '../../../app/keys/windowKeys';
 import { drawnStyle, placeOf, updateView, useOverlayView, type Sheet } from './overlayState';
 
 /** Blink flips sides this often while X (or the Blink button) is held. */
@@ -179,14 +180,14 @@ export function OverlayWindow({
 
   const onKeyDown = (e: KeyboardEvent<HTMLDivElement>): void => {
     const plain = !e.ctrlKey && !e.metaKey && !e.altKey;
-    if (!plain || (e.key !== 'x' && e.key !== 'X') || isEditable(e.target as Element)) return;
+    if (!plain || e.key.toLowerCase() !== BLINK_KEY || isEditable(e.target as Element)) return;
     e.preventDefault();
     e.stopPropagation();
     // The vector page is one drawing: Blink is the screen drawing's own.
     if (!e.repeat && !view.vector) startBlink();
   };
   const onKeyUp = (e: KeyboardEvent<HTMLDivElement>): void => {
-    if (e.key === 'x' || e.key === 'X') stopBlink();
+    if (e.key.toLowerCase() === BLINK_KEY) stopBlink();
   };
 
   const label = t('compare.overlay.window', {

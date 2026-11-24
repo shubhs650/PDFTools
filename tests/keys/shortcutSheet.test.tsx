@@ -25,7 +25,8 @@ describe('keyboard sheet', () => {
       appStore.getState().setShortcutsOpen(true);
     });
     const table = screen.getByTestId('shortcut-sheet');
-    const rows = within(table).getAllByRole('row').slice(1); // the header row
+    // The keymap's rows (the window keys follow in their own section, M13-09).
+    const rows = [...table.querySelectorAll<HTMLTableRowElement>('tbody[data-part="keymap"] tr')];
     expect(rows).toHaveLength(KEYMAP.length);
     const names = rows.map((r) => within(r).getByRole('rowheader').textContent);
     for (const n of names) {

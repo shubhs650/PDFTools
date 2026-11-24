@@ -6,6 +6,7 @@ import {
   loupePlace,
   loupeRegion,
   loupeShown,
+  toggleLoupeHere,
   parseLoupeSettings,
 } from '../../src/features/view/loupe/loupeModel';
 
@@ -98,5 +99,46 @@ describe('loupeShown', () => {
     for (const tool of ['select', 'hand', 'highlight', 'measureDistance'])
       expect(loupeShown(any, tool, served)).toBe(true);
     expect(loupeShown({ ...any, on: false }, 'measureDistance', served)).toBe(true);
+  });
+});
+
+// M13-09 (D-68): the loupe's key (M) shows or hides the loupe where the person is:
+// shown → off (both switches that show it here); hidden → on with the switch that
+// serves this tool (the Measure loupe for Measure and line tools, View › Loupe otherwise).
+describe('toggleLoupeHere', () => {
+  const served = new Set(['measureDistance', 'line']);
+  it('turns the Measure loupe on in a tool it serves', () => {
+    const off = { ...DEFAULT_LOUPE, on: false };
+    expect(toggleLoupeHere(off, 'measureDistance', served)).toEqual({ on: true });
+  });
+  it('turns the Measure loupe off in a tool it serves', () => {
+    expect(toggleLoupeHere(DEFAULT_LOUPE, 'line', served)).toEqual({ on: false });
+  });
+  it('turns View › Loupe on in any other tool', () => {
+    expect(toggleLoupeHere(DEFAULT_LOUPE, 'select', served)).toEqual({ anywhere: true });
+  });
+  it('turns View › Loupe off in any other tool', () => {
+    const any = { ...DEFAULT_LOUPE, anywhere: true };
+    expect(toggleLoupeHere(any, 'hand', served)).toEqual({ anywhere: false });
+  });
+  it('hides it in a served tool even when View › Loupe shows it', () => {
+    const both = { ...DEFAULT_LOUPE, anywhere: true };
+    expect(toggleLoupeHere(both, 'measureDistance', served)).toEqual({
+      on: false,
+      anywhere: false,
+    });
+    const anyOnly = { ...DEFAULT_LOUPE, on: false, anywhere: true };
+    expect(
+      loupeShown({ ...anyOnly, ...toggleLoupeHere(anyOnly, 'line', served) }, 'line', served),
+    ).toBe(false);
+  });
+  it('always flips what the person sees', () => {
+    for (const on of [true, false])
+      for (const anywhere of [true, false])
+        for (const tool of ['measureDistance', 'select']) {
+          const s = { ...DEFAULT_LOUPE, on, anywhere };
+          const next = { ...s, ...toggleLoupeHere(s, tool, served) };
+          expect(loupeShown(next, tool, served)).toBe(!loupeShown(s, tool, served));
+        }
   });
 });

@@ -1,7 +1,15 @@
 // Keys named in Help's text, from the keymap and for this platform (UI04): the
 // text says Cmd on macOS and never drifts from KEYMAP.
 import type { TFunction } from 'i18next';
+import { formatChord } from '../app/keys/chord';
+import { KEYMAP } from '../app/keys/keymap';
 import { keyLabels, shortcutText } from '../app/keys/labels';
+
+/** A binding's first keys, the browser-reserved ones the installed app gets (D-29). */
+function firstChord(target: string, t: TFunction): string {
+  const chord = KEYMAP.find((b) => b.target === target)?.chords[0];
+  return chord ? formatChord(chord, keyLabels(t)) : '';
+}
 
 export function helpKeys(t: TFunction): Record<string, string> {
   const k = (target: string) => shortcutText(target, t);
@@ -20,6 +28,11 @@ export function helpKeys(t: TFunction): Record<string, string> {
     fitWidth: k('view.fitWidth'),
     actualSize: k('view.actualSize'),
     prevView: k('view.prevView'),
+    nextView: k('view.nextView'),
+    // Thin Lines (M13-05): the key that works everywhere, and the installed app's own.
+    thinLines: k('view.thinLines'),
+    thinLinesApp: firstChord('view.thinLines', t),
+    loupe: k('loupe.toggle'),
     fullScreen: k('view.fullScreen'),
     darkTheme: k('view.darkTheme'),
     find: k('home.find'),

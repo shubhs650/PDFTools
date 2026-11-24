@@ -19,12 +19,14 @@ import {
   type ChangeEntry,
   type MarkStyle,
 } from '../../../model/compare/textView';
+import { NEXT_DIFFERENCE_KEY, PREV_DIFFERENCE_KEYS } from '../../../app/keys/windowKeys';
 import { ColorPicker, IconButton, ToggleButton } from '../../../ui/components';
 import { badges, kindLabel } from './changeLabels';
 import { changeKey, setColour, updateTextView, useTextView, useTextViewPart } from './textFlow';
 
-const NEXT_KEYS = 'F8';
-const PREV_KEYS = 'Shift+F8';
+// F8 and Shift+F8 (on the shortcut sheet's window keys, M13-09).
+const NEXT_KEYS = NEXT_DIFFERENCE_KEY;
+const PREV_KEYS = PREV_DIFFERENCE_KEYS;
 
 /** Rows drawn above and below the ones in view. */
 const OVERSCAN = 8;

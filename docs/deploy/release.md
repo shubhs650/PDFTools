@@ -73,10 +73,10 @@ Do these once, before the first tag. Steps 1–3 are in the Cloudflare dashboard
 The workflow refuses a tag that does not match `package.json`, a commit that is not on `main`,
 and a version without release notes.
 
-**Features in preview.** The release build sets `VITE_COMPARE=off`, which leaves out every
-command marked `preview` in `src/app/commands.ts`: today the Compare ribbon tab and Compare with…
-(M12, plan question 3). The beta site, PR previews and the tests build with it on. M12-23 removes
-the switch from the workflow when comparison is accepted.
+**Features in preview.** A build with `VITE_COMPARE=off` leaves out every command marked
+`preview` in `src/app/commands.ts` (the Compare ribbon tab and Compare with…) and Help's Compare
+chapter. Release builds set it until 1.0.0; from 1.1.0 (M13-09) they no longer do, so Compare
+ships. The switch stays for a future preview feature.
 
 ## Checking a release
 

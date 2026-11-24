@@ -37,12 +37,13 @@ import {
 import { makeClouds } from './makeClouds';
 import { ChevronDown12Regular } from '@fluentui/react-icons/svg/chevron-down';
 import { ChevronRight12Regular } from '@fluentui/react-icons/svg/chevron-right';
+import { NEXT_DIFFERENCE_KEY, PREV_DIFFERENCE_KEYS } from '../../../app/keys/windowKeys';
 import { updateLayout, useLayout } from '../layout/layoutStore';
 
 /** Next difference; with Shift, the previous one (as in a text comparison: F8, Shift+F8). */
-const NEXT_KEY = 'F8';
-const NEXT_KEYS = 'F8';
-const PREV_KEYS = 'Shift+F8';
+const NEXT_KEY = NEXT_DIFFERENCE_KEY;
+const NEXT_KEYS = NEXT_DIFFERENCE_KEY;
+const PREV_KEYS = PREV_DIFFERENCE_KEYS;
 const SCOPES = ['all', 'sheet'] as const;
 const SCOPE_LABEL: Record<(typeof SCOPES)[number], MessageKey> = {
   all: msg('compare.diff.scope_all'),

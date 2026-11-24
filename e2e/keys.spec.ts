@@ -102,8 +102,15 @@ test('the shortcut sheet opens from Help and lists every binding', async ({ page
     .click();
   const dialog = page.getByRole('dialog', { name: 'Keyboard shortcuts' });
   await expect(dialog).toBeVisible();
-  const rows = dialog.getByTestId('shortcut-sheet').locator('tbody tr');
-  await expect(rows).toHaveCount(78); // + undo, redo, 11 annotation keys (M3-05), 6 text markup tools (M3-08), 9 tools and Enter (M3-09), paste and paste to original pages (M4-21), full screen (M6-01), cut and the context menu (M6-02), 12 Bookmarks pane keys (M6-11), F2 on a text comment (M7-03), Dark Theme (M7-11), F1 for Help (M9-04), New (M10-08·O4), Tell Me (M10-08·O2), Move Tab Left/Right (M11-04), Reopen Closed Tab (M11-05)
+  const rows = dialog.getByTestId('shortcut-sheet').locator('tbody[data-part="keymap"] tr');
+  await expect(rows).toHaveCount(80); // + Thin Lines (M13-05), the loupe's M (M13-09); // + undo, redo, 11 annotation keys (M3-05), 6 text markup tools (M3-08), 9 tools and Enter (M3-09), paste and paste to original pages (M4-21), full screen (M6-01), cut and the context menu (M6-02), 12 Bookmarks pane keys (M6-11), F2 on a text comment (M7-03), Dark Theme (M7-11), F1 for Help (M9-04), New (M10-08·O4), Tell Me (M10-08·O2), Move Tab Left/Right (M11-04), Reopen Closed Tab (M11-05)
+  // M13-09: the keys a pane or window reads itself, in their own section.
+  await expect(
+    dialog.getByTestId('shortcut-sheet').locator('tbody[data-part="window"] tr'),
+  ).toHaveCount(11); // a heading row and 10 keys
+  await expect(dialog.getByRole('row', { name: /^Show or Hide the Loupe/ })).toContainText('M');
+  await expect(dialog.getByRole('row', { name: /^Thin Lines/ })).toContainText('Ctrl+Alt+5');
+  await expect(dialog.getByRole('row', { name: /^Blink between Old and New/ })).toContainText('X');
   await expect(dialog.getByRole('row', { name: /^Help/ })).toContainText('F1');
   // The Bookmarks pane's own keys say where they work (M6-11).
   await expect(dialog.getByRole('row', { name: /^Rename \(Bookmarks pane\)/ })).toContainText('F2');

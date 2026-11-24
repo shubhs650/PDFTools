@@ -4,7 +4,10 @@
 // public/help-img/<id>.webp and src/help/shots.json. Not part of CI: re-run it
 // after a visible UI change. One test per screenshot, so one can be re-made
 // alone with --grep.
-import type { Page } from '@playwright/test';
+import type { Locator, Page } from '@playwright/test';
+import ExcelJS from 'exceljs';
+import { A, templateA } from '../fixtures/crsTemplates.ts';
+import { crsCorpusFile } from '../fixtures/crs-review/index.ts';
 import { OWNER_PW, qpdfEncrypt } from '../fixtures/encrypted.ts';
 import { attachmentsPdf } from '../fixtures/generate.ts';
 import { helpReportPdf } from '../fixtures/help-samples.ts';
@@ -18,6 +21,7 @@ import {
   uncertainOverlay,
 } from '../support/compare.ts';
 import { expect, test } from '../support/fixtures.ts';
+import { stubSavePicker } from '../support/savePicker.ts';
 import { shoot, type Box } from './shoot.ts';
 import {
   DRAWING,
@@ -51,6 +55,9 @@ import {
 } from './scenes.ts';
 
 test.describe.configure({ timeout: 120_000 });
+
+const CRS_SPEC = 'crs_02_pump_specification_review.pdf';
+const CRS_DRAWINGS = 'crs_01_steel_drawing_set_review.pdf';
 
 // --- Getting started ---------------------------------------------------------
 
@@ -138,15 +145,77 @@ test('zoom-and-pages-2: the status bar', async ({ page }) => {
   await open(page);
   const bar = statusBar(page);
   const box = (await bar.boundingBox()) as Box;
-  const band = { x: 560, y: box.y - 32, width: 806, height: 32 };
+  const nav = bar.getByRole('group', { name: 'Page navigation' });
+  const x = ((await nav.boundingBox()) as Box).x - 12;
+  const width = box.x + box.width - x;
+  const band = { x, y: box.y - 32, width, height: 32 };
   await shoot(page, 'zoom-and-pages-2', {
-    clip: { x: 560, y: band.y, width: 806, height: box.height + band.height },
+    clip: { x, y: band.y, width, height: box.height + band.height },
     pad: 0,
     cover: [band],
     callouts: [
-      { n: 1, target: bar.getByRole('group', { name: 'Page navigation' }), at: 't', dy: -16 },
-      { n: 2, target: bar.getByRole('group', { name: 'View mode' }), at: 't', dy: -16 },
-      { n: 3, target: bar.getByRole('group', { name: 'Zoom' }), at: 't', dy: -16 },
+      { n: 1, target: nav, at: 't', dy: -16 },
+      {
+        n: 2,
+        target: bar.getByRole('group', { name: 'Previous and next view' }),
+        at: 't',
+        dy: -16,
+      },
+      { n: 3, target: bar.getByRole('button', { name: 'Thin Lines' }), at: 't', dy: -16 },
+      { n: 4, target: bar.getByRole('button', { name: 'Enable Snapping' }), at: 't', dy: -16 },
+      { n: 5, target: bar.getByRole('group', { name: 'View mode' }), at: 't', dy: -16 },
+      { n: 6, target: bar.getByRole('group', { name: 'Zoom' }), at: 't', dy: -16 },
+    ],
+  });
+});
+
+test('thin-lines-1: a drawing with Thin Lines on', async ({ page }) => {
+  await start(page);
+  await open(page);
+  await fitPage(page);
+  const bar = statusBar(page);
+  const thin = bar.getByRole('button', { name: 'Thin Lines' });
+  await thin.click();
+  await expect(thin).toHaveAttribute('aria-pressed', 'true');
+  await expect
+    .poll(() => page.evaluate(() => localStorage.getItem('pdftools.thinLines')))
+    .toBe('1');
+  // The tiles drawn again thin.
+  await page.waitForTimeout(1500);
+  await shoot(page, 'thin-lines-1', {
+    callouts: [
+      { n: 1, target: thin, at: 't', dy: -16, outline: true },
+      { n: 2, target: page.locator('[data-page="0"] .page-content'), at: 'tl', dx: 16, dy: 16 },
+    ],
+  });
+});
+
+test('view-history-1: Previous View and Next View in the status bar', async ({ page }) => {
+  await start(page);
+  await open(page, REPORT);
+  // Two steps: a page typed in the status bar, then back once, so both buttons can act.
+  const bar = statusBar(page);
+  const box = bar.getByRole('textbox', { name: 'Page number' });
+  await box.fill('3');
+  await box.press('Enter');
+  await expect(box).toHaveValue('3');
+  const history = bar.getByRole('group', { name: 'Previous and next view' });
+  await history.getByRole('button', { name: 'Previous View' }).click();
+  await expect(history.getByRole('button', { name: 'Next View' })).toBeEnabled();
+  const nav = bar.getByRole('group', { name: 'Page navigation' });
+  const navBox = (await nav.boundingBox()) as Box;
+  const histBox = (await history.boundingBox()) as Box;
+  const barBox = (await bar.boundingBox()) as Box;
+  const x = navBox.x - 12;
+  const width = histBox.x + histBox.width + 12 - x;
+  const band = { x, y: barBox.y - 32, width, height: 32 };
+  await shoot(page, 'view-history-1', {
+    clip: { x, y: band.y, width, height: barBox.height + band.height },
+    pad: 0,
+    cover: [band],
+    callouts: [
+      { n: 1, target: nav, at: 't', dy: -16 },
+      { n: 2, target: history, at: 't', dy: -16 },
     ],
   });
 });
@@ -507,6 +576,77 @@ test('reviewing-comments-1: the Comments pane', async ({ page }) => {
   });
 });
 
+/** The CRS review corpus's specification and a project form (both self-made, rule 13) set up as a template. */
+const crsSetup = (page: Page) => dialog(page, 'Set up a CRS template');
+
+async function crsTemplateSetUp(page: Page): Promise<Locator> {
+  await page.setViewportSize({ width: 1366, height: 900 });
+  await start(page);
+  await stubSavePicker(page);
+  for (const name of [CRS_DRAWINGS, CRS_SPEC]) {
+    const before = (await cap(page, 'view', 'activeDocId')) as string | null;
+    await drop(page, [{ name, b64: Buffer.from(crsCorpusFile(name)).toString('base64') }]);
+    await expect.poll(() => cap(page, 'view', 'activeDocId')).not.toBe(before);
+  }
+  await ribbonTab(page, 'Comment').click();
+  await toolbar(page, 'Comment').getByRole('button', { name: 'Export CRS' }).click();
+  const d = dialog(page, 'Export Comment Review Sheet');
+  await expect(d).toBeVisible();
+  await d.getByRole('button', { name: 'Templates…' }).click();
+  const manager = dialog(page, 'CRS templates');
+  await manager.getByLabel('Import Excel form…').setInputFiles({
+    name: 'Project Alpha CRS.xlsx',
+    mimeType: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+    buffer: Buffer.from(await templateA(ExcelJS)),
+  });
+  // The sheet read and the suggestions made (the start row under the header).
+  const set = crsSetup(page);
+  await expect(set.getByRole('grid', { name: /^Sheet / })).toBeVisible();
+  await expect(set.getByLabel('Start row number')).toHaveValue(String(A.startRow));
+  await expect(set.getByText('Suggested from the sheet', { exact: false })).toBeVisible();
+  return d;
+}
+
+test('crs-templates-1: Export CRS with a project template and two documents', async ({ page }) => {
+  const d = await crsTemplateSetUp(page);
+  await crsSetup(page).getByRole('button', { name: 'Save template' }).click();
+  await expect(crsSetup(page)).toBeHidden();
+  const manager = dialog(page, 'CRS templates');
+  await manager.locator('.ui-dialog-footer').getByRole('button', { name: 'Close' }).click();
+  await d.getByLabel(CRS_DRAWINGS).check();
+  await d
+    .getByRole('group', { name: `Details of ${CRS_SPEC}` })
+    .getByLabel('Document number')
+    .fill('PS-1200-ME-SPC-0007');
+  await d
+    .getByRole('group', { name: `Details of ${CRS_SPEC}` })
+    .getByLabel('Revision')
+    .fill('B');
+  await page.evaluate(() => {
+    (document.activeElement as HTMLElement | null)?.blur();
+  });
+  await shoot(page, 'crs-templates-1', {
+    clip: d,
+    pad: 8,
+    callouts: [
+      { n: 1, target: d.getByLabel('Template', { exact: true }), at: 'l', dx: -14 },
+      { n: 2, target: d.getByRole('group', { name: `Details of ${CRS_SPEC}` }), at: 'tl', dx: -14 },
+      { n: 3, target: d.getByText('The comments the template takes'), at: 'l', dx: -30 },
+    ],
+  });
+});
+
+test('crs-templates-2: setting up a template beside the sheet preview', async ({ page }) => {
+  await crsTemplateSetUp(page);
+  const s = crsSetup(page);
+  await expect(s.getByRole('grid', { name: /^Sheet / })).toBeVisible();
+  // Step 3, Columns: every field marked on its column in the preview.
+  for (let i = 0; i < 2; i++) await s.getByRole('button', { name: 'Next' }).click();
+  await expect(s.getByLabel('Column for Comment text')).toHaveValue('E');
+  await page.waitForTimeout(300);
+  await shoot(page, 'crs-templates-2', { clip: s, pad: 8 });
+});
+
 test('flatten-snapshot-1: the Flatten Comments dialog', async ({ page }) => {
   await reviewedDrawing(page);
   await ribbonTab(page, 'Comment').click();
@@ -614,6 +754,58 @@ test('snapping-1: the Snap options', async ({ page }) => {
     clip: [group(page, 'Measure', 'Snap'), group(page, 'Measure', 'Settings')],
     pad: 10,
   });
+});
+
+test('loupe-1: the loupe while measuring a distance', async ({ page }) => {
+  await start(page);
+  await open(page);
+  await fitPage(page);
+  const d = await setScale100(page, 'Metres');
+  await d.getByRole('button', { name: 'Apply' }).click();
+  await toolbar(page, 'Measure').getByRole('button', { name: 'Distance', exact: true }).click();
+  // Picking Distance turns snapping on.
+  await expect(statusBar(page).getByRole('button', { name: 'Enable Snapping' })).toHaveAttribute(
+    'aria-pressed',
+    'true',
+  );
+  // Near the plan's bottom-left corner (page points from the top-left): the loupe sits
+  // above and to the right of the pointer, over the plan.
+  const cx = 120;
+  const cy = 842 - 260;
+  const p = await at(page, DRAWING, cx + 3, cy - 3);
+  await page.mouse.move(p.x - 40, p.y + 30, { steps: 4 });
+  await page.mouse.move(p.x, p.y, { steps: 6 });
+  const loupe = page.getByTestId('measure-loupe');
+  await expect(loupe).toBeVisible();
+  await expect(page.getByTestId('measure-loupe-marker')).toBeVisible({ timeout: 10_000 });
+  await expect
+    .poll(async () => ((await cap(page, 'annotate', 'loupe')) as { drawn: number }).drawn)
+    .toBeGreaterThan(0);
+  await page.waitForTimeout(400);
+  const lens = (await loupe.boundingBox()) as Box;
+  const x = Math.min(p.x, lens.x) - 60;
+  const y = Math.min(p.y, lens.y) - 40;
+  const r = Math.max(p.x, lens.x + lens.width) + 60;
+  const b = Math.max(p.y, lens.y + lens.height) + 60;
+  await shoot(page, 'loupe-1', {
+    clip: { x, y, width: r - x, height: b - y },
+    pad: 0,
+    mouseAway: false,
+    callouts: [
+      { n: 1, target: loupe, at: 'tr', dx: 8, dy: -8 },
+      { n: 2, target: page.getByTestId('measure-loupe-marker'), at: 'r', dx: 18 },
+    ],
+  });
+});
+
+test('loupe-2: Settings, Measure', async ({ page }) => {
+  await start(page);
+  await page.getByTestId('file-tab').click();
+  await backstage(page).getByRole('button', { name: 'Settings', exact: true }).click();
+  const section = backstage(page).getByTestId('measure-section');
+  await section.scrollIntoViewIfNeeded();
+  await expect(section).toBeVisible();
+  await shoot(page, 'loupe-2', { clip: section, pad: 8 });
 });
 
 // --- Forms -----------------------------------------------------------------------
@@ -829,6 +1021,32 @@ test('compare-start-2: the input window of a PDF overlay', async ({ page }) => {
         at: 'l',
         dx: -16,
       },
+    ],
+  });
+});
+
+test('compare-samples-1: Try a sample in the input window', async ({ page }) => {
+  await start(page);
+  await ribbonTab(page, 'Compare').click();
+  await toolbar(page, 'Compare').getByRole('button', { name: 'PDF Overlay' }).click();
+  await expect(input(page)).toBeVisible();
+  const offer = input(page).getByTestId('compare-sample');
+  const button = offer.getByRole('button', { name: 'Try a sample' });
+  // Measured before the menu opens: an open menu hides the rest from the accessibility tree.
+  const buttonBox = (await button.boundingBox()) as Box;
+  const sides: Box[] = [];
+  for (const l of [compareSide(page, 'a'), compareSide(page, 'b'), offer])
+    sides.push((await l.boundingBox()) as Box);
+  await button.click();
+  const menu = page.getByRole('menu');
+  await expect(menu.getByRole('menuitem')).toHaveCount(2);
+  await shoot(page, 'compare-samples-1', {
+    clip: [...sides, menu],
+    pad: 12,
+    mouseAway: false,
+    callouts: [
+      { n: 1, target: buttonBox, at: 't', dy: -14 },
+      { n: 2, target: menu, at: 'tr', dx: 10 },
     ],
   });
 });

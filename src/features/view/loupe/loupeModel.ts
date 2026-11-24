@@ -49,6 +49,23 @@ export function loupeShown(s: LoupeSettings, tool: string, served: ReadonlySet<s
   return s.anywhere || (s.on && served.has(tool));
 }
 
+/**
+ * The loupe's key (M13-09, D-68): shows or hides the loupe where the person is.
+ * Shown → off, with every switch that shows it in `tool`; hidden → on, with the
+ * Measure loupe in a tool it serves and with View → Loupe in any other tool.
+ * Returns only the settings that change.
+ */
+export function toggleLoupeHere(
+  s: LoupeSettings,
+  tool: string,
+  served: ReadonlySet<string>,
+): Partial<LoupeSettings> {
+  const servedHere = served.has(tool);
+  if (!loupeShown(s, tool, served)) return servedHere ? { on: true } : { anywhere: true };
+  if (!servedHere) return { anywhere: false };
+  return s.anywhere ? { on: false, anywhere: false } : { on: false };
+}
+
 /** Stored settings (localStorage JSON) → settings; anything not valid falls back to the default. */
 export function parseLoupeSettings(raw: string | null): LoupeSettings {
   if (!raw) return { ...DEFAULT_LOUPE };

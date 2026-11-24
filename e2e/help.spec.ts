@@ -117,7 +117,7 @@ test('the Help page: contents, pager, search on Enter only, screenshots and ligh
   await page.goto('/help#welcome');
   const nav = page.getByRole('navigation', { name: 'Contents' });
   // 44 topics, and 8 in Compare revisions (M12-22; on while Compare is switched on).
-  await expect(nav.getByRole('link')).toHaveCount(52);
+  await expect(nav.getByRole('link')).toHaveCount(57); // + 5 topics (M13-09)
   await expect(topic(page).getByRole('heading', { level: 1 })).toHaveText('Welcome to Triya PDF');
 
   // Contents and the pager move between topics.

@@ -8,7 +8,7 @@ import type { HistoryCapability } from '@embedpdf/plugin-history';
 import { pagesBusy } from '../pages/pageOps';
 import { notify, registerCommand, type CommandHandler } from '../../app/commands/dispatch';
 import { undoOverride } from '../../app/commands/undoOverride';
-import { appStore } from '../../app/store/appStore';
+import { appStore, effectiveTool } from '../../app/store/appStore';
 import { documentStore, selectActive } from '../../app/store/documentStore';
 import { msg } from '../../i18n';
 import { openProfileDialog, requestProfile } from '../settings/profile/profileStore';
@@ -19,6 +19,8 @@ import { loadScales, openScaleDialog, scaleStore } from '../measure/scaleStore';
 import { MEASURE_COMMANDS } from '../measure/measureTools';
 import { setSnapping, snapStore, toggleKind } from '../measure/snapping';
 import { loupeSettingsStore, setLoupeSettings } from '../measure/loupeSettings';
+import { LOUPE_TOOLS } from '../measure/loupePointer';
+import { toggleLoupeHere } from '../view/loupe/loupeModel';
 import { openCrs } from '../crs/crsExport';
 import { capability, hostStore } from '../view/host';
 import { annotationCapability, annotationState } from './selection';
@@ -510,6 +512,15 @@ export function registerAnnotateCommands(): () => void {
         setLoupeSettings({ anywhere: !loupeSettingsStore.getState().anywhere });
       },
       isPressed: () => loupeSettingsStore.getState().anywhere,
+    }),
+    // M (M13-09, D-68): shows or hides the loupe in the tool in use — the Measure loupe in
+    // the tools it serves, View → Loupe in any other.
+    registerCommand('loupe.toggle', {
+      requiresDocument: true,
+      run: () => {
+        const tool = effectiveTool(appStore.getState());
+        setLoupeSettings(toggleLoupeHere(loupeSettingsStore.getState(), tool, LOUPE_TOOLS));
+      },
     }),
     ...(
       [

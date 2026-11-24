@@ -8,6 +8,7 @@ import type { InternalAction } from '../commands/dispatch';
 import { formatChord, isMac } from './chord';
 import { keyLabels } from './labels';
 import { KEYMAP, chordsOn } from './keymap';
+import { WINDOW_KEYS } from './windowKeys';
 
 // The sheet's own wording where a command's label is too short to explain its keys.
 const ACTION_LABELS: Record<
@@ -38,6 +39,7 @@ const ACTION_LABELS: Record<
   'annotation.nudgeRightFar': msg('shortcuts.action.annotationNudgeFar'),
   'annotation.nudgeUpFar': msg('shortcuts.action.annotationNudgeFar'),
   'annotation.nudgeDownFar': msg('shortcuts.action.annotationNudgeFar'),
+  'loupe.toggle': msg('shortcuts.action.loupeToggle'),
 };
 
 export function ShortcutTable({ testId = 'shortcut-sheet' }: { testId?: string }) {
@@ -54,7 +56,7 @@ export function ShortcutTable({ testId = 'shortcut-sheet' }: { testId?: string }
           <th scope="col">{t('shortcuts.keys')}</th>
         </tr>
       </thead>
-      <tbody>
+      <tbody data-part="keymap">
         {KEYMAP.map((bnd) => (
           <tr key={bnd.target}>
             <th scope="row">
@@ -74,6 +76,28 @@ export function ShortcutTable({ testId = 'shortcut-sheet' }: { testId?: string }
               {bnd.reservedFirst ? (
                 <span className="shortcut-note">{t('shortcuts.reservedNote')}</span>
               ) : null}
+            </td>
+          </tr>
+        ))}
+      </tbody>
+      {/* Keys a pane or window reads itself (M13-09): held keys, a comparison's, Review & Extract's. */}
+      <tbody data-part="window">
+        <tr>
+          <th scope="colgroup" colSpan={2} className="shortcut-group">
+            {t('shortcuts.more')}
+          </th>
+        </tr>
+        {WINDOW_KEYS.map((w) => (
+          <tr key={w.id} data-window-key={w.id}>
+            <th scope="row">{t(w.label)}</th>
+            <td>
+              {w.chords.map((c, i) => (
+                <span key={i}>
+                  {i > 0 ? t('shortcuts.or') : null}
+                  <kbd>{formatChord(c, labels)}</kbd>
+                </span>
+              ))}
+              {w.hold ? <span className="shortcut-hold"> ({t('shortcuts.held')})</span> : null}
             </td>
           </tr>
         ))}
