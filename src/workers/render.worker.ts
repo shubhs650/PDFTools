@@ -35,6 +35,7 @@ import { imageUnder } from './shared/pageImages';
 import { dropCustom, keepAuthor, nameTargets, writeMarkupIntent } from './render/annotIds';
 import { installFontReadback } from './render/freeTextFonts';
 import { applyTextColors, takeTextColorFallbacks } from './render/freeTextColors';
+import { fixLineEndingAppearance } from './render/lineEndingAppearance';
 import subsetWasmUrl from 'harfbuzzjs/dist/harfbuzz-subset.wasm?url';
 import {
   applyCommentFont,
@@ -201,6 +202,8 @@ const handlers: Handlers<RenderApi> = {
       applyTextColors(m, n, method, callArgs, faces !== null);
       // Its text in a library font, shaped and embedded (M11-07, D-52).
       applyCommentFont(m, n, method, callArgs, faces);
+      // Arrow heads on level and upright lines, readable (M13-04).
+      fixLineEndingAppearance(m, n, method, callArgs);
     }
     // A reopen (page-operation undo) re-applies the owner unlock (ADR-016 d5).
     if (method === 'unlockOwnerPermissions' && value === true && typeof docId === 'string') {

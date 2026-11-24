@@ -81,7 +81,13 @@ import { ScaleIndicator } from '../features/measure/ScaleIndicator';
 import { GrowthPrompt, SaveOptimizedDialog } from '../features/save/SaveDialogs';
 import { SaveErrorDialog, SaveStatus } from '../features/save/SaveStatus';
 import { registerViewCommands } from '../features/view/commands';
-import { PageNav, ViewModeSwitch, ZoomBox } from '../features/view/StatusControls';
+import {
+  PageNav,
+  StatusDivider,
+  ViewHistoryNav,
+  ViewModeSwitch,
+  ZoomBox,
+} from '../features/view/StatusControls';
 import { UiProvider } from '../ui/components';
 import { AppFrame } from './AppFrame';
 import { Backstage } from './backstage/Backstage';
@@ -201,11 +207,19 @@ export function App() {
                 <ToolHint />
               </>
             ),
-            pageNav: <PageNav />,
+            pageNav: (
+              <>
+                <PageNav />
+                <ViewHistoryNav />
+              </>
+            ),
+            // M13-04 (D-70): the scale, the labelled toggles (Thin Lines joins before
+            // Enable Snapping in M13-05), a divider, the view modes and the zoom.
             view: (
               <>
-                <SnapStatus />
                 <ScaleIndicator />
+                <SnapStatus />
+                <StatusDivider />
                 <ViewModeSwitch />
                 <ZoomBox />
               </>
