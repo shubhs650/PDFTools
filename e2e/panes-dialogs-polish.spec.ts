@@ -77,8 +77,8 @@ for (const theme of ['light', 'dark'] as const)
     await nav.getByRole('button', { name: 'Settings', exact: true }).click();
     await expect(current).toHaveText('Settings');
     const cards = backstage(page).locator('.settings-sections > *');
-    // Appearance, Start-up (M11-08·O2), Measure (M13-02), profile, local data
-    await expect(cards).toHaveCount(5);
+    // Appearance, Start-up (M11-08·O2), Measure (M13-02), CRS templates (M13-08), profile, local data
+    await expect(cards).toHaveCount(6);
     for (const radius of await cards.evaluateAll((els) =>
       els.map((el) => getComputedStyle(el).borderTopLeftRadius),
     ))
