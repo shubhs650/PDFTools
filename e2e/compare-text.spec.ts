@@ -361,6 +361,12 @@ test('pair 08: scans are offered OCR for this comparison only; their changes are
       .getByRole('option', { name: /From OCR|Possible OCR error/ })
       .first(),
   ).toBeAttached();
+  // A note's × closes it for this comparison (M13-04).
+  await page
+    .getByTestId('text-notice-ocr')
+    .getByRole('button', { name: 'Close this message' })
+    .click();
+  await expect(page.getByTestId('text-notice-ocr')).toHaveCount(0);
 });
 
 test('the text comparison passes axe in light and dark; the windows and the list are keyboard reachable @a11y', async ({
