@@ -439,7 +439,8 @@
       "attachment": "Opened from an attachment in another PDF",
       "created": "New document, not saved yet",
       "saved": "Saved on this device",
-      "downloaded": "Saved to your downloads"
+      "downloaded": "Saved to your downloads",
+      "sample": "A sample that comes with {{app}}"
     },
     "pages_one": "{{count}} page",
     "pages_other": "{{count}} pages",
@@ -2933,6 +2934,41 @@
     "hint": {
       "overlay": "Drop PDF files here, or choose them. Several files are compared as one set.",
       "text": "Drop a PDF file here, or choose one."
+    },
+    "sample": {
+      "offer": "No files to hand?",
+      "try": "Try a sample",
+      "tag": "Sample",
+      "failed": "The sample could not be opened. It is downloaded for offline use after the app first starts; try again in a moment.",
+      "lookFor": "What to look for:",
+      "flange": {
+        "title": "Flange drawing, Rev A → Rev B",
+        "description": "One A3 sheet: a bigger bolt circle, more holes, a new keyway and a revision cloud.",
+        "lookFor": "The bolt circle Ø120 → Ø128 (found as text), 6 → 8 holes, the new keyway and the revision cloud. Choose Compare to start.",
+        "fileA": "Flange drawing Rev A.pdf",
+        "fileB": "Flange drawing Rev B.pdf"
+      },
+      "checkedPrint": {
+        "title": "Checked print with review comments",
+        "description": "Close out a checker’s comments on the old revision against the new one.",
+        "lookFor": "Rev A carries a checker’s comments and check highlights. After Compare, open Close-out and close each comment out as addressed, changed differently or carried over. One change in Rev B was not asked for.",
+        "fileA": "Checked print Rev A.pdf",
+        "fileB": "Checked print Rev B.pdf"
+      },
+      "tender": {
+        "title": "EPC tender, 6 pages",
+        "description": "Clauses inserted with renumbering, a damages cap raised and a “not” removed.",
+        "lookFor": "Two inserted clauses (the renumbering after them is one note), the damages cap 5 % → 10 %, and “not” removed from clause 5.3. Choose Compare to start.",
+        "fileA": "EPC tender Rev A.pdf",
+        "fileB": "EPC tender Rev B.pdf"
+      },
+      "invoice": {
+        "title": "Commercial invoice, 1 page",
+        "description": "Changed figures, an added line item and recalculated totals.",
+        "lookFor": "A changed quantity and price with their percent change, an added line item, a new tax rate and the recalculated totals. Choose Compare to start.",
+        "fileA": "Commercial invoice Rev A.pdf",
+        "fileB": "Commercial invoice Rev B.pdf"
+      }
     },
     "opening_one": "Opening {{count}} file…",
     "opening_other": "Opening {{count}} files…",

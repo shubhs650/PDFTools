@@ -1,6 +1,6 @@
 # Triya PDF — Progress
 
-_Last updated: 2026-11-24 (M13-06: spike S33, CRS project templates with ExcelJS, works with workaround, ADR-034 Amendment 1; M13 plan approved: final improvements for 1.1.0, tasks M13-01 … M13-09, ADR-034, ARCHITECTURE.md Rev 0.24; M12-ux plan and ADR-033 recorded (tasks M12-24 … M12-27 all merged); M12-26: alignment made easy to find and first-time tips; M12-27: review in a comparison made easier; M12-25: room to work in a comparison; M12-24: the Compare input window made clearer; M12-23: M12 acceptance, M12 complete on the agent side; M12-22: Compare help and release notes; M12-21·O4: drop a tab on a tab; M12-20: the comparison file; M12-21: change register and presets)_
+_Last updated: 2026-11-24 (M13-06: spike S33, CRS project templates with ExcelJS, works with workaround, ADR-034 Amendment 1; M13-01: sample comparisons in the Compare input window; M13 plan approved: final improvements for 1.1.0, tasks M13-01 … M13-09, ADR-034, ARCHITECTURE.md Rev 0.24; M12-ux plan and ADR-033 recorded (tasks M12-24 … M12-27 all merged); M12-26: alignment made easy to find and first-time tips; M12-27: review in a comparison made easier; M12-25: room to work in a comparison; M12-24: the Compare input window made clearer; M12-23: M12 acceptance, M12 complete on the agent side; M12-22: Compare help and release notes; M12-21·O4: drop a tab on a tab; M12-20: the comparison file; M12-21: change register and presets)_
 
 **Next (approved 2026-11-24):** [docs/plan/M13.md](plan/M13.md) — final improvements before
 v1.1.0 ([ADR-034](adr/034-m13-final-improvements.md), D-67 … D-71, ARCHITECTURE.md Rev 0.24):
@@ -56,6 +56,23 @@ interop is in the M6 pack (CHECKLIST §M6 R1–R4). Rev 0 (M0–M4) is complete 
   totals) and openpyxl; 2,000 rows with 200 pictures in about 0.5 s in a browser worker under the CSP.
   11 unit tests (`spikes/s33-crs-templates/s33.test.ts`), the `s33` spike project. Sample files
   for the owner's Excel check in the project files (`m13-06/`).
+- **M13-01 — Sample comparisons (ADR-034, D-67; plan [M13](plan/M13.md) §1).** Two self-made
+  corpus pairs per type ship with the app (`src/model/compare/samples.ts`): PDF Overlay pair 01
+  (flange) and 19 (checked print with review comments), Text Comparison pair 05 (EPC tender) and
+  01 (invoice). The build copies them from `Synthetic PDF Corpus/` (`scripts/vite-assets.ts`), so
+  they cannot go stale, and serves them as `samples/<type>-<pair>-<a|b>.pdf`; the service worker
+  caches them in the background (`precacheSplit.ts`: `pdf` added, bundle-report module
+  `samples`). Under the two drop boxes: "No files to hand? **Try a sample**" with that type's two
+  samples, each with a line under it; one click (`loadSample` in `compareFlow.ts`, same-origin
+  fetch, opened without tabs as source `sample`) fills Document A and B with page pictures and a
+  **Sample** tag, replacing what was there; the sticky footer says what to look for while the sides
+  still hold the sample as shipped (`shownSample`). Samples have no file handle, so Save review
+  saves them with Save As (existing `save()` fallback). Help: a line in compare-start. Tests:
+  `tests/compare/samples.test.ts` (byte-identical to the corpus loader's files, background
+  precache), `e2e/compare-samples.spec.ts` (each sample against its manifest, Save As, axe light
+  and dark, keyboard), an M13 offline test in `e2e/offline.spec.ts`; the input window's keyboard
+  order test gained "Try a sample". Screenshots: `/mnt/project-files/m13-01/`.
+
 - **M12-27 — Review in a comparison (ADR-033 decisions 4–6, D-62, D-64; plan [M12-ux](plan/M12-ux.md) task D).**
   The close-out list shows comments with typed text first, then markup without text, each group
   by page then position (`closeOutModel.ts`). A **Hide highlights** box (on by default, kept on

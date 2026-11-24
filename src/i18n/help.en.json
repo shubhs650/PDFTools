@@ -1238,6 +1238,7 @@
         },
         {
           "list": [
+            "No files to hand? Under the two sides, <b>Try a sample</b> fills Document A and Document B with one of the samples that come with {{app}}, two for each type, and a line says what to look for. Then choose <b>Compare</b> as usual. A sample is not a file on your computer, so saving comments on it asks where to save, as <b>Save As</b> does.",
             "The swap button between the two sides exchanges Document A and Document B.",
             "For a PDF overlay, each side takes several files, compared as one set (for example one file per sheet). The arrows put the files in order.",
             "Right-click a document tab and choose <b>Compare with…</b> to start a comparison with that document as Document A.",

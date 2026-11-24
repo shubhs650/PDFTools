@@ -36,6 +36,7 @@ describe('precache split (§9, ADR-003 decision 3)', () => {
     'fonts/kr/NotoSansKR-Regular.otf',
     'fonts/sig-allura/Allura-Regular.ttf',
     'fonts/sig-allura/LICENSE',
+    'samples/overlay-01-a.pdf',
     'fonts/latin/LICENSE',
     'sw.js',
     'workbox-2fbc6a65.js',
@@ -62,7 +63,7 @@ describe('precache split (§9, ADR-003 decision 3)', () => {
     ]);
   });
 
-  it('background: the Work and Snap workers, ExcelJS, PDF Oxide, the Word builder, OCR, the CJK and signature fonts', () => {
+  it('background: the Work and Snap workers, ExcelJS, PDF Oxide, the Word builder, OCR, the CJK and signature fonts, the sample comparisons', () => {
     expect(urls(background)).toEqual([
       'assets/work.worker-Kl12.js',
       'assets/snap.worker-Op56.js',
@@ -78,6 +79,7 @@ describe('precache split (§9, ADR-003 decision 3)', () => {
       'fonts/jp/NotoSansJP-Regular.otf',
       'fonts/kr/NotoSansKR-Regular.otf',
       'fonts/sig-allura/Allura-Regular.ttf',
+      'samples/overlay-01-a.pdf',
     ]);
   });
 

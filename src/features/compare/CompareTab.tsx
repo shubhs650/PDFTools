@@ -15,8 +15,16 @@ import { openUnlockDialog } from '../protect/unlock';
 import { ThumbImage } from '../thumbnails/ThumbImage';
 import { usePages } from '../thumbnails/pageInfo';
 import {
+  samplesOf,
+  shownSample,
+  type Sample,
+  type SampleId,
+  type SampleSide,
+} from '../../model/compare/samples';
+import {
   addFilesTo,
   addOpenDocument,
+  loadSample,
   openingCount,
   pickFilesFor,
   updateInputs,
@@ -66,6 +74,45 @@ const RANGE_ERROR: Record<RangeError, MessageKey> = {
 };
 
 const COMMAND: Record<CompareType, string> = { overlay: 'compare.overlay', text: 'compare.text' };
+
+/** The words of each sample comparison (M13-01, D-67). */
+const SAMPLE_TEXT: Record<
+  SampleId,
+  {
+    title: MessageKey;
+    description: MessageKey;
+    lookFor: MessageKey;
+    file: Record<SampleSide, MessageKey>;
+  }
+> = {
+  flange: {
+    title: msg('compare.sample.flange.title'),
+    description: msg('compare.sample.flange.description'),
+    lookFor: msg('compare.sample.flange.lookFor'),
+    file: { a: msg('compare.sample.flange.fileA'), b: msg('compare.sample.flange.fileB') },
+  },
+  checkedPrint: {
+    title: msg('compare.sample.checkedPrint.title'),
+    description: msg('compare.sample.checkedPrint.description'),
+    lookFor: msg('compare.sample.checkedPrint.lookFor'),
+    file: {
+      a: msg('compare.sample.checkedPrint.fileA'),
+      b: msg('compare.sample.checkedPrint.fileB'),
+    },
+  },
+  tender: {
+    title: msg('compare.sample.tender.title'),
+    description: msg('compare.sample.tender.description'),
+    lookFor: msg('compare.sample.tender.lookFor'),
+    file: { a: msg('compare.sample.tender.fileA'), b: msg('compare.sample.tender.fileB') },
+  },
+  invoice: {
+    title: msg('compare.sample.invoice.title'),
+    description: msg('compare.sample.invoice.description'),
+    lookFor: msg('compare.sample.invoice.lookFor'),
+    file: { a: msg('compare.sample.invoice.fileA'), b: msg('compare.sample.invoice.fileB') },
+  },
+};
 
 /**
  * A comparison tab (M12-08, D-58, ARCHITECTURE §7.16): its input window, and the result
@@ -190,9 +237,11 @@ function InputWindow({ comparison: c }: { comparison: Comparison }) {
           </div>
           <SidePanel comparison={c} side="b" />
         </div>
+        {c.area ? null : <SampleBar comparison={c} />}
         {overlay && !inputBlock ? <PairingTable id={c.id} /> : null}
         {c.area ? null : <PresetOptions comparison={c} />}
         <footer className="compare-foot" data-testid="compare-foot">
+          <SampleLook comparison={c} />
           <p id={statusId} className="compare-status" role="status">
             {status}
           </p>
@@ -210,6 +259,68 @@ function InputWindow({ comparison: c }: { comparison: Comparison }) {
         </footer>
       </div>
     </section>
+  );
+}
+
+/**
+ * Sample comparisons (M13-01, D-67): under the two drop boxes, "No files to
+ * hand? Try a sample" with a small menu of this type's samples, each with a
+ * line saying what it shows. One click fills Document A and B (SampleLook then
+ * says what to look for); Compare is pressed as usual.
+ */
+function SampleBar({ comparison: c }: { comparison: Comparison }) {
+  const { t } = useTranslation();
+  const failed = useCompareUi((s) => s.sampleFailed[c.id] === true);
+  const busy = useCompareUi((s) => openingCount(s, c.id, 'a') + openingCount(s, c.id, 'b') > 0);
+  const fileName = (sample: Sample, side: SampleSide): string =>
+    t(SAMPLE_TEXT[sample.id].file[side]);
+  return (
+    <div className="compare-sample" data-testid="compare-sample">
+      <div className="compare-sample-offer">
+        <span className="compare-sample-question">{t('compare.sample.offer')}</span>
+        <DropdownMenu
+          trigger={
+            <Button
+              label={t('compare.sample.try')}
+              size="small"
+              icon={<ChevronDown16Regular />}
+              disabled={busy}
+            />
+          }
+          entries={samplesOf(c.type).map((sample) => ({
+            id: `sample-${sample.id}`,
+            label: t(SAMPLE_TEXT[sample.id].title),
+            description: t(SAMPLE_TEXT[sample.id].description),
+            onSelect: () => {
+              void loadSample(c.id, sample, fileName);
+            },
+          }))}
+        />
+      </div>
+      {failed ? (
+        <p className="compare-sample-failed" role="alert">
+          {t('compare.sample.failed')}
+        </p>
+      ) : null}
+    </div>
+  );
+}
+
+/**
+ * What to look for in the sample on the sides (M13-01): in the window's
+ * sticky footer, beside Compare, so it is in view however tall the sides are.
+ * It goes once the sides are no longer the sample as shipped.
+ */
+function SampleLook({ comparison: c }: { comparison: Comparison }) {
+  const { t } = useTranslation();
+  const placed = useCompareUi((s) => s.samples[c.id]);
+  const shown = c.area ? undefined : shownSample(c, placed);
+  if (!shown) return null;
+  return (
+    <p className="compare-sample-look" data-testid="compare-sample-look" data-sample={shown.id}>
+      <span className="compare-sample-look-label">{t('compare.sample.lookFor')}</span>{' '}
+      {t(SAMPLE_TEXT[shown.id].lookFor)}
+    </p>
   );
 }
 
@@ -386,6 +497,9 @@ function FileItem({
     <li className="compare-file" data-testid="compare-file">
       <div className="compare-file-head">
         <span className="compare-file-name">{name}</span>
+        {doc.meta.source === 'sample' ? (
+          <span className="compare-file-tag">{t('compare.sample.tag')}</span>
+        ) : null}
         <span className="compare-file-pages">
           {t('compare.pages', { count: doc.meta.pageCount })}
         </span>

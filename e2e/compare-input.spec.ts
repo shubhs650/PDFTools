@@ -224,6 +224,7 @@ test('the keyboard reaches every control of the input window, in order', async (
     'Remove B.pdf',
     'Pages of B.pdf',
     'Add files…',
+    'Try a sample', // under the two sides (M13-01)
     // The pairing table (M12-09): "Pair automatically" is off until the table is edited.
     // Each page has its picture, which opens the page picker, and each sheet a Preview
     // button (M12-24).
