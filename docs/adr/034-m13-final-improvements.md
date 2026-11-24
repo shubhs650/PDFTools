@@ -175,6 +175,10 @@ objects, one path per line, 2,000 placed symbols in form XObjects), the e2e A0 s
    whether thumbnails follow Thin Lines (they draw through the normal path today); a unit test
    that a 3 pt line draws 1 device pixel and that saves stay byte-identical with Thin Lines on
    (`spikes/s32-thin-lines/s32.test.ts` shows how).
+   **Settled in M13-05:** copies close when Thin Lines is turned off and before their
+   document closes or is reopened (after in-flight renders); the Measure loupe draws the page
+   content from the copy and the comments from the document; thumbnails keep the page's own
+   lines; Ctrl+Alt+5 is the alternate of Ctrl+5 (D-29).
 6. **Found on the way:** Ctrl+S on an image-heavy file is slow once its pages were drawn (PDFium
    writes the decoded image streams again and the narrow tail then drops them: 8.4 s instead of
    0.15 s for a 120 MB image). Today's behaviour, unrelated to Thin Lines; reported to the owner, not fixed here.

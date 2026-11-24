@@ -68,7 +68,10 @@ export function matches(chord: Chord, e: KeyLike, mac: boolean): boolean {
   // Option+Q on macOS types "œ": a letter chord with Alt matches its physical key there.
   const optionLetter =
     mac && chord.alt && /^[a-z]$/.test(chord.key) && e.code === `Key${chord.key.toUpperCase()}`;
-  if (key !== chord.key && !optionLetter) return false;
+  // A digit with Ctrl+Alt (Option+5 on macOS types "∞", AltGr+5 types "[" on some
+  // layouts): the physical digit key (M13-05, Ctrl+Alt+5).
+  const altDigit = chord.alt && /^[0-9]$/.test(chord.key) && e.code === `Digit${chord.key}`;
+  if (key !== chord.key && !optionLetter && !altDigit) return false;
   const shiftInsensitive = key === '+' || key === '=' || key === '-';
   return shiftInsensitive || e.shiftKey === chord.shift;
 }

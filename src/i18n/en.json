@@ -80,6 +80,7 @@
       "continuousFacing": "Continuous Facing",
       "rotateCw": "Rotate View Clockwise",
       "rotateCcw": "Rotate View Counterclockwise",
+      "thinLines": "Thin Lines",
       "leftPanes": "Panes",
       "propertiesPane": "Properties Pane",
       "collapseRibbon": "Collapse Ribbon",
@@ -895,7 +896,8 @@
       "session": "Files open last time: their names and the browser's permission handles, kept only while File › Settings › Start-up reopens them",
       "closeOutHighlights": "Whether a comparison's close-out list hides highlights",
       "compareTips": "Whether the first-time tips of Compare were seen",
-      "measureLoupe": "The Measure loupe and snapping choices: loupe on or off, size, magnification"
+      "measureLoupe": "The Measure loupe and snapping choices: loupe on or off, size, magnification",
+      "thinLines": "Whether Thin Lines is on"
     },
     "clearHint": "To delete this data, use File → Settings → Clear all local data."
   },

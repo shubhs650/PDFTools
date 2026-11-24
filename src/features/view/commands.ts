@@ -4,7 +4,7 @@ import { deselectAnnotations } from '../annotate/commands';
 import { endTextEdit } from '../annotate/textEdit';
 import { focusDocumentView } from './focus';
 import { isFieldTool } from '../forms/fieldModel';
-import { registerCommand } from '../../app/commands/dispatch';
+import { notify, registerCommand } from '../../app/commands/dispatch';
 import { clearSelection } from '../select/commands';
 import { appStore } from '../../app/store/appStore';
 import { documentStore, selectActive, type ZoomSetting } from '../../app/store/documentStore';
@@ -13,6 +13,9 @@ import { msg } from '../../i18n';
 import { move, rotate, setViewMode, setZoom, zoomStep, type ZoomTarget } from './controller';
 import { openDocumentMenu } from './documentMenus';
 import { canGoBack, canGoForward, nextView, previousView } from './viewHistory';
+import { hostStore } from './host';
+import { retileAll } from './keyedTiles';
+import { isThinLinesOn, thinLinesStore, toggleThinLines } from './thinLines';
 
 const modeIs = (m: ViewMode): boolean => selectActive(documentStore.getState())?.view.mode === m;
 
@@ -96,6 +99,11 @@ export function registerViewCommands(): () => void {
         isPressed: () => modeIs(mode),
       }),
     ),
+    // Thin Lines (M13-05, D-69): one setting for every document, kept on this device.
+    registerCommand('view.thinLines', {
+      run: toggleThinLines,
+      isPressed: isThinLinesOn,
+    }),
     // Shift+F10 / the Menu key in the document (M6-02): its context menu.
     registerCommand('menu.context', {
       requiresDocument: true,
@@ -163,8 +171,23 @@ export function registerViewCommands(): () => void {
         appStore.getState().setTool('select');
       },
     }),
+    thinLinesStore.subscribe((s, prev) => {
+      if (s.on !== prev.on) applyThinLines(s.on);
+    }),
   ];
   return () => {
     for (const off of offs) off();
   };
+}
+
+/**
+ * Thin Lines turned on or off (M13-05): the buttons show it, every open document
+ * draws its visible tiles again (previews follow their key), and when off the
+ * Render worker closes its thin copies.
+ */
+function applyThinLines(on: boolean): void {
+  notify();
+  const { render, registry } = hostStore.getState();
+  if (render) void render.rpc.call('thinLines', { on }).promise.catch(() => undefined);
+  if (registry) retileAll(registry);
 }

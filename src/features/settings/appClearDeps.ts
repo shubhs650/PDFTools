@@ -19,6 +19,7 @@ import { resetHideHighlights } from '../compare/closeout/closeOutStore';
 import { resetCompareTips } from '../compare/tips/tipsStore';
 import { resetLoupeSettings } from '../measure/loupeSettings';
 import { resetCrsTemplates } from '../crs/templates/crsTemplateStore';
+import { resetThinLines } from '../view/thinLines';
 import type { ClearDeps } from './clearAll';
 
 const hasCaches = (): boolean => typeof caches !== 'undefined';
@@ -63,5 +64,7 @@ export const appClearDeps: ClearDeps = {
     resetLoupeSettings();
     // The CRS project templates (M13-07).
     resetCrsTemplates();
+    // Thin Lines back to off (M13-05).
+    resetThinLines();
   },
 };

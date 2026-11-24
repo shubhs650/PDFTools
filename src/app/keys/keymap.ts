@@ -81,6 +81,9 @@ export const KEYMAP: readonly Binding[] = [
   b('view.fitWidth', ['Ctrl+2']),
   b('view.zoomIn', ['Ctrl+=', 'Ctrl++']),
   b('view.zoomOut', ['Ctrl+-']),
+  // Thin Lines (M13-05, D-69): Chrome and Edge keep Ctrl+1 … Ctrl+8 for their own tabs in
+  // a normal window, so Ctrl+5 works in the installed app; Ctrl+Alt+5 always works.
+  b('view.thinLines', ['Ctrl+5', 'Ctrl+Alt+5'], 'global', true),
   // Help in its own window (M9, ADR-026 D-46); Ctrl+F1 stays Collapse Ribbon.
   { ...b('help.help', ['F1']), inText: true },
   b('view.collapseRibbon', ['Ctrl+F1']),

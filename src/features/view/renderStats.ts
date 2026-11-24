@@ -4,7 +4,9 @@
 // aborted, failed) with request→Blob latency, so tests can see stale tiles
 // being aborted on scroll and zoom (ADR-004 decision 3).
 import { Task, type PdfEngine } from '@embedpdf/models';
+import { THIN_OPTION } from '../../engine/hostedEngine';
 import type { TileCache } from './tileCache';
+import { isThinLinesOn } from './thinLines';
 
 export interface KindStats {
   requested: number;
@@ -79,6 +81,16 @@ export function renderKey(method: string, args: unknown[]): string | null {
   return JSON.stringify([method, doc.id, page.index, ...rest]);
 }
 
+/** A view render's arguments with the Thin Lines option added to its options when on. */
+export function withThinOption(method: string, args: unknown[], on: boolean): unknown[] {
+  if (!on) return args;
+  const at = method === 'renderPageRect' ? 3 : 2;
+  const out = [...args];
+  const given: unknown = args[at];
+  out[at] = { ...(given && typeof given === 'object' ? given : {}), [THIN_OPTION]: true };
+  return out;
+}
+
 /** Documents whose first page preview has been drawn (background work waits for it, M2-08). */
 const previewed = new Set<string>();
 
@@ -100,7 +112,10 @@ export function instrumentEngine(engine: PdfEngine, cache: TileCache): void {
     const target = engine as unknown as Record<string, RenderFn>;
     const original = target[method]?.bind(engine);
     if (!original) return;
-    target[method] = (...args: unknown[]) => {
+    target[method] = (...given: unknown[]) => {
+      // Thin Lines (M13-05): the request carries the setting in its options, so the
+      // Render worker draws the thin copy and the cache keeps the two drawings apart.
+      const args = withThinOption(method, given, isThinLinesOn());
       const s = stats();
       const key = renderKey(method, args);
       const doc = args[0] as Located;

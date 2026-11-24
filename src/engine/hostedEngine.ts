@@ -17,7 +17,7 @@ import {
   type PdfTask,
 } from '@embedpdf/models';
 import { RpcError, isAbortError } from './errors';
-import { isMutation } from './mutations';
+import { THIN_METHODS, isMutation } from './mutations';
 import { PDFIUM_ERROR_PREFIX, type RenderApi } from './renderApi';
 import type { RpcClient } from './rpc';
 
@@ -73,6 +73,29 @@ export const renderCallCounts = new Map<string, number>();
 /** Called after a document-changing call succeeded (the tab's dirty mark, M1-22). */
 export type MutationListener = (method: string, docId: string) => void;
 
+/**
+ * The render option a view render carries while Thin Lines is on (M13-05, D-69;
+ * set where the request is made and cached, renderStats.ts). EmbedPDF passes
+ * render options through to the executor unchanged.
+ */
+export const THIN_OPTION = 'thinLines';
+
+/**
+ * A view render that asks for Thin Lines: the call and its arguments as sent
+ * (the option taken out), or null when it does not ask.
+ */
+export function thinCall(method: string, args: unknown[]): unknown[] | null {
+  if (!THIN_METHODS.has(method)) return null;
+  const at = method === 'renderPageRect' ? 3 : 2;
+  const options = args[at];
+  if (!options || typeof options !== 'object' || !(THIN_OPTION in options)) return null;
+  const { [THIN_OPTION]: thin, ...rest } = options as Record<string, unknown>;
+  if (thin !== true) return null;
+  const out = [...args];
+  out[at] = rest;
+  return out;
+}
+
 export function createHostedExecutor(
   rpc: RpcClient<RenderApi>,
   onMutation?: MutationListener,
@@ -83,9 +106,12 @@ export function createHostedExecutor(
       return (...args: unknown[]) => {
         renderCallCounts.set(method, (renderCallCounts.get(method) ?? 0) + 1);
         const task = new Task<unknown, { code: PdfErrorCode; message: string }>();
+        const thinArgs = thinCall(method, args);
         const job = rpc.call(
           'exec',
-          { method, args: slimArgs(args) },
+          thinArgs
+            ? { method, args: slimArgs(thinArgs), thin: true }
+            : { method, args: slimArgs(args) },
           {
             transfer: transferablesFor(method, args),
             onProgress: (p) => {

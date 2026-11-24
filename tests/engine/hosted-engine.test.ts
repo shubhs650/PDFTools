@@ -7,8 +7,10 @@ import {
   createHostedExecutor,
   renderCallCounts,
   slimArgs,
+  THIN_OPTION,
   type TextSource,
 } from '../../src/engine/hostedEngine';
+import { renderKey, withThinOption } from '../../src/features/view/renderStats';
 import type { RenderApi } from '../../src/engine/renderApi';
 import { RpcClient } from '../../src/engine/rpc';
 import { serve } from '../../src/workers/rpc-host';
@@ -22,7 +24,7 @@ afterEach(() => {
 });
 
 function executorWith(
-  exec: (method: string) => unknown,
+  exec: (method: string, thin?: boolean, args?: unknown[]) => unknown,
   onMutation?: (method: string, docId: string) => void,
 ) {
   const ch = new MessageChannel();
@@ -79,7 +81,8 @@ function executorWith(
     renderProgressive: () => {
       throw new Error('not used');
     },
-    exec: async ({ method }, ctx) => {
+    thinLines: () => ({ copies: 0, opened: 0, walked: 0, thinned: 0 }),
+    exec: async ({ method, thin, args }, ctx) => {
       if (method === 'slow') {
         await new Promise<void>((resolve) => {
           ctx.signal.addEventListener('abort', () => {
@@ -88,7 +91,7 @@ function executorWith(
         });
         return null;
       }
-      return exec(method);
+      return exec(method, thin, args);
     },
     docInfo: () => ({
       pageCount: 0,
@@ -129,6 +132,49 @@ describe('hosted executor proxy (ADR-004)', () => {
       .toPromise()
       .catch(() => undefined);
     expect(seen).toEqual(['createPageAnnotation:d1']);
+  });
+
+  it('sends a view render with the Thin Lines option as thin, the option taken out (M13-05)', async () => {
+    const ex = executorWith((m, thin, args) => ({
+      m,
+      thin: thin === true,
+      args,
+    })) as unknown as Record<string, (...a: unknown[]) => { toPromise(): Promise<unknown> }>;
+    const doc = { id: 'd1' };
+    const rect = { origin: { x: 0, y: 0 }, size: { width: 1, height: 1 } };
+    const thinOpts = { scaleFactor: 2, [THIN_OPTION]: true };
+    expect(
+      await ex.renderPageRect?.(doc, { index: 0 }, rect, { scaleFactor: 2 }).toPromise(),
+    ).toEqual({
+      m: 'renderPageRect',
+      thin: false,
+      args: [doc, { index: 0 }, rect, { scaleFactor: 2 }],
+    });
+    expect(await ex.renderPageRect?.(doc, { index: 0 }, rect, thinOpts).toPromise()).toEqual({
+      m: 'renderPageRect',
+      thin: true,
+      args: [doc, { index: 0 }, rect, { scaleFactor: 2 }],
+    });
+    expect(await ex.renderPageRaw?.(doc, { index: 0 }, thinOpts).toPromise()).toMatchObject({
+      thin: true,
+      args: [doc, { index: 0 }, { scaleFactor: 2 }],
+    });
+    // Thumbnails keep the page's own lines, whatever the options say.
+    expect(await ex.renderThumbnailRaw?.(doc, { index: 0 }, thinOpts).toPromise()).toMatchObject({
+      thin: false,
+    });
+  });
+
+  it('adds the option to view renders only while Thin Lines is on (the cache keys differ)', () => {
+    const args = [{ id: 'd' }, { index: 1 }, { origin: {} }, { scaleFactor: 1 }];
+    expect(withThinOption('renderPageRect', args, false)).toBe(args);
+    const on = withThinOption('renderPageRect', args, true);
+    expect(on[3]).toEqual({ scaleFactor: 1, [THIN_OPTION]: true });
+    expect(args[3]).toEqual({ scaleFactor: 1 });
+    expect(renderKey('renderPageRect', on)).not.toBe(renderKey('renderPageRect', args));
+    expect(withThinOption('renderPage', [{ id: 'd' }, { index: 0 }], true)[2]).toEqual({
+      [THIN_OPTION]: true,
+    });
   });
 
   it('turns a pdfium:<code> RpcError back into the PdfErrorCode (e.g. password)', async () => {

@@ -53,3 +53,25 @@ export function isFieldDesign(method: string, args: readonly unknown[]): boolean
 
 export const isMutation = (method: string): boolean =>
   ANNOTATION_METHODS.has(method) || FORM_METHODS.has(method) || OTHER_MUTATIONS.has(method);
+
+/**
+ * Executor calls that draw a page for the view (tiles, previews; never
+ * thumbnails): with Thin Lines on they draw the document's thin copy (M13-05,
+ * D-69, ADR-034 Amendment 2).
+ */
+export const THIN_METHODS: ReadonlySet<string> = new Set(['renderPageRect', 'renderPageRaw']);
+
+/**
+ * Executor calls that change what a page's content draws: Thin Lines' copy is
+ * opened again after them. Comments, form values, bookmarks, attachments,
+ * metadata and security never do (content tiles draw no comments or fields).
+ */
+export const CONTENT_METHODS: ReadonlySet<string> = new Set([
+  'deletePage',
+  'importPages',
+  'flattenAnnotation',
+  'flattenPage',
+  'redactTextInRects',
+  'applyRedaction',
+  'applyAllRedactions',
+]);

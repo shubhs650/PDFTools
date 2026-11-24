@@ -92,6 +92,7 @@ import { LayerDiagonal20Regular } from '@fluentui/react-icons/svg/layer-diagonal
 import { Lightbulb20Regular } from '@fluentui/react-icons/svg/lightbulb';
 import { Line20Filled, Line20Regular } from '@fluentui/react-icons/svg/line';
 import { LineFlowDiagonalUpRight20Filled, LineFlowDiagonalUpRight20Regular } from '@fluentui/react-icons/svg/line-flow-diagonal-up-right';
+import { LineThickness20Filled, LineThickness20Regular } from '@fluentui/react-icons/svg/line-thickness';
 import { Link20Filled, Link20Regular } from '@fluentui/react-icons/svg/link';
 import { LockClosed20Filled, LockClosed20Regular } from '@fluentui/react-icons/svg/lock-closed';
 import { LockOpen20Regular, LockOpen32Regular } from '@fluentui/react-icons/svg/lock-open';
@@ -221,6 +222,7 @@ export const FLUENT_GLYPHS: Record<string, FluentGlyphs> = {
   'view.continuousFacing': { regular: { small: BookOpen20Regular }, filled: { small: BookOpen20Filled } },
   'view.rotateCw': { regular: { small: ArrowRotateClockwise20Regular } },
   'view.rotateCcw': { regular: { small: ArrowRotateCounterclockwise20Regular } },
+  'view.thinLines': { regular: { small: LineThickness20Regular }, filled: { small: LineThickness20Filled } },
   'view.leftPanes': { regular: { small: PanelLeft20Regular }, filled: { small: PanelLeft20Filled } },
   'view.propertiesPane': { regular: { small: PanelRight20Regular }, filled: { small: PanelRight20Filled } },
   'view.collapseRibbon': { regular: { small: PanelTopContract20Regular } },

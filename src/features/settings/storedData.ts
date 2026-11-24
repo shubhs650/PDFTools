@@ -9,6 +9,7 @@ import { WHATS_NEW_STORAGE_KEY } from '../whatsNew/releases';
 import { RECENT_FONTS_STORAGE_KEY } from '../annotate/fonts/recentFonts';
 import { HIDE_HIGHLIGHTS_STORAGE_KEY } from '../compare/closeout/closeOutStore';
 import { LOUPE_STORAGE_KEY } from '../measure/loupeSettings';
+import { THIN_LINES_STORAGE_KEY } from '../view/thinLines';
 import { COMPARE_TIPS_STORAGE_KEY } from '../compare/tips/tipsKey';
 import { DB_NAME } from '../../storage/idb';
 import { RECOVERY_DIR } from '../../storage/recoveryTypes';
@@ -195,6 +196,14 @@ export const LOCAL_DATA: readonly LocalDataItem[] = [
     location: LOUPE_STORAGE_KEY,
     store: LOUPE_STORAGE_KEY,
     what: msg('privacy.data.measureLoupe'),
+    cleared: true,
+  },
+  {
+    // Thin Lines on (M13-05, D-69): one setting for every document.
+    kind: 'localStorage',
+    location: THIN_LINES_STORAGE_KEY,
+    store: THIN_LINES_STORAGE_KEY,
+    what: msg('privacy.data.thinLines'),
     cleared: true,
   },
   {

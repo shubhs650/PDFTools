@@ -815,3 +815,46 @@ export function snapSheet(): Uint8Array {
     '<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica >>',
   ]);
 }
+
+/**
+ * Thin Lines (M13-05, D-69): a 400 × 400 pt page with a 6 pt line on the page
+ * (y = 300, x 20 – 180) and one inside a form XObject (y = 200), a filled
+ * rectangle (x 20 – 70), and a Square comment with a 6 pt border (x 220 – 380, y 60 – 340)
+ * whose widths Thin Lines keeps.
+ */
+export const THIN_SHEET = {
+  size: 400,
+  /** Column (pt) through the two page lines. */
+  linesX: 100,
+  /** Column (pt) through the comment's top and bottom borders. */
+  commentX: 300,
+  width: 6,
+} as const;
+
+/** `title`: the heading (two files with different titles are two documents). */
+export function thinLinesSheet(title = 'Thin Lines test sheet - self-made'): Uint8Array {
+  const content = [
+    '0 G 6 w 20 300 m 180 300 l S',
+    'q 1 0 0 1 20 200 cm /Fm1 Do Q',
+    '0.6 g 20 80 50 40 re f',
+    `BT /F1 12 Tf 20 360 Td (${escText(title)}) Tj ET`,
+  ].join('\n');
+  return buildPdf([
+    '<< /Type /Catalog /Pages 2 0 R >>',
+    '<< /Type /Pages /Kids [3 0 R] /Count 1 >>',
+    '<< /Type /Page /Parent 2 0 R /MediaBox [0 0 400 400] ' +
+      '/Resources << /XObject << /Fm1 5 0 R >> /Font << /F1 6 0 R >> >> /Contents 4 0 R /Annots [7 0 R] >>',
+    { dict: '<< >>', stream: content },
+    {
+      dict: '<< /Type /XObject /Subtype /Form /BBox [-10 -10 170 10] >>',
+      stream: '0 G 6 w 0 0 m 160 0 l S',
+    },
+    '<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica >>',
+    '<< /Type /Annot /Subtype /Square /Rect [220 60 380 340] /NM (thin-square) /F 4 ' +
+      '/C [0 0 0] /BS << /W 6 >> /AP << /N 8 0 R >> >>',
+    {
+      dict: '<< /Type /XObject /Subtype /Form /BBox [0 0 160 280] >>',
+      stream: '0 G 6 w 3 3 154 274 re S',
+    },
+  ]);
+}

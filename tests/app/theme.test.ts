@@ -304,6 +304,8 @@ describe('where the theme is reached', () => {
       'pdftools.compareTipsSeen',
       // The Measure loupe and automatic snapping choices (M13-02).
       'pdftools.measureLoupe',
+      // Thin Lines on (M13-05).
+      'pdftools.thinLines',
     ]);
     expect(items.every((d) => d.cleared)).toBe(true);
   });

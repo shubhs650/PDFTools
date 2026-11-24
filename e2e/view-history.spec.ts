@@ -179,7 +179,8 @@ test('the status bar fits at 1280 px; with less room, the view modes fold before
   for (let i = 1; i < shown.length; i++)
     expect(shown[i]?.[0] ?? 0).toBeGreaterThanOrEqual(shown[i - 1]?.[1] ?? 0);
 
-  await squeeze(page, 820);
+  // With Thin Lines (M13-05) beside Enable Snapping: folds at about 940 px, words at 860.
+  await squeeze(page, 900);
   await expect(bar(page)).toHaveAttribute('data-fold', '1');
   await expect(modes).toBeHidden();
   await expect(toggle.locator('.status-toggle-label')).toBeVisible();
@@ -193,7 +194,7 @@ test('the status bar fits at 1280 px; with less room, the view modes fold before
   );
   await page.keyboard.press('Escape');
 
-  await squeeze(page, 680);
+  await squeeze(page, 760);
   await expect(bar(page)).toHaveAttribute('data-fold', '2');
   // The words are hidden, the name stays.
   await expect(toggle).toBeVisible();

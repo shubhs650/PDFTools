@@ -1,6 +1,6 @@
 # Triya PDF — Progress
 
-_Last updated: 2026-11-24 (M13-07: the CRS project template engine and the CRS review corpus; M13-04: labelled status bar toggles, Previous / Next View in the status bar, one view history for the window, Distance with open arrows; M13-03: spike S32, Thin Lines route b, a view-only copy kept thin, ADR-034 Amendment 2; M13-02: the Measure loupe and automatic snapping; M13-06: spike S33, CRS project templates with ExcelJS, works with workaround, ADR-034 Amendment 1; M13-01: sample comparisons in the Compare input window; M13 plan approved: final improvements for 1.1.0, tasks M13-01 … M13-09, ADR-034, ARCHITECTURE.md Rev 0.24; M12-ux plan and ADR-033 recorded (tasks M12-24 … M12-27 all merged); M12-26: alignment made easy to find and first-time tips; M12-27: review in a comparison made easier; M12-25: room to work in a comparison; M12-24: the Compare input window made clearer; M12-23: M12 acceptance, M12 complete on the agent side; M12-22: Compare help and release notes; M12-21·O4: drop a tab on a tab; M12-20: the comparison file; M12-21: change register and presets)_
+_Last updated: 2026-11-24 (M13-05: Thin Lines, every page line 1 device pixel wide on screen only, from a view-only copy in the Render worker; M13-07: the CRS project template engine and the CRS review corpus; M13-04: labelled status bar toggles, Previous / Next View in the status bar, one view history for the window, Distance with open arrows; M13-03: spike S32, Thin Lines route b, a view-only copy kept thin, ADR-034 Amendment 2; M13-02: the Measure loupe and automatic snapping; M13-06: spike S33, CRS project templates with ExcelJS, works with workaround, ADR-034 Amendment 1; M13-01: sample comparisons in the Compare input window; M13 plan approved: final improvements for 1.1.0, tasks M13-01 … M13-09, ADR-034, ARCHITECTURE.md Rev 0.24; M12-ux plan and ADR-033 recorded (tasks M12-24 … M12-27 all merged); M12-26: alignment made easy to find and first-time tips; M12-27: review in a comparison made easier; M12-25: room to work in a comparison; M12-24: the Compare input window made clearer; M12-23: M12 acceptance, M12 complete on the agent side; M12-22: Compare help and release notes; M12-21·O4: drop a tab on a tab; M12-20: the comparison file; M12-21: change register and presets)_
 
 **Next (approved 2026-11-24):** [docs/plan/M13.md](plan/M13.md) — final improvements before
 v1.1.0 ([ADR-034](adr/034-m13-final-improvements.md), D-67 … D-71, ARCHITECTURE.md Rev 0.24):
@@ -38,6 +38,44 @@ interop is in the M6 pack (CHECKLIST §M6 R1–R4). Rev 0 (M0–M4) is complete 
 
 ## Done
 
+- **M13-05 — Thin Lines (ADR-034 Amendment 2 route b, D-69; plan [M13](plan/M13.md) §3, §4).**
+  While it is on, the Render worker draws page tiles, previews (the progressive path too) and the
+  Measure loupe's page from a view-only copy of each document whose stroked paths, inside form
+  XObjects at any depth, have width 0, which PDFium draws 1 device pixel wide at any zoom
+  (`src/workers/render/thinLines.ts`: `ThinCopies`, `thinPage`). The copy reads the opened file
+  straight from the document's buffer on the WASM heap (`FPDF_LoadCustomDocument`, registered in
+  EmbedPDF's cache through `pdfium.ts` `registerDocument`), plus PDFium's incremental section only
+  after the page content changed. Each page load of the copy is walked once (EmbedPDF's page
+  context, so a page parsed again after 5 s is walked again). Kept current: a page operation,
+  flatten or crop (`pagesOp`) and the content-changing executor calls open a fresh copy; a close
+  or reopen of the document (`pagesRestore`, `pagesApply`, `closeDocument`) first waits for the
+  copies' in-flight renders and closes them (they read its bytes); turning it off closes every
+  copy. The document itself is never touched: saves, print, exports, snapshots and the CRS are
+  as before (unit test: Ctrl+S, keep-all and Save Optimized byte-identical with it on). Comments
+  keep their widths (the loupe draws them from the document). **Thumbnails keep the page's own
+  lines** (decided here: at thumbnail size most lines are under a pixel already; their cache
+  stays valid). The request carries the setting (a `thinLines` render option added where view
+  renders are made and cached, `renderStats.ts`, taken out by the executor proxy), so the tile
+  cache keys the two drawings apart and a request queued before a toggle never mixes them.
+  Toggles: the status bar (`ThinLinesStatus.tsx`, the M13-04 labelled toggle, before Enable
+  Snapping), View › Page Display, Tell me, and **Ctrl+5** in the installed app with
+  **Ctrl+Alt+5** as the alternate (Chrome and Edge keep Ctrl+1 … Ctrl+8 in a normal tab, D-29;
+  the tooltip shows Ctrl+Alt+5); a Ctrl+Alt digit chord also matches its physical key, so
+  Cmd+Option+5 on macOS and AltGr layouts work. One setting for every document, kept on this
+  device (`pdftools.thinLines`, on the Privacy page, cleared by Clear all local data). Turning
+  it on or off redraws the visible tiles through the tiling plugin's own refresh
+  (`keyedTiles.ts` `retileAll`, not REFRESH_PAGES, which would reload each page's text
+  geometry). Icon: our own drawing (`src/ui/icons/custom/m13.ts`), three lines of falling
+  weight; pressed, a solid tile with three equal thin lines cut out. Applies in normal views and
+  a comparison's Document A / B windows; the overlay keeps its own Thicken thin lines. Tests:
+  `tests/render/thinLines.test.ts` (real PDFium: 3 pt → 1 device px at 1× and 4×, in nested
+  forms, fills and text unchanged; saves byte-identical; the copy follows a rotation and a new
+  page; a copy in use closes only after its render), hosted-engine, keys, keyed-tiles,
+  pdfium-access; `e2e/thin-lines.spec.ts` (pixels read off the screen: page lines 1 device px,
+  the comment border 6; every toggle; kept after a reload; axe light and dark);
+  `e2e/perf/thin-lines.spec.ts` (@smoke: A0 sheet on, 800 %, 100 %, off with no long task, the
+  copy closed when off). The status bar's fold now starts at about 940 px (test updated).
+  Screenshots: `/mnt/project-files/m13-05/`. Help text is M13-09.
 - **M13-07 — CRS project template engine (D-71; ADR-034 Amendment 1; plan [M13](plan/M13.md)
   §6, the owner's answers C1 – C15).** No screens yet (M13-08). Model in `src/model/crs/`
   (pure): `template.ts` (fields, detail cells, status words, comment types, defaults, the

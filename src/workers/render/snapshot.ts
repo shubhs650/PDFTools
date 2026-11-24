@@ -47,11 +47,17 @@ const WHITE = 0xffffffff;
 /** The longest side, in pixels (snapshotScale keeps within it). */
 const MAX_SIDE = MAX_SNAPSHOT_SIDE;
 
+/**
+ * `contentPagePtr`: draw the page content from another load of the same page
+ * (the loupe with Thin Lines on, M13-05: the thin copy's page); the comments
+ * always come from the document's own page.
+ */
 export function renderSnapshot(
   mod: WrappedPdfiumModule,
   native: PdfiumNative,
   docId: string,
   req: SnapshotRequest,
+  contentPagePtr?: number,
 ): SnapshotPixels {
   const { rect, scale, rotation } = req;
   if (!(scale > 0 && Math.max(rect.size.width, rect.size.height) * scale <= MAX_SIDE + 1))
@@ -71,7 +77,8 @@ export function renderSnapshot(
     const M = buildUserToDeviceMatrix(rect, rotation, width, height);
     heap.HEAPF32.set([M.a, M.b, M.c, M.d, M.e, M.f], m / 4);
     heap.HEAPF32.set([0, 0, width, height], clip / 4);
-    rawCall(mod, 'FPDF_RenderPageBitmapWithMatrix', bmp, ref.pagePtr, m, clip, RGBA);
+    const content = contentPagePtr ?? ref.pagePtr;
+    rawCall(mod, 'FPDF_RenderPageBitmapWithMatrix', bmp, content, m, clip, RGBA);
     const x1 = rect.origin.x + rect.size.width;
     const y1 = rect.origin.y + rect.size.height;
     for (const b of annotBoxes(mod, ref.pagePtr, req.frame, { widgets: true })) {
