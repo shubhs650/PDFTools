@@ -3,12 +3,14 @@
 // C7) — and how they split into sheets and cells (C5, C6, C15), the fill spec
 // and the CSV.
 import {
+  PdfAnnotationLineEnding as End,
   PdfAnnotationState as St,
   PdfAnnotationStateModel,
   PdfAnnotationSubtype as S,
   type PdfAnnotationObject,
 } from '@embedpdf/models';
 import { describe, expect, it } from 'vitest';
+import { crsTypeId } from '../../src/features/annotate/annotationTypes';
 import {
   groupByPage,
   isHighlight,
@@ -285,5 +287,40 @@ describe('sheets and cells (C5, C6, C15)', () => {
       fallback,
     );
     expect(prefillDetails({ fileNameRule: '' }, 'PA-12_RevC.pdf', fallback)).toEqual(fallback);
+  });
+});
+
+describe('review sheet type names (M13-07)', () => {
+  it('tells arrows, clouds, callouts and typewriter text from lines, shapes and text boxes', () => {
+    const line = (start: End, end: End) =>
+      a({ id: 'l', type: S.LINE, lineEndings: { start, end } } as never);
+    expect(crsTypeId(line(End.None, End.None))).toBe('line');
+    expect(crsTypeId(line(End.None, End.OpenArrow))).toBe('arrow');
+    expect(crsTypeId(line(End.RClosedArrow, End.Circle))).toBe('arrow');
+    expect(crsTypeId(a({ id: 'p', type: S.POLYGON, cloudyBorderIntensity: 1 } as never))).toBe(
+      'cloud',
+    );
+    expect(crsTypeId(a({ id: 'p', type: S.POLYGON }))).toBe('polygon');
+    expect(crsTypeId(a({ id: 'r', type: S.SQUARE, cloudyBorderIntensity: 2 } as never))).toBe(
+      'cloud',
+    );
+    expect(crsTypeId(a({ id: 'f', type: S.FREETEXT, intent: 'FreeTextCallout' }))).toBe('callout');
+    expect(crsTypeId(a({ id: 'f', type: S.FREETEXT, intent: 'FreeTextTypeWriter' }))).toBe(
+      'typewriter',
+    );
+    expect(crsTypeId(a({ id: 'f', type: S.FREETEXT }))).toBe('freeText');
+  });
+
+  it('the finer types have their own ticks', () => {
+    const s = defaultSettings('CRS', 10, APP);
+    s.types.cloud = false;
+    const cloudy = a({
+      id: 'c',
+      type: S.POLYGON,
+      contents: 'x',
+      cloudyBorderIntensity: 1,
+    } as never);
+    const plain = a({ id: 'p', type: S.POLYGON, contents: 'y', rect: box(10, 90) });
+    expect(templateRows([cloudy, plain], opts({ settings: s })).map((r) => r.id)).toEqual(['p']);
   });
 });

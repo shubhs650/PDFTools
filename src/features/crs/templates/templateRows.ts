@@ -12,7 +12,7 @@ import {
   type CrsTemplateSettings,
   type StatusWord,
 } from '../../../model/crs/template';
-import { annotationTypeId } from '../../annotate/annotationTypes';
+import { crsTypeId } from '../../annotate/annotationTypes';
 import {
   commentsOf,
   matches,
@@ -98,7 +98,7 @@ export function templateRows(
   const picked = commentsOf(all).filter(
     (c) =>
       (!o.filter || matches(c, o.filter)) &&
-      o.settings.types[annotationTypeId(c.annot)] &&
+      o.settings.types[crsTypeId(c.annot)] &&
       !(ignore && isHighlight(c.annot)),
   );
   const kids = childrenOf(all);

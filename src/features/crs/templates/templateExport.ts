@@ -10,7 +10,7 @@ import { documentStore } from '../../../app/store/documentStore';
 import { format, t } from '../../../i18n';
 import type { CrsTemplate } from '../../../model/crs/template';
 import type { TemplateShot } from '../../../workers/work/crsTemplate/job';
-import { annotationTypeKey } from '../../annotate/annotationTypes';
+import { crsTypeId, TYPE_KEYS } from '../../annotate/annotationTypes';
 import { commentsOf } from '../../annotate/comments/commentsModel';
 import { commentsStore, objectsOf, viewOf } from '../../annotate/comments/commentsStore';
 import { annotationState } from '../../annotate/selection';
@@ -52,7 +52,7 @@ async function docRows(
     settings: tpl,
     filter: o.scope === 'filtered' ? viewOf(commentsStore.getState(), docId).filter : null,
     ignoreHighlights: o.ignoreHighlights,
-    typeLabel: (a) => t(annotationTypeKey(a)),
+    typeLabel: (a) => t(TYPE_KEYS[crsTypeId(a)]),
     date: (x) => format.date(x),
     discipline: (author) => (author === profile?.name ? profile.discipline : ''),
     noAuthor: t('annotate.noAuthor'),

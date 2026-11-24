@@ -2,7 +2,7 @@
 // D-71): ExcelJS loaded lazily, each row's snapshot rendered from a copy of
 // its document with the unsaved edits appended (the ADR-013 route, as the
 // Standard CRS), at twice the size it is shown in its column so it stays
-// sharp. Only the finished file's bytes go back, transferred.
+// sharp, and never smaller than CONTEXT round the markup. Only the finished file's bytes go back, transferred.
 import type { WrappedPdfiumModule } from '@embedpdf/pdfium';
 import { snapshotOf, type SnapshotRegion } from '../crs';
 import type { JobSlice } from '../scheduler';
@@ -16,6 +16,12 @@ export interface TemplateShot {
 
 /** Rendered pixels per shown pixel. */
 const SHARP = 2;
+/**
+ * The least page area a snapshot shows (points), centred on the markup, so a
+ * sticky note, an inserted-text mark or an underlined word comes with what is
+ * round it.
+ */
+const CONTEXT = { width: 160, height: 100 };
 
 export async function exportTemplateCrs(
   mod: WrappedPdfiumModule,
@@ -34,7 +40,7 @@ export async function exportTemplateCrs(
         const shot = shots[g]?.[i];
         const ptr = shot ? docPtrs[shot.doc] : null;
         if (!shot || ptr === null || ptr === undefined) return Promise.resolve(null);
-        return snapshotOf(mod, ptr, shot.region, widthPx * SHARP, maxPx * SHARP)();
+        return snapshotOf(mod, ptr, shot.region, widthPx * SHARP, maxPx * SHARP, CONTEXT)();
       }
     : null;
   const out = await fillTemplate(

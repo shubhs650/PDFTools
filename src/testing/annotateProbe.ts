@@ -45,6 +45,7 @@ import {
 } from '../features/crs/templates/crsTemplateStore';
 import {
   buildTemplateCrs,
+  type DocDetails,
   type TemplateExportOptions,
 } from '../features/crs/templates/templateExport';
 import type { TestHook } from './hook';
@@ -173,13 +174,14 @@ export function registerAnnotateProbe(hook: TestHook): void {
       settings: unknown,
       o: TemplateExportOptions,
       cancelAfter = -1,
+      details: Partial<DocDetails>[] = [],
     ) => {
       const ac = new AbortController();
       let reports = 0;
       try {
         const out = await buildTemplateCrs(
           probeTemplate(b64, settings),
-          docIds.map((docId) => ({ docId, details: PROBE_DETAILS })),
+          docIds.map((docId, i) => ({ docId, details: { ...PROBE_DETAILS, ...details[i] } })),
           o,
           ac.signal,
           () => {

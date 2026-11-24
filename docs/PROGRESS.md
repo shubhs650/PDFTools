@@ -69,6 +69,17 @@ interop is in the M6 pack (CHECKLIST §M6 R1–R4). Rev 0 (M0–M4) is complete 
   `e2e/fixtures/crsTemplates.ts` (rule 13). Found: ExcelJS drops a note on an empty cell at
   load (a note on a cell with text survives a row move). Sample files for a look in Excel:
   project files `m13-07/`.
+  Owner check with real comments (2026-11-24): the first sample files were filled with
+  stand-in rows, so a **CRS review corpus** was added: `Synthetic PDF Corpus/crs_review_corpus/`
+  (an A3 steel drawing set with page labels and a sheet stored with /Rotate 90; an A4 pump
+  specification with text markups; 40 comments of 18 kinds, replies and every status), made by
+  `e2e/fixtures/crs-review/` (`npm run corpus:crs`, `-- --check`), exported through the real
+  worker in `e2e/crs-review-corpus.spec.ts` (`CRS_OUT=<folder>` keeps the files). What it
+  showed, fixed: the template's type column now says Arrow, Cloud, Callout and Typewriter text
+  (`crsTypeId`, with their own type ticks; the Comments pane and Standard CRS keep their
+  names); a snapshot on a turned page showed the whole sheet, now the markup's box is turned
+  with the page (`displayBox`, Standard CRS too); a template snapshot shows at least 160 × 100
+  pt round the markup, so a sticky note or an underlined word comes with what is round it.
 
 - **M13-02 — Measure loupe and automatic snapping (ADR-034, D-68; plan [M13](plan/M13.md) §2).**
   M12-13's alignment magnifier became one shared loupe (`src/features/view/loupe/`: `Loupe.tsx`,

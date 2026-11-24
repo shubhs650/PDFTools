@@ -187,8 +187,12 @@ export class Doc {
     return this.pages;
   }
 
-  finish(info: DocInfo, idSeed: string): Uint8Array {
-    this.w.set(this.catalog, `<< /Type /Catalog /Pages ${String(this.pagesRef)} 0 R >>`);
+  /** `catalogExtra` adds entries to the catalog, e.g. `/PageLabels << … >>`. */
+  finish(info: DocInfo, idSeed: string, catalogExtra = ''): Uint8Array {
+    this.w.set(
+      this.catalog,
+      `<< /Type /Catalog /Pages ${String(this.pagesRef)} 0 R${catalogExtra ? ` ${catalogExtra}` : ''} >>`,
+    );
     this.w.set(
       this.pagesRef,
       `<< /Type /Pages /Kids [${this.pages.map((p) => `${String(p)} 0 R`).join(' ')}] /Count ${String(this.pages.length)} >>`,
