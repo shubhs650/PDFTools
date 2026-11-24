@@ -1,6 +1,6 @@
 # Triya PDF — Progress
 
-_Last updated: 2026-11-24 (M13-02·O1: View › Loupe, the loupe in every tool; M13-01·O5: "Try comparing two revisions" on the start screen; M13-05: Thin Lines, every page line 1 device pixel wide on screen only, from a view-only copy in the Render worker; M13-07: the CRS project template engine and the CRS review corpus; M13-04: labelled status bar toggles, Previous / Next View in the status bar, one view history for the window, Distance with open arrows; M13-03: spike S32, Thin Lines route b, a view-only copy kept thin, ADR-034 Amendment 2; M13-02: the Measure loupe and automatic snapping; M13-06: spike S33, CRS project templates with ExcelJS, works with workaround, ADR-034 Amendment 1; M13-01: sample comparisons in the Compare input window; M13 plan approved: final improvements for 1.1.0, tasks M13-01 … M13-09, ADR-034, ARCHITECTURE.md Rev 0.24; M12-ux plan and ADR-033 recorded (tasks M12-24 … M12-27 all merged); M12-26: alignment made easy to find and first-time tips; M12-27: review in a comparison made easier; M12-25: room to work in a comparison; M12-24: the Compare input window made clearer; M12-23: M12 acceptance, M12 complete on the agent side; M12-22: Compare help and release notes; M12-21·O4: drop a tab on a tab; M12-20: the comparison file; M12-21: change register and presets)_
+_Last updated: 2026-11-24 (M13-02·O2: the loupe and snapping for Line, Arrow, Polyline and Callout comments; M13-02·O1: View › Loupe, the loupe in every tool; M13-01·O5: "Try comparing two revisions" on the start screen; M13-05: Thin Lines, every page line 1 device pixel wide on screen only, from a view-only copy in the Render worker; M13-07: the CRS project template engine and the CRS review corpus; M13-04: labelled status bar toggles, Previous / Next View in the status bar, one view history for the window, Distance with open arrows; M13-03: spike S32, Thin Lines route b, a view-only copy kept thin, ADR-034 Amendment 2; M13-02: the Measure loupe and automatic snapping; M13-06: spike S33, CRS project templates with ExcelJS, works with workaround, ADR-034 Amendment 1; M13-01: sample comparisons in the Compare input window; M13 plan approved: final improvements for 1.1.0, tasks M13-01 … M13-09, ADR-034, ARCHITECTURE.md Rev 0.24; M12-ux plan and ADR-033 recorded (tasks M12-24 … M12-27 all merged); M12-26: alignment made easy to find and first-time tips; M12-27: review in a comparison made easier; M12-25: room to work in a comparison; M12-24: the Compare input window made clearer; M12-23: M12 acceptance, M12 complete on the agent side; M12-22: Compare help and release notes; M12-21·O4: drop a tab on a tab; M12-20: the comparison file; M12-21: change register and presets)_
 
 **Next (approved 2026-11-24):** [docs/plan/M13.md](plan/M13.md) — final improvements before
 v1.1.0 ([ADR-034](adr/034-m13-final-improvements.md), D-67 … D-71, ARCHITECTURE.md Rev 0.24):
@@ -37,6 +37,18 @@ answers Q1–Q7; ARCHITECTURE.md Rev 0.12 after [ADR-024](adr/024-freetext-text-
 interop is in the M6 pack (CHECKLIST §M6 R1–R4). Rev 0 (M0–M4) is complete on the agent side.
 
 ## Done
+
+- **M13-02·O2 — The loupe and snapping for line comments (D-68; plan [M13](plan/M13.md) §2).**
+  Line, Arrow, Polyline and Callout now get the Measure loupe (`LINE_COMMENT_TOOLS` in
+  `measure/loupePointer.ts`, governed by the Measure ribbon's Loupe toggle like the measuring
+  tools; View › Loupe covers every tool anyway). Line, Arrow and Polyline already snapped; the
+  Callout now does too (`calloutHandlers` in `annotate/tools/drawTools.ts`): its arrow tip and
+  knee land on the page's geometry while snapping is on (both the drag and the three-click
+  route; a click hands the plugin the snapped point it pressed), its box does not. Picking these
+  tools does not turn snapping on (automatic snapping stays with the measuring tools, P3). E2E:
+  `e2e/line-comment-loupe.spec.ts` (each tool's points land on the snap sheet's corners, the
+  loupe's marker and kind, no auto-snap, the toggle, axe light and dark). Screenshots:
+  `/mnt/project-files/m13-02-o2/`.
 
 - **M13-02·O1 — View › Loupe, the loupe in every tool (D-68; plan [M13](plan/M13.md) §2).**
   The View ribbon's Loupe (Zoom group, `view.loupe`, no longer a greyed-out placeholder) turns
