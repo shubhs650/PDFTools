@@ -54,6 +54,7 @@ for (const theme of ['light', 'dark'] as const)
       /Merge files/,
       /Getting started/,
       /Keyboard shortcuts/,
+      /Try comparing two revisions/, // M13-01·O5, across the row
     ]);
     await expect(actions.getByRole('button', { name: 'Merge files' })).toHaveAccessibleDescription(
       'Combine PDFs into one',

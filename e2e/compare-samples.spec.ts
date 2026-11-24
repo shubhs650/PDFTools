@@ -194,6 +194,30 @@ test.describe('sample comparisons', () => {
     );
   });
 
+  test('the start screen offers “Try comparing two revisions”: Compare opens with the flange sample filled in (O5) @smoke', async ({
+    page,
+  }) => {
+    await page.goto('/');
+    const action = page
+      .getByTestId('start-screen')
+      .getByRole('list', { name: 'Quick actions' })
+      .getByRole('button', { name: 'Try comparing two revisions' });
+    await expect(action).toHaveAccessibleDescription('A sample drawing, ready in Compare');
+    // Keyboard reachable, as every quick action.
+    await action.focus();
+    await page.keyboard.press('Enter');
+    await expect(input(page)).toBeVisible();
+    await expect(page.getByTestId('start-screen')).toHaveCount(0);
+    await expect(input(page).getByRole('radio', { name: 'PDF Overlay' })).toBeChecked();
+    for (const s of ['a', 'b'] as const)
+      await expect(compareSide(page, s).getByTestId('compare-file')).toHaveCount(1);
+    await sideHolds(page, 'a', 'Flange drawing Rev A.pdf');
+    await sideHolds(page, 'b', 'Flange drawing Rev B.pdf');
+    await expect(look(page)).toContainText('What to look for: The bolt circle Ø120 → Ø128');
+    // The person presses Compare as usual: nothing is compared yet.
+    await expect(input(page).getByRole('button', { name: 'Compare', exact: true })).toBeVisible();
+  });
+
   for (const dark of [false, true])
     test(`the input window with a sample passes axe (${dark ? 'dark' : 'light'}) and is keyboard reachable @a11y`, async ({
       page,
