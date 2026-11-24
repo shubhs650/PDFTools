@@ -26,6 +26,23 @@ async function openTwo(page: Page): Promise<void> {
   await expect(docTab(page, 'short.pdf')).toHaveAttribute('aria-selected', 'true');
 }
 
+/**
+ * Waits until the active tab's window has settled: a tab just selected lays its pages out
+ * and lands its fit zoom over the next frames, and that first layout scrolls to the top.
+ */
+async function settled(page: Page): Promise<void> {
+  const zoom = bar(page).getByRole('textbox', { name: 'Zoom' });
+  let last = '';
+  await expect
+    .poll(async () => {
+      const now = await zoom.inputValue();
+      const same = now === last;
+      last = now;
+      return same;
+    })
+    .toBe(true);
+}
+
 async function goTo(page: Page, n: number): Promise<void> {
   await pageBox(page).fill(String(n));
   await pageBox(page).press('Enter');
@@ -79,6 +96,7 @@ test('one history for the window: tab switches and opened documents are steps', 
   await expect(back(page)).toBeEnabled();
   await goTo(page, 4); // short.pdf: 1 → 4
   await docTab(page, 'long.pdf').click();
+  await settled(page);
   await goTo(page, 9); // long.pdf: 1 → 9
 
   await back(page).click();

@@ -6,7 +6,7 @@
 import { notify } from '../../app/commands/dispatch';
 import { documentStore, type DocumentsState } from '../../app/store/documentStore';
 import { restoreView, viewOf, viewReady } from './controller';
-import { ViewHistory, type Place } from './history';
+import { ViewHistory, type Place, type ViewEntry } from './history';
 
 const history = new ViewHistory();
 /** True while a step of the history selects a tab, so that switch is not recorded. */
@@ -74,10 +74,51 @@ function go(to: Place | null): void {
   const started = performance.now();
   const place = (): void => {
     if (ticket !== pending || documentStore.getState().activeTab !== to.tab) return;
-    if (viewReady(to.tab)) restoreView(view);
-    else if (performance.now() - started < MOUNT_WAIT_MS) requestAnimationFrame(place);
+    if (viewReady(to.tab)) {
+      restoreView(view);
+      hold(to.tab, view, ticket);
+    } else if (performance.now() - started < MOUNT_WAIT_MS) requestAnimationFrame(place);
   };
   place();
+}
+
+/** How long a step holds its view against the selected tab's first layout. */
+const HOLD_MS = 600;
+
+/**
+ * A tab just selected may still land its first layout (the fit zoom, its scroll to the
+ * top) after the view was placed: for a short while, put the view back if that moved it.
+ * The person's own wheel, pointer or key ends the hold, so it never fights them.
+ */
+function hold(tab: string, view: ViewEntry, ticket: number): void {
+  const until = performance.now() + HOLD_MS;
+  let applied = performance.now();
+  let mine = true;
+  const stop = (): void => {
+    mine = false;
+  };
+  const events = ['wheel', 'pointerdown', 'keydown'] as const;
+  for (const e of events) window.addEventListener(e, stop, { capture: true, once: true });
+  const check = (): void => {
+    const done =
+      !mine ||
+      ticket !== pending ||
+      documentStore.getState().activeTab !== tab ||
+      performance.now() > until;
+    if (done) {
+      for (const e of events) window.removeEventListener(e, stop, { capture: true });
+      return;
+    }
+    const now = viewOf(tab);
+    const moved = now && (now.page !== view.page || Math.abs(now.scrollTop - view.scrollTop) > 2);
+    // Not every frame: a zoom put back takes a layout to land.
+    if (moved && performance.now() - applied > 120) {
+      applied = performance.now();
+      restoreView(view);
+    }
+    requestAnimationFrame(check);
+  };
+  requestAnimationFrame(check);
 }
 
 // Switching tabs and opening a document are steps too; a closed tab's places go with it.

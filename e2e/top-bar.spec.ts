@@ -209,8 +209,8 @@ test('the magnet toggle: pressed and unpressed, keyboard reachable, named, axe c
   const status = page.getByRole('contentinfo', { name: 'Status bar' });
   const toggle = status.getByRole('button', { name: 'Enable Snapping' });
   await expect(toggle).toHaveAttribute('aria-pressed', 'false');
-  // An icon, not the old text button.
-  await expect(toggle).toHaveText('');
+  // M13-04 (D-70): the labelled status toggle, an icon and its always-visible words.
+  await expect(toggle).toHaveText('Enable Snapping');
   await expect(toggle.locator('svg')).toHaveCount(1);
   const plain = await toggle.locator('svg').innerHTML();
   await toggle.focus();
