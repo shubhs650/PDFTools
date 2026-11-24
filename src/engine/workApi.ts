@@ -35,6 +35,7 @@ import type { SnapshotRegion } from '../workers/work/crs';
 import type { WorkbookSpec } from '../workers/work/crsWorkbook';
 import type { TemplateFillSpec } from '../workers/work/crsTemplate/fill';
 import type { TemplateInspection, TemplateProbe } from '../workers/work/crsTemplate/inspect';
+import type { PreviewRequest, SheetPreview } from '../workers/work/crsTemplate/preview';
 import type { TemplateShot } from '../workers/work/crsTemplate/job';
 import type { CrsTemplate, StatusWord } from '../model/crs/template';
 import type { TemplateFileRead } from '../model/crs/templateFile';
@@ -405,6 +406,16 @@ export interface WorkApi {
   crsTemplateInspect: MethodSpec<
     { bytes: ArrayBuffer; probe: TemplateProbe | null },
     TemplateInspection
+  >;
+  /**
+   * The set-up's live sheet preview (M13-08, C13): the sheet's first rows as
+   * Excel draws them and the last pre-drawn row for the probe. `key` names the
+   * workbook: while it stays the same the loaded workbook is reused (one kept).
+   * Null when the sheet is missing; the inspection's refusal when it can't load.
+   */
+  crsTemplatePreview: MethodSpec<
+    { key: string; bytes: ArrayBuffer; request: PreviewRequest },
+    { ok: true; preview: SheetPreview | null } | { ok: false }
   >;
   /** The template file (C14): one JSON file with the workbook and the settings. */
   crsTemplateFileWrite: MethodSpec<

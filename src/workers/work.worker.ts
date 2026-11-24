@@ -44,6 +44,7 @@ import { mayHoldTables, pageObjects, tablesOf } from './work/compareStructure';
 import { exportCrs } from './work/crs';
 import { exportTemplateCrs } from './work/crsTemplate/job';
 import { inspectTemplate } from './work/crsTemplate/inspect';
+import { previewOf } from './work/crsTemplate/previewCache';
 import { workbookKind } from './work/crsTemplate/kind';
 import { readPageLabels } from './work/pageLabels';
 import { readTemplateFile, writeTemplateFile } from '../model/crs/templateFile';
@@ -868,6 +869,12 @@ serve<WorkApi>(self, {
     scheduler.run('interactive', ctx.signal, async () => {
       const { default: lib } = await import('exceljs');
       return inspectTemplate(lib, bytes, probe);
+    }),
+
+  crsTemplatePreview: ({ key, bytes, request }, ctx) =>
+    scheduler.run('interactive', ctx.signal, async () => {
+      const { default: lib } = await import('exceljs');
+      return previewOf(lib, key, bytes, request);
     }),
 
   crsTemplateFileWrite: ({ template }, ctx) =>

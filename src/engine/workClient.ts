@@ -60,6 +60,7 @@ type JobMethod =
   | 'crs'
   | 'crsTemplate'
   | 'crsTemplateInspect'
+  | 'crsTemplatePreview'
   | 'crsTemplateFileWrite'
   | 'crsTemplateFileRead'
   | 'pageLabels'
