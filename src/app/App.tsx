@@ -72,6 +72,7 @@ import { ImageStampDialog, StampDialog } from '../features/stamps/StampDialogs';
 import { CalibrateDialog, SetScaleDialog } from '../features/measure/ScaleDialogs';
 import { ViewportDialog } from '../features/measure/ViewportDialog';
 import { SnapStatus } from '../features/measure/SnapStatus';
+import { ThinLinesStatus } from '../features/view/ThinLinesStatus';
 import { CrsDialog } from '../features/crs/CrsDialog';
 import { AnnotationExportDialog } from '../features/annotate/export/AnnotationExportDialog';
 import { ImportCommentsDialog } from '../features/annotate/transfer/ImportCommentsDialog';
@@ -213,11 +214,12 @@ export function App() {
                 <ViewHistoryNav />
               </>
             ),
-            // M13-04 (D-70): the scale, the labelled toggles (Thin Lines joins before
-            // Enable Snapping in M13-05), a divider, the view modes and the zoom.
+            // M13-04 (D-70): the scale, the labelled toggles (Thin Lines, M13-05, then
+            // Enable Snapping), a divider, the view modes and the zoom.
             view: (
               <>
                 <ScaleIndicator />
+                <ThinLinesStatus />
                 <SnapStatus />
                 <StatusDivider />
                 <ViewModeSwitch />

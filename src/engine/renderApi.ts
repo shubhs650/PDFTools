@@ -35,8 +35,12 @@ export interface RenderApi {
     { wasmUrl: string; fontFallback: FontFallbackConfig | null },
     { ms: number; wasmBytes: number }
   >;
-  /** One IPdfiumExecutor call, forwarded by the main-thread proxy (hostedEngine.ts). */
-  exec: MethodSpec<{ method: string; args: unknown[] }, unknown, unknown>;
+  /**
+   * One IPdfiumExecutor call, forwarded by the main-thread proxy (hostedEngine.ts).
+   * `thin`: Thin Lines is on (M13-05, D-69); a view render (`renderPageRect`,
+   * `renderPageRaw`) draws the document's view-only thin copy instead.
+   */
+  exec: MethodSpec<{ method: string; args: unknown[]; thin?: boolean }, unknown, unknown>;
   docInfo: MethodSpec<{ docId: string }, DocumentInfo>;
   /**
    * Bounds of everything drawn on a page (text, paths, images), in points from
@@ -207,8 +211,9 @@ export interface RenderApi {
    * drawn as a snapshot is (content, the drawn markups and form fields, at the
    * view's rotation), as an ImageBitmap, transferred. Shown on screen only and
    * never copied out, so it needs no copy permission. Cancellable until it draws.
+   * `thin`: the page content as Thin Lines draws it (M13-05); comments as they are.
    */
-  loupe: MethodSpec<{ docId: string } & SnapshotRequest, { bitmap: ImageBitmap }>;
+  loupe: MethodSpec<{ docId: string; thin?: boolean } & SnapshotRequest, { bitmap: ImageBitmap }>;
   /**
    * The embedded file of a FileAttachment comment, by its /NM (M6-10: Save
    * Attachment… from the page or the Comments pane). Transferred.
@@ -236,10 +241,11 @@ export interface RenderApi {
   pageCost: MethodSpec<{ docId: string; pageIndex: number }, { objects: number; segments: number }>;
   /**
    * Progressive render of a whole page at `scale` (M1-17): RGBA pixels,
-   * transferred. Cancellable between slices; progress = slices done.
+   * transferred. Cancellable between slices; progress = slices done. `thin`: from
+   * the Thin Lines copy (M13-05).
    */
   renderProgressive: MethodSpec<
-    { docId: string; pageIndex: number; scale: number; sliceMs?: number },
+    { docId: string; pageIndex: number; scale: number; sliceMs?: number; thin?: boolean },
     {
       data: Uint8ClampedArray<ArrayBuffer>;
       width: number;
@@ -249,6 +255,15 @@ export interface RenderApi {
       totalMs: number;
     },
     { slices: number }
+  >;
+  /**
+   * Thin Lines turned on or off (M13-05, D-69, ADR-034 Amendment 2). Copies open
+   * on the first thin render; off closes them all. Returns what is open and the
+   * counters (copies opened, pages walked, paths made thin) for diagnostics.
+   */
+  thinLines: MethodSpec<
+    { on: boolean },
+    { copies: number; opened: number; walked: number; thinned: number }
   >;
 }
 

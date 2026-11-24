@@ -44,3 +44,27 @@ export function installKeyedTiles(registry: PluginRegistry): (() => void) | null
     { mode: 'throttle', wait: 50, throttleMode: 'trailing', keyExtractor: (e) => e.documentId },
   );
 }
+
+interface RetileInternals {
+  recalculateTiles?: (payload: { documentId: string; pageIndexes: number[] }) => unknown;
+}
+
+/**
+ * Draws every open document's visible tiles again (Thin Lines turned on or off,
+ * M13-05): the plugin's own refresh, which gives the tiles new ids, without
+ * EmbedPDF's REFRESH_PAGES (that also reloads each page's text geometry, a Work
+ * worker job per page). Off-screen pages draw fresh when they come into view.
+ * Returns false when the internal is not there (the caller refreshes pages).
+ */
+export function retileAll(registry: PluginRegistry): boolean {
+  const tiling = registry.getPlugin('tiling') as unknown as RetileInternals | null;
+  const recalc = tiling?.recalculateTiles?.bind(tiling);
+  if (!recalc) return false;
+  const docs = registry.getStore().getState().core.documents;
+  for (const [documentId, d] of Object.entries(docs)) {
+    const count = d.document?.pageCount ?? 0;
+    if (count > 0)
+      void recalc({ documentId, pageIndexes: Array.from({ length: count }, (_, i) => i) });
+  }
+  return true;
+}

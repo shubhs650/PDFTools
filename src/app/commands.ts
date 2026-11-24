@@ -617,6 +617,18 @@ export const COMMANDS: readonly CommandDef[] = [
     milestone: 'M1',
   },
   {
+    // Thin Lines (M13-05, D-69): every page line 1 device pixel wide, on screen only;
+    // also in the status bar (Ctrl+5). One setting for every document.
+    id: 'view.thinLines',
+    tab: 'view',
+    group: 'pageDisplay',
+    size: 'small',
+    fluent: 'LineThickness',
+    milestone: 'M1',
+    toggle: true,
+    custom: 'view.thinLines',
+  },
+  {
     id: 'view.leftPanes',
     tab: 'view',
     group: 'window',

@@ -648,6 +648,11 @@ export class SaveTracker {
    * the owner password once unlocked, else the one it was opened with
    * (memory only, M2-Q7).
    */
+  /** Length of the bytes PDFium has the document open from (R, or R + a tail after a reopen). */
+  openedLength(docId: string): number {
+    return this.need(docId).openedLength;
+  }
+
   copyPassword(docId: string): string | undefined {
     const s = this.need(docId);
     return s.ownerPassword ?? s.password;

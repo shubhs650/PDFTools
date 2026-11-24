@@ -5,12 +5,14 @@
 import { describe, expect, it, vi } from 'vitest';
 import type { PluginRegistry } from '@embedpdf/core';
 import { TilingPlugin } from '@embedpdf/plugin-tiling';
-import { installKeyedTiles } from '../../src/features/view/keyedTiles';
+import { installKeyedTiles, retileAll } from '../../src/features/view/keyedTiles';
 
 describe('keyed tile listener (S27 finding 1)', () => {
   it('the pinned tiling plugin still has the internals it uses', () => {
     const proto = TilingPlugin.prototype as unknown as Record<string, unknown>;
     expect(typeof proto.calculateVisibleTiles).toBe('function');
+    // Thin Lines (M13-05) draws the tiles again through the plugin's own refresh.
+    expect(typeof proto.recalculateTiles).toBe('function');
     // Built over a stand-in registry: it keeps the scroll capability and listens
     // to scrolling without a key per document (else the workaround can go).
     const calls: { options: Record<string, unknown> }[] = [];
@@ -69,5 +71,18 @@ describe('keyed tile listener (S27 finding 1)', () => {
   it('does nothing without the internals', () => {
     const registry = { getPlugin: () => ({}) } as unknown as PluginRegistry;
     expect(installKeyedTiles(registry)).toBeNull();
+  });
+
+  it('draws the tiles of every open document again through the plugin (Thin Lines, M13-05)', () => {
+    const recalc = vi.fn();
+    const docs = { A: { document: { pageCount: 3 } }, B: { document: null } };
+    const registry = {
+      getPlugin: () => ({ recalculateTiles: recalc }),
+      getStore: () => ({ getState: () => ({ core: { documents: docs } }) }),
+    } as unknown as PluginRegistry;
+    expect(retileAll(registry)).toBe(true);
+    expect(recalc).toHaveBeenCalledTimes(1);
+    expect(recalc).toHaveBeenCalledWith({ documentId: 'A', pageIndexes: [0, 1, 2] });
+    expect(retileAll({ getPlugin: () => ({}) } as unknown as PluginRegistry)).toBe(false);
   });
 });

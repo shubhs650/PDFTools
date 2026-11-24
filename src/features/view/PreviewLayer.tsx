@@ -8,6 +8,7 @@ import { isHeavy } from '../../workers/render/costModel';
 import { previewScale } from './preview';
 import { pageCost, progressivePreview } from './progressivePreview';
 import { markFirstPreview } from './renderStats';
+import { useThinLines } from './thinLines';
 
 /**
  * Bounded base image of one page (ADR-011 decision 3): drawn at once from the
@@ -24,11 +25,13 @@ export function PreviewLayer({ documentId, pageIndex }: { documentId: string; pa
     ? previewScale(size, doc.scale, typeof window === 'undefined' ? 1 : window.devicePixelRatio)
     : 0;
   const refresh = doc?.pageRefreshVersions[pageIndex] ?? 0;
+  // Thin Lines (M13-05): the preview is drawn again when it is turned on or off.
+  const thin = useThinLines();
   const [url, setUrl] = useState<string | null>(null);
   // The render that failed (its inputs), so that page shows plain paper, not a
   // shimmer that never ends (O5); a new zoom or refresh tries again.
   const [failedKey, setFailedKey] = useState<string | null>(null);
-  const attempt = `${documentId}:${String(pageIndex)}:${String(scaleFactor)}:${String(refresh)}`;
+  const attempt = `${documentId}:${String(pageIndex)}:${String(scaleFactor)}:${String(refresh)}:${String(thin)}`;
   const current = useRef<string | null>(null);
 
   useEffect(() => {
@@ -87,7 +90,7 @@ export function PreviewLayer({ documentId, pageIndex }: { documentId: string; pa
       live = false;
       cancel();
     };
-  }, [render, documentId, pageIndex, scaleFactor, refresh, size, attempt]);
+  }, [render, documentId, pageIndex, scaleFactor, refresh, thin, size, attempt]);
 
   useEffect(
     () => () => {

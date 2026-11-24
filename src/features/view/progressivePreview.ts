@@ -5,6 +5,7 @@ import { isAbortError } from '../../engine/errors';
 import type { RenderCost } from '../../workers/render/costModel';
 import { renderEngine, tileCache } from './host';
 import { renderStats } from './renderStats';
+import { isThinLinesOn } from './thinLines';
 
 type PageCost = Pick<RenderCost, 'objects' | 'segments'>;
 
@@ -33,13 +34,20 @@ export interface PreviewJob {
 }
 
 export function progressivePreview(docId: string, pageIndex: number, scale: number): PreviewJob {
-  const key = JSON.stringify(['progressive', docId, pageIndex, scale]);
+  // Thin Lines (M13-05): drawn from the thin copy, cached apart.
+  const thin = isThinLinesOn();
+  const key = JSON.stringify(['progressive', docId, pageIndex, scale, ...(thin ? ['thin'] : [])]);
   const hit = tileCache.get(key);
   if (hit) return { promise: Promise.resolve(hit), cancel: () => undefined };
   const r = renderEngine();
   const stats = renderStats.progressive;
   stats.requested++;
-  const job = r.rpc.call('renderProgressive', { docId, pageIndex, scale });
+  const job = r.rpc.call('renderProgressive', {
+    docId,
+    pageIndex,
+    scale,
+    ...(thin ? { thin } : {}),
+  });
   const promise = job.promise.then(
     async (out) => {
       stats.done++;

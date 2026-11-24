@@ -9,6 +9,7 @@ import { capability, hostStore, renderEngine, tileCache } from '../features/view
 import { renderStats, resetRenderStats, type KindStats } from '../features/view/renderStats';
 import { viewFocus } from '../features/view/tileScheduler';
 import { pagePointAt } from '../features/view/pagePoint';
+import { isThinLinesOn } from '../features/view/thinLines';
 import type { TestHook } from './hook';
 
 const viewport = (): HTMLElement => {
@@ -163,6 +164,12 @@ export function registerViewProbe(hook: TestHook): void {
         })
         .map((el) => Number(el.dataset['page']));
     },
+    /**
+     * Thin Lines' copies in the Render worker (M13-05): open now, and the counters
+     * (opened, pages walked, paths made thin). Asks with the current setting, so it
+     * changes nothing.
+     */
+    thinLines: () => renderEngine().rpc.call('thinLines', { on: isThinLinesOn() }).promise,
     /** Visible pages whose tiles have all loaded (sharp). */
     sharpVisiblePages: () => {
       const v = viewport().getBoundingClientRect();

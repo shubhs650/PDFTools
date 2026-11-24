@@ -10,6 +10,7 @@ import {
 } from './paths';
 import { M3_DESIGNS, type Design } from './m3';
 import { M4_DESIGNS } from './m4';
+import { M13_DESIGNS } from './m13';
 
 const at32 = (paths: string[]): string[] => paths.map((d) => scalePath(d, 1.6));
 
@@ -48,7 +49,7 @@ function glyphs(id: string, design: Design, large: boolean): FluentGlyphs {
 }
 
 const DESIGNED_GLYPHS: Record<string, FluentGlyphs> = Object.fromEntries(
-  Object.entries({ ...M3_DESIGNS, ...M4_DESIGNS }).map(([id, d]) => [
+  Object.entries({ ...M3_DESIGNS, ...M4_DESIGNS, ...M13_DESIGNS }).map(([id, d]) => [
     id,
     glyphs(id, d.design, d.large === true),
   ]),

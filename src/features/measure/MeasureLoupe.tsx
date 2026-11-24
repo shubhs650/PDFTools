@@ -8,6 +8,7 @@ import type { SnapKind } from '../../model/snapIndex';
 import { hostStore, renderEngine } from '../view/host';
 import { Loupe, type LoupeJob } from '../view/loupe/Loupe';
 import { LOUPE_SIDES, type LoupeRegion } from '../view/loupe/loupeModel';
+import { useThinLines } from '../view/thinLines';
 import { useLoupeSettings } from './loupeSettings';
 import { LOUPE_TOOLS, useLoupePointer } from './loupePointer';
 import { useSnapping } from './snapping';
@@ -67,6 +68,7 @@ export function MeasureLoupe() {
   const frame =
     settings.on && pointer && LOUPE_TOOLS.has(tool) ? pageFrame(pointer.docId, pointer.page) : null;
   const page = pointer?.page ?? 0;
+  const thin = useThinLines();
   const draw = useCallback(
     (r: LoupeRegion): LoupeJob => {
       const f = docId ? pageFrame(docId, page) : null;
@@ -90,6 +92,8 @@ export function MeasureLoupe() {
         },
         scale: r.scale,
         rotation: f.rotation,
+        // The page content as the view draws it (Thin Lines, M13-05).
+        ...(thin ? { thin } : {}),
       });
       return {
         promise: j.promise.then((x) => x.bitmap),
@@ -98,9 +102,9 @@ export function MeasureLoupe() {
         },
       };
     },
-    [docId, page],
+    [docId, page, thin],
   );
-  const key = `${docId ?? ''}/${String(page)}/${String(version)}/${String(frame?.rotation ?? 0)}`;
+  const key = `${docId ?? ''}/${String(page)}/${String(version)}/${String(frame?.rotation ?? 0)}/${String(thin)}`;
   if (!frame || !pointer) return null;
   const zoom = Math.min(MAX_ZOOM, frame.zoom * settings.mag);
   const center = laidToDisplayed(frame.rotation, frame.width, frame.height, pointer.pos);

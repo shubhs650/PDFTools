@@ -167,6 +167,21 @@ describe('resolveBinding: scopes and text fields', () => {
       'comment.squiggly',
     );
   });
+  it('toggles Thin Lines with Ctrl+5 and Ctrl+Alt+5, also where Alt+5 types a character (M13-05)', () => {
+    expect(resolveBinding(ev('5', { ctrlKey: true }), focus, false)?.target).toBe('view.thinLines');
+    const ctrlAlt = { ctrlKey: true, altKey: true, code: 'Digit5' };
+    expect(resolveBinding(ev('5', ctrlAlt), focus, false)?.target).toBe('view.thinLines');
+    // AltGr+5 types "[" on a French keyboard; Cmd+Option+5 types "∞" on a Mac.
+    expect(resolveBinding(ev('[', ctrlAlt), focus, false)?.target).toBe('view.thinLines');
+    expect(
+      resolveBinding(ev('∞', { metaKey: true, altKey: true, code: 'Digit5' }), focus, true)?.target,
+    ).toBe('view.thinLines');
+    // Not while typing, and not another digit key.
+    expect(resolveBinding(ev('5', ctrlAlt), { ...focus, editable: true }, false)).toBeUndefined();
+    expect(resolveBinding(ev('[', { ...ctrlAlt, code: 'Digit6' }), focus, false)).toBeUndefined();
+    const thin = KEYMAP.find((b) => b.target === 'view.thinLines');
+    expect(thin?.reservedFirst).toBe(true);
+  });
   it('matches a physical key only for Alt+letter on macOS', () => {
     const altQ = parseChord('Alt+Q');
     expect(matches(altQ, ev('œ', { altKey: true, code: 'KeyQ' }), false)).toBe(false);

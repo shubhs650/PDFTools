@@ -53,6 +53,7 @@ import {
 } from './render/fileAttach';
 import { secureCopy } from './render/security';
 import { listNotePopups, placeNotePopup, removePopupOf } from './render/notePopups';
+import { CONTENT_METHODS, THIN_METHODS, ThinCopies, type ThinPage } from './render/thinLines';
 
 const FPDF_PAGEOBJ_PATH = 2;
 /** `FPDF_GetFormType` for a dynamic (full) XFA form: nothing to fill (M2-14). */
@@ -63,6 +64,8 @@ const FORM_VALUE_METHODS = new Set(['setFormFieldValue', 'setFormFieldState']);
 let mod: WrappedPdfiumModule | undefined;
 let native: PdfiumNative | undefined;
 let tracker: SaveTracker | undefined;
+/** Thin Lines' view-only copies (M13-05, ADR-034 Amendment 2), opened while it is on. */
+let thinCopies: ThinCopies | undefined;
 const annotBoxCache = new AnnotBoxCache();
 const overlayTiles = new OverlayTiles();
 /** Layer copies the overlay draws from (comparison layer switches, D-59, Q24). */
@@ -89,10 +92,20 @@ function blocksForFont(args: unknown): boolean {
   return typeof method === 'string' && Array.isArray(a) && commentFontOf(method, a) !== null;
 }
 
-function ready(): { mod: WrappedPdfiumModule; native: PdfiumNative; tracker: SaveTracker } {
-  if (!mod || !native || !tracker)
+function ready(): {
+  mod: WrappedPdfiumModule;
+  native: PdfiumNative;
+  tracker: SaveTracker;
+  thin: ThinCopies;
+} {
+  if (!mod || !native || !tracker || !thinCopies)
     throw new RpcError('not-initialized', 'The render worker is not initialized');
-  return { mod, native, tracker };
+  return { mod, native, tracker, thin: thinCopies };
+}
+
+/** The thin copy's page for a view render (Thin Lines on), or null to draw the document. */
+function thinPageFor(thin: boolean | undefined, docId: string, pageIndex: number): ThinPage | null {
+  return thin ? ready().thin.page(docId, pageIndex) : null;
 }
 
 /** Pixel buffers we own can be transferred; never the WASM heap itself. */
@@ -139,12 +152,17 @@ const handlers: Handlers<RenderApi> = {
     native = new PdfiumNative(mod, { fontFallback });
     // Text boxes keep their standard font when read back (M6-06).
     installFontReadback(native);
-    tracker = new SaveTracker(mod, native);
+    const t = new SaveTracker(mod, native);
+    tracker = t;
+    thinCopies = new ThinCopies(mod, native, {
+      openedLength: (id) => t.openedLength(id),
+      password: (id) => t.copyPassword(id),
+    });
     return { ms: performance.now() - t0, wasmBytes: wasmMemory(mod)?.buffer.byteLength ?? 0 };
   },
 
-  exec: async ({ method, args }, ctx) => {
-    const { mod: m, native: n, tracker: t } = ready();
+  exec: async ({ method, args, thin }, ctx) => {
+    const { mod: m, native: n, tracker: t, thin: copies } = ready();
     const docId = (args[0] as { id?: unknown } | undefined)?.id;
     // Rule 9: a mutation the document's permissions forbid never reaches PDFium.
     if (isMutation(method) && typeof docId === 'string') t.checkAllowed(method, docId, args);
@@ -175,27 +193,47 @@ const handlers: Handlers<RenderApi> = {
     // A text comment in a library font (M11-07): its faces are loaded before PDFium draws it.
     const faces =
       typeof docId === 'string' ? await prepareCommentFont(commentFaces, method, callArgs) : null;
+    // Thin Lines (M13-05): a view render draws the thin copy's page instead.
+    const pageIndex = (callArgs[1] as { index?: unknown } | undefined)?.index;
+    const thinPage =
+      typeof docId === 'string' && THIN_METHODS.has(method) && typeof pageIndex === 'number'
+        ? thinPageFor(thin, docId, pageIndex)
+        : null;
+    const drawArgs = thinPage
+      ? [{ ...(callArgs[0] as object), id: thinPage.docId }, ...callArgs.slice(1)]
+      : callArgs;
+    // A document closing (or opening again under its id) takes its bytes: its copies close first.
+    const replacing =
+      typeof docId === 'string' && (method === 'closeDocument' || method === 'openDocumentBuffer');
+    if (replacing) await copies.replacing(docId);
     let value: unknown;
-    if (typeof docId === 'string' && isFileAttachmentCall(method, callArgs)) {
-      // Attach File (M6-10, ADR-022 d1): EmbedPDF can't create or update this subtype.
-      value =
-        method === 'createPageAnnotation'
-          ? createFileAttachment(m, n, callArgs)
-          : updateFileAttachment(m, n, callArgs);
-    } else {
-      const task = fn.apply(n, callArgs);
-      task.onProgress((p) => {
-        ctx.progress(p);
-      });
-      ctx.signal.addEventListener('abort', () => {
-        task.abort({ code: PdfErrorCode.Cancelled, message: 'cancelled' });
-      });
-      try {
-        value = await task.toPromise();
-      } catch (err) {
-        throw toRpcError(err);
+    try {
+      if (typeof docId === 'string' && isFileAttachmentCall(method, callArgs)) {
+        // Attach File (M6-10, ADR-022 d1): EmbedPDF can't create or update this subtype.
+        value =
+          method === 'createPageAnnotation'
+            ? createFileAttachment(m, n, callArgs)
+            : updateFileAttachment(m, n, callArgs);
+      } else {
+        const task = fn.apply(n, drawArgs);
+        task.onProgress((p) => {
+          ctx.progress(p);
+        });
+        ctx.signal.addEventListener('abort', () => {
+          task.abort({ code: PdfErrorCode.Cancelled, message: 'cancelled' });
+        });
+        try {
+          value = await task.toPromise();
+        } catch (err) {
+          throw toRpcError(err);
+        }
       }
+    } finally {
+      thinPage?.release();
+      if (replacing && typeof docId === 'string') copies.replaced(docId);
     }
+    // A change to what the page content draws: the next thin render opens a fresh copy.
+    if (typeof docId === 'string' && CONTENT_METHODS.has(method)) copies.contentChanged(docId);
     if (typeof docId === 'string') {
       writeMarkupIntent(m, n, method, callArgs);
       // A text comment's own text colour, in /DS and its appearance (ADR-024).
@@ -422,13 +460,20 @@ const handlers: Handlers<RenderApi> = {
     return new Transfer(out, [out.data.buffer]);
   },
 
-  loupe: async ({ docId, ...req }, ctx) => {
+  loupe: async ({ docId, thin, ...req }, ctx) => {
     const { mod: m, native: n } = ready();
     // A spot the pointer has already left is cancelled before it draws (one in flight).
     await nextTask();
     ctx.throwIfAborted();
-    // On screen only, as the page itself (no copy permission needed, unlike a snapshot).
-    const out = renderSnapshot(m, n, docId, req);
+    // On screen only, as the page itself (no copy permission needed, unlike a snapshot);
+    // with Thin Lines on, the page content as the view draws it (M13-05).
+    const thinPage = thinPageFor(thin, docId, req.pageIndex);
+    let out;
+    try {
+      out = renderSnapshot(m, n, docId, req, thinPage?.pagePtr);
+    } finally {
+      thinPage?.release();
+    }
     const bitmap = await createImageBitmap(new ImageData(out.data, out.width, out.height));
     return new Transfer({ bitmap }, [bitmap]);
   },
@@ -477,9 +522,10 @@ const handlers: Handlers<RenderApi> = {
     }
   },
 
-  renderProgressive: async ({ docId, pageIndex, scale, sliceMs }, ctx) => {
+  renderProgressive: async ({ docId, pageIndex, scale, sliceMs, thin }, ctx) => {
     const { mod: m, native: n } = ready();
-    const page = acquirePage(n, docId, pageIndex);
+    // Thin Lines (M13-05): the thin copy's page, held until the last slice.
+    const page = thinPageFor(thin, docId, pageIndex) ?? acquirePage(n, docId, pageIndex);
     try {
       const size = {
         width: rawCall(m, 'FPDF_GetPageWidthF', page.pagePtr),
@@ -493,10 +539,17 @@ const handlers: Handlers<RenderApi> = {
     }
   },
 
+  thinLines: async ({ on }) => {
+    const { thin } = ready();
+    // Off: every copy closes (its parsed pages and image caches go with it).
+    if (!on) await thin.closeAll();
+    return { copies: thin.openCount, ...thin.stats };
+  },
+
   memory: () => ({ wasmBytes: mod ? (wasmMemory(mod)?.buffer.byteLength ?? 0) : 0 }),
 
   pagesOp: async ({ docId, op }, ctx) => {
-    const { mod: m, native: n, tracker: t } = ready();
+    const { mod: m, native: n, tracker: t, thin } = ready();
     // Rule 9: page operations need assemble (ADR-016 d9); a flatten changes page
     // content and removes comments, so it needs modify and annotate (M6-09).
     // A crop changes how pages show, not which pages there are: modify (M11-08·O9).
@@ -525,6 +578,8 @@ const handlers: Handlers<RenderApi> = {
       });
       annotBoxCache.drop(docId);
       overlayTiles.drop(docId);
+      // Pages or their content changed in place (Thin Lines' copy opens again, M13-05).
+      thin.contentChanged(docId);
     }
   },
 
@@ -540,16 +595,28 @@ const handlers: Handlers<RenderApi> = {
   },
 
   pagesRestore: async ({ docId, token }) => {
-    const { mod: m, native: n, tracker: t } = ready();
-    await t.restore(docId, token);
+    const { mod: m, native: n, tracker: t, thin } = ready();
+    // The reopen frees the bytes Thin Lines' copies read (M13-05): they close first.
+    await thin.replacing(docId);
+    try {
+      await t.restore(docId, token);
+    } finally {
+      thin.replaced(docId);
+    }
     annotBoxCache.drop(docId);
     overlayTiles.drop(docId);
     return { pages: pageInfos(m, n, docId) };
   },
 
   pagesApply: async ({ docId, objects, firstNew, capability }) => {
-    const { mod: m, native: n, tracker: t } = ready();
-    await t.applyObjects(docId, objects, firstNew, capability ?? 'annotate');
+    const { mod: m, native: n, tracker: t, thin } = ready();
+    // The reopen frees the bytes Thin Lines' copies read (M13-05): they close first.
+    await thin.replacing(docId);
+    try {
+      await t.applyObjects(docId, objects, firstNew, capability ?? 'annotate');
+    } finally {
+      thin.replaced(docId);
+    }
     annotBoxCache.drop(docId);
     overlayTiles.drop(docId);
     return { pages: pageInfos(m, n, docId) };

@@ -114,6 +114,42 @@ export function openedBytes(
   return heap.subarray(ctx.filePtr, ctx.filePtr + length);
 }
 
+/** Where an open document's file bytes start on the WASM heap (EmbedPDF's `filePtr`). */
+export function filePtrOf(native: PdfiumNative, docId: string): number {
+  const ctx = (native as unknown as NativeInternals).cache?.getContext(docId);
+  if (!ctx) throw new Error('Document is not open');
+  if (typeof ctx.filePtr !== 'number' || ctx.filePtr === 0) {
+    throw new Error('EmbedPDF internals changed: context.filePtr is not a pointer');
+  }
+  return ctx.filePtr;
+}
+
+interface RegisterInternals {
+  cache?: {
+    setDocument?(id: string, filePtr: number, docPtr: number, normalizeRotation: boolean): void;
+  };
+}
+
+/**
+ * Puts a document PDFium opened outside EmbedPDF (`FPDF_LoadCustomDocument`)
+ * into its document cache, so its renders, page cache and close are EmbedPDF's
+ * own (M13-05, ADR-034 Amendment 2: the Thin Lines copy). EmbedPDF frees
+ * `filePtr` when the document closes.
+ */
+export function registerDocument(
+  native: PdfiumNative,
+  id: string,
+  filePtr: number,
+  docPtr: number,
+  normalizeRotation: boolean,
+): void {
+  const cache = (native as unknown as RegisterInternals).cache;
+  if (typeof cache?.setDocument !== 'function') {
+    throw new Error('EmbedPDF internals changed: PdfiumNative.cache.setDocument is missing');
+  }
+  cache.setDocument(id, filePtr, docPtr, normalizeRotation);
+}
+
 /**
  * Closes every page EmbedPDF has cached for the document (ADR-016 finding 3):
  * its page cache is keyed by page index, so after a page operation a cached

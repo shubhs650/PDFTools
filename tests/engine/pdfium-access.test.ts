@@ -8,10 +8,12 @@ import { beforeAll, describe, expect, it } from 'vitest';
 import { FONT_FILES, localFontConfig } from '../../src/engine/fonts';
 import {
   docPtrOf,
+  filePtrOf,
   isNormalized,
   openedBytes,
   purgePageCache,
   rawCall,
+  registerDocument,
 } from '../../src/workers/render/pdfium';
 
 const require = createRequire(import.meta.url);
@@ -57,6 +59,17 @@ describe('docPtrOf (ADR-005 decision 4: the single private accessor)', () => {
       purgePageCache(native, doc.id);
     }).not.toThrow();
     expect(isNormalized(native, doc.id)).toBe(false);
+    await native.closeDocument(doc).toPromise();
+  });
+
+  it('reaches the file pointer and registers outside documents (Thin Lines copy, M13-05)', async () => {
+    const doc = await open('original__plain.pdf');
+    expect(filePtrOf(native, doc.id)).toBeGreaterThan(0);
+    expect(() => {
+      registerDocument({} as PdfiumNative, 'x', 0, 0, false);
+    }).toThrow(/internals changed/);
+    const fake = { cache: { getContext: () => ({ docPtr: 1 }) } } as unknown as PdfiumNative;
+    expect(() => filePtrOf(fake, 'x')).toThrow(/internals changed/);
     await native.closeDocument(doc).toPromise();
   });
 
