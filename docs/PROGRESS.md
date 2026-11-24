@@ -1,6 +1,14 @@
 # Triya PDF — Progress
 
-_Last updated: 2026-11-23 (M12-26: alignment made easy to find and first-time tips; M12-27: review in a comparison made easier; M12-25: room to work in a comparison; M12-24: the Compare input window made clearer; M12-23: M12 acceptance, M12 complete on the agent side; M12-22: Compare help and release notes; M12-21·O4: drop a tab on a tab; M12-20: the comparison file; M12-21: change register and presets)_
+_Last updated: 2026-11-24 (M13 plan approved: final improvements for 1.1.0, tasks M13-01 … M13-09, ADR-034, ARCHITECTURE.md Rev 0.24; M12-ux plan and ADR-033 recorded (tasks M12-24 … M12-27 all merged); M12-26: alignment made easy to find and first-time tips; M12-27: review in a comparison made easier; M12-25: room to work in a comparison; M12-24: the Compare input window made clearer; M12-23: M12 acceptance, M12 complete on the agent side; M12-22: Compare help and release notes; M12-21·O4: drop a tab on a tab; M12-20: the comparison file; M12-21: change register and presets)_
+
+**Next (approved 2026-11-24):** [docs/plan/M13.md](plan/M13.md) — final improvements before
+v1.1.0 ([ADR-034](adr/034-m13-final-improvements.md), D-67 … D-71, ARCHITECTURE.md Rev 0.24):
+sample comparisons, the Measure loupe and auto-snap, Thin Lines (spike S32 first), labelled
+status bar toggles with Previous / Next view, CRS project templates (spike S33 first), then Help
+and the release checks (M13-09). Two threads at a time: lane 1 M13-01 → M13-05, lane 2
+M13-06 → M13-08. The Compare usability round ([M12-ux](plan/M12-ux.md), ADR-033, Rev 0.23) is
+done (M12-24 … M12-27 merged).
 
 **Current milestone:** M12 — PDF comparison (PDF overlay for drawings, text comparison for
 documents), version 1.1.0: plan [docs/plan/M12.md](plan/M12.md) and
