@@ -20,8 +20,9 @@ export const S13_PORT = 4189;
 export const S17_PORT = 4190;
 export const S27_PORT = 4191;
 export const S29_PORT = 4193;
+export const S33_PORT = 4194;
 
-// SPIKE=s8|s3|s1|s5|s7|s4|s9|s11|s13|s17|s27|s29 limits which spike gets built and served (default: both).
+// SPIKE=s8|s3|s1|s5|s7|s4|s9|s11|s13|s17|s27|s29|s33 limits which spike gets built and served (default: both).
 const only = process.env.SPIKE;
 const want = (name: string): boolean => !only || only === name;
 
@@ -114,6 +115,12 @@ export default defineConfig({
         baseURL: `http://localhost:${String(S27_PORT)}`,
         viewport: { width: 1600, height: 1000 },
       },
+    },
+    {
+      // M13-06: project CRS templates filled in a worker (ADR-034 amendment).
+      name: 's33',
+      testMatch: ['s33-crs-templates/**/*.spec.ts'],
+      use: { ...devices['Desktop Chrome'], baseURL: `http://localhost:${String(S33_PORT)}` },
     },
     {
       // M12-04: the overlay on screen, compositor against worker (ADR-032).
@@ -226,5 +233,6 @@ export default defineConfig({
           ),
         ]
       : []),
+    ...(want('s33') ? [server('s33', 's33-crs-templates', S33_PORT, ' --coi')] : []),
   ],
 });

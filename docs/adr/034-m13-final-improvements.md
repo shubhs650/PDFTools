@@ -56,3 +56,62 @@ release checks. The CRS item was settled in fifteen questions asked one at a tim
 - Help gains topics for each item; every Help screenshot is regenerated for 1.1.0.
 - Version 1.1.0 ships after M13-09 and the owner's hand check, with Compare switched on in
   release builds.
+
+## Amendment 1 — S33: project Excel templates with ExcelJS (M13-06, 2026-11-24)
+
+Spike S33 ([`spikes/s33-crs-templates/`](../../spikes/s33-crs-templates/),
+[RESULTS.md](../../spikes/s33-crs-templates/RESULTS.md)) checked D-71 against ExcelJS 4.4.0 on
+self-made templates (rule 13). **Verdict: works with workaround; no new dependency; D-71 stands
+as written.** The owner's check in Excel (no repair prompt) is still open, with the sample files
+in the project files (`m13-06/`).
+
+1. **Files taken.** `.xlsx` and `.xltx` only, told apart by their bytes (OLE2 signature, else the
+   zip's main content type), never by the file name. Refused with a plain message: macro-enabled
+   (`.xlsm`, `.xltm`: ExcelJS loads them but drops the macros), binary (`.xlsb`), and OLE2 files,
+   which are both old `.xls` files and workbooks with a password to open (the message names
+   both). ExcelJS finds parts by Excel's own names and prefixes, so a workbook written by some
+   other tools fails to load (openpyxl's did); the import catches any load error and asks for the
+   file to be saved again from Excel or LibreOffice (files saved by either load).
+2. **What survives** a load and write: merged cells, pictures, borders, fills, fonts, number
+   formats, column widths, row heights, print area and titles, page setup, header and footer,
+   frozen panes, drop-downs, conditional formatting, formulas including shared formulas, defined
+   names, cell notes, hyperlinks, hidden and protected sheets, Excel tables on other sheets,
+   grouped rows, the theme. **Lost, named in the import's warning** (found from the zip's part
+   list): text boxes and other shapes, charts, sparklines, Excel 2010-style drop-downs in the
+   sheet's extension list, named cell style names (their formatting stays); expected lost and
+   warned the same way though not tried: pivot tables, slicers, threaded comments, form
+   controls, header and footer pictures, links to other workbooks.
+3. **Row insert method.** Not ExcelJS's `insertRows` / `spliceRows` / `duplicateRow` (new rows
+   get no borders, formulas or drop-downs; totals, conditional formatting and the print area do
+   not grow). The engine edits the worksheet's plain model in one pass: rows after the last
+   pre-drawn row move down; a range that reaches that row grows (totals such as
+   `COUNTA(E10:E24)`, print area, conditional formatting, names); the same rule rewrites merged
+   cells, drop-downs and their list formulas, conditional formatting rules, picture anchors, row
+   breaks, the filter range, other sheets' formulas and the workbook's names. Each new row copies
+   the start row's styles, height, in-row merges and drop-downs, with formulas slid as a fill
+   down would. Shared formulas are made plain first; the last pre-drawn row's closing bottom edge
+   moves to the new last row. Pre-drawn rows are detected by the start row's side borders and
+   fill in every table column (bottom edge not compared), empty except formula columns.
+4. **Sheet copy method.** A copy is built from a model of the template sheet taken before any
+   filling (everything above comes along; pictures share the workbook's image). The first page or
+   document fills the template sheet itself, renamed with every reference in the workbook
+   rewritten; the others follow it in order. Sheet names: forbidden characters to `-`, no control
+   characters, no quote at either end, at most 31 UTF-16 units without splitting a pair,
+   "History" → "History 1", clashes (case-insensitive) get " (2)", " (3)" …
+5. **Four ExcelJS write fixes** are part of the engine: drop-downs handed over as ready column
+   ranges (ExcelJS sorts cells as text and writes ranges crossing row 9 → 10 twice, overlapping);
+   a width of exactly 9 nudged to 9.0001 straight after loading (ExcelJS drops it); formula
+   results dropped and `fullCalcOnLoad` set (LibreOffice otherwise shows the template's old
+   totals); the old merge list cleared before a sheet model is set.
+6. **Snapshots** are scaled to the Snapshot column's pixel width (Excel's width formula, a merged
+   cell counts all its columns) less a 4 px margin, capped by the height limit (at most about
+   540 px: Excel's 409-point row limit), anchored to their cell with native offsets; the row
+   grows. Every filled row with wrapped text gets an explicit height for its lines, otherwise
+   LibreOffice grows the row on opening and draws the pictures below a line too high.
+7. **Time.** 2,000 rows with 200 pictures: about 0.5 s in a browser worker under the CSP; 2,000
+   pictures about 1.5 s (6.4 MB); 2,000 rows over 50 sheet copies about 1.7 s; heap at most 55 MB; no
+   main-thread long task. Cancel acts between sheets and before the zip is written; progress
+   counts rows and sheets.
+8. **Left to M13-07:** a table (list object) on the chosen sheet below the start row (warn, or
+   move its range by the same rule with a test), tests for notes and hyperlinks in moved rows, and
+   relative references in custom drop-down formulas.
