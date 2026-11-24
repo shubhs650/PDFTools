@@ -3,10 +3,14 @@ import { ShieldCheckmark16Regular } from '@fluentui/react-icons/svg/shield-check
 import { useId } from 'react';
 import { useTranslation } from 'react-i18next';
 import { runCommand } from '../../app/commands/dispatch';
+import { compareShown } from '../../app/tabMenu';
 import { shortcutText } from '../../app/keys/labels';
 import { msg, type MessageKey } from '../../i18n';
+import { sampleById } from '../../model/compare/samples';
 import { buttonClass } from '../../ui/components/buttonClass';
 import { CommandIcon } from '../../ui/icons/CommandIcon';
+import { trySample } from '../compare/compareFlow';
+import { sampleFileName } from '../compare/sampleText';
 import { openHelp } from '../help/openHelp';
 import { RecentList } from '../recent/RecentList';
 import { SessionPrompt } from '../session/SessionPrompt';
@@ -20,7 +24,11 @@ interface QuickAction {
   icon: string;
   label: MessageKey;
   detail: MessageKey;
-  run: () => void;
+  run: (t: (key: MessageKey) => string) => void;
+  /** Left out when false (a build without Compare, M12-08). */
+  shown?: () => boolean;
+  /** Spans the whole row of tiles. */
+  wide?: true;
 }
 
 /** The start screen's quick actions: commands that work with no document open. */
@@ -61,6 +69,21 @@ const QUICK_ACTIONS: readonly QuickAction[] = [
     run: () => {
       void runCommand('help.shortcuts');
     },
+  },
+  {
+    // Try comparing two revisions (M13-01·O5, D-67): Compare with the flange
+    // drawing sample (overlay pair 01) filled in on its input window. A tile
+    // across the whole row, under the four everyday actions.
+    id: 'trySample',
+    icon: 'compare.overlay',
+    label: msg('open.start.actions.trySample'),
+    detail: msg('open.start.actions.trySampleDetail'),
+    run: (t) => {
+      const sample = sampleById('flange');
+      if (sample) void trySample(sample, sampleFileName(t));
+    },
+    shown: compareShown,
+    wide: true,
   },
 ];
 
@@ -116,16 +139,19 @@ export function StartScreen() {
 function QuickActions() {
   const { t } = useTranslation();
   const base = useId();
+  const actions = QUICK_ACTIONS.filter((a) => a.shown?.() ?? true);
   return (
     <ul className="start-actions" aria-label={t('open.start.actions.title')}>
-      {QUICK_ACTIONS.map((a) => (
-        <li key={a.id}>
+      {actions.map((a) => (
+        <li key={a.id} className={a.wide ? 'start-action-wide' : undefined}>
           <button
             type="button"
             className="start-action ui-focusable"
             aria-labelledby={`${base}-${a.id}`}
             aria-describedby={`${base}-${a.id}-detail`}
-            onClick={a.run}
+            onClick={() => {
+              a.run(t);
+            }}
           >
             <span className="start-badge" aria-hidden="true">
               <CommandIcon id={a.icon} />

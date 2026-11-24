@@ -14,13 +14,8 @@ import { collectDropped, hasFiles } from '../open/dropped';
 import { openUnlockDialog } from '../protect/unlock';
 import { ThumbImage } from '../thumbnails/ThumbImage';
 import { usePages } from '../thumbnails/pageInfo';
-import {
-  samplesOf,
-  shownSample,
-  type Sample,
-  type SampleId,
-  type SampleSide,
-} from '../../model/compare/samples';
+import { samplesOf, shownSample } from '../../model/compare/samples';
+import { SAMPLE_TEXT, sampleFileName } from './sampleText';
 import {
   addFilesTo,
   addOpenDocument,
@@ -74,45 +69,6 @@ const RANGE_ERROR: Record<RangeError, MessageKey> = {
 };
 
 const COMMAND: Record<CompareType, string> = { overlay: 'compare.overlay', text: 'compare.text' };
-
-/** The words of each sample comparison (M13-01, D-67). */
-const SAMPLE_TEXT: Record<
-  SampleId,
-  {
-    title: MessageKey;
-    description: MessageKey;
-    lookFor: MessageKey;
-    file: Record<SampleSide, MessageKey>;
-  }
-> = {
-  flange: {
-    title: msg('compare.sample.flange.title'),
-    description: msg('compare.sample.flange.description'),
-    lookFor: msg('compare.sample.flange.lookFor'),
-    file: { a: msg('compare.sample.flange.fileA'), b: msg('compare.sample.flange.fileB') },
-  },
-  checkedPrint: {
-    title: msg('compare.sample.checkedPrint.title'),
-    description: msg('compare.sample.checkedPrint.description'),
-    lookFor: msg('compare.sample.checkedPrint.lookFor'),
-    file: {
-      a: msg('compare.sample.checkedPrint.fileA'),
-      b: msg('compare.sample.checkedPrint.fileB'),
-    },
-  },
-  tender: {
-    title: msg('compare.sample.tender.title'),
-    description: msg('compare.sample.tender.description'),
-    lookFor: msg('compare.sample.tender.lookFor'),
-    file: { a: msg('compare.sample.tender.fileA'), b: msg('compare.sample.tender.fileB') },
-  },
-  invoice: {
-    title: msg('compare.sample.invoice.title'),
-    description: msg('compare.sample.invoice.description'),
-    lookFor: msg('compare.sample.invoice.lookFor'),
-    file: { a: msg('compare.sample.invoice.fileA'), b: msg('compare.sample.invoice.fileB') },
-  },
-};
 
 /**
  * A comparison tab (M12-08, D-58, ARCHITECTURE §7.16): its input window, and the result
@@ -272,8 +228,7 @@ function SampleBar({ comparison: c }: { comparison: Comparison }) {
   const { t } = useTranslation();
   const failed = useCompareUi((s) => s.sampleFailed[c.id] === true);
   const busy = useCompareUi((s) => openingCount(s, c.id, 'a') + openingCount(s, c.id, 'b') > 0);
-  const fileName = (sample: Sample, side: SampleSide): string =>
-    t(SAMPLE_TEXT[sample.id].file[side]);
+  const fileName = sampleFileName(t);
   return (
     <div className="compare-sample" data-testid="compare-sample">
       <div className="compare-sample-offer">

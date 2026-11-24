@@ -1938,6 +1938,10 @@ body {
   list-style: none;
 }
 
+.start-action-wide {
+  grid-column: 1 / -1;
+}
+
 .start-action {
   display: flex;
   align-items: center;

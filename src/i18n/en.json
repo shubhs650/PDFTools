@@ -574,6 +574,8 @@
         "newDetail": "A4, Letter or a custom size",
         "merge": "Merge files",
         "mergeDetail": "Combine PDFs into one",
+        "trySample": "Try comparing two revisions",
+        "trySampleDetail": "A sample drawing, ready in Compare",
         "help": "Getting started",
         "helpDetail": "A short tour of Help",
         "shortcuts": "Keyboard shortcuts",

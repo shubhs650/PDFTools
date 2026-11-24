@@ -208,3 +208,14 @@ export async function loadSample(
   }));
   return true;
 }
+
+/**
+ * Try comparing two revisions (M13-01·O5, D-67): from the start screen, a new
+ * comparison tab of the sample's type with the sample filled in on its input
+ * window; the person presses Compare as usual. Resolves the comparison's id.
+ */
+export async function trySample(sample: Sample, fileName: SampleFileName): Promise<string> {
+  const id = startComparison(sample.type);
+  await loadSample(id, sample, fileName);
+  return id;
+}
