@@ -37,6 +37,7 @@
     "typecheck:spikes": "tsc -p spikes",
     "icons": "node scripts/gen-icons.ts",
     "corpus": "node e2e/fixtures/comparison-corpus/build.ts",
+    "corpus:crs": "node e2e/fixtures/crs-review/build.ts",
     "help:screenshots": "playwright test --project=help-shots --workers=1 e2e/help-shots/shots.spec.ts",
     "readme:screenshots": "playwright test --project=help-shots --workers=1 e2e/help-shots/readme.spec.ts",
     "owner:interop:m3": "playwright test --project=e2e e2e/interop-m3.spec.ts --workers=1",

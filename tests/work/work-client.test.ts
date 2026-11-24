@@ -83,6 +83,21 @@ function fakeSpawn(world: FakeWorld) {
       crs: () => {
         throw new Error('not used');
       },
+      crsTemplate: () => {
+        throw new Error('not used');
+      },
+      crsTemplateInspect: () => {
+        throw new Error('not used');
+      },
+      crsTemplateFileWrite: () => {
+        throw new Error('not used');
+      },
+      crsTemplateFileRead: () => {
+        throw new Error('not used');
+      },
+      pageLabels: () => {
+        throw new Error('not used');
+      },
       snapGeometry: () => {
         throw new Error('not used');
       },

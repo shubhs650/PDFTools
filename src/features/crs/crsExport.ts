@@ -131,19 +131,24 @@ function rowsFor(docId: string, o: CrsOptions) {
   });
 }
 
-function headerOf(o: CrsOptions): [string, string][] {
+/** The active status scheme as the sheet names it: "Name: AP Approved, AN …". */
+export function schemeText(): string {
   const scheme = activeScheme();
   const name = scheme.nameKey ? t(scheme.nameKey as MessageKey) : (scheme.name ?? '');
   const codes = scheme.codes
     .map((c) => `${c.code} ${c.labelKey ? t(c.labelKey as MessageKey) : (c.label ?? '')}`)
     .join(', ');
+  return `${name}: ${codes}`;
+}
+
+function headerOf(o: CrsOptions): [string, string][] {
   return [
     [t('crs.head.docNumber'), o.docNumber],
     [t('crs.head.revision'), o.revision],
     [t('crs.head.title'), o.title],
     [t('crs.head.reviewer'), o.reviewer],
     [t('crs.head.date'), o.date],
-    [t('crs.head.scheme'), `${name}: ${codes}`],
+    [t('crs.head.scheme'), schemeText()],
   ];
 }
 

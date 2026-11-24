@@ -32,28 +32,57 @@ async function toPng(data: Uint8ClampedArray<ArrayBuffer>, width: number, height
   return (await canvas.convertToBlob({ type: 'image/png' })).arrayBuffer();
 }
 
-/** The markup's region with a margin, clipped to the page; the whole page when rotated. */
-function snapshotOf(
+/** The box shown on screen for an unrotated box (top-left origin) on a page turned `q` quarter turns clockwise. */
+export function displayBox(
+  r: { x: number; y: number; width: number; height: number },
+  page: { width: number; height: number },
+  q: number,
+): { x: number; y: number; width: number; height: number } {
+  // `page` is the shown size; the unrotated page is W × H.
+  const odd = q % 2 === 1;
+  const W = odd ? page.height : page.width;
+  const H = odd ? page.width : page.height;
+  const at = (x: number, y: number): [number, number] =>
+    q === 1 ? [H - y, x] : q === 2 ? [W - x, H - y] : q === 3 ? [y, W - x] : [x, y];
+  const [ax, ay] = at(r.x, r.y);
+  const [bx, by] = at(r.x + r.width, r.y + r.height);
+  return {
+    x: Math.min(ax, bx),
+    y: Math.min(ay, by),
+    width: Math.abs(bx - ax),
+    height: Math.abs(by - ay),
+  };
+}
+
+/** A span of at least `min` around [a, a + len], kept inside [0, size]. */
+function span(a: number, len: number, min: number, size: number): [number, number] {
+  const want = Math.min(size, Math.max(len + 2 * PAD, min));
+  const start = Math.min(Math.max(0, a + len / 2 - want / 2), Math.max(0, size - want));
+  return [start, Math.max(1, Math.min(size, start + want) - start)];
+}
+
+/**
+ * The markup's region with a margin, as the page is shown (a turned page's
+ * box is turned with it), kept on the page. At most `maxW` × `maxH` pixels (a
+ * project template asks for its Snapshot column's size, M13-07). `min` widens
+ * a small markup's region to show what is round it (a sticky note's icon
+ * alone says nothing), centred on the markup.
+ */
+export function snapshotOf(
   mod: WrappedPdfiumModule,
   docPtr: number,
   r: SnapshotRegion,
+  maxW = MAX_W,
+  maxH = MAX_H,
+  min: { width: number; height: number } = { width: 0, height: 0 },
 ): () => Promise<Snapshot> {
   return async () => {
     const box = pageBox(mod, docPtr, r.page);
-    const region =
-      box.rotation === 0
-        ? (() => {
-            const x = Math.max(0, r.x - PAD);
-            const y = Math.max(0, r.y - PAD);
-            return {
-              x,
-              y,
-              width: Math.max(1, Math.min(box.width, r.x + r.width + PAD) - x),
-              height: Math.max(1, Math.min(box.height, r.y + r.height + PAD) - y),
-            };
-          })()
-        : { x: 0, y: 0, width: box.width, height: box.height };
-    const scale = Math.min(MAX_SCALE, MAX_W / region.width, MAX_H / region.height);
+    const d = displayBox(r, box, ((box.rotation % 4) + 4) % 4);
+    const [x, width] = span(d.x, d.width, min.width, box.width);
+    const [y, height] = span(d.y, d.height, min.height, box.height);
+    const region = { x, y, width, height };
+    const scale = Math.min(MAX_SCALE, maxW / region.width, maxH / region.height);
     const rows = Math.max(1, Math.round(region.height * scale));
     const band = renderBand(mod, docPtr, {
       pageIndex: r.page,

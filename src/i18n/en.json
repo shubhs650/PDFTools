@@ -885,6 +885,7 @@
       "visualSignatures": "Visual signatures and initials you saved in Sign Document (drawn strokes or pictures)",
       "ignoreZoneSets": "Ignore zone sets you saved for comparisons (names and rectangles on the sheet, no drawing content)",
       "comparePresets": "Comparison presets you saved (names, colours, settings and ignore zone rectangles, no document content)",
+      "crsTemplates": "CRS project templates you imported: each project workbook and how it is filled (sheet, rows, cells, columns, status words)",
       "lastViews": "Where you left each file: its page, zoom, layout and view rotation, kept under a code computed from the file (no file names or content), for the last 500 files",
       "theme": "Light or dark theme",
       "accent": "Accent colour (Blue, Teal, Indigo or Graphite)",
@@ -1414,10 +1415,14 @@
     "type": {
       "note": "Note",
       "freeText": "Text box",
+      "callout": "Callout",
+      "typewriter": "Typewriter text",
       "line": "Line",
+      "arrow": "Arrow",
       "rectangle": "Rectangle",
       "oval": "Oval",
       "polygon": "Polygon",
+      "cloud": "Cloud",
       "polyline": "Polyline",
       "highlight": "Highlight",
       "underline": "Underline",
@@ -1974,6 +1979,41 @@
       "snapshot": "Snapshot",
       "vendorResponse": "Vendor Response",
       "finalStatus": "Final Status"
+    },
+    "tpl": {
+      "pageSheet": "Page {{page}}",
+      "fileName": "{{name}} (CRS template).json",
+      "field": {
+        "srNo": "Sr. No.",
+        "commentNo": "Comment No.",
+        "page": "Page",
+        "pageLabel": "Page label",
+        "type": "Comment type",
+        "text": "Comment text",
+        "author": "Author",
+        "discipline": "Discipline",
+        "created": "Date created",
+        "modified": "Date modified",
+        "status": "Status",
+        "allReplies": "All replies",
+        "firstReply": "First reply",
+        "lastReply": "Last reply",
+        "lastReplyAuthor": "Last reply author",
+        "snapshot": "Snapshot",
+        "commentId": "Comment ID",
+        "fixed": "Fixed text"
+      },
+      "detail": {
+        "docName": "Document name",
+        "docNumber": "Document number",
+        "revision": "Revision",
+        "title": "Title",
+        "reviewer": "Reviewer",
+        "reviewDate": "Review date",
+        "scheme": "Status scheme",
+        "commentCount": "Comment count",
+        "pageCount": "Page count"
+      }
     }
   },
   "export": {

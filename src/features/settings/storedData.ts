@@ -103,6 +103,14 @@ export const LOCAL_DATA: readonly LocalDataItem[] = [
     cleared: true,
   },
   {
+    // CRS project templates (M13-07, D-71): the project's own workbook and its settings.
+    kind: 'indexedDB',
+    location: `${DB_NAME} › crsTemplates`,
+    store: 'crsTemplates',
+    what: msg('privacy.data.crsTemplates'),
+    cleared: true,
+  },
+  {
     // Each file's last view (M11-08·O3, D-53), by fingerprint: never a name or content.
     kind: 'indexedDB',
     location: `${DB_NAME} › lastViews`,

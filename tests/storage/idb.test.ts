@@ -23,6 +23,7 @@ describe('AppDb (M1-12)', () => {
     expect([...db.db.objectStoreNames].sort()).toEqual([
       'commentStyles',
       'comparePresets',
+      'crsTemplates',
       'ignoreZoneSets',
       'lastViews',
       'profile',
@@ -321,7 +322,7 @@ describe('AppDb v11 (M12-21)', () => {
     const set = { id: 's1', name: 'Title block', zones: [] };
     await v10.putZoneSet(set);
     v10.close();
-    const db = await AppDb.open({ factory });
+    const db = await AppDb.open({ factory, migrations: MIGRATIONS.slice(0, 11) });
     expect(db.db.version).toBe(11);
     expect(await db.listZoneSets()).toEqual([set]);
     const preset = { id: 'p1', name: 'Drawings', type: 'overlay' };
@@ -332,6 +333,30 @@ describe('AppDb v11 (M12-21)', () => {
     await db.putComparePreset(preset);
     await db.clearAll();
     expect(await db.listComparePresets()).toEqual([]);
+    db.close();
+  });
+});
+
+describe('AppDb v12 (M13-07)', () => {
+  it('keeps CRS templates with their workbooks by id, keeps the presets, and clears them', async () => {
+    const factory = new IDBFactory();
+    const v11 = await AppDb.open({ factory, migrations: MIGRATIONS.slice(0, 11) });
+    const preset = { id: 'p1', name: 'Drawings', type: 'overlay' };
+    await v11.putComparePreset(preset);
+    v11.close();
+    const db = await AppDb.open({ factory });
+    expect(db.db.version).toBe(12);
+    expect(await db.listComparePresets()).toEqual([preset]);
+    const workbook = new Uint8Array([0x50, 0x4b, 3, 4]).buffer;
+    await db.putCrsTemplate({ id: 't1', name: 'Project CRS', workbook } as { id: string });
+    const [got] = (await db.listCrsTemplates()) as { id: string; workbook: ArrayBuffer }[];
+    expect(got?.id).toBe('t1');
+    expect([...new Uint8Array(got?.workbook ?? new ArrayBuffer(0))]).toEqual([0x50, 0x4b, 3, 4]);
+    await db.deleteCrsTemplate('t1');
+    expect(await db.listCrsTemplates()).toEqual([]);
+    await db.putCrsTemplate({ id: 't1', name: 'Project CRS', workbook } as { id: string });
+    await db.clearAll();
+    expect(await db.listCrsTemplates()).toEqual([]);
     db.close();
   });
 });

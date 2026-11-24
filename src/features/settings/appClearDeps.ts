@@ -18,6 +18,7 @@ import { resetPresets } from '../compare/presets/presetStore';
 import { resetHideHighlights } from '../compare/closeout/closeOutStore';
 import { resetCompareTips } from '../compare/tips/tipsStore';
 import { resetLoupeSettings } from '../measure/loupeSettings';
+import { resetCrsTemplates } from '../crs/templates/crsTemplateStore';
 import type { ClearDeps } from './clearAll';
 
 const hasCaches = (): boolean => typeof caches !== 'undefined';
@@ -60,5 +61,7 @@ export const appClearDeps: ClearDeps = {
     resetCompareTips();
     // The Measure loupe and automatic snapping back to their defaults (M13-02).
     resetLoupeSettings();
+    // The CRS project templates (M13-07).
+    resetCrsTemplates();
   },
 };
