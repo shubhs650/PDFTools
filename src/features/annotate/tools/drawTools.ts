@@ -74,6 +74,14 @@ export function setSnapper(fn: Snapper | null): void {
   snapper = fn;
 }
 
+type PointerTap = (tool: DrawTool, page: number, pos: Pt, evt: unknown) => void;
+let tap: PointerTap | null = null;
+
+/** The Measure loupe (M13-02, D-68) follows the pointer of the tools it serves from here. */
+export function setPointerTap(fn: PointerTap | null): void {
+  tap = fn;
+}
+
 /**
  * Wraps a tool's pointer handler factory: Shift constrains from the anchor
  * point; otherwise points snap to the page's geometry when snapping is on
@@ -94,12 +102,14 @@ export function wrapFactory(
       // Drag tools: where the drag started. Vertex tools: the last vertex placed.
       let anchor: Pt | null = null;
       const snaps = SNAPS.has(tool);
-      const fix = (pos: Pt, evt: Evt): Pt =>
-        shift(evt)
+      const fix = (pos: Pt, evt: Evt): Pt => {
+        tap?.(tool, context.pageIndex, pos, evt);
+        return shift(evt)
           ? constrain(tool, anchor, pos)
           : snaps && snapper
             ? snapper(context.pageIndex, pos, evt)
             : pos;
+      };
       const entry = {
         finish: () => {
           if (anchor) h.onDoubleClick?.(anchor, undefined as unknown as Evt, tool);

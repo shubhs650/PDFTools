@@ -1,6 +1,6 @@
 # Triya PDF — Progress
 
-_Last updated: 2026-11-24 (M13-01: sample comparisons in the Compare input window; M13 plan approved: final improvements for 1.1.0, tasks M13-01 … M13-09, ADR-034, ARCHITECTURE.md Rev 0.24; M12-ux plan and ADR-033 recorded (tasks M12-24 … M12-27 all merged); M12-26: alignment made easy to find and first-time tips; M12-27: review in a comparison made easier; M12-25: room to work in a comparison; M12-24: the Compare input window made clearer; M12-23: M12 acceptance, M12 complete on the agent side; M12-22: Compare help and release notes; M12-21·O4: drop a tab on a tab; M12-20: the comparison file; M12-21: change register and presets)_
+_Last updated: 2026-11-24 (M13-02: the Measure loupe and automatic snapping; M13-01: sample comparisons in the Compare input window; M13 plan approved: final improvements for 1.1.0, tasks M13-01 … M13-09, ADR-034, ARCHITECTURE.md Rev 0.24; M12-ux plan and ADR-033 recorded (tasks M12-24 … M12-27 all merged); M12-26: alignment made easy to find and first-time tips; M12-27: review in a comparison made easier; M12-25: room to work in a comparison; M12-24: the Compare input window made clearer; M12-23: M12 acceptance, M12 complete on the agent side; M12-22: Compare help and release notes; M12-21·O4: drop a tab on a tab; M12-20: the comparison file; M12-21: change register and presets)_
 
 **Next (approved 2026-11-24):** [docs/plan/M13.md](plan/M13.md) — final improvements before
 v1.1.0 ([ADR-034](adr/034-m13-final-improvements.md), D-67 … D-71, ARCHITECTURE.md Rev 0.24):
@@ -37,6 +37,29 @@ answers Q1–Q7; ARCHITECTURE.md Rev 0.12 after [ADR-024](adr/024-freetext-text-
 interop is in the M6 pack (CHECKLIST §M6 R1–R4). Rev 0 (M0–M4) is complete on the agent side.
 
 ## Done
+
+- **M13-02 — Measure loupe and automatic snapping (ADR-034, D-68; plan [M13](plan/M13.md) §2).**
+  M12-13's alignment magnifier became one shared loupe (`src/features/view/loupe/`: `Loupe.tsx`,
+  pure geometry in `loupeModel.ts`): the Render worker draws the region (one request in flight, at
+  most one per animation frame, latest spot wins; a region with a margin, so small moves only
+  shift the picture), it sits above and to the right of the pointer and flips near the window's
+  edges, with a crosshair. Alignment uses it unchanged (same size and magnification, its overlay
+  colours). The Measure loupe (`measure/MeasureLoupe.tsx`, `loupePointer.ts`) follows the pointer
+  with Distance, Perimeter, Area, Calibrate and drawing a Scale Viewport (whose corners now snap
+  too): the view as shown through a new `loupe` Render request (a snapshot of the region without
+  the copy permission, as it never leaves the screen), the snap marker in place and the snap kind
+  under the lens; hidden off the page, after a wheel turn, another tool or Space for Hand; Alt
+  means no snap, as before. Picking one of those tools turns snapping on with a short note; when
+  the measuring ends (Esc or another tool) snapping goes back, unless the person switched it
+  meanwhile (owner choice P3; pure rules in `model/autoSnap.ts`, the automatic change is never
+  stored). A **Loupe** toggle in the Measure ribbon's Snap group (on by default) and
+  **Settings → Measure** (loupe size small / medium / large, magnification 2× / 4× / 8×, "Turn on
+  snapping when measuring"), kept on this device as `pdftools.measureLoupe` (Privacy page, Clear
+  all local data). Tests: `tests/measure/autoSnap.test.ts`, `tests/view/loupeModel.test.ts`,
+  `e2e/measure-loupe.spec.ts` (each tool, auto-snap rules, settings and the toggle, axe light and
+  dark), `e2e/perf/measure-loupe.spec.ts` (pointer sweep over overlay corpus pair 14: 142 loupe
+  requests in 333 frames, no long task). Help topic in M13-09. Screenshots:
+  `/mnt/project-files/m13-02/`.
 
 - **M13-01 — Sample comparisons (ADR-034, D-67; plan [M13](plan/M13.md) §1).** Two self-made
   corpus pairs per type ship with the app (`src/model/compare/samples.ts`): PDF Overlay pair 01

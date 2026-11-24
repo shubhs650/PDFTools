@@ -1,7 +1,14 @@
 {
   "snap": {
     "enable": "Enable Snapping",
-    "preparing": "Preparing snapping…"
+    "preparing": "Preparing snapping…",
+    "autoOn": "Snapping is on while you measure. It goes back to how it was when you finish.",
+    "kind": {
+      "endpoint": "Endpoint",
+      "midpoint": "Midpoint",
+      "intersection": "Intersection",
+      "nearest": "Nearest"
+    }
   },
   "app": {
     "name": "Triya PDF",
@@ -141,6 +148,7 @@
       "scaleViewport": "Scale Viewport",
       "units": "Units and Precision",
       "snapping": "Enable Snapping",
+      "loupe": "Loupe",
       "snapEndpoint": "Snap to Endpoint",
       "snapMidpoint": "Snap to Midpoint",
       "snapIntersection": "Snap to Intersection",
@@ -714,6 +722,18 @@
       "reopen": "Reopen the files from last time",
       "hint": "Files open when you leave {{app}} open again in their tabs, each where you left it. Your browser may ask once per file to allow access again. New documents that were never saved can't be reopened, and files with unsaved changes are offered by recovery instead.",
       "note": "While this is on, {{app}} keeps which files are open (their names and the browser's permission handles) on this device. Nothing is kept when the start screen is chosen."
+    },
+    "measure": {
+      "title": "Measure",
+      "size": "Loupe size",
+      "small": "Small",
+      "medium": "Medium",
+      "large": "Large",
+      "mag": "Loupe magnification",
+      "magValue": "{{value}}×",
+      "autoSnap": "Turn on snapping when measuring",
+      "autoSnapHint": "Distance, Perimeter, Area, Calibrate and Scale Viewport turn snapping on; it goes back to how it was when you finish, unless you switch it yourself meanwhile.",
+      "note": "The loupe shows the spot under the pointer larger while you measure. Switch it on or off on the Measure tab, in the Snap group. These choices are kept on this device only."
     }
   },
   "about": {
@@ -870,7 +890,8 @@
       "recentFonts": "Comment fonts you chose last (font names only), shown first in the font list",
       "session": "Files open last time: their names and the browser's permission handles, kept only while File › Settings › Start-up reopens them",
       "closeOutHighlights": "Whether a comparison's close-out list hides highlights",
-      "compareTips": "Whether the first-time tips of Compare were seen"
+      "compareTips": "Whether the first-time tips of Compare were seen",
+      "measureLoupe": "The Measure loupe and snapping choices: loupe on or off, size, magnification"
     },
     "clearHint": "To delete this data, use File → Settings → Clear all local data."
   },

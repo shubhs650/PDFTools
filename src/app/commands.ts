@@ -1209,6 +1209,17 @@ export const COMMANDS: readonly CommandDef[] = [
     custom: 'measure.snapping', // M3-06
   },
   {
+    // M13-02 (D-68, ADR-034): the loupe beside the pointer while measuring; on by default.
+    id: 'measure.loupe',
+    tab: 'measure',
+    group: 'snap',
+    size: 'small',
+    fluent: 'SearchSquare',
+    milestone: 'M3',
+    toggle: true,
+    shipped: true,
+  },
+  {
     id: 'measure.snapEndpoint',
     tab: 'measure',
     group: 'snap',

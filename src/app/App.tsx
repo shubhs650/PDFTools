@@ -23,6 +23,7 @@ import { registerAttachFileCommands } from '../features/attachments/attachFile';
 import { registerSignCommands } from '../features/sign/signDocument';
 import { SignDocumentDialog } from '../features/sign/SignDocumentDialog';
 import { SnapshotToast } from '../features/snapshot/SnapshotLayer';
+import { MeasureLoupe } from '../features/measure/MeasureLoupe';
 import { registerOcrCommands } from '../features/ocr/commands';
 import { OcrDialog } from '../features/ocr/OcrDialog';
 import { RedactionStatus } from '../features/redact/PendingRedactionsPanel';
@@ -268,6 +269,7 @@ export function App() {
         <ImportCommentsDialog />
         <FlattenDialog />
         <SnapshotToast />
+        <MeasureLoupe />
         <PageImageProgress />
         <ExportDialog />
         <ExpressExtractDialog />

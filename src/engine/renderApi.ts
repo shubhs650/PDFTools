@@ -203,6 +203,13 @@ export interface RenderApi {
    */
   snapshot: MethodSpec<{ docId: string } & SnapshotRequest, SnapshotPixels>;
   /**
+   * The loupe (M13-02, D-68, ADR-034): a region of a page as the view shows it,
+   * drawn as a snapshot is (content, the drawn markups and form fields, at the
+   * view's rotation), as an ImageBitmap, transferred. Shown on screen only and
+   * never copied out, so it needs no copy permission. Cancellable until it draws.
+   */
+  loupe: MethodSpec<{ docId: string } & SnapshotRequest, { bitmap: ImageBitmap }>;
+  /**
    * The embedded file of a FileAttachment comment, by its /NM (M6-10: Save
    * Attachment… from the page or the Comments pane). Transferred.
    */

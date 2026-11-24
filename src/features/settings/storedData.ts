@@ -8,6 +8,7 @@ import { msg, type MessageKey } from '../../i18n';
 import { WHATS_NEW_STORAGE_KEY } from '../whatsNew/releases';
 import { RECENT_FONTS_STORAGE_KEY } from '../annotate/fonts/recentFonts';
 import { HIDE_HIGHLIGHTS_STORAGE_KEY } from '../compare/closeout/closeOutStore';
+import { LOUPE_STORAGE_KEY } from '../measure/loupeSettings';
 import { COMPARE_TIPS_STORAGE_KEY } from '../compare/tips/tipsKey';
 import { DB_NAME } from '../../storage/idb';
 import { RECOVERY_DIR } from '../../storage/recoveryTypes';
@@ -178,6 +179,14 @@ export const LOCAL_DATA: readonly LocalDataItem[] = [
     location: COMPARE_TIPS_STORAGE_KEY,
     store: COMPARE_TIPS_STORAGE_KEY,
     what: msg('privacy.data.compareTips'),
+    cleared: true,
+  },
+  {
+    // The Measure loupe and automatic snapping choices (M13-02, D-68).
+    kind: 'localStorage',
+    location: LOUPE_STORAGE_KEY,
+    store: LOUPE_STORAGE_KEY,
+    what: msg('privacy.data.measureLoupe'),
     cleared: true,
   },
   {

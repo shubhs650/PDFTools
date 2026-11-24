@@ -7122,54 +7122,85 @@ textarea.form-field {
   line-height: 1.3;
 }
 
-.align-magnifier {
+.loupe {
   position: fixed;
   z-index: 50;
-  overflow: hidden;
-  border: 2px solid var(--color-accent);
-  border-radius: 50%;
-  background: var(--color-page);
-  box-shadow: var(--elevation-2);
   pointer-events: none;
 }
 
-.align-magnifier canvas {
-  display: block;
-  width: 100%;
-  height: 100%;
+/* The lens (M12-13's magnifier, shared since M13-02): a circle with a crosshair at the spot. */
+.loupe-lens {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  border-radius: 50%;
+  outline: 2px solid var(--color-accent);
+  outline-offset: -2px;
+  background: var(--color-page);
+  box-shadow: var(--elevation-2);
 }
 
-.align-magnifier::before,
-.align-magnifier::after {
+.loupe-picture {
+  position: absolute;
+  display: block;
+}
+
+.loupe-cross::before,
+.loupe-cross::after {
   position: absolute;
   background: var(--color-accent);
   content: '';
 }
 
-.align-magnifier::before {
+.loupe-cross::before {
   top: 50%;
   left: 0;
   width: 100%;
   height: 1px;
 }
 
-.align-magnifier::after {
+.loupe-cross::after {
   top: 0;
   left: 50%;
   width: 1px;
   height: 100%;
 }
 
+/* The snap marker inside the lens, over the crosshair. */
+.loupe-lens .snap-marker {
+  z-index: 1;
+}
+
+.loupe-label {
+  position: absolute;
+  top: calc(100% - 10px);
+  left: 50%;
+  transform: translateX(-50%);
+  padding: 1px var(--space-2);
+  border: 1px solid var(--color-accent);
+  border-radius: var(--radius-s);
+  background: var(--color-surface);
+  color: var(--color-text);
+  font-size: var(--font-size-s);
+  line-height: 1.3;
+  white-space: nowrap;
+  box-shadow: var(--elevation-1);
+}
+
 @media (forced-colors: active) {
   .align-point,
-  .align-magnifier {
+  .loupe-label {
     border-color: Highlight;
+  }
+
+  .loupe-lens {
+    outline-color: Highlight;
   }
 
   .align-point::before,
   .align-point::after,
-  .align-magnifier::before,
-  .align-magnifier::after,
+  .loupe-cross::before,
+  .loupe-cross::after,
   .align-point-label {
     background: Highlight;
     color: HighlightText;

@@ -11,6 +11,7 @@ import { RecentList } from '../../features/recent/RecentList';
 import { AppearanceSection } from '../../features/settings/AppearanceSection';
 import { LocalData } from '../../features/settings/LocalData';
 import { StartupSection } from '../../features/settings/StartupSection';
+import { MeasureSection } from '../../features/settings/MeasureSection';
 import { ProfileSection } from '../../features/settings/profile/ProfileSection';
 import { About } from '../about/About';
 import { Privacy } from './Privacy';
@@ -174,6 +175,7 @@ export function Backstage({ open, section: initial, onOpenChange }: BackstagePro
                 <div className="settings-sections">
                   <AppearanceSection />
                   <StartupSection />
+                  <MeasureSection />
                   <ProfileSection />
                   <LocalData />
                 </div>

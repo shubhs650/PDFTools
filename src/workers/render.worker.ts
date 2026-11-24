@@ -419,6 +419,17 @@ const handlers: Handlers<RenderApi> = {
     return new Transfer(out, [out.data.buffer]);
   },
 
+  loupe: async ({ docId, ...req }, ctx) => {
+    const { mod: m, native: n } = ready();
+    // A spot the pointer has already left is cancelled before it draws (one in flight).
+    await nextTask();
+    ctx.throwIfAborted();
+    // On screen only, as the page itself (no copy permission needed, unlike a snapshot).
+    const out = renderSnapshot(m, n, docId, req);
+    const bitmap = await createImageBitmap(new ImageData(out.data, out.width, out.height));
+    return new Transfer({ bitmap }, [bitmap]);
+  },
+
   fileAttachment: ({ docId, pageIndex, id }) => {
     const { mod: m, native: n } = ready();
     const out = readFileAttachment(m, n, docId, pageIndex, id);

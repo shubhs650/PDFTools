@@ -17,6 +17,7 @@ import { resetZoneSets } from '../compare/diff/zoneSetsStore';
 import { resetPresets } from '../compare/presets/presetStore';
 import { resetHideHighlights } from '../compare/closeout/closeOutStore';
 import { resetCompareTips } from '../compare/tips/tipsStore';
+import { resetLoupeSettings } from '../measure/loupeSettings';
 import type { ClearDeps } from './clearAll';
 
 const hasCaches = (): boolean => typeof caches !== 'undefined';
@@ -57,5 +58,7 @@ export const appClearDeps: ClearDeps = {
     resetHideHighlights();
     // Compare's first-time tips show again (M12-26).
     resetCompareTips();
+    // The Measure loupe and automatic snapping back to their defaults (M13-02).
+    resetLoupeSettings();
   },
 };

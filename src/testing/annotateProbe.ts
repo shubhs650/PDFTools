@@ -17,6 +17,7 @@ import { annotationCapability, annotationState } from '../features/annotate/sele
 import { capability, hostStore } from '../features/view/host';
 import { diagnostics } from '../app/diagnostics';
 import { ensurePage, rtts, snapStore } from '../features/measure/snapping';
+import { loupeStats } from '../features/view/loupe/loupeModel';
 import { lastCrs } from '../features/crs/crsExport';
 import { lastAnnotationExport } from '../features/annotate/export/annotationExport';
 import { placeDynamicStamp } from '../features/stamps/stampTools';
@@ -105,6 +106,8 @@ export function registerAnnotateProbe(hook: TestHook): void {
       pages: snapStore.getState().pages,
       errors: diagnostics().filter((d) => d.where.startsWith('snap.')),
     }),
+    /** The loupe's requests to the Render worker and pictures shown so far (M13-02). */
+    loupe: () => ({ ...loupeStats }),
     /** Starts a page's geometry extraction (the Work worker gets busy with it). */
     snapPrepare: (docId: string, page: number) => {
       void ensurePage(docId, page);

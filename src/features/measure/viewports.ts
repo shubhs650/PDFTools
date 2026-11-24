@@ -25,6 +25,8 @@ import {
   type Box,
 } from '../../model/scaleViewport';
 import { capability, hostStore } from '../view/host';
+import { trackLoupe } from './loupePointer';
+import { snapPoint } from './snapping';
 import { entriesOf, loadScales, readEntries, scaleOf, scaleStore, setEntries } from './scaleStore';
 
 /** A viewport being added (index undefined) or edited, for the dialog. */
@@ -173,15 +175,23 @@ const handler: HandlerFactory<PdfAnnotationObject> = {
   create(context) {
     let start: Pt | null = null;
     const page = context.pageIndex;
+    const at = (raw: Pt, evt: unknown): Pt => {
+      trackLoupe('scaleViewport', page, raw, evt);
+      return snapPoint(page, raw, evt);
+    };
     return {
-      onPointerDown: (pos) => {
+      // The corners snap to the drawing and the loupe follows (M13-02, D-68); Alt: no snap.
+      onPointerDown: (raw, evt) => {
+        const pos = at(raw, evt);
         start = { ...pos };
         viewportStore.setState({ draft: { page, a: start, b: start } });
       },
-      onPointerMove: (pos) => {
+      onPointerMove: (raw, evt) => {
+        const pos = at(raw, evt);
         if (start) viewportStore.setState({ draft: { page, a: start, b: { ...pos } } });
       },
-      onPointerUp: (pos) => {
+      onPointerUp: (raw, evt) => {
+        const pos = at(raw, evt);
         const a = start;
         start = null;
         viewportStore.setState({ draft: null });
