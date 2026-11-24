@@ -741,9 +741,66 @@ test('measure-tools-1: the Measure tab', async ({ page }) => {
 test('measure-tools-2: a distance and an area', async ({ page }) => {
   const { top, bottom } = await measuredDrawing(page);
   await shoot(page, 'measure-tools-2', {
-    clip: await pageBox(page, DRAWING, 80, top - 60, 720, bottom - top + 100),
+    clip: await pageBox(page, DRAWING, 80, top - 85, 720, bottom - top + 125),
     pad: 0,
   });
+});
+
+test('measure-tools-3: placing a distance, the dimension line set sideways', async ({ page }) => {
+  await start(page);
+  await open(page);
+  await fitPage(page);
+  const d = await setScale100(page, 'Metres');
+  await d.getByRole('button', { name: 'Apply' }).click();
+  // The loupe off for this picture, so the dimension line shows clearly.
+  const loupe = toolbar(page, 'Measure').getByRole('button', { name: 'Loupe', exact: true });
+  if ((await loupe.getAttribute('aria-pressed')) === 'true') await loupe.click();
+  await toolbar(page, 'Measure').getByRole('button', { name: 'Distance', exact: true }).click();
+  // The plan's top edge (page points from the top-left), snapped at its corners.
+  const mm = 72 / 25.4 / 100;
+  const left = 120;
+  const right = 120 + 22000 * mm;
+  const top = 842 - (260 + 15000 * mm);
+  // The page's geometry ready, so both corners snap.
+  await expect
+    .poll(
+      async () =>
+        Object.values(
+          ((await cap(page, 'annotate', 'snap')) as { pages: Record<string, string> }).pages,
+        ),
+      { timeout: 20_000 },
+    )
+    .toContain('ready');
+  for (const x of [left, right]) {
+    const p = await at(page, DRAWING, x, top);
+    await page.mouse.move(p.x - 10, p.y + 10);
+    await page.mouse.move(p.x, p.y, { steps: 4 });
+    await page.waitForTimeout(200);
+    await page.mouse.click(p.x, p.y);
+  }
+  await expect(page.getByTestId('measure-live')).toHaveText('22.00 m');
+  // Sideways (Alt: no snap), the pointer above the plan.
+  await page.keyboard.down('Alt');
+  const side = await at(page, DRAWING, left + (right - left) * 0.62, top - 60);
+  await page.mouse.move(side.x, side.y, { steps: 8 });
+  await expect(page.getByTestId('measure-leaders').locator('line')).toHaveCount(2);
+  await expect(page.getByTestId('measure-live')).toBeVisible();
+  await page.waitForTimeout(300);
+  await shoot(page, 'measure-tools-3', {
+    clip: await pageBox(page, DRAWING, left - 40, top - 100, right - left + 80, 140),
+    pad: 0,
+    mouseAway: false,
+    callouts: [
+      { n: 1, target: await pageBox(page, DRAWING, left - 3, top - 3, 6, 6), at: 'b', dy: 10 },
+      {
+        n: 2,
+        target: await pageBox(page, DRAWING, right - 120, top - 66, 40, 6),
+        at: 'tr',
+        dy: -14,
+      },
+    ],
+  });
+  await page.keyboard.up('Alt');
 });
 
 test('snapping-1: the Snap options', async ({ page }) => {

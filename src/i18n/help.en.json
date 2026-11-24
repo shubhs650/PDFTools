@@ -1102,13 +1102,23 @@
           "steps": [
             "Set the scale first (see [Setting the scale](#measure-scale)).",
             "Choose <b>Distance</b>, <b>Perimeter</b> or <b>Area</b> on the <b>Measure</b> tab.",
-            "For Distance, drag from one point to the other: the line has an open arrow at each end, like a dimension line. For Perimeter and Area, click each corner and double-click (or press <kbd>Enter</kbd>) to finish. The [loupe](#loupe) beside the pointer shows each point larger.",
+            "For <b>Distance</b>, click the first point, then the second. Move the pointer sideways: the dimension line follows it, with a leader line from each point. Click to place it. <kbd>Enter</kbd> places it where it is, and a second click on the second point gives a plain line.",
+            "For <b>Perimeter</b> and <b>Area</b>, click each point, then double-click or press <kbd>Enter</kbd> to finish. An area also finishes when you click its first corner again.",
+            "Press <kbd>Esc</kbd> to drop a measurement you are placing; the tool stays on. The [loupe](#loupe) beside the pointer shows each point larger, and each click snaps when snapping is on.",
             "The value shows on the page and in the Properties pane."
           ]
         },
         {
           "shot": "measure-tools-2",
-          "alt": "A distance and an area measured on a drawing, with their values"
+          "alt": "A distance and an area measured on a drawing, with their values; the distance's dimension line sits above the plan"
+        },
+        {
+          "shot": "measure-tools-3",
+          "alt": "Placing a distance: the dimension line and its leader lines follow the pointer, with the value beside it",
+          "caption": "1 The two points · 2 The dimension line, set by moving the pointer sideways"
+        },
+        {
+          "tip": "A distance ends in open arrows, like a dimension line. Its dimension line is saved as standard PDF leader lines, so other PDF viewers show it in the same place. Dragging a point of a placed distance keeps the dimension line beside it."
         },
         {
           "tip": "Measurements are comments, so they appear in the Comments pane and can be exported with the other comments."
