@@ -1,7 +1,7 @@
-# Triya PDF — Architecture & Product Specification (Rev 0.23)
+# Triya PDF — Architecture & Product Specification (Rev 0.24)
 
 **App:** Triya PDF (formerly PDFTools, D-41) · **URL:** `app.triyapdf.com` and `triya-pdf.openengtools.com` (D-28) · **Platform:** Open Engineering Tools (OET)
-**Status:** Approved for implementation · **Last updated:** 23-Nov-2026 (Rev 0.23)
+**Status:** Approved for implementation · **Last updated:** 24-Nov-2026 (Rev 0.24)
 **Companion file:** `CLAUDE.md` (standing rules for the coding agent — read it first)
 
 > This document is the single source of truth. Where code and this document disagree, this document wins until it is deliberately amended. Decisions are numbered (D-xx) so commits, issues and ADRs can reference them.
@@ -25,6 +25,8 @@
 > **Rev 0.17 amendment** — [ADR-028](docs/adr/028-m11-tabs-fonts-select.md) (owner-approved 2026-11-17, all optional items accepted): **M11** — document tabs v2 (D-50), comments selectable in every pointer mode (D-51), a self-hosted font library for text comments with our own appearance streams (D-52), pick up where you left off (D-53), fonts installed on the computer (D-54), split, images to PDF and crop (D-55), resizable panes with edge arrows (D-56) (§2, §3.2, §7.1, §7.8, §8, §8.1, §9, §10.3, §13 M11).
 
 > **Rev 0.18 amendment** — [ADR-028](docs/adr/028-m11-tabs-fonts-select.md) amendment (owner, 2026-11-18): **D-54 withdrawn** — fonts installed on the user's computer are not supported (a cross-compatibility risk); text comments use only the fonts that ship with the app (D-52), and the library may grow later on user request (§2, §7.1, §10.3, §13 M11).
+
+> **Rev 0.24 amendment** — [ADR-034](docs/adr/034-m13-final-improvements.md) (owner, 2026-11-24): **M13 — final improvements for 1.1.0** — sample comparisons shipped with the app (D-67); a loupe and automatic snapping for Measure (D-68); **Thin Lines** on screen (D-69); labelled status bar toggles, Previous view / Next view in the status bar and one view history for the window (D-70); **CRS export into project Excel templates** (D-71) (§2, §5, §7.4, §7.5, §7.16, §8.1, §13).
 
 > **Rev 0.23 amendment** — [ADR-033](docs/adr/033-m12-compare-usability.md) (owner, 2026-11-23): **Compare made easier to use** after the M12 hand check — page previews and a page picker in the pairing table, **New comparison** in a new tab instead of returning to the inputs (D-58); foldable, resizable panes, Maximise, labelled header buttons and a colour key (D-62); plain alignment status words, a "Checked by you" status and a guided **Line up** mode (D-60); close-out sorted with text comments first, Hide highlights and click to zoom; an unsaved dot on the window titles; page number and Go to page in the text view (D-62, D-64) (§7.16).
 
@@ -149,6 +151,11 @@ Tablet/phone UI · Safari parity · PDF text/content editing · form design beyo
 | D-64 | **Text comparison view** (ADR-031): Document A and Document B side by side, continuous scroll synchronised by content, bands across the gap, the list on the right; marks by colour and shape (deleted red struck, inserted green underlined, replaced amber, moved blue, changed figure framed); the marks belong to the view, not to the documents; the comment and close-out rules of D-62 |
 | D-65 | **Saving a comparison** (ADR-031): **Save review** (Ctrl+S) writes only the reviewer's new comments into Document A and Document B by the normal incremental save; **Save comparison…** writes one standard PDF (overlay pages, or Document B's pages with the changes as standard highlights, carets and notes) with the other document(s) and the comparison data as attachments, readable in any viewer and reopened here as the live comparison (format `docs/formats/triya-comparison-v1.md`, ADR-032; a protected input makes a password-protected file); Export Document A / B; change register to Excel and CSV; optional summary page |
 | D-66 | **Comparison work and acceptance** (ADR-031): a PDFium-free **Compare worker** for alignment, difference detection and text matching, fed by the Work worker; progressive results, viewed items first, with progress and Cancel; done = the corpus acceptance suite in CI (`Synthetic PDF Corpus/`, self-made) plus the owner's hand check; numbers fixed after the spikes (ADR-032) |
+| D-67 | **Sample comparisons** (ADR-034): two self-made pairs per comparison type from `Synthetic PDF Corpus/` ship with the app, precached, and fill the input window from a "Try a sample" menu; the start screen offers one when no document is open |
+| D-68 | **Measure loupe and snapping** (ADR-034): one shared loupe (from M12-13's magnifier) beside the pointer for Measure tools, Calibrate and Scale Viewport, also View → Loupe and line-type comments; Measure tools turn snapping on and restore it when they end |
+| D-69 | **Thin Lines** (ADR-034): Ctrl+5, View ribbon and status bar toggle; every stroked page line drawn 1 device pixel wide on screen only (comments, files, print and exports untouched); one setting stored on the device; route by spike S32 |
+| D-70 | **Status bar** (ADR-034): labelled toggles (icon plus text) for Thin Lines and Enable Snapping; Previous view / Next view beside the page buttons; one view history for the whole window, including tab switches and opened documents |
+| D-71 | **CRS project templates** (ADR-034): Export CRS fills a project's own `.xlsx` form stored on the device (sheet, start row, detected pre-drawn rows then inserted rows copying format, formulas and drop-downs, detail cells, file-name rule, field list with column numbers, reply fields, status words, type ticks, Ignore highlights, one sheet per page or per document, snapshots fitted to their column), set up in guided steps with a live sheet preview, shared as a template file; the Standard CRS stays the default; limits by spike S33 |
 | D-34 | **OCR** (Rev 1 item 1, ADR-020): Tesseract WASM core in its own worker, five languages (English precached, the rest on first use), invisible text layer written by our object layer with a glyphless font, pages with text skipped unless asked; needs the modify permission |
 
 ---
@@ -298,9 +305,10 @@ Ctrl+S calls PDFium `FPDF_SaveAsCopy(FPDF_INCREMENTAL)` in the Render worker, th
 - Tile cache bounded per document (LRU); off-screen documents drop tiles first.
 - Thumbnails and text layers load lazily in viewport order.
 - View modes: single, continuous, facing, continuous facing; rotate view; fit page / width / visible / actual size; loupe and pan-and-zoom window are **nice-to-have** within Rev 0.
+- **Thin Lines** (D-69, ADR-034): every stroked page line 1 device pixel wide on screen only, Ctrl+5; tiles are keyed by the setting. **Loupe** (D-68): View → Loupe in any tool. **Previous / Next view** (D-70): one history for the window, including tab switches and opened documents.
 - Left rail panes: Bookmarks, Thumbnails, Comments, Attachments, Signatures, Search results, Layers (display toggle only).
 - Comments pane: one toolbar row (options menu with sort, group and filters; Find runs on Enter), cards grouped by page with replies, status and lock, selection mirrored with the page, context menu (ADR-021).
-- Status bar: page nav, zoom, view mode, **snapping** (magnet toggle, ADR-021), "✓ Ready offline" / "Preparing offline… n %", "Update ready".
+- Status bar: page nav with **Previous view / Next view**, zoom, view mode, labelled **Thin Lines** and **Enable Snapping** toggles (icon plus text, D-70; snapping was a magnet toggle, ADR-021), "✓ Ready offline" / "Preparing offline… n %", "Update ready".
 
 ---
 
@@ -369,8 +377,12 @@ First markup triggers a dialog: name, initials, discipline, company (optional). 
 - Persist using standard PDF measurement structures (Measure / Viewport dictionaries). EmbedPDF/PDFium cannot write or read these, so a narrow **own PDF object layer** (reader, serializer, patch writer) in the Render worker adds `/Measure`, `/IT`, `/Cap`, `/Contents` and page `/VP`, merged into the single Ctrl+S revision (ADR-007). Encrypted files: the Standard security handler is implemented in M3; until then, measurements in encrypted PDFs are shown but not saved, with a message (ADR-007). Label strategy and viewport semantics for viewer-made files follow the owner's interop run (ADR-007 decisions 2–3).
 - **Snapping** to vector geometry (endpoints, midpoints, intersections, nearest-on-segment). Geometry for each visible page is extracted whole in the Work worker (page parsing dominates, so region extraction does not pay off — ADR-008), spatially indexed, cached per page. Queries are answered by the Snap worker (§3.1, ADR-008).
 
+- **Loupe and auto-snap** (D-68, ADR-034): a loupe beside the pointer while a Measure tool, Calibrate or Scale Viewport is active; snapping turns on with those tools and returns to its earlier state when they end.
+
 ### 7.5 CRS export (D-15)
 Excel (ExcelJS). Header block: document number, revision, title, reviewer, date, status scheme. Columns: No. · Page · Location/Type · Reviewer · Discipline · Comment · Replies · Status · Snapshot · Vendor Response (blank) · Final Status (blank). Optional snapshot thumbnail of each markup region embedded per row. Also CSV (no images).
+
+**Project templates** (D-71, ADR-034): a project's own `.xlsx` CRS form, stored on the device, filled on one chosen sheet from a start row (pre-drawn rows first, then inserted rows copying the start row's format, formulas and drop-downs); detail cells, field list with columns, reply fields, status words, comment-type ticks, Ignore highlights, order by page with text comments first, one sheet per page or per document; guided set-up with a live sheet preview; a template file to share. Built in the Work worker. The layout above is the built-in **Standard CRS** template and stays the default.
 
 ### 7.6 Extraction & conversion
 | Output | Engine | Label |
@@ -444,6 +456,8 @@ Two comparison types (ADR-031, plan `docs/plan/M12.md`): **PDF Overlay** for dra
 - **Work and progress** (D-66): the Compare worker (§3.1) computes; results arrive sheet by sheet, the viewed one first, with progress and Cancel.
 - **Not in scope:** more than two revisions at once; non-PDF inputs; accepting, rejecting or merging changes; several files per side in a text comparison; a curtain slider; an inline redline pane; a title-block reader; unit conversion; formatting-only changes; comparing comments as content; a folder picker.
 
+**Sample comparisons** (D-67, ADR-034): the input window offers two self-made sample pairs per type ("Try a sample"), shipped with the app and precached.
+
 ---
 
 ## 8. UI specification
@@ -462,7 +476,7 @@ Two comparison types (ADR-031, plan `docs/plan/M12.md`): **PDF Overlay** for dra
 - **Do not copy other PDF products' artwork or proprietary visual assets.** Layout conventions only.
 
 ### 8.1 Keyboard (D-29)
-Ctrl+O/S/P, Ctrl+Shift+S, Ctrl+Z/Y, Ctrl+F, Ctrl+Shift+F, Ctrl+0/1/2 (fit page / actual / fit width), Ctrl+= / Ctrl+-, H (hand), V (select), single-letter tool keys, **Ctrl+F4** close tab, **Ctrl+PageUp/PageDown** switch tabs, Esc cancels tool. **F1** opens Help (ADR-026). **Ctrl+Shift+Left/Right** moves the focused document tab and **Reopen Closed Tab** is on the tab menu (D-50). In a comparison (ADR-031): **F8** / **Shift+F8** next and previous difference; **X** held blinks between old and new while the overlay has focus. Help → printable shortcut sheet. Ctrl+F4 and Ctrl+PageUp/PageDown are reserved by Chrome in a normal tab (may work in the installed PWA window); alternates are defined in M1 (ADR-001 B5).
+Ctrl+O/S/P, Ctrl+Shift+S, Ctrl+Z/Y, Ctrl+F, Ctrl+Shift+F, Ctrl+0/1/2 (fit page / actual / fit width), Ctrl+= / Ctrl+-, H (hand), V (select), single-letter tool keys, **Ctrl+F4** close tab, **Ctrl+PageUp/PageDown** switch tabs, Esc cancels tool. **F1** opens Help (ADR-026). **Ctrl+Shift+Left/Right** moves the focused document tab and **Reopen Closed Tab** is on the tab menu (D-50). In a comparison (ADR-031): **F8** / **Shift+F8** next and previous difference; **X** held blinks between old and new while the overlay has focus. Help → printable shortcut sheet. **Ctrl+5** Thin Lines (D-69; an alternate if the browser keeps it in a normal tab). Ctrl+F4 and Ctrl+PageUp/PageDown are reserved by Chrome in a normal tab (may work in the installed PWA window); alternates are defined in M1 (ADR-001 B5).
 
 ### 8.2 i18n & accessibility (D-30)
 No user-visible string literals in components — all via i18n keys in `en.json` (Help's text in `help.en.json`, ADR-026). Locale-aware dates/numbers/units via `Intl`. Layouts tolerate +40 % label length. Every control keyboard-reachable with visible focus and an accessible name.
@@ -588,6 +602,9 @@ The OCR text-selection fix; document tabs v2 (D-50); comments in every pointer m
 
 ### M12 — PDF comparison (ADR-031)
 PDF overlay for drawings and text comparison for documents (§7.16, D-58 … D-66), version 1.1.0: corpus additions; spikes S27 – S31 (several documents on screen, alignment, the overlay and the vector overlay PDF, text matching, the comparison file) with ADR-032 as a second owner gate; the Compare worker, the comparison tab and input window, pairing, alignment, the overlay view, the Review layout, differences, review across revisions, the vector overlay, the text comparison engine and view, saving, the change register, compare an area, Help, acceptance and the owner's hand check; switched off in release builds until acceptance (`docs/plan/M12.md`).
+
+### M13 — Final improvements for 1.1.0 (ADR-034)
+Sample comparisons, the Measure loupe and auto-snap, Thin Lines, labelled status bar toggles with Previous / Next view, CRS project templates (spikes S32 and S33 first), then Help, release checks and the owner's hand check before the `v1.1.0` tag (`docs/plan/M13.md`).
 
 ---
 
