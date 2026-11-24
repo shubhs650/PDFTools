@@ -65,6 +65,7 @@ import { detectTables, exportTables, tableCells, type TableSources } from './wor
 import { applyRedactions } from './work/redact/apply';
 import type { PdfDocumentObject } from '@embedpdf/models';
 import { installFontReadback } from './render/freeTextFonts';
+import { installLeaderReadback } from './render/leaderReadback';
 import { copyItems, editObjects, OutlineError, readOutline } from './work/outline';
 import { popupStates } from './work/popups';
 import { LayerCopyError, layerCopy, layerKey, type LayerStates } from './shared/layerCopy';
@@ -240,6 +241,8 @@ serve<WorkApi>(self, {
     native = new PdfiumNative(mod, { fontFallback: null });
     // Text boxes keep their standard font when listed (M6-06).
     installFontReadback(native);
+    // A line's leader lines (/LL) come back as its `leader` (M13-10).
+    installLeaderReadback(mod, native);
     return { ms: performance.now() - t0, wasmBytes: wasmBytes() };
   },
 

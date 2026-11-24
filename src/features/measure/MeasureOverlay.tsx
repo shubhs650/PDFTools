@@ -1,6 +1,7 @@
 import { useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
 import { format } from '../../i18n';
+import { leaderOf } from '../../model/dimension';
 import { labelAnchor, measurePoints, valueText } from '../../model/measurement';
 import { useAnnotationMap } from '../annotate/comments/commentsStore';
 import { choiceFor, kindOf } from './measurements';
@@ -55,14 +56,31 @@ export function MeasureOverlay({
       )
       .map((o) => {
         const k = kindOf(documentId, o) ?? 'distance';
-        return { id: o.id, at: labelAnchor(k, measurePoints(o)) };
+        return { id: o.id, at: labelAnchor(k, measurePoints(o), leaderOf(o)) };
       });
     // entry: viewports changed → re-evaluate.
   }, [byUid, hasDetails, documentId, pageIndex, entry]); // eslint-disable-line react-hooks/exhaustive-deps
-  const at = live?.pts[live.pts.length - 1];
+  const at = live?.at ?? live?.pts[live.pts.length - 1];
   if ((!text || !at) && spans.length === 0) return null;
   return (
     <div className="measure-overlay" aria-hidden="true">
+      {live?.leaders ? (
+        // A Distance's leader lines while its offset is set (M13-10); the plugin
+        // previews the dimension line itself.
+        <svg className="measure-leaders" data-testid="measure-leaders">
+          {live.leaders.map(([p, q], i) => (
+            <line
+              key={i}
+              x1={p.x * scale}
+              y1={p.y * scale}
+              x2={q.x * scale}
+              y2={q.y * scale}
+              stroke={live.color ?? 'currentColor'}
+              strokeWidth={Math.max(1, (live.width ?? 1) * scale)}
+            />
+          ))}
+        </svg>
+      ) : null}
       {text && at ? (
         <span
           className="measure-live"

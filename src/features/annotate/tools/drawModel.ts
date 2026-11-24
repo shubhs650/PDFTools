@@ -98,8 +98,12 @@ export const KEYBOARD_PLACED: ReadonlySet<DrawTool> = new Set([
   'formCombobox',
 ]);
 
-/** Tools whose drawing is a chain of clicks, finished by Enter or double-click. */
+/**
+ * Tools whose drawing is a chain of clicks, finished by Enter or double-click
+ * (Distance: two points, then the offset, M13-10).
+ */
 export const VERTEX_TOOLS: ReadonlySet<DrawTool> = new Set([
+  'measureDistance',
   'polyline',
   'polygon',
   'cloud',

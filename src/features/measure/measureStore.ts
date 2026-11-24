@@ -10,6 +10,12 @@ export interface LiveMeasure {
   kind: MeasureKind;
   /** Points so far, the pointer last (EmbedPDF page points, top-left origin). */
   pts: Pt[];
+  /** Where the value shows, when not at the last point (a Distance's offset: the pointer). */
+  at?: Pt;
+  /** A Distance's leader lines while its offset is set (M13-10), with its colour and width. */
+  leaders?: [Pt, Pt][];
+  color?: string;
+  width?: number;
 }
 
 interface MeasureState {

@@ -4,6 +4,7 @@
 // layer adds (/IT, /Measure, /Cap, /CP) and where the grouped FreeText label
 // goes. Pure; coordinates are EmbedPDF's (page points, top-left origin) unless
 // a function says otherwise — lengths and areas don't depend on the origin.
+import { dimensionMiddle, type Leader } from './dimension';
 import type { PdfJson } from './pdf/wire';
 import {
   formatLength,
@@ -41,6 +42,8 @@ export interface MeasureShape {
   intent?: string;
   linePoints?: { start: Pt; end: Pt };
   vertices?: Pt[];
+  /** A Distance drawn as a dimension: the leader line entries (M13-10, model/dimension.ts). */
+  leader?: Leader | null;
 }
 
 const LINE = 4;
@@ -122,13 +125,13 @@ export function labelSize(text: string, fontSize = LABEL_FONT_SIZE): Rect['size'
   };
 }
 
-/** Where a label sits: above a line's midpoint, at a polygon's centre, by a polyline's last vertex. */
-export function labelAnchor(kind: Kind, pts: readonly Pt[]): Pt {
+/**
+ * Where a label sits: above a line's midpoint (a dimension's: the middle of its
+ * dimension line, M13-10), at a polygon's centre, by a polyline's last vertex.
+ */
+export function labelAnchor(kind: Kind, pts: readonly Pt[], leader?: Leader | null): Pt {
   const first = pts[0] ?? { x: 0, y: 0 };
-  if (kind === 'distance') {
-    const b = pts[1] ?? first;
-    return { x: (first.x + b.x) / 2, y: (first.y + b.y) / 2 };
-  }
+  if (kind === 'distance') return dimensionMiddle(first, pts[1] ?? first, leader);
   if (kind === 'area') {
     const n = pts.length || 1;
     return {
@@ -149,9 +152,10 @@ export function labelRect(
   text: string,
   page: { width: number; height: number },
   fontSize = LABEL_FONT_SIZE,
+  leader?: Leader | null,
 ): Rect {
   const size = labelSize(text, fontSize);
-  const a = labelAnchor(kind, pts);
+  const a = labelAnchor(kind, pts, leader);
   const x = a.x - size.width / 2;
   const y = kind === 'area' ? a.y - size.height / 2 : a.y - size.height - 2;
   const clamp = (v: number, max: number): number => Math.min(Math.max(0, v), Math.max(0, max));

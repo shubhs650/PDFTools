@@ -247,6 +247,8 @@ test('a measured distance has an open arrow at each end (owner, 2026-11-24)', as
   await page.mouse.down();
   await page.mouse.move(box.x + box.width * 0.6, box.y + box.height * 0.3, { steps: 6 });
   await page.mouse.up();
+  // M13-10: a click on the second point places it with no offset.
+  await page.mouse.click(box.x + box.width * 0.6, box.y + box.height * 0.3);
   await expect
     .poll(async () =>
       ((await cap(page, 'annotate', 'objects', id)) as { type: number; lineEndings?: unknown }[])

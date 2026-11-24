@@ -276,6 +276,8 @@ test(
       await page.mouse.down();
       await page.mouse.move(b.x, b.y, { steps: 6 });
       await page.mouse.up();
+      // M13-10: a click on the second point places it with no offset.
+      await page.mouse.click(b.x, b.y);
       await expect
         .poll(async () =>
           ((await cap(page, 'annotate', 'list', id)) as { contents: string | null }[]).some(

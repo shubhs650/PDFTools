@@ -5,7 +5,8 @@ import { cap, drop } from './support/app.ts';
 import { expect, test } from './support/fixtures.ts';
 
 // M3-16 (§7.4, ADR-007, M3-Q2): Distance, Perimeter and Area draw EmbedPDF
-// line/polyline/polygon annotations; the value goes to /Contents and a grouped
+// line/polyline/polygon annotations, placed by clicks (M13-10: a Distance's
+// dimension line beside its points, stored as /LL and /LLE); the value goes to /Contents and a grouped
 // FreeText label, and /IT, /Measure, /Cap are staged for the single Ctrl+S
 // revision. Values follow vertex edits (in the same undo step) and the scale.
 
@@ -18,6 +19,8 @@ interface Obj {
   replyType?: number;
   linePoints?: { start: { x: number; y: number }; end: { x: number; y: number } };
   vertices?: { x: number; y: number }[];
+  leader?: { ll: number; lle: number; llo: number };
+  rect?: { origin: { x: number; y: number }; size: { width: number; height: number } };
 }
 
 const T = { FREETEXT: 3, LINE: 4, POLYGON: 7, POLYLINE: 8 };
@@ -118,19 +121,36 @@ test('Distance at 1:100: live value, value and label, vertex edit in one undo st
   await setScale(page, '100', 'Metres', '2');
   await tool(page, 'Distance');
 
-  // While drawing: the value next to the pointer, in the page's scale.
+  // M13-10: click the first point, click the second (the value next to the pointer, in
+  // the page's scale), move sideways to set the dimension line, click to place it.
   const a = await at(page, 100, 300);
   const b = await at(page, 300, 300);
+  const side = await at(page, 220, 340);
   await page.mouse.move(a.x, a.y);
-  await page.mouse.down();
+  await page.mouse.click(a.x, a.y);
   await page.mouse.move(b.x, b.y, { steps: 8 });
   await expect(page.getByTestId('measure-live')).toHaveText(/^\d+\.\d\d m$/);
-  await page.mouse.up();
+  await page.mouse.click(b.x, b.y);
+  // Nothing is placed yet: the leader lines follow the pointer, the value stays.
+  expect(await cap(page, 'annotate', 'list', id)).toEqual([]);
+  await page.mouse.move(side.x, side.y, { steps: 6 });
+  await expect(page.getByTestId('measure-leaders').locator('line')).toHaveCount(2);
+  await expect(page.getByTestId('measure-live')).toHaveText(/^\d+\.\d\d m$/);
+  await page.mouse.click(side.x, side.y);
   await expect(page.getByTestId('measure-live')).toBeHidden();
+  await expect(page.getByTestId('measure-leaders')).toHaveCount(0);
 
   const { m, label } = await measured(page, id, T.LINE);
   expect(m.contents).toMatch(/^\d+\.\d\d m$/);
   expect(label.type).toBe(T.FREETEXT);
+  // The measured points stay the line; the offset is the leader (40 pt, down the page).
+  expect(m.linePoints?.start.y).toBeCloseTo(300, 0);
+  expect(m.linePoints?.end.y).toBeCloseTo(300, 0);
+  expect(m.leader?.ll).toBeCloseTo(40, 0);
+  // The label sits over the dimension line, not over the measured points.
+  expect((await objects(page, id)).find((o) => o.id === label.id)?.rect?.origin.y).toBeGreaterThan(
+    300,
+  );
 
   // A vertex edit re-values the measurement and its label; one undo takes all back.
   const before = m.contents;
@@ -157,12 +177,109 @@ test('Distance at 1:100: live value, value and label, vertex edit in one undo st
   expect(tail).toMatch(/\/Cap\s*true/);
   expect(tail).toMatch(/\/Contents\s*\(20\.00 m\)/);
   expect(tail).toMatch(/\/RT\s*\/Group/);
+  // The offset as the standard leader line entries, so other viewers draw it.
+  expect(tail).toMatch(/\/LL\s+40(\.\d+)?\b/);
+  expect(tail).toMatch(/\/LLE\s+3\b/);
 
-  // Reopened: still a measurement with its value.
+  // Reopened: still a measurement with its value and its leader lines.
   const id2 = await open(page, file);
   const back = await measured(page, id2, T.LINE);
   expect(back.m.intent).toBe('LineDimension');
   expect(back.m.contents).toBe('20.00 m');
+  expect(back.m.leader?.ll).toBeCloseTo(40, 0);
+});
+
+test('Distance: Esc drops a half-placed one; Enter places it with no offset; the old drag still works', async ({
+  page,
+}) => {
+  const id = await open(page);
+  await tool(page, 'Distance');
+  await expect(page.getByTestId('tool-hint')).toContainText('Click two points');
+  const live = page.getByTestId('measure-live');
+
+  // Esc after the second point: nothing placed, the tool stays on.
+  await clicks(page, [
+    [100, 300],
+    [300, 300],
+  ]);
+  const side = await at(page, 200, 260);
+  await page.mouse.move(side.x, side.y, { steps: 4 });
+  await expect(page.getByTestId('measure-leaders')).toBeVisible();
+  await page.keyboard.press('Escape');
+  await expect(live).toHaveCount(0);
+  expect(await cap(page, 'annotate', 'list', id)).toEqual([]);
+  await expect(
+    measureTab(page).getByRole('button', { name: 'Distance', exact: true }),
+  ).toHaveAttribute('aria-pressed', 'true');
+
+  // Enter after the second point (pointer on the line): a plain dimension, no leader lines.
+  await clicks(page, [
+    [100, 150],
+    [300, 150],
+  ]);
+  await page.keyboard.press('Enter');
+  const first = await measured(page, id, T.LINE);
+  expect(first.m.leader).toBeUndefined();
+
+  // Press at the first point, drag to the second, release; then the offset, above.
+  const a = await at(page, 100, 250);
+  const b = await at(page, 300, 250);
+  const up = await at(page, 200, 220);
+  await page.mouse.move(a.x, a.y);
+  await page.mouse.down();
+  await page.mouse.move(b.x, b.y, { steps: 8 });
+  await page.mouse.up();
+  await expect(live).toBeVisible();
+  await page.mouse.move(up.x, up.y, { steps: 4 });
+  await page.mouse.click(up.x, up.y);
+  await expect
+    .poll(async () =>
+      (await objects(page, id)).filter((o) => o.type === T.LINE).map((o) => o.leader?.ll ?? 0),
+    )
+    .toHaveLength(2);
+  const lines = (await objects(page, id)).filter((o) => o.type === T.LINE);
+  const dragged = lines.find((o) => o.id !== first.m.id);
+  // Above a line drawn left to right is anticlockwise: a negative /LL.
+  expect(dragged?.leader?.ll).toBeCloseTo(-30, 0);
+  expect(dragged?.linePoints?.start.x).toBeCloseTo(100, 0);
+  expect(dragged?.linePoints?.end.x).toBeCloseTo(300, 0);
+});
+
+test('Perimeter and Area are placed by clicks: double-click, a click on the first corner, Esc', async ({
+  page,
+}) => {
+  const id = await open(page);
+  await tool(page, 'Perimeter');
+  await expect(page.getByTestId('tool-hint')).toContainText('double-click or press Enter');
+  await clicks(page, [
+    [100, 200],
+    [200, 250],
+  ]);
+  const c = await at(page, 300, 200);
+  await page.mouse.move(c.x, c.y, { steps: 4 });
+  await page.mouse.dblclick(c.x, c.y);
+  const per = await measured(page, id, T.POLYLINE);
+  expect(per.m.vertices).toHaveLength(3);
+
+  await tool(page, 'Area');
+  await expect(page.getByTestId('tool-hint')).toContainText('click the first one');
+  await clicks(page, [
+    [350, 150],
+    [500, 150],
+    [500, 280],
+    [350, 150],
+  ]);
+  const area = await measured(page, id, T.POLYGON);
+  expect(area.m.vertices).toHaveLength(3);
+
+  // Esc drops a half-drawn area.
+  await clicks(page, [
+    [350, 320],
+    [500, 320],
+  ]);
+  await page.keyboard.press('Escape');
+  await expect(page.getByTestId('measure-live')).toHaveCount(0);
+  expect((await objects(page, id)).filter((o) => o.type === T.POLYGON)).toHaveLength(1);
 });
 
 test('Perimeter and Area: click, Enter finishes; exact S2 values; a new scale re-values them', async ({
@@ -254,11 +371,11 @@ test('without a scale the value is marked uncalibrated and no /Measure is writte
   await tool(page, 'Distance');
   const a = await at(page, 100, 300);
   const b = await at(page, 100 + 50 * MM, 300);
-  await page.mouse.move(a.x, a.y);
-  await page.mouse.down();
+  await page.mouse.click(a.x, a.y);
   await page.mouse.move(b.x, b.y, { steps: 6 });
   await expect(page.getByTestId('measure-live')).toHaveText(/\(uncalibrated\)$/);
-  await page.mouse.up();
+  await page.mouse.click(b.x, b.y);
+  await page.mouse.click(b.x, b.y);
   const { m } = await measured(page, id, T.LINE);
   expect(m.contents).toMatch(/^\d+\.\d mm \(uncalibrated\)$/);
   const { tail } = await save(page, id, bytes);
@@ -274,12 +391,11 @@ test('an encrypted file (AES-256) saves its measurement with the measure keys', 
   const id = await open(page, bytes);
   await setScale(page, '100', 'Metres', '2');
   await tool(page, 'Distance');
-  const a = await at(page, 100, 300);
-  const b = await at(page, 300, 300);
-  await page.mouse.move(a.x, a.y);
-  await page.mouse.down();
-  await page.mouse.move(b.x, b.y, { steps: 6 });
-  await page.mouse.up();
+  await clicks(page, [
+    [100, 300],
+    [300, 300],
+    [200, 330],
+  ]);
   const { m } = await measured(page, id, T.LINE);
   const { file } = await save(page, id, bytes);
   const id2 = await open(page, file);

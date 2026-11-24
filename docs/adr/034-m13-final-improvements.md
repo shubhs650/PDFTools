@@ -182,3 +182,32 @@ objects, one path per line, 2,000 placed symbols in form XObjects), the e2e A0 s
 6. **Found on the way:** Ctrl+S on an image-heavy file is slow once its pages were drawn (PDFium
    writes the decoded image streams again and the narrow tail then drops them: 8.4 s instead of
    0.15 s for a 120 MB image). Today's behaviour, unrelated to Thin Lines; reported to the owner, not fixed here.
+
+## Amendment 3 — Measuring by clicks; Distance as a dimension (M13-10, 2026-11-24)
+
+Asked for by the owner on 2026-11-24 (plan §8): Distance by clicks in the CAD way, with the
+dimension line set beside the points by moving the pointer sideways; Perimeter and Area by clicks
+too. **Adds D-72.**
+
+1. **Gesture.** Distance: click, click, move sideways, click (Enter or a double-click places it
+   where it is; Esc drops it). The earlier press-and-drag gives the two points. Perimeter and Area
+   keep the plugin's click-by-click drawing (double-click, Enter, an area's first corner). A
+   status bar hint names the clicks. Snapping, the loupe, auto-snap, Shift and Alt apply to
+   every click (`wrapFactory` treats Distance as a click-by-click tool).
+2. **Stored the standard way.** `/L` keeps the measured points, so `/Contents`, `/Measure` and the
+   value never depend on the offset; the offset is `/LL` (signed; positive is clockwise from the
+   start of `/L` in user space), `/LLE` 3 pt and `/LLO` only when set. No private keys (rule 6).
+3. **Appearance.** PDFium's generated appearance for a Line draws `/L` only. After EmbedPDF
+   creates or changes a Line that has a leader, the Render worker sets `/L` to the dimension line
+   for a moment, lets PDFium draw that appearance (so colour, width, dashes, endings and opacity
+   stay PDFium's), puts `/L` back, adds the two leader lines (solid, same colour and width) and
+   sets the result as the appearance (the M7-12 / M13-04 route, plain numbers). The main thread
+   gives the comment a `/Rect` that holds the leader lines (the tool's transform keeps it so when
+   a point is dragged). If anything is unexpected, PDFium's own appearance of the measured line
+   stays and `/LL` is still written.
+4. **Reading back.** In the Render and Work workers, a Line with a non-zero `/LL` gets a `leader`
+   field on its object (the way text comments carry their library font), so a dimension made
+   here or in another editor keeps its leader lines when edited.
+5. **Not in this change:** dragging the offset of a placed dimension (its end points stay
+   editable; drawing it again sets a new offset); leader lines for Perimeter (a polyline has no
+   such entries in PDF).

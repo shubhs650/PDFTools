@@ -248,8 +248,14 @@ export async function measuredDrawing(page: Page): Promise<{ top: number; bottom
     if (double) await page.mouse.dblclick(s.x, s.y);
     else await page.mouse.click(s.x, s.y);
   }
+  // Distance by clicks (M13-10): the two corners, then the dimension line 60 pt above
+  // the plan, clear of the drawing's own dimensions (Alt: no snap for that click).
   await toolbar(page, 'Measure').getByRole('button', { name: 'Distance', exact: true }).click();
-  await drag(page, DRAWING, [left, top], [right, top]);
+  await clickAt(left, top);
+  await clickAt(right, top);
+  await page.keyboard.down('Alt');
+  await clickAt((left + right) / 2, top - 60);
+  await page.keyboard.up('Alt');
   await escapeTool(page);
   await ribbonTab(page, 'Measure').click();
   await toolbar(page, 'Measure').getByRole('button', { name: 'Area', exact: true }).click();

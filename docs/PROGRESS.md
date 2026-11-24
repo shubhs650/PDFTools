@@ -1,11 +1,11 @@
 # Triya PDF — Progress
 
-_Last updated: 2026-11-24 (M13-09: Help for M13 with every picture made again, the loupe's key M, a shortcut sheet that lists every key, What's new and release notes for 1.1.0, Compare on in release builds, the release checks and the owner pack; M13 complete on the agent side; M13-08: the CRS template screens, the export dialog with project templates, four guided set-up steps beside a live sheet preview, the template manager; M13-02·O2: the loupe and snapping for Line, Arrow, Polyline and Callout comments; M13-02·O1: View › Loupe, the loupe in every tool; M13-01·O5: "Try comparing two revisions" on the start screen; M13-05: Thin Lines, every page line 1 device pixel wide on screen only, from a view-only copy in the Render worker; M13-07: the CRS project template engine and the CRS review corpus; M13-04: labelled status bar toggles, Previous / Next View in the status bar, one view history for the window, Distance with open arrows; M13-03: spike S32, Thin Lines route b, a view-only copy kept thin, ADR-034 Amendment 2; M13-02: the Measure loupe and automatic snapping; M13-06: spike S33, CRS project templates with ExcelJS, works with workaround, ADR-034 Amendment 1; M13-01: sample comparisons in the Compare input window; M13 plan approved: final improvements for 1.1.0, tasks M13-01 … M13-09, ADR-034, ARCHITECTURE.md Rev 0.24; M12-ux plan and ADR-033 recorded (tasks M12-24 … M12-27 all merged); M12-26: alignment made easy to find and first-time tips; M12-27: review in a comparison made easier; M12-25: room to work in a comparison; M12-24: the Compare input window made clearer; M12-23: M12 acceptance, M12 complete on the agent side; M12-22: Compare help and release notes; M12-21·O4: drop a tab on a tab; M12-20: the comparison file; M12-21: change register and presets)_
+_Last updated: 2026-11-24 (M13-10: measuring by clicks, Distance as a dimension with leader lines stored as /LL and /LLE, ADR-034 Amendment 3, D-72, ARCHITECTURE.md Rev 0.25; M13-09: Help for M13 with every picture made again, the loupe's key M, a shortcut sheet that lists every key, What's new and release notes for 1.1.0, Compare on in release builds, the release checks and the owner pack; M13 complete on the agent side; M13-08: the CRS template screens, the export dialog with project templates, four guided set-up steps beside a live sheet preview, the template manager; M13-02·O2: the loupe and snapping for Line, Arrow, Polyline and Callout comments; M13-02·O1: View › Loupe, the loupe in every tool; M13-01·O5: "Try comparing two revisions" on the start screen; M13-05: Thin Lines, every page line 1 device pixel wide on screen only, from a view-only copy in the Render worker; M13-07: the CRS project template engine and the CRS review corpus; M13-04: labelled status bar toggles, Previous / Next View in the status bar, one view history for the window, Distance with open arrows; M13-03: spike S32, Thin Lines route b, a view-only copy kept thin, ADR-034 Amendment 2; M13-02: the Measure loupe and automatic snapping; M13-06: spike S33, CRS project templates with ExcelJS, works with workaround, ADR-034 Amendment 1; M13-01: sample comparisons in the Compare input window; M13 plan approved: final improvements for 1.1.0, tasks M13-01 … M13-09, ADR-034, ARCHITECTURE.md Rev 0.24; M12-ux plan and ADR-033 recorded (tasks M12-24 … M12-27 all merged); M12-26: alignment made easy to find and first-time tips; M12-27: review in a comparison made easier; M12-25: room to work in a comparison; M12-24: the Compare input window made clearer; M12-23: M12 acceptance, M12 complete on the agent side; M12-22: Compare help and release notes; M12-21·O4: drop a tab on a tab; M12-20: the comparison file; M12-21: change register and presets)_
 
-**Next:** M13-10 (Distance, Perimeter and Area placed by clicks, the dimension line dragged sideways; owner request 2026-11-24), then the owner pack of [M13 acceptance](acceptance/M13.md) §4 (samples, loupe, Thin Lines,
+**Next:** the owner pack of [M13 acceptance](acceptance/M13.md) §4 (samples, loupe, Thin Lines,
 view history, a real project CRS template opened in Excel), then the owner tags `v1.1.0` and
 approves the deploy ([docs/deploy/release.md](deploy/release.md)). **M13 is complete on the agent
-side** (M13-01 … M13-09 and O1, O2, O5 merged); plan [docs/plan/M13.md](plan/M13.md),
+side** (M13-01 … M13-10 and O1, O2, O5 merged); plan [docs/plan/M13.md](plan/M13.md),
 [ADR-034](adr/034-m13-final-improvements.md), ARCHITECTURE.md Rev 0.24.
 
 **Current milestone:** M12 — PDF comparison (PDF overlay for drawings, text comparison for
@@ -35,6 +35,19 @@ answers Q1–Q7; ARCHITECTURE.md Rev 0.12 after [ADR-024](adr/024-freetext-text-
 interop is in the M6 pack (CHECKLIST §M6 R1–R4). Rev 0 (M0–M4) is complete on the agent side.
 
 ## Done
+
+- **M13-10 — Measuring by clicks; Distance as a dimension (D-72; ADR-034 Amendment 3; plan
+  [M13](plan/M13.md) §8; owner request 2026-11-24).** Distance: click the first point, click the
+  second, move sideways and click to place the dimension line (Enter or a double-click places it
+  where it is, Esc drops it; the old press-and-drag still works). The offset is stored as the
+  standard leader line entries `/LL`, `/LLE` (`model/dimension.ts`); the Render worker draws the
+  dimension line with PDFium's own appearance and adds the leader lines
+  (`workers/render/dimensionAppearance.ts`), and both workers read `/LL` back
+  (`leaderReadback.ts`), so other viewers show the same picture and editing keeps the leaders.
+  Perimeter and Area were already click by click; they and Distance now have status bar hints.
+  Snapping, the loupe, Shift and the open arrows work as before (`measureDistance` joined the
+  vertex tools in `drawModel.ts`). Help Measuring rewritten with a new picture
+  (`measure-tools-3`), What's new, release notes and the owner pack updated.
 
 - **M13-09 — Help, shortcuts, About, What's new and the 1.1.0 release checks (plan
   [M13](plan/M13.md) §7; [acceptance](acceptance/M13.md)).** Five new Help topics: `thin-lines`,
