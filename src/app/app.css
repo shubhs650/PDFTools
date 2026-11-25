@@ -2270,8 +2270,20 @@ body {
 }
 
 .document-stack-view {
+  position: relative;
   flex: 1;
   min-height: 0;
+}
+
+/* The no-scale question (M14-02): a banner card over the top of the page, so the
+   page does not move while a measurement is being drawn. */
+.permission-banner.scale-prompt {
+  position: absolute;
+  top: var(--space-0);
+  left: var(--space-0);
+  right: var(--space-0);
+  z-index: 5;
+  flex-wrap: wrap;
 }
 
 /* M10-06 (D-47): a raised card over the canvas, an accent bar at its start. */
@@ -4503,6 +4515,16 @@ textarea.form-field {
   font-size: var(--font-size-xs);
   font-variant-numeric: tabular-nums;
   white-space: nowrap;
+}
+
+/* Crossing into another scale area while drawing (M14-02, Q30): a warning, no number. */
+.measure-live--warning {
+  color: var(--color-danger);
+  border: 1px solid var(--color-danger);
+}
+
+.measure-live--warning::before {
+  content: '\26A0\FE0E  ';
 }
 
 .measure-spans {

@@ -516,6 +516,16 @@ export function DocumentView({ documentId, sheet }: { documentId: string; sheet?
   const scroller = (): HTMLElement | null =>
     host.current?.querySelector<HTMLElement>('.viewport') ?? null;
 
+  // The middle button pans in every tool (M14-02, D-78): taken before the page's
+  // own handlers see it, so a measurement in progress keeps its points.
+  const onPointerDownCapture = (e: PointerEvent<HTMLDivElement>): void => {
+    if (e.button !== 1 || e.pointerType !== 'mouse') return;
+    e.preventDefault();
+    e.stopPropagation();
+    e.currentTarget.setPointerCapture(e.pointerId);
+    pan.current = { x: e.clientX, y: e.clientY, id: e.pointerId };
+    setPanning(true);
+  };
   const onPointerDown = (e: PointerEvent<HTMLDivElement>): void => {
     if (tool !== 'hand' || e.button !== 0) return;
     // A press on a comment (its body, selection frame or handles), a sticky
@@ -571,6 +581,11 @@ export function DocumentView({ documentId, sheet }: { documentId: string; sheet?
           aria-busy={restoring || undefined}
           tabIndex={0}
           onKeyDown={onKeyDown}
+          onPointerDownCapture={onPointerDownCapture}
+          // No middle-button auto-scroll: the middle button pans.
+          onMouseDown={(e) => {
+            if (e.button === 1) e.preventDefault();
+          }}
           onPointerDown={onPointerDown}
           onPointerMove={onPointerMove}
           onPointerUp={endPan}

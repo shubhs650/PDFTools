@@ -6,6 +6,7 @@
 // as read. The user's last units and precision are remembered on this device.
 import { createStore, useStore } from 'zustand';
 import { recordError } from '../../app/diagnostics';
+import { appStore, type Tool } from '../../app/store/appStore';
 import { documentStore } from '../../app/store/documentStore';
 import {
   PAGE_VIEWPORT_NAME,
@@ -40,6 +41,10 @@ interface ScaleState {
   dialog: 'setScale' | 'calibrate' | null;
   /** Calibration points picked on the page (page points), for the dialog. */
   picked: { page: number; a: { x: number; y: number }; b: { x: number; y: number } } | null;
+  /** "This page" in the dialogs when it is not the current page (the no-scale question, M14-02). */
+  target: number | null;
+  /** The measuring tool to go back to once the dialog closes (asked from the no-scale question). */
+  returnTool: Tool | null;
 }
 
 export const scaleStore = createStore<ScaleState>()(() => ({
@@ -47,6 +52,8 @@ export const scaleStore = createStore<ScaleState>()(() => ({
   defaults: { unit: 'mm', precision: 2 },
   dialog: null,
   picked: null,
+  target: null,
+  returnTool: null,
 }));
 
 export function useScales<T>(selector: (s: ScaleState) => T): T {
@@ -195,13 +202,17 @@ async function rememberDefaults(d: MeasureDefaults): Promise<void> {
   }
 }
 
-export function openScaleDialog(which: 'setScale' | 'calibrate'): void {
+/** `page`: the page "This page" means (default: the current page). */
+export function openScaleDialog(which: 'setScale' | 'calibrate', page?: number): void {
   void loadDefaults();
-  scaleStore.setState({ dialog: which });
+  scaleStore.setState({ dialog: which, target: page ?? null });
 }
 
+/** Closes the dialog; a measuring tool it was asked from comes back on (M14-02). */
 export function closeScaleDialog(): void {
-  scaleStore.setState({ dialog: null });
+  const back = scaleStore.getState().returnTool;
+  scaleStore.setState({ dialog: null, target: null, returnTool: null });
+  if (back && appStore.getState().tool !== back) appStore.getState().setTool(back);
 }
 
 /** Forget a closed document. */

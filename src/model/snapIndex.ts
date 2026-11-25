@@ -297,3 +297,48 @@ export function snap(
   }
   return best;
 }
+
+/** A crossing closer than this (points) to the last point is that point itself. */
+const SELF = 0.5;
+
+/**
+ * Shift still snaps (M14-02, D-78, Q25): with the direction locked from the
+ * last point (ox, oy) along the unit vector (dx, dy), the point where that
+ * direction crosses a drawn segment, nearest to (x, y) (the pointer's place
+ * on the locked line) and within `r` of it; null when none does. Segments
+ * along the direction never cross it; crossings at or behind the last point
+ * are skipped.
+ */
+export function snapOnLine(
+  g: GridIndex,
+  ox: number,
+  oy: number,
+  dx: number,
+  dy: number,
+  x: number,
+  y: number,
+  r: number,
+  seen?: Uint32Array,
+  stamp?: number,
+): Snap | null {
+  const s = g.segs;
+  let best: Snap | null = null;
+  for (const i of candidates(g, x, y, r, seen, stamp)) {
+    const ax = s[i * 4] ?? 0;
+    const ay = s[i * 4 + 1] ?? 0;
+    const qx = (s[i * 4 + 2] ?? 0) - ax;
+    const qy = (s[i * 4 + 3] ?? 0) - ay;
+    const den = dx * qy - dy * qx;
+    if (Math.abs(den) < 1e-9 * Math.hypot(qx, qy)) continue; // along the direction
+    // o + t·d = a + u·q
+    const t = ((ax - ox) * qy - (ay - oy) * qx) / den;
+    const u = ((ax - ox) * dy - (ay - oy) * dx) / den;
+    if (u < -1e-9 || u > 1 + 1e-9 || t <= SELF) continue;
+    const px = ox + t * dx;
+    const py = oy + t * dy;
+    const d = Math.hypot(px - x, py - y);
+    if (d > r) continue;
+    if (!best || d < best.dist) best = { kind: 'intersection', x: px, y: py, dist: d, seg: i };
+  }
+  return best;
+}

@@ -3,19 +3,22 @@
 // the geometry (B7) and the plugin previews, commits and undoes as usual. All
 // three are placed by clicks (M13-10): Distance with our own handler (two
 // points, then the offset of its dimension line, dimensionTool.ts); Perimeter
-// and Area with the plugin's click-by-click polyline and polygon. The
-// plugin's previews feed the live value next to the pointer (measureStore);
-// the value, label and measure keys follow on commit (measurements.ts).
+// and Area with our click-by-click polyline and polygon (vertexTool.ts). Their
+// points live outside the handlers (gesture.ts, M14-02), so any view change
+// keeps a measurement in progress. The live value shows next to the pointer
+// (measureStore); the value, label and measure keys follow on commit
+// (measurements.ts).
 import type { PluginRegistry } from '@embedpdf/core';
 import { PdfAnnotationLineEnding, type PdfAnnotationObject } from '@embedpdf/models';
 import type { AnnotationCapability } from '@embedpdf/plugin-annotation';
 import { MEASURE_INTENT, measureKind, type MeasureKind } from '../../model/measurement';
 import type { Pt } from '../../model/scale';
 import type { DrawTool } from '../annotate/tools/drawModel';
-import { wrapFactory, type HandlerContext } from '../annotate/tools/drawTools';
+import { wrapFactory } from '../annotate/tools/drawTools';
 import { capability } from '../view/host';
 import { dimensionHandlerFactory, withLeaderRect, type Patch } from './dimensionTool';
-import { setLive } from './measureStore';
+import { gestureAnchor, registeringDoc } from './gesture';
+import { vertexHandlerFactory } from './vertexTool';
 
 export const MEASURE_TOOLS = {
   measureDistance: 'distance',
@@ -54,28 +57,6 @@ export function previewPoints(data: PreviewData | undefined): Pt[] {
   return [...(data.vertices ?? []), ...(data.currentVertex ? [data.currentVertex] : [])];
 }
 
-function watching(kind: MeasureKind) {
-  return (context: HandlerContext): HandlerContext => ({
-    ...context,
-    onPreview: (state) => {
-      context.onPreview(state);
-      setLive(
-        state
-          ? {
-              page: context.pageIndex,
-              kind,
-              pts: previewPoints(state.data as PreviewData | undefined),
-            }
-          : null,
-      );
-    },
-    onCommit: (annotation, ctx) => {
-      setLive(null);
-      context.onCommit(annotation, ctx);
-    },
-  });
-}
-
 /** Called once the plugin registry is up, before installDrawTools rewraps the base tools. */
 export function installMeasureTools(registry: PluginRegistry): void {
   let cap: AnnotationCapability;
@@ -86,9 +67,10 @@ export function installMeasureTools(registry: PluginRegistry): void {
   }
   for (const [id, kind] of Object.entries(MEASURE_TOOLS) as [MeasureTool, MeasureKind][]) {
     const base = cap.getTool(BASE[id]);
-    // Distance is placed by clicks with an offset (M13-10, dimensionTool.ts).
-    const handler = kind === 'distance' ? dimensionHandlerFactory : base?.pointerHandler;
-    if (!base || !handler) continue;
+    // Placed by clicks with the points kept outside the handler, so a view change
+    // between two clicks keeps them (M13-10, M14-02): dimensionTool.ts, vertexTool.ts.
+    const handler = kind === 'distance' ? dimensionHandlerFactory : vertexHandlerFactory(kind, id);
+    if (!base) continue;
     // A distance is drawn like a dimension line, an open arrow at each end (owner,
     // 2026-11-24, M13-04); a perimeter keeps plain (butt) ends.
     const end =
@@ -111,9 +93,13 @@ export function installMeasureTools(registry: PluginRegistry): void {
             transform: withLeaderRect(base.transform as Patch | undefined),
           }
         : {}),
-      // Distance keeps the live value itself (its offset too); the others watch the previews.
-      pointerHandler:
-        kind === 'distance' ? wrapFactory(id, handler) : wrapFactory(id, handler, watching(kind)),
+      // The live value comes from the gesture (gesture.ts); Shift locks from its last point.
+      pointerHandler: wrapFactory(id, handler, undefined, {
+        anchor: (page) => {
+          const where = { doc: registeringDoc(), tool: id, page };
+          return () => gestureAnchor(where);
+        },
+      }),
     });
   }
 }

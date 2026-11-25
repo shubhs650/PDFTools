@@ -1936,7 +1936,23 @@
     },
     "spansBadge": "Spans viewports",
     "pageArea": "the page",
-    "spansHint": "Move its points into one viewport, or out of all of them, for a single scale."
+    "spansHint": "Move its points into one viewport, or out of all of them, for a single scale.",
+    "gesture": {
+      "pageChanged": "The measurement on page {{page}} was ended: a measurement stays on one page."
+    },
+    "live": {
+      "crosses": "Crosses {{name}}",
+      "leaves": "Leaves {{name}}"
+    },
+    "noScale": {
+      "name": "No scale on this page",
+      "text": "Page {{page}} has no scale yet, so measurements there show lengths on paper.",
+      "setScale": "Set scale",
+      "calibrate": "Calibrate",
+      "paperSize": "Measure at paper size",
+      "close": "Keep measuring without a scale",
+      "paperDone": "Page {{page}} is measured at paper size (1:1)."
+    }
   },
   "viewport": {
     "baseName": "Detail",

@@ -1,3 +1,4 @@
+import { currentGesture } from '../features/measure/gesture';
 // E2E-only probe for the annotation layer (M3-05). Never part of a production
 // build. Reads the annotation plugin's store and history, and the render stats
 // of annotation tiles, without depending on DOM details.
@@ -149,6 +150,8 @@ export function registerAnnotateProbe(hook: TestHook): void {
       pages: snapStore.getState().pages,
       errors: diagnostics().filter((d) => d.where.startsWith('snap.')),
     }),
+    /** The measurement in progress (M14-02): its document, tool, page and points. */
+    gesture: () => currentGesture(),
     /** The loupe's requests to the Render worker and pictures shown so far (M13-02). */
     loupe: () => ({ ...loupeStats }),
     /** Where the loupe's pointer is: page and page points, unturned (M13-02·O1). */

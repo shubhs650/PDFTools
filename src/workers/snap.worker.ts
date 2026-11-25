@@ -3,7 +3,7 @@
 // answers pointer queries (≤ 1 in flight per frame, snapping.ts), so a query
 // never waits behind a page parse.
 import type { SnapApi } from '../engine/snapApi';
-import { snap, type GridIndex } from '../model/snapIndex';
+import { snap, snapOnLine, type GridIndex } from '../model/snapIndex';
 import { serve } from './rpc-host';
 
 const indexes = new Map<string, GridIndex>();
@@ -31,5 +31,15 @@ serve<SnapApi>(self, {
       stamp = 1;
     }
     return snap(g, x, y, r, new Set(kinds), 2048, seen, stamp);
+  },
+  snapLine: ({ key, ox, oy, dx, dy, x, y, r }) => {
+    const g = indexes.get(key);
+    if (!g) return null;
+    stamp = (stamp + 1) >>> 0;
+    if (stamp === 0) {
+      seen.fill(0);
+      stamp = 1;
+    }
+    return snapOnLine(g, ox, oy, dx, dy, x, y, r, seen, stamp);
   },
 });

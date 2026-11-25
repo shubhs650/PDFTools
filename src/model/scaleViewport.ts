@@ -51,6 +51,36 @@ export function scaleChoice(pts: Pt[], layout: PageLayout): ScaleChoice {
   return chooseScale(pts, layout.details, layout.pageDefault);
 }
 
+/** While drawing (M14-02, D-77, Q30): one scale area, or the warning for leaving the first one. */
+export type LiveScale =
+  | { kind: 'one'; choice: ScaleChoice }
+  /** A point is in a detail viewport the measurement did not start in. */
+  | { kind: 'crosses'; name: string }
+  /** The measurement started in a detail viewport and a point is outside it. */
+  | { kind: 'leaves'; name: string };
+
+/**
+ * The live scale of the points drawn so far (the pointer last, user space): the
+ * warning as soon as one point is in another scale area than the first point.
+ */
+export function liveScale(pts: readonly Pt[], layout: PageLayout): LiveScale {
+  const areaOf = (p: Pt): (ScaleViewport & { index: number }) | null => {
+    const c = scaleChoice([p], layout);
+    return c.kind === 'viewport' ? (c.viewport as ScaleViewport & { index: number }) : null;
+  };
+  const [first, ...rest] = pts;
+  if (first) {
+    const start = areaOf(first);
+    for (const p of rest) {
+      const a = areaOf(p);
+      if ((a?.index ?? -1) === (start?.index ?? -1)) continue;
+      if (a) return { kind: 'crosses', name: a.name };
+      if (start) return { kind: 'leaves', name: start.name };
+    }
+  }
+  return { kind: 'one', choice: scaleChoice([...pts], layout) };
+}
+
 /** The scale a choice values a measurement in (spanning: the page default, flagged). */
 export function scaleOfChoice(c: ScaleChoice): Scale | null {
   if (c.kind === 'viewport') return c.viewport.scale;
