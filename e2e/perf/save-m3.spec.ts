@@ -33,7 +33,7 @@ test('Ctrl+S with 100 mixed M3 markups (measurements, stamps): < 1 s, no long ta
   await dialog.getByRole('button', { name: 'Apply' }).click();
   await expect(dialog).toBeHidden();
 
-  // 60 shapes, 30 measurements (10 of each kind, each with its label), 10 stamps.
+  // 60 shapes, 30 measurements (10 of each kind, one markup each since M14-03), 10 stamps.
   for (let i = 0; i < 60; i++)
     await cap(
       page,
@@ -62,12 +62,12 @@ test('Ctrl+S with 100 mixed M3 markups (measurements, stamps): < 1 s, no long ta
     ]);
   }
   for (let i = 0; i < 10; i++) await cap(page, 'annotate', 'stamp', id, 2, 300, 60 + i * 30);
-  // 100 markups plus the 30 measurement labels.
+  // 100 markups (no measurement labels since M14-03).
   await expect
     .poll(async () => ((await cap(page, 'annotate', 'list', id)) as unknown[]).length, {
       timeout: 30_000,
     })
-    .toBe(130);
+    .toBe(100);
   await expect(tab(page)).toHaveAccessibleName(/unsaved changes/);
   await cap(page, 'view', 'settle', 500);
 

@@ -288,7 +288,8 @@ for (const [variant, url] of [
     ])) as string;
     await expect
       .poll(async () => ((await cap(page, 'annotate', 'list', id)) as unknown[]).length)
-      .toBe(3);
+      // The square and the measurement (one markup since M14-03, no text box).
+      .toBe(2);
 
     // Comments pane with the square's thread open.
     await run('comment.commentsPane');
