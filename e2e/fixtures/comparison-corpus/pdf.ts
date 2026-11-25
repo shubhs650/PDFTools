@@ -136,6 +136,10 @@ export interface PageSpec {
   rotate?: number;
   /** Builds the page's annotations once its object number is known. */
   annots?: (w: PdfWriter, page: number) => number[];
+  /** More page dictionary entries, e.g. `/VP [ … ]` (measure corpus, M14-01). */
+  extra?: string;
+  /** More resource entries for this page only, e.g. `/XObject << … >>`. */
+  extraResources?: string;
 }
 
 /** One PDF document: shared fonts and graphics states, pages in order. */
@@ -144,6 +148,7 @@ export class Doc {
   private readonly catalog = this.w.alloc();
   private readonly pagesRef = this.w.alloc();
   private readonly resources: number;
+  private readonly resourceEntries: string;
   private readonly pages: number[] = [];
   /** Object numbers of the shared fonts, for annotation appearance streams. */
   readonly fontRefs: Record<FontKey, number>;
@@ -162,22 +167,24 @@ export class Doc {
       return `/${key} ${String(ref)} 0 R`;
     });
     this.fontRefs = refs as Record<FontKey, number>;
-    this.resources = this.w.add(
-      `<< /Font << ${fontRefs.join(' ')} >> /ExtGState << /GSmul << /Type /ExtGState /BM /Multiply >> >> >>`,
-    );
+    this.resourceEntries = `/Font << ${fontRefs.join(' ')} >> /ExtGState << /GSmul << /Type /ExtGState /BM /Multiply >> >>`;
+    this.resources = this.w.add(`<< ${this.resourceEntries} >>`);
   }
 
   addPage(p: PageSpec): number {
     const ref = this.w.alloc();
     const contents = this.w.add({ dict: '<< >>', stream: p.content });
     const annots = p.annots ? p.annots(this.w, ref) : [];
+    const resources = p.extraResources
+      ? this.w.add(`<< ${this.resourceEntries} ${p.extraResources} >>`)
+      : this.resources;
     this.w.set(
       ref,
       `<< /Type /Page /Parent ${String(this.pagesRef)} 0 R /MediaBox [0 0 ${num(p.width)} ${num(p.height)}]${
         p.rotate ? ` /Rotate ${String(p.rotate)}` : ''
-      } /Resources ${String(this.resources)} 0 R /Contents ${String(contents)} 0 R${
+      } /Resources ${String(resources)} 0 R /Contents ${String(contents)} 0 R${
         annots.length ? ` /Annots [${annots.map((a) => `${String(a)} 0 R`).join(' ')}]` : ''
-      } >>`,
+      }${p.extra ? ` ${p.extra}` : ''} >>`,
     );
     this.pages.push(ref);
     return ref;
