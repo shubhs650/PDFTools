@@ -76,8 +76,7 @@ interop is in the M6 pack (CHECKLIST §M6 R1–R4). Rev 0 (M0–M4) is complete 
   - Open: a click inside an earlier measurement's rect while a measuring tool is on selects that
     measurement instead of placing a point (as in 1.1.0); M14-04 (point editing) should look at
     it. Shared caption font objects (Amendment 1 decision 2): each markup
-    embeds its own subset for now; moving the sharing to M14-07 (Count) is recommended and waits
-    for the owner's answer.
+    embeds its own subset; the owner moved the sharing to M14-07 (Count) on 2026-11-25.
 
 - **M14-01 — Spike S34: every measurement kind as one markup; the measure corpus (D-74, D-79;
   ADR-035 Amendment 1, accepted by the owner; plan [M14](plan/M14.md) §1).** The measure corpus
