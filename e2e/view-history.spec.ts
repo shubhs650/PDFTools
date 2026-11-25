@@ -229,7 +229,7 @@ test('a measured distance has an open arrow at each end (owner, 2026-11-24)', as
   await expect(page.locator('[data-page="0"] img.page-preview')).toBeVisible();
   const id = (await cap(page, 'view', 'activeDocId')) as string;
   await expect.poll(() => cap(page, 'annotate', 'list', id)).not.toBeNull();
-  expect(await cap(page, 'annotate', 'toolDefaults', 'measureDistance')).toMatchObject({
+  expect(await cap(page, 'annotate', 'toolDefaults', 'measureLength')).toMatchObject({
     lineEndings: { start: 4, end: 4 },
   });
   // A perimeter keeps plain ends.
@@ -239,7 +239,7 @@ test('a measured distance has an open arrow at each end (owner, 2026-11-24)', as
   await page.getByRole('tab', { name: 'Measure' }).click();
   await page
     .getByRole('toolbar', { name: 'Measure commands' })
-    .getByRole('button', { name: 'Distance', exact: true })
+    .getByRole('button', { name: 'Length', exact: true })
     .click();
   const box = await page.locator('[data-page="0"] .page-content').boundingBox();
   if (!box) throw new Error('page not laid out');

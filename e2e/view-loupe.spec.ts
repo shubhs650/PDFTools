@@ -88,7 +88,7 @@ test('View → Loupe shows the loupe in every tool, beside the pointer, hidden o
   const measure = page.getByRole('toolbar', { name: 'Measure commands' });
   // The Measure ribbon's Loupe off: View → Loupe still shows it while measuring.
   await measure.getByRole('button', { name: 'Loupe', exact: true }).click();
-  await measure.getByRole('button', { name: 'Distance', exact: true }).click();
+  await measure.getByRole('button', { name: 'Length', exact: true }).click();
   await hover(page, 0.6, 0.4);
   await expect(loupe(page)).toBeVisible();
 
@@ -133,7 +133,7 @@ test('View → Loupe follows a turned view: the spot shown is the one under the 
   await page.getByRole('tab', { name: 'Measure' }).click();
   await page
     .getByRole('toolbar', { name: 'Measure commands' })
-    .getByRole('button', { name: 'Distance', exact: true })
+    .getByRole('button', { name: 'Length', exact: true })
     .click();
   await hover(page, 0.25, 0.35);
   await expect(loupe(page)).toBeVisible();
@@ -178,7 +178,7 @@ test('M shows or hides the loupe in the tool in use', async ({ page }) => {
   const measure = page.getByRole('toolbar', { name: 'Measure commands' });
   const measureLoupe = measure.getByRole('button', { name: 'Loupe', exact: true });
   await expect(measureLoupe).toHaveAttribute('aria-pressed', 'true');
-  await measure.getByRole('button', { name: 'Distance', exact: true }).click();
+  await measure.getByRole('button', { name: 'Length', exact: true }).click();
   await hover(page, 0.6, 0.4);
   await expect(loupe(page)).toBeVisible();
   await page.getByTestId('document-view').focus();

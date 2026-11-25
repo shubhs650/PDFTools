@@ -173,7 +173,7 @@ test('a Distance survives the zoom field and a scroll; Esc ends it, the tool sta
 }) => {
   const id = await open(page, snapSheet(), 'snap.pdf');
   await setScale(page);
-  await tool(page, 'Distance');
+  await tool(page, 'Length');
   await clickAt(page, 150, 30);
   // The zoom field in the status bar.
   const field = page.getByRole('textbox', { name: 'Zoom', exact: true });
@@ -196,7 +196,7 @@ test('a Distance survives the zoom field and a scroll; Esc ends it, the tool sta
   await page.keyboard.press('Escape');
   await expect.poll(() => gesture(page)).toBeNull();
   await expect(
-    measureTab(page).getByRole('button', { name: 'Distance', exact: true }),
+    measureTab(page).getByRole('button', { name: 'Length', exact: true }),
   ).toHaveAttribute('aria-pressed', 'true');
   // Another tool ends it too.
   await clickAt(page, 150, 100);
@@ -231,7 +231,7 @@ test('a click on another page ends the measurement with a note and starts there'
 test('Shift locks to horizontal and still snaps where it meets a drawn line', async ({ page }) => {
   const id = await open(page, snapSheet(), 'snap.pdf');
   await setScale(page);
-  await tool(page, 'Distance');
+  await tool(page, 'Length');
   await expect
     .poll(
       async () =>
@@ -262,7 +262,7 @@ test('a page with no scale asks once: paper size, then no question on that page 
   page,
 }) => {
   const id = await open(page, simplePdf(1));
-  await tool(page, 'Distance');
+  await tool(page, 'Length');
   await clickAt(page, 100, 100, 0, 595);
   const prompt = page.getByRole('region', { name: 'No scale on this page' });
   await expect(prompt).toBeVisible();
@@ -305,7 +305,7 @@ test('Set scale from the question: the dialog is for that page and the measureme
   page,
 }) => {
   const id = await open(page, simplePdf(1));
-  await tool(page, 'Distance');
+  await tool(page, 'Length');
   await clickAt(page, 100, 100, 0, 595);
   const prompt = page.getByRole('region', { name: 'No scale on this page' });
   await prompt.getByRole('button', { name: 'Set scale' }).click();
@@ -347,7 +347,7 @@ test('crossing into a detail viewport turns the live value into a warning', asyn
   await dialog.getByRole('button', { name: 'Save' }).click();
   await expect(dialog).toBeHidden();
 
-  await tool(page, 'Distance');
+  await tool(page, 'Length');
   await clickAt(page, 60, 150, 0, 595);
   const live = page.getByTestId('measure-live');
   const outside = await at(page, 250, 150, 0, 595);

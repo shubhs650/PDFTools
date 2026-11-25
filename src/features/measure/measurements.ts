@@ -1,46 +1,78 @@
-// Measurements follow their geometry and scale (M3-16, §7.4, ADR-007, M3-Q2).
-// On every create or edit of a measurement, its /Contents gets the formatted
-// value, its grouped FreeText label (/IRT + /RT /Group) the same text and a
-// place next to it, and the object layer stages /IT, /Measure, /Cap and /CP
-// for the single Ctrl+S revision. The value and label join the edit's undo
-// step (historyJoin.ts). A scale change re-values the page's measurements.
+// Measurements follow their geometry and scale (M3-16, §7.4, ADR-007, M3-Q2),
+// each one standard markup since M14-03 (D-74, ADR-035 Amendment 1). On every
+// create or edit of a measurement, its /Contents gets the value (with its
+// label in front, Q27), its `measure` field what only Triya PDF keeps (tool,
+// label, caption place and offset, an area's fill), its /Subj the tool's name,
+// its /Rect room for the caption the Render worker draws into its appearance
+// (workers/render/measureAppearance.ts); the object layer stages /IT,
+// /Measure, /Cap, /CP and /CO, and the page's /PieceInfo (pageData.ts), for
+// the single Ctrl+S revision. The value and caption join the edit's undo step
+// (historyJoin.ts). A scale change re-values the page's measurements.
 //
 // Which scale: a measurement from a file keeps its own /Measure (ADR-007 d3:
 // what its author saw) unless that is the page's own scale, in which case it
-// follows the page like ours do. The label is derived: selecting it selects
-// the measurement, whose vertices stay editable (a selected group has none).
+// follows the page like ours do. A v1.1.0 measurement with a grouped FreeText
+// label keeps it, as before, until "Update old measurements" (Q38).
 import type { PluginRegistry } from '@embedpdf/core';
 import {
+  expandRect,
   PdfAnnotationReplyType,
   PdfAnnotationSubtype,
-  PdfStandardFont,
-  PdfTextAlignment,
-  PdfVerticalAlignment,
-  uuidV4,
+  rectFromPoints,
+  type LineEndings,
   type PdfAnnotationObject,
 } from '@embedpdf/models';
-import type { AnnotationCapability, AnnotationScope } from '@embedpdf/plugin-annotation';
+import {
+  patching,
+  type AnnotationCapability,
+  type AnnotationScope,
+} from '@embedpdf/plugin-annotation';
 import { recordError } from '../../app/diagnostics';
 import { documentStore } from '../../app/store/documentStore';
-import { format, t } from '../../i18n';
+import { format, msg, t, type MessageKey } from '../../i18n';
+import { leaderOf, unionRect } from '../../model/dimension';
 import {
-  LABEL_FONT_SIZE,
-  LABEL,
+  captionBoundsEP,
+  captionText,
+  metaOf,
+  mirror,
+  sameMeta,
+  toolFromShape,
+  type MeasureMeta,
+  type MeasureTool,
+} from '../../model/measureMarkup';
+import {
   labelRect,
   measureKeys,
   measureKind,
   measurePoints,
+  toUserSpace,
   valueText,
   type MeasureKind,
+  type Rect,
 } from '../../model/measurement';
-import { leaderOf } from '../../model/dimension';
-import { measureFromPdf, ratioLabel, type ScaleChoice, type Scale } from '../../model/scale';
+import {
+  measureFromPdf,
+  ratioLabel,
+  type Pt,
+  type Scale,
+  type ScaleChoice,
+} from '../../model/scale';
 import { layoutOf, scaleChoice, scaleOfChoice } from '../../model/scaleViewport';
-import { toUserSpace } from '../../model/measurement';
 import { isReplaying, joinStep, outsideHistory } from '../annotate/historyJoin';
-import { capability, renderEngine } from '../view/host';
+import { capability, hostStore, renderEngine } from '../view/host';
+import { dimensionRect } from './dimensionTool';
+import { fileMeta, stagePageData } from './pageData';
 import { layoutFor, readEntries, scaleStore } from './scaleStore';
 import { frameOf } from './viewports';
+
+/** The tool's name as the markup's subject (/Subj), so other editors' lists say it (Q27). */
+export const TOOL_SUBJECT: Record<MeasureTool, MessageKey> = {
+  length: msg('measure.subject.length'),
+  polylength: msg('measure.subject.polylength'),
+  perimeter: msg('measure.subject.perimeter'),
+  area: msg('measure.subject.area'),
+};
 
 const sameScale = (a: Scale | null, b: Scale | null): boolean =>
   !!a &&
@@ -116,7 +148,7 @@ export function measurementText(kind: MeasureKind, a: PdfAnnotationObject, s: Sc
   return v.calibrated ? v.value : t('measure.uncalibrated', { value: v.value });
 }
 
-/** The measurement's grouped label, if it has one. */
+/** The measurement's grouped label (a v1.1.0 measurement's FreeText), if it has one. */
 export function labelOf(scope: AnnotationScope, id: string): PdfAnnotationObject | null {
   for (const ta of scope.getAnnotations()) {
     const o = ta.object;
@@ -130,11 +162,58 @@ export function labelOf(scope: AnnotationScope, id: string): PdfAnnotationObject
   return null;
 }
 
+/**
+ * A measurement's tool and what only Triya PDF keeps about it (M14-03, D-74):
+ * its own `measure` field (made or edited in this session), else the file's
+ * Triya data, else its standard data (ADR-035 Amendment 1 decision 4). Null
+ * for a v1.1.0 measurement that still has its grouped label (it keeps that
+ * label until "Update old measurements", Q38), and for what isn't one.
+ */
+export function metaFor(
+  docId: string,
+  a: PdfAnnotationObject,
+  scope?: AnnotationScope,
+): MeasureMeta | null {
+  const own = metaOf(a);
+  if (own) return own;
+  const kind = kindOf(docId, a);
+  if (!kind) return null;
+  if (scope && labelOf(scope, a.id)) return null;
+  const file = fileMeta(docId, a);
+  if (file) return file;
+  const tool = toolFromShape(kind, toUserSpace(measurePoints(a), frameOf(docId, a.pageIndex)));
+  const cp = fileMeasure(docId, a.pageIndex, a.id)?.measure.cp;
+  return tool === 'length' && cp === 'Inline' ? { tool, cap: 'inline' } : { tool };
+}
+
+/** The measuring tool a measurement was made with (null: not one). */
+export function toolOf(docId: string, a: PdfAnnotationObject): MeasureTool | null {
+  const own = metaOf(a);
+  if (own) return own.tool;
+  const kind = kindOf(docId, a);
+  if (!kind) return null;
+  return fileMeta(docId, a)?.tool ?? toolFromShape(kind, measurePoints(a).map(mirror));
+}
+
+/** "Slab S1: 42.5 m²", or the value alone (Q27). */
+export const sheetText = (label: string | undefined, value: string): string =>
+  captionText(label, value, (l, v) => t('measure.caption.labelled', { label: l, value: v }));
+
 /** What was last staged per annotation (so an edit that keeps the scale stages nothing). */
 const staged = new Map<string, string>();
 
-async function stage(docId: string, a: PdfAnnotationObject, kind: MeasureKind, s: Scale | null) {
-  const keys = measureKeys(kind, s);
+async function stage(
+  docId: string,
+  a: PdfAnnotationObject,
+  kind: MeasureKind,
+  s: Scale | null,
+  meta: MeasureMeta | null,
+) {
+  const keys = measureKeys(
+    kind,
+    s,
+    meta ? { place: meta.cap ?? 'top', offset: meta.capOffset ?? null } : {},
+  );
   const key = `${docId}/${a.id}`;
   const sig = JSON.stringify(keys);
   if (staged.get(key) === sig) return;
@@ -159,11 +238,45 @@ function pageSize(registry: PluginRegistry, docId: string, page: number) {
 }
 
 const near = (a: number, b: number): boolean => Math.abs(a - b) < 0.5;
+const sameRect = (r: Rect, q: Rect): boolean =>
+  near(r.origin.x, q.origin.x) &&
+  near(r.origin.y, q.origin.y) &&
+  near(r.size.width, q.size.width) &&
+  near(r.size.height, q.size.height);
+
+/** The rect that holds a measurement's geometry (with its line endings and leader lines). */
+function geometryRect(a: PdfAnnotationObject): Rect {
+  const o = a as unknown as {
+    strokeWidth?: number;
+    lineEndings?: LineEndings;
+    linePoints?: { start: Pt; end: Pt };
+    vertices?: Pt[];
+  };
+  const w = o.strokeWidth ?? 1;
+  if (a.type === PdfAnnotationSubtype.LINE && o.linePoints)
+    return dimensionRect(o.linePoints.start, o.linePoints.end, leaderOf(a), w, o.lineEndings);
+  const pts = o.vertices ?? [];
+  if (pts.length === 0) return a.rect;
+  return a.type === PdfAnnotationSubtype.POLYGON
+    ? expandRect(rectFromPoints(pts), w / 2)
+    : patching.lineRectWithEndings(pts, w, o.lineEndings);
+}
+
+/** The rect that holds a measurement and its caption (estimated width, measureMarkup.ts). */
+export function measureRect(a: PdfAnnotationObject, meta: MeasureMeta, text: string): Rect {
+  const geo = geometryRect(a);
+  const box = captionBoundsEP(meta, measurePoints(a), leaderOf(a), text);
+  if (!box) return geo;
+  return unionRect(geo, {
+    origin: { x: box[0], y: box[1] },
+    size: { width: box[2] - box[0], height: box[3] - box[1] },
+  });
+}
 
 /** Measurements being refreshed: their own value update fires an event too. */
 const busy = new Set<string>();
 
-/** Brings a measurement's value, label and keys up to date. */
+/** Brings a measurement's value, caption, label and keys up to date. */
 function refresh(registry: PluginRegistry, docId: string, id: string, how: 'join' | 'outside') {
   const key = `${docId}/${id}`;
   if (busy.has(key)) return;
@@ -173,48 +286,58 @@ function refresh(registry: PluginRegistry, docId: string, id: string, how: 'join
   const kind = kindOf(docId, a);
   if (!kind) return;
   const s = scaleForMeasurement(docId, a);
-  const text = measurementText(kind, a, s);
-  const label = LABEL.freeText ? labelOf(scope, a.id) : null;
-  const rect = labelRect(
-    kind,
-    measurePoints(a),
-    text,
-    pageSize(registry, docId, a.pageIndex),
-    undefined,
-    leaderOf(a),
-  );
-  const apply = (): void => {
-    if (a.contents !== text) scope.updateAnnotation(a.pageIndex, a.id, { contents: text });
-    if (!LABEL.freeText) return;
-    if (!label) {
-      const color = (a as { strokeColor?: string }).strokeColor ?? '#E44234';
-      scope.createAnnotation(a.pageIndex, {
-        type: PdfAnnotationSubtype.FREETEXT,
-        id: uuidV4(),
-        pageIndex: a.pageIndex,
-        rect,
-        contents: text,
-        fontFamily: PdfStandardFont.Helvetica,
-        fontSize: LABEL_FONT_SIZE,
-        fontColor: color,
-        textAlign: PdfTextAlignment.Center,
-        verticalAlign: PdfVerticalAlignment.Middle,
-        opacity: 1,
-        color: 'transparent',
-        flags: ['print'],
-        created: new Date(),
-        inReplyToId: a.id,
-        replyType: PdfAnnotationReplyType.Group,
-      });
-    } else if (
-      label.contents !== text ||
-      !near(label.rect.origin.x, rect.origin.x) ||
-      !near(label.rect.origin.y, rect.origin.y) ||
-      !near(label.rect.size.width, rect.size.width)
-    ) {
-      scope.updateAnnotation(label.pageIndex, label.id, { contents: text, rect });
-    }
-  };
+  const value = measurementText(kind, a, s);
+  const found = metaFor(docId, a, scope);
+  let apply: () => void;
+  if (found) {
+    // An area's fill comes in as the plugin's fill colour (the tool's style, a
+    // pasted style) and moves into `measure` (no /IC, ADR-035 Amendment 1).
+    const color = (a as { color?: string }).color;
+    const meta =
+      a.type === PdfAnnotationSubtype.POLYGON && color && color !== 'transparent'
+        ? { ...found, fill: color }
+        : found;
+    // One markup (M14-03, D-74): the value (and label) drawn in its own appearance.
+    const text = sheetText(meta.label, value);
+    const rect = measureRect(a, meta, text);
+    const subject = t(TOOL_SUBJECT[meta.tool]);
+    const patch: Record<string, unknown> = {};
+    if (a.contents !== text) patch['contents'] = text;
+    if (!sameMeta(metaOf(a), meta)) patch['measure'] = meta;
+    if (a.subject !== subject) patch['subject'] = subject;
+    if (!sameRect(a.rect, rect)) patch['rect'] = rect;
+    // An area's fill lives in `measure` (no /IC, ADR-035 Amendment 1).
+    if (
+      a.type === PdfAnnotationSubtype.POLYGON &&
+      (a as { color?: string }).color !== 'transparent'
+    )
+      patch['color'] = 'transparent';
+    apply = () => {
+      if (Object.keys(patch).length) scope.updateAnnotation(a.pageIndex, a.id, patch);
+    };
+  } else {
+    // A v1.1.0 measurement keeps its grouped label until it is updated (Q38).
+    const label = labelOf(scope, a.id);
+    const rect = labelRect(
+      kind,
+      measurePoints(a),
+      value,
+      pageSize(registry, docId, a.pageIndex),
+      undefined,
+      leaderOf(a),
+    );
+    apply = () => {
+      if (a.contents !== value) scope.updateAnnotation(a.pageIndex, a.id, { contents: value });
+      if (
+        label &&
+        (label.contents !== value ||
+          !near(label.rect.origin.x, rect.origin.x) ||
+          !near(label.rect.origin.y, rect.origin.y) ||
+          !near(label.rect.size.width, rect.size.width))
+      )
+        scope.updateAnnotation(label.pageIndex, label.id, { contents: value, rect });
+    };
+  }
   busy.add(key);
   try {
     if (how === 'join') joinStep(apply);
@@ -226,7 +349,33 @@ function refresh(registry: PluginRegistry, docId: string, id: string, how: 'join
   } finally {
     busy.delete(key);
   }
-  void stage(docId, a, kind, s);
+  void stage(docId, a, kind, s, found);
+  stagePageData(docId, a.pageIndex, () => pageAnnots(scope, a.pageIndex));
+}
+
+const pageAnnots = (scope: AnnotationScope, page: number): PdfAnnotationObject[] =>
+  scope.getAnnotations({ pageIndex: page }).map((ta) => ta.object);
+
+/**
+ * Changes what Triya PDF keeps about a measurement (its label, caption place,
+ * caption offset, fill: the Properties pane, a dragged caption), as one undo
+ * step; its caption and keys follow.
+ */
+export function setMeasureMeta(
+  docId: string,
+  id: string,
+  change: { [K in keyof MeasureMeta]?: MeasureMeta[K] | undefined },
+): void {
+  const registry = hostStore.getState().registry;
+  if (!registry) return;
+  const scope = capability<AnnotationCapability>(registry, 'annotation').forDocument(docId);
+  const a = scope.getAnnotationById(id)?.object;
+  if (!a) return;
+  const meta = metaFor(docId, a, scope);
+  if (!meta) return;
+  const next = metaOf({ measure: { ...meta, ...change } });
+  if (!next || sameMeta(next, meta)) return;
+  scope.updateAnnotation(a.pageIndex, a.id, { measure: next } as Partial<PdfAnnotationObject>);
 }
 
 /** The page's measurements valued by its scales (not a file's own other scale). */
@@ -248,7 +397,17 @@ export function installMeasurements(registry: PluginRegistry): () => void {
     return () => undefined;
   }
   const offEvents = cap.onAnnotationEvent((e) => {
-    if ((e.type !== 'create' && e.type !== 'update') || e.committed) return;
+    if (e.type === 'delete') {
+      if (e.committed) return;
+      // A removed measurement's Triya data goes with it (pageData.ts).
+      if (kindOf(e.documentId, e.annotation)) {
+        const scope = cap.forDocument(e.documentId);
+        const page = e.annotation.pageIndex;
+        stagePageData(e.documentId, page, () => pageAnnots(scope, page));
+      }
+      return;
+    }
+    if (e.type !== 'create' && e.type !== 'update') return;
     if (!kindOf(e.documentId, e.annotation)) return;
     const id = e.annotation.id;
     // Undo/redo restores the value and label with the geometry; a scale changed

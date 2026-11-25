@@ -62,7 +62,8 @@ const SNAPS: ReadonlySet<DrawTool> = new Set([
   'square',
   'highlightArea',
   'circle',
-  'measureDistance',
+  'measureLength',
+  'measurePolylength',
   'measurePerimeter',
   'measureArea',
 ]);
@@ -364,6 +365,14 @@ function textDefaults(): Record<string, unknown> {
   return { contents: t('annotate.freeText.placeholder') };
 }
 
+/** Tools of measureTools.ts with a style of their own (M14-03, Q31). */
+const MEASURE_STYLE_TOOLS = [
+  'measureLength',
+  'measurePolylength',
+  'measurePerimeter',
+  'measureArea',
+] as const satisfies readonly StyleTool[];
+
 /** The plugin's own tools we rewrap under the same id. */
 const REWRAPPED: readonly DrawTool[] = [
   'textComment',
@@ -479,6 +488,12 @@ export function installDrawTools(registry: PluginRegistry): () => void {
       matchScore: (a: PdfAnnotationObject) =>
         a.type === PdfAnnotationSubtype.POLYGON && (a.cloudyBorderIntensity ?? 0) > 0 ? 20 : 0,
     });
+
+  // The measuring tools (installMeasureTools) remember their own style too (M14-03, Q31).
+  for (const id of MEASURE_STYLE_TOOLS) {
+    const tool = cap.getTool(id);
+    if (tool) cap.setToolDefaults(id, styled(id, { ...tool.defaults }));
+  }
 
   // The user's own defaults: once loaded, and whenever they change (M6-06/07).
   const reapply = () => {

@@ -253,7 +253,8 @@ test('M3 interop: measurements at 1:100, with and without a scale viewport', asy
   const id = await open(page, original, 'scaled.pdf');
   await setScale(page, '100', 'Metres', '2');
   await measurements(page, id, 60, 100, 200 * MM, 100 * MM);
-  await expect.poll(() => count(page, id)).toBe(6);
+  // One markup each since M14-03 (no grouped text boxes).
+  await expect.poll(() => count(page, id)).toBe(3);
   keep('measure-page__ctrl-s.pdf', await save(page, id, original));
 
   // Detail A 1:5 over the lower right, an 80 × 40 mm plate inside, one line spanning.
@@ -282,7 +283,7 @@ test('M3 interop: measurements at 1:100, with and without a scale viewport', asy
     { x: 100, y: 500 },
     { x: 330, y: 650 },
   ]);
-  await expect.poll(() => count(page, id2)).toBe(8);
+  await expect.poll(() => count(page, id2)).toBe(4);
   keep('measure-viewport__ctrl-s.pdf', await save(page, id2, original));
 });
 
@@ -297,6 +298,6 @@ for (const [name, args] of [
     await setScale(page, '100', 'Metres', '2');
     await measurements(page, id, 60, 100, 200 * MM, 100 * MM);
     expect(await cap(page, 'annotate', 'stamp', id, 0, 400, 560)).not.toBeNull();
-    await expect.poll(() => count(page, id)).toBe(7);
+    await expect.poll(() => count(page, id)).toBe(4);
     keep(`encrypted-${name}__ctrl-s.pdf`, await save(page, id, original));
   });

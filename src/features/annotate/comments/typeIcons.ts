@@ -1,7 +1,8 @@
 // The icon of a comment's card (M6-05): the icon of the tool that makes that
 // type, so the pane and the ribbon read the same (ADR-010 icons). Pure.
 import { PdfAnnotationSubtype as S, type PdfAnnotationObject } from '@embedpdf/models';
-import { measureKind } from '../../../model/measurement';
+import { metaOf, mirror, toolFromShape } from '../../../model/measureMarkup';
+import { measureKind, measurePoints } from '../../../model/measurement';
 
 const BY_TYPE: Partial<Record<S, string>> = {
   [S.TEXT]: 'comment.stickyNote',
@@ -23,7 +24,8 @@ const BY_TYPE: Partial<Record<S, string>> = {
 
 /** The command whose icon stands for the annotation's type (a comment bubble otherwise). */
 export function typeIconCommand(a: PdfAnnotationObject): string {
+  // A measurement: its tool's icon (M14-03: Length, Polylength, Perimeter, Area).
   const k = measureKind(a);
-  if (k) return `measure.${k}`;
+  if (k) return `measure.${metaOf(a)?.tool ?? toolFromShape(k, measurePoints(a).map(mirror))}`;
   return BY_TYPE[a.type] ?? 'comment.commentsPane';
 }

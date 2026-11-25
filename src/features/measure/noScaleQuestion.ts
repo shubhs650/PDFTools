@@ -25,7 +25,7 @@ import {
 import { frameOf } from './viewports';
 
 /** Measurements of a size: they need a scale. */
-const SIZED: ReadonlySet<GestureKind> = new Set(['distance', 'perimeter', 'area']);
+const SIZED: ReadonlySet<GestureKind> = new Set(['distance', 'polylength', 'perimeter', 'area']);
 
 interface PromptState {
   /** Pages asked already, per document ("docId/page"), for the session. */

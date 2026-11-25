@@ -61,7 +61,7 @@ async function hoverCorner(page: Page): Promise<void> {
     .toBe('endpoint');
 }
 
-for (const tool of ['Distance', 'Perimeter', 'Area', 'Calibrate', 'Scale Viewport'])
+for (const tool of ['Length', 'Polylength', 'Perimeter', 'Area', 'Calibrate', 'Scale Viewport'])
   test(`${tool}: the loupe follows the pointer with the snap kind, hides off the page`, async ({
     page,
   }) => {
@@ -115,7 +115,7 @@ test('auto snap: a note says so, one session across tools, the person’s own sw
   page,
 }) => {
   await open(page);
-  await pick(page, 'Distance');
+  await pick(page, 'Length');
   await expect(toggle(page)).toHaveAttribute('aria-pressed', 'true');
   await expect(page.getByTestId('snapshot-toast')).toHaveText(
     'Snapping is on while you measure. It goes back to how it was when you finish.',
@@ -140,7 +140,7 @@ test('auto snap: a note says so, one session across tools, the person’s own sw
   await expect(toggle(page)).toHaveAttribute('aria-pressed', 'true');
   // Snapping already on: picking a tool changes nothing and no note shows.
   await page.getByTestId('snapshot-toast').waitFor({ state: 'detached', timeout: 8000 });
-  await pick(page, 'Distance');
+  await pick(page, 'Length');
   await expect(page.getByTestId('snapshot-toast')).toHaveCount(0);
   await page.keyboard.press('Escape');
   await expect(toggle(page)).toHaveAttribute('aria-pressed', 'true');
@@ -169,7 +169,7 @@ test('Settings → Measure and the ribbon toggle: size, magnification, auto-snap
   await expect(backstage(page)).toBeHidden();
 
   // Auto-snap off: picking Distance leaves snapping off; the loupe still shows, larger.
-  await pick(page, 'Distance');
+  await pick(page, 'Length');
   await expect(toggle(page)).toHaveAttribute('aria-pressed', 'false');
   const c = await at(page, 300, 300);
   await page.mouse.move(c.x - 10, c.y - 10);
@@ -183,7 +183,7 @@ test('Settings → Measure and the ribbon toggle: size, magnification, auto-snap
   await expect(button).toHaveAttribute('aria-pressed', 'true');
   await button.click();
   await expect(button).toHaveAttribute('aria-pressed', 'false');
-  await pick(page, 'Distance');
+  await pick(page, 'Length');
   await page.mouse.move(c.x + 5, c.y + 5, { steps: 3 });
   await expect(loupe(page)).toHaveCount(0);
   const stored = await page.evaluate(() => localStorage.getItem('pdftools.measureLoupe'));
@@ -206,7 +206,7 @@ for (const dark of [false, true])
   }) => {
     if (dark) await darkTheme(page);
     await open(page);
-    await pick(page, 'Distance');
+    await pick(page, 'Length');
     await hoverCorner(page);
     await expect(loupe(page)).toBeVisible();
     const ribbon = await new AxeBuilder({ page })

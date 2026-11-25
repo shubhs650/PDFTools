@@ -250,7 +250,7 @@ export async function measuredDrawing(page: Page): Promise<{ top: number; bottom
   }
   // Distance by clicks (M13-10): the two corners, then the dimension line 60 pt above
   // the plan, clear of the drawing's own dimensions (Alt: no snap for that click).
-  await toolbar(page, 'Measure').getByRole('button', { name: 'Distance', exact: true }).click();
+  await toolbar(page, 'Measure').getByRole('button', { name: 'Length', exact: true }).click();
   await clickAt(left, top);
   await clickAt(right, top);
   await page.keyboard.down('Alt');

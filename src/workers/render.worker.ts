@@ -36,6 +36,12 @@ import { dropCustom, keepAuthor, nameTargets, writeMarkupIntent } from './render
 import { installFontReadback } from './render/freeTextFonts';
 import { applyTextColors, takeTextColorFallbacks } from './render/freeTextColors';
 import { applyDimensionAppearance } from './render/dimensionAppearance';
+import {
+  applyMeasureAppearance,
+  measureCallOf,
+  prepareMeasureCaption,
+  takeMeasureFallbacks,
+} from './render/measureAppearance';
 import { installLeaderReadback } from './render/leaderReadback';
 import { fixLineEndingAppearance } from './render/lineEndingAppearance';
 import subsetWasmUrl from 'harfbuzzjs/dist/harfbuzz-subset.wasm?url';
@@ -91,7 +97,12 @@ const commentFaces = new FaceStore(
 /** An executor call that draws a text comment in a library font (its faces may load first). */
 function blocksForFont(args: unknown): boolean {
   const { method, args: a } = args as { method?: unknown; args?: unknown };
-  return typeof method === 'string' && Array.isArray(a) && commentFontOf(method, a) !== null;
+  return (
+    typeof method === 'string' &&
+    Array.isArray(a) &&
+    // A measurement's caption is shaped in the app's own font too (M14-03, D-74).
+    (commentFontOf(method, a) !== null || !!measureCallOf(method, a)?.text.trim())
+  );
 }
 
 function ready(): {
@@ -197,6 +208,11 @@ const handlers: Handlers<RenderApi> = {
     // A text comment in a library font (M11-07): its faces are loaded before PDFium draws it.
     const faces =
       typeof docId === 'string' ? await prepareCommentFont(commentFaces, method, callArgs) : null;
+    // A measurement's caption in the app's own font (M14-03, D-74): its faces first.
+    const captionFaces =
+      typeof docId === 'string'
+        ? await prepareMeasureCaption(commentFaces, method, callArgs)
+        : null;
     // Thin Lines (M13-05): a view render draws the thin copy's page instead.
     const pageIndex = (callArgs[1] as { index?: unknown } | undefined)?.index;
     const thinPage =
@@ -244,10 +260,14 @@ const handlers: Handlers<RenderApi> = {
       applyTextColors(m, n, method, callArgs, faces !== null);
       // Its text in a library font, shaped and embedded (M11-07, D-52).
       applyCommentFont(m, n, method, callArgs, faces);
-      // A Distance with an offset: its dimension line and leader lines (M13-10).
-      applyDimensionAppearance(m, n, method, callArgs);
-      // Arrow heads on level and upright lines, readable (M13-04).
-      fixLineEndingAppearance(m, n, method, callArgs);
+      // A measurement as one markup, its value in its own appearance (M14-03, D-74).
+      const measured = applyMeasureAppearance(m, n, method, callArgs, captionFaces);
+      if (measured !== 'drawn') {
+        // A Distance with an offset: its dimension line and leader lines (M13-10).
+        applyDimensionAppearance(m, n, method, callArgs);
+        // Arrow heads on level and upright lines, readable (M13-04).
+        fixLineEndingAppearance(m, n, method, callArgs);
+      }
     }
     // A reopen (page-operation undo) re-applies the owner unlock (ADR-016 d5).
     if (method === 'unlockOwnerPermissions' && value === true && typeof docId === 'string') {
@@ -282,7 +302,12 @@ const handlers: Handlers<RenderApi> = {
     const textColorFallbacks = takeTextColorFallbacks(docId);
     // Text comments whose library font could not be drawn (M11-07): a count for diagnostics.
     const commentFontFallbacks = takeCommentFontFallbacks(docId);
-    return new Transfer({ ...r, tail, textColorFallbacks, commentFontFallbacks }, [tail]);
+    // Measurements whose caption could not be drawn (M14-03): a count for diagnostics.
+    const measureFallbacks = takeMeasureFallbacks(docId);
+    return new Transfer(
+      { ...r, tail, textColorFallbacks, commentFontFallbacks, measureFallbacks },
+      [tail],
+    );
   },
 
   commitSave: ({ docId, tailLength, rewrite }) => ({

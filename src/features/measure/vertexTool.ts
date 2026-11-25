@@ -1,10 +1,12 @@
-// Perimeter and Area by clicks (M3-16, M13-10), with their points kept outside
+// Polylength, Perimeter and Area by clicks (M3-16, M13-10, M14-03), with their points kept outside
 // the handler (M14-02, D-78, ADR-035): EmbedPDF's own polyline and polygon
 // handlers keep their vertices inside, and the plugin makes new handlers on
 // every zoom and whenever a page is laid out again, so a zoom between two
 // clicks lost them. These handlers draw the same previews and commit the same
 // annotations as the plugin's (a POLYLINE or POLYGON with the tool's
-// defaults); the points live in gesture.ts. Points are EmbedPDF page points.
+// defaults); the points live in gesture.ts. A Perimeter always closes: its
+// PolyLine repeats its first vertex (ADR-035 Amendment 1), and its preview
+// shows the closing side. Points are EmbedPDF page points.
 import {
   expandRect,
   PdfAnnotationBorderStyle,
@@ -33,7 +35,7 @@ import { setLive } from './measureStore';
 /** The plugin's handle around an area's first corner (CSS px): a click inside it closes the area. */
 const CLOSE_HANDLE_PX = 14;
 
-type VertexKind = 'perimeter' | 'area';
+type VertexKind = 'polylength' | 'perimeter' | 'area';
 
 function defaultsOf(context: HandlerContext) {
   const d = (context.getTool()?.defaults ?? {}) as Record<string, unknown>;
@@ -60,7 +62,17 @@ function boundsFor(kind: VertexKind, pts: Pt[], d: ReturnType<typeof defaultsOf>
     : patching.lineRectWithEndings(pts, d.strokeWidth, d.lineEndings);
 }
 
-/** How a Perimeter (a polyline) or an Area (a polygon) is shown and placed. */
+/** A Perimeter's points with its closing side: the first point again. */
+const closed = (pts: Pt[]): Pt[] => {
+  const first = pts[0];
+  return first ? [...pts, first] : pts;
+};
+
+/** The live value's kind (a Polylength is valued as a path, like a Perimeter). */
+const liveKind = (kind: VertexKind): 'perimeter' | 'area' =>
+  kind === 'area' ? 'area' : 'perimeter';
+
+/** How a Polylength or Perimeter (a polyline) or an Area (a polygon) is shown and placed. */
 export function vertexDrawer(kind: VertexKind): Drawer {
   const type = kind === 'area' ? PdfAnnotationSubtype.POLYGON : PdfAnnotationSubtype.POLYLINE;
   return {
@@ -69,7 +81,8 @@ export function vertexDrawer(kind: VertexKind): Drawer {
       if (g.pts.length === 0 || !pointer) return;
       const d = defaultsOf(context);
       const all = [...g.pts, pointer];
-      const bounds = boundsFor(kind, all, d);
+      const path = kind === 'perimeter' ? closed(all) : all;
+      const bounds = boundsFor(kind, path, d);
       // The plugin's preview data: a polygon's placed vertices and the moving one apart.
       context.onPreview({
         type,
@@ -77,18 +90,19 @@ export function vertexDrawer(kind: VertexKind): Drawer {
         data: {
           ...d,
           rect: bounds,
-          vertices: kind === 'area' ? g.pts : all,
+          vertices: kind === 'area' ? g.pts : path,
           currentVertex: pointer,
         },
       });
-      setLive({ page: g.page, kind, pts: all });
+      setLive({ page: g.page, kind: liveKind(kind), pts: path });
     },
     place(g: Gesture, context: HandlerContext) {
       const d = defaultsOf(context);
+      const vertices = kind === 'perimeter' ? closed(g.pts) : g.pts;
       const annotation = {
         ...d,
-        vertices: g.pts,
-        rect: boundsFor(kind, g.pts, d),
+        vertices,
+        rect: boundsFor(kind, vertices, d),
         type,
         pageIndex: context.pageIndex,
         id: uuidV4(),
@@ -102,7 +116,7 @@ export function vertexDrawer(kind: VertexKind): Drawer {
   };
 }
 
-/** The pointer handlers of Perimeter (`perimeter`) or Area (`area`). */
+/** The pointer handlers of Polylength, Perimeter or Area. */
 export function vertexHandlerFactory(
   kind: VertexKind,
   tool: string,

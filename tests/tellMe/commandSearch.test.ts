@@ -37,7 +37,7 @@ describe('command index', () => {
   it('places a command at its own tab, not at a copy on Home', () => {
     expect(where('comment.highlight')).toEqual(['Comment', 'Text Markup']);
     expect(where('view.zoomIn')).toEqual(['View', 'Zoom']);
-    expect(where('measure.distance')?.[0]).toBe('Measure');
+    expect(where('measure.length')?.[0]).toBe('Measure');
   });
 
   it('places a command shown only as a copy at its first copy', () => {
@@ -125,8 +125,10 @@ describe('search (on Enter only, rule 3)', () => {
   it('matches through the place last ("measure" lists the Measure tab)', () => {
     const r = ids('measure');
     expect(r.length).toBeGreaterThan(3);
-    expect(items.find((i) => i.id === r[0])?.where).toMatch(/^Measure › /);
-    expect(r).toEqual(expect.arrayContaining(['measure.distance', 'measure.area']));
+    // The Measure button's own label matches first (M14-03), then the tab's commands.
+    expect(r[0]).toBe('measure.lastTool');
+    expect(items.find((i) => i.id === r[1])?.where).toMatch(/^Measure › /);
+    expect(r).toEqual(expect.arrayContaining(['measure.length', 'measure.area']));
   });
 
   it('needs every word to match', () => {

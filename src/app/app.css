@@ -4496,6 +4496,49 @@ textarea.form-field {
   pointer-events: none;
 }
 
+/* A selected measurement's caption and fill while the plugin draws it (M14-03). */
+.selected-measure-fill {
+  position: absolute;
+  inset: var(--space-0);
+  overflow: visible;
+  pointer-events: none;
+}
+
+.selected-measure-caption {
+  position: absolute;
+  font-family: var(--font-family);
+  line-height: 1.18;
+  white-space: pre;
+  pointer-events: none;
+}
+
+/* A selected measurement's caption, draggable (M14-03, Q40). */
+.caption-handle-layer {
+  position: absolute;
+  /* Over the plugin's selection box (z-index 1), which takes the pointer. */
+  z-index: 2;
+  inset: var(--space-0);
+  pointer-events: none;
+}
+
+.caption-handle {
+  position: absolute;
+  padding: var(--space-0);
+  border: 1px dashed var(--color-accent);
+  border-radius: var(--radius-s);
+  background: transparent;
+  cursor: move;
+  pointer-events: auto;
+  touch-action: none;
+}
+
+.caption-handle-ghost {
+  position: absolute;
+  border: 1px dashed var(--color-accent);
+  border-radius: var(--radius-s);
+  background: color-mix(in srgb, var(--color-accent) 12%, transparent);
+}
+
 .measure-leaders {
   position: absolute;
   inset: var(--space-0);

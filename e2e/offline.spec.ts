@@ -264,7 +264,7 @@ test(
           { timeout: 20_000 },
         )
         .toBe('ready');
-      await measure.getByRole('button', { name: 'Distance', exact: true }).click();
+      await measure.getByRole('button', { name: 'Length', exact: true }).click();
       const box = await page.locator('[data-page="0"] .page-content').boundingBox();
       if (!box) throw new Error('page not laid out');
       const k = box.width / 600;

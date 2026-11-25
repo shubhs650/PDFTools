@@ -1,4 +1,4 @@
-import { PdfBlendMode, PdfStandardFont } from '@embedpdf/models';
+import { PdfAnnotationLineEnding, PdfBlendMode, PdfStandardFont } from '@embedpdf/models';
 import { IDBFactory } from 'fake-indexeddb';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { MARKUP_DEFAULTS, MARKUP_TOOLS } from '../../src/features/annotate/tools/markupModel';
@@ -100,8 +100,21 @@ describe('shipped comment styles (M6-03, D-37, B6)', () => {
       opacity: 0.5,
       blendMode: PdfBlendMode.Multiply,
     });
-    for (const m of ['measureDistance', 'measurePerimeter', 'measureArea'])
-      expect(STYLE_TOOLS).not.toContain(m);
+    // M14-03 (Q31): each measuring tool remembers its own style; red, open arrows on
+    // Length, butt ends on the others, a light see-through fill on areas.
+    expect(SHIPPED_DEFAULTS.measureLength).toMatchObject({
+      strokeColor: '#E44234',
+      lineEndings: {
+        start: PdfAnnotationLineEnding.OpenArrow,
+        end: PdfAnnotationLineEnding.OpenArrow,
+      },
+    });
+    for (const m of ['measurePolylength', 'measurePerimeter'] as const)
+      expect(SHIPPED_DEFAULTS[m].lineEndings).toEqual({
+        start: PdfAnnotationLineEnding.Butt,
+        end: PdfAnnotationLineEnding.Butt,
+      });
+    expect(SHIPPED_DEFAULTS.measureArea).toMatchObject({ color: '#E44234' });
     expect(MARKUP_DEFAULTS.highlight.color).toBe('#FFE14D');
   });
 

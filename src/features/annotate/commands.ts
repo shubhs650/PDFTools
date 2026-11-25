@@ -6,7 +6,12 @@ import type { AnnotationCapability } from '@embedpdf/plugin-annotation';
 import { startTransition } from 'react';
 import type { HistoryCapability } from '@embedpdf/plugin-history';
 import { pagesBusy } from '../pages/pageOps';
-import { notify, registerCommand, type CommandHandler } from '../../app/commands/dispatch';
+import {
+  notify,
+  registerCommand,
+  runCommand,
+  type CommandHandler,
+} from '../../app/commands/dispatch';
 import { undoOverride } from '../../app/commands/undoOverride';
 import { appStore, effectiveTool } from '../../app/store/appStore';
 import { documentStore, selectActive } from '../../app/store/documentStore';
@@ -16,7 +21,9 @@ import { openSchemes } from '../stamps/schemes/schemeStore';
 import { placeDynamicStamp, placeImageStamp } from '../stamps/stampTools';
 import { stampStore } from '../stamps/stampStore';
 import { loadScales, openScaleDialog, scaleStore } from '../measure/scaleStore';
-import { MEASURE_COMMANDS } from '../measure/measureTools';
+import { isMeasureTool, MEASURE_COMMANDS } from '../measure/measureTools';
+import { lastMeasureTool, measureCommandOf } from '../measure/lastMeasureTool';
+import { pairsOf, upgradeOldMeasurements } from '../measure/upgradeOld';
 import { setSnapping, snapStore, toggleKind } from '../measure/snapping';
 import { loupeSettingsStore, setLoupeSettings } from '../measure/loupeSettings';
 import { LOUPE_TOOLS } from '../measure/loupePointer';
@@ -272,6 +279,28 @@ export function registerAnnotateCommands(): () => void {
         },
       }),
     ),
+    // Home's and Comment's Measure button (M14-03): the last measuring tool used.
+    registerCommand('measure.lastTool', {
+      requires: 'annotate',
+      isPressed: () => isMeasureTool(appStore.getState().tool),
+      run: async () => {
+        await runCommand(measureCommandOf(lastMeasureTool.getState().tool));
+      },
+    }),
+    // Measurements saved by 1.1.0 become one markup each, one undo step (M14-03, Q38).
+    registerCommand('measure.updateOld', {
+      requires: 'annotate',
+      disabledReason: () => {
+        const id = activeId();
+        const st = id ? annotationState(id) : null;
+        const all = st ? Object.values(st.byUid).map((t) => t.object) : [];
+        return id && pairsOf(id, all).length > 0 ? null : msg('measure.oldBar.none');
+      },
+      run: () => {
+        const id = activeId();
+        if (id) upgradeOldMeasurements(id);
+      },
+    }),
     // Enter on the page: place a note or text box at its centre (M3-Q6), or
     // finish the polyline/polygon being drawn. Otherwise Enter keeps its job.
     // A selected text comment: Enter edits it (M7-03, D-43 c), unless a polyline is being drawn.

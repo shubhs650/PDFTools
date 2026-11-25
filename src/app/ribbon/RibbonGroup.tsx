@@ -4,9 +4,11 @@ import { useTranslation } from 'react-i18next';
 import { CommandDropdown, type ContextMenuEntry } from '../../ui/components';
 import { CommandIcon } from '../../ui/icons/CommandIcon';
 import { PALETTE_COMMANDS } from '../../features/annotate/tools/stylePalette';
+import { MeasureSplitButton } from '../../features/measure/MeasureSplitButton';
 import { groupLabelKey } from '../commandLabels';
 import type { CommandTab } from '../commands';
 import { RibbonButton, RibbonSplitButton } from './RibbonButton';
+import { MEASURE_SPLIT } from './stops';
 import {
   commandsAtStep,
   groupCells,
@@ -55,6 +57,20 @@ export function RibbonGroup({ tab, group, step, stop, measure = false }: RibbonG
           groupCells(shown).map((cell) => {
             const buttons = cell.map((c) => {
               const main = stop();
+              if (c.id === MEASURE_SPLIT) {
+                const arrow = stop();
+                return (
+                  <MeasureSplitButton
+                    key={c.id}
+                    large={c.size === 'large'}
+                    compact={c.compact === true}
+                    mainRef={main.bind}
+                    arrowRef={arrow.bind}
+                    mainTabIndex={main.tabIndex}
+                    arrowTabIndex={arrow.tabIndex}
+                  />
+                );
+              }
               const tool = PALETTE_COMMANDS[c.id];
               if (tool) {
                 const arrow = stop();

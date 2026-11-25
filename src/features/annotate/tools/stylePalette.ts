@@ -32,8 +32,13 @@ export const PALETTE_COMMANDS: Readonly<Record<string, StyleTool>> = {
   'comment.typewriter': 'typewriter', // its button arrived with the Comment ribbon (M6-08)
 };
 
-/** Every tool with a palette (the import/export order). */
-export const PALETTE_TOOLS: readonly StyleTool[] = STYLE_TOOLS;
+/**
+ * Every tool with a palette (the import/export order). The measuring tools
+ * remember their style (M14-03, Q31) but have no saved presets (Q41).
+ */
+export const PALETTE_TOOLS: readonly StyleTool[] = STYLE_TOOLS.filter(
+  (t) => !t.startsWith('measure'),
+);
 
 /**
  * The Comment Styles Palette window's tool list (M6-17), in groups as
@@ -72,6 +77,10 @@ export const TOOL_COMMANDS: Readonly<Record<StyleTool, string>> = {
   highlightArea: 'comment.highlightArea',
   inkHighlighter: 'comment.inkHighlighter',
   textComment: 'comment.stickyNote',
+  measureLength: 'measure.length',
+  measurePolylength: 'measure.polylength',
+  measurePerimeter: 'measure.perimeter',
+  measureArea: 'measure.area',
 };
 
 /** How a tool's presets and previews look. */
@@ -106,6 +115,10 @@ export const KIND: Readonly<Record<StyleTool, StyleKind>> = {
   highlightArea: 'area',
   inkHighlighter: 'highlight',
   textComment: 'note',
+  measureLength: 'line',
+  measurePolylength: 'line',
+  measurePerimeter: 'line',
+  measureArea: 'shape',
 };
 
 /**
@@ -133,6 +146,11 @@ const GROUP: Readonly<Record<StyleTool, string>> = {
   highlightArea: 'highlightArea',
   inkHighlighter: 'inkHighlighter',
   textComment: 'note',
+  // A measurement's style stays its own (M14-03): never restyled from a comment's.
+  measureLength: 'measureLength',
+  measurePolylength: 'measurePolylength',
+  measurePerimeter: 'measurePerimeter',
+  measureArea: 'measureArea',
 };
 
 export const sameGroup = (a: StyleTool, b: StyleTool): boolean => GROUP[a] === GROUP[b];

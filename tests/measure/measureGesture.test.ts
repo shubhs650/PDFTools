@@ -63,7 +63,7 @@ describe('view changes keep the points (Bug 1, Q19)', () => {
   it('a pointer move on another page or tool leaves it alone', () => {
     const g = area([{ x: 1, y: 1 }]);
     expect(move(g, { ...P0, page: 2 }, { x: 9, y: 9 })).toBe(g);
-    expect(move(g, { ...P0, tool: 'measureDistance' }, { x: 9, y: 9 })).toBe(g);
+    expect(move(g, { ...P0, tool: 'measureLength' }, { x: 9, y: 9 })).toBe(g);
   });
 
   it('the anchor for Shift is the last point placed on its own page', () => {
@@ -101,7 +101,7 @@ describe('only Esc, another tool or a page change ends it', () => {
 });
 
 describe('Distance: two points, then the offset', () => {
-  const D: Where = { ...P0, tool: 'measureDistance' };
+  const D: Where = { ...P0, tool: 'measureLength' };
   it('takes the second point, then commits with the offset on the third click', () => {
     let g = click(null, D, 'distance', { x: 0, y: 0 }, 3).gesture;
     g = click(g, D, 'distance', { x: 100, y: 0 }, 3).gesture;
@@ -154,11 +154,15 @@ describe('Perimeter and Area by clicks', () => {
     expect(click(two, P0, 'area', { x: 2, y: -2 }, 3).commit).toBeUndefined();
   });
 
-  it('finish needs two points for a perimeter, three for an area', () => {
+  it('finish needs two points for a polylength, three for a perimeter or an area', () => {
     const p: Gesture = { ...area([{ x: 0, y: 0 }]), tool: 'measurePerimeter', kind: 'perimeter' };
     expect(finish(p).commit).toBeUndefined();
     const p2 = { ...p, pts: [...p.pts, { x: 9, y: 0 }] };
-    expect(finish(p2).commit?.pts).toHaveLength(2);
+    // M14-03: a Perimeter always closes, so it needs a third point.
+    expect(finish(p2).commit).toBeUndefined();
+    expect(finish({ ...p2, pts: [...p2.pts, { x: 9, y: 9 }] }).commit?.pts).toHaveLength(3);
+    const l: Gesture = { ...p2, tool: 'measurePolylength', kind: 'polylength' };
+    expect(finish(l).commit?.pts).toHaveLength(2);
     expect(
       finish(
         area([

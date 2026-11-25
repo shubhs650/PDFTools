@@ -121,6 +121,8 @@ export interface RenderApi {
       textColorFallbacks?: number;
       /** Text comments since the last save whose library font PDFium's appearance replaced (M11-07). */
       commentFontFallbacks?: number;
+      /** Measurements since the last save whose caption PDFium's appearance replaced (M14-03). */
+      measureFallbacks?: number;
     }
   >;
   /** The tail of the last saveIncremental was written: it becomes the new base (M1-22). */

@@ -141,7 +141,8 @@
       "openPopup": "Open Popup"
     },
     "measure": {
-      "distance": "Distance",
+      "length": "Length",
+      "polylength": "Polylength",
       "perimeter": "Perimeter",
       "area": "Area",
       "calibrate": "Calibrate",
@@ -153,7 +154,9 @@
       "snapEndpoint": "Snap to Endpoint",
       "snapMidpoint": "Snap to Midpoint",
       "snapIntersection": "Snap to Intersection",
-      "snapNearest": "Snap to Nearest"
+      "snapNearest": "Snap to Nearest",
+      "lastTool": "Measure",
+      "updateOld": "Update Old Measurements"
     },
     "organize": {
       "insertBlank": "Insert Blank Page",
@@ -344,7 +347,8 @@
         "manage": "Manage"
       },
       "measure": {
-        "measure": "Measure",
+        "length": "Length",
+        "area": "Area",
         "scale": "Scale",
         "settings": "Settings",
         "snap": "Snap"
@@ -378,7 +382,8 @@
     "expand": "Expand Ribbon",
     "needsDocument": "Open a document to use this command",
     "notReady": "Not available yet",
-    "quickAccess": "Quick access toolbar"
+    "quickAccess": "Quick access toolbar",
+    "measureMenu": "Measuring tools"
   },
   "frame": {
     "banner": "Toolbar",
@@ -754,7 +759,7 @@
       "mag": "Loupe magnification",
       "magValue": "{{value}}×",
       "autoSnap": "Turn on snapping when measuring",
-      "autoSnapHint": "Distance, Perimeter, Area, Calibrate and Scale Viewport turn snapping on; it goes back to how it was when you finish, unless you switch it yourself meanwhile.",
+      "autoSnapHint": "Length, Polylength, Perimeter, Area, Calibrate and Scale Viewport turn snapping on; it goes back to how it was when you finish, unless you switch it yourself meanwhile.",
       "note": "The loupe shows the spot under the pointer larger while you measure or draw a line, arrow, polyline or callout. Switch it on or off on the Measure tab, in the Snap group; View › Loupe shows it with every tool. These choices are kept on this device only."
     },
     "crsTemplates": {
@@ -1460,8 +1465,8 @@
       "ink": "Pencil drawing",
       "fileAttachment": "File attachment",
       "other": "Comment",
-      "distance": "Distance measurement",
-      "perimeter": "Perimeter measurement",
+      "distance": "Length measurement",
+      "perimeter": "Polylength or perimeter measurement",
       "area": "Area measurement"
     },
     "anonymous": "Anonymous",
@@ -1476,8 +1481,9 @@
     },
     "toolHint": {
       "callout": "Drag from the point to the text box position",
-      "distance": "Click two points, move sideways to set the dimension line, then click. Esc cancels.",
-      "perimeter": "Click each point, then double-click or press Enter. Esc cancels.",
+      "length": "Click two points, move sideways to set the dimension line, then click. Double-click the second point or press Enter for no offset. Esc cancels.",
+      "polylength": "Click each point, then double-click or press Enter. Esc cancels.",
+      "perimeter": "Click each corner, then click the first one, double-click or press Enter: it closes back to the first corner. Esc cancels.",
       "area": "Click each corner, then click the first one, double-click or press Enter. Esc cancels."
     },
     "link": {
@@ -1700,7 +1706,11 @@
       "squiggly": "Squiggly",
       "highlightArea": "Highlight Area",
       "inkHighlighter": "Free Highlight",
-      "textComment": "Sticky Note"
+      "textComment": "Sticky Note",
+      "measureLength": "Length",
+      "measurePolylength": "Polylength",
+      "measurePerimeter": "Perimeter",
+      "measureArea": "Area"
     }
   },
   "comments": {
@@ -1952,6 +1962,37 @@
       "paperSize": "Measure at paper size",
       "close": "Keep measuring without a scale",
       "paperDone": "Page {{page}} is measured at paper size (1:1)."
+    },
+    "subject": {
+      "length": "Length",
+      "polylength": "Polylength",
+      "perimeter": "Perimeter",
+      "area": "Area"
+    },
+    "caption": {
+      "labelled": "{{label}}: {{value}}"
+    },
+    "props": {
+      "heading": "Measurement",
+      "label": "Label",
+      "labelHint": "Shown in front of the value on the page.",
+      "caption": "Caption",
+      "above": "Above the line",
+      "inline": "In the line",
+      "resetCaption": "Put the caption back",
+      "captionMoved": "The caption was moved."
+    },
+    "captionDrag": {
+      "handle": "Move the caption of this measurement"
+    },
+    "oldBar": {
+      "name": "Measurements from an earlier version",
+      "text_one": "This file has {{count}} measurement saved by an earlier version of {{app}}, with its value in a separate text box. Other PDF editors treat the two as separate items.",
+      "text_other": "This file has {{count}} measurements saved by an earlier version of {{app}}, each with its value in a separate text box. Other PDF editors treat the two as separate items.",
+      "update": "Update old measurements",
+      "done_one": "{{count}} measurement updated. Undo puts it back as it was.",
+      "done_other": "{{count}} measurements updated. Undo puts them back as they were.",
+      "none": "This file has no measurements from an earlier version."
     }
   },
   "viewport": {

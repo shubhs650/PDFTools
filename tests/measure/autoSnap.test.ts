@@ -19,14 +19,21 @@ const change = (
 ) => onToolChange(session, { from, to, enabled, autoSnap });
 
 describe('auto snap', () => {
-  it('covers the three Measure tools, Calibrate and drawing a Scale Viewport', () => {
+  it('covers the four Measure tools, Calibrate and drawing a Scale Viewport', () => {
     expect([...AUTO_SNAP_TOOLS].sort()).toEqual(
-      ['calibrate', 'measureArea', 'measureDistance', 'measurePerimeter', 'scaleViewport'].sort(),
+      [
+        'calibrate',
+        'measureArea',
+        'measureLength',
+        'measurePolylength',
+        'measurePerimeter',
+        'scaleViewport',
+      ].sort(),
     );
   });
 
   it('turns snapping on when a Measure tool is picked with snapping off, and says so', () => {
-    const r = change(null, 'select', 'measureDistance', false);
+    const r = change(null, 'select', 'measureLength', false);
     expect(r.set).toBe(true);
     expect(r.note).toBe(true);
     expect(r.session).toEqual({ before: false, turnedOn: true, touched: false });
@@ -50,8 +57,8 @@ describe('auto snap', () => {
   });
 
   it('keeps one session while moving between measuring tools', () => {
-    const start = change(null, 'select', 'measureDistance', false);
-    const mid = change(start.session, 'measureDistance', 'measurePerimeter', true);
+    const start = change(null, 'select', 'measureLength', false);
+    const mid = change(start.session, 'measureLength', 'measurePerimeter', true);
     expect(mid.set).toBeNull();
     expect(mid.note).toBe(false);
     expect(mid.session).toEqual(start.session);
@@ -62,11 +69,11 @@ describe('auto snap', () => {
   });
 
   it('leaves snapping as the person set it when they switched it meanwhile', () => {
-    const start = change(null, 'select', 'measureDistance', false);
+    const start = change(null, 'select', 'measureLength', false);
     // Switched off and on again: still their choice, so it stays on.
     const touched = onSnapToggled(onSnapToggled(start.session));
     expect(touched?.touched).toBe(true);
-    const end = change(touched, 'measureDistance', 'select', true);
+    const end = change(touched, 'measureLength', 'select', true);
     expect(end.set).toBeNull();
     expect(end.session).toBeNull();
     // Switched off during measuring: stays off.
@@ -76,9 +83,9 @@ describe('auto snap', () => {
   });
 
   it('does nothing with "Turn on snapping when measuring" cleared', () => {
-    const r = change(null, 'select', 'measureDistance', false, false);
+    const r = change(null, 'select', 'measureLength', false, false);
     expect(r).toEqual({ session: null, set: null, note: false });
-    expect(change(null, 'measureDistance', 'select', false, false).set).toBeNull();
+    expect(change(null, 'measureLength', 'select', false, false).set).toBeNull();
   });
 
   it('a switch outside a measuring session is not recorded', () => {
@@ -91,9 +98,9 @@ describe('auto snap', () => {
   });
 
   it('does not restore over a state that already matches', () => {
-    const start = change(null, 'select', 'measureDistance', false);
+    const start = change(null, 'select', 'measureLength', false);
     // Something else (not the person's switch) already turned it off.
-    const end = change(start.session, 'measureDistance', 'select', false);
+    const end = change(start.session, 'measureLength', 'select', false);
     expect(end.set).toBeNull();
     expect(end.session).toBeNull();
   });

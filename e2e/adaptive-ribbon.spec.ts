@@ -109,8 +109,9 @@ test('Comment: labels from 1600 px; at 1280 px every tool is a button with its n
     'Free Highlight',
     'Rectangle',
     'Stamp',
-    'Distance',
-    'Area',
+    // M14-03: one Measure split button, the last measuring tool (Length) on its face.
+    'Length',
+    'Measuring tools',
   ])
     await expect(bar.getByRole('button', { name, exact: true }), name).toBeVisible();
   await page.screenshot({ path: 'test-results/m6-08/comment-1280.png' });
@@ -302,7 +303,7 @@ test('Home (M7-09): names, tooltips with shortcuts, pane toggles, Rotate View, S
   for (const name of ['Select Text', 'Select Comments', 'Reset Form', 'Signatures'])
     await expect(home.getByRole('button', { name, exact: true }), name).toHaveCount(0);
   await expect(home.getByRole('button', { name: 'Rotate Clockwise', exact: true })).toHaveCount(0);
-  for (const name of ['Callout', 'Line', 'Arrow', 'Rectangle', 'Distance', 'Sign Document…'])
+  for (const name of ['Callout', 'Line', 'Arrow', 'Rectangle', 'Length', 'Sign Document…'])
     await expect(home.getByRole('button', { name, exact: true }), name).toBeVisible();
 
   // Every Home button has a tooltip naming it, with its shortcut when it has one.

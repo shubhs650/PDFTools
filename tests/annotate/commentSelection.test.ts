@@ -85,7 +85,7 @@ describe('selectsAfterDraw', () => {
       'textComment',
       'freeText',
       'dynamicStamp',
-      'measureDistance',
+      'measureLength',
       'formTextField',
     ])
       expect(selectsAfterDraw(t)).toBe(true);

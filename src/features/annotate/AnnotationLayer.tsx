@@ -28,6 +28,7 @@ import { TEXT_BODY_ATTR, textBodyUnmounted, useEditEpoch } from './textEdit';
 import { pressComment, type PageGeometry } from './textPointer';
 import { isTextMarkup } from './pointerModes';
 import { annotationCapability } from './selection';
+import { SelectedMeasure } from '../measure/SelectedMeasure';
 
 const readLibraryFont = (a: PdfAnnotationObject): string | undefined => {
   const v = (a as unknown as { libraryFont?: unknown }).libraryFont;
@@ -96,6 +97,8 @@ function Body({
           })}
     >
       {children}
+      {/* A selected measurement's caption and fill (M14-03): the plugin draws only its points. */}
+      {isSelected ? <SelectedMeasure annotation={annotation} scale={geometry.scale} /> : null}
     </div>
   );
 }
