@@ -1,8 +1,8 @@
 # ADR-035: M14 — Measuring overhaul for version 1.2.0
 
-- **Status:** Proposed. The owner approved the decisions behind it on 2026-11-25 (41 questions
-  answered one at a time, then the written summary); accepted with the owner's approval of the
-  plan [docs/plan/M14.md](../plan/M14.md).
+- **Status:** Accepted by the owner on 2026-11-25: the decisions (41 questions answered one at a
+  time, then the written summary) and the plan [docs/plan/M14.md](../plan/M14.md) ("I approve the
+  plan, proceed").
 - **Date:** 2026-11-25
 - **Deciders:** owner (Shubham) / agent (M14 planning thread)
 - **Adds:** D-73 … D-79. **Amends:** §7.4, §7.5, §13 of ARCHITECTURE.md (Rev 0.26).
