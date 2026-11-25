@@ -51,8 +51,11 @@ export const targetKey = (t: PatchTarget): string =>
  */
 // /Open: a sticky note pop-up's open state, a boolean PDFium can't write (M7-06, S23).
 const ANNOT_KEYS = new Set(['Measure', 'IT', 'Cap', 'CP', 'LL', 'LLE', 'LLO', 'CO', 'Open']);
-/** /Tabs: the page's form tab order (M6-14). */
-const PAGE_KEYS = new Set(['VP', 'Tabs']);
+/**
+ * /Tabs: the page's form tab order (M6-14). /PieceInfo and /LastModified: the
+ * measurements' own data (ISO 32000-1 §14.5; spike S34, ADR-035 Amendment 1).
+ */
+const PAGE_KEYS = new Set(['VP', 'Tabs', 'PieceInfo', 'LastModified']);
 /** A form field's tooltip and default value, which EmbedPDF doesn't write (M6-14, ADR-022 d4). */
 export const FIELD_KEYS = new Set(['TU', 'DV']);
 

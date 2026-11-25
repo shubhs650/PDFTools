@@ -1,0 +1,551 @@
+{
+  "version": 1,
+  "generator": "e2e/fixtures/measure-corpus (M14-01)",
+  "sheets": [
+    {
+      "file": "01_floor_plan_1-100_mm.pdf",
+      "title": "Floor plan 1:100 (mm)",
+      "width": 1190.551,
+      "height": 841.89,
+      "rotate": 0,
+      "viewports": [{ "name": "Plan", "ratio": "1:100", "unit": "mm" }],
+      "scaleNote": "Page /VP \"Plan\" at 1:100 in mm; the 24000 dimension can calibrate too",
+      "items": [
+        {
+          "id": "overall-length",
+          "kind": "length",
+          "points": [
+            [127.559, 317.48],
+            [807.874, 317.48]
+          ],
+          "value": 24000,
+          "unit": "mm",
+          "note": "Grid A to D along the bottom wall"
+        },
+        {
+          "id": "office-diagonal",
+          "kind": "length",
+          "points": [
+            [127.559, 317.48],
+            [382.677, 487.559]
+          ],
+          "value": 10816.654,
+          "unit": "mm",
+          "note": "Office corner to corner"
+        },
+        {
+          "id": "wall-run",
+          "kind": "polylength",
+          "points": [
+            [807.874, 317.48],
+            [807.874, 572.598],
+            [581.102, 572.598],
+            [581.102, 742.677]
+          ],
+          "value": 23000,
+          "unit": "mm",
+          "note": "Open path along the east walls"
+        },
+        {
+          "id": "office-perimeter",
+          "kind": "perimeter",
+          "points": [
+            [127.559, 317.48],
+            [382.677, 317.48],
+            [382.677, 487.559],
+            [127.559, 487.559]
+          ],
+          "value": 30000,
+          "unit": "mm",
+          "note": "Closed: the closing side counts"
+        },
+        {
+          "id": "office-area",
+          "kind": "area",
+          "points": [
+            [127.559, 317.48],
+            [382.677, 317.48],
+            [382.677, 487.559],
+            [127.559, 487.559]
+          ],
+          "value": 54,
+          "unit": "m²",
+          "note": "9000 x 6000"
+        },
+        {
+          "id": "workshop-area",
+          "kind": "area",
+          "points": [
+            [382.677, 317.48],
+            [807.874, 317.48],
+            [807.874, 572.598],
+            [581.102, 572.598],
+            [581.102, 487.559],
+            [382.677, 487.559]
+          ],
+          "value": 114,
+          "unit": "m²",
+          "note": "L-shaped room"
+        },
+        {
+          "id": "slab-net-area",
+          "kind": "cutout",
+          "points": [
+            [127.559, 487.559],
+            [382.677, 487.559],
+            [382.677, 742.677],
+            [127.559, 742.677]
+          ],
+          "holes": [
+            [
+              [184.252, 544.252],
+              [226.772, 544.252],
+              [226.772, 586.772],
+              [184.252, 586.772]
+            ],
+            [
+              [283.465, 586.772],
+              [340.157, 586.772],
+              [340.157, 700.157],
+              [283.465, 700.157]
+            ]
+          ],
+          "value": 70.75,
+          "unit": "m²",
+          "note": "81 m² gross minus 2.25 m² and 8 m² openings"
+        },
+        {
+          "id": "slab-volume",
+          "kind": "volume",
+          "points": [
+            [127.559, 487.559],
+            [382.677, 487.559],
+            [382.677, 742.677],
+            [127.559, 742.677]
+          ],
+          "holes": [
+            [
+              [184.252, 544.252],
+              [226.772, 544.252],
+              [226.772, 586.772],
+              [184.252, 586.772]
+            ],
+            [
+              [283.465, 586.772],
+              [340.157, 586.772],
+              [340.157, 700.157],
+              [283.465, 700.157]
+            ]
+          ],
+          "depth": 250,
+          "value": 17.6875,
+          "unit": "m³",
+          "note": "Net slab area x 250 mm (gross: 20.25 m³)"
+        },
+        {
+          "id": "doors",
+          "kind": "count",
+          "points": [
+            [240.945, 317.48],
+            [382.677, 388.346],
+            [467.717, 317.48],
+            [581.102, 515.906],
+            [694.488, 572.598],
+            [807.874, 430.866],
+            [212.598, 487.559]
+          ],
+          "value": 7,
+          "unit": "doors",
+          "note": "Hinge points of the seven doors"
+        }
+      ]
+    },
+    {
+      "file": "02_pipe_run_1-50.pdf",
+      "title": "Pipe run with bends 1:50 (mm)",
+      "width": 1190.551,
+      "height": 841.89,
+      "rotate": 0,
+      "viewports": [{ "name": "Pipe run", "ratio": "1:50", "unit": "mm" }],
+      "scaleNote": "Page /VP \"Pipe run\" at 1:50 in mm",
+      "items": [
+        {
+          "id": "run-length",
+          "kind": "polylength",
+          "points": [
+            [113.386, 311.811],
+            [453.543, 311.811],
+            [678.431, 484.373],
+            [905.203, 484.373]
+          ],
+          "value": 15000,
+          "unit": "mm",
+          "note": "Centreline through the intersection points (6000 + 5000 + 4000)"
+        },
+        {
+          "id": "first-leg",
+          "kind": "length",
+          "points": [
+            [113.386, 311.811],
+            [453.543, 311.811]
+          ],
+          "value": 6000,
+          "unit": "mm",
+          "note": "Dimensioned leg"
+        },
+        {
+          "id": "inside-angle-B",
+          "kind": "angle",
+          "points": [
+            [113.386, 311.811],
+            [453.543, 311.811],
+            [678.431, 484.373]
+          ],
+          "value": 142.5,
+          "unit": "°",
+          "note": "Inside angle at the first bend"
+        },
+        {
+          "id": "deflection-B",
+          "kind": "angle",
+          "points": [
+            [680.315, 311.811],
+            [453.543, 311.811],
+            [678.431, 484.373]
+          ],
+          "value": 37.5,
+          "unit": "°",
+          "note": "Deflection from the horizontal construction line"
+        },
+        {
+          "id": "bend-radius-B",
+          "kind": "radius",
+          "points": [
+            [430.45, 379.843],
+            [452.318, 315.421]
+          ],
+          "center": [430.45, 379.843],
+          "onCircle": [
+            [430.45, 311.811],
+            [452.318, 315.421],
+            [471.865, 325.87]
+          ],
+          "value": 1200,
+          "unit": "mm",
+          "note": "Bend radius (an arc, not a full circle)"
+        },
+        {
+          "id": "tank-diameter",
+          "kind": "diameter",
+          "points": [
+            [850.394, 680.315],
+            [935.433, 680.315]
+          ],
+          "center": [850.394, 680.315],
+          "onCircle": [
+            [935.433, 680.315],
+            [850.394, 765.354],
+            [776.747, 637.795]
+          ],
+          "value": 3000,
+          "unit": "mm",
+          "note": "Tank T-1"
+        },
+        {
+          "id": "flange-radius",
+          "kind": "radius",
+          "points": [
+            [922.21, 484.373],
+            [922.21, 501.381]
+          ],
+          "center": [922.21, 484.373],
+          "onCircle": [
+            [939.218, 484.373],
+            [922.21, 501.381],
+            [907.481, 475.869]
+          ],
+          "value": 300,
+          "unit": "mm",
+          "note": "Flange, a small full circle"
+        }
+      ]
+    },
+    {
+      "file": "03_three_scales_1-50_1-5_1-10.pdf",
+      "title": "One sheet, three scales (1:50, 1:5, 1:10)",
+      "width": 1190.551,
+      "height": 841.89,
+      "rotate": 0,
+      "viewports": [
+        { "name": "Main view", "ratio": "1:50", "unit": "mm" },
+        { "name": "Detail A", "ratio": "1:5", "unit": "mm" },
+        { "name": "Detail B", "ratio": "1:10", "unit": "mm" }
+      ],
+      "scaleNote": "Three /VP entries; the rest of the page has no scale",
+      "items": [
+        {
+          "id": "beam-length",
+          "kind": "length",
+          "points": [
+            [113.386, 572.598],
+            [566.929, 572.598]
+          ],
+          "value": 8000,
+          "unit": "mm",
+          "viewport": "Main view",
+          "note": "Top of beam, end to end"
+        },
+        {
+          "id": "plate-width",
+          "kind": "length",
+          "points": [
+            [170.079, 170.079],
+            [396.85, 170.079]
+          ],
+          "value": 400,
+          "unit": "mm",
+          "viewport": "Detail A",
+          "note": "End plate width at 1:5"
+        },
+        {
+          "id": "plate-area",
+          "kind": "area",
+          "points": [
+            [170.079, 170.079],
+            [396.85, 170.079],
+            [396.85, 311.811],
+            [170.079, 311.811]
+          ],
+          "value": 0.1,
+          "unit": "m²",
+          "viewport": "Detail A",
+          "note": "400 x 250 at 1:5"
+        },
+        {
+          "id": "cleat-length",
+          "kind": "length",
+          "points": [
+            [737.008, 368.504],
+            [992.126, 368.504]
+          ],
+          "value": 900,
+          "unit": "mm",
+          "viewport": "Detail B",
+          "note": "Cleat length at 1:10"
+        },
+        {
+          "id": "spans-two-scales",
+          "kind": "length",
+          "points": [
+            [113.386, 425.197],
+            [396.85, 311.811]
+          ],
+          "value": null,
+          "unit": "mm",
+          "note": "Starts in Main view, ends in Detail A: no value, \"spans 2 scales\""
+        }
+      ]
+    },
+    {
+      "file": "04_no_scale.pdf",
+      "title": "No scale (sketch)",
+      "width": 1190.551,
+      "height": 841.89,
+      "rotate": 0,
+      "viewports": [],
+      "scaleNote": "No /VP: the first measurement asks for a scale (D-77)",
+      "items": [
+        {
+          "id": "paper-line",
+          "kind": "length",
+          "points": [
+            [170.079, 226.772],
+            [453.543, 226.772]
+          ],
+          "value": 100,
+          "unit": "mm (paper)",
+          "note": "Measured at paper size"
+        },
+        {
+          "id": "paper-rectangle",
+          "kind": "area",
+          "points": [
+            [595.276, 226.772],
+            [822.047, 226.772],
+            [822.047, 368.504],
+            [595.276, 368.504]
+          ],
+          "value": 4000,
+          "unit": "mm² (paper)",
+          "note": "80 x 50 mm on paper"
+        },
+        {
+          "id": "paper-angle",
+          "kind": "angle",
+          "points": [
+            [170.079, 396.85],
+            [283.465, 510.236],
+            [425.197, 425.197]
+          ],
+          "value": 104.036,
+          "unit": "°",
+          "note": "An angle needs no scale"
+        }
+      ]
+    },
+    {
+      "file": "05_raster_only.pdf",
+      "title": "Raster only (one image, no vectors)",
+      "width": 1190.551,
+      "height": 841.89,
+      "rotate": 0,
+      "viewports": [],
+      "scaleNote": "No /VP and nothing to snap to: calibrate on the 10 m scale bar",
+      "items": [
+        {
+          "id": "scale-bar",
+          "kind": "calibration",
+          "points": [
+            [226.772, 184.252],
+            [510.236, 184.252]
+          ],
+          "value": 10000,
+          "unit": "mm",
+          "note": "Calibrate on the 10 m scale bar (no vectors to snap to)"
+        },
+        {
+          "id": "room-area",
+          "kind": "area",
+          "points": [
+            [226.772, 255.118],
+            [566.929, 255.118],
+            [566.929, 425.197],
+            [226.772, 425.197]
+          ],
+          "value": 72,
+          "unit": "m²",
+          "note": "12000 x 6000 at 1:100 (line centres, 0.5 mm wide on paper)"
+        },
+        {
+          "id": "room-length",
+          "kind": "length",
+          "points": [
+            [226.772, 255.118],
+            [566.929, 255.118]
+          ],
+          "value": 12000,
+          "unit": "mm",
+          "note": "Bottom wall centreline"
+        }
+      ]
+    },
+    {
+      "file": "06_imperial_ft-in.pdf",
+      "title": "Imperial, ft-in (1/4\" = 1'-0\")",
+      "width": 1224,
+      "height": 792,
+      "rotate": 0,
+      "viewports": [{ "name": "Plan", "ratio": "1/4\" = 1'-0\"", "unit": "ft-in" }],
+      "scaleNote": "/VP \"Plan\" in feet shown as ft-in to 1/16\"",
+      "items": [
+        {
+          "id": "long-wall",
+          "kind": "length",
+          "points": [
+            [113.386, 198.425],
+            [473.386, 198.425]
+          ],
+          "value": 240,
+          "unit": "in",
+          "note": "20'-0\""
+        },
+        {
+          "id": "odd-length",
+          "kind": "length",
+          "points": [
+            [113.386, 423.425],
+            [259.636, 423.425]
+          ],
+          "value": 97.5,
+          "unit": "in",
+          "note": "8'-1 1/2\""
+        },
+        {
+          "id": "garage-area",
+          "kind": "area",
+          "points": [
+            [113.386, 198.425],
+            [473.386, 198.425],
+            [473.386, 423.425],
+            [113.386, 423.425]
+          ],
+          "value": 250,
+          "unit": "sq ft",
+          "note": "20'-0\" x 12'-6\""
+        }
+      ]
+    },
+    {
+      "file": "07_rotated_page.pdf",
+      "title": "Rotated page (/Rotate 90)",
+      "width": 841.89,
+      "height": 1190.551,
+      "rotate": 90,
+      "viewports": [{ "name": "Plan", "ratio": "1:100", "unit": "mm" }],
+      "scaleNote": "Portrait media box, /Rotate 90; points are in user space (before the turn)",
+      "items": [
+        {
+          "id": "overall-length",
+          "kind": "length",
+          "points": [
+            [524.41, 127.559],
+            [524.41, 807.874]
+          ],
+          "value": 24000,
+          "unit": "mm",
+          "note": "Same wall as sheet 01, on a turned page"
+        },
+        {
+          "id": "office-area",
+          "kind": "area",
+          "points": [
+            [524.41, 127.559],
+            [524.41, 382.677],
+            [354.331, 382.677],
+            [354.331, 127.559]
+          ],
+          "value": 54,
+          "unit": "m²",
+          "note": "9000 x 6000"
+        },
+        {
+          "id": "slab-net-area",
+          "kind": "cutout",
+          "points": [
+            [354.331, 127.559],
+            [354.331, 382.677],
+            [99.213, 382.677],
+            [99.213, 127.559]
+          ],
+          "holes": [
+            [
+              [297.638, 184.252],
+              [297.638, 226.772],
+              [255.118, 226.772],
+              [255.118, 184.252]
+            ],
+            [
+              [255.118, 283.465],
+              [255.118, 340.157],
+              [141.733, 340.157],
+              [141.733, 283.465]
+            ]
+          ],
+          "value": 70.75,
+          "unit": "m²",
+          "note": "As sheet 01"
+        }
+      ]
+    }
+  ]
+}

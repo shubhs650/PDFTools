@@ -1,11 +1,13 @@
 # Triya PDF — Progress
 
-_Last updated: 2026-11-25 (M14-02: measuring that survives zoom and pan, Shift that still snaps, the no-scale question, the crossing warning, ADR-035 D-77 and D-78; M14 plan: measuring overhaul for 1.2.0 after the owner's 41-question interview, [docs/plan/M14.md](plan/M14.md), [ADR-035](adr/035-m14-measuring-overhaul.md), D-73 … D-79, ARCHITECTURE.md Rev 0.26). Earlier: 2026-11-24 (M13-10: measuring by clicks, Distance as a dimension with leader lines stored as /LL and /LLE, ADR-034 Amendment 3, D-72, ARCHITECTURE.md Rev 0.25; M13-09: Help for M13 with every picture made again, the loupe's key M, a shortcut sheet that lists every key, What's new and release notes for 1.1.0, Compare on in release builds, the release checks and the owner pack; M13 complete on the agent side; M13-08: the CRS template screens, the export dialog with project templates, four guided set-up steps beside a live sheet preview, the template manager; M13-02·O2: the loupe and snapping for Line, Arrow, Polyline and Callout comments; M13-02·O1: View › Loupe, the loupe in every tool; M13-01·O5: "Try comparing two revisions" on the start screen; M13-05: Thin Lines, every page line 1 device pixel wide on screen only, from a view-only copy in the Render worker; M13-07: the CRS project template engine and the CRS review corpus; M13-04: labelled status bar toggles, Previous / Next View in the status bar, one view history for the window, Distance with open arrows; M13-03: spike S32, Thin Lines route b, a view-only copy kept thin, ADR-034 Amendment 2; M13-02: the Measure loupe and automatic snapping; M13-06: spike S33, CRS project templates with ExcelJS, works with workaround, ADR-034 Amendment 1; M13-01: sample comparisons in the Compare input window; M13 plan approved: final improvements for 1.1.0, tasks M13-01 … M13-09, ADR-034, ARCHITECTURE.md Rev 0.24; M12-ux plan and ADR-033 recorded (tasks M12-24 … M12-27 all merged); M12-26: alignment made easy to find and first-time tips; M12-27: review in a comparison made easier; M12-25: room to work in a comparison; M12-24: the Compare input window made clearer; M12-23: M12 acceptance, M12 complete on the agent side; M12-22: Compare help and release notes; M12-21·O4: drop a tab on a tab; M12-20: the comparison file; M12-21: change register and presets)_
+_Last updated: 2026-11-25 (M14-01: spike S34, every measurement kind as one markup, the measure corpus and the interop pack, [ADR-035](adr/035-m14-measuring-overhaul.md) Amendment 1 accepted after the owner's interop check; M14-02: measuring that survives zoom and pan, Shift that still snaps, the no-scale question, the crossing warning, ADR-035 D-77 and D-78; M14 plan: measuring overhaul for 1.2.0 after the owner's 41-question interview, [docs/plan/M14.md](plan/M14.md), [ADR-035](adr/035-m14-measuring-overhaul.md), D-73 … D-79, ARCHITECTURE.md Rev 0.26). Earlier: 2026-11-24 (M13-10: measuring by clicks, Distance as a dimension with leader lines stored as /LL and /LLE, ADR-034 Amendment 3, D-72, ARCHITECTURE.md Rev 0.25; M13-09: Help for M13 with every picture made again, the loupe's key M, a shortcut sheet that lists every key, What's new and release notes for 1.1.0, Compare on in release builds, the release checks and the owner pack; M13 complete on the agent side; M13-08: the CRS template screens, the export dialog with project templates, four guided set-up steps beside a live sheet preview, the template manager; M13-02·O2: the loupe and snapping for Line, Arrow, Polyline and Callout comments; M13-02·O1: View › Loupe, the loupe in every tool; M13-01·O5: "Try comparing two revisions" on the start screen; M13-05: Thin Lines, every page line 1 device pixel wide on screen only, from a view-only copy in the Render worker; M13-07: the CRS project template engine and the CRS review corpus; M13-04: labelled status bar toggles, Previous / Next View in the status bar, one view history for the window, Distance with open arrows; M13-03: spike S32, Thin Lines route b, a view-only copy kept thin, ADR-034 Amendment 2; M13-02: the Measure loupe and automatic snapping; M13-06: spike S33, CRS project templates with ExcelJS, works with workaround, ADR-034 Amendment 1; M13-01: sample comparisons in the Compare input window; M13 plan approved: final improvements for 1.1.0, tasks M13-01 … M13-09, ADR-034, ARCHITECTURE.md Rev 0.24; M12-ux plan and ADR-033 recorded (tasks M12-24 … M12-27 all merged); M12-26: alignment made easy to find and first-time tips; M12-27: review in a comparison made easier; M12-25: room to work in a comparison; M12-24: the Compare input window made clearer; M12-23: M12 acceptance, M12 complete on the agent side; M12-22: Compare help and release notes; M12-21·O4: drop a tab on a tab; M12-20: the comparison file; M12-21: change register and presets)_
 
 **Next:** M14 — measuring overhaul for version 1.2.0, plan [docs/plan/M14.md](plan/M14.md) and
 [ADR-035](adr/035-m14-measuring-overhaul.md) **accepted by the owner** (2026-11-25), ARCHITECTURE.md
 Rev 0.26 (D-73 … D-79). Two threads at a time: lane 1 starts with spike S34 (M14-01, owner gate),
-lane 2 with M14-02. Version 1.1.0 is tagged first, as it is (owner, Q37).
+lane 2 with M14-02. **M14-01 done; owner gate passed:** the owner checked
+`Synthetic PDF Corpus/measure/interop/S34_interop_pack.pdf` in Acrobat Reader, the second desktop
+editor and Chrome or Edge ("Everything works well", 2026-11-25), so M14-03 can start. Version 1.1.0 is tagged first, as it is (owner, Q37).
 Also waiting: the owner pack of [M13 acceptance](acceptance/M13.md) §4 (samples, loupe, Thin Lines,
 view history, a real project CRS template opened in Excel), then the owner tags `v1.1.0` and
 approves the deploy ([docs/deploy/release.md](deploy/release.md)). **M13 is complete on the agent
@@ -39,6 +41,29 @@ answers Q1–Q7; ARCHITECTURE.md Rev 0.12 after [ADR-024](adr/024-freetext-text-
 interop is in the M6 pack (CHECKLIST §M6 R1–R4). Rev 0 (M0–M4) is complete on the agent side.
 
 ## Done
+
+- **M14-01 — Spike S34: every measurement kind as one markup; the measure corpus (D-74, D-79;
+  ADR-035 Amendment 1, accepted by the owner; plan [M14](plan/M14.md) §1).** The measure corpus
+  (`e2e/fixtures/measure-corpus/`, `npm run corpus:measure`) writes seven self-made sheets into
+  `Synthetic PDF Corpus/measure/`: a floor plan at 1:100 in mm, a pipe run at 1:50, 1:50 with 1:5
+  and 1:10 viewports, no scale, raster only, ft-in at 1:48 and a rotated page. It also writes
+  `MEASURE_MANIFEST.json` with the true values. The spike (`spikes/s34-measure-markups/`,
+  `npm run spike:s34`) builds an interop pack of 42 markups on the app's own engine:
+  - Every kind is exactly one annotation, its value drawn in its own appearance in embedded fonts,
+    and in `/Contents`.
+  - Length is a Line (`/Cap`, `/CP`), Polylength and Perimeter are PolyLines, and Area, Volume and
+    Cutout are Polygons, all with `/IT` and `/Measure`. Holes are cut with an even-odd fill.
+  - Angle, Radius, Diameter and Count are Stamps, because a viewer that redraws keeps
+    a Stamp exactly. It drops the captions of Lines, PolyLines and Polygons and draws Circles and
+    Squares across their whole `/Rect`. The alternatives are on page 3.
+  - The Triya data sits in the page `/PieceInfo /TriyaPDF`, keyed by `/NM`, with a geometry
+    fingerprint. It reads back whole, keeps the shape-free data after a move elsewhere, and
+    survives a later Ctrl+S. The object layer's page patches now admit `PieceInfo` and
+    `LastModified`.
+  - Chromium's own viewer, PDFium and Poppler show the pack as drawn.
+  - Font subsets cost 1.5–3 kB per markup, so we recommend a shared font object per face for
+    M14-03 and M14-07.
+  - 19 tests are in `s34.test.ts`. Findings: [RESULTS.md](../spikes/s34-measure-markups/RESULTS.md).
 
 - **M14-02 — Measuring that survives zoom and pan; Shift; the no-scale question; the crossing
   warning (D-78, D-77; [ADR-035](adr/035-m14-measuring-overhaul.md); plan [M14](plan/M14.md) §2).**

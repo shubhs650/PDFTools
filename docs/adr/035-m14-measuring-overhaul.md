@@ -100,3 +100,63 @@ appearance for text comments (D-52), text and border colours (ADR-024) and dimen
   project templates, page overview pictures, merged count bubbles, an angle from two picked lines,
   keyboard point placement and typed lengths, measurements across pages, slope, pitch, dynamic fill
   and 3D.
+
+## Amendment 1 — S34: every measurement kind as one markup (M14-01, 2026-11-25)
+
+- **Status:** **Accepted by the owner on 2026-11-25.** He checked the pack in Adobe Acrobat
+  Reader, the second desktop PDF editor and the Chrome or Edge viewer and answered "Everything
+  works well" (the M14-01 owner gate). M14-03 and the tasks after it build on these decisions.
+- **Evidence:** [spikes/s34-measure-markups/RESULTS.md](../../spikes/s34-measure-markups/RESULTS.md),
+  the pack `Synthetic PDF Corpus/measure/interop/S34_interop_pack.pdf`, the checklist
+  [OWNER-CHECK.md](../../spikes/s34-measure-markups/OWNER-CHECK.md), and 19 tests in
+  `spikes/s34-measure-markups/s34.test.ts`. The measure corpus (D-79) is in
+  `Synthetic PDF Corpus/measure/`: seven sheets and a manifest of true values, written by
+  `npm run corpus:measure`.
+
+**Findings.** Every kind saves as exactly one annotation, its value drawn into its own appearance
+in embedded fonts that ship with the app, and its value in `/Contents`. All 40 measurements of the
+pack read back whole from the page's `/PieceInfo`, and the data survives a later Ctrl+S. Chromium's
+own viewer, PDFium and Poppler show the pack as drawn. A viewer that redraws an annotation from
+its dictionary (PDFium as the stand-in) keeps a Line's, PolyLine's or Polygon's geometry but drops
+its caption, fill and holes. It draws a Circle or Square across the whole `/Rect` (ignoring `/RD`), and
+never touches a Stamp.
+
+**Decisions (D-74 detail):**
+
+1. **Subtypes.**
+   - Length is a `/Line` (`/IT /LineDimension`, `/Cap true`, `/CP /Top` or `/Inline`, `/LL`
+     `/LLE` `/LLO` for its offset, `/Measure`).
+   - Polylength and Perimeter are a `/PolyLine` (`/IT /PolyLineDimension`, `/Measure`). A
+     Perimeter repeats its first vertex.
+   - Area, Volume and Cutout are a `/Polygon` (`/IT /PolygonDimension`, `/Measure`, no `/IC`:
+     the fill is drawn only in the appearance).
+   - **Angle, Radius, Diameter and Count are `/Stamp`s**, because a Stamp's appearance is never
+     redrawn. The alternatives (PolyLine, Circle, Square) are in the pack for comparison.
+   - The summary table is a `/FreeText`.
+   - Every measurement has `/Subj` set to its tool name and an `/NM`.
+2. **Captions** are shaped and embedded by the comment-font pipeline (D-52, rule: only fonts
+   shipped with the app). Above puts the caption on the reading side, and In line cuts a gap into
+   the line. Holes are cut with an even-odd fill. Each caption costs 1.5–3 kB of font subset, so
+   M14-03 and M14-07 share one font object per face across a document's measurements, rewritten
+   with the union subset in the Ctrl+S that adds glyphs.
+3. **Triya data.**
+   - Format: page `/PieceInfo << /TriyaPDF << /LastModified … /Private << /Type
+/TriyaMeasurements /V 1 /Items << /<NM> entry … >> >> >> >>` plus page `/LastModified`.
+   - Each entry holds the tool, label, count group, number and shape, depth, unit and decimals,
+     holes, arc, scale, and a fingerprint of the geometry (0.01 pt).
+   - It is written through the object layer's page patches, so it goes into the one Ctrl+S
+     revision (rule 7).
+4. **Reading back.**
+   - When the fingerprint matches, everything is restored.
+   - When another editor moved or reshaped the markup, its tool, label, group, number and depth
+     are kept, and its holes and arc are dropped.
+   - Without data, the standard kinds come back from `/IT` and the geometry (a Volume or Cutout
+     as an Area). The rest stay plain markups that show and print as drawn.
+5. **Cutout holes.** The outline is the Polygon's `/Vertices`. The holes are in the Triya data
+   and are cut out of the appearance (even-odd fill, dashed hole outlines).
+
+**The owner's check (2026-11-25).** The two open questions were whether Acrobat Reader or the
+second editor drops the value of a moved Line, PolyLine or Polygon, and whether Stamps are
+acceptable for Angle, Radius, Diameter and Count. The owner answered for the whole pack:
+"Everything works well". So the proposals stand: Stamps for Angle, Radius, Diameter and Count;
+the alternatives on page 3 of the pack are not used.
