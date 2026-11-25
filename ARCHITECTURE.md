@@ -1,7 +1,7 @@
-# Triya PDF — Architecture & Product Specification (Rev 0.25)
+# Triya PDF — Architecture & Product Specification (Rev 0.26)
 
 **App:** Triya PDF (formerly PDFTools, D-41) · **URL:** `app.triyapdf.com` and `triya-pdf.openengtools.com` (D-28) · **Platform:** Open Engineering Tools (OET)
-**Status:** Approved for implementation · **Last updated:** 24-Nov-2026 (Rev 0.25)
+**Status:** Approved for implementation · **Last updated:** 25-Nov-2026 (Rev 0.26)
 **Companion file:** `CLAUDE.md` (standing rules for the coding agent — read it first)
 
 > This document is the single source of truth. Where code and this document disagree, this document wins until it is deliberately amended. Decisions are numbered (D-xx) so commits, issues and ADRs can reference them.
@@ -25,6 +25,8 @@
 > **Rev 0.17 amendment** — [ADR-028](docs/adr/028-m11-tabs-fonts-select.md) (owner-approved 2026-11-17, all optional items accepted): **M11** — document tabs v2 (D-50), comments selectable in every pointer mode (D-51), a self-hosted font library for text comments with our own appearance streams (D-52), pick up where you left off (D-53), fonts installed on the computer (D-54), split, images to PDF and crop (D-55), resizable panes with edge arrows (D-56) (§2, §3.2, §7.1, §7.8, §8, §8.1, §9, §10.3, §13 M11).
 
 > **Rev 0.18 amendment** — [ADR-028](docs/adr/028-m11-tabs-fonts-select.md) amendment (owner, 2026-11-18): **D-54 withdrawn** — fonts installed on the user's computer are not supported (a cross-compatibility risk); text comments use only the fonts that ship with the app (D-52), and the library may grow later on user request (§2, §7.1, §10.3, §13 M11).
+
+> **Rev 0.26 amendment** — [ADR-035](docs/adr/035-m14-measuring-overhaul.md) (owner, 2026-11-25): **M14 — measuring overhaul for 1.2.0** — ten measuring tools in four ribbon groups (D-73); every measurement is one standard markup with its value in its own appearance and Triya data in the page's `/PieceInfo`, replacing ADR-007's grouped label (D-74); Count with groups and numbers (D-75); a Measurements pane with totals, export, attachment and a summary on the sheet (D-76); scale viewports edited on the page and measurements that follow scale changes (D-77); measuring that survives view changes, Shift that still snaps, point editing (D-78); acceptance in three viewers (D-79) (§7.4, §7.5, §13).
 
 > **Rev 0.25 amendment** — [ADR-034](docs/adr/034-m13-final-improvements.md) Amendment 3 (owner, 2026-11-24): **measuring by clicks** — Distance is click, click, move sideways to set its dimension line, click, stored as the standard leader line entries `/LL` and `/LLE` with an appearance that draws them; Perimeter and Area by clicks (D-72) (§7.4).
 
@@ -159,6 +161,13 @@ Tablet/phone UI · Safari parity · PDF text/content editing · form design beyo
 | D-70 | **Status bar** (ADR-034): labelled toggles (icon plus text) for Thin Lines and Enable Snapping; Previous view / Next view beside the page buttons; one view history for the whole window, including tab switches and opened documents |
 | D-71 | **CRS project templates** (ADR-034): Export CRS fills a project's own `.xlsx` form stored on the device (sheet, start row, detected pre-drawn rows then inserted rows copying format, formulas and drop-downs, detail cells, file-name rule, field list with column numbers, reply fields, status words, type ticks, Ignore highlights, one sheet per page or per document, snapshots fitted to their column), set up in guided steps with a live sheet preview, shared as a template file; the Standard CRS stays the default; limits by spike S33 |
 | D-72 | **Measuring by clicks** (ADR-034 Amendment 3): Distance by click, click, a sideways move that sets the dimension line beside the points (leader lines to it), and a click; Enter places, Esc drops, the old drag still gives the points; stored as the Line's `/LL`, `/LLE` (`/L` stays on the measured points) with an appearance drawn by the Render worker; Perimeter and Area by clicks |
+| D-73 | **Measuring toolset** (ADR-035): Length (replaces Distance, optional sideways offset), Polylength (open), Perimeter (always closes), Area (straight edges), Volume (area × remembered depth), Cutout (holes in an area or volume), Angle (three clicks), Radius and Diameter (centre and edge, or three points), Count; four Measure ribbon groups and one Measure split button on Home and Comment; value on the sheet with an optional label, tool name as subject; own area and volume units; a remembered style per tool; review first, light takeoff |
+| D-74 | **One markup per measurement** (ADR-035): one standard annotation whose appearance (drawn by the Render worker) holds the geometry and the value, the value also in `/Contents`; Length is a `/Line` with `/Cap` and `/CP` Top (default) or Inline; standard `/Measure` kept; Triya-only data in the page's `/PieceInfo` keyed by `/NM`; subtypes for the non-standard kinds by spike S34; 1.1.0's Line-plus-FreeText pairs updated by one click on an information bar; supersedes ADR-007 decision 2 |
+| D-75 | **Count** (ADR-035): one symbol markup per click with its number beside it; groups (name, shape, colour, size) chosen up front; numbers per group across the document, gaps kept, Renumber on request; a screen-only, status bar toggled option keeps count numbers the same size at any zoom (small, see-through, capped) |
+| D-76 | **Measurements pane and export** (ADR-035): a left-rail pane grouped by tool and count group with totals, page filter, flags and a Scales section; a Measurements filter in Comments and an off-by-default CRS option; Excel (measurements and totals sheets) and CSV with optional framed pictures; Attach to this PDF (replaces, flagged when out of date, never on Ctrl+S); an optional summary table markup kept up to date |
+| D-77 | **Scales and viewports** (ADR-035): viewports selected, moved, resized, deleted and edited on the page on the Measure tab; every scale change updates the measurements using it (one Undo, a note); a page without a scale asks once (Set scale, Calibrate, paper size); points in two scale areas warn while drawing and give no number |
+| D-78 | **Measuring interaction** (ADR-035): a measurement in progress survives zoom, pan, scroll, loupe and view history; only Esc, another tool or a page change ends it; Shift locks 0°/45°/90° and still snaps; placed measurements edited point by point (drag, add, remove); every control by keyboard, new points by pointer |
+| D-79 | **Measuring acceptance** (ADR-035): one test file with every tool checked by the owner in Acrobat Reader, a second desktop editor and the Chrome or Edge viewer (looks right, one item to select, move and delete, value readable); self-made drawings with known values in `Synthetic PDF Corpus/measure/`; version 1.2.0 |
 | D-34 | **OCR** (Rev 1 item 1, ADR-020): Tesseract WASM core in its own worker, five languages (English precached, the rest on first use), invisible text layer written by our object layer with a glyphless font, pages with text skipped unless asked; needs the modify permission |
 
 ---
@@ -374,20 +383,22 @@ First markup triggers a dialog: name, initials, discipline, company (optional). 
 - Image stamps: import PNG/JPG/PDF page, or paste an image from the clipboard (D-45).
 
 ### 7.4 Measurement (D-14)
-- Tools: distance, perimeter (polyline), area (polygon); calibration tool.
+- Tools: distance, perimeter (polyline), area (polygon); calibration tool. **From M14 (D-73, ADR-035):** Length (replaces distance), Polylength, Perimeter (closed), Area, Volume, Cutout, Angle, Radius, Diameter and Count, in four ribbon groups; a Measurements pane with totals and export (D-76); viewports edited on the page (D-77).
 - Scale by ratio (1:50) or calibration (pick two points, enter real length). Units: mm, m, in, ft-in; precision setting.
 - **Scale viewports**: user draws regions with their own scale (e.g. Detail A 1:5). Measurement uses the viewport containing it; outside any viewport → page default scale; no scale → shows "uncalibrated"; spanning viewports → flagged warning.
-- Persist using standard PDF measurement structures (Measure / Viewport dictionaries). EmbedPDF/PDFium cannot write or read these, so a narrow **own PDF object layer** (reader, serializer, patch writer) in the Render worker adds `/Measure`, `/IT`, `/Cap`, `/Contents` and page `/VP`, merged into the single Ctrl+S revision (ADR-007). Encrypted files: the Standard security handler is implemented in M3; until then, measurements in encrypted PDFs are shown but not saved, with a message (ADR-007). Label strategy and viewport semantics for viewer-made files follow the owner's interop run (ADR-007 decisions 2–3).
+- Persist using standard PDF measurement structures (Measure / Viewport dictionaries). EmbedPDF/PDFium cannot write or read these, so a narrow **own PDF object layer** (reader, serializer, patch writer) in the Render worker adds `/Measure`, `/IT`, `/Cap`, `/Contents` and page `/VP`, merged into the single Ctrl+S revision (ADR-007). Encrypted files: the Standard security handler is implemented in M3; until then, measurements in encrypted PDFs are shown but not saved, with a message (ADR-007). Viewport semantics for viewer-made files follow ADR-007 decision 3. **Labels (D-74, ADR-035, superseding ADR-007 decision 2):** each measurement is one standard markup whose own appearance, drawn by the Render worker, holds its value; Triya-only data lives in the page's `/PieceInfo`, keyed by `/NM`.
 - **Snapping** to vector geometry (endpoints, midpoints, intersections, nearest-on-segment). Geometry for each visible page is extracted whole in the Work worker (page parsing dominates, so region extraction does not pay off — ADR-008), spatially indexed, cached per page. Queries are answered by the Snap worker (§3.1, ADR-008).
 
 - **Measuring by clicks** (D-72, ADR-034 Amendment 3): Distance is click, click, move sideways to set the dimension line, click; Perimeter and Area click each point and finish with a double-click or Enter (an area also on its first corner); Esc drops. A Distance's offset is the standard `/LL` and `/LLE` of its Line annotation, drawn in its appearance by the Render worker.
 
 - **Loupe and auto-snap** (D-68, ADR-034): a loupe beside the pointer while a Measure tool, Calibrate or Scale Viewport is active; snapping turns on with those tools and returns to its earlier state when they end.
 
+- **Measuring overhaul** (D-73 … D-79, ADR-035): a measurement in progress survives view changes; Shift still snaps; point editing; measurements follow scale changes; a page without a scale asks once; points in two scale areas give no number (`docs/plan/M14.md`).
+
 ### 7.5 CRS export (D-15)
 Excel (ExcelJS). Header block: document number, revision, title, reviewer, date, status scheme. Columns: No. · Page · Location/Type · Reviewer · Discipline · Comment · Replies · Status · Snapshot · Vendor Response (blank) · Final Status (blank). Optional snapshot thumbnail of each markup region embedded per row. Also CSV (no images).
 
-**Project templates** (D-71, ADR-034): a project's own `.xlsx` CRS form, stored on the device, filled on one chosen sheet from a start row (pre-drawn rows first, then inserted rows copying the start row's format, formulas and drop-downs); detail cells, field list with columns, reply fields, status words, comment-type ticks, Ignore highlights, order by page with text comments first, one sheet per page or per document; guided set-up with a live sheet preview; a template file to share. Built in the Work worker. The layout above is the built-in **Standard CRS** template and stays the default.
+**Project templates** (D-71, ADR-034): a project's own `.xlsx` CRS form, stored on the device, filled on one chosen sheet from a start row (pre-drawn rows first, then inserted rows copying the start row's format, formulas and drop-downs); detail cells, field list with columns, reply fields, status words, comment-type ticks, Ignore highlights, order by page with text comments first, one sheet per page or per document; guided set-up with a live sheet preview; a template file to share. Built in the Work worker. The layout above is the built-in **Standard CRS** template and stays the default. **Measurements** (D-76, ADR-035) are left out of the CRS unless the export's "Include measurements" option is ticked; their own export is the Measurements pane's (§7.4).
 
 ### 7.6 Extraction & conversion
 | Output | Engine | Label |
@@ -610,6 +621,9 @@ PDF overlay for drawings and text comparison for documents (§7.16, D-58 … D-6
 
 ### M13 — Final improvements for 1.1.0 (ADR-034)
 Sample comparisons, the Measure loupe and auto-snap, Thin Lines, labelled status bar toggles with Previous / Next view, CRS project templates (spikes S32 and S33 first), then Help, release checks and the owner's hand check before the `v1.1.0` tag (`docs/plan/M13.md`).
+
+### M14 — Measuring overhaul for 1.2.0 (ADR-035)
+Spike S34 (every measurement kind as one markup, checked in three viewers) first; then two lanes: the tools as one markup each (Length, Polylength, Perimeter, Area, point editing, Angle, Radius, Diameter, Volume, Cutout, Count) and the interaction fixes, Measurements pane, viewports on the page and export; Help, the owner's hand check and the `v1.2.0` tag (`docs/plan/M14.md`).
 
 ---
 
