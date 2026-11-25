@@ -6,7 +6,7 @@ outside the spike lets the object layer stage a page's `/PieceInfo` and `/LastMo
 (`src/workers/render/objects/patches.ts`). The measure corpus it uses is
 `e2e/fixtures/measure-corpus/` → [`Synthetic PDF Corpus/measure/`](../../Synthetic%20PDF%20Corpus/measure/README.md).
 
-**Verdict: works, waiting for the owner's interop check.** Every measurement kind saves as
+**Verdict: works. The owner checked the pack in Acrobat Reader, the second desktop editor and Chrome or Edge on 2026-11-25: "Everything works well".** Every measurement kind saves as
 **exactly one** standard annotation. The value is drawn into the markup's own appearance and is also
 its `/Contents`, with no FreeText beside it. All 40 measurements of the pack read back whole from the page's
 `/PieceInfo`, the data survives a later Ctrl+S, and the pack shows correctly in Chromium's own

@@ -103,9 +103,9 @@ appearance for text comments (D-52), text and border colours (ADR-024) and dimen
 
 ## Amendment 1 — S34: every measurement kind as one markup (M14-01, 2026-11-25)
 
-- **Status:** Proposed, **waiting for the owner's interop check** (the M14-01 owner gate). M14-03
-  and the tasks after it start once he has checked the pack in Adobe Acrobat Reader, the second
-  desktop PDF editor and the Chrome or Edge viewer.
+- **Status:** **Accepted by the owner on 2026-11-25.** He checked the pack in Adobe Acrobat
+  Reader, the second desktop PDF editor and the Chrome or Edge viewer and answered "Everything
+  works well" (the M14-01 owner gate). M14-03 and the tasks after it build on these decisions.
 - **Evidence:** [spikes/s34-measure-markups/RESULTS.md](../../spikes/s34-measure-markups/RESULTS.md),
   the pack `Synthetic PDF Corpus/measure/interop/S34_interop_pack.pdf`, the checklist
   [OWNER-CHECK.md](../../spikes/s34-measure-markups/OWNER-CHECK.md), and 19 tests in
@@ -121,7 +121,7 @@ its dictionary (PDFium as the stand-in) keeps a Line's, PolyLine's or Polygon's 
 its caption, fill and holes. It draws a Circle or Square across the whole `/Rect` (ignoring `/RD`), and
 never touches a Stamp.
 
-**Decisions proposed (D-74 detail):**
+**Decisions (D-74 detail):**
 
 1. **Subtypes.**
    - Length is a `/Line` (`/IT /LineDimension`, `/Cap true`, `/CP /Top` or `/Inline`, `/LL`
@@ -155,11 +155,8 @@ never touches a Stamp.
 5. **Cutout holes.** The outline is the Polygon's `/Vertices`. The holes are in the Triya data
    and are cut out of the appearance (even-odd fill, dashed hole outlines).
 
-**Open for the owner.**
-
-- Does Acrobat Reader or the second editor redraw a Line, PolyLine or Polygon when it is moved,
-  dropping its value from the page (the value stays in the comments list)?
-- Are Stamps acceptable for Angle, Radius, Diameter and Count?
-
-If a kind cannot be one markup that keeps its look, that lane stops and the owner gets the options
-(CLAUDE.md workflow).
+**The owner's check (2026-11-25).** The two open questions were whether Acrobat Reader or the
+second editor drops the value of a moved Line, PolyLine or Polygon, and whether Stamps are
+acceptable for Angle, Radius, Diameter and Count. The owner answered for the whole pack:
+"Everything works well". So the proposals stand: Stamps for Angle, Radius, Diameter and Count;
+the alternatives on page 3 of the pack are not used.
