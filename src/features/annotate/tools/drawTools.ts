@@ -27,6 +27,7 @@ import {
   calloutJoin,
   centred,
   constrain,
+  isAngled,
   TEXT_COMMENT_CATEGORY,
   VERTEX_TOOLS,
   type DrawTool,
@@ -69,9 +70,41 @@ const SNAPS: ReadonlySet<DrawTool> = new Set([
 type Snapper = (page: number, pos: Pt, evt: unknown) => Pt;
 let snapper: Snapper | null = null;
 
+/**
+ * Shift with snapping on (M14-02, D-78): `pos` is already locked to 0°, 45°
+ * or 90° from `anchor`; the answer is where that direction meets a drawn line
+ * near it, else `pos`.
+ */
+type LockedSnapper = (page: number, anchor: Pt, pos: Pt, evt: unknown) => Pt;
+let lockedSnapper: LockedSnapper | null = null;
+
 /** Snapping (measure/snapping.ts) hooks in here; null turns it off. */
-export function setSnapper(fn: Snapper | null): void {
+export function setSnapper(fn: Snapper | null, locked: LockedSnapper | null = null): void {
   snapper = fn;
+  lockedSnapper = fn ? locked : null;
+}
+
+/** Drawings kept outside the handlers (a measurement in progress, M14-02): Enter and Esc reach them. */
+interface DrawingProvider {
+  finish: () => boolean;
+  cancel: () => boolean;
+}
+const providers = new Set<DrawingProvider>();
+
+export function addDrawingProvider(p: DrawingProvider): () => void {
+  providers.add(p);
+  return () => {
+    providers.delete(p);
+  };
+}
+
+/** How a tool's handler is wrapped (M14-02). */
+export interface WrapOptions {
+  /**
+   * The tool keeps its points outside the handler (measure/gesture.ts): the
+   * anchor for Shift comes from there, and Enter and Esc reach it as a provider.
+   */
+  anchor?: (pageIndex: number) => () => Pt | null;
 }
 
 type PointerTap = (tool: DrawTool, page: number, pos: Pt, evt: unknown) => void;
@@ -92,6 +125,7 @@ export function wrapFactory(
   tool: DrawTool,
   factory: HandlerFactory<PdfAnnotationObject>,
   adapt?: (context: HandlerContext) => HandlerContext,
+  opts: WrapOptions = {},
 ): HandlerFactory<PdfAnnotationObject> {
   const vertices = VERTEX_TOOLS.has(tool);
   return {
@@ -101,15 +135,41 @@ export function wrapFactory(
       if (tool === 'freeTextCallout') return calloutHandlers(h, context);
       // Drag tools: where the drag started. Vertex tools: the last vertex placed.
       let anchor: Pt | null = null;
+      // Asked once per handler, while the plugin makes it (it knows the document then).
+      const kept = opts.anchor?.(context.pageIndex);
+      const anchorNow = (): Pt | null => (kept ? kept() : anchor);
       const snaps = SNAPS.has(tool);
       const fix = (pos: Pt, evt: Evt): Pt => {
         tap?.(tool, context.pageIndex, pos, evt);
-        return shift(evt)
-          ? constrain(tool, anchor, pos)
-          : snaps && snapper
-            ? snapper(context.pageIndex, pos, evt)
-            : pos;
+        if (shift(evt)) {
+          const from = anchorNow();
+          const locked = constrain(tool, from, pos);
+          // Shift locks the angle and still snaps (M14-02, D-78, Q25): where the
+          // locked direction meets a drawn line. Alt: no snap for that click.
+          return from && snaps && lockedSnapper && isAngled(tool)
+            ? lockedSnapper(context.pageIndex, from, locked, evt)
+            : locked;
+        }
+        return snaps && snapper ? snapper(context.pageIndex, pos, evt) : pos;
       };
+      if (kept) {
+        // A measurement kept outside the handler (M14-02): nothing to track here.
+        return {
+          ...h,
+          onClick: (pos, evt, mode) => {
+            h.onClick?.(fix(pos, evt), evt, mode);
+          },
+          onPointerDown: (pos, evt, mode) => {
+            h.onPointerDown?.(fix(pos, evt), evt, mode);
+          },
+          onPointerUp: (pos, evt, mode) => {
+            h.onPointerUp?.(fix(pos, evt), evt, mode);
+          },
+          onPointerMove: (pos, evt, mode) => {
+            h.onPointerMove?.(fix(pos, evt), evt, mode);
+          },
+        };
+      }
       const entry = {
         finish: () => {
           if (anchor) h.onDoubleClick?.(anchor, undefined as unknown as Evt, tool);
@@ -285,14 +345,18 @@ function calloutHandlers(h: Handlers, context: HandlerContext): Handlers {
 export function finishDrawing(): boolean {
   const all = [...inProgress];
   for (const e of all) e.finish();
-  return all.length > 0;
+  let any = all.length > 0;
+  for (const p of providers) if (p.finish()) any = true;
+  return any;
 }
 
 /** Esc: drop the polyline/polygon being drawn (the tool stays on). False when none is. */
 export function cancelDrawing(): boolean {
   const all = [...inProgress];
   for (const e of all) e.cancel();
-  return all.length > 0;
+  let any = all.length > 0;
+  for (const p of providers) if (p.cancel()) any = true;
+  return any;
 }
 
 /** Tools whose placeholder text goes into the PDF: localized (rule 11). */

@@ -9,6 +9,7 @@ import { installStampTools } from '../stamps/stampTools';
 import { installCalibrateTool } from '../measure/calibrate';
 import { installMeasurements } from '../measure/measurements';
 import { installMeasureTools } from '../measure/measureTools';
+import { installGestures } from '../measure/gesture';
 import { installViewportTool } from '../measure/viewports';
 import { installSnapping } from '../measure/snapping';
 import { installMeasureLoupe } from '../measure/loupePointer';
@@ -43,6 +44,8 @@ const onInitialized = (registry: Parameters<typeof setRegistry>[0]): Promise<voi
     // Before installDrawTools rewraps the line/polyline/polygon tools they build on.
     installMeasureTools(registry);
     installDrawTools(registry);
+    // A measurement in progress lives outside the handlers: view changes keep it (M14-02).
+    installGestures(registry);
     installStampTools(registry);
     installCalibrateTool(registry);
     installViewportTool(registry);

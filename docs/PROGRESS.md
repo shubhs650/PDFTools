@@ -1,6 +1,6 @@
 # Triya PDF — Progress
 
-_Last updated: 2026-11-25 (M14-01: spike S34, every measurement kind as one markup, the measure corpus and the interop pack, [ADR-035](adr/035-m14-measuring-overhaul.md) Amendment 1 accepted after the owner's interop check). Earlier: 2026-11-25 (M14 plan: measuring overhaul for 1.2.0 after the owner's 41-question interview, [docs/plan/M14.md](plan/M14.md), [ADR-035](adr/035-m14-measuring-overhaul.md), D-73 … D-79, ARCHITECTURE.md Rev 0.26). Earlier: 2026-11-24 (M13-10: measuring by clicks, Distance as a dimension with leader lines stored as /LL and /LLE, ADR-034 Amendment 3, D-72, ARCHITECTURE.md Rev 0.25; M13-09: Help for M13 with every picture made again, the loupe's key M, a shortcut sheet that lists every key, What's new and release notes for 1.1.0, Compare on in release builds, the release checks and the owner pack; M13 complete on the agent side; M13-08: the CRS template screens, the export dialog with project templates, four guided set-up steps beside a live sheet preview, the template manager; M13-02·O2: the loupe and snapping for Line, Arrow, Polyline and Callout comments; M13-02·O1: View › Loupe, the loupe in every tool; M13-01·O5: "Try comparing two revisions" on the start screen; M13-05: Thin Lines, every page line 1 device pixel wide on screen only, from a view-only copy in the Render worker; M13-07: the CRS project template engine and the CRS review corpus; M13-04: labelled status bar toggles, Previous / Next View in the status bar, one view history for the window, Distance with open arrows; M13-03: spike S32, Thin Lines route b, a view-only copy kept thin, ADR-034 Amendment 2; M13-02: the Measure loupe and automatic snapping; M13-06: spike S33, CRS project templates with ExcelJS, works with workaround, ADR-034 Amendment 1; M13-01: sample comparisons in the Compare input window; M13 plan approved: final improvements for 1.1.0, tasks M13-01 … M13-09, ADR-034, ARCHITECTURE.md Rev 0.24; M12-ux plan and ADR-033 recorded (tasks M12-24 … M12-27 all merged); M12-26: alignment made easy to find and first-time tips; M12-27: review in a comparison made easier; M12-25: room to work in a comparison; M12-24: the Compare input window made clearer; M12-23: M12 acceptance, M12 complete on the agent side; M12-22: Compare help and release notes; M12-21·O4: drop a tab on a tab; M12-20: the comparison file; M12-21: change register and presets)_
+_Last updated: 2026-11-25 (M14-01: spike S34, every measurement kind as one markup, the measure corpus and the interop pack, [ADR-035](adr/035-m14-measuring-overhaul.md) Amendment 1 accepted after the owner's interop check; M14-02: measuring that survives zoom and pan, Shift that still snaps, the no-scale question, the crossing warning, ADR-035 D-77 and D-78; M14 plan: measuring overhaul for 1.2.0 after the owner's 41-question interview, [docs/plan/M14.md](plan/M14.md), [ADR-035](adr/035-m14-measuring-overhaul.md), D-73 … D-79, ARCHITECTURE.md Rev 0.26). Earlier: 2026-11-24 (M13-10: measuring by clicks, Distance as a dimension with leader lines stored as /LL and /LLE, ADR-034 Amendment 3, D-72, ARCHITECTURE.md Rev 0.25; M13-09: Help for M13 with every picture made again, the loupe's key M, a shortcut sheet that lists every key, What's new and release notes for 1.1.0, Compare on in release builds, the release checks and the owner pack; M13 complete on the agent side; M13-08: the CRS template screens, the export dialog with project templates, four guided set-up steps beside a live sheet preview, the template manager; M13-02·O2: the loupe and snapping for Line, Arrow, Polyline and Callout comments; M13-02·O1: View › Loupe, the loupe in every tool; M13-01·O5: "Try comparing two revisions" on the start screen; M13-05: Thin Lines, every page line 1 device pixel wide on screen only, from a view-only copy in the Render worker; M13-07: the CRS project template engine and the CRS review corpus; M13-04: labelled status bar toggles, Previous / Next View in the status bar, one view history for the window, Distance with open arrows; M13-03: spike S32, Thin Lines route b, a view-only copy kept thin, ADR-034 Amendment 2; M13-02: the Measure loupe and automatic snapping; M13-06: spike S33, CRS project templates with ExcelJS, works with workaround, ADR-034 Amendment 1; M13-01: sample comparisons in the Compare input window; M13 plan approved: final improvements for 1.1.0, tasks M13-01 … M13-09, ADR-034, ARCHITECTURE.md Rev 0.24; M12-ux plan and ADR-033 recorded (tasks M12-24 … M12-27 all merged); M12-26: alignment made easy to find and first-time tips; M12-27: review in a comparison made easier; M12-25: room to work in a comparison; M12-24: the Compare input window made clearer; M12-23: M12 acceptance, M12 complete on the agent side; M12-22: Compare help and release notes; M12-21·O4: drop a tab on a tab; M12-20: the comparison file; M12-21: change register and presets)_
 
 **Next:** M14 — measuring overhaul for version 1.2.0, plan [docs/plan/M14.md](plan/M14.md) and
 [ADR-035](adr/035-m14-measuring-overhaul.md) **accepted by the owner** (2026-11-25), ARCHITECTURE.md
@@ -64,6 +64,32 @@ interop is in the M6 pack (CHECKLIST §M6 R1–R4). Rev 0 (M0–M4) is complete 
   - Font subsets cost 1.5–3 kB per markup, so we recommend a shared font object per face for
     M14-03 and M14-07.
   - 19 tests are in `s34.test.ts`. Findings: [RESULTS.md](../spikes/s34-measure-markups/RESULTS.md).
+
+- **M14-02 — Measuring that survives zoom and pan; Shift; the no-scale question; the crossing
+  warning (D-78, D-77; [ADR-035](adr/035-m14-measuring-overhaul.md); plan [M14](plan/M14.md) §2).**
+  Cause of the owner's bug: EmbedPDF makes new pointer handlers for a page on every zoom and
+  whenever the page is laid out again, and Distance, Perimeter and Area kept their points inside
+  the handler. The points now live in `features/measure/gesture.ts` (pure rules in
+  `model/measureGesture.ts`, test-first); each new handler for the same page shows the preview
+  again and the next click continues. Perimeter and Area use our own click-by-click handlers
+  (`vertexTool.ts`, same previews and annotations as the plugin's); Distance's handler reads the
+  same state. Which document a handler is for comes from wrapping the plugin's
+  `registerPageHandlers` (pinned 2.15.x; a unit test covers it). Only Esc, another tool, another
+  tab or a click on another page ends a measurement; a page change says so in a status note.
+  The middle button now pans in every tool (taken before the page's handlers see it). Shift
+  locks 0°, 45° or 90° and still snaps: a new Snap worker query (`snapOnLine` in
+  `model/snapIndex.ts`) finds where the locked direction crosses a drawn line; Alt still means
+  no snap. The first sized measurement on a page with no scale asks once, in a card over the
+  page (never a modal, so the measurement goes on): Set scale (for that page), Calibrate (the
+  tool comes back after) or Measure at paper size (a 1 : 1 page scale in the usual unit, saved
+  with the scale data; M14-08 can flag 1 : 1 as paper size); the × keeps measuring without a
+  scale; another tool before an answer asks again next time. The live value uses the scale of
+  the area the measurement started in and turns into "Crosses Detail A" / "Leaves Detail A" as
+  soon as a point is in another scale area (`liveScale` in `model/scaleViewport.ts`). Tests:
+  `tests/measure/measureGesture.test.ts`, `gestureHandlers.test.ts`, `snapOnLine` and
+  `liveScale` cases; e2e `e2e/measure-view-changes.spec.ts` (wheel, keys, zoom field, scroll,
+  Space and middle-button pan, Previous View, page change, Esc, tool switch, Shift snap, the
+  question's three answers, the crossing warning).
 
 - **M13-10 — Measuring by clicks; Distance as a dimension (D-72; ADR-034 Amendment 3; plan
   [M13](plan/M13.md) §8; owner request 2026-11-24).** Distance: click the first point, click the

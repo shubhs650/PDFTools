@@ -4,6 +4,7 @@ import { MM_PER_POINT, type PageViewport, type Scale } from '../../src/model/sca
 import {
   coversPage,
   layoutOf,
+  liveScale,
   nextViewportName,
   normBox,
   scaleChoice,
@@ -99,5 +100,85 @@ describe('editing the list', () => {
   it('suggests the next free name', () => {
     expect(nextViewportName(list, 'Detail')).toBe('Detail B');
     expect(nextViewportName([], 'Detail')).toBe('Detail A');
+  });
+});
+
+// M14-02 (D-77, Q30): while drawing, the live value turns into a warning as
+// soon as the pointer leaves the scale area the measurement started in.
+describe('liveScale (the crossing warning while drawing)', () => {
+  const l = layoutOf(list, A4);
+  it('all points in the page area: the page scale', () => {
+    const r = liveScale(
+      [
+        { x: 10, y: 10 },
+        { x: 200, y: 200 },
+      ],
+      l,
+    );
+    expect(r).toEqual({ kind: 'one', choice: { kind: 'page', scale: s100 } });
+  });
+
+  it('all points in a detail: its scale', () => {
+    const r = liveScale(
+      [
+        { x: 310, y: 410 },
+        { x: 500, y: 600 },
+      ],
+      l,
+    );
+    expect(r.kind === 'one' && r.choice.kind).toBe('viewport');
+  });
+
+  it('from the page area into a detail: crosses it', () => {
+    expect(
+      liveScale(
+        [
+          { x: 10, y: 10 },
+          { x: 400, y: 500 },
+        ],
+        l,
+      ),
+    ).toEqual({
+      kind: 'crosses',
+      name: 'Detail A',
+    });
+  });
+
+  it('from a detail out to the page area: leaves it', () => {
+    expect(
+      liveScale(
+        [
+          { x: 400, y: 500 },
+          { x: 10, y: 10 },
+        ],
+        l,
+      ),
+    ).toEqual({
+      kind: 'leaves',
+      name: 'Detail A',
+    });
+  });
+
+  it('back into the start area later still warns: a measurement uses one scale', () => {
+    const r = liveScale(
+      [
+        { x: 10, y: 10 },
+        { x: 400, y: 500 },
+        { x: 20, y: 20 },
+      ],
+      l,
+    );
+    expect(r).toEqual({ kind: 'crosses', name: 'Detail A' });
+  });
+
+  it('no points, or a page without scales: one area, uncalibrated', () => {
+    expect(liveScale([], layoutOf([], A4))).toEqual({
+      kind: 'one',
+      choice: { kind: 'uncalibrated' },
+    });
+    expect(liveScale([{ x: 1, y: 1 }], layoutOf([], A4))).toEqual({
+      kind: 'one',
+      choice: { kind: 'uncalibrated' },
+    });
   });
 });

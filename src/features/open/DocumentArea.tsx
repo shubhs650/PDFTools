@@ -4,6 +4,7 @@ import { PermissionBanner } from '../protect/PermissionBanner';
 import { XfaBanner } from '../forms/XfaBanner';
 import { SignatureBanner } from '../signatures/SignatureBanner';
 import { FindBar } from '../search/FindBar';
+import { ScalePrompt } from '../measure/ScalePrompt';
 import { DocumentHost } from '../view/DocumentHost';
 import { DocumentView } from '../view/DocumentView';
 import { capability, tileCache, useHost } from '../view/host';
@@ -69,6 +70,8 @@ export function DocumentArea() {
             <FindBar />
             <div className="document-stack-view">
               <DocumentView key={activeId} documentId={activeId} />
+              {/* The no-scale question floats over the page (M14-02): nothing moves under the pointer. */}
+              <ScalePrompt documentId={activeId} />
             </div>
           </div>
         ) : (

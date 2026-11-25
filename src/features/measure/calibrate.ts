@@ -8,7 +8,7 @@ import type {
   AnnotationTool,
   HandlerFactory,
 } from '@embedpdf/plugin-annotation';
-import { appStore } from '../../app/store/appStore';
+import { appStore, type Tool } from '../../app/store/appStore';
 import { capability } from '../view/host';
 import { scaleStore } from './scaleStore';
 import { snapPoint } from './snapping';
@@ -37,6 +37,8 @@ const handler: HandlerFactory<PdfAnnotationObject> = {
         scaleStore.setState({
           picked: { page: context.pageIndex, a, b: { ...pos } },
           dialog: 'calibrate',
+          // "This page" is the page the points were picked on.
+          target: context.pageIndex,
         });
         appStore.getState().setTool('select');
       },
@@ -44,10 +46,14 @@ const handler: HandlerFactory<PdfAnnotationObject> = {
   },
 };
 
-/** Starts picking: the dialog closes until both points are clicked. */
-export function startPicking(): void {
+/**
+ * Starts picking: the dialog closes until both points are clicked. `returnTo`:
+ * the measuring tool to go back to once the dialog closes (the no-scale
+ * question, M14-02); picking again from the dialog keeps the earlier one.
+ */
+export function startPicking(returnTo?: Tool): void {
   first = null;
-  scaleStore.setState({ dialog: null });
+  scaleStore.setState((s) => ({ dialog: null, returnTool: returnTo ?? s.returnTool }));
   appStore.getState().setTool('calibrate');
 }
 

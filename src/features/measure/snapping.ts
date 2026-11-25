@@ -111,6 +111,8 @@ interface Query {
   pos: Pt;
   /** The window's zoom when the caller knows it (a comparison window, M12-13). */
   zoom?: number;
+  /** Shift (M14-02): the direction is locked from this point (EmbedPDF page points). */
+  from?: Pt;
 }
 
 let pending: Query | null = null;
@@ -136,15 +138,27 @@ function fire(): void {
   inFlight = true;
   const clearedAtStart = cleared;
   const t0 = performance.now();
-  snapClient()
-    .call('snap', {
-      key: keyOf(q.docId, q.page),
-      x: f.originX + q.pos.x,
-      y: f.originY + f.height - q.pos.y,
-      r,
-      kinds,
-    })
-    .promise.then(
+  const key = keyOf(q.docId, q.page);
+  const x = f.originX + q.pos.x;
+  const y = f.originY + f.height - q.pos.y;
+  const from = q.from;
+  const len = from ? Math.hypot(q.pos.x - from.x, q.pos.y - from.y) : 0;
+  const call =
+    from && len > 0
+      ? snapClient().call('snapLine', {
+          key,
+          ox: f.originX + from.x,
+          oy: f.originY + f.height - from.y,
+          // y down on the page is y up in user space.
+          dx: (q.pos.x - from.x) / len,
+          dy: -(q.pos.y - from.y) / len,
+          x,
+          y,
+          r,
+        })
+      : snapClient().call('snap', { key, x, y, r, kinds });
+  call.promise
+    .then(
       (s: Snap | null) => {
         rtts.push(performance.now() - t0);
         if (cleared !== clearedAtStart) return; // the marker was taken off meanwhile
@@ -190,7 +204,7 @@ export function snapPointIn(
   page: number,
   pos: Pt,
   evt: unknown,
-  { force = false, zoom }: { force?: boolean; zoom?: number } = {},
+  { force = false, zoom, from }: { force?: boolean; zoom?: number; from?: Pt } = {},
 ): Pt {
   const st = snapStore.getState();
   const alt = (evt as { altKey?: boolean } | null)?.altKey === true;
@@ -203,16 +217,31 @@ export function snapPointIn(
     void ensurePage(docId, page, force);
     return pos;
   }
-  request({ docId, page, pos, ...(zoom ? { zoom } : {}) });
+  request({ docId, page, pos, ...(zoom ? { zoom } : {}), ...(from ? { from } : {}) });
   const l = last;
   if (
     l?.at &&
     l.q.docId === docId &&
     l.q.page === page &&
+    sameLock(l.q.from, from) &&
     Math.hypot(l.q.pos.x - pos.x, l.q.pos.y - pos.y) <= l.r / 2
   )
     return l.at;
   return pos;
+}
+
+const sameLock = (a: Pt | undefined, b: Pt | undefined): boolean =>
+  a === b || (!!a && !!b && Math.abs(a.x - b.x) < 1e-6 && Math.abs(a.y - b.y) < 1e-6);
+
+/**
+ * Shift with snapping on (M14-02, D-78, Q25): `pos` is already locked to 0°,
+ * 45° or 90° from `from`; the answer is where that direction crosses a drawn
+ * line near the pointer (the latest answer, as snapPoint), else `pos`. Alt:
+ * no snapping for that click.
+ */
+export function snapLocked(page: number, from: Pt, pos: Pt, evt: unknown): Pt {
+  const docId = documentStore.getState().activeId;
+  return docId ? snapPointIn(docId, page, pos, evt, { from }) : pos;
 }
 
 /**
@@ -289,7 +318,7 @@ export function resetAutoSnap(): void {
 
 /** Called once at start: the remembered switches; snapping follows the current page. */
 export function installSnapping(): () => void {
-  setSnapper(snapPoint);
+  setSnapper(snapPoint, snapLocked);
   void (async () => {
     try {
       const v = await (

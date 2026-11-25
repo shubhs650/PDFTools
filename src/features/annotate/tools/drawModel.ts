@@ -122,6 +122,9 @@ const ANGLED: ReadonlySet<DrawTool> = new Set([
   'measurePerimeter',
   'measureArea',
 ]);
+/** Shift locks this tool's lines to 0°, 45° or 90° (and still snaps, M14-02). */
+export const isAngled = (tool: string): boolean => ANGLED.has(tool as DrawTool);
+
 /** … and boxes square. */
 const BOXED: ReadonlySet<DrawTool> = new Set(['square', 'highlightArea', 'circle', 'link']);
 

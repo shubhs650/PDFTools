@@ -2,8 +2,9 @@
 // the first point, click the second, move the pointer sideways to set where the
 // dimension line goes, and click to place it. Enter or a double-click places it
 // where it is, Esc drops it. A press-and-drag from one point to the other still
-// works: the release is the second point, then the offset as usual. The plugin
-// previews and commits; wrapFactory (drawTools.ts) snaps every point, follows
+// works: the release is the second point, then the offset as usual. The points
+// live outside the handler (gesture.ts), so a zoom, pan or scroll between the
+// clicks keeps them (M14-02, D-78). The plugin previews and commits; wrapFactory (drawTools.ts) snaps every point, follows
 // the pointer with the loupe and constrains with Shift. The leader lines are
 // stored as the standard /LL and /LLE (model/dimension.ts); the Render worker
 // draws them (workers/render/dimensionAppearance.ts). Points are EmbedPDF page
@@ -17,16 +18,27 @@ import {
   type PdfAnnotationObject,
 } from '@embedpdf/models';
 import { patching, type HandlerFactory } from '@embedpdf/plugin-annotation';
+import type { Gesture } from '../../model/measureGesture';
+import type { HandlerContext } from '../annotate/tools/drawTools';
 import {
   boundsOf,
   dimensionGeometry,
   leaderFor,
   leaderOf,
-  offsetOf,
   unionRect,
   type Leader,
   type Pt,
 } from '../../model/dimension';
+import {
+  attachGesture,
+  clickMeasure,
+  currentPoints,
+  drawingOn,
+  finishMeasure,
+  moveMeasure,
+  registeringDoc,
+  type Drawer,
+} from './gesture';
 import { setLive } from './measureStore';
 
 interface Rect {
@@ -82,15 +94,88 @@ export function withLeaderRect(base: Patch | undefined): Patch {
 /** A press this far (page points) from where it went down is a drag. */
 const DRAG = 4;
 
+function defaultsOf(context: HandlerContext) {
+  const d = (context.getTool()?.defaults ?? {}) as Record<string, unknown>;
+  return {
+    ...d,
+    strokeWidth: typeof d['strokeWidth'] === 'number' ? d['strokeWidth'] : 1,
+    strokeColor: typeof d['strokeColor'] === 'string' ? d['strokeColor'] : '#E44234',
+    color: typeof d['color'] === 'string' ? d['color'] : 'transparent',
+    opacity: typeof d['opacity'] === 'number' ? d['opacity'] : 1,
+    strokeStyle:
+      (d['strokeStyle'] as PdfAnnotationBorderStyle | undefined) ?? PdfAnnotationBorderStyle.SOLID,
+    strokeDashArray: Array.isArray(d['strokeDashArray']) ? (d['strokeDashArray'] as number[]) : [],
+    lineEndings: (d['lineEndings'] as LineEndings | undefined) ?? {
+      start: PdfAnnotationLineEnding.OpenArrow,
+      end: PdfAnnotationLineEnding.OpenArrow,
+    },
+  };
+}
+
+/** A Distance's preview, live value and annotation, from its gesture. */
+export const dimensionDrawer: Drawer = {
+  show(g: Gesture, context: HandlerContext) {
+    const [a, b] = g.pts;
+    const pointer = g.pointer;
+    if (!a || !pointer) return;
+    const d = defaultsOf(context);
+    if (!b) {
+      const rect = patching.lineRectWithEndings([a, pointer], d.strokeWidth, d.lineEndings);
+      context.onPreview({
+        type: PdfAnnotationSubtype.LINE,
+        bounds: rect,
+        data: { ...d, rect, linePoints: { start: a, end: pointer } },
+      });
+      setLive({ page: g.page, kind: 'distance', pts: [a, pointer] });
+      return;
+    }
+    const leader = leaderFor(g.offset);
+    const geo = dimensionGeometry(a, b, leader, true);
+    const rect = dimensionRect(a, b, leader, d.strokeWidth, d.lineEndings);
+    context.onPreview({
+      type: PdfAnnotationSubtype.LINE,
+      bounds: rect,
+      data: { ...d, rect, linePoints: { start: geo.start, end: geo.end } },
+    });
+    setLive({
+      page: g.page,
+      kind: 'distance',
+      pts: [a, b],
+      at: pointer,
+      ...(leader ? { leaders: geo.leaders, color: d.strokeColor, width: d.strokeWidth } : {}),
+    });
+  },
+  place(g: Gesture, context: HandlerContext) {
+    const [a, b] = g.pts;
+    if (!a || !b) return;
+    const d = defaultsOf(context);
+    const leader = leaderFor(g.offset);
+    const annotation = {
+      ...d,
+      type: PdfAnnotationSubtype.LINE,
+      id: uuidV4(),
+      pageIndex: context.pageIndex,
+      flags: ['print'],
+      created: new Date(),
+      linePoints: { start: a, end: b },
+      rect: dimensionRect(a, b, leader, d.strokeWidth, d.lineEndings),
+      ...(leader ? { leader } : {}),
+    } as unknown as PdfAnnotationObject;
+    context.onCommit(annotation);
+  },
+  hide(context: HandlerContext) {
+    context.onPreview(null);
+  },
+};
+
 /** The Distance tool's pointer handlers. */
 export const dimensionHandlerFactory: HandlerFactory<PdfAnnotationObject> = {
   annotationType: PdfAnnotationSubtype.LINE,
   create(context) {
-    const { pageIndex, pageSize, getTool, onPreview, onCommit } = context;
-    let a: Pt | null = null;
-    let b: Pt | null = null;
-    let pointer: Pt | null = null;
-    let offset = 0;
+    const { pageIndex, pageSize } = context;
+    const where = { doc: registeringDoc(), tool: 'measureDistance', page: pageIndex };
+    // A zoom or a scroll made this handler: the Distance in progress carries on here.
+    attachGesture(where, context, dimensionDrawer);
     // A press-and-drag from the first point to the second (the earlier gesture).
     let down: Pt | null = null;
     let dragging = false;
@@ -100,112 +185,31 @@ export const dimensionHandlerFactory: HandlerFactory<PdfAnnotationObject> = {
       x: Math.min(Math.max(p.x, 0), pageSize.width),
       y: Math.min(Math.max(p.y, 0), pageSize.height),
     });
-    const defaults = () => {
-      const d = (getTool()?.defaults ?? {}) as Record<string, unknown>;
-      return {
-        ...d,
-        strokeWidth: typeof d['strokeWidth'] === 'number' ? d['strokeWidth'] : 1,
-        strokeColor: typeof d['strokeColor'] === 'string' ? d['strokeColor'] : '#E44234',
-        color: typeof d['color'] === 'string' ? d['color'] : 'transparent',
-        opacity: typeof d['opacity'] === 'number' ? d['opacity'] : 1,
-        strokeStyle:
-          (d['strokeStyle'] as PdfAnnotationBorderStyle | undefined) ??
-          PdfAnnotationBorderStyle.SOLID,
-        strokeDashArray: Array.isArray(d['strokeDashArray'])
-          ? (d['strokeDashArray'] as number[])
-          : [],
-        lineEndings: (d['lineEndings'] as LineEndings | undefined) ?? {
-          start: PdfAnnotationLineEnding.OpenArrow,
-          end: PdfAnnotationLineEnding.OpenArrow,
-        },
-      };
+    const placed = (): number => currentPoints(where);
+    const clickAt = (p: Pt): void => {
+      clickMeasure(where, 'distance', p, context, dimensionDrawer);
     };
-    const reset = (): void => {
-      a = null;
-      b = null;
-      pointer = null;
-      offset = 0;
-      down = null;
-      dragging = false;
-      onPreview(null);
-      setLive(null);
-    };
-    const preview = (): void => {
-      if (!a || !pointer) return;
-      const d = defaults();
-      if (!b) {
-        const rect = patching.lineRectWithEndings([a, pointer], d.strokeWidth, d.lineEndings);
-        onPreview({
-          type: PdfAnnotationSubtype.LINE,
-          bounds: rect,
-          data: { ...d, rect, linePoints: { start: a, end: pointer } },
-        });
-        setLive({ page: pageIndex, kind: 'distance', pts: [a, pointer] });
-        return;
-      }
-      const leader = leaderFor(offset);
-      const g = dimensionGeometry(a, b, leader, true);
-      const rect = dimensionRect(a, b, leader, d.strokeWidth, d.lineEndings);
-      onPreview({
-        type: PdfAnnotationSubtype.LINE,
-        bounds: rect,
-        data: { ...d, rect, linePoints: { start: g.start, end: g.end } },
-      });
-      setLive({
-        page: pageIndex,
-        kind: 'distance',
-        pts: [a, b],
-        at: pointer,
-        ...(leader ? { leaders: g.leaders, color: d.strokeColor, width: d.strokeWidth } : {}),
-      });
-    };
-    const commit = (): void => {
-      if (!a || !b) {
-        reset();
-        return;
-      }
-      const d = defaults();
-      const leader = leaderFor(offset);
-      const annotation = {
-        ...d,
-        type: PdfAnnotationSubtype.LINE,
-        id: uuidV4(),
-        pageIndex,
-        flags: ['print'],
-        created: new Date(),
-        linePoints: { start: a, end: b },
-        rect: dimensionRect(a, b, leader, d.strokeWidth, d.lineEndings),
-        ...(leader ? { leader } : {}),
-      } as unknown as PdfAnnotationObject;
-      reset();
-      onCommit(annotation);
-    };
-    // `drawing` tells wrapFactory when nothing is half placed any more.
-    const handlers = {
-      drawing: () => a !== null,
+    return {
       onPointerDown: (pos: Pt) => {
         down = onPage(pos);
         dragging = false;
       },
       onPointerMove: (pos: Pt) => {
         const p = onPage(pos);
-        pointer = p;
-        if (down && !a && Math.hypot(p.x - down.x, p.y - down.y) > DRAG) {
+        if (down && placed() === 0 && Math.hypot(p.x - down.x, p.y - down.y) > DRAG) {
           // A drag from the first point: it is placed where the press went down.
-          a = down;
+          clickAt(down);
           dragging = true;
         }
-        if (a && b) offset = offsetOf(a, b, p, true);
-        preview();
+        moveMeasure(where, p);
       },
       onPointerUp: (pos: Pt) => {
         const p = onPage(pos);
-        if (dragging && a && !b && Math.hypot(p.x - a.x, p.y - a.y) > DRAG) {
+        if (dragging && placed() === 1) {
           // The release is the second point; the click that follows is not a new one.
-          b = p;
-          offset = 0;
-          skipClick = true;
-          preview();
+          const before = placed();
+          clickAt(p);
+          if (placed() > before) skipClick = true;
         }
         down = null;
         dragging = false;
@@ -216,30 +220,12 @@ export const dimensionHandlerFactory: HandlerFactory<PdfAnnotationObject> = {
           return;
         }
         if (evt?.ctrlKey || evt?.metaKey) return;
-        const p = onPage(pos);
-        pointer = p;
-        if (!a) {
-          a = p;
-          preview();
-        } else if (!b) {
-          if (Math.hypot(p.x - a.x, p.y - a.y) < 1) return;
-          b = p;
-          offset = 0;
-          preview();
-        } else {
-          offset = offsetOf(a, b, p, true);
-          commit();
-        }
+        clickAt(onPage(pos));
       },
-      // Enter (finishDrawing) and a double-click: place it where it is.
+      // A double-click: place it where it is (Enter reaches it through gesture.ts).
       onDoubleClick: () => {
-        if (a && b) commit();
-        else reset();
-      },
-      onPointerCancel: () => {
-        reset();
+        if (drawingOn(where)) finishMeasure();
       },
     };
-    return handlers;
   },
 };
