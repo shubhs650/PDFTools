@@ -15,4 +15,21 @@ export interface SnapApi {
     { key: string; x: number; y: number; r: number; kinds: SnapKind[] },
     Snap | null
   >;
+  /**
+   * Shift still snaps (M14-02): where the direction locked from (ox, oy) along
+   * the unit vector (dx, dy) crosses a drawn segment within r of (x, y).
+   */
+  snapLine: MethodSpec<
+    {
+      key: string;
+      ox: number;
+      oy: number;
+      dx: number;
+      dy: number;
+      x: number;
+      y: number;
+      r: number;
+    },
+    Snap | null
+  >;
 }

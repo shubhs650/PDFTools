@@ -2,12 +2,14 @@ import { useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
 import { format } from '../../i18n';
 import { leaderOf } from '../../model/dimension';
-import { labelAnchor, measurePoints, valueText } from '../../model/measurement';
+import { labelAnchor, measurePoints, toUserSpace, valueText } from '../../model/measurement';
+import { liveScale, scaleOfChoice } from '../../model/scaleViewport';
 import { useAnnotationMap } from '../annotate/comments/commentsStore';
 import { choiceFor, kindOf } from './measurements';
 import { useDocuments } from '../../app/store/documentStore';
 import { useMeasure } from './measureStore';
-import { layoutFor, scaleOf, useScales } from './scaleStore';
+import { layoutFor, useScales } from './scaleStore';
+import { frameOf } from './viewports';
 
 /**
  * The value of the measurement being drawn, next to the pointer (M3-16,
@@ -30,12 +32,25 @@ export function MeasureOverlay({
   const active = useDocuments((s) => s.activeId === documentId);
   const live = useMeasure((s) => (active && s.live?.page === pageIndex ? s.live : null));
   const entry = useScales((s) => s.docs[documentId]);
-  const text = useMemo(() => {
+  // The value in the scale of the area it started in; a warning instead as soon as
+  // a point is in another scale area (M14-02, D-77, Q30).
+  const live2 = useMemo(() => {
     if (!live || live.pts.length < 2) return null;
-    const s = entry ? scaleOf({ docs: { [documentId]: entry } }, documentId, pageIndex) : null;
-    const v = valueText(live.kind, live.pts, s, format);
-    return v.calibrated ? v.value : t('measure.uncalibrated', { value: v.value });
+    const layout = entry
+      ? layoutFor({ docs: { [documentId]: entry } }, documentId, pageIndex)
+      : { pageDefault: null, details: [] };
+    const where = liveScale(toUserSpace(live.pts, frameOf(documentId, pageIndex)), layout);
+    if (where.kind === 'crosses')
+      return { text: t('measure.live.crosses', { name: where.name }), warning: true };
+    if (where.kind === 'leaves')
+      return { text: t('measure.live.leaves', { name: where.name }), warning: true };
+    const v = valueText(live.kind, live.pts, scaleOfChoice(where.choice), format);
+    return {
+      text: v.calibrated ? v.value : t('measure.uncalibrated', { value: v.value }),
+      warning: false,
+    };
   }, [live, entry, documentId, pageIndex, t]);
+  const text = live2?.text ?? null;
   // Spanning flags only where the page has detail viewports.
   const hasDetails = useMemo(
     () =>
@@ -83,8 +98,9 @@ export function MeasureOverlay({
       ) : null}
       {text && at ? (
         <span
-          className="measure-live"
+          className={live2?.warning ? 'measure-live measure-live--warning' : 'measure-live'}
           data-testid="measure-live"
+          data-warning={live2?.warning ? true : undefined}
           style={{ left: at.x * scale, top: at.y * scale }}
         >
           {text}

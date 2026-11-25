@@ -142,7 +142,7 @@ function PagesFields({ f, rangeError }: { f: Fields; rangeError: boolean }) {
 function pagesOf(f: Fields, docId: string): number[] | null {
   const d = documentStore.getState().docs[docId];
   if (!d) return null;
-  if (f.where === 'page') return [d.view.page];
+  if (f.where === 'page') return [scaleStore.getState().target ?? d.view.page];
   const count = d.meta.pageCount;
   if (f.where === 'all') return Array.from({ length: count }, (_, i) => i);
   const r = parseRange(f.range, count);
@@ -163,7 +163,11 @@ function SetScaleForm({ docId }: { docId: string }) {
   const defaults = useScales((s) => s.defaults);
   // The page's scale when the dialog opens (read once: a derived object).
   const [current] = useState(() =>
-    scaleOf(scaleStore.getState(), docId, documentStore.getState().docs[docId]?.view.page ?? 0),
+    scaleOf(
+      scaleStore.getState(),
+      docId,
+      scaleStore.getState().target ?? documentStore.getState().docs[docId]?.view.page ?? 0,
+    ),
   );
   const f = useScaleFields(
     current
@@ -343,7 +347,12 @@ function CalibrateForm({ docId }: { docId: string }) {
           submit();
         }}
       >
-        <Button label={t('scale.pick')} onClick={startPicking} />
+        <Button
+          label={t('scale.pick')}
+          onClick={() => {
+            startPicking();
+          }}
+        />
         <div className="scale-points">
           {labels.map((k, i) => (
             <TextField

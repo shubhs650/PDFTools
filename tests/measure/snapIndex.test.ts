@@ -8,6 +8,7 @@ import {
   indexBytes,
   intersect,
   snap,
+  snapOnLine,
   thin,
   type SnapKind,
 } from '../../src/model/snapIndex';
@@ -124,5 +125,44 @@ describe('dense pages (ADR-008 d3)', () => {
     const s = segs([0, 0, 0.2, 0], [0, 0, 10, 0], [5, 5, 5, 5.3]);
     expect([...thin(s, 0.5)]).toEqual([0, 0, 10, 0]);
     expect(indexBytes(buildGrid(s))).toBeGreaterThan(s.byteLength);
+  });
+});
+
+// M14-02 (D-78, Q25): Shift locks the direction from the last point and still
+// snaps: the point lands where that direction meets a drawn line. Test-first.
+describe('snapOnLine (Shift still snaps)', () => {
+  // A vertical wall at x = 100 from y = 0 to 200, a slanted one, a far one.
+  const g = buildGrid(segs([100, 0, 100, 200], [150, 0, 250, 100], [400, 0, 400, 200]));
+
+  it('lands where the locked horizontal meets the wall near the pointer', () => {
+    // From (0, 50) locked to horizontal; the pointer's locked point is (97, 50).
+    const s = snapOnLine(g, 0, 50, 1, 0, 97, 50, 6);
+    expect(s).toMatchObject({ kind: 'intersection', x: 100, y: 50 });
+  });
+
+  it('meets a slanted line along a 45° direction', () => {
+    // The slanted wall is y = x - 150; the locked direction from (300, 0) going
+    // up and left (y = 300 - x) meets it at (225, 75).
+    const d = Math.SQRT1_2;
+    const s = snapOnLine(g, 300, 0, -d, d, 223, 77, 6);
+    expect(s?.x).toBeCloseTo(225);
+    expect(s?.y).toBeCloseTo(75);
+  });
+
+  it('only a crossing within the radius counts, and the nearest one wins', () => {
+    expect(snapOnLine(g, 0, 50, 1, 0, 80, 50, 6)).toBeNull();
+    const two = buildGrid(segs([100, 0, 100, 200], [104, 0, 104, 200]));
+    expect(snapOnLine(two, 0, 50, 1, 0, 103, 50, 6)?.x).toBe(104);
+  });
+
+  it('a line along the locked direction, or one that ends short of it, is no crossing', () => {
+    const along = buildGrid(segs([0, 50, 300, 50]));
+    expect(snapOnLine(along, 0, 50, 1, 0, 120, 50, 6)).toBeNull();
+    const short = buildGrid(segs([100, 60, 100, 200]));
+    expect(snapOnLine(short, 0, 50, 1, 0, 100, 50, 6)).toBeNull();
+  });
+
+  it('a crossing behind the last point is skipped', () => {
+    expect(snapOnLine(g, 120, 50, 1, 0, 100, 50, 6)).toBeNull();
   });
 });
