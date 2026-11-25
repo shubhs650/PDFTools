@@ -755,7 +755,7 @@ test('measure-tools-3: placing a distance, the dimension line set sideways', asy
   // The loupe off for this picture, so the dimension line shows clearly.
   const loupe = toolbar(page, 'Measure').getByRole('button', { name: 'Loupe', exact: true });
   if ((await loupe.getAttribute('aria-pressed')) === 'true') await loupe.click();
-  await toolbar(page, 'Measure').getByRole('button', { name: 'Distance', exact: true }).click();
+  await toolbar(page, 'Measure').getByRole('button', { name: 'Length', exact: true }).click();
   // The plan's top edge (page points from the top-left), snapped at its corners.
   const mm = 72 / 25.4 / 100;
   const left = 120;
@@ -819,7 +819,7 @@ test('loupe-1: the loupe while measuring a distance', async ({ page }) => {
   await fitPage(page);
   const d = await setScale100(page, 'Metres');
   await d.getByRole('button', { name: 'Apply' }).click();
-  await toolbar(page, 'Measure').getByRole('button', { name: 'Distance', exact: true }).click();
+  await toolbar(page, 'Measure').getByRole('button', { name: 'Length', exact: true }).click();
   // Picking Distance turns snapping on.
   await expect(statusBar(page).getByRole('button', { name: 'Enable Snapping' })).toHaveAttribute(
     'aria-pressed',

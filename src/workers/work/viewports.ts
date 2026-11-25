@@ -22,6 +22,8 @@ export interface FileMeasure {
   intent: string;
   /** Its /Measure as plain data (null when it has none). */
   measure: PdfJson;
+  /** A Line's caption position, /CP without the slash (M14-03: Above or In line). */
+  cp?: string;
 }
 
 export interface PageVp {
@@ -31,6 +33,8 @@ export interface PageVp {
   vp: PdfJson;
   /** Annotations with a /…Dimension intent (M3-16). */
   measures: FileMeasure[];
+  /** The page's /PieceInfo as plain data (null when it has none): Triya data (M14-03, D-74). */
+  pieceInfo: PdfJson;
 }
 
 const DIMENSIONS = new Set(['LineDimension', 'PolyLineDimension', 'PolygonDimension']);
@@ -50,7 +54,13 @@ async function measuresOf(r: PdfReader, page: number, annots: PdfValue | undefin
         ? nm.text()
         : stableAnnotId(entry instanceof PdfRef ? entry.num : 0, page, i);
     const m = d.get('Measure');
-    out.push({ id, intent, measure: m === undefined ? null : toJson(await deep(r, m)) });
+    const cp = nameOf(await r.resolve(d.get('CP')));
+    out.push({
+      id,
+      intent,
+      measure: m === undefined ? null : toJson(await deep(r, m)),
+      ...(cp ? { cp } : {}),
+    });
   }
   return out;
 }
@@ -69,6 +79,19 @@ async function deep(r: PdfReader, v: PdfValue | undefined, depth = 0): Promise<P
   return x;
 }
 
+/**
+ * A page's /PieceInfo: Triya PDF's own entry resolved, every other
+ * application's kept as written (references stay references, so writing the
+ * page's /PieceInfo again keeps their data, streams and all).
+ */
+async function pieceInfoOf(r: PdfReader, v: PdfValue): Promise<PdfJson> {
+  const d = await r.resolve(v);
+  if (!isDict(d)) return null;
+  const out = new Map<string, PdfValue>();
+  for (const [k, e] of d) out.set(k, k === 'TriyaPDF' ? await deep(r, e) : e);
+  return toJson(out);
+}
+
 export async function readViewports(
   bytes: Uint8Array,
   inflate: Inflate,
@@ -84,11 +107,13 @@ export async function readViewports(
         ? (box as [number, number, number, number])
         : [0, 0, 612, 792];
     const vp = p.dict.get('VP');
+    const pi = p.dict.get('PieceInfo');
     out.push({
       page: i,
       mediaBox,
       vp: vp === undefined ? null : toJson(await deep(r, vp)),
       measures: await measuresOf(r, i, p.dict.get('Annots')),
+      pieceInfo: pi === undefined ? null : await pieceInfoOf(r, pi),
     });
   }
   return out;

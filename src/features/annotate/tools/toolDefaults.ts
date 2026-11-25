@@ -9,7 +9,7 @@
 // overrides of the shipped ones (toolDefaultsStore.ts), so a later change
 // to a shipped default reaches everyone who has not set that property.
 // Pure: no store, no plugin.
-import { PdfStandardFont } from '@embedpdf/models';
+import { PdfAnnotationLineEnding, PdfStandardFont } from '@embedpdf/models';
 import { libraryFamily } from '../../../model/fonts/library';
 
 /** Tools with a default style; the ids are the plugin's tool ids. */
@@ -36,6 +36,11 @@ export const STYLE_TOOLS = [
   'highlightArea',
   'inkHighlighter',
   'textComment',
+  // M14-03 (Q31): each measuring tool remembers its own colour, width, ends and fill.
+  'measureLength',
+  'measurePolylength',
+  'measurePerimeter',
+  'measureArea',
 ] as const;
 
 export type StyleTool = (typeof STYLE_TOOLS)[number];
@@ -103,6 +108,18 @@ const LINE: StyleProps = {
   color: 'transparent',
 };
 
+/** The measuring tools' red (M3-16), kept by M14-03 (Q31). */
+export const MEASURE_RED = '#E44234';
+const OPEN_ARROW: number = PdfAnnotationLineEnding.OpenArrow;
+const BUTT: number = PdfAnnotationLineEnding.Butt;
+
+const MEASURE: StyleProps = {
+  strokeColor: MEASURE_RED,
+  strokeWidth: DEFAULT_LINE_WIDTH,
+  color: 'transparent',
+  opacity: 1,
+};
+
 /** The shipped defaults (B6). */
 export const SHIPPED_DEFAULTS: Readonly<Record<StyleTool, Readonly<StyleProps>>> = {
   freeText: TEXT,
@@ -146,6 +163,12 @@ export const SHIPPED_DEFAULTS: Readonly<Record<StyleTool, Readonly<StyleProps>>>
     opacity: HIGHLIGHT_OPACITY,
   },
   textComment: { strokeColor: NOTE_YELLOW, opacity: 1 },
+  // M14-03 (Q31): today's red; open arrows on Length, butt ends on the others; a light
+  // see-through fill on areas (drawn at FILL_ALPHA in the appearance, never as /IC).
+  measureLength: { ...MEASURE, lineEndings: { start: OPEN_ARROW, end: OPEN_ARROW } },
+  measurePolylength: { ...MEASURE, lineEndings: { start: BUTT, end: BUTT } },
+  measurePerimeter: { ...MEASURE, lineEndings: { start: BUTT, end: BUTT } },
+  measureArea: { ...MEASURE, color: MEASURE_RED },
 };
 
 /** The stored record's schema version (IndexedDB `toolDefaults`, keyed by tool id). */

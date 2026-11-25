@@ -82,7 +82,13 @@ describe('a view change between clicks keeps the measurement', () => {
     click(h2, 110, 110);
     expect(finishDrawing()).toBe(true);
     const a = after.onCommit.mock.calls[0]?.[0] as { vertices: unknown[] };
-    expect(a.vertices).toHaveLength(3);
+    // A Perimeter closes (ADR-035 Amendment 1): its first point again at the end.
+    expect(a.vertices).toEqual([
+      { x: 10, y: 10 },
+      { x: 110, y: 10 },
+      { x: 110, y: 110 },
+      { x: 10, y: 10 },
+    ]);
   });
 
   it('Distance: first point, zoom, second point, scroll away and back, offset click', () => {

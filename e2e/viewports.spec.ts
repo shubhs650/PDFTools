@@ -60,7 +60,7 @@ async function at(page: Page, x: number, y: number) {
 
 /** A distance measurement drawn, then set to user-space points a → b. */
 async function distance(page: Page, id: string, a: [number, number], b: [number, number]) {
-  const button = measureTab(page).getByRole('button', { name: 'Distance', exact: true });
+  const button = measureTab(page).getByRole('button', { name: 'Length', exact: true });
   await button.click();
   const before = new Set((await objects(page, id)).map((o) => o.id));
   const p = await at(page, 100, 150);

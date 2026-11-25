@@ -134,7 +134,8 @@ export const REUSE_GROUPS: readonly ReuseGroup[] = [
       'comment.stamp',
     ],
   },
-  { tab: 'home', group: 'measure', ids: ['measure.distance'] },
+  // M14-03 (Q26): one Measure split button, the last measuring tool on its face.
+  { tab: 'home', group: 'measure', ids: ['measure.lastTool'] },
   // Home → View (M7-09, review 3d): icons only. Home rotates the view; Organize
   // rotates the pages (owner's answer 6, M6 plan). The pane buttons are the
   // rail's toggles (Bookmarks: Q2), pressed while their pane is open.
@@ -164,7 +165,7 @@ export const REUSE_GROUPS: readonly ReuseGroup[] = [
   {
     tab: 'comment',
     group: 'measure',
-    ids: ['measure.distance', 'measure.perimeter', 'measure.area'],
+    ids: ['measure.lastTool'],
   },
   // Form (M6-14): the pointer tools and Reset Form.
   { tab: 'form', group: 'tools', ids: ['home.hand', 'home.selectText'] },
@@ -1136,20 +1137,32 @@ export const COMMANDS: readonly CommandDef[] = [
     milestone: 'M4',
     shipped: true, // M4-21
   },
+  // M14-03 (D-73, Q26): the Length group (Length, Polylength, Perimeter) and the Area group.
   {
-    id: 'measure.distance',
+    id: 'measure.length',
     tab: 'measure',
-    group: 'measure',
+    group: 'length',
     size: 'large',
     fluent: 'Ruler',
     milestone: 'M3',
     toggle: true,
-    shipped: true, // M3-16
+    shipped: true, // M3-16 (Distance), M14-03
+  },
+  {
+    id: 'measure.polylength',
+    tab: 'measure',
+    group: 'length',
+    size: 'large',
+    fluent: 'Ruler',
+    milestone: 'M3',
+    toggle: true,
+    shipped: true, // M14-03
+    custom: 'measure.polylength',
   },
   {
     id: 'measure.perimeter',
     tab: 'measure',
-    group: 'measure',
+    group: 'length',
     size: 'large',
     fluent: 'Pentagon',
     milestone: 'M3',
@@ -1160,13 +1173,36 @@ export const COMMANDS: readonly CommandDef[] = [
   {
     id: 'measure.area',
     tab: 'measure',
-    group: 'measure',
+    group: 'area',
     size: 'large',
     fluent: 'Pentagon',
     milestone: 'M3',
     toggle: true,
     shipped: true, // M3-16
     custom: 'measure.area', // M3-06
+  },
+  {
+    // M14-03 (Q26): Home's and Comment's one Measure button. Its face is the last measuring
+    // tool used; its arrow lists every measuring tool (MeasureSplitButton).
+    id: 'measure.lastTool',
+    tab: 'measure',
+    group: 'length',
+    size: 'large',
+    fluent: 'Ruler',
+    milestone: 'M3',
+    toggle: true,
+    shipped: true,
+    reuseOnly: true,
+  },
+  {
+    // M14-03 (Q38): turns each 1.1.0 measurement and its grouped text box into one markup.
+    id: 'measure.updateOld',
+    tab: 'menu',
+    group: 'menu',
+    size: 'small',
+    fluent: 'ArrowSync',
+    milestone: 'M3',
+    shipped: true,
   },
   {
     id: 'measure.calibrate',

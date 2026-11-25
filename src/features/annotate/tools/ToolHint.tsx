@@ -8,7 +8,8 @@ const HINTS: Partial<Record<string, MessageKey>> = {
   // M7-03 (ADR-023 D-43 f, B11): one drag, or the three clicks.
   freeTextCallout: msg('annotate.toolHint.callout'),
   // M13-10: every Measure tool is placed by clicks.
-  measureDistance: msg('annotate.toolHint.distance'),
+  measureLength: msg('annotate.toolHint.length'),
+  measurePolylength: msg('annotate.toolHint.polylength'),
   measurePerimeter: msg('annotate.toolHint.perimeter'),
   measureArea: msg('annotate.toolHint.area'),
 };

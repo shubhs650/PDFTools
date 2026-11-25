@@ -126,7 +126,7 @@ FILES.forEach((file, n) => {
     await page.getByRole('tab', { name: 'Measure' }).click();
     await page
       .getByRole('toolbar', { name: 'Measure commands' })
-      .getByRole('button', { name: 'Distance', exact: true })
+      .getByRole('button', { name: 'Length', exact: true })
       .click();
     // Over the middle of the view (whichever page is there): its index first, then 300 moves.
     const area = await page.getByTestId('document-view').boundingBox();

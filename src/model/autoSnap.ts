@@ -7,7 +7,8 @@
 
 /** The tools that measure (tool ids as the app store names them). */
 export const AUTO_SNAP_TOOLS: ReadonlySet<string> = new Set([
-  'measureDistance',
+  'measureLength',
+  'measurePolylength',
   'measurePerimeter',
   'measureArea',
   'calibrate',

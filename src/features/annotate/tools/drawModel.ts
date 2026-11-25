@@ -25,8 +25,9 @@ export const DRAW_TOOLS = [
   'imageStamp',
   // Calibrate (M3-15): two clicks on the page (measure/calibrate.ts).
   'calibrate',
-  // Measurements (M3-16): line, polyline and polygon with a dimension intent (measure/measureTools.ts).
-  'measureDistance',
+  // Measurements (M3-16, M14-03): line, polyline and polygon with a dimension intent (measure/measureTools.ts).
+  'measureLength',
+  'measurePolylength',
   'measurePerimeter',
   'measureArea',
   // Scale viewport (M3-17): a rectangle, then the dialog (measure/viewports.ts).
@@ -103,10 +104,11 @@ export const KEYBOARD_PLACED: ReadonlySet<DrawTool> = new Set([
  * (Distance: two points, then the offset, M13-10).
  */
 export const VERTEX_TOOLS: ReadonlySet<DrawTool> = new Set([
-  'measureDistance',
+  'measureLength',
   'polyline',
   'polygon',
   'cloud',
+  'measurePolylength',
   'measurePerimeter',
   'measureArea',
 ]);
@@ -118,7 +120,8 @@ const ANGLED: ReadonlySet<DrawTool> = new Set([
   'polyline',
   'polygon',
   'cloud',
-  'measureDistance',
+  'measureLength',
+  'measurePolylength',
   'measurePerimeter',
   'measureArea',
 ]);

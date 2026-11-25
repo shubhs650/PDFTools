@@ -60,7 +60,7 @@ test('snapped distance: exact value between two known endpoints; Alt turns snapp
     )
     .toBe('ready');
 
-  await measureTab(page).getByRole('button', { name: 'Distance', exact: true }).click();
+  await measureTab(page).getByRole('button', { name: 'Length', exact: true }).click();
   // Near (400, 450) and (500, 450): a few points off each corner.
   const a = await at(page, 403, 447);
   await page.mouse.move(a.x - 20, a.y - 20);
@@ -82,6 +82,9 @@ test('snapped distance: exact value between two known endpoints; Alt turns snapp
     )
     .toEqual(['3.5278 m']);
 
+  // The measurement just drawn stays selected and takes presses over its box, which
+  // holds its caption since M14-03 (selectAfterDraw.ts): deselect it first.
+  await cap(page, 'annotate', 'selectMany', id, []);
   // Alt held: no marker, no snapping.
   await page.keyboard.down('Alt');
   await page.mouse.move(a.x + 1, a.y + 1, { steps: 3 });
@@ -113,7 +116,7 @@ test('the snap marker goes when another tool is chosen', async ({ page }) => {
         ],
     )
     .toBe('ready');
-  await measureTab(page).getByRole('button', { name: 'Distance', exact: true }).click();
+  await measureTab(page).getByRole('button', { name: 'Length', exact: true }).click();
   const a = await at(page, 403, 447);
   await page.mouse.move(a.x - 20, a.y - 20);
   await page.mouse.move(a.x, a.y, { steps: 4 });

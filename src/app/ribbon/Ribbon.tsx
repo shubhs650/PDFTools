@@ -7,8 +7,8 @@ import { tabLabelKey } from '../commandLabels';
 import { Brand, TopBarActions } from '../TopBar';
 import { appStore, useApp } from '../store/appStore';
 import { QuickAccess } from './QuickAccess';
-import { PALETTE_COMMANDS } from '../../features/annotate/tools/stylePalette';
 import { RibbonGroup, type Stop } from './RibbonGroup';
+import { stopsOf } from './stops';
 import { ribbonLayout, STEP_MENU, type RibbonTabLayout } from './layout';
 import { useAdaptiveSteps } from './useAdaptiveSteps';
 import { useRovingToolbar } from './useRovingToolbar';
@@ -183,7 +183,7 @@ function RibbonPanel({ tab, onEscape }: { tab: RibbonTabLayout; onEscape: () => 
   // a group folded into its menu button is one.
   const stops = tab.groups.reduce((sum, g, i) => {
     if (steps[i] === STEP_MENU) return sum + 1;
-    return sum + g.commands.length + g.commands.filter((c) => PALETTE_COMMANDS[c.id]).length;
+    return sum + g.commands.reduce((n, c) => n + stopsOf(c.id), 0);
   }, 0);
   const roving = useRovingToolbar(stops);
   let n = 0;

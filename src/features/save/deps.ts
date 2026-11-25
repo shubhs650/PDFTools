@@ -25,6 +25,9 @@ export function saveDeps(): SaveFlowDeps {
       // M11-07: a text comment in a library font kept PDFium's appearance (its standard font).
       if (r.commentFontFallbacks)
         recordEvent('annotate', 'freetext-font-kept', { count: r.commentFontFallbacks });
+      // M14-03: a measurement kept PDFium's appearance (its value only in /Contents).
+      if (r.measureFallbacks)
+        recordEvent('annotate', 'measure-caption-kept', { count: r.measureFallbacks });
       return r;
     },
     async verify(docId, piece, expected, signal) {

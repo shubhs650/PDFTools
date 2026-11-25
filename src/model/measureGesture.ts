@@ -7,7 +7,8 @@
 // Pure. Points are EmbedPDF page points (top-left origin, y down).
 import { offsetOf, type Pt } from './dimension';
 
-export type GestureKind = 'distance' | 'perimeter' | 'area';
+/** Length is a 'distance'; a Perimeter closes back to its first point when placed (M14-03, Q6). */
+export type GestureKind = 'distance' | 'polylength' | 'perimeter' | 'area';
 
 /** Where a pointer event happens: a document, the tool that is on, a page. */
 export interface Where {
@@ -61,8 +62,9 @@ const start = (w: Where, kind: GestureKind, at: Pt): Gesture => ({
 });
 
 /**
- * A click. `closeRadius` (points): an area's click this close to its first
- * corner (a square, as EmbedPDF's polygon tool has it) closes it.
+ * A click. `closeRadius` (points): an area's or a perimeter's click this
+ * close to its first corner (a square, as EmbedPDF's polygon tool has it)
+ * closes it.
  */
 export function click(
   g: Gesture | null,
@@ -91,7 +93,13 @@ export function click(
     return { gesture: start(w, kind, at) };
   }
   const first = g.pts[0];
-  if (g.kind === 'area' && first && g.pts.length >= 3 && near(first, at, closeRadius + 1e-9))
+  // A click on the first point closes an Area or a Perimeter.
+  if (
+    (g.kind === 'area' || g.kind === 'perimeter') &&
+    first &&
+    g.pts.length >= 3 &&
+    near(first, at, closeRadius + 1e-9)
+  )
     return { gesture: null, commit: g };
   if (last && near(last, at, SAME_POINT)) return { gesture: g };
   return { gesture: { ...g, pts: [...g.pts, at], pointer: at } };
@@ -105,7 +113,7 @@ export function move(g: Gesture | null, w: Where, at: Pt): Gesture | null {
   return { ...g, pointer: at, offset };
 }
 
-const ENOUGH: Record<GestureKind, number> = { distance: 2, perimeter: 2, area: 3 };
+const ENOUGH: Record<GestureKind, number> = { distance: 2, polylength: 2, perimeter: 3, area: 3 };
 
 /** Enter or a double-click: placed as it is when it has enough points, else dropped. */
 export function finish(g: Gesture | null): Outcome {

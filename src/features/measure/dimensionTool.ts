@@ -173,7 +173,7 @@ export const dimensionHandlerFactory: HandlerFactory<PdfAnnotationObject> = {
   annotationType: PdfAnnotationSubtype.LINE,
   create(context) {
     const { pageIndex, pageSize } = context;
-    const where = { doc: registeringDoc(), tool: 'measureDistance', page: pageIndex };
+    const where = { doc: registeringDoc(), tool: 'measureLength', page: pageIndex };
     // A zoom or a scroll made this handler: the Distance in progress carries on here.
     attachGesture(where, context, dimensionDrawer);
     // A press-and-drag from the first point to the second (the earlier gesture).

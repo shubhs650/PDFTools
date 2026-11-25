@@ -4,11 +4,13 @@ import { simplePdf } from './fixtures/generate.ts';
 import { cap, drop } from './support/app.ts';
 import { expect, test } from './support/fixtures.ts';
 
-// M3-16 (§7.4, ADR-007, M3-Q2): Distance, Perimeter and Area draw EmbedPDF
-// line/polyline/polygon annotations, placed by clicks (M13-10: a Distance's
-// dimension line beside its points, stored as /LL and /LLE); the value goes to /Contents and a grouped
-// FreeText label, and /IT, /Measure, /Cap are staged for the single Ctrl+S
-// revision. Values follow vertex edits (in the same undo step) and the scale.
+// M3-16 (§7.4, ADR-007, M3-Q2), M14-03 (D-73, D-74): Length, Polylength,
+// Perimeter and Area draw EmbedPDF line/polyline/polygon annotations, placed by
+// clicks (M13-10: a Length's dimension line beside its points, stored as /LL
+// and /LLE); the value goes to /Contents and into the markup's own appearance
+// (one markup, no grouped FreeText), and /IT, /Measure, /Cap, /CP are staged
+// for the single Ctrl+S revision. Values follow vertex edits (in the same undo
+// step) and the scale.
 
 interface Obj {
   id: string;
@@ -17,6 +19,8 @@ interface Obj {
   contents?: string;
   inReplyToId?: string;
   replyType?: number;
+  subject?: string;
+  measure?: { tool: string; cap?: string; label?: string; fill?: string };
   linePoints?: { start: { x: number; y: number }; end: { x: number; y: number } };
   vertices?: { x: number; y: number }[];
   leader?: { ll: number; lle: number; llo: number };
@@ -73,21 +77,26 @@ async function clicks(page: Page, pts: [number, number][]) {
   }
 }
 
-/** The measurement of `type` and its grouped label, once both exist. */
-async function measured(page: Page, id: string, type: number) {
-  await expect
-    .poll(async () => {
-      const all = await objects(page, id);
-      const m = all.find((o) => o.type === type && o.intent?.endsWith('Dimension'));
-      const label = all.find((o) => o.inReplyToId === m?.id && o.replyType === GROUP);
-      return m && label && label.contents === m.contents ? m.contents : null;
-    })
-    .not.toBeNull();
+/**
+ * The measurement of `type` once its value is in (M14-03: one markup, its
+ * `measure` field set when made in this session; `fromFile`: read back).
+ */
+async function measured(page: Page, id: string, type: number, fromFile = false) {
+  const find = (all: Obj[]) =>
+    all.find(
+      (o) =>
+        o.type === type &&
+        o.intent?.endsWith('Dimension') &&
+        !!o.contents &&
+        (fromFile || !!o.measure),
+    );
+  await expect.poll(async () => find(await objects(page, id))?.contents ?? null).not.toBeNull();
   const all = await objects(page, id);
-  const m = all.find((o) => o.type === type && o.intent?.endsWith('Dimension'));
-  const label = all.find((o) => o.inReplyToId === m?.id);
-  if (!m || !label) throw new Error('measurement or label missing');
-  return { m, label };
+  const m = find(all);
+  if (!m) throw new Error('measurement missing');
+  // One markup: no text box grouped to it.
+  expect(all.filter((o) => o.inReplyToId === m.id && o.replyType === GROUP)).toEqual([]);
+  return { m };
 }
 
 async function contentsOf(page: Page, id: string, annot: string) {
@@ -113,13 +122,13 @@ const R = [
   { x: 100, y: 500 - 100 * MM },
 ];
 
-test('Distance at 1:100: live value, value and label, vertex edit in one undo step, saved and read back @smoke', async ({
+test('Length at 1:100: live value, one markup with its caption, vertex edit in one undo step, saved and read back @smoke', async ({
   page,
 }) => {
   const bytes = simplePdf(1);
   const id = await open(page, bytes);
   await setScale(page, '100', 'Metres', '2');
-  await tool(page, 'Distance');
+  await tool(page, 'Length');
 
   // M13-10: click the first point, click the second (the value next to the pointer, in
   // the page's scale), move sideways to set the dimension line, click to place it.
@@ -140,35 +149,30 @@ test('Distance at 1:100: live value, value and label, vertex edit in one undo st
   await expect(page.getByTestId('measure-live')).toBeHidden();
   await expect(page.getByTestId('measure-leaders')).toHaveCount(0);
 
-  const { m, label } = await measured(page, id, T.LINE);
+  const { m } = await measured(page, id, T.LINE);
   expect(m.contents).toMatch(/^\d+\.\d\d m$/);
-  expect(label.type).toBe(T.FREETEXT);
+  expect(m.measure).toEqual({ tool: 'length', cap: 'top' });
+  expect(m.subject).toBe('Length');
+  expect(await objects(page, id)).toHaveLength(1);
   // The measured points stay the line; the offset is the leader (40 pt, down the page).
   expect(m.linePoints?.start.y).toBeCloseTo(300, 0);
   expect(m.linePoints?.end.y).toBeCloseTo(300, 0);
   expect(m.leader?.ll).toBeCloseTo(40, 0);
-  // The label sits over the dimension line, not over the measured points.
-  expect((await objects(page, id)).find((o) => o.id === label.id)?.rect?.origin.y).toBeGreaterThan(
-    300,
-  );
+  // Its rect holds the dimension line 40 pt down the page and the caption beside it.
+  const r = (await objects(page, id)).find((o) => o.id === m.id)?.rect;
+  expect((r?.origin.y ?? 0) + (r?.size.height ?? 0)).toBeGreaterThan(340);
 
-  // A vertex edit re-values the measurement and its label; one undo takes all back.
+  // A vertex edit re-values the measurement and its caption; one undo takes all back.
   const before = m.contents;
   await cap(page, 'annotate', 'update', id, 0, m.id, {
     linePoints: { start: R[0], end: R[1] },
   });
   await expect.poll(() => contentsOf(page, id, m.id)).toBe('20.00 m');
-  await expect.poll(() => contentsOf(page, id, label.id)).toBe('20.00 m');
   await cap(page, 'annotate', 'undo', id);
   await expect.poll(() => contentsOf(page, id, m.id)).toBe(before);
-  await expect.poll(() => contentsOf(page, id, label.id)).toBe(before);
   await cap(page, 'annotate', 'redo', id);
   await expect.poll(() => contentsOf(page, id, m.id)).toBe('20.00 m');
-
-  // Selecting the label selects the measurement alone (its vertices stay editable).
   await page.keyboard.press('Escape');
-  await cap(page, 'annotate', 'select', id, 0, label.id);
-  await expect.poll(() => cap(page, 'annotate', 'selected', id)).toEqual([m.id]);
 
   const { file, tail } = await save(page, id, bytes);
   expect(tail).toMatch(/\/IT\s*\/LineDimension/);
@@ -176,24 +180,29 @@ test('Distance at 1:100: live value, value and label, vertex edit in one undo st
   expect(tail).toMatch(/\/R\s*\(1 m = 100 m\)/);
   expect(tail).toMatch(/\/Cap\s*true/);
   expect(tail).toMatch(/\/Contents\s*\(20\.00 m\)/);
-  expect(tail).toMatch(/\/RT\s*\/Group/);
+  expect(tail).toMatch(/\/CP\s*\/Top/);
+  expect(tail).not.toMatch(/\/RT\s*\/Group/);
+  expect(tail).not.toMatch(/\/FreeText/);
+  // Triya data in the page's /PieceInfo (D-74), the tool by name.
+  expect(tail).toMatch(/\/TriyaPDF/);
+  expect(tail).toMatch(/\/T\s*\/Length/);
   // The offset as the standard leader line entries, so other viewers draw it.
   expect(tail).toMatch(/\/LL\s+40(\.\d+)?\b/);
   expect(tail).toMatch(/\/LLE\s+3\b/);
 
   // Reopened: still a measurement with its value and its leader lines.
   const id2 = await open(page, file);
-  const back = await measured(page, id2, T.LINE);
+  const back = await measured(page, id2, T.LINE, true);
   expect(back.m.intent).toBe('LineDimension');
   expect(back.m.contents).toBe('20.00 m');
   expect(back.m.leader?.ll).toBeCloseTo(40, 0);
 });
 
-test('Distance: Esc drops a half-placed one; Enter places it with no offset; the old drag still works', async ({
+test('Length: Esc drops a half-placed one; Enter places it with no offset; the old drag still works', async ({
   page,
 }) => {
   const id = await open(page);
-  await tool(page, 'Distance');
+  await tool(page, 'Length');
   await expect(page.getByTestId('tool-hint')).toContainText('Click two points');
   const live = page.getByTestId('measure-live');
 
@@ -209,7 +218,7 @@ test('Distance: Esc drops a half-placed one; Enter places it with no offset; the
   await expect(live).toHaveCount(0);
   expect(await cap(page, 'annotate', 'list', id)).toEqual([]);
   await expect(
-    measureTab(page).getByRole('button', { name: 'Distance', exact: true }),
+    measureTab(page).getByRole('button', { name: 'Length', exact: true }),
   ).toHaveAttribute('aria-pressed', 'true');
 
   // Enter after the second point (pointer on the line): a plain dimension, no leader lines.
@@ -259,7 +268,9 @@ test('Perimeter and Area are placed by clicks: double-click, a click on the firs
   await page.mouse.move(c.x, c.y, { steps: 4 });
   await page.mouse.dblclick(c.x, c.y);
   const per = await measured(page, id, T.POLYLINE);
-  expect(per.m.vertices).toHaveLength(3);
+  // A Perimeter closes: its first vertex again at the end (ADR-035 Amendment 1).
+  expect(per.m.vertices).toHaveLength(4);
+  expect(per.m.measure?.tool).toBe('perimeter');
 
   await tool(page, 'Area');
   await expect(page.getByTestId('tool-hint')).toContainText('click the first one');
@@ -320,7 +331,6 @@ test('Perimeter and Area: click, Enter finishes; exact S2 values; a new scale re
   await setScale(page, '5', 'Millimetres', '1');
   await expect.poll(() => contentsOf(page, id, per.m.id)).toBe('3,000.0 mm');
   await expect.poll(() => contentsOf(page, id, area.m.id)).toBe('500,000.0 mm²');
-  await expect.poll(() => contentsOf(page, id, per.label.id)).toBe('3,000.0 mm');
 
   const { tail } = await save(page, id, bytes);
   expect(tail).toMatch(/\/IT\s*\/PolyLineDimension/);
@@ -368,7 +378,7 @@ test('without a scale the value is marked uncalibrated and no /Measure is writte
 }) => {
   const bytes = simplePdf(1);
   const id = await open(page, bytes);
-  await tool(page, 'Distance');
+  await tool(page, 'Length');
   const a = await at(page, 100, 300);
   const b = await at(page, 100 + 50 * MM, 300);
   await page.mouse.click(a.x, a.y);
@@ -390,7 +400,7 @@ test('an encrypted file (AES-256) saves its measurement with the measure keys', 
   const bytes = qpdfEncrypt(simplePdf(1), '', 'owner', ['256']);
   const id = await open(page, bytes);
   await setScale(page, '100', 'Metres', '2');
-  await tool(page, 'Distance');
+  await tool(page, 'Length');
   await clicks(page, [
     [100, 300],
     [300, 300],
@@ -399,7 +409,7 @@ test('an encrypted file (AES-256) saves its measurement with the measure keys', 
   const { m } = await measured(page, id, T.LINE);
   const { file } = await save(page, id, bytes);
   const id2 = await open(page, file);
-  const back = await measured(page, id2, T.LINE);
+  const back = await measured(page, id2, T.LINE, true);
   expect(back.m.contents).toBe(m.contents);
   expect(back.m.intent).toBe('LineDimension');
 });

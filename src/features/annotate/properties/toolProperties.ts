@@ -30,6 +30,10 @@ export const TOOL_NAME_KEYS: Record<StyleTool, MessageKey> = {
   highlightArea: msg('annotProps.toolName.highlightArea'),
   inkHighlighter: msg('annotProps.toolName.inkHighlighter'),
   textComment: msg('annotProps.toolName.textComment'),
+  measureLength: msg('annotProps.toolName.measureLength'),
+  measurePolylength: msg('annotProps.toolName.measurePolylength'),
+  measurePerimeter: msg('annotProps.toolName.measurePerimeter'),
+  measureArea: msg('annotProps.toolName.measureArea'),
 };
 
 /**

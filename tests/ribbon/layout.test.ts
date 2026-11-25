@@ -126,7 +126,8 @@ describe('ribbon layout from the command table (§8, ADR-001 B6, M1-Q2)', () => 
       'comment.cloud',
       'comment.stamp',
     ]);
-    expect(ids('measure')).toEqual(['measure.distance']);
+    // M14-03 (Q26): one Measure split button, the last measuring tool on its face.
+    expect(ids('measure')).toEqual(['measure.lastTool']);
     // Protect (3g): Sign Document instead of the Signatures pane.
     expect(ids('protect')).toEqual(['protect.signDocument']);
     const all = home?.groups.flatMap((g) => g.commands) ?? [];
@@ -223,7 +224,7 @@ describe('ribbon layout from the command table (§8, ADR-001 B6, M1-Q2)', () => 
       'comment.cloud',
       'comment.pencil',
     ]);
-    expect(ids('measure')).toEqual(['measure.distance', 'measure.perimeter', 'measure.area']);
+    expect(ids('measure')).toEqual(['measure.lastTool']);
     expect(ids('manage')).toEqual([
       'comment.commentsPane',
       'comment.importComments',

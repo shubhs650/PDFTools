@@ -102,7 +102,7 @@ describe('presets (M6-07, D-37, B5)', () => {
       // M7-07: black Courier.
       typewriter: ['black'],
     };
-    for (const tool of STYLE_TOOLS) {
+    for (const tool of PALETTE_TOOLS) {
       const current = presetsFor(tool).filter((p) => isCurrent(p.props, SHIPPED_DEFAULTS[tool]));
       expect(
         current.map((p) => p.id),
@@ -141,11 +141,14 @@ describe('presets (M6-07, D-37, B5)', () => {
     expect(presetsFor('textComment')[5]?.props).toEqual({ strokeColor: '#FFFF00' });
   });
 
-  it('the window lists every style tool once, each with its ribbon command', () => {
+  it('the window lists every comment style tool once, each with its ribbon command', () => {
     const listed = TOOL_GROUPS.flatMap((g) => g.tools);
-    expect([...listed].sort()).toEqual([...STYLE_TOOLS].sort());
+    expect([...listed].sort()).toEqual([...PALETTE_TOOLS].sort());
     expect(new Set(listed).size).toBe(listed.length);
-    for (const tool of STYLE_TOOLS) expect(TOOL_COMMANDS[tool]).toMatch(/^comment\./);
+    for (const tool of PALETTE_TOOLS) expect(TOOL_COMMANDS[tool]).toMatch(/^comment\./);
+    // M14-03 (Q41): the measuring tools remember a style but have no palette.
+    for (const tool of STYLE_TOOLS.filter((t) => !PALETTE_TOOLS.includes(t)))
+      expect(TOOL_COMMANDS[tool]).toMatch(/^measure\./);
   });
 });
 

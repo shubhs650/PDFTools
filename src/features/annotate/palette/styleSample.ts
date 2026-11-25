@@ -51,6 +51,10 @@ const FALLBACK: Readonly<Record<StyleTool, Record<string, unknown>>> = {
   highlightArea: { type: S.SQUARE },
   inkHighlighter: { type: S.INK, intent: 'InkHighlight' },
   textComment: { type: S.TEXT },
+  measureLength: { type: S.LINE, intent: 'LineDimension' },
+  measurePolylength: { type: S.POLYLINE, intent: 'PolyLineDimension' },
+  measurePerimeter: { type: S.POLYLINE, intent: 'PolyLineDimension' },
+  measureArea: { type: S.POLYGON, intent: 'PolygonDimension' },
 };
 
 /** `props` over the tool's current style, as an annotation object (no placement). */

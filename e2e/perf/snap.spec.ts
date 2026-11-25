@@ -26,7 +26,7 @@ test('snap RTT p95 ≤ 16 ms on the dense A0 sheet, also during another extracti
   await page.getByRole('tab', { name: 'Measure' }).click();
   await page
     .getByRole('toolbar', { name: 'Measure commands' })
-    .getByRole('button', { name: 'Distance', exact: true })
+    .getByRole('button', { name: 'Length', exact: true })
     .click();
   const box = await page.locator('[data-page="0"] .page-content').boundingBox();
   if (!box) throw new Error('page not laid out');

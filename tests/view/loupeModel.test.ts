@@ -87,18 +87,18 @@ describe('loupe settings', () => {
 // M13-02·O1 (D-68): View → Loupe shows the loupe in every tool; otherwise it
 // shows only with the tools it serves, while the Measure ribbon's Loupe is on.
 describe('loupeShown', () => {
-  const served = new Set(['measureDistance', 'calibrate']);
+  const served = new Set(['measureLength', 'calibrate']);
   it('shows with the served tools while the Measure loupe is on', () => {
-    expect(loupeShown(DEFAULT_LOUPE, 'measureDistance', served)).toBe(true);
+    expect(loupeShown(DEFAULT_LOUPE, 'measureLength', served)).toBe(true);
     expect(loupeShown(DEFAULT_LOUPE, 'calibrate', served)).toBe(true);
     expect(loupeShown(DEFAULT_LOUPE, 'select', served)).toBe(false);
-    expect(loupeShown({ ...DEFAULT_LOUPE, on: false }, 'measureDistance', served)).toBe(false);
+    expect(loupeShown({ ...DEFAULT_LOUPE, on: false }, 'measureLength', served)).toBe(false);
   });
   it('shows in every tool with View → Loupe, whatever the Measure loupe says', () => {
     const any = { ...DEFAULT_LOUPE, anywhere: true };
-    for (const tool of ['select', 'hand', 'highlight', 'measureDistance'])
+    for (const tool of ['select', 'hand', 'highlight', 'measureLength'])
       expect(loupeShown(any, tool, served)).toBe(true);
-    expect(loupeShown({ ...any, on: false }, 'measureDistance', served)).toBe(true);
+    expect(loupeShown({ ...any, on: false }, 'measureLength', served)).toBe(true);
   });
 });
 
@@ -106,10 +106,10 @@ describe('loupeShown', () => {
 // shown → off (both switches that show it here); hidden → on with the switch that
 // serves this tool (the Measure loupe for Measure and line tools, View › Loupe otherwise).
 describe('toggleLoupeHere', () => {
-  const served = new Set(['measureDistance', 'line']);
+  const served = new Set(['measureLength', 'line']);
   it('turns the Measure loupe on in a tool it serves', () => {
     const off = { ...DEFAULT_LOUPE, on: false };
-    expect(toggleLoupeHere(off, 'measureDistance', served)).toEqual({ on: true });
+    expect(toggleLoupeHere(off, 'measureLength', served)).toEqual({ on: true });
   });
   it('turns the Measure loupe off in a tool it serves', () => {
     expect(toggleLoupeHere(DEFAULT_LOUPE, 'line', served)).toEqual({ on: false });
@@ -123,7 +123,7 @@ describe('toggleLoupeHere', () => {
   });
   it('hides it in a served tool even when View › Loupe shows it', () => {
     const both = { ...DEFAULT_LOUPE, anywhere: true };
-    expect(toggleLoupeHere(both, 'measureDistance', served)).toEqual({
+    expect(toggleLoupeHere(both, 'measureLength', served)).toEqual({
       on: false,
       anywhere: false,
     });
@@ -135,7 +135,7 @@ describe('toggleLoupeHere', () => {
   it('always flips what the person sees', () => {
     for (const on of [true, false])
       for (const anywhere of [true, false])
-        for (const tool of ['measureDistance', 'select']) {
+        for (const tool of ['measureLength', 'select']) {
           const s = { ...DEFAULT_LOUPE, on, anywhere };
           const next = { ...s, ...toggleLoupeHere(s, tool, served) };
           expect(loupeShown(next, tool, served)).toBe(!loupeShown(s, tool, served));

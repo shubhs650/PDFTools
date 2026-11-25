@@ -1,6 +1,6 @@
 # Triya PDF — Progress
 
-_Last updated: 2026-11-25 (M14-01: spike S34, every measurement kind as one markup, the measure corpus and the interop pack, [ADR-035](adr/035-m14-measuring-overhaul.md) Amendment 1 accepted after the owner's interop check; M14-02: measuring that survives zoom and pan, Shift that still snaps, the no-scale question, the crossing warning, ADR-035 D-77 and D-78; M14 plan: measuring overhaul for 1.2.0 after the owner's 41-question interview, [docs/plan/M14.md](plan/M14.md), [ADR-035](adr/035-m14-measuring-overhaul.md), D-73 … D-79, ARCHITECTURE.md Rev 0.26). Earlier: 2026-11-24 (M13-10: measuring by clicks, Distance as a dimension with leader lines stored as /LL and /LLE, ADR-034 Amendment 3, D-72, ARCHITECTURE.md Rev 0.25; M13-09: Help for M13 with every picture made again, the loupe's key M, a shortcut sheet that lists every key, What's new and release notes for 1.1.0, Compare on in release builds, the release checks and the owner pack; M13 complete on the agent side; M13-08: the CRS template screens, the export dialog with project templates, four guided set-up steps beside a live sheet preview, the template manager; M13-02·O2: the loupe and snapping for Line, Arrow, Polyline and Callout comments; M13-02·O1: View › Loupe, the loupe in every tool; M13-01·O5: "Try comparing two revisions" on the start screen; M13-05: Thin Lines, every page line 1 device pixel wide on screen only, from a view-only copy in the Render worker; M13-07: the CRS project template engine and the CRS review corpus; M13-04: labelled status bar toggles, Previous / Next View in the status bar, one view history for the window, Distance with open arrows; M13-03: spike S32, Thin Lines route b, a view-only copy kept thin, ADR-034 Amendment 2; M13-02: the Measure loupe and automatic snapping; M13-06: spike S33, CRS project templates with ExcelJS, works with workaround, ADR-034 Amendment 1; M13-01: sample comparisons in the Compare input window; M13 plan approved: final improvements for 1.1.0, tasks M13-01 … M13-09, ADR-034, ARCHITECTURE.md Rev 0.24; M12-ux plan and ADR-033 recorded (tasks M12-24 … M12-27 all merged); M12-26: alignment made easy to find and first-time tips; M12-27: review in a comparison made easier; M12-25: room to work in a comparison; M12-24: the Compare input window made clearer; M12-23: M12 acceptance, M12 complete on the agent side; M12-22: Compare help and release notes; M12-21·O4: drop a tab on a tab; M12-20: the comparison file; M12-21: change register and presets)_
+_Last updated: 2026-11-25 (M14-03: Length, Polylength, Perimeter and Area as one markup each, the value drawn in its own appearance, Label, caption Above or In line, draggable captions, per-tool styles, the Measure split button on Home and Comment, and the "Update old measurements" bar for 1.1.0 files, ADR-035 D-73 and D-74; M14-01: spike S34, every measurement kind as one markup, the measure corpus and the interop pack, [ADR-035](adr/035-m14-measuring-overhaul.md) Amendment 1 accepted after the owner's interop check; M14-02: measuring that survives zoom and pan, Shift that still snaps, the no-scale question, the crossing warning, ADR-035 D-77 and D-78; M14 plan: measuring overhaul for 1.2.0 after the owner's 41-question interview, [docs/plan/M14.md](plan/M14.md), [ADR-035](adr/035-m14-measuring-overhaul.md), D-73 … D-79, ARCHITECTURE.md Rev 0.26). Earlier: 2026-11-24 (M13-10: measuring by clicks, Distance as a dimension with leader lines stored as /LL and /LLE, ADR-034 Amendment 3, D-72, ARCHITECTURE.md Rev 0.25; M13-09: Help for M13 with every picture made again, the loupe's key M, a shortcut sheet that lists every key, What's new and release notes for 1.1.0, Compare on in release builds, the release checks and the owner pack; M13 complete on the agent side; M13-08: the CRS template screens, the export dialog with project templates, four guided set-up steps beside a live sheet preview, the template manager; M13-02·O2: the loupe and snapping for Line, Arrow, Polyline and Callout comments; M13-02·O1: View › Loupe, the loupe in every tool; M13-01·O5: "Try comparing two revisions" on the start screen; M13-05: Thin Lines, every page line 1 device pixel wide on screen only, from a view-only copy in the Render worker; M13-07: the CRS project template engine and the CRS review corpus; M13-04: labelled status bar toggles, Previous / Next View in the status bar, one view history for the window, Distance with open arrows; M13-03: spike S32, Thin Lines route b, a view-only copy kept thin, ADR-034 Amendment 2; M13-02: the Measure loupe and automatic snapping; M13-06: spike S33, CRS project templates with ExcelJS, works with workaround, ADR-034 Amendment 1; M13-01: sample comparisons in the Compare input window; M13 plan approved: final improvements for 1.1.0, tasks M13-01 … M13-09, ADR-034, ARCHITECTURE.md Rev 0.24; M12-ux plan and ADR-033 recorded (tasks M12-24 … M12-27 all merged); M12-26: alignment made easy to find and first-time tips; M12-27: review in a comparison made easier; M12-25: room to work in a comparison; M12-24: the Compare input window made clearer; M12-23: M12 acceptance, M12 complete on the agent side; M12-22: Compare help and release notes; M12-21·O4: drop a tab on a tab; M12-20: the comparison file; M12-21: change register and presets)_
 
 **Next:** M14 — measuring overhaul for version 1.2.0, plan [docs/plan/M14.md](plan/M14.md) and
 [ADR-035](adr/035-m14-measuring-overhaul.md) **accepted by the owner** (2026-11-25), ARCHITECTURE.md
@@ -41,6 +41,43 @@ answers Q1–Q7; ARCHITECTURE.md Rev 0.12 after [ADR-024](adr/024-freetext-text-
 interop is in the M6 pack (CHECKLIST §M6 R1–R4). Rev 0 (M0–M4) is complete on the agent side.
 
 ## Done
+
+- **M14-03 — Length, Polylength, Perimeter and Area as one markup (D-73, D-74; ADR-035
+  Amendment 1; plan [M14](plan/M14.md) §3).**
+  - Length replaces Distance. Polylength (open) is new; Perimeter always closes (its PolyLine
+    repeats the first vertex). Each makes one Line, PolyLine or Polygon with `/IT`, `/Measure`,
+    `/Subj` = the tool's name, and the value in `/Contents` and in its own appearance: no FreeText.
+  - The Render worker draws the caption (Inter 10 pt, embedded subset), a Length's leader lines and
+    an Area's see-through fill into the markup's appearance (`workers/render/measureAppearance.ts`);
+    an Area keeps no `/IC`. A Length's caption is Above (`/CP /Top`) or In line (`/CP /Inline`, the
+    line broken under the text). Polylength and Perimeter values sit on the longest segment, an
+    Area's in the middle of the shape.
+  - Properties pane: a Measurement section with Label ("Slab S1: 42.5 m²"), Caption (Length) and
+    Put the caption back; an Area's fill is the Style section's Fill. A selected measurement's
+    caption can be dragged, or moved with the arrow keys (`/CO`). Label, fill and caption offset are
+    Triya data in the page `/PieceInfo` (`model/measureData.ts`), staged with every change for the
+    single Ctrl+S revision; other applications' entries are kept.
+  - Ribbon: the Measure tab has a Length group (Length, Polylength, Perimeter) and an Area group;
+    Home and Comment have one Measure split button, its face the last measuring tool used (this
+    session), its menu every measuring tool.
+  - Styles: each measuring tool remembers its colour, width, line ends and (Area) fill. Defaults:
+    red, open arrows on Length, butt ends elsewhere, a 20 % fill on areas. No style presets.
+  - A file with 1.1.0 measurements (a Line, PolyLine or Polygon plus a grouped FreeText) shows the
+    bar "Update old measurements" with its ×; one click turns every pair into one markup, one undo
+    step.
+  - While a measurement is selected the annotation plugin draws it from its points, so its caption
+    and fill are drawn over it (`SelectedMeasure.tsx`).
+  - Tests: unit tests of caption placement, the drag offset, the Triya data and pair detection;
+    the appearance through Ctrl+S on real PDFium (`tests/measure/measure-appearance.test.ts`); e2e
+    per tool, the Properties pane, the split button and the 1.1.0 bar, axe light and dark
+    (`e2e/measure-markups.spec.ts`); the interop file rebuilt from the real tools on the corpus
+    floor plan (`e2e/measure-interop-m14.spec.ts`, `M14_INTEROP_OUT`). Screenshots and the interop
+    file: `/mnt/project-files/m14-03/`.
+  - Open: a click inside an earlier measurement's rect while a measuring tool is on selects that
+    measurement instead of placing a point (as in 1.1.0); M14-04 (point editing) should look at
+    it. Shared caption font objects (Amendment 1 decision 2): each markup
+    embeds its own subset for now; moving the sharing to M14-07 (Count) is recommended and waits
+    for the owner's answer.
 
 - **M14-01 — Spike S34: every measurement kind as one markup; the measure corpus (D-74, D-79;
   ADR-035 Amendment 1, accepted by the owner; plan [M14](plan/M14.md) §1).** The measure corpus

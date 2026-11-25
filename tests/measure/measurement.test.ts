@@ -93,6 +93,14 @@ describe('object keys', () => {
     expect(k.set.Cap).toBe(true);
     expect(k.set.CP).toEqual({ name: 'Top' });
     expect(measureFromPdf(k.set.Measure)).toEqual(s100);
+    // No moved caption: no /CO (M14-03).
+    expect(k.remove).toEqual(['CO']);
+  });
+
+  it('a length caption in line, moved: /CP /Inline and /CO', () => {
+    const k = measureKeys('distance', s100, { place: 'inline', offset: { x: 1.234, y: -5 } });
+    expect(k.set.CP).toEqual({ name: 'Inline' });
+    expect(k.set.CO).toEqual([1.23, -5]);
     expect(k.remove).toEqual([]);
   });
 

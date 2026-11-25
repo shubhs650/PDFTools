@@ -2,6 +2,7 @@ import { useEffect } from 'react';
 import { documentStore, useDocuments } from '../../app/store/documentStore';
 import { PermissionBanner } from '../protect/PermissionBanner';
 import { XfaBanner } from '../forms/XfaBanner';
+import { OldMeasurementsBar } from '../measure/OldMeasurementsBar';
 import { SignatureBanner } from '../signatures/SignatureBanner';
 import { FindBar } from '../search/FindBar';
 import { ScalePrompt } from '../measure/ScalePrompt';
@@ -67,6 +68,7 @@ export function DocumentArea() {
             <PermissionBanner documentId={activeId} />
             <SignatureBanner documentId={activeId} />
             <XfaBanner documentId={activeId} />
+            <OldMeasurementsBar documentId={activeId} />
             <FindBar />
             <div className="document-stack-view">
               <DocumentView key={activeId} documentId={activeId} />

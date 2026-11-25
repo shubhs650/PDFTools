@@ -24,7 +24,7 @@ test('the loupe over the dense A1 plot plan: ≤ 1 request per frame, no long ta
   await page.getByRole('tab', { name: 'Measure' }).click();
   await page
     .getByRole('toolbar', { name: 'Measure commands' })
-    .getByRole('button', { name: 'Distance', exact: true })
+    .getByRole('button', { name: 'Length', exact: true })
     .click();
   // Picking Distance turned snapping on; wait for the page's geometry.
   await expect(page.getByTestId('snap-toggle')).toHaveAttribute('aria-pressed', 'true');

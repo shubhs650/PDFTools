@@ -211,7 +211,7 @@ test('every command M1 … M4 show has a handler: none says "Not available yet" 
     'comment.stamp',
     'comment.commentsPane',
     'comment.exportCrs',
-    'measure.distance',
+    'measure.length',
     'measure.area',
     'measure.setScale',
     'measure.scaleViewport',

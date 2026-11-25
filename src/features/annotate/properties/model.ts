@@ -12,6 +12,7 @@ import {
   type PdfAnnotationObject,
 } from '@embedpdf/models';
 import { libraryFamily, standardFont } from '../../../model/fonts/library';
+import { metaOf, type MeasureMeta } from '../../../model/measureMarkup';
 
 /** In grid order: Style, then Text, then the General texts. */
 export const PROPS = [
@@ -127,9 +128,20 @@ const hasBorder = (a: PdfAnnotationObject): boolean => {
   );
 };
 
+/**
+ * A measurement made as one markup (M14-03, D-74): its text and subject follow
+ * its value, label and tool, and an area's fill lives in its `measure` field.
+ */
+const measureOf = (a: PdfAnnotationObject): MeasureMeta | null => metaOf(a);
+const measureFill = (a: PdfAnnotationObject): boolean =>
+  a.type === S.POLYGON && measureOf(a) !== null;
+
 /** Whether `a` has property `p`. */
 export const has = (a: PdfAnnotationObject, p: Prop): boolean =>
-  TYPES[p].has(a.type) && !(p === 'rotation' && isCallout(a)) && !(p === 'border' && !hasBorder(a));
+  TYPES[p].has(a.type) &&
+  !(p === 'rotation' && isCallout(a)) &&
+  !(p === 'border' && !hasBorder(a)) &&
+  !((p === 'contents' || p === 'subject') && measureOf(a) !== null);
 
 /** Properties that are style (Copy/Apply Style, tool defaults), not content or placement. */
 const STYLE: readonly Prop[] = PROPS.filter(
@@ -195,6 +207,7 @@ function valueOf(a: PdfAnnotationObject, p: Prop): Plain | undefined {
     case 'border':
       return str('strokeColor');
     case 'fill':
+      if (measureFill(a)) return measureOf(a)?.fill ?? 'transparent';
       return str('color') ?? str('backgroundColor') ?? 'transparent';
     case 'opacity':
       return num('opacity') ?? 1;
@@ -276,9 +289,16 @@ export function patchFor(
     case 'border':
       out = { strokeColor: v };
       break;
-    case 'fill':
-      out = { color: v };
+    case 'fill': {
+      const meta = measureFill(a) ? measureOf(a) : null;
+      if (meta) {
+        const next: MeasureMeta = { ...meta };
+        if (v === 'transparent') delete next.fill;
+        else next.fill = String(v);
+        out = { color: 'transparent', measure: next };
+      } else out = { color: v };
       break;
+    }
     case 'opacity':
       out = { opacity: clamp(Number(v), 0, 1) };
       break;

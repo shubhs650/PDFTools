@@ -96,20 +96,28 @@ export function valueText(
 
 /**
  * What the object layer stages on the annotation: /IT always; /Measure RL when
- * there is a scale (removed when there isn't); /Cap and /CP /Top on lines, so
- * viewers that draw captions show /Contents on the line.
+ * there is a scale (removed when there isn't); on lines /Cap and /CP (Above,
+ * /Top, by default; In line, /Inline: M14-03, Q20), and /CO for a dragged
+ * caption (its offset along and across the line, ISO 32000-1 Table 175).
  */
 export function measureKeys(
   kind: Kind,
   scale: Scale | null,
+  caption: { place?: 'top' | 'inline'; offset?: Pt | null } = {},
 ): { set: Record<string, PdfJson>; remove: string[] } {
   const set: Record<string, PdfJson> = { IT: { name: MEASURE_INTENT[kind] } };
+  const remove: string[] = [];
   if (scale) set['Measure'] = measureToPdf(scale);
+  else remove.push('Measure');
   if (kind === 'distance') {
     set['Cap'] = true;
-    set['CP'] = { name: 'Top' };
+    set['CP'] = { name: caption.place === 'inline' ? 'Inline' : 'Top' };
+    const o = caption.offset;
+    if (o && (o.x !== 0 || o.y !== 0))
+      set['CO'] = [Math.round(o.x * 100) / 100, Math.round(o.y * 100) / 100];
+    else remove.push('CO');
   }
-  return { set, remove: scale ? [] : ['Measure'] };
+  return { set, remove };
 }
 
 export interface Rect {
