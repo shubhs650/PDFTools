@@ -25,7 +25,13 @@ import { measurePoints } from '../../model/measurement';
 import type { Pt } from '../../model/scale';
 import { useSelectedAnnotations } from '../annotate/selection';
 import { pageSizeOf, pointOnPage } from '../view/pagePoint';
-import { kindOf, measurementText, scaleForMeasurement, sheetText } from './measurements';
+import {
+  kindOf,
+  measurementText,
+  scaleForMeasurement,
+  sheetText,
+  withFileCurve,
+} from './measurements';
 import {
   commitEdit,
   pointEditStore,
@@ -87,7 +93,9 @@ function Ghost({ a, scale }: { a: PdfAnnotationObject; scale: number }) {
   const pts = measurePoints(a);
   const xy = (p: Pt): string => `${String(p.x * scale)},${String(p.y * scale)}`;
   let shape: ReactNode = null;
-  if (a.type === PdfAnnotationSubtype.LINE && pts[0] && pts[1]) {
+  if (a.type === PdfAnnotationSubtype.STAMP) {
+    // An Angle, Radius or Diameter: SelectedMeasure below draws it whole (M14-05).
+  } else if (a.type === PdfAnnotationSubtype.LINE && pts[0] && pts[1]) {
     const g = dimensionGeometry(pts[0], pts[1], leaderOf(a), true);
     shape = (
       <>
@@ -133,9 +141,11 @@ function Ghost({ a, scale }: { a: PdfAnnotationObject; scale: number }) {
   const r = a.rect;
   return (
     <>
-      <svg className="measure-edit-ghost" aria-hidden="true" opacity={o.opacity ?? 1}>
-        {shape}
-      </svg>
+      {shape ? (
+        <svg className="measure-edit-ghost" aria-hidden="true" opacity={o.opacity ?? 1}>
+          {shape}
+        </svg>
+      ) : null}
       <div
         className="measure-edit-caption"
         aria-hidden="true"
@@ -175,7 +185,8 @@ export function MeasureEditor({
   const preview = useEditPreview(active ? documentId : null);
   const drag = useRef<Drag | null>(null);
   const layer = useRef<HTMLDivElement>(null);
-  const a = sel.length === 1 ? sel[0] : undefined;
+  // A curve read from a file: its points from its Triya data (M14-05).
+  const a = sel.length === 1 && sel[0] ? withFileCurve(documentId, sel[0]) : undefined;
   const target = a?.pageIndex === pageIndex && tool === 'select' ? editTarget(documentId, a) : null;
   if (!a || !target) return null;
   const shown = preview?.id === a.id ? preview.object : a;

@@ -68,7 +68,7 @@ import { layoutOf, scaleChoice, scaleOfChoice } from '../../model/scaleViewport'
 import { isReplaying, joinStep, outsideHistory } from '../annotate/historyJoin';
 import { capability, hostStore, renderEngine } from '../view/host';
 import { dimensionRect } from './dimensionTool';
-import { fileMeta, fileStyle, stagePageData } from './pageData';
+import { fileMeta, fileStyle, setCurveScaleSource, stagePageData } from './pageData';
 import { layoutFor, readEntries, scaleStore, takeScaleNote } from './scaleStore';
 import { showScaleNote } from './scaleNote';
 import { frameOf } from './viewports';
@@ -214,6 +214,18 @@ export function metaFor(
   return tool === 'length' && cp === 'Inline' ? { tool, cap: 'inline' } : { tool };
 }
 
+/**
+ * An Angle, Radius or Diameter read from a file (M14-05): the Stamp keeps
+ * neither its points nor its style, so they come from its Triya data (D-74),
+ * for drawing and editing it. Anything else comes back as it is.
+ */
+export function withFileCurve(docId: string, a: PdfAnnotationObject): PdfAnnotationObject {
+  if (a.type !== PdfAnnotationSubtype.STAMP || metaOf(a)) return a;
+  const meta = fileMeta(docId, a);
+  if (!meta || !isCurveTool(meta.tool) || (meta.pts?.length ?? 0) < 2) return a;
+  return { ...a, ...fileStyle(docId, a), measure: meta } as PdfAnnotationObject;
+}
+
 /** The measuring tool a measurement was made with (null: not one). */
 export function toolOf(docId: string, a: PdfAnnotationObject): MeasureTool | null {
   const own = metaOf(a);
@@ -339,7 +351,11 @@ function refresh(registry: PluginRegistry, docId: string, id: string, how: 'join
   // An Angle, Radius or Diameter read from a file has its points in the file's Triya data.
   const a =
     found && isCurveKind(kind) && !metaOf(stored)
-      ? ({ ...stored, ...fileStyle(docId, stored), measure: found } as unknown as PdfAnnotationObject)
+      ? ({
+          ...stored,
+          ...fileStyle(docId, stored),
+          measure: found,
+        } as unknown as PdfAnnotationObject)
       : stored;
   // A curve whose points are gone (another editor reshaped it): kept as drawn, with its text.
   if (isCurveKind(kind) && measurePoints(a).length < 2) return;
@@ -449,6 +465,8 @@ function followers(registry: PluginRegistry, docId: string, page: number): strin
 
 /** Called once the plugin registry is up (DocumentHost); returns the unsubscribe. */
 export function installMeasurements(registry: PluginRegistry): () => void {
+  // A curve's Triya entry records the scale it was valued in (pageData.ts).
+  setCurveScaleSource(scaleForMeasurement);
   let cap: AnnotationCapability;
   try {
     cap = capability<AnnotationCapability>(registry, 'annotation');

@@ -105,7 +105,7 @@ export function curveDrawer(tool: CurveTool): Drawer {
         measure,
         created: new Date(),
       } as unknown as PdfStampAnnoObject;
-      context.onCommit(annotation as PdfAnnotationObject, {
+      context.onCommit(annotation, {
         data: BLANK_STAMP_PDF.slice().buffer,
         mimeType: 'application/pdf',
       } as never);

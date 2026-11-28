@@ -2,14 +2,28 @@ import { useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
 import { format } from '../../i18n';
 import { leaderOf } from '../../model/dimension';
-import { labelAnchor, measurePoints, toUserSpace, valueText } from '../../model/measurement';
+import { isCurveTool } from '../../model/measureCurve';
+import {
+  isCurveKind,
+  labelAnchor,
+  measurePoints,
+  measuredValue,
+  toUserSpace,
+  valueText,
+} from '../../model/measurement';
 import { liveScale, scaleOfChoice } from '../../model/scaleViewport';
 import { useAnnotationMap } from '../annotate/comments/commentsStore';
-import { choiceFor, kindOf } from './measurements';
+import { CurveShapeSvg } from './CurveShape';
+import { choiceFor, curveWords, kindOf } from './measurements';
 import { useDocuments } from '../../app/store/documentStore';
 import { useMeasure } from './measureStore';
 import { layoutFor, useScales } from './scaleStore';
 import { frameOf } from './viewports';
+
+const CURRENT = 'currentColor';
+
+/** Its test id (not shown). */
+const LIVE_ID = 'measure-curve-live';
 
 /**
  * The value of the measurement being drawn, next to the pointer (M3-16,
@@ -36,6 +50,14 @@ export function MeasureOverlay({
   // a point is in another scale area (M14-02, D-77, Q30).
   const live2 = useMemo(() => {
     if (!live || live.pts.length < 2) return null;
+    // An Angle or a curve by three points has no value until its last point.
+    if (isCurveKind(live.kind) && !Number.isFinite(measuredValue(live.kind, live.pts, null)))
+      return null;
+    // An Angle needs no scale (Q9), so where it is drawn does not matter.
+    if (live.kind === 'angle') {
+      const v = valueText('angle', live.pts, null, format, curveWords);
+      return { text: v.value, warning: false };
+    }
     const layout = entry
       ? layoutFor({ docs: { [documentId]: entry } }, documentId, pageIndex)
       : { pageDefault: null, details: [] };
@@ -44,7 +66,7 @@ export function MeasureOverlay({
       return { text: t('measure.live.crosses', { name: where.name }), warning: true };
     if (where.kind === 'leaves')
       return { text: t('measure.live.leaves', { name: where.name }), warning: true };
-    const v = valueText(live.kind, live.pts, scaleOfChoice(where.choice), format);
+    const v = valueText(live.kind, live.pts, scaleOfChoice(where.choice), format, curveWords);
     return {
       text: v.calibrated ? v.value : t('measure.uncalibrated', { value: v.value }),
       warning: false,
@@ -76,9 +98,20 @@ export function MeasureOverlay({
     // entry: viewports changed → re-evaluate.
   }, [byUid, hasDetails, documentId, pageIndex, entry]); // eslint-disable-line react-hooks/exhaustive-deps
   const at = live?.at ?? live?.pts[live.pts.length - 1];
-  if ((!text || !at) && spans.length === 0) return null;
+  const curve = live && isCurveTool(live.kind) ? live.kind : null;
+  if ((!text || !at) && spans.length === 0 && !curve) return null;
   return (
     <div className="measure-overlay" aria-hidden="true">
+      {live && curve ? (
+        <CurveShapeSvg
+          tool={curve}
+          pts={live.pts}
+          color={live.color ?? CURRENT}
+          width={live.width ?? 1}
+          scale={scale}
+          data-testid={LIVE_ID}
+        />
+      ) : null}
       {live?.leaders ? (
         // A Distance's leader lines while its offset is set (M13-10); the plugin
         // previews the dimension line itself.

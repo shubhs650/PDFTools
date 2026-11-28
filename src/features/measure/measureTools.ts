@@ -183,7 +183,7 @@ function curveTool(
     pointerHandler: wrapFactory(id, curveHandlerFactory(tool, id), undefined, {
       anchor: anchorFor(id),
     }),
-  } as unknown as Parameters<AnnotationCapability['addTool']>[0];
+  };
 }
 
 /** Called once the plugin registry is up, before installDrawTools rewraps the base tools. */

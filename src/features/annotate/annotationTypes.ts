@@ -8,7 +8,8 @@ import {
   type PdfAnnotationObject,
 } from '@embedpdf/models';
 import { msg, type MessageKey } from '../../i18n';
-import { measureKind } from '../../model/measurement';
+import type { CurveTool } from '../../model/measureCurve';
+import { curveKind, measureKind } from '../../model/measurement';
 import type { CrsType } from '../../model/crs/template';
 
 /** Every type id's display name (`annotate.type.<id>`). */
@@ -61,8 +62,19 @@ export function annotationTypeId(a: PdfAnnotationObject): CrsType {
   return measureKind(a) ?? TYPE[a.type] ?? 'other';
 }
 
+/**
+ * An Angle, Radius or Diameter (M14-05) is a Stamp in the file and to the CRS
+ * template, but is named as the measurement it is.
+ */
+const CURVE_KEYS: Record<CurveTool, MessageKey> = {
+  angle: msg('annotate.type.angle'),
+  radius: msg('annotate.type.radius'),
+  diameter: msg('annotate.type.diameter'),
+};
+
 export function annotationTypeKey(a: PdfAnnotationObject): MessageKey {
-  return TYPE_KEYS[annotationTypeId(a)];
+  const curve = curveKind(a);
+  return curve ? CURVE_KEYS[curve] : TYPE_KEYS[annotationTypeId(a)];
 }
 
 const ARROW_ENDS: ReadonlySet<End> = new Set([

@@ -25,7 +25,15 @@ import {
 import { frameOf } from './viewports';
 
 /** Measurements of a size: they need a scale. */
-const SIZED: ReadonlySet<GestureKind> = new Set(['distance', 'polylength', 'perimeter', 'area']);
+const SIZED: ReadonlySet<GestureKind> = new Set([
+  'distance',
+  'polylength',
+  'perimeter',
+  'area',
+  // A Radius or Diameter is a length; an Angle needs no scale (M14-05, Q9).
+  'circle2',
+  'circle3',
+]);
 
 interface PromptState {
   /** Pages asked already, per document ("docId/page"), for the session. */

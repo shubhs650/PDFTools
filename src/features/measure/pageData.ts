@@ -142,7 +142,8 @@ export function itemsFor(
     const meta = metaOf(a);
     if (meta && isCurveTool(meta.tool) && isStamp(a)) {
       // The points go in the entry's own keys, in user space.
-      const { pts: _pts, ...rest } = meta;
+      const rest = { ...meta };
+      delete rest.pts;
       out.set(
         a.id,
         entryToPdf({ meta: rest, fp: fingerprintOf(docId, a), curve: curveEntry(docId, a, meta) }),

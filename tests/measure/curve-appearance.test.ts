@@ -144,10 +144,15 @@ async function create(doc: PdfDocumentObject, annot: Record<string, unknown>) {
   const args: unknown[] = [doc, page, annot];
   const f = await prepareMeasureCaption(faces, 'createPageAnnotation', args);
   await native
-    .createPageAnnotation(doc, page, annot as never, {
-      data: BLANK_STAMP_PDF.slice().buffer,
-      mimeType: 'application/pdf',
-    } as never)
+    .createPageAnnotation(
+      doc,
+      page,
+      annot as never,
+      {
+        data: BLANK_STAMP_PDF.slice().buffer,
+        mimeType: 'application/pdf',
+      } as never,
+    )
     .toPromise();
   const outcome = applyMeasureAppearance(mod, native, 'createPageAnnotation', args, f);
   tracker.recordMutation('createPageAnnotation', args);
@@ -199,14 +204,17 @@ describe('Angle, Radius and Diameter are one Stamp with their own appearance (M1
     expect(
       inkIn(
         doc.id,
-        [(c.x + mid.x) / 2 - 1, (c.y + mid.y) / 2 - 1, (c.x + mid.x) / 2 + 1, (c.y + mid.y) / 2 + 1],
+        [
+          (c.x + mid.x) / 2 - 1,
+          (c.y + mid.y) / 2 - 1,
+          (c.x + mid.x) / 2 + 1,
+          (c.y + mid.y) / 2 + 1,
+        ],
         red,
       ),
     ).toBe(true);
     const d = await open(simplePdf(1));
-    expect(
-      await create(d, curve('d1', { tool: 'diameter', pts }, 'Ø 160.0 mm')),
-    ).toBe('drawn');
+    expect(await create(d, curve('d1', { tool: 'diameter', pts }, 'Ø 160.0 mm'))).toBe('drawn');
     expect(inkIn(d.id, [p200.x - 1.5, p200.y - 1.5, p200.x + 1.5, p200.y + 1.5], red)).toBe(true);
   });
 
@@ -227,7 +235,9 @@ describe('Angle, Radius and Diameter are one Stamp with their own appearance (M1
     };
     const args = [doc, page, moved, { regenerateAppearance: false }];
     expect(measureCallOf('updatePageAnnotation', args)).toBeNull();
-    await native.updatePageAnnotation(doc, page, moved as never, { regenerateAppearance: false }).toPromise();
+    await native
+      .updatePageAnnotation(doc, page, moved as never, { regenerateAppearance: false })
+      .toPromise();
     expect(inkIn(doc.id, [350, 399, 360, 401], red)).toBe(true);
     expect(inkIn(doc.id, [250, 299, 260, 301], red)).toBe(false);
   });
@@ -282,7 +292,9 @@ describe('a curve’s Triya data (M14-05)', () => {
     );
     const [p] = await r.pages();
     const pi = p?.dict.get('PieceInfo');
-    const back = entryFromPdf(readItems(pi === undefined ? null : toJson((await r.resolve(pi)) ?? null)).get('r9'));
+    const back = entryFromPdf(
+      readItems(pi === undefined ? null : toJson((await r.resolve(pi)) ?? null)).get('r9'),
+    );
     expect(back?.meta).toEqual({ tool: 'radius', label: 'Bend B', shape: 'circle' });
     expect(back?.curve?.pts[0]?.x).toBeCloseTo(100.123, 3);
     expect(back?.curve?.rect).toEqual([40, 190, 160, 310]);
@@ -291,7 +303,13 @@ describe('a curve’s Triya data (M14-05)', () => {
   });
 
   it('moved elsewhere (same size) its points move with it; resized, they are dropped', () => {
-    const saved = { pts: [{ x: 10, y: 10 }, { x: 20, y: 10 }], rect: [0, 0, 30, 20] as [number, number, number, number] };
+    const saved = {
+      pts: [
+        { x: 10, y: 10 },
+        { x: 20, y: 10 },
+      ],
+      rect: [0, 0, 30, 20] as [number, number, number, number],
+    };
     expect(curvePointsNow(saved, [0, 0, 30, 20])).toEqual(saved.pts);
     expect(curvePointsNow(saved, [100, 50, 130, 70])).toEqual([
       { x: 110, y: 60 },

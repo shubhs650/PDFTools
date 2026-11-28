@@ -138,7 +138,8 @@ export function metaOf(a: unknown): MeasureMeta | null {
 const samePts = (a: readonly Pt[] | undefined, b: readonly Pt[] | undefined): boolean =>
   (a?.length ?? 0) === (b?.length ?? 0) &&
   (a ?? []).every(
-    (p, i) => Math.abs(p.x - (b?.[i]?.x ?? NaN)) < 1e-3 && Math.abs(p.y - (b?.[i]?.y ?? NaN)) < 1e-3,
+    (p, i) =>
+      Math.abs(p.x - (b?.[i]?.x ?? NaN)) < 1e-3 && Math.abs(p.y - (b?.[i]?.y ?? NaN)) < 1e-3,
   );
 
 /** Two metas say the same. */

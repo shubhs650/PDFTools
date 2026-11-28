@@ -1473,7 +1473,10 @@
       "other": "Comment",
       "distance": "Length measurement",
       "perimeter": "Polylength or perimeter measurement",
-      "area": "Area measurement"
+      "area": "Area measurement",
+      "angle": "Angle measurement",
+      "radius": "Radius measurement",
+      "diameter": "Diameter measurement"
     },
     "anonymous": "Anonymous",
     "caret": {
@@ -2002,7 +2005,14 @@
       "above": "Above the line",
       "inline": "In the line",
       "resetCaption": "Put the caption back",
-      "captionMoved": "The caption was moved."
+      "captionMoved": "The caption was moved.",
+      "noScaleNeeded": "An angle needs no scale.",
+      "shape": "Shown as",
+      "shapeArc": "The arc through the points",
+      "shapeCircle": "The whole circle",
+      "method": "Pick by",
+      "methodCentre": "Centre, then a point on the edge",
+      "methodThree": "Three points on the curve"
     },
     "captionDrag": {
       "handle": "Move the caption of this measurement"

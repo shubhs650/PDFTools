@@ -27,7 +27,10 @@ function arcBand(cx: number, cy: number, r: number, a0: number, a1: number, k: n
   const n = 12;
   const at = (rr: number, t: number): Pt => [cx + rr * Math.cos(t), cy + rr * Math.sin(t)];
   const ts = Array.from({ length: n + 1 }, (_, i) => a0 + ((a1 - a0) * i) / n);
-  return poly([...ts.map((t) => at(r + w / 2, t)), ...ts.reverse().map((t) => at(r - w / 2, t))], k);
+  return poly(
+    [...ts.map((t) => at(r + w / 2, t)), ...ts.reverse().map((t) => at(r - w / 2, t))],
+    k,
+  );
 }
 
 /** The corner and the arms of the Angle icon: along the bottom, and up to the right. */

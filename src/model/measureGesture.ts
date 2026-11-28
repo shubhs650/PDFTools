@@ -13,13 +13,7 @@ import { offsetOf, type Pt } from './dimension';
  * (centre, edge: 'circle2') or three on the curve ('circle3') (M14-05).
  */
 export type GestureKind =
-  | 'distance'
-  | 'polylength'
-  | 'perimeter'
-  | 'area'
-  | 'angle'
-  | 'circle2'
-  | 'circle3';
+  'distance' | 'polylength' | 'perimeter' | 'area' | 'angle' | 'circle2' | 'circle3';
 
 /** The kinds placed by a fixed number of clicks, and that number (M14-05). */
 const FIXED: Partial<Record<GestureKind, number>> = { angle: 3, circle2: 2, circle3: 3 };

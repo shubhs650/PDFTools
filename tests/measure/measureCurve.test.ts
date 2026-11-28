@@ -201,6 +201,8 @@ describe('the drawing', () => {
     const circle = arcOps({ c: P(0, 0), r: 10, a0: 0, a1: 2 * Math.PI }, f);
     expect(circle.match(/ c/gu)).toHaveLength(4);
     expect(arcPath({ c: P(0, 0), r: 10, a0: 0, a1: 2 * Math.PI }, 1)).toMatch(/A10 10 0 1 1/u);
-    expect(arcPath({ c: P(0, 0), r: 10, a0: 0, a1: Math.PI / 2 }, 2)).toBe('M20 0 A20 20 0 0 1 0 20');
+    expect(arcPath({ c: P(0, 0), r: 10, a0: 0, a1: Math.PI / 2 }, 2)).toBe(
+      'M20 0 A20 20 0 0 1 0 20',
+    );
   });
 });

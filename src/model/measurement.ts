@@ -24,8 +24,7 @@ import {
  */
 export type MeasureKind = Kind | CurveTool;
 
-export const isCurveKind = (k: MeasureKind | null | undefined): k is CurveTool =>
-  isCurveTool(k);
+export const isCurveKind = (k: MeasureKind | null | undefined): k is CurveTool => isCurveTool(k);
 
 /** /IT per kind (ISO 32000-1 §12.5.6.7, 12.5.6.9). */
 export const MEASURE_INTENT: Record<Kind, string> = {
@@ -102,7 +101,16 @@ export function measuredValue(kind: MeasureKind, pts: readonly Pt[], scale: Scal
   if (isCurveTool(kind)) {
     const v = curveValue(kind, pts) ?? Number.NaN;
     // Degrees need no scale; a radius or diameter is a length on the page.
-    return kind === 'angle' ? v : measure('distance', [{ x: 0, y: 0 }, { x: v, y: 0 }], scale ?? PAPER);
+    return kind === 'angle'
+      ? v
+      : measure(
+          'distance',
+          [
+            { x: 0, y: 0 },
+            { x: v, y: 0 },
+          ],
+          scale ?? PAPER,
+        );
   }
   return measure(kind === 'perimeter' ? 'distance' : kind, [...pts], scale ?? PAPER);
 }

@@ -102,8 +102,7 @@ const nums = (j: PdfJson | undefined): number[] | null =>
 function curveFromPdf(d: Dict): CurveEntry | null {
   const p = nums(d['P']);
   const r = nums(d['Rc']);
-  if (!p || !r || r.length !== 4 || p.length % 2 !== 0 || p.length < 4 || p.length > 6)
-    return null;
+  if (!p || r?.length !== 4 || p.length % 2 !== 0 || p.length < 4 || p.length > 6) return null;
   const pts: Pt[] = [];
   for (let i = 0; i < p.length; i += 2) pts.push({ x: p[i] ?? 0, y: p[i + 1] ?? 0 });
   const out: CurveEntry = { pts, rect: r as Box };
