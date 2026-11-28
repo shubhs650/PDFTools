@@ -9,6 +9,7 @@ import {
   type PdfAnnotationObject,
 } from '@embedpdf/models';
 import type { MessageKey } from '../../../i18n';
+import { measureKind } from '../../../model/measurement';
 import { annotationTypeKey } from '../annotationTypes';
 
 /** Not comments: links (link layer), form fields, popups (a markup's window). */
@@ -31,6 +32,8 @@ export interface Comment {
   status: PdfAnnotationState | null;
   /** /F Locked (M6-05: the card shows a lock). */
   locked: boolean;
+  /** A measurement (/IT LineDimension, PolyLineDimension, PolygonDimension; M14-08, Q34). */
+  measure: boolean;
   /** What Find looks in (M6-05): contents, author, subject and every reply, lower case. */
   search: string;
   annot: PdfAnnotationObject;
@@ -139,6 +142,7 @@ export function commentsOf(all: readonly PdfAnnotationObject[]): Comment[] {
       replies: replies.get(a.id) ?? 0,
       status: states.get(a.id)?.state ?? null,
       locked: a.flags?.includes('locked') ?? false,
+      measure: measureKind(a) !== null,
       search: [contents, a.author ?? '', subjectOf(a), ...(replyText.get(a.id) ?? [])]
         .join('\n')
         .toLocaleLowerCase(),
@@ -157,6 +161,8 @@ export interface CommentFilter {
   statuses?: readonly (PdfAnnotationState | 'none')[];
   /** Find (M6-05, set on Enter only — rule 3): words in the text, author, subject or replies. */
   text?: string;
+  /** false hides measurements (M14-08, Q34: they stay in the pane unless this is set). */
+  measurements?: boolean;
 }
 
 export type CommentSort = 'page' | 'date' | 'author' | 'type';
@@ -216,6 +222,7 @@ export function matches(c: Comment, f: CommentFilter): boolean {
   if (f.types?.length && !f.types.includes(c.type)) return false;
   if (f.pages && (c.page < f.pages[0] || c.page > f.pages[1])) return false;
   if (f.statuses?.length && !f.statuses.includes(c.status ?? 'none')) return false;
+  if (f.measurements === false && c.measure) return false;
   if (f.text) {
     const words = findText(f.text).split(/\s+/u).filter(Boolean);
     if (!words.every((w) => c.search.includes(w))) return false;
@@ -230,6 +237,7 @@ export function isFiltered(f: CommentFilter): boolean {
     (f.types?.length ?? 0) > 0 ||
     f.pages !== undefined ||
     (f.statuses?.length ?? 0) > 0 ||
+    f.measurements === false ||
     findText(f.text ?? '') !== ''
   );
 }

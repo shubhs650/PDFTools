@@ -26,6 +26,8 @@ export interface TemplateExportOptions {
   ignoreHighlights: boolean;
   snapshots: boolean;
   format: 'xlsx' | 'csv';
+  /** "Include measurements" (M14-08, Q34); absent: off. */
+  measurements?: boolean;
 }
 
 export const FIELD_KEYS: Record<CrsField, MessageKey> = {

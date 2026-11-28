@@ -19,7 +19,8 @@ const MM = 72 / 25.4;
 const H = 842; // simplePdf is A4: user y → EmbedPDF y = H - y
 
 const measureTab = (page: Page) => page.getByRole('toolbar', { name: 'Measure commands' });
-const props = (page: Page) => page.getByTestId('properties-pane');
+/** The Measurements pane's Scales section (M14-08: it replaced the Properties pane's list). */
+const scales = (page: Page) => page.getByTestId('measure-scales');
 const objects = async (page: Page, id: string) =>
   ((await cap(page, 'annotate', 'objects', id)) as Obj[] | null) ?? [];
 
@@ -34,11 +35,18 @@ async function open(page: Page, bytes: Uint8Array): Promise<string> {
   return id;
 }
 
-/** View → Properties Pane, then back to Measure (the viewport list shows there). */
+/** View → Properties Pane, then back to Measure (a measurement's scale shows there). */
 async function propertiesPane(page: Page) {
   await page.getByRole('tab', { name: 'View' }).click();
   await page.getByRole('button', { name: 'Properties Pane', exact: true }).click();
   await page.getByRole('tab', { name: 'Measure' }).click();
+}
+
+/** The Measurements pane in the left rail (M14-08), with its Scales section. */
+async function measurementsPane(page: Page) {
+  if (await scales(page).isVisible()) return;
+  await page.locator('[data-rail="rail.measurements"] button').click();
+  await expect(scales(page)).toBeVisible();
 }
 
 async function setScale(page: Page) {
@@ -96,10 +104,12 @@ test('Detail A 1:5: added from the keyboard, plate measured inside, a spanning l
   const id = await open(page, bytes);
   await setScale(page);
   await propertiesPane(page);
-  await expect(props(page)).toContainText('No scale viewports on this page.');
+  await measurementsPane(page);
+  await expect(scales(page)).toContainText('1 : 100');
+  await expect(page.getByTestId('measure-viewport')).toHaveCount(0);
 
-  // Keyboard path: Add viewport in the Properties pane, box typed.
-  await props(page).getByRole('button', { name: 'Add viewport' }).click();
+  // Keyboard path: Add viewport in the Scales section, box typed.
+  await scales(page).getByRole('button', { name: 'Add viewport' }).click();
   const dialog = page.getByRole('dialog', { name: 'Scale viewport' });
   await expect(dialog.getByLabel('Name')).toHaveValue('Detail A');
   await dialog.getByLabel('Left').fill('300');
@@ -113,7 +123,7 @@ test('Detail A 1:5: added from the keyboard, plate measured inside, a spanning l
   await expect(dialog.getByRole('status')).toHaveText('Scale 1 : 5');
   await dialog.getByRole('button', { name: 'Save' }).click();
   await expect(dialog).toBeHidden();
-  await expect(props(page)).toContainText('Detail A · 1 : 5');
+  await expect(scales(page)).toContainText('Detail A · 1 : 5');
   await expect(page.getByTestId('viewport-outline')).toHaveCount(1);
   await expect(page.getByTestId('viewport-outline')).toContainText('Detail A 1 : 5');
 
@@ -130,7 +140,7 @@ test('Detail A 1:5: added from the keyboard, plate measured inside, a spanning l
   // Undo removes the viewport (the plate is re-valued at the page scale), redo restores it.
   await cap(page, 'annotate', 'select', id, 0, plate);
   await page.keyboard.press('Escape');
-  await props(page).getByRole('button', { name: 'Edit Detail A' }).click();
+  await scales(page).getByRole('button', { name: 'Edit Detail A' }).click();
   await page
     .getByRole('dialog', { name: 'Edit scale viewport' })
     .getByLabel('Real', { exact: true })
@@ -159,8 +169,8 @@ test('Detail A 1:5: added from the keyboard, plate measured inside, a spanning l
 
   // Reopened: the viewport is read back and listed; the plate keeps its value.
   const id2 = await open(page, Buffer.concat([Buffer.from(bytes), tail]));
-  await propertiesPane(page);
-  await expect(props(page)).toContainText('Detail A · 1 : 10');
+  await measurementsPane(page);
+  await expect(scales(page)).toContainText('Detail A · 1 : 10');
   await expect
     .poll(async () => (await objects(page, id2)).map((o) => o.contents))
     .toContain('800.0 mm');
@@ -184,8 +194,8 @@ test('the Scale Viewport tool: drag a rectangle, the dialog opens with its box; 
   await expect(dialog.getByLabel('Top')).toHaveValue(/^74[12]/);
   await dialog.getByRole('button', { name: 'Save' }).click();
   await expect(page.getByTestId('viewport-outline')).toHaveCount(1);
-  await propertiesPane(page);
-  await props(page).getByRole('button', { name: 'Delete Detail A' }).click();
+  await measurementsPane(page);
+  await scales(page).getByRole('button', { name: 'Delete Detail A' }).click();
   await expect(page.getByTestId('viewport-outline')).toHaveCount(0);
   await cap(page, 'annotate', 'undo', id);
   await expect(page.getByTestId('viewport-outline')).toHaveCount(1);

@@ -50,6 +50,7 @@ function rowsOf(
     settings: tpl,
     filter: o.scope === 'filtered' ? viewOf(commentsStore.getState(), docId).filter : null,
     ignoreHighlights: o.ignoreHighlights,
+    measurements: o.measurements === true,
     typeLabel: (a) => t(TYPE_KEYS[crsTypeId(a)]),
     date: (x) => format.date(x),
     discipline: (author) => (author === profile?.name ? profile.discipline : ''),

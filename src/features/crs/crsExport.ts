@@ -40,6 +40,8 @@ export interface CrsOptions {
   scope: 'all' | 'filtered';
   snapshots: boolean;
   format: 'xlsx' | 'csv';
+  /** "Include measurements" (M14-08, Q34): off by default. */
+  measurements: boolean;
 }
 
 interface CrsState {
@@ -129,6 +131,7 @@ export async function openCrs(docId: string): Promise<void> {
       scope: 'all',
       snapshots: true,
       format: 'xlsx',
+      measurements: false,
     },
   });
 }
@@ -159,6 +162,7 @@ function rowsFor(docId: string, o: CrsOptions) {
     date: (x) => format.date(x),
     discipline: (author) => (author === profile?.name ? profile.discipline : ''),
     noAuthor: t('annotate.noAuthor'),
+    measurements: o.measurements,
   });
 }
 

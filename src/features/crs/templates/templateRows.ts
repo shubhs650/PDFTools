@@ -41,6 +41,8 @@ export interface TemplateRowOptions {
   filter?: CommentFilter | null;
   /** The export dialog's own Ignore highlights (defaults to the template's). */
   ignoreHighlights?: boolean;
+  /** Measurements in the rows (M14-08, Q34); absent: included. */
+  measurements?: boolean;
   typeLabel(a: PdfAnnotationObject): string;
   date(d: Date): string;
   discipline(author: string): string;
@@ -98,6 +100,7 @@ export function templateRows(
   const picked = commentsOf(all).filter(
     (c) =>
       (!o.filter || matches(c, o.filter)) &&
+      (o.measurements !== false || !c.measure) &&
       o.settings.types[crsTypeId(c.annot)] &&
       !(ignore && isHighlight(c.annot)),
   );

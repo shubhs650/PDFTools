@@ -104,8 +104,16 @@ interface Options {
   ignoreHighlights: boolean;
   snapshots: boolean;
   format: 'xlsx';
+  /** M14-08 (Q34): off by default; on here, so the corpus's distance measurement is a row. */
+  measurements: boolean;
 }
-const xlsx: Options = { scope: 'all', ignoreHighlights: true, snapshots: true, format: 'xlsx' };
+const xlsx: Options = {
+  scope: 'all',
+  ignoreHighlights: true,
+  snapshots: true,
+  format: 'xlsx',
+  measurements: true,
+};
 
 async function exported(
   page: Page,
@@ -198,7 +206,7 @@ test('the review corpus fills the project templates: every comment kind, status,
       'Polyline',
       'Pencil drawing',
       'Stamp',
-      'Distance measurement',
+      'Length measurement',
     ]),
   );
   const byText = (rows: Record<string, unknown>[], start: string) => {

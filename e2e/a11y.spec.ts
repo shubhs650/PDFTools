@@ -215,6 +215,7 @@ for (const [variant, url] of [
     for (const pane of [
       'rail.thumbnails',
       'rail.bookmarks',
+      'rail.measurements',
       'rail.search',
       'rail.attachments',
       'rail.layers',
@@ -298,14 +299,16 @@ for (const [variant, url] of [
     await page.waitForTimeout(200);
     await axe(page, 'Comments pane');
 
-    // Properties pane: the measurement, and the Measure tab's viewport list.
+    // Properties pane: the measurement; the Measurements pane with its Scales section (M14-08).
     await run('view.propertiesPane');
     await cap(page, 'annotate', 'select', id, 0, line);
     await expect(page.getByTestId('measure-info')).toBeVisible();
     await page.locator('#ribbon-tab-measure').click();
-    await expect(page.locator('.viewport-list')).toBeVisible();
-    await axe(page, 'Properties pane (measurement, viewports)');
-    await page.locator('.viewport-list > button').click();
+    await axe(page, 'Properties pane (measurement)');
+    await run('rail.measurements');
+    await expect(page.getByTestId('measure-list')).toBeVisible();
+    await axe(page, 'Measurements pane');
+    await page.getByTestId('measure-scales').getByRole('button', { name: 'Add viewport' }).click();
     await expect(page.getByRole('dialog')).toBeVisible();
     await axe(page, 'dialog scale viewport');
     await page.keyboard.press('Escape');
