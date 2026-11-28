@@ -1,6 +1,6 @@
 import { Delete20Regular } from '@fluentui/react-icons/svg/delete';
 import { Edit20Regular } from '@fluentui/react-icons/svg/edit';
-import { useMemo } from 'react';
+import { useId, useMemo, type KeyboardEvent } from 'react';
 import { useTranslation } from 'react-i18next';
 import { securityOf, useDocuments } from '../../../app/store/documentStore';
 import { format } from '../../../i18n';
@@ -9,8 +9,22 @@ import { ratioLabel } from '../../../model/scale';
 import { coversPage, layoutOf, normBox, type Box } from '../../../model/scaleViewport';
 import { Button, IconButton } from '../../../ui/components';
 import { entriesOf, mediaBoxOf, openScaleDialog, readEntries, useScales } from '../scaleStore';
-import { addViewport, defaultBox, deleteViewport, editViewport } from '../viewports';
-import { showViewport, useMeasurePane, type PaneScope } from './measureEntries';
+import { addViewport, defaultBox, deleteViewport, editViewport, nudgeViewport } from '../viewports';
+import {
+  clearPickedViewport,
+  showViewport,
+  useMeasurePane,
+  type PaneScope,
+} from './measureEntries';
+
+const STEP = 1;
+const BIG_STEP = 10;
+const ARROWS: Record<string, { x: number; y: number }> = {
+  ArrowLeft: { x: -1, y: 0 },
+  ArrowRight: { x: 1, y: 0 },
+  ArrowUp: { x: 0, y: -1 },
+  ArrowDown: { x: 0, y: 1 },
+};
 
 interface ViewportItem {
   index: number;
@@ -31,7 +45,9 @@ interface PageScales {
  * neither are left out, except the current page); a click on a viewport shows
  * and selects it on its page. Replaces the Properties pane's viewport list
  * (M3-17) as the keyboard path to set a page's scale and to add, edit and
- * delete viewports. This page shows the current page only.
+ * delete viewports. This page shows the current page only. From the keyboard
+ * (M14-09, Q36) a viewport's button also moves it on its page with the arrow
+ * keys (Shift: 10 pt) and Delete removes it.
  */
 export function ScalesSection({
   docId,
@@ -43,6 +59,7 @@ export function ScalesSection({
   scope: PaneScope;
 }) {
   const { t } = useTranslation();
+  const hintId = useId();
   const entry = useScales((s) => s.docs[docId]);
   const picked = useMeasurePane((s) => s.viewport);
   const canEdit = useDocuments((s) => {
@@ -91,6 +108,9 @@ export function ScalesSection({
       <h3 id="mpane-scales-title" className="mpane-scales-title">
         {t('measurements.scales')}
       </h3>
+      <span id={hintId} hidden>
+        {t('measurements.viewportHint')}
+      </span>
       {!entry || entry === 'loading' ? (
         <p className="pane-empty">{t('measurements.loading')}</p>
       ) : entry === 'failed' ? (
@@ -136,8 +156,24 @@ export function ScalesSection({
                             className={`mpane-viewport-show${isPicked ? ' is-selected' : ''}`}
                             aria-pressed={isPicked}
                             data-testid="measure-viewport"
+                            aria-describedby={canEdit ? hintId : undefined}
                             onClick={() => {
                               showViewport(docId, p.page, v.index, v.bbox);
+                            }}
+                            onKeyDown={(e: KeyboardEvent<HTMLButtonElement>) => {
+                              if (!canEdit || e.ctrlKey || e.metaKey || e.altKey) return;
+                              if (e.key === 'Delete') {
+                                deleteViewport(docId, p.page, v.index);
+                                clearPickedViewport();
+                              } else {
+                                const dir = ARROWS[e.key];
+                                if (!dir) return;
+                                const n = e.shiftKey ? BIG_STEP : STEP;
+                                if (!isPicked) showViewport(docId, p.page, v.index, v.bbox);
+                                nudgeViewport(docId, p.page, v.index, dir.x * n, dir.y * n);
+                              }
+                              e.preventDefault();
+                              e.stopPropagation();
                             }}
                           >
                             {v.text}

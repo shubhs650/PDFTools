@@ -219,14 +219,23 @@ export async function applyScale(
   for (const page of pages) {
     const p = d.pages[page];
     if (!p) continue;
-    const others = entriesOf(st, docId, page).filter((entry) => {
+    // The new whole-page viewport takes the place of the first earlier one, so
+    // the detail viewports keep their places in the list (a viewport picked on
+    // the page stays picked, M14-09); a page without one gets it at the end.
+    const whole = viewportToPdf({ name: PAGE_VIEWPORT_NAME, bbox: p.mediaBox, scale });
+    const list: PdfJson[] = [];
+    let placed = false;
+    for (const entry of entriesOf(st, docId, page)) {
       const [vp] = viewportsFromPdf([entry]);
-      return !vp || !(vp.name === PAGE_VIEWPORT_NAME || coversPage(vp.bbox, p.mediaBox));
-    });
-    lists.set(page, [
-      ...others,
-      viewportToPdf({ name: PAGE_VIEWPORT_NAME, bbox: p.mediaBox, scale }),
-    ]);
+      if (!vp || !(vp.name === PAGE_VIEWPORT_NAME || coversPage(vp.bbox, p.mediaBox))) {
+        list.push(entry);
+      } else if (!placed) {
+        list.push(whole);
+        placed = true;
+      }
+    }
+    if (!placed) list.push(whole);
+    lists.set(page, list);
   }
   const ok = await changeScales(docId, lists);
   if (ok)

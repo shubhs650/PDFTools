@@ -4710,6 +4710,7 @@ textarea.form-field {
 
 .viewport-outline {
   position: absolute;
+  box-sizing: border-box;
   border: 1px dashed var(--color-accent);
 }
 
@@ -4732,6 +4733,101 @@ textarea.form-field {
   color: var(--color-text-on-brand);
   font-size: var(--font-size-xs);
   white-space: nowrap;
+}
+
+/* On the Measure tab with Select (M14-09): borders, labels and handles take
+   the pointer; the inside of a viewport stays the page's. Over the plugin's
+   selection box (z-index 1), under a measurement's own handles. */
+.viewport-layer--editable {
+  z-index: 2;
+}
+
+.viewport-edge {
+  position: absolute;
+  cursor: move;
+  pointer-events: auto;
+  touch-action: none;
+}
+
+.viewport-edge--n,
+.viewport-edge--s {
+  right: -4px;
+  left: -4px;
+  height: 8px;
+}
+
+.viewport-edge--e,
+.viewport-edge--w {
+  top: -4px;
+  bottom: -4px;
+  width: 8px;
+}
+
+.viewport-edge--n {
+  top: -4px;
+}
+
+.viewport-edge--s {
+  bottom: -4px;
+}
+
+.viewport-edge--e {
+  right: -4px;
+}
+
+.viewport-edge--w {
+  left: -4px;
+}
+
+.viewport-label--button {
+  margin: var(--space-0);
+  border: 0;
+  font: inherit;
+  font-size: var(--font-size-xs);
+  line-height: inherit;
+  cursor: move;
+  pointer-events: auto;
+  touch-action: none;
+}
+
+.viewport-outline[data-dragging] {
+  border-style: solid;
+}
+
+.viewport-handle {
+  position: absolute;
+  width: 9px;
+  height: 9px;
+  padding: var(--space-0);
+  border: 2px solid var(--color-accent);
+  background: var(--color-surface-raised);
+  pointer-events: auto;
+  touch-action: none;
+  transform: translate(-50%, -50%);
+}
+
+.viewport-handle:hover {
+  background: var(--color-accent);
+}
+
+.viewport-handle--nw,
+.viewport-handle--se {
+  cursor: nwse-resize;
+}
+
+.viewport-handle--ne,
+.viewport-handle--sw {
+  cursor: nesw-resize;
+}
+
+.viewport-handle--n,
+.viewport-handle--s {
+  cursor: ns-resize;
+}
+
+.viewport-handle--e,
+.viewport-handle--w {
+  cursor: ew-resize;
 }
 
 /* ------------------------------------------------------------ redaction (M4-16) */

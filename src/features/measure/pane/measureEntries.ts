@@ -3,7 +3,7 @@
 // document reading, rule 1) and the page scales the Work worker handed back
 // (scaleStore), as the pane's model takes it (model/measureList.ts). Also the
 // pane's own choices (This page or All pages) and the scale viewport selected
-// from its Scales section, which the page outlines show (M14-09 edits it).
+// from its Scales section or on the page (M14-09), which the page outlines show.
 import type { PdfAnnotationObject } from '@embedpdf/models';
 import { createStore, useStore } from 'zustand';
 import { documentStore } from '../../../app/store/documentStore';
@@ -12,10 +12,11 @@ import { measureEntry, type MeasureEntry } from '../../../model/measureList';
 import { measurePoints } from '../../../model/measurement';
 import { ratioLabel, type Scale } from '../../../model/scale';
 import type { Box } from '../../../model/scaleViewport';
+import { samePick } from '../../../model/viewportEdit';
 import { annotationCapability } from '../../annotate/selection';
 import { goToPoint } from '../../view/controller';
 import { choiceFor, metaFor, toolOf, type MeasureChoice } from '../measurements';
-import { entriesOf, scaleStore } from '../scaleStore';
+import { entriesOf, mediaBoxOf, scaleStore } from '../scaleStore';
 import { rectOfBox } from '../viewports';
 
 /** Where a measurement's scale comes from, short: "Detail A · 1 : 5", "1 : 100", "No scale". */
@@ -119,13 +120,16 @@ export function clearPickedViewport(): void {
   if (measurePaneStore.getState().viewport) measurePaneStore.setState({ viewport: null });
 }
 
-// The pick goes when its page's viewports change (an index may then name
-// another one), its document closes, or a click lands anywhere but the Scales
-// section (M14-09 adds selecting on the page itself).
+// The pick goes when its page's viewports change so that its index may name
+// another one, its document closes, or a click lands anywhere but the Scales
+// section or a viewport on the page (M14-09).
 scaleStore.subscribe((s, prev) => {
   const v = measurePaneStore.getState().viewport;
   if (!v || s.docs === prev.docs) return;
-  if (entriesOf(s, v.docId, v.page) !== entriesOf(prev, v.docId, v.page)) clearPickedViewport();
+  const before = entriesOf(prev, v.docId, v.page);
+  const after = entriesOf(s, v.docId, v.page);
+  if (before === after) return;
+  if (!samePick(before, after, v.index, mediaBoxOf(s, v.docId, v.page))) clearPickedViewport();
 });
 documentStore.subscribe((s) => {
   const v = measurePaneStore.getState().viewport;
@@ -137,7 +141,7 @@ if (typeof document !== 'undefined')
     (e) => {
       if (!measurePaneStore.getState().viewport) return;
       const el = e.target instanceof Element ? e.target : null;
-      if (!el?.closest('.mpane-scales')) clearPickedViewport();
+      if (!el?.closest('.mpane-scales, [data-viewport-ui]')) clearPickedViewport();
     },
     true,
   );
