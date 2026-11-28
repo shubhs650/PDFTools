@@ -14,6 +14,7 @@ import { textMenuFromEvent } from '../annotate/textMenu';
 import { selectedTextMenu, snippetOf } from '../select/selectedText';
 import { onTextSelectionAt, selectedQuery, textSelectionOf } from '../select/textSelection';
 import { imageAt } from '../pageImage/pageImage';
+import { pointFromRightClick } from '../measure/pointEdit';
 import {
   commentMenu,
   IMAGE_ITEMS,
@@ -109,6 +110,13 @@ export function DocumentMenu({
       return;
     }
     const at = pagePointAt(documentId, e.clientX, e.clientY);
+    // A right-click on the selected measurement's edge adds a point, on a
+    // point removes it (M14-04, Q24); the keys still open the comment menu.
+    if (e.nativeEvent.isTrusted && pointFromRightClick(documentId, at)) {
+      e.preventDefault();
+      e.stopPropagation();
+      return;
+    }
     // On selected text, or from the keys while text is selected: the text menu.
     const onText = e.nativeEvent.isTrusted
       ? onTextSelectionAt(documentId, e.clientX, e.clientY)

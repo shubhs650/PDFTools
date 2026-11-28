@@ -1985,6 +1985,17 @@
     "captionDrag": {
       "handle": "Move the caption of this measurement"
     },
+    "edit": {
+      "point": "Point {{n}} of {{count}}: drag it, or move it with the arrow keys",
+      "pointRemovable": "Point {{n}} of {{count}}: drag it, or move it with the arrow keys; Delete removes it",
+      "line": "Dimension line: drag it, or move it with the arrow keys"
+    },
+    "scaleNote": {
+      "name": "Measurements updated",
+      "text_one": "{{count}} measurement updated to the new scale.",
+      "text_other": "{{count}} measurements updated to the new scale.",
+      "undo": "Undo"
+    },
     "oldBar": {
       "name": "Measurements from an earlier version",
       "text_one": "This file has {{count}} measurement saved by an earlier version of {{app}}, with its value in a separate text box. Other PDF editors treat the two as separate items.",

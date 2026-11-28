@@ -15,6 +15,7 @@ import { allows } from '../../model/permissions';
 import { isFixed } from '../annotate/properties/model';
 import { useSelectedAnnotations } from '../annotate/selection';
 import { setMeasureMeta } from './measurements';
+import { useEditPreview } from './pointEdit';
 
 const STEP = 1;
 const BIG_STEP = 10;
@@ -38,9 +39,19 @@ export function CaptionHandle({
   const sel = useSelectedAnnotations(active ? documentId : null);
   const drag = useRef<{ id: number; x: number; y: number } | null>(null);
   const [moved, setMoved] = useState<Pt | null>(null);
+  // A point being dragged (M14-04): the preview has its own caption.
+  const dragging = useEditPreview(active ? documentId : null) !== null;
   const a = sel.length === 1 ? sel[0] : undefined;
   const meta = a ? metaOf(a) : null;
-  if (!a || !meta || a.pageIndex !== pageIndex || !canEdit || isFixed(a) || tool !== 'select')
+  if (
+    !a ||
+    !meta ||
+    dragging ||
+    a.pageIndex !== pageIndex ||
+    !canEdit ||
+    isFixed(a) ||
+    tool !== 'select'
+  )
     return null;
   const pts = measurePoints(a);
   const leader = leaderOf(a);
@@ -69,7 +80,7 @@ export function CaptionHandle({
     height: (box[3] - box[1]) * scale,
   };
   return (
-    <div className="caption-handle-layer">
+    <div className="caption-handle-layer" data-no-interaction>
       {moved ? (
         <div
           className="caption-handle-ghost"

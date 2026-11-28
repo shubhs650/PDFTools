@@ -10,7 +10,7 @@ import { Loupe, type LoupeJob } from '../view/loupe/Loupe';
 import { LOUPE_SIDES, loupeShown, type LoupeRegion } from '../view/loupe/loupeModel';
 import { useThinLines } from '../view/thinLines';
 import { useLoupeSettings } from './loupeSettings';
-import { LOUPE_TOOLS, pageFrame, useLoupePointer } from './loupePointer';
+import { LOUPE_TOOLS, pageFrame, useLoupeEditing, useLoupePointer } from './loupePointer';
 import { useSnapping } from './snapping';
 
 /** For the tests: the loupe's own element. */
@@ -50,8 +50,10 @@ export function MeasureLoupe() {
       ? s.marker
       : null,
   );
+  // Dragging a measurement's point (M14-04, D-78): the Measure loupe in Select too.
+  const editing = useLoupeEditing();
   const frame =
-    pointer && loupeShown(settings, tool, LOUPE_TOOLS)
+    pointer && (loupeShown(settings, tool, LOUPE_TOOLS) || (editing && settings.on))
       ? pageFrame(pointer.docId, pointer.page)
       : null;
   const page = pointer?.page ?? 0;

@@ -47,9 +47,19 @@ export interface LoupePointer {
   client: Pt;
 }
 
-export const loupeStore = createStore<{ pointer: LoupePointer | null }>()(() => ({
+export const loupeStore = createStore<{
+  pointer: LoupePointer | null;
+  /** A point of a placed measurement is being dragged (M14-04): the loupe shows in Select too. */
+  editing: boolean;
+}>()(() => ({
   pointer: null,
+  editing: false,
 }));
+
+/** A measurement's point is being dragged (M14-04, D-78). */
+export function useLoupeEditing(): boolean {
+  return useStore(loupeStore, (s) => s.editing);
+}
 
 export function useLoupePointer(): LoupePointer | null {
   return useStore(loupeStore, (s) => s.pointer);
