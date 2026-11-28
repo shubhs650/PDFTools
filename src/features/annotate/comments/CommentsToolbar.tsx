@@ -183,6 +183,18 @@ export function CommentsToolbar({
         },
         { kind: 'separator', id: 'show-sep' },
         {
+          // M14-08 (Q34): measurements stay in the list; this hides or shows them.
+          kind: 'checkbox',
+          id: 'measurements',
+          label: t('comments.measurements'),
+          checked: f.measurements !== false,
+          onCheckedChange: (on) => {
+            const rest = { ...f };
+            delete rest.measurements;
+            setFilter(on ? rest : { ...rest, measurements: false });
+          },
+        },
+        {
           kind: 'checkbox',
           id: 'this-page',
           label: t('comments.thisPage'),

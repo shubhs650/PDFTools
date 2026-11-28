@@ -345,6 +345,7 @@ export const FLUENT_GLYPHS: Record<string, FluentGlyphs> = {
   'rail.bookmarks': { regular: { small: Bookmark20Regular }, filled: { small: Bookmark20Filled } },
   'rail.thumbnails': { regular: { small: SlideMultiple20Regular }, filled: { small: SlideMultiple20Filled } },
   'rail.comments': { regular: { small: CommentMultiple20Regular }, filled: { small: CommentMultiple20Filled } },
+  'rail.measurements': { regular: { small: Ruler20Regular }, filled: { small: Ruler20Filled } },
   'rail.attachments': { regular: { small: Attach20Regular }, filled: { small: Attach20Filled } },
   'rail.signatures': { regular: { small: Signature20Regular }, filled: { small: Signature20Filled } },
   'rail.search': { regular: { small: Search20Regular }, filled: { small: Search20Filled } },

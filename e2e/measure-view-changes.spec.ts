@@ -330,11 +330,9 @@ test('Set scale from the question: the dialog is for that page and the measureme
 test('crossing into a detail viewport turns the live value into a warning', async ({ page }) => {
   await open(page, simplePdf(1));
   await setScale(page);
-  await page.getByRole('tab', { name: 'View' }).click();
-  await page.getByRole('button', { name: 'Properties Pane', exact: true }).click();
-  await page.getByRole('tab', { name: 'Measure' }).click();
-  const props = page.getByTestId('properties-pane');
-  await props.getByRole('button', { name: 'Add viewport' }).click();
+  // The Measurements pane's Scales section (M14-08).
+  await page.locator('[data-rail="rail.measurements"] button').click();
+  await page.getByTestId('measure-scales').getByRole('button', { name: 'Add viewport' }).click();
   const dialog = page.getByRole('dialog', { name: 'Scale viewport' });
   // User space 300…550 × 600…800: page points y 42…242 from the top (A4, 842 pt).
   await dialog.getByLabel('Left').fill('300');

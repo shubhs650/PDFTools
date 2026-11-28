@@ -130,6 +130,7 @@ function CrsForm({ docId, initial }: { docId: string; initial: CrsOptions }) {
       ignoreHighlights,
       snapshots: o.snapshots,
       format: o.format,
+      measurements: o.measurements,
     });
   };
 
@@ -332,6 +333,17 @@ function CrsForm({ docId, initial }: { docId: string; initial: CrsOptions }) {
             {t('crs.ignoreHighlights')}
           </label>
         ) : null}
+        <label className="scale-radio">
+          <input
+            type="checkbox"
+            checked={o.measurements}
+            disabled={!!running}
+            onChange={(e) => {
+              set('measurements', e.currentTarget.checked);
+            }}
+          />
+          {t('crs.includeMeasurements')}
+        </label>
         <fieldset className="scale-where">
           <legend className="ui-field-label">{t('crs.format')}</legend>
           {radio('format', 'xlsx', t('crs.xlsx'))}

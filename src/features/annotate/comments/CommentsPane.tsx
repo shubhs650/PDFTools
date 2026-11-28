@@ -276,6 +276,12 @@ function FilterChips({ docId, view }: { docId: string; view: CommentsView }) {
           (f.statuses ?? []).filter((x) => x !== s),
         ),
     });
+  if (f.measurements === false)
+    chips.push({
+      key: 'measurements',
+      label: t('comments.chip.noMeasurements'),
+      clear: () => without('measurements'),
+    });
   if (f.pages)
     chips.push({
       key: 'pages',

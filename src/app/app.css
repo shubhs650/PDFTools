@@ -4717,6 +4717,12 @@ textarea.form-field {
   border-style: solid;
 }
 
+/* The viewport picked in the Measurements pane's Scales section (M14-08). */
+.viewport-outline--picked {
+  /* Outline only: the drawing under it stays readable. */
+  border: var(--focus-width) solid var(--color-accent);
+}
+
 .viewport-label {
   position: absolute;
   bottom: 100%;
@@ -5200,32 +5206,6 @@ textarea.form-field {
   display: grid;
   gap: var(--space-2);
   padding: var(--space-3);
-}
-
-.viewport-list {
-  display: grid;
-  gap: var(--space-2);
-  padding: var(--space-3);
-  border-top: 1px solid var(--color-border);
-}
-
-.viewport-items {
-  display: grid;
-  gap: var(--space-1);
-  margin: var(--space-0);
-  padding: var(--space-0);
-  list-style: none;
-}
-
-.viewport-item {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  gap: var(--space-1);
-}
-
-.viewport-item-text {
-  flex: 1 1 100%;
 }
 
 .viewport-box {
@@ -10045,4 +10025,279 @@ textarea.form-field {
   .crs-setup-step[aria-current='step'] {
     outline: 3px solid Highlight;
   }
+}
+
+/* ------------------------------------------------------------ measurements pane (M14-08, D-76) */
+
+.measurements-pane {
+  /* Fills the pane body and scrolls as one, the Scales section under the list. */
+  position: absolute;
+  inset: var(--space-0);
+  display: flex;
+  flex-direction: column;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+}
+
+/* This page or All pages: two radio buttons drawn as one segmented control. */
+.mpane-scope {
+  display: flex;
+  margin: var(--density-pad-y) var(--density-pad-x);
+  padding: var(--space-1);
+  border: var(--border-width) solid var(--color-border-strong);
+  border-radius: var(--radius-l);
+  background: var(--color-surface);
+}
+
+.mpane-scope-option {
+  position: relative;
+  display: inline-flex;
+  flex: 1;
+  justify-content: center;
+  padding: var(--space-1) var(--space-3);
+  border-radius: var(--radius-m);
+  font-size: var(--font-size-s);
+  cursor: pointer;
+}
+
+.mpane-scope-option input {
+  position: absolute;
+  inset: var(--space-0);
+  margin: var(--space-0);
+  border-radius: inherit;
+  opacity: 0;
+  cursor: pointer;
+}
+
+.mpane-scope-option:has(input:checked) {
+  background: var(--color-selected);
+  color: var(--color-selected-text);
+  font-weight: var(--font-weight-semibold);
+}
+
+.mpane-scope-option:has(input:focus-visible) {
+  outline: var(--focus-width) solid var(--color-focus);
+  outline-offset: var(--focus-offset);
+}
+
+.mpane-list {
+  display: grid;
+  gap: var(--space-3);
+  padding: var(--space-1) var(--density-pad-x) var(--density-pad-y);
+}
+
+.mpane-list:focus-visible {
+  outline: var(--focus-width) solid var(--color-focus);
+  outline-offset: calc(-1 * var(--focus-width));
+}
+
+.mpane-group {
+  display: grid;
+  gap: var(--space-1);
+}
+
+.mpane-group-head {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-1) var(--space-3);
+  align-items: baseline;
+  justify-content: space-between;
+  padding: var(--space-1) var(--space-0);
+  border-bottom: var(--border-width) solid var(--color-border);
+  font-size: var(--font-size-s);
+}
+
+.mpane-group-name {
+  font-weight: var(--font-weight-semibold);
+}
+
+.mpane-group-count {
+  color: var(--color-text-muted);
+  font-weight: var(--font-weight-regular);
+}
+
+.mpane-group-totals {
+  display: grid;
+  justify-items: end;
+  color: var(--color-text);
+  font-variant-numeric: tabular-nums;
+}
+
+.mpane-group-total:first-child {
+  font-weight: var(--font-weight-semibold);
+}
+
+.mpane-group-total + .mpane-group-total {
+  color: var(--color-text-muted);
+}
+
+.mpane-row {
+  display: grid;
+  gap: var(--space-1);
+  padding: var(--space-2) var(--space-3);
+  border: var(--border-width) solid var(--color-border);
+  border-radius: var(--radius-m);
+  background: var(--color-surface);
+  cursor: pointer;
+  transition: background-color var(--duration-fast) var(--ease-out);
+}
+
+.mpane-row:hover {
+  background: var(--color-hover);
+}
+
+.mpane-row.is-selected {
+  border-color: var(--color-accent);
+  background: var(--color-selected);
+}
+
+.mpane-list:focus-visible .mpane-row.is-active {
+  outline: var(--focus-width) solid var(--color-focus);
+  outline-offset: calc(-1 * var(--focus-width));
+}
+
+.mpane-row-value {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-1) var(--space-2);
+  align-items: baseline;
+}
+
+.mpane-row-label {
+  font-weight: var(--font-weight-semibold);
+}
+
+.mpane-row-number {
+  font-variant-numeric: tabular-nums;
+}
+
+.mpane-row-number.is-none {
+  color: var(--color-text-muted);
+  font-style: italic;
+}
+
+.mpane-row-meta {
+  color: var(--color-text-muted);
+  font-size: var(--font-size-s);
+}
+
+.mpane-row-flags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-1);
+}
+
+.mpane-flag {
+  padding: var(--space-0) var(--space-2);
+  border: var(--border-width) solid var(--color-border-strong);
+  border-radius: var(--radius-round);
+  color: var(--color-text-muted);
+  font-size: var(--font-size-xs);
+}
+
+.mpane-flag--warning {
+  border-color: var(--color-danger);
+  color: var(--color-danger);
+}
+
+.mpane-flag--warning::before {
+  content: '\26A0\FE0E  ';
+}
+
+.measurements-count {
+  margin: var(--space-0);
+  padding: var(--space-0) var(--density-pad-x) var(--density-pad-y);
+  color: var(--color-text-muted);
+  font-size: var(--font-size-s);
+}
+
+.measurements-count:empty {
+  display: none;
+}
+
+.mpane-scales {
+  display: grid;
+  gap: var(--space-2);
+  margin-top: auto;
+  padding: var(--density-pad-y) var(--density-pad-x);
+  border-top: var(--border-width) solid var(--color-border);
+}
+
+.mpane-scales > .ui-button {
+  justify-self: start;
+}
+
+.mpane-scales-title {
+  margin: var(--space-0);
+  font-size: var(--font-size-m);
+  font-weight: var(--font-weight-semibold);
+}
+
+.mpane-scale-pages,
+.mpane-viewports {
+  display: grid;
+  gap: var(--space-1);
+  margin: var(--space-0);
+  padding: var(--space-0);
+  list-style: none;
+}
+
+.mpane-scale-page {
+  display: grid;
+  gap: var(--space-1);
+}
+
+.mpane-scale-head,
+.mpane-viewport {
+  display: flex;
+  gap: var(--space-2);
+  align-items: center;
+  min-height: var(--control-height-s);
+}
+
+.mpane-scale-name {
+  flex: 1;
+  min-width: var(--space-0);
+}
+
+.mpane-scale-current {
+  color: var(--color-text-muted);
+  font-size: var(--font-size-s);
+}
+
+.mpane-scale-ratio {
+  color: var(--color-text-muted);
+  font-variant-numeric: tabular-nums;
+}
+
+.mpane-viewports {
+  padding-inline-start: var(--space-4);
+}
+
+.mpane-viewport-show {
+  flex: 1;
+  min-width: var(--space-0);
+  min-height: var(--control-height-s);
+  padding: var(--space-0) var(--space-2);
+  border: var(--border-width) solid transparent;
+  border-radius: var(--radius-m);
+  background: transparent;
+  color: var(--color-text);
+  font: inherit;
+  text-align: start;
+  cursor: pointer;
+}
+
+.mpane-viewport-show:hover {
+  background: var(--color-hover);
+}
+
+.mpane-viewport-show.is-selected {
+  border-color: var(--color-accent);
+  background: var(--color-selected);
+}
+
+.mpane-viewport-show:focus-visible {
+  outline: var(--focus-width) solid var(--color-focus);
+  outline-offset: var(--focus-offset);
 }

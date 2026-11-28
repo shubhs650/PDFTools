@@ -1856,6 +1856,16 @@ export const COMMANDS: readonly CommandDef[] = [
     shipped: true, // M3-11
   },
   {
+    id: 'rail.measurements',
+    tab: 'rail',
+    group: 'panes',
+    size: 'small',
+    fluent: 'Ruler',
+    milestone: 'M3',
+    toggle: true,
+    shipped: true, // M14-08 (D-76)
+  },
+  {
     id: 'rail.attachments',
     tab: 'rail',
     group: 'panes',

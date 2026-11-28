@@ -2,7 +2,6 @@ import { Dismiss20Regular } from '@fluentui/react-icons/svg/dismiss';
 import { useTranslation } from 'react-i18next';
 import { AnnotationProperties } from '../features/annotate/properties/AnnotationProperties';
 import { MeasureInfo } from '../features/measure/MeasureInfo';
-import { ViewportList } from '../features/measure/ViewportList';
 import { useDocuments } from './store/documentStore';
 import { IconButton } from '../ui/components';
 import { PaneEdge } from './PaneEdge';
@@ -67,9 +66,8 @@ export function PropertiesPane() {
             />
           </div>
           <AnnotationProperties />
-          {/* A measurement's scale and the page's viewports (M3-17). */}
+          {/* A measurement's scale (M3-17); the page's viewports are in the Measurements pane (M14-08). */}
           {docId ? <MeasureInfo docId={docId} /> : null}
-          <ViewportList />
         </section>
       ) : null}
     </aside>

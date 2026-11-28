@@ -59,6 +59,11 @@ export interface RowOptions {
   discipline(author: string): string;
   /** "Anonymous" / "an unknown author" for comments without /T. */
   noAuthor: string;
+  /**
+   * Measurements in the rows (M14-08, Q34): the CRS passes its "Include
+   * measurements" (off by default); absent (the annotation export): included.
+   */
+  measurements?: boolean;
 }
 
 const oneLine = (s: string): string => s.replace(/\r\n|\r/gu, '\n').trim();
@@ -79,7 +84,9 @@ export function* crsRowBatches(
   o: RowOptions,
   size: number,
 ): Generator<CrsRow[]> {
-  const comments = commentsOf(all).filter((c) => !o.filter || matches(c, o.filter));
+  const comments = commentsOf(all).filter(
+    (c) => (!o.filter || matches(c, o.filter)) && (o.measurements !== false || !c.measure),
+  );
   const kids = childrenOf(all);
   const row = (c: (typeof comments)[number]): CrsRow => {
     const thread = buildThread(all, c.id, kids);

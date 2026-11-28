@@ -125,9 +125,11 @@ describe('search (on Enter only, rule 3)', () => {
   it('matches through the place last ("measure" lists the Measure tab)', () => {
     const r = ids('measure');
     expect(r.length).toBeGreaterThan(3);
-    // The Measure button's own label matches first (M14-03), then the tab's commands.
+    // The Measure button's own label matches first (M14-03), then the Measurements
+    // pane's (M14-08), then the tab's commands.
     expect(r[0]).toBe('measure.lastTool');
-    expect(items.find((i) => i.id === r[1])?.where).toMatch(/^Measure › /);
+    expect(r[1]).toBe('rail.measurements');
+    expect(items.find((i) => i.id === r[2])?.where).toMatch(/^Measure › /);
     expect(r).toEqual(expect.arrayContaining(['measure.length', 'measure.area']));
   });
 
