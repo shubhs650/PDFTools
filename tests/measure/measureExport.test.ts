@@ -155,6 +155,9 @@ describe('the measurements sheet (M14-10, Q32)', () => {
     expect(numberFormat(0)).toBe('0');
     expect(numberFormat(3)).toBe('0.000');
     expect(unitText(s5, 'area')).toBe('mm²');
+    // An angle (M14-05): degrees with one decimal, whatever the scale.
+    expect(unitText(s5, 'angle')).toBe('°');
+    expect(decimalsOf(s5, 'angle')).toBe(1);
     // 1 January 2026, 00:00 local → Excel serial 46023.
     expect(excelDate(new Date(2026, 0, 1))).toBeCloseTo(46023, 9);
   });

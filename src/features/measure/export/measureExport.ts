@@ -35,13 +35,12 @@ import {
   pickFileSaveTarget,
   writeToHandle,
 } from '../../../storage/fileAccess';
-import { objectsOf } from '../../annotate/comments/commentsStore';
 import { annotationState } from '../../annotate/selection';
 import { invalidateAttachments } from '../../attachments/attachments';
 import { toCsv } from '../../crs/csv';
 import { editsSettled } from '../../save/pendingEdits';
 import { renderEngine, workClient } from '../../view/host';
-import { choiceFor, TOOL_SUBJECT } from '../measurements';
+import { choiceFor, TOOL_SUBJECT, withFileCurve } from '../measurements';
 import { measureEntries, measurePaneStore } from '../pane/measureEntries';
 import { loadScales, scaleStore } from '../scaleStore';
 import { noteAttached } from './attachedExport';
@@ -217,7 +216,10 @@ export function buildExport(
   const st = annotationState(docId);
   const scales = scaleStore.getState().docs[docId];
   if (!d || !st || !scales || typeof scales === 'string') return null;
-  const objects = objectsOf(st.byUid);
+  // Not those deleted but not yet committed.
+  const objects = Object.values(st.byUid)
+    .filter((t) => t.commitState !== 'deleted')
+    .map((t) => withFileCurve(docId, t.object));
   const byId = new Map(objects.map((a) => [a.id, a]));
   const entries = measureEntries(docId, objects);
   const groups = groupMeasurements(entries, scope.all ? {} : { page: scope.page });

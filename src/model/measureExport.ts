@@ -14,6 +14,7 @@ import {
   type Sum,
 } from './measureList';
 import type { Scale } from './scale';
+import { ANGLE_DECIMALS } from './measurement';
 
 /** A cell of the workbook: text, a number shown with `fmt`, an Excel date (serial, local time), or empty. */
 export type BookCell = string | { n: number; fmt: string } | { date: number } | null;
@@ -127,17 +128,14 @@ export const DATE_FORMAT = 'yyyy-mm-dd hh:mm';
 
 /** A unit as the sheet writes it: "m", "m²", "°". */
 export function unitText(scale: Scale, q: Quantity): string {
-  // Every quantity but these two (an angle, M14-05) is in degrees.
-  const kind: string = q;
-  if (kind === 'area') return `${scale.unit}²`;
-  if (kind === 'length') return scale.unit;
-  return '°';
+  if (q === 'area') return `${scale.unit}²`;
+  if (q === 'length') return scale.unit;
+  return '°'; // an angle (M14-05), whatever the scale
 }
 
 /** Decimals a value is shown with: its scale's (ft-in in decimal feet: at least 2). */
 export function decimalsOf(scale: Scale, q: Quantity): number {
-  const kind: string = q;
-  if (kind !== 'length' && kind !== 'area') return 1;
+  if (q === 'angle') return ANGLE_DECIMALS;
   const p = Math.max(0, Math.min(6, Math.round(scale.precision)));
   return scale.ftIn && q === 'length' ? Math.max(2, p) : p;
 }
