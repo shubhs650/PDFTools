@@ -147,6 +147,7 @@ import { Status20Regular } from '@fluentui/react-icons/svg/status';
 import { TabDesktopArrowClockwise20Regular } from '@fluentui/react-icons/svg/tab-desktop-arrow-clockwise';
 import { TabDesktopMultiple20Regular } from '@fluentui/react-icons/svg/tab-desktop-multiple';
 import { TableArrowUp20Regular, TableArrowUp24Regular } from '@fluentui/react-icons/svg/table-arrow-up';
+import { TableCalculator20Regular } from '@fluentui/react-icons/svg/table-calculator';
 import { TableEdit20Regular, TableEdit28Regular } from '@fluentui/react-icons/svg/table-edit';
 import { TableLightning20Regular, TableLightning28Regular } from '@fluentui/react-icons/svg/table-lightning';
 import { TableSettings20Regular, TableSettings28Regular } from '@fluentui/react-icons/svg/table-settings';
@@ -282,6 +283,8 @@ export const FLUENT_GLYPHS: Record<string, FluentGlyphs> = {
   'measure.diameter': { regular: { small: Ruler20Regular, large: Ruler32Regular, largeNative: 32 }, filled: { small: Ruler20Filled, large: Ruler32Filled, largeNative: 32 } },
   'measure.lastTool': { regular: { small: Ruler20Regular, large: Ruler32Regular, largeNative: 32 }, filled: { small: Ruler20Filled, large: Ruler32Filled, largeNative: 32 } },
   'measure.updateOld': { regular: { small: ArrowSync20Regular } },
+  'measure.export': { regular: { small: ArrowExport20Regular } },
+  'measure.placeSummary': { regular: { small: TableCalculator20Regular } },
   'measure.calibrate': { regular: { small: Ruler20Regular, large: Ruler32Regular, largeNative: 32 }, filled: { small: Ruler20Filled, large: Ruler32Filled, largeNative: 32 } },
   'measure.setScale': { regular: { small: RatioOneToOne20Regular, large: RatioOneToOne24Regular, largeNative: 24 }, filled: { small: RatioOneToOne20Filled, large: RatioOneToOne24Filled, largeNative: 24 } },
   'measure.scaleViewport': { regular: { small: SelectObject20Regular, large: SelectObject24Regular, largeNative: 24 }, filled: { small: SelectObject20Filled, large: SelectObject24Filled, largeNative: 24 } },

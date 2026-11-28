@@ -1239,6 +1239,26 @@ export const COMMANDS: readonly CommandDef[] = [
     shipped: true,
   },
   {
+    // M14-10 (D-76, Q32): the Measurements pane's Export… (Tell me finds it too).
+    id: 'measure.export',
+    tab: 'menu',
+    group: 'menu',
+    size: 'small',
+    fluent: 'ArrowExport',
+    milestone: 'M3',
+    shipped: true,
+  },
+  {
+    // M14-10 (D-76, Q17): a table of the totals on the page, kept up to date.
+    id: 'measure.placeSummary',
+    tab: 'menu',
+    group: 'menu',
+    size: 'small',
+    fluent: 'TableCalculator',
+    milestone: 'M3',
+    shipped: true,
+  },
+  {
     id: 'measure.calibrate',
     tab: 'measure',
     group: 'scale',

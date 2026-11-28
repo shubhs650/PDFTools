@@ -58,6 +58,7 @@ type JobMethod =
   | 'hitRects'
   | 'snapGeometry'
   | 'crs'
+  | 'measureExport'
   | 'crsTemplate'
   | 'crsTemplateInspect'
   | 'crsTemplatePreview'

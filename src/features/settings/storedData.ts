@@ -10,6 +10,7 @@ import { RECENT_FONTS_STORAGE_KEY } from '../annotate/fonts/recentFonts';
 import { HIDE_HIGHLIGHTS_STORAGE_KEY } from '../compare/closeout/closeOutStore';
 import { LOUPE_STORAGE_KEY } from '../measure/loupeSettings';
 import { CURVE_METHOD_STORAGE_KEY } from '../measure/curveMethod';
+import { MEASURE_EXPORT_STORAGE_KEY } from '../measure/export/exportSettings';
 import { THIN_LINES_STORAGE_KEY } from '../view/thinLines';
 import { COMPARE_TIPS_STORAGE_KEY } from '../compare/tips/tipsKey';
 import { DB_NAME } from '../../storage/idb';
@@ -213,6 +214,14 @@ export const LOCAL_DATA: readonly LocalDataItem[] = [
     location: THIN_LINES_STORAGE_KEY,
     store: THIN_LINES_STORAGE_KEY,
     what: msg('privacy.data.thinLines'),
+    cleared: true,
+  },
+  {
+    // The measurements export's format and pictures choice (M14-10, D-76, Q33).
+    kind: 'localStorage',
+    location: MEASURE_EXPORT_STORAGE_KEY,
+    store: MEASURE_EXPORT_STORAGE_KEY,
+    what: msg('privacy.data.measureExport'),
     cleared: true,
   },
   {

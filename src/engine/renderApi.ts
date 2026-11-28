@@ -225,6 +225,18 @@ export interface RenderApi {
     { name: string; data: ArrayBuffer }
   >;
   /**
+   * Attach to this PDF (M14-10, D-76, ADR-035): the measurements export as a
+   * document attachment, replacing our earlier copy, with its stamp (Q18).
+   * Needs the modify permission (rule 9); saved with the next Ctrl+S.
+   * Returns the name it got.
+   */
+  attachExport: MethodSpec<
+    { docId: string; name: string; description: string; bytes: ArrayBuffer; stamp: string },
+    { name: string }
+  >;
+  /** The attached measurements export's name and stamp, or null (M14-10). */
+  exportAttachment: MethodSpec<{ docId: string }, { name: string; stamp: string } | null>;
+  /**
    * Sticky note pop-ups (M7-06, ADR-023 D-44, spike S23): the notes on a page
    * that have a /Popup, with its /Rect (device space) and object number (the
    * Work worker reads /Open by it).

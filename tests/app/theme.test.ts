@@ -308,6 +308,8 @@ describe('where the theme is reached', () => {
       'pdftools.measureCurveMethod',
       // Thin Lines on (M13-05).
       'pdftools.thinLines',
+      // The measurements export's format and pictures (M14-10).
+      'pdftools.measureExport',
     ]);
     expect(items.every((d) => d.cleared)).toBe(true);
   });

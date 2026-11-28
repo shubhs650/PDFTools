@@ -33,6 +33,7 @@ import type { SecurityCheck, SecurityVerifyResult } from '../workers/work/verify
 import type { GridIndex } from '../model/snapIndex';
 import type { SnapshotRegion } from '../workers/work/crs';
 import type { WorkbookSpec } from '../workers/work/crsWorkbook';
+import type { MeasureBookSpec, PictureRegion } from '../model/measureExport';
 import type { TemplateFillSpec } from '../workers/work/crsTemplate/fill';
 import type { TemplateInspection, TemplateProbe } from '../workers/work/crsTemplate/inspect';
 import type { PreviewRequest, SheetPreview } from '../workers/work/crsTemplate/preview';
@@ -378,6 +379,23 @@ export interface WorkApi {
    */
   crs: MethodSpec<
     { docId: string; piece?: ArrayBuffer; spec: WorkbookSpec; snapshots: SnapshotRegion[] | null },
+    { bytes: ArrayBuffer },
+    { done: number; total: number }
+  >;
+  /**
+   * The measurements export (M14-10, D-76, ADR-035): the measurements and
+   * totals sheets (ExcelJS, lazy) with, when `pictures` is given, each row's
+   * picture rendered from a copy of the current revision plus `piece` (unsaved
+   * edits). Progress per row; cancellable between rows; the file's bytes come
+   * back transferred.
+   */
+  measureExport: MethodSpec<
+    {
+      docId: string;
+      piece?: ArrayBuffer;
+      spec: MeasureBookSpec;
+      pictures: (PictureRegion | null)[] | null;
+    },
     { bytes: ArrayBuffer },
     { done: number; total: number }
   >;

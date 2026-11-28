@@ -59,6 +59,8 @@ import {
   readFileAttachment,
   updateFileAttachment,
 } from './render/fileAttach';
+import { attachExport, readExportAttachment } from './render/exportAttachment';
+import { applySummaryAppearance, prepareSummary } from './render/summaryAppearance';
 import { secureCopy } from './render/security';
 import { listNotePopups, placeNotePopup, removePopupOf } from './render/notePopups';
 import { CONTENT_METHODS, THIN_METHODS, ThinCopies, type ThinPage } from './render/thinLines';
@@ -213,6 +215,9 @@ const handlers: Handlers<RenderApi> = {
       typeof docId === 'string'
         ? await prepareMeasureCaption(commentFaces, method, callArgs)
         : null;
+    // The measurement summary's table in the app's own font (M14-10, D-76).
+    const summaryFaces =
+      typeof docId === 'string' ? await prepareSummary(commentFaces, method, callArgs) : null;
     // Thin Lines (M13-05): a view render draws the thin copy's page instead.
     const pageIndex = (callArgs[1] as { index?: unknown } | undefined)?.index;
     const thinPage =
@@ -261,6 +266,8 @@ const handlers: Handlers<RenderApi> = {
       // Its text in a library font, shaped and embedded (M11-07, D-52).
       applyCommentFont(m, n, method, callArgs, faces);
       // A measurement as one markup, its value in its own appearance (M14-03, D-74).
+      // The measurement summary drawn as a table (M14-10, D-76).
+      applySummaryAppearance(m, n, method, callArgs, summaryFaces);
       const measured = applyMeasureAppearance(m, n, method, callArgs, captionFaces);
       if (measured !== 'drawn') {
         // A Distance with an offset: its dimension line and leader lines (M13-10).
@@ -513,6 +520,21 @@ const handlers: Handlers<RenderApi> = {
     const { mod: m, native: n } = ready();
     const out = readFileAttachment(m, n, docId, pageIndex, id);
     return new Transfer(out, [out.data]);
+  },
+
+  attachExport: async ({ docId, name, description, bytes, stamp }) => {
+    const { mod: m, native: n, tracker: t } = ready();
+    await t.securityReady(docId);
+    // Rule 9: an attachment changes the document (modify).
+    t.checkAllowed('addAttachment', docId);
+    const got = attachExport(m, n, docId, { name, description, bytes, stamp });
+    t.recordMutation('addAttachment', [{ id: docId }]);
+    return { name: got };
+  },
+
+  exportAttachment: ({ docId }) => {
+    const { mod: m, native: n } = ready();
+    return readExportAttachment(m, n, docId);
   },
 
   notePopups: ({ docId, pageIndex }) => {

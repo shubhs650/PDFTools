@@ -74,6 +74,7 @@ import { ViewportDialog } from '../features/measure/ViewportDialog';
 import { SnapStatus } from '../features/measure/SnapStatus';
 import { ThinLinesStatus } from '../features/view/ThinLinesStatus';
 import { CrsDialog } from '../features/crs/CrsDialog';
+import { MeasureExportDialog } from '../features/measure/export/MeasureExportDialog';
 import { TemplateManager } from '../features/crs/templates/TemplateManager';
 import { TemplateSetup } from '../features/crs/templates/TemplateSetup';
 import { AnnotationExportDialog } from '../features/annotate/export/AnnotationExportDialog';
@@ -283,6 +284,7 @@ export function App() {
         <CalibrateDialog />
         <ViewportDialog />
         <CrsDialog />
+        <MeasureExportDialog />
         <TemplateManager />
         <TemplateSetup />
         <AnnotationExportDialog />

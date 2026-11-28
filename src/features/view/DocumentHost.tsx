@@ -8,6 +8,7 @@ import { installDrawTools } from '../annotate/tools/drawTools';
 import { installStampTools } from '../stamps/stampTools';
 import { installCalibrateTool } from '../measure/calibrate';
 import { installMeasurements } from '../measure/measurements';
+import { installSummaryKeeper } from '../measure/summary/summary';
 import { installMeasureTools } from '../measure/measureTools';
 import { installGestures } from '../measure/gesture';
 import { installViewportTool } from '../measure/viewports';
@@ -50,6 +51,8 @@ const onInitialized = (registry: Parameters<typeof setRegistry>[0]): Promise<voi
     installCalibrateTool(registry);
     installViewportTool(registry);
     installMeasurements(registry);
+    // The measurement summary on the sheet stays up to date (M14-10, D-76).
+    installSummaryKeeper(registry);
     installSnapping();
     installMeasureLoupe();
     installAttachmentRefresh(registry);
