@@ -32,6 +32,8 @@ import { recordError } from '../../app/diagnostics';
 import { documentStore } from '../../app/store/documentStore';
 import { format, msg, t, type MessageKey } from '../../i18n';
 import { leaderOf, unionRect } from '../../model/dimension';
+import { curveDrawing, isCurveTool, type CurveTool } from '../../model/measureCurve';
+import { bounds } from '../../model/measureGeometry';
 import {
   captionBoundsEP,
   captionText,
@@ -43,6 +45,8 @@ import {
   type MeasureTool,
 } from '../../model/measureMarkup';
 import {
+  curveKind,
+  isCurveKind,
   labelRect,
   measureKeys,
   measureKind,
@@ -64,7 +68,7 @@ import { layoutOf, scaleChoice, scaleOfChoice } from '../../model/scaleViewport'
 import { isReplaying, joinStep, outsideHistory } from '../annotate/historyJoin';
 import { capability, hostStore, renderEngine } from '../view/host';
 import { dimensionRect } from './dimensionTool';
-import { fileMeta, stagePageData } from './pageData';
+import { fileMeta, fileStyle, stagePageData } from './pageData';
 import { layoutFor, readEntries, scaleStore, takeScaleNote } from './scaleStore';
 import { showScaleNote } from './scaleNote';
 import { frameOf } from './viewports';
@@ -75,7 +79,19 @@ export const TOOL_SUBJECT: Record<MeasureTool, MessageKey> = {
   polylength: msg('measure.subject.polylength'),
   perimeter: msg('measure.subject.perimeter'),
   area: msg('measure.subject.area'),
+  angle: msg('measure.subject.angle'),
+  radius: msg('measure.subject.radius'),
+  diameter: msg('measure.subject.diameter'),
 };
+
+/** The sign around a curve's number (M14-05): "∠ 37.5°", "R 1,200 mm", "Ø 2,400 mm". */
+const CURVE_WORDS: Record<CurveTool, MessageKey> = {
+  angle: msg('measure.caption.angle'),
+  radius: msg('measure.caption.radius'),
+  diameter: msg('measure.caption.diameter'),
+};
+export const curveWords = (kind: CurveTool, value: string): string =>
+  t(CURVE_WORDS[kind], { value });
 
 const sameScale = (a: Scale | null, b: Scale | null): boolean =>
   !!a &&
@@ -93,10 +109,18 @@ function fileMeasure(docId: string, page: number, id: string) {
   return p && m ? { page: p, measure: m } : null;
 }
 
-/** The measurement kind: its intent, or (loaded from a file) the file's /IT. */
+/**
+ * The measurement kind: its intent, or (loaded from a file) the file's /IT;
+ * an Angle, Radius or Diameter (a Stamp, M14-05) from its own `measure` field
+ * or the file's Triya data.
+ */
 export function kindOf(docId: string, a: PdfAnnotationObject): MeasureKind | null {
-  const k = measureKind(a);
+  const k = measureKind(a) ?? curveKind(a);
   if (k) return k;
+  if (a.type === PdfAnnotationSubtype.STAMP) {
+    const tool = fileMeta(docId, a)?.tool ?? null;
+    return isCurveTool(tool) ? tool : null;
+  }
   const f = fileMeasure(docId, a.pageIndex, a.id);
   return f ? measureKind({ ...a, intent: f.measure.intent }) : null;
 }
@@ -147,7 +171,7 @@ export function choiceText(c: MeasureChoice): string {
 
 /** The value as shown and written: "20.00 m", or "200.0 mm (uncalibrated)". */
 export function measurementText(kind: MeasureKind, a: PdfAnnotationObject, s: Scale | null) {
-  const v = valueText(kind, measurePoints(a), s, format);
+  const v = valueText(kind, measurePoints(a), s, format, curveWords);
   return v.calibrated ? v.value : t('measure.uncalibrated', { value: v.value });
 }
 
@@ -184,6 +208,7 @@ export function metaFor(
   if (scope && labelOf(scope, a.id)) return null;
   const file = fileMeta(docId, a);
   if (file) return file;
+  if (isCurveKind(kind)) return null;
   const tool = toolFromShape(kind, toUserSpace(measurePoints(a), frameOf(docId, a.pageIndex)));
   const cp = fileMeasure(docId, a.pageIndex, a.id)?.measure.cp;
   return tool === 'length' && cp === 'Inline' ? { tool, cap: 'inline' } : { tool };
@@ -195,7 +220,9 @@ export function toolOf(docId: string, a: PdfAnnotationObject): MeasureTool | nul
   if (own) return own.tool;
   const kind = kindOf(docId, a);
   if (!kind) return null;
-  return fileMeta(docId, a)?.tool ?? toolFromShape(kind, measurePoints(a).map(mirror));
+  const file = fileMeta(docId, a)?.tool;
+  if (file) return file;
+  return isCurveKind(kind) ? kind : toolFromShape(kind, measurePoints(a).map(mirror));
 }
 
 /** "Slab S1: 42.5 m²", or the value alone (Q27). */
@@ -212,6 +239,8 @@ async function stage(
   s: Scale | null,
   meta: MeasureMeta | null,
 ) {
+  // An Angle, Radius or Diameter is a plain Stamp in the file: nothing of its own to stage.
+  if (isCurveKind(kind)) return;
   const keys = measureKeys(
     kind,
     s,
@@ -262,6 +291,18 @@ function geometryRect(a: PdfAnnotationObject): Rect {
     vertices?: Pt[];
   };
   const w = o.strokeWidth ?? 1;
+  const curve = curveKind(a);
+  if (curve) {
+    // An Angle, Radius or Diameter: what its appearance draws (measureCurve.ts), in page points.
+    const meta = metaOf(a);
+    const d = curveDrawing(curve, measurePoints(a), {
+      width: w,
+      ...(meta?.shape ? { shape: meta.shape } : {}),
+    });
+    if (!d) return a.rect;
+    const [x0, y0, x1, y1] = bounds(d.extent, w / 2 + 1);
+    return { origin: { x: x0, y: y0 }, size: { width: x1 - x0, height: y1 - y0 } };
+  }
   if (a.type === PdfAnnotationSubtype.LINE && o.linePoints)
     return dimensionRect(o.linePoints.start, o.linePoints.end, leaderOf(a), w, o.lineEndings);
   const pts = o.vertices ?? [];
@@ -290,13 +331,20 @@ function refresh(registry: PluginRegistry, docId: string, id: string, how: 'join
   const key = `${docId}/${id}`;
   if (busy.has(key)) return;
   const scope = capability<AnnotationCapability>(registry, 'annotation').forDocument(docId);
-  const a = scope.getAnnotationById(id)?.object;
-  if (!a) return;
-  const kind = kindOf(docId, a);
+  const stored = scope.getAnnotationById(id)?.object;
+  if (!stored) return;
+  const kind = kindOf(docId, stored);
   if (!kind) return;
+  const found = metaFor(docId, stored, scope);
+  // An Angle, Radius or Diameter read from a file has its points in the file's Triya data.
+  const a =
+    found && isCurveKind(kind) && !metaOf(stored)
+      ? ({ ...stored, ...fileStyle(docId, stored), measure: found } as unknown as PdfAnnotationObject)
+      : stored;
+  // A curve whose points are gone (another editor reshaped it): kept as drawn, with its text.
+  if (isCurveKind(kind) && measurePoints(a).length < 2) return;
   const s = scaleForMeasurement(docId, a);
   const value = measurementText(kind, a, s);
-  const found = metaFor(docId, a, scope);
   let apply: () => void;
   if (found) {
     // An area's fill comes in as the plugin's fill colour (the tool's style, a
@@ -312,7 +360,9 @@ function refresh(registry: PluginRegistry, docId: string, id: string, how: 'join
     const subject = t(TOOL_SUBJECT[meta.tool]);
     const patch: Record<string, unknown> = {};
     if (a.contents !== text) patch['contents'] = text;
-    if (!sameMeta(metaOf(a), meta)) patch['measure'] = meta;
+    if (!sameMeta(metaOf(stored), meta)) patch['measure'] = meta;
+    // A curve from a file: its colour and width come back from its Triya data.
+    if (a !== stored) Object.assign(patch, fileStyle(docId, stored));
     if (a.subject !== subject) patch['subject'] = subject;
     if (!sameRect(a.rect, rect)) patch['rect'] = rect;
     // An area's fill lives in `measure` (no /IC, ADR-035 Amendment 1).
@@ -471,9 +521,12 @@ export function installMeasurements(registry: PluginRegistry): () => void {
         const ids = followers(registry, docId, page);
         if (note) {
           const frame = frameOf(docId, page);
+          // An Angle needs no scale (Q9): a scale change never touches it.
           const items = ids.flatMap((id) => {
             const o = scope.getAnnotationById(id)?.object;
-            return o ? [{ id, pts: toUserSpace(measurePoints(o), frame) }] : [];
+            return o && kindOf(docId, o) !== 'angle'
+              ? [{ id, pts: toUserSpace(measurePoints(o), frame) }]
+              : [];
           });
           touched += touchedBy(
             items,

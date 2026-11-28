@@ -18,6 +18,7 @@ import { resetPresets } from '../compare/presets/presetStore';
 import { resetHideHighlights } from '../compare/closeout/closeOutStore';
 import { resetCompareTips } from '../compare/tips/tipsStore';
 import { resetLoupeSettings } from '../measure/loupeSettings';
+import { resetCurveMethods } from '../measure/curveMethod';
 import { resetCrsTemplates } from '../crs/templates/crsTemplateStore';
 import { resetThinLines } from '../view/thinLines';
 import type { ClearDeps } from './clearAll';
@@ -62,6 +63,8 @@ export const appClearDeps: ClearDeps = {
     resetCompareTips();
     // The Measure loupe and automatic snapping back to their defaults (M13-02).
     resetLoupeSettings();
+    // How Radius and Diameter are picked, back to centre and edge (M14-05).
+    resetCurveMethods();
     // The CRS project templates (M13-07).
     resetCrsTemplates();
     // Thin Lines back to off (M13-05).

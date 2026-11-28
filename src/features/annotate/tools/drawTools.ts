@@ -66,6 +66,9 @@ const SNAPS: ReadonlySet<DrawTool> = new Set([
   'measurePolylength',
   'measurePerimeter',
   'measureArea',
+  'measureAngle',
+  'measureRadius',
+  'measureDiameter',
 ]);
 
 type Snapper = (page: number, pos: Pt, evt: unknown) => Pt;
@@ -371,6 +374,9 @@ const MEASURE_STYLE_TOOLS = [
   'measurePolylength',
   'measurePerimeter',
   'measureArea',
+  'measureAngle',
+  'measureRadius',
+  'measureDiameter',
 ] as const satisfies readonly StyleTool[];
 
 /** The plugin's own tools we rewrap under the same id. */

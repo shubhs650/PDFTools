@@ -81,6 +81,9 @@ export const TOOL_COMMANDS: Readonly<Record<StyleTool, string>> = {
   measurePolylength: 'measure.polylength',
   measurePerimeter: 'measure.perimeter',
   measureArea: 'measure.area',
+  measureAngle: 'measure.angle',
+  measureRadius: 'measure.radius',
+  measureDiameter: 'measure.diameter',
 };
 
 /** How a tool's presets and previews look. */
@@ -119,6 +122,9 @@ export const KIND: Readonly<Record<StyleTool, StyleKind>> = {
   measurePolylength: 'line',
   measurePerimeter: 'line',
   measureArea: 'shape',
+  measureAngle: 'line',
+  measureRadius: 'line',
+  measureDiameter: 'line',
 };
 
 /**
@@ -151,6 +157,9 @@ const GROUP: Readonly<Record<StyleTool, string>> = {
   measurePolylength: 'measurePolylength',
   measurePerimeter: 'measurePerimeter',
   measureArea: 'measureArea',
+  measureAngle: 'measureAngle',
+  measureRadius: 'measureRadius',
+  measureDiameter: 'measureDiameter',
 };
 
 export const sameGroup = (a: StyleTool, b: StyleTool): boolean => GROUP[a] === GROUP[b];

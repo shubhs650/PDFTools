@@ -2,6 +2,8 @@ import { useTranslation } from 'react-i18next';
 import { useApp } from '../../../app/store/appStore';
 import { useDocuments } from '../../../app/store/documentStore';
 import { msg, type MessageKey } from '../../../i18n';
+import { curveMethodStore } from '../../measure/curveMethod';
+import { useStore } from 'zustand';
 
 /** How to use a tool whose gesture is not obvious, in the status bar while it is on. */
 const HINTS: Partial<Record<string, MessageKey>> = {
@@ -12,6 +14,15 @@ const HINTS: Partial<Record<string, MessageKey>> = {
   measurePolylength: msg('annotate.toolHint.polylength'),
   measurePerimeter: msg('annotate.toolHint.perimeter'),
   measureArea: msg('annotate.toolHint.area'),
+  measureAngle: msg('annotate.toolHint.angle'),
+  measureRadius: msg('annotate.toolHint.radiusCentre'),
+  measureDiameter: msg('annotate.toolHint.diameterCentre'),
+};
+
+/** Radius and Diameter by three points (M14-05): their own hints. */
+const THREE: Partial<Record<string, MessageKey>> = {
+  measureRadius: msg('annotate.toolHint.radiusThree'),
+  measureDiameter: msg('annotate.toolHint.diameterThree'),
 };
 
 /** Status bar (§5): the active tool's hint. */
@@ -19,7 +30,11 @@ export function ToolHint() {
   const { t } = useTranslation();
   const tool = useApp((s) => s.tool);
   const hasDoc = useDocuments((s) => s.activeId !== null);
-  const key = hasDoc ? HINTS[tool] : undefined;
+  const methods = useStore(curveMethodStore);
+  const three =
+    (tool === 'measureRadius' && methods.radius === 'three') ||
+    (tool === 'measureDiameter' && methods.diameter === 'three');
+  const key = hasDoc ? ((three ? THREE[tool] : undefined) ?? HINTS[tool]) : undefined;
   if (!key) return null;
   return (
     <span className="status-text tool-hint" data-testid="tool-hint">

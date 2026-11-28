@@ -7,8 +7,22 @@
 // Pure. Points are EmbedPDF page points (top-left origin, y down).
 import { offsetOf, type Pt } from './dimension';
 
-/** Length is a 'distance'; a Perimeter closes back to its first point when placed (M14-03, Q6). */
-export type GestureKind = 'distance' | 'polylength' | 'perimeter' | 'area';
+/**
+ * Length is a 'distance'; a Perimeter closes back to its first point when
+ * placed (M14-03, Q6). An Angle takes three clicks; a Radius or Diameter two
+ * (centre, edge: 'circle2') or three on the curve ('circle3') (M14-05).
+ */
+export type GestureKind =
+  | 'distance'
+  | 'polylength'
+  | 'perimeter'
+  | 'area'
+  | 'angle'
+  | 'circle2'
+  | 'circle3';
+
+/** The kinds placed by a fixed number of clicks, and that number (M14-05). */
+const FIXED: Partial<Record<GestureKind, number>> = { angle: 3, circle2: 2, circle3: 3 };
 
 /** Where a pointer event happens: a document, the tool that is on, a page. */
 export interface Where {
@@ -92,6 +106,15 @@ export function click(
     }
     return { gesture: start(w, kind, at) };
   }
+  const fixed = FIXED[g.kind];
+  if (fixed) {
+    // An Angle, Radius or Diameter: placed by its last click (a repeated point adds nothing).
+    if (g.pts.some((p) => near(p, at, SAME_POINT))) return { gesture: g };
+    const pts = [...g.pts, at];
+    return pts.length >= fixed
+      ? { gesture: null, commit: { ...g, pts, pointer: at } }
+      : { gesture: { ...g, pts, pointer: at } };
+  }
   const first = g.pts[0];
   // A click on the first point closes an Area or a Perimeter.
   if (
@@ -113,7 +136,15 @@ export function move(g: Gesture | null, w: Where, at: Pt): Gesture | null {
   return { ...g, pointer: at, offset };
 }
 
-const ENOUGH: Record<GestureKind, number> = { distance: 2, polylength: 2, perimeter: 3, area: 3 };
+const ENOUGH: Record<GestureKind, number> = {
+  distance: 2,
+  polylength: 2,
+  perimeter: 3,
+  area: 3,
+  angle: 3,
+  circle2: 2,
+  circle3: 3,
+};
 
 /** Enter or a double-click: placed as it is when it has enough points, else dropped. */
 export function finish(g: Gesture | null): Outcome {

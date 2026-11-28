@@ -9,6 +9,7 @@ import { WHATS_NEW_STORAGE_KEY } from '../whatsNew/releases';
 import { RECENT_FONTS_STORAGE_KEY } from '../annotate/fonts/recentFonts';
 import { HIDE_HIGHLIGHTS_STORAGE_KEY } from '../compare/closeout/closeOutStore';
 import { LOUPE_STORAGE_KEY } from '../measure/loupeSettings';
+import { CURVE_METHOD_STORAGE_KEY } from '../measure/curveMethod';
 import { THIN_LINES_STORAGE_KEY } from '../view/thinLines';
 import { COMPARE_TIPS_STORAGE_KEY } from '../compare/tips/tipsKey';
 import { DB_NAME } from '../../storage/idb';
@@ -196,6 +197,14 @@ export const LOCAL_DATA: readonly LocalDataItem[] = [
     location: LOUPE_STORAGE_KEY,
     store: LOUPE_STORAGE_KEY,
     what: msg('privacy.data.measureLoupe'),
+    cleared: true,
+  },
+  {
+    // How Radius and Diameter are picked (M14-05, Q10): centre and edge, or three points.
+    kind: 'localStorage',
+    location: CURVE_METHOD_STORAGE_KEY,
+    store: CURVE_METHOD_STORAGE_KEY,
+    what: msg('privacy.data.measureCurveMethod'),
     cleared: true,
   },
   {

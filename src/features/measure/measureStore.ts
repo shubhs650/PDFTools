@@ -2,6 +2,7 @@
 // live value next to the pointer. Plain arithmetic only (rule 1): the value is
 // computed from the plugin's preview points and the page's scale.
 import { createStore, useStore } from 'zustand';
+import type { CurveMethod } from '../../model/measureCurve';
 import type { MeasureKind } from '../../model/measurement';
 import type { Pt } from '../../model/scale';
 
@@ -16,6 +17,11 @@ export interface LiveMeasure {
   leaders?: [Pt, Pt][];
   color?: string;
   width?: number;
+  /**
+   * An Angle, Radius or Diameter being placed (M14-05): its own preview is
+   * drawn here (a Stamp has none in the plugin), by the method it is picked with.
+   */
+  method?: CurveMethod;
 }
 
 interface MeasureState {

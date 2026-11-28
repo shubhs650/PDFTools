@@ -1181,6 +1181,40 @@ export const COMMANDS: readonly CommandDef[] = [
     shipped: true, // M3-16
     custom: 'measure.area', // M3-06
   },
+  // M14-05 (D-73, Q26): the Curves and Angles group (Angle, Radius, Diameter).
+  {
+    id: 'measure.angle',
+    tab: 'measure',
+    group: 'curves',
+    size: 'large',
+    fluent: 'Ruler',
+    milestone: 'M3',
+    toggle: true,
+    shipped: true, // M14-05
+    custom: 'measure.angle',
+  },
+  {
+    id: 'measure.radius',
+    tab: 'measure',
+    group: 'curves',
+    size: 'large',
+    fluent: 'Ruler',
+    milestone: 'M3',
+    toggle: true,
+    shipped: true, // M14-05
+    custom: 'measure.radius',
+  },
+  {
+    id: 'measure.diameter',
+    tab: 'measure',
+    group: 'curves',
+    size: 'large',
+    fluent: 'Ruler',
+    milestone: 'M3',
+    toggle: true,
+    shipped: true, // M14-05
+    custom: 'measure.diameter',
+  },
   {
     // M14-03 (Q26): Home's and Comment's one Measure button. Its face is the last measuring
     // tool used; its arrow lists every measuring tool (MeasureSplitButton).

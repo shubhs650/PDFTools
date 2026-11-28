@@ -18,19 +18,24 @@ import {
   type CaptionBox,
   type Pt,
 } from './measureGeometry';
+import { curveDrawing, isCurveTool, type CurveShape, type CurveTool } from './measureCurve';
 import type { Kind } from './scale';
 
-export type MeasureTool = 'length' | 'polylength' | 'perimeter' | 'area';
+/** Angle, Radius and Diameter (M14-05) are Stamps; the rest Line, PolyLine, Polygon. */
+export type MeasureTool = 'length' | 'polylength' | 'perimeter' | 'area' | CurveTool;
 
 export const MEASURE_TOOL_IDS: readonly MeasureTool[] = [
   'length',
   'polylength',
   'perimeter',
   'area',
+  'angle',
+  'radius',
+  'diameter',
 ];
 
-/** How each tool's value is computed (model/scale.ts): a Perimeter repeats its first vertex. */
-export const VALUE_KIND: Record<MeasureTool, Kind> = {
+/** How each length and area tool's value is computed (model/scale.ts): a Perimeter repeats its first vertex. */
+export const VALUE_KIND: Record<Exclude<MeasureTool, CurveTool>, Kind> = {
   length: 'distance',
   polylength: 'perimeter',
   perimeter: 'perimeter',
@@ -43,6 +48,9 @@ export const TOOL_TOKEN: Record<MeasureTool, string> = {
   polylength: 'Polylength',
   perimeter: 'Perimeter',
   area: 'Area',
+  angle: 'Angle',
+  radius: 'Radius',
+  diameter: 'Diameter',
 };
 
 export const toolOfToken = (t: string | undefined): MeasureTool | null =>
@@ -62,6 +70,15 @@ export interface MeasureMeta {
   capOffset?: Pt;
   /** Area: the see-through fill drawn in the appearance only (no /IC); absent: none. */
   fill?: string;
+  /**
+   * Angle, Radius and Diameter (M14-05): the clicked points, EmbedPDF page
+   * points (a Stamp has no geometry of its own): an Angle's arm end, corner,
+   * arm end; a Radius's or Diameter's centre and edge point, or three points
+   * on the curve.
+   */
+  pts?: Pt[];
+  /** A three-point Radius or Diameter drawn as its arc or the whole circle (absent: the tool's default). */
+  shape?: CurveShape;
 }
 
 /** Caption size (Q40: 10 pt in the app's own font). */
@@ -97,8 +114,32 @@ export function metaOf(a: unknown): MeasureMeta | null {
   )
     out.capOffset = { x: o.x, y: o.y };
   if (typeof r['fill'] === 'string' && HEX.test(r['fill'])) out.fill = r['fill'];
+  if (isCurveTool(tool)) {
+    const pts = r['pts'];
+    if (
+      Array.isArray(pts) &&
+      pts.length >= 2 &&
+      pts.length <= 3 &&
+      pts.every(
+        (p: unknown) =>
+          typeof p === 'object' &&
+          p !== null &&
+          Number.isFinite((p as Pt).x) &&
+          Number.isFinite((p as Pt).y),
+      )
+    )
+      out.pts = (pts as Pt[]).map((p) => ({ x: p.x, y: p.y }));
+    if (r['shape'] === 'arc' || r['shape'] === 'circle') out.shape = r['shape'];
+  }
   return out;
 }
+
+/** Two point lists say the same (to 0.001 pt). */
+const samePts = (a: readonly Pt[] | undefined, b: readonly Pt[] | undefined): boolean =>
+  (a?.length ?? 0) === (b?.length ?? 0) &&
+  (a ?? []).every(
+    (p, i) => Math.abs(p.x - (b?.[i]?.x ?? NaN)) < 1e-3 && Math.abs(p.y - (b?.[i]?.y ?? NaN)) < 1e-3,
+  );
 
 /** Two metas say the same. */
 export function sameMeta(a: MeasureMeta | null, b: MeasureMeta | null): boolean {
@@ -109,7 +150,9 @@ export function sameMeta(a: MeasureMeta | null, b: MeasureMeta | null): boolean 
     (a.cap ?? 'top') === (b.cap ?? 'top') &&
     (a.capOffset?.x ?? 0) === (b.capOffset?.x ?? 0) &&
     (a.capOffset?.y ?? 0) === (b.capOffset?.y ?? 0) &&
-    (a.fill ?? '') === (b.fill ?? '')
+    (a.fill ?? '') === (b.fill ?? '') &&
+    samePts(a.pts, b.pts) &&
+    (a.shape ?? '') === (b.shape ?? '')
   );
 }
 
@@ -160,7 +203,7 @@ export function offsetBox(c: CaptionBox, o: Pt | undefined): CaptionBox {
  * first), in user space (y up).
  */
 export function captionPlace(
-  meta: Pick<MeasureMeta, 'tool' | 'cap' | 'capOffset'>,
+  meta: Pick<MeasureMeta, 'tool' | 'cap' | 'capOffset' | 'shape'>,
   pts: readonly Pt[],
   leader: Leader | null | undefined,
   width: number,
@@ -172,6 +215,10 @@ export function captionPlace(
     const a = pts[0] ?? zero;
     const g = dimensionGeometry(a, pts[1] ?? a, leader, false);
     box = lineCaption(g.start, g.end, meta.cap ?? 'top', width, height);
+  } else if (isCurveTool(meta.tool)) {
+    // An Angle's outside its arc; a Radius's or Diameter's above its line (measureCurve.ts).
+    const d = curveDrawing(meta.tool, pts, { ...(meta.shape ? { shape: meta.shape } : {}) });
+    box = d ? d.caption(width, height) : { at: pts[0] ?? zero, angle: 0, width, height };
   } else if (meta.tool === 'area') {
     box = { at: areaLabelPoint(pts, width, height), angle: 0, width, height };
   } else {
