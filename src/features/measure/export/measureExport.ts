@@ -239,7 +239,8 @@ export function buildExport(
     items.push({
       entry: e,
       ...placeOf(docId, a, e),
-      group: e.label,
+      // A count's group ("Door"), else the label (Q27).
+      group: e.quantity === 'count' ? e.group : e.label,
       author: a.author ?? '',
       date: when instanceof Date && !Number.isNaN(when.getTime()) ? when : null,
       region,

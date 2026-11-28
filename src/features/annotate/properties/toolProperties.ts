@@ -38,6 +38,7 @@ export const TOOL_NAME_KEYS: Record<StyleTool, MessageKey> = {
   measureAngle: msg('annotProps.toolName.measureAngle'),
   measureRadius: msg('annotProps.toolName.measureRadius'),
   measureDiameter: msg('annotProps.toolName.measureDiameter'),
+  measureCount: msg('annotProps.toolName.measureCount'),
 };
 
 /**

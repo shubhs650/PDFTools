@@ -20,6 +20,8 @@ const NOT_SELECTED: ReadonlySet<DrawTool> = new Set([
   // Freehand: the next stroke begins inside the last one's box.
   'ink',
   'inkHighlighter',
+  // Count (M14-07): the next click usually lands beside the last count, on its number.
+  'measureCount',
   // Not comments: the link layer, the scale dialog and calibration own them.
   'link',
   'calibrate',

@@ -72,7 +72,7 @@ function words(scope: SummaryScope, page: number): SummaryWords {
       t('measureSummary.count'),
       t('measureSummary.total'),
     ],
-    tool: (g) => t(TOOL_SUBJECT[g.tool]),
+    tool: (g) => g.group ?? t(TOOL_SUBJECT[g.tool]),
     atPaper: (name) => t('measureExport.atPaper', { name }),
     leftOut: (n) => t('measureSummary.leftOut', { count: n, n: format.number(n, 0) }),
     noTotal: t('measureSummary.noTotal'),

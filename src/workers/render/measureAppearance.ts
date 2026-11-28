@@ -37,7 +37,13 @@ import type { WrappedPdfiumModule } from '@embedpdf/pdfium';
 import { dimensionGeometry, dimensionPoints, leaderOf, type Leader } from '../../model/dimension';
 import { libraryFamily } from '../../model/fonts/library';
 import { normalizeHex } from '../../model/freeTextStyle';
-import { arcOps, curveDrawing, isCurveTool, type CurveTool } from '../../model/measureCurve';
+import { arcOps, curveDrawing, type CurveTool } from '../../model/measureCurve';
+import {
+  countSymbol,
+  DEFAULT_COUNT_SIZE,
+  symbolBounds,
+  type CountShape,
+} from '../../model/measureCount';
 import {
   bounds,
   corners,
@@ -53,6 +59,7 @@ import {
   FILL_ALPHA,
   captionPlace,
   captionSize,
+  isStampTool,
   metaOf,
   type MeasureMeta,
 } from '../../model/measureMarkup';
@@ -66,6 +73,7 @@ import type { Subsetter } from './commentFonts/hbsubset';
 import { drawDimension, readLine } from './dimensionAppearance';
 import { exportAppearance } from './freeTextColors';
 import { acquirePage, rawCall, withWideString } from './pdfium';
+import { noteMeasureFont } from './save/sharedFonts';
 import { latin1 } from './save/bytes';
 
 interface MeasureArg {
@@ -114,15 +122,19 @@ export function measureCallOf(method: string, args: readonly unknown[]): Measure
   if (!a || !SUBTYPES.has(a.type) || typeof a.id !== 'string') return null;
   const meta = metaOf(a);
   if (!meta) return null;
-  // A Stamp is ours only as an Angle, Radius or Diameter with its points; those are never anything else.
+  // A Stamp is ours only as an Angle, Radius or Diameter with its points, or a
+  // Count with its centre (M14-07); those are never anything else.
   const stamp = a.type === PdfAnnotationSubtype.STAMP;
-  if (stamp !== isCurveTool(meta.tool) || (stamp && (meta.pts?.length ?? 0) < 2)) return null;
+  const need = meta.tool === 'count' ? 1 : 2;
+  if (stamp !== isStampTool(meta.tool) || (stamp && (meta.pts?.length ?? 0) < need)) return null;
   const opts = args[3] as { regenerateAppearance?: unknown } | undefined;
   if (method === 'updatePageAnnotation' && opts?.regenerateAppearance === false) return null;
   const docId = (args[0] as { id?: unknown } | undefined)?.id;
   const pageIndex = (args[1] as { index?: unknown } | undefined)?.index;
   if (typeof docId !== 'string' || typeof pageIndex !== 'number') return null;
-  const text = typeof a.contents === 'string' ? a.contents : '';
+  // A count whose number is switched off draws its symbol alone (Q11); its text stays.
+  const text =
+    typeof a.contents === 'string' && !(meta.tool === 'count' && meta.hideN) ? a.contents : '';
   return {
     docId,
     pageIndex,
@@ -309,8 +321,12 @@ export function drawMeasureAppearance(
   faces: CommentFaces | null,
   native?: PdfiumNative,
 ): MeasureOutcome {
-  if (call.type === PdfAnnotationSubtype.STAMP)
-    return native ? drawCurveAppearance(mod, native, annot, call, faces) : 'fallback';
+  if (call.type === PdfAnnotationSubtype.STAMP) {
+    if (!native) return 'fallback';
+    return call.meta.tool === 'count'
+      ? drawCountAppearance(mod, native, annot, call, faces)
+      : drawCurveAppearance(mod, native, annot, call, faces);
+  }
   const a = call.arg;
   const isLine = call.type === PdfAnnotationSubtype.LINE;
   const isArea = call.type === PdfAnnotationSubtype.POLYGON;
@@ -407,7 +423,7 @@ export function drawMeasureAppearance(
   // With no caption, `assemble` embeds no font and never subsets.
   const sub = faces?.sub ?? (null as unknown as Subsetter);
   try {
-    const { file } = assemble(
+    const { file, fonts } = assemble(
       exported.bytes,
       { ...exported.ex.page, bbox: exported.ex.bbox, matrix: exported.ex.matrix },
       res,
@@ -421,6 +437,9 @@ export function drawMeasureAppearance(
       generate(mod, annot, a.blendMode);
       return 'fallback';
     }
+    // Its caption's fonts join the document's shared measurement fonts on Ctrl+S.
+    if (faces)
+      for (const ft of fonts) noteMeasureFont(call.docId, ft.baseFont, ft.face, ft.used, faces.sub);
   } catch {
     generate(mod, annot, a.blendMode);
     return 'fallback';
@@ -484,6 +503,27 @@ export function drawCurveAppearance(
   const parts: string[] = [
     `q ${opacity < 1 ? '/TMOp gs ' : ''}${c3(stroke)} RG ${f(width)} w 1 J 1 j\n${geo.join('\n')}\nS\nQ`,
   ];
+  return stampForm(mod, annot, call, exported.bytes, exported.ex.page, rect, parts, placed, faces);
+}
+
+/**
+ * A Stamp's whole appearance from our ops in user space (an Angle's, Radius's,
+ * Diameter's or Count's): its caption added, one form whose box is /Rect.
+ */
+function stampForm(
+  mod: WrappedPdfiumModule,
+  annot: number,
+  call: MeasureCall,
+  exportedBytes: Uint8Array,
+  page: { num: number; gen: number; dict: PdfDict },
+  rect: Box,
+  parts: string[],
+  placed: Placed | null,
+  faces: CommentFaces | null,
+): MeasureOutcome {
+  const a = call.arg;
+  const stroke = rgbOf(a.strokeColor);
+  const opacity = typeof a.opacity === 'number' && a.opacity >= 0 && a.opacity <= 1 ? a.opacity : 1;
   let usage: Usage = new Map();
   let names = new Map<Face, string>();
   if (placed && faces) {
@@ -492,27 +532,33 @@ export function drawCurveAppearance(
     names = c.names;
     parts.push(`q ${opacity < 1 ? '/TMOp gs ' : ''}\n${c.ops}\nQ`);
   }
-  const res: PdfDict = new Map<string, PdfValue>();
+  const gs = new Map<string, PdfValue>();
   if (opacity < 1)
-    res.set(
-      'ExtGState',
+    gs.set(
+      'TMOp',
       new Map<string, PdfValue>([
-        [
-          'TMOp',
-          new Map<string, PdfValue>([
-            ['Type', new PdfName('ExtGState')],
-            ['ca', opacity],
-            ['CA', opacity],
-          ]),
-        ],
+        ['Type', new PdfName('ExtGState')],
+        ['ca', opacity],
+        ['CA', opacity],
       ]),
     );
+  if (call.meta.tool === 'count')
+    gs.set(
+      'TMFill',
+      new Map<string, PdfValue>([
+        ['Type', new PdfName('ExtGState')],
+        ['ca', FILL_ALPHA * opacity],
+        ['CA', opacity],
+      ]),
+    );
+  const res: PdfDict = new Map<string, PdfValue>();
+  if (gs.size) res.set('ExtGState', gs);
   const sub = faces?.sub ?? (null as unknown as Subsetter);
   try {
     // Our ops are in user space: the form's box is /Rect, with no matrix.
-    const { file } = assemble(
-      exported.bytes,
-      { ...exported.ex.page, bbox: rect, matrix: [1, 0, 0, 1, 0, 0] },
+    const { file, fonts } = assemble(
+      exportedBytes,
+      { ...page, bbox: rect, matrix: [1, 0, 0, 1, 0, 0] },
       res,
       parts.join('\n'),
       usage,
@@ -520,10 +566,56 @@ export function drawCurveAppearance(
       sub,
       { italic: false },
     );
-    return setAppearanceFile(mod, annot, file) ? 'drawn' : 'fallback';
+    if (!setAppearanceFile(mod, annot, file)) return 'fallback';
+    if (faces)
+      for (const ft of fonts) noteMeasureFont(call.docId, ft.baseFont, ft.face, ft.used, faces.sub);
+    return 'drawn';
   } catch {
     return 'fallback';
   }
+}
+
+/**
+ * Draws a Count's own appearance on its Stamp (M14-07, D-75): its symbol in
+ * its group's colour (a closed one with the see-through fill) and its number
+ * beside it, about the centre in its `measure` field.
+ */
+export function drawCountAppearance(
+  mod: WrappedPdfiumModule,
+  native: PdfiumNative,
+  annot: number,
+  call: MeasureCall,
+  faces: CommentFaces | null,
+): MeasureOutcome {
+  const a = call.arg;
+  const at = curvePoints(native, call)?.[0];
+  if (!at) return 'fallback';
+  if (call.text.trim() && !faces) return 'fallback';
+  const size = call.meta.size ?? DEFAULT_COUNT_SIZE;
+  const shape: CountShape = call.meta.sym ?? 'circle';
+  const sym = countSymbol(shape, at, size, 1);
+  const placed = faces ? placeCaption(call, faces, [at], null) : null;
+  let rect = symbolBounds(at, size);
+  if (placed) rect = unionBox(rect, bounds(corners(placed.box), 1));
+  const now = readRect(mod, annot);
+  if (now) rect = unionBox(rect, now);
+  if (!setRect(mod, annot, rect)) return 'fallback';
+  const exported = exportAppearance(mod, annot);
+  if (!exported) return 'fallback';
+  const stroke = c3(rgbOf(a.strokeColor));
+  const opacity = typeof a.opacity === 'number' && a.opacity >= 0 && a.opacity <= 1 ? a.opacity : 1;
+  const ring = (pts: Pt[]): string =>
+    `${pts.map((p, i) => `${xy(p)} ${i ? 'l' : 'm'}`).join(' ')} h`;
+  const shapes: string[] = sym.closed.map(ring);
+  if (sym.circle)
+    shapes.push(`${arcOps({ c: sym.circle.c, r: sym.circle.r, a0: 0, a1: 2 * Math.PI }, f)} h`);
+  const parts: string[] = [];
+  if (shapes.length) parts.push(`q /TMFill gs ${stroke} rg ${shapes.join(' ')} f Q`);
+  const open = sym.open.map((pts) => pts.map((p, i) => `${xy(p)} ${i ? 'l' : 'm'}`).join(' '));
+  parts.push(
+    `q ${opacity < 1 ? '/TMOp gs ' : ''}${stroke} RG ${f(sym.width)} w 1 J 1 j\n${[...shapes, ...open].join('\n')}\nS\nQ`,
+  );
+  return stampForm(mod, annot, call, exported.bytes, exported.ex.page, rect, parts, placed, faces);
 }
 
 const fallbacks = new Map<string, number>();

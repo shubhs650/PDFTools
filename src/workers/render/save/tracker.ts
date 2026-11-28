@@ -45,7 +45,8 @@ import {
   type PatchTarget,
 } from '../objects/patches';
 import { digestDocument, uncheckNames, type DocDigest, type ObjectDigest } from './digest';
-import { narrowTail, type ExtraObject, type ObjectPatch } from './narrowTail';
+import { narrowTail, parseTailObjects, type ExtraObject, type ObjectPatch } from './narrowTail';
+import { canonicalOverrides, commitShare, forgetShare, shareFonts } from './sharedFonts';
 import { FPDF_INCREMENTAL, FPDF_NO_INCREMENTAL, saveWithFlags } from './writer';
 import { saveBaseOf, trailerRef, type SaveBase } from './xref';
 import {
@@ -232,6 +233,7 @@ export class SaveTracker {
       reopened: new Map(),
       semantic: false,
     };
+    forgetShare(docId);
     // Only the trailer and /Encrypt are read; `bytes` is not kept once the key is known.
     if (namesEncrypt(state.base)) {
       state.cryptReady = PdfReader.open(
@@ -254,6 +256,7 @@ export class SaveTracker {
 
   closed(docId: string): void {
     this.docs.delete(docId);
+    forgetShare(docId);
     for (const [token, snap] of this.snapshots)
       if (snap.docId === docId) this.snapshots.delete(token);
   }
@@ -516,7 +519,7 @@ export class SaveTracker {
     // which then belong to this save rather than silently to the next one.
     const pages = s.untracked > 0 ? 'all' : [...s.pages.keys()].sort((a, b) => a - b);
     const digest = s.base ? digestDocument(this.mod, this.native, docId, pages) : null;
-    const { base, r, keepAll, objects } = this.buildTail(docId, s, opts);
+    const { base, r, keepAll, objects } = this.buildTail(docId, s, { ...opts, record: true });
     s.pending = {
       next: r.next,
       tailLength: r.tail.length,
@@ -550,7 +553,7 @@ export class SaveTracker {
   private buildTail(
     docId: string,
     s: DocState,
-    opts: { keepAll?: boolean; extra?: readonly ExtraObject[] },
+    opts: { keepAll?: boolean; extra?: readonly ExtraObject[]; record?: boolean },
   ) {
     const base = s.base;
     if (!base) {
@@ -578,10 +581,29 @@ export class SaveTracker {
       force: !patch.clean,
       apply: (bytes) => applyPatch(bytes, patch, s.crypt),
     }));
+    // One font object per face for the measurement captions (M14-07, ADR-035 Amendment 1 d2).
+    const share = keepAll
+      ? null
+      : shareFonts(docId, parseTailObjects(full, s.openedLength), {
+          encrypted: namesEncrypt(base),
+          record: opts.record === true,
+        });
+    if (share) {
+      for (const p of patches) {
+        const again = share.repoint.get(p.num);
+        if (!again) continue;
+        const first = p.apply.bind(p);
+        p.apply = (bytes) => again.apply(first(bytes));
+        share.repoint.delete(p.num);
+      }
+      patches.push(...share.repoint.values());
+    }
+    const extra = [...(opts.extra ?? []), ...(share?.extra ?? [])];
     const r = narrowTail(base, full, s.openedLength, dirty, {
       keepAll,
       patches,
-      ...(opts.extra ? { extra: opts.extra } : {}),
+      ...(extra.length ? { extra } : {}),
+      ...(share?.drop.size ? { drop: share.drop } : {}),
     });
     const objects: ObjectDigest[] = resolved.map(({ num, patch }) => patchDigest(num, patch));
     return { base, r, keepAll, objects };
@@ -607,6 +629,9 @@ export class SaveTracker {
     if (s.infoEdited <= p.seq) s.infoEdited = 0;
     if (s.untracked <= p.seq) s.untracked = 0;
     s.patches.committed(p.seq);
+    // The tail's shared measurement fonts are the file's now; a rewrite wrote memory as it is.
+    if (p.rewrite) forgetShare(docId, { keepNotes: true });
+    else commitShare(docId);
     delete s.pending;
     return p.next.length;
   }
@@ -754,6 +779,14 @@ export class SaveTracker {
       if (again && (keepAll || !sameObject(value(d), value(again)))) out.push(again);
     }
     if (view.byteLength === 0) throw new RpcError('save-heap', 'The document buffer moved');
+    // The shared measurement fonts stay ours (sharedFonts.ts): PDFium's copy under
+    // their numbers holds only the glyphs of the first caption that used them.
+    const ours = canonicalOverrides(docId);
+    for (let i = 0; i < out.length; i++) {
+      const sp = out[i];
+      const b = sp ? ours.get(sp.num) : undefined;
+      if (sp && b) out[i] = { ...sp, gen: 0, bytes: b };
+    }
     out.sort((a, b) => a.num - b.num);
     const r = narrowTail(base, full, s.openedLength, [], { extra: out, onlyExtra: true });
     const resolved = this.resolvePatches(docId, s);

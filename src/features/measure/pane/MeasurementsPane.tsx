@@ -25,7 +25,8 @@ import {
 } from '../../../model/measureList';
 import { objectsOf, useAnnotationMap } from '../../annotate/comments/commentsStore';
 import { useSelectedAnnotations } from '../../annotate/selection';
-import { TOOL_SUBJECT } from '../measurements';
+import { countsOf, groupHasGaps, renumberGroup } from '../countGroups';
+import { countText, TOOL_SUBJECT } from '../measurements';
 import { loadScales, useScales } from '../scaleStore';
 import {
   measureEntries,
@@ -105,6 +106,7 @@ export function MeasurementsPane() {
       ) : (
         <MeasureList docId={docId} groups={groups} />
       )}
+      <RenumberGroups docId={docId} groups={groups} />
       <p className="measurements-count" role="status">
         {entries && shown > 0
           ? t('measurements.count', { count: shown, n: format.number(shown, 0) })
@@ -224,6 +226,47 @@ function AttachedNote({ docId }: { docId: string }) {
   );
 }
 
+/**
+ * Renumber group (M14-07, D-75, Q15): for each count group with gaps in its
+ * numbers (a count deleted), a note and a button that numbers it 1, 2, 3 …
+ * again in one undo step. Outside the list, so the list stays one tab stop.
+ */
+function RenumberGroups({ docId, groups }: { docId: string; groups: readonly MeasureGroup[] }) {
+  const { t } = useTranslation();
+  const annotate = useDocuments((s) => {
+    const meta = s.docs[docId]?.meta;
+    return meta ? allows(securityOf(meta), 'annotate') : false;
+  });
+  // Gaps across every page, whichever pages the list shows.
+  const gapped = useMemo(() => {
+    const counts = countsOf(docId);
+    return groups.filter(
+      (g): g is MeasureGroup & { group: string } =>
+        g.group !== undefined && groupHasGaps(docId, g.group, counts),
+    );
+  }, [docId, groups]);
+  if (gapped.length === 0) return null;
+  return (
+    <div className="mpane-renumber" data-testid="measure-renumber">
+      {gapped.map((g) => (
+        <div key={g.key} className="mpane-renumber-row">
+          <span className="mpane-renumber-text">
+            {t('measurements.countGaps', { group: g.group })}
+          </span>
+          <Button
+            size="small"
+            label={t('measurements.renumber', { group: g.group })}
+            disabled={!annotate}
+            onClick={() => {
+              renumberGroup(docId, g.group);
+            }}
+          />
+        </div>
+      ))}
+    </div>
+  );
+}
+
 /** "Total 3.50 m", "At paper size 35.0 mm", "1 not in the total (spans 2 scales)". */
 function totalLines(g: MeasureGroup): string[] {
   const t = tGlobal;
@@ -315,7 +358,8 @@ function MeasureList({ docId, groups }: { docId: string; groups: readonly Measur
       }}
     >
       {groups.map((g) => {
-        const name = t(TOOL_SUBJECT[g.tool]);
+        // A count group goes by its own name ("Door"), the rest by their tool.
+        const name = g.group ?? t(TOOL_SUBJECT[g.tool]);
         const totals = totalLines(g);
         const count = format.number(g.entries.length, 0);
         return (
@@ -374,7 +418,11 @@ function MeasureRow({
   active: boolean;
 }) {
   const { t } = useTranslation();
-  const value = entryText(e, format);
+  // A count's "Door 7"; the rest their value.
+  const value =
+    e.quantity === 'count'
+      ? countText({ tool: 'count', group: e.group, n: e.n })
+      : entryText(e, format);
   return (
     <div
       id={id}

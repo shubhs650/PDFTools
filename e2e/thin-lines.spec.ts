@@ -92,10 +92,12 @@ test('Thin Lines from the status bar draws page lines 1 device px; comments keep
   await page.goto('/');
   await skipReviewerPrompt(page);
   await openSheet(page);
-  // Before Enable Snapping, off, with its shortcut in the tooltip and aria-keyshortcuts.
+  // First, then Same-Size Count Numbers beside it (M14-07), then Enable Snapping; off,
+  // with its shortcut in the tooltip and aria-keyshortcuts.
   const toggles = bar(page).locator('.status-toggle');
   await expect(toggles.nth(0)).toHaveAccessibleName('Thin Lines');
-  await expect(toggles.nth(1)).toHaveAccessibleName('Enable Snapping');
+  await expect(toggles.nth(1)).toHaveAccessibleName('Same-Size Count Numbers');
+  await expect(toggles.nth(2)).toHaveAccessibleName('Enable Snapping');
   await expect(statusToggle(page)).toHaveAttribute('aria-pressed', 'false');
   await expect(statusToggle(page)).toHaveAttribute('aria-keyshortcuts', 'Control+5 Control+Alt+5');
   await expectLines(page, false);

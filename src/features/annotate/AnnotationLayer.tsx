@@ -33,8 +33,7 @@ import { withFileMeta } from '../measure/measurements';
 import { isSummary } from '../measure/summary/summary';
 import { SummaryPreview } from '../measure/summary/SummaryPreview';
 import { useEditPreview } from '../measure/pointEdit';
-import { metaOf } from '../../model/measureMarkup';
-import { isCurveTool } from '../../model/measureCurve';
+import { isStampTool, metaOf } from '../../model/measureMarkup';
 
 const readLibraryFont = (a: PdfAnnotationObject): string | undefined => {
   const v = (a as unknown as { libraryFont?: unknown }).libraryFont;
@@ -71,7 +70,10 @@ function Body({
   // An Angle, Radius or Diameter (a Stamp, M14-05): drawn by SelectedMeasure while
   // selected, not by the plugin's image of it (app.css).
   const shown = isSelected ? withFileMeta(documentId, annotation) : annotation;
-  const curve = isMeasureCurve(shown);
+  // (A Stamp read from a file is one too, by its Triya data: its plugin image stays hidden.)
+  const curve = isMeasureCurve(
+    annotation.type === PdfAnnotationSubtype.STAMP ? withFileMeta(documentId, annotation) : shown,
+  );
   // A text comment in a library font (M11-07, D-52): its editor draws that face.
   const lib = text ? libraryFamily(readLibraryFont(annotation)) : undefined;
   const font = lib?.group ? lib.id : undefined;
@@ -112,18 +114,20 @@ function Body({
             },
           })}
     >
-      {children}
+      {/* A measurement Stamp has no plugin image at all (M14-07): the tiles and SelectedMeasure
+          draw it, and 1,000 such images were made again on every change of the page. */}
+      {curve ? null : children}
       {/* A selected measurement's caption and fill (M14-03): the plugin draws only its points. */}
       {isSelected ? <SelectedMeasure annotation={shown} scale={geometry.scale} /> : null}
     </div>
   );
 }
 
-/** An Angle, Radius or Diameter: a Stamp with a curve's `measure` field. */
+/** An Angle, Radius, Diameter or Count: a Stamp with our `measure` field. */
 function isMeasureCurve(a: PdfAnnotationObject): boolean {
   if (a.type !== PdfAnnotationSubtype.STAMP) return false;
   const meta = metaOf(a);
-  return !!meta && isCurveTool(meta.tool);
+  return !!meta && isStampTool(meta.tool);
 }
 
 /**

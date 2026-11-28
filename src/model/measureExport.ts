@@ -140,6 +140,7 @@ export function unitText(scale: Scale, q: Quantity, own?: QuantityUnit | null): 
   if (q === 'area') return own ? AREA_SYMBOL[own as AreaUnit] : `${scale.unit}²`;
   if (q === 'volume') return own ? VOLUME_SYMBOL[own as VolumeUnit] : `${scale.unit}³`;
   if (q === 'length') return scale.unit;
+  if (q === 'count') return ''; // a count's value is its number (M14-07)
   return '°'; // an angle (M14-05), whatever the scale
 }
 
@@ -150,6 +151,7 @@ export function unitText(scale: Scale, q: Quantity, own?: QuantityUnit | null): 
 export function decimalsOf(scale: Scale, q: Quantity, own?: { decimals: number }): number {
   if (q === 'angle') return ANGLE_DECIMALS;
   if (own && (q === 'area' || q === 'volume')) return own.decimals;
+  if (q === 'count') return 0;
   const p = Math.max(0, Math.min(6, Math.round(scale.precision)));
   return scale.ftIn && q === 'length' ? Math.max(2, p) : p;
 }
@@ -222,7 +224,8 @@ function sumRow(name: string, sum: Sum, q: Quantity, note: string): BookCell[] {
 export function totalRows(groups: readonly MeasureGroup[], words: ExportWords): BookCell[][] {
   const out: BookCell[][] = [];
   for (const g of groups) {
-    const name = words.tool(g.tool);
+    // A count group by its own name ("Door"): its count is its total (M14-07).
+    const name = g.group ?? words.tool(g.tool);
     const { real, paper, left } = g.total;
     const note = left ? words.leftOut(left) : '';
     if (!real && !paper) {
@@ -231,7 +234,7 @@ export function totalRows(groups: readonly MeasureGroup[], words: ExportWords): 
         count: whole(g.entries.length),
         total: null,
         unit: '',
-        note: left ? note : words.noTotal,
+        note: left ? note : g.quantity === 'count' ? '' : words.noTotal,
       };
       out.push(TOTAL_COLUMNS.map((c) => cells[c]));
       continue;

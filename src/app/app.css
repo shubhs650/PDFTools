@@ -3985,6 +3985,12 @@ textarea.form-field {
   display: none;
 }
 
+/* A hint or a refusal in a section's grid spans both columns (M14-07). */
+.prop-grid > .prop-empty-hint,
+.prop-grid > .ui-field-error {
+  grid-column: 1 / -1;
+}
+
 /* Each row spans both columns and lines up with the others (subgrid). */
 .prop-field {
   display: grid;
@@ -4629,6 +4635,16 @@ textarea.form-field {
 }
 
 /* Crossing into another scale area while drawing (M14-02, Q30): a warning, no number. */
+.measure-count-ghost-text {
+  position: absolute;
+  transform: translate(-50%, -50%);
+  opacity: 0.6;
+  font-family: var(--font-family);
+  line-height: 1;
+  white-space: nowrap;
+  pointer-events: none;
+}
+
 .measure-live--warning {
   color: var(--color-danger);
   border: 1px solid var(--color-danger);
@@ -5333,6 +5349,27 @@ textarea.form-field {
   border: 0;
   margin: var(--space-0);
   padding: var(--space-0);
+}
+
+.count-numbers {
+  position: absolute;
+  inset: var(--space-0);
+  pointer-events: none;
+}
+
+/* Same-size count numbers (M14-07): small, on a see-through background, the group's colour at the side. */
+.count-number-label {
+  position: absolute;
+  transform: translateY(-50%);
+  padding: 0 0.25em;
+  border-left: 2px solid currentColor;
+  border-radius: var(--radius-s);
+  background: color-mix(in srgb, var(--color-surface-raised) 72%, transparent);
+  color: var(--color-text);
+  font-family: var(--font-family);
+  line-height: 1.2;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
 }
 
 .comment-numbers {
@@ -10197,6 +10234,21 @@ textarea.form-field {
 }
 
 /* The attached export's note, out of date with Refresh (M14-10, Q18). */
+.mpane-renumber {
+  display: grid;
+  gap: var(--space-1);
+  margin: var(--space-1) var(--density-pad-x) var(--space-0);
+}
+
+.mpane-renumber-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-2);
+  font-size: var(--font-size-s);
+  color: var(--color-text-muted);
+}
+
 .mpane-attached {
   display: flex;
   flex-wrap: wrap;

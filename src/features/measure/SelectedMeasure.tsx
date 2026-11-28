@@ -23,6 +23,11 @@ import {
 import { leaderOf } from '../../model/dimension';
 import { measurePoints } from '../../model/measurement';
 import { CurveShapeSvg } from './CurveShape';
+import { CountSymbolSvg } from './CountSymbol';
+import { DEFAULT_COUNT_SIZE } from '../../model/measureCount';
+
+/** A selected count's symbol (its test id, not shown). */
+const COUNT_ID = 'selected-measure-count';
 
 /** Its test id (not shown). */
 const SELECTED_ID = 'selected-measure-curve';
@@ -43,7 +48,8 @@ export function SelectedMeasure({
   };
   const color = o.strokeColor ?? 'currentColor';
   const pts = measurePoints(annotation);
-  const text = annotation.contents ?? '';
+  // A count whose number is switched off shows its symbol alone (M14-07, Q11).
+  const text = meta.tool === 'count' && meta.hideN ? '' : (annotation.contents ?? '');
   const { origin } = annotation.rect;
   const local = (p: { x: number; y: number }) => ({
     x: (p.x - origin.x) * scale,
@@ -91,7 +97,21 @@ export function SelectedMeasure({
         data-testid={SELECTED_ID}
       />
     ) : null;
-  if (!text.trim()) return fill ?? curve;
+  const at0 = pts[0];
+  const count =
+    annotation.type === PdfAnnotationSubtype.STAMP && meta.tool === 'count' && at0 ? (
+      <CountSymbolSvg
+        shape={meta.sym ?? 'circle'}
+        at={at0}
+        size={meta.size ?? DEFAULT_COUNT_SIZE}
+        color={color}
+        opacity={o.opacity ?? 1}
+        scale={scale}
+        origin={origin}
+        data-testid={COUNT_ID}
+      />
+    ) : null;
+  if (!text.trim()) return fill ?? curve ?? count;
   const { width, height } = captionSize(estimateWidth(text), 1);
   const box = captionPlace(
     meta,
@@ -106,6 +126,7 @@ export function SelectedMeasure({
     <>
       {fill}
       {curve}
+      {count}
       <span
         className="selected-measure-caption"
         aria-hidden="true"

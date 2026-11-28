@@ -85,6 +85,7 @@ export const TOOL_COMMANDS: Readonly<Record<StyleTool, string>> = {
   measureAngle: 'measure.angle',
   measureRadius: 'measure.radius',
   measureDiameter: 'measure.diameter',
+  measureCount: 'measure.count',
 };
 
 /** How a tool's presets and previews look. */
@@ -127,6 +128,7 @@ export const KIND: Readonly<Record<StyleTool, StyleKind>> = {
   measureAngle: 'line',
   measureRadius: 'line',
   measureDiameter: 'line',
+  measureCount: 'shape',
 };
 
 /**
@@ -163,6 +165,7 @@ const GROUP: Readonly<Record<StyleTool, string>> = {
   measureAngle: 'measureAngle',
   measureRadius: 'measureRadius',
   measureDiameter: 'measureDiameter',
+  measureCount: 'measureCount',
 };
 
 export const sameGroup = (a: StyleTool, b: StyleTool): boolean => GROUP[a] === GROUP[b];

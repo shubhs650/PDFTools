@@ -143,10 +143,14 @@ const measureFill = (a: PdfAnnotationObject): boolean =>
 const measureCurve = (a: PdfAnnotationObject): boolean =>
   a.type === S.STAMP && measureOf(a) !== null;
 const CURVE_PROPS: ReadonlySet<Prop> = new Set<Prop>(['stroke', 'width', 'opacity']);
+/** A Count (M14-07): its colour, shape and size are its count group's; only its opacity is its own. */
+const COUNT_PROPS: ReadonlySet<Prop> = new Set<Prop>(['opacity']);
+const curveProps = (a: PdfAnnotationObject): ReadonlySet<Prop> =>
+  measureOf(a)?.tool === 'count' ? COUNT_PROPS : CURVE_PROPS;
 
 /** Whether `a` has property `p`. */
 export const has = (a: PdfAnnotationObject, p: Prop): boolean =>
-  (measureCurve(a) ? CURVE_PROPS.has(p) : TYPES[p].has(a.type)) &&
+  (measureCurve(a) ? curveProps(a).has(p) : TYPES[p].has(a.type)) &&
   !(p === 'rotation' && isCallout(a)) &&
   !(p === 'border' && !hasBorder(a)) &&
   !((p === 'contents' || p === 'subject') && measureOf(a) !== null);

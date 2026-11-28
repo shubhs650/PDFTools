@@ -16,6 +16,7 @@ import { canGoBack, canGoForward, nextView, previousView } from './viewHistory';
 import { hostStore } from './host';
 import { retileAll } from './keyedTiles';
 import { isThinLinesOn, thinLinesStore, toggleThinLines } from './thinLines';
+import { isCountNumbersOn, toggleCountNumbers } from '../measure/countNumbers';
 
 const modeIs = (m: ViewMode): boolean => selectActive(documentStore.getState())?.view.mode === m;
 
@@ -103,6 +104,11 @@ export function registerViewCommands(): () => void {
     registerCommand('view.thinLines', {
       run: toggleThinLines,
       isPressed: isThinLinesOn,
+    }),
+    // Same-size count numbers (M14-07, D-75): one setting for every document, kept on this device.
+    registerCommand('view.countNumbers', {
+      run: toggleCountNumbers,
+      isPressed: isCountNumbersOn,
     }),
     // Shift+F10 / the Menu key in the document (M6-02): its context menu.
     registerCommand('menu.context', {

@@ -47,6 +47,8 @@ export const STYLE_TOOLS = [
   'measureAngle',
   'measureRadius',
   'measureDiameter',
+  // M14-07: Count (a Stamp each; its colour, shape and size come from its count group).
+  'measureCount',
 ] as const;
 
 export type StyleTool = (typeof STYLE_TOOLS)[number];
@@ -183,6 +185,7 @@ export const SHIPPED_DEFAULTS: Readonly<Record<StyleTool, Readonly<StyleProps>>>
   measureAngle: CURVE,
   measureRadius: CURVE,
   measureDiameter: CURVE,
+  measureCount: { opacity: 1 },
 };
 
 /** The stored record's schema version (IndexedDB `toolDefaults`, keyed by tool id). */

@@ -32,13 +32,15 @@ import { recordError } from '../../app/diagnostics';
 import { documentStore } from '../../app/store/documentStore';
 import { format, msg, t, type MessageKey } from '../../i18n';
 import { leaderOf, unionRect } from '../../model/dimension';
-import { curveDrawing, isCurveTool, type CurveTool } from '../../model/measureCurve';
+import { curveDrawing, type CurveTool } from '../../model/measureCurve';
 import { areaValue } from '../../model/measureQuantity';
 import { bounds } from '../../model/measureGeometry';
+import { DEFAULT_COUNT_SIZE, symbolBounds } from '../../model/measureCount';
 import {
   captionBoundsEP,
   captionText,
   isAreaTool,
+  isStampTool,
   metaOf,
   mirror,
   sameMeta,
@@ -48,11 +50,12 @@ import {
 } from '../../model/measureMarkup';
 import {
   curveKind,
-  isCurveKind,
+  isStampKind,
   labelRect,
   measureKeys,
   measureKind,
   measurePoints,
+  stampKind,
   toUserSpace,
   valueText,
   type MeasureKind,
@@ -85,6 +88,7 @@ export const TOOL_SUBJECT: Record<MeasureTool, MessageKey> = {
   angle: msg('measure.subject.angle'),
   radius: msg('measure.subject.radius'),
   diameter: msg('measure.subject.diameter'),
+  count: msg('measure.subject.count'),
 };
 
 /** The sign around a curve's number (M14-05): "∠ 37.5°", "R 1,200 mm", "Ø 2,400 mm". */
@@ -118,11 +122,11 @@ function fileMeasure(docId: string, page: number, id: string) {
  * or the file's Triya data.
  */
 export function kindOf(docId: string, a: PdfAnnotationObject): MeasureKind | null {
-  const k = measureKind(a) ?? curveKind(a);
+  const k = measureKind(a) ?? stampKind(a);
   if (k) return k;
   if (a.type === PdfAnnotationSubtype.STAMP) {
     const tool = fileMeta(docId, a)?.tool ?? null;
-    return isCurveTool(tool) ? tool : null;
+    return isStampTool(tool) ? tool : null;
   }
   const f = fileMeasure(docId, a.pageIndex, a.id);
   return f ? measureKind({ ...a, intent: f.measure.intent }) : null;
@@ -172,8 +176,16 @@ export function choiceText(c: MeasureChoice): string {
   }
 }
 
+/** A count's text (M14-07, Q11): its group's name and its number, "Door 7". */
+export function countText(meta: MeasureMeta | null): string {
+  const n = format.number(meta?.n ?? 0, 0);
+  const group = meta?.group?.trim();
+  return group ? t('measure.caption.count', { group, n }) : n;
+}
+
 /**
- * The value as shown and written: "20.00 m", or "200.0 mm (uncalibrated)".
+ * The value as shown and written: "20.00 m", or "200.0 mm (uncalibrated)";
+ * a count's "Door 7".
  * An Area's or Volume's comes from its `measure` field (`meta`, its own by
  * default): net of its cutouts, in its own unit, a Volume's times its depth.
  */
@@ -183,6 +195,7 @@ export function measurementText(
   s: Scale | null,
   meta: MeasureMeta | null = metaOf(a),
 ) {
+  if (kind === 'count') return countText(meta);
   const v = valueText(kind, measurePoints(a), s, format, curveWords, meta ?? {});
   return v.calibrated ? v.value : t('measure.uncalibrated', { value: v.value });
 }
@@ -220,7 +233,7 @@ export function metaFor(
   if (scope && labelOf(scope, a.id)) return null;
   const file = fileMeta(docId, a);
   if (file) return file;
-  if (isCurveKind(kind)) return null;
+  if (isStampKind(kind)) return null;
   const tool = toolFromShape(kind, toUserSpace(measurePoints(a), frameOf(docId, a.pageIndex)));
   const cp = fileMeasure(docId, a.pageIndex, a.id)?.measure.cp;
   return tool === 'length' && cp === 'Inline' ? { tool, cap: 'inline' } : { tool };
@@ -240,7 +253,9 @@ export function withFileMeta(docId: string, a: PdfAnnotationObject): PdfAnnotati
   }
   if (a.type !== PdfAnnotationSubtype.STAMP) return a;
   const meta = fileMeta(docId, a);
-  if (!meta || !isCurveTool(meta.tool) || (meta.pts?.length ?? 0) < 2) return a;
+  // A Count (M14-07) has its centre alone.
+  if (!meta || !isStampTool(meta.tool) || (meta.pts?.length ?? 0) < (meta.tool === 'count' ? 1 : 2))
+    return a;
   return { ...a, ...fileStyle(docId, a), measure: meta } as PdfAnnotationObject;
 }
 
@@ -252,7 +267,7 @@ export function toolOf(docId: string, a: PdfAnnotationObject): MeasureTool | nul
   if (!kind) return null;
   const file = fileMeta(docId, a)?.tool;
   if (file) return file;
-  return isCurveKind(kind) ? kind : toolFromShape(kind, measurePoints(a).map(mirror));
+  return isStampKind(kind) ? kind : toolFromShape(kind, measurePoints(a).map(mirror));
 }
 
 /** "Slab S1: 42.5 m²", or the value alone (Q27). */
@@ -269,8 +284,8 @@ async function stage(
   s: Scale | null,
   meta: MeasureMeta | null,
 ) {
-  // An Angle, Radius or Diameter is a plain Stamp in the file: nothing of its own to stage.
-  if (isCurveKind(kind)) return;
+  // An Angle, Radius, Diameter or Count is a plain Stamp in the file: nothing of its own to stage.
+  if (isStampKind(kind)) return;
   // An Area's or Volume's own area unit goes in its /Measure /A (M14-06, Q28).
   const area =
     kind === 'area' && meta && isAreaTool(meta.tool) ? areaValue(measurePoints(a), meta, s) : null;
@@ -325,6 +340,14 @@ function geometryRect(a: PdfAnnotationObject): Rect {
     vertices?: Pt[];
   };
   const w = o.strokeWidth ?? 1;
+  const meta0 = metaOf(a);
+  if (meta0?.tool === 'count' && a.type === PdfAnnotationSubtype.STAMP) {
+    // A Count (M14-07): its symbol about its centre.
+    const c = measurePoints(a)[0];
+    if (!c) return a.rect;
+    const [x0, y0, x1, y1] = symbolBounds(c, meta0.size ?? DEFAULT_COUNT_SIZE);
+    return { origin: { x: x0, y: y0 }, size: { width: x1 - x0, height: y1 - y0 } };
+  }
   const curve = curveKind(a);
   if (curve) {
     // An Angle, Radius or Diameter: what its appearance draws (measureCurve.ts), in page points.
@@ -349,7 +372,9 @@ function geometryRect(a: PdfAnnotationObject): Rect {
 /** The rect that holds a measurement and its caption (estimated width, measureMarkup.ts). */
 export function measureRect(a: PdfAnnotationObject, meta: MeasureMeta, text: string): Rect {
   const geo = geometryRect(a);
-  const box = captionBoundsEP(meta, measurePoints(a), leaderOf(a), text);
+  // A count whose number is switched off has its symbol alone (Q11).
+  const shown = meta.tool === 'count' && meta.hideN ? '' : text;
+  const box = captionBoundsEP(meta, measurePoints(a), leaderOf(a), shown);
   if (!box) return geo;
   return unionRect(geo, {
     origin: { x: box[0], y: box[1] },
@@ -372,7 +397,7 @@ function refresh(registry: PluginRegistry, docId: string, id: string, how: 'join
   const found = metaFor(docId, stored, scope);
   // An Angle, Radius or Diameter read from a file has its points in the file's Triya data.
   const a =
-    found && isCurveKind(kind) && !metaOf(stored)
+    found && isStampKind(kind) && !metaOf(stored)
       ? ({
           ...stored,
           ...fileStyle(docId, stored),
@@ -380,7 +405,7 @@ function refresh(registry: PluginRegistry, docId: string, id: string, how: 'join
         } as unknown as PdfAnnotationObject)
       : stored;
   // A curve whose points are gone (another editor reshaped it): kept as drawn, with its text.
-  if (isCurveKind(kind) && measurePoints(a).length < 2) return;
+  if (isStampKind(kind) && measurePoints(a).length < (kind === 'count' ? 1 : 2)) return;
   const s = scaleForMeasurement(docId, a);
   // A file's Area or Volume: its cutouts, depth and units are in its Triya data (M14-06).
   const value = measurementText(kind, a, s, found ?? metaOf(a));
@@ -394,7 +419,8 @@ function refresh(registry: PluginRegistry, docId: string, id: string, how: 'join
         ? { ...found, fill: color }
         : found;
     // One markup (M14-03, D-74): the value (and label) drawn in its own appearance.
-    const text = sheetText(meta.label, value);
+    // A count's text is its group and number, with no label (M14-07).
+    const text = kind === 'count' ? value : sheetText(meta.label, value);
     const rect = measureRect(a, meta, text);
     const subject = t(TOOL_SUBJECT[meta.tool]);
     const patch: Record<string, unknown> = {};
@@ -479,11 +505,17 @@ export function setMeasureMeta(
 /** The page's measurements valued by its scales (not a file's own other scale). */
 function followers(registry: PluginRegistry, docId: string, page: number): string[] {
   const scope = capability<AnnotationCapability>(registry, 'annotation').forDocument(docId);
-  return scope
-    .getAnnotations({ pageIndex: page })
-    .map((ta) => ta.object)
-    .filter((o) => kindOf(docId, o) && choiceFor(docId, o).kind !== 'own')
-    .map((o) => o.id);
+  return (
+    scope
+      .getAnnotations({ pageIndex: page })
+      .map((ta) => ta.object)
+      // A Count needs no scale (M14-07): a scale change never touches it.
+      .filter((o) => {
+        const k = kindOf(docId, o);
+        return k && k !== 'count' && choiceFor(docId, o).kind !== 'own';
+      })
+      .map((o) => o.id)
+  );
 }
 
 /** Called once the plugin registry is up (DocumentHost); returns the unsubscribe. */

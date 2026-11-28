@@ -37,6 +37,7 @@ import { lockModeFor } from '../annotate/pointerModes';
 import { NumberOverlay } from '../annotate/comments/NumberOverlay';
 import { NotePopupLayer } from '../annotate/notes/NotePopupLayer';
 import { MeasureOverlay } from '../measure/MeasureOverlay';
+import { CountNumbersLayer } from '../measure/CountNumbersLayer';
 import { CaptionHandle } from '../measure/CaptionHandle';
 import { MeasureEditor } from '../measure/MeasureEditor';
 import { ViewportLayer } from '../measure/ViewportLayer';
@@ -183,6 +184,12 @@ function Page({
               <SnapMarker documentId={documentId} pageIndex={layout.pageIndex} scale={scale} />
               {/* The value of a measurement being drawn (M3-16). */}
               <MeasureOverlay documentId={documentId} pageIndex={layout.pageIndex} scale={scale} />
+              {/* Same-size count numbers (M14-07), when switched on. */}
+              <CountNumbersLayer
+                documentId={documentId}
+                pageIndex={layout.pageIndex}
+                scale={scale}
+              />
               {/* A selected measurement's caption, draggable (M14-03). */}
               <CaptionHandle documentId={documentId} pageIndex={layout.pageIndex} scale={scale} />
               {/* A selected measurement's points and dimension line, editable (M14-04). */}
