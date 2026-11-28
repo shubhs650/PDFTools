@@ -223,7 +223,7 @@ export async function setScale100(page: Page, units = 'Millimetres') {
   return d;
 }
 
-/** The drawing at 1 : 100 in metres, with a snapped distance and area on the plan. */
+/** The drawing at 1 : 100 in metres, with a snapped length and area on the plan. */
 export async function measuredDrawing(page: Page): Promise<{ top: number; bottom: number }> {
   await start(page);
   await open(page);
@@ -233,6 +233,16 @@ export async function measuredDrawing(page: Page): Promise<{ top: number; bottom
   // Snap to the building's corners, so the values are exact.
   const snap = toolbar(page, 'Measure').getByRole('button', { name: 'Enable Snapping' });
   if ((await snap.getAttribute('aria-pressed')) !== 'true') await snap.click();
+  // The page's geometry ready, so the corners snap.
+  await expect
+    .poll(
+      async () =>
+        Object.values(
+          ((await cap(page, 'annotate', 'snap')) as { pages: Record<string, string> }).pages,
+        ),
+      { timeout: 20_000 },
+    )
+    .toContain('ready');
   // Plan corners (page points from the top-left).
   const mm = 72 / 25.4 / 100;
   const left = 120;
@@ -248,7 +258,7 @@ export async function measuredDrawing(page: Page): Promise<{ top: number; bottom
     if (double) await page.mouse.dblclick(s.x, s.y);
     else await page.mouse.click(s.x, s.y);
   }
-  // Distance by clicks (M13-10): the two corners, then the dimension line 60 pt above
+  // Length by clicks (M13-10): the two corners, then the dimension line 60 pt above
   // the plan, clear of the drawing's own dimensions (Alt: no snap for that click).
   await toolbar(page, 'Measure').getByRole('button', { name: 'Length', exact: true }).click();
   await clickAt(left, top);

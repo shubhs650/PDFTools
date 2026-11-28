@@ -565,6 +565,7 @@
       "spaceHand": "Hand while held (in the document)",
       "zoomHold": "Zoom to Area while held, with the Hand tool",
       "noSnap": "No snapping for this click, while measuring or drawing a line",
+      "lockAngle": "Next point at 0°, 45° or 90° (still snapping), while measuring or editing a measurement",
       "nextDifference": "Next Difference or Change (in a comparison)",
       "prevDifference": "Previous Difference or Change (in a comparison)",
       "blink": "Blink between Old and New (in a PDF overlay)",
@@ -771,7 +772,7 @@
       "mag": "Loupe magnification",
       "magValue": "{{value}}×",
       "autoSnap": "Turn on snapping when measuring",
-      "autoSnapHint": "Length, Polylength, Perimeter, Area, Calibrate and Scale Viewport turn snapping on; it goes back to how it was when you finish, unless you switch it yourself meanwhile.",
+      "autoSnapHint": "Every measuring tool except Count, and Calibrate and Scale Viewport, turn snapping on; it goes back to how it was when you finish, unless you switch it yourself meanwhile.",
       "note": "The loupe shows the spot under the pointer larger while you measure or draw a line, arrow, polyline or callout. Switch it on or off on the Measure tab, in the Snap group; View › Loupe shows it with every tool. These choices are kept on this device only."
     },
     "crsTemplates": {

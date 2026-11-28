@@ -32,14 +32,14 @@ test('F1, Help → Help and a dialog\'s "?" open Help at the right topic, in one
   const help = await helpWindow(context, () => page.keyboard.press('F1'));
   await help.waitForLoadState();
   await expect(help).toHaveURL(/\/help#measure-tools$/);
-  await expect(help).toHaveTitle('Measuring distance, perimeter and area – Triya PDF Help');
+  await expect(help).toHaveTitle('Measuring length, perimeter and area – Triya PDF Help');
   await expect(topic(help).getByRole('heading', { level: 1 })).toHaveText(
-    'Measuring distance, perimeter and area',
+    'Measuring length, perimeter and area',
   );
   await expect(
     help
       .getByRole('navigation', { name: 'Contents' })
-      .getByRole('link', { name: 'Measuring distance, perimeter and area' }),
+      .getByRole('link', { name: 'Measuring length, perimeter and area' }),
   ).toHaveAttribute('aria-current', 'page');
 
   // A dialog's "?" goes to the dialog's topic, in the same window.
@@ -117,7 +117,7 @@ test('the Help page: contents, pager, search on Enter only, screenshots and ligh
   await page.goto('/help#welcome');
   const nav = page.getByRole('navigation', { name: 'Contents' });
   // 44 topics, and 8 in Compare revisions (M12-22; on while Compare is switched on).
-  await expect(nav.getByRole('link')).toHaveCount(57); // + 5 topics (M13-09)
+  await expect(nav.getByRole('link')).toHaveCount(65); // + 5 topics (M13-09), + 8 measuring topics (M14-11)
   await expect(topic(page).getByRole('heading', { level: 1 })).toHaveText('Welcome to Triya PDF');
 
   // Contents and the pager move between topics.

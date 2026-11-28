@@ -13,7 +13,7 @@ leave your computer.
 [![CI](https://github.com/shubhs650/PDFTools/actions/workflows/ci.yml/badge.svg?branch=main)](https://github.com/shubhs650/PDFTools/actions/workflows/ci.yml)
 [![License: MIT](https://img.shields.io/badge/license-MIT-16a34a)](LICENSE)
 
-**[Open Triya PDF](https://app.triyapdf.com)** · [triya-pdf.openengtools.com](https://triya-pdf.openengtools.com) · [What's new](docs/release-notes/v1.1.0.md) · [Report an issue](https://github.com/shubhs650/PDFTools/issues/new)
+**[Open Triya PDF](https://app.triyapdf.com)** · [triya-pdf.openengtools.com](https://triya-pdf.openengtools.com) · [What's new](docs/release-notes/v1.2.0.md) · [Report an issue](https://github.com/shubhs650/PDFTools/issues/new)
 
 <img src="docs/images/window-light.webp" alt="Triya PDF with an engineering drawing marked up with a rectangle, an oval and a line, and the Comments pane listing them" width="900">
 
@@ -27,7 +27,8 @@ leave your computer.
   stored on your device. Install it and it opens like a desktop app, with or without a network.
 - **Made for engineering documents.** Big drawings and long specifications stay responsive,
   because every heavy job runs in background workers. Measure to scale, snap to the drawing's
-  lines, and carry comments from one revision of a drawing to the next.
+  lines, total and export your takeoff, and carry comments from one revision of a drawing to
+  the next.
 - **Standard PDFs out.** Comments, form fields, bookmarks and signatures are standard PDF
   objects, so Acrobat Reader and other viewers show them. Ctrl+S saves only what changed.
 - **Free and open source,** under the MIT license.
@@ -38,7 +39,7 @@ leave your computer.
 | ----------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | **View and find**       | Document tabs, thumbnails, bookmarks, layers and attachments; zoom, rotate and page layouts; Thin Lines (every line one pixel wide on screen); Previous and Next View across documents; Find and Advanced Search across all open files; print, or export a print-ready PDF.                                                                                                                     |
 | **Comment and mark up** | Highlight, underline, strike out, sticky notes with replies, text boxes, typewriter and callouts (with a font library that ships with the app), lines, arrows, shapes, clouds, pencil and stamps, including your own pictures. Comment styles, a Comments pane to filter and review, status for each comment, and a comment review sheet (CRS) in Excel, also in your project's own Excel form. |
-| **Measure**             | Set or calibrate a scale (also per viewport), then measure distance, perimeter and area, snapping to endpoints, midpoints, intersections and the nearest line, with a loupe beside the pointer.                                                                                                                                                                                                 |
+| **Measure**             | Set or calibrate a scale (also per viewport, edited on the page), then measure length, polylength, perimeter, area, volume with cutouts, angle, radius, diameter and counts, each saved as one standard PDF comment; snapping, Shift for 0°/45°/90° and a loupe; a Measurements pane with totals, and export to Excel or CSV.                                                                   |
 | **Compare**             | Overlay two revisions of a drawing (old in red, new in green), every difference listed and aligned for you; compare the text of two documents side by side; close out the old revision's comments. Samples included to try it.                                                                                                                                                                  |
 | **Organize**            | Insert, delete, move, rotate, extract, split, crop and merge pages; turn images into a PDF; start a blank PDF.                                                                                                                                                                                                                                                                                  |
 | **Forms**               | Fill and save forms; create text fields, check boxes, radio buttons, lists and dropdowns.                                                                                                                                                                                                                                                                                                       |
@@ -48,7 +49,7 @@ leave your computer.
 
 <table>
   <tr>
-    <td width="50%"><img src="docs/images/measure.webp" alt="A plan measured at 1 : 100: a 22.00 m distance and a 60.00 m² area"><br><b>Measure to scale</b> with snapping to the drawing.</td>
+    <td width="50%"><img src="docs/images/measure.webp" alt="A plan measured at 1 : 100: a 22.00 m length and a 60.00 m² area"><br><b>Measure to scale</b> with snapping to the drawing.</td>
     <td width="50%"><img src="docs/images/window-dark.webp" alt="The marked-up drawing in the dark theme"><br><b>Dark theme</b>, while pages stay white.</td>
   </tr>
   <tr>

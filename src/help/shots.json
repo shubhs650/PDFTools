@@ -24,7 +24,7 @@
     "h": 560
   },
   "comment-tab-1": {
-    "w": 1318,
+    "w": 1308,
     "h": 167
   },
   "comment-transfer-1": {
@@ -89,7 +89,7 @@
   },
   "compare-start-2": {
     "w": 1137,
-    "h": 1018
+    "h": 858
   },
   "compare-text-1": {
     "w": 1311,
@@ -151,12 +151,32 @@
     "w": 856,
     "h": 347
   },
+  "measure-count-1": {
+    "w": 977,
+    "h": 459
+  },
+  "measure-curves-1": {
+    "w": 574,
+    "h": 331
+  },
+  "measure-editing-1": {
+    "w": 246,
+    "h": 342
+  },
+  "measure-export-1": {
+    "w": 576,
+    "h": 532
+  },
+  "measure-export-2": {
+    "w": 202,
+    "h": 80
+  },
   "measure-scale-1": {
     "w": 536,
     "h": 524
   },
   "measure-tools-1": {
-    "w": 1093,
+    "w": 1319,
     "h": 167
   },
   "measure-tools-2": {
@@ -166,6 +186,18 @@
   "measure-tools-3": {
     "w": 481,
     "h": 96
+  },
+  "measure-tools-4": {
+    "w": 260,
+    "h": 310
+  },
+  "measure-volume-1": {
+    "w": 975,
+    "h": 326
+  },
+  "measurements-pane-1": {
+    "w": 260,
+    "h": 799
   },
   "ocr-1": {
     "w": 576,
@@ -231,6 +263,10 @@
     "w": 260,
     "h": 511
   },
+  "scale-viewports-1": {
+    "w": 519,
+    "h": 246
+  },
   "selecting-comments-1": {
     "w": 410,
     "h": 215
@@ -248,7 +284,7 @@
     "h": 706
   },
   "snapping-1": {
-    "w": 460,
+    "w": 461,
     "h": 119
   },
   "stamps-1": {
@@ -280,7 +316,7 @@
     "h": 800
   },
   "view-history-1": {
-    "w": 315,
+    "w": 314,
     "h": 65
   },
   "welcome-1": {
@@ -288,11 +324,11 @@
     "h": 800
   },
   "zoom-and-pages-1": {
-    "w": 1245,
+    "w": 1340,
     "h": 133
   },
   "zoom-and-pages-2": {
-    "w": 963,
+    "w": 1163,
     "h": 65
   }
 }
