@@ -308,7 +308,8 @@ for (const [variant, url] of [
     await run('rail.measurements');
     await expect(page.getByTestId('measure-list')).toBeVisible();
     await axe(page, 'Measurements pane');
-    await page.getByTestId('measure-scales').getByRole('button', { name: 'Add viewport' }).click();
+    // Pseudo-locale: the section's own button (Add viewport), not by name.
+    await page.getByTestId('measure-scales').locator(':scope > button').click();
     await expect(page.getByRole('dialog')).toBeVisible();
     await axe(page, 'dialog scale viewport');
     await page.keyboard.press('Escape');
