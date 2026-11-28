@@ -3,13 +3,17 @@
 // the stored points, where a right-click lands (a point or an edge), and which
 // measurements a scale change touches (D-77, Q23). Pure. Points are EmbedPDF
 // page points (top-left origin, y down) unless a function says otherwise.
+import { isCurveTool } from './measureCurve';
 import type { MeasureTool } from './measureMarkup';
 import type { PageLayout } from './scaleViewport';
 import { scaleChoice, scaleOfChoice } from './scaleViewport';
 import type { Pt, Scale, ScaleChoice } from './scale';
 
-/** A Length has its two points only; the others add and remove points (Q24). */
-export const canAddPoints = (tool: MeasureTool): boolean => tool !== 'length';
+/**
+ * A Length has its two points only, an Angle, Radius or Diameter the points it
+ * was picked with (M14-05); the others add and remove points (Q24).
+ */
+export const canAddPoints = (tool: MeasureTool): boolean => tool !== 'length' && !isCurveTool(tool);
 
 /** A Perimeter and an Area are closed: an edge joins the last point to the first. */
 export const isClosed = (tool: MeasureTool): boolean => tool === 'perimeter' || tool === 'area';
@@ -156,11 +160,14 @@ export function pointAction(
 
 /**
  * The point Shift locks a dragged handle from (0°, 45°, 90°, D-78): the one
- * before it; the first point of an open shape locks from the second.
+ * before it; the first point of an open shape locks from the second. An
+ * Angle's arms lock from its corner and the corner from the first arm; a
+ * Radius's or Diameter's edge from its centre (M14-05).
  */
 export function lockAnchor(tool: MeasureTool, handles: readonly Pt[], i: number): Pt | null {
   const n = handles.length;
   if (n < 2) return null;
+  if (tool === 'angle' && n === 3) return (i === 1 ? handles[0] : handles[1]) ?? null;
   if (i > 0) return handles[i - 1] ?? null;
   return (isClosed(tool) ? handles[n - 1] : handles[1]) ?? null;
 }

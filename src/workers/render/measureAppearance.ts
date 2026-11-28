@@ -16,6 +16,12 @@
 //  4. `assemble` (commentFonts/appearance.ts) wraps it as one form with
 //     PDFium's resources, our see-through states and the font subsets.
 //
+// An Angle, Radius or Diameter (M14-05, ADR-035 Amendment 1) is a Stamp whose
+// appearance is entirely ours: its arms and arc, or its circle (or arc) and
+// radius or diameter line with open arrows, and the caption, drawn from the
+// points in its `measure` field (model/measureCurve.ts) in /Rect's own space.
+// A viewer never redraws a Stamp, so it looks the same everywhere.
+//
 // Two steps, as the comment fonts: `prepareMeasureCaption` (async: HarfBuzz
 // and the faces) before the executor call, `applyMeasureAppearance`
 // (synchronous) right after it. Anything unexpected keeps PDFium's own
@@ -26,6 +32,7 @@ import type { WrappedPdfiumModule } from '@embedpdf/pdfium';
 import { dimensionGeometry, dimensionPoints, leaderOf, type Leader } from '../../model/dimension';
 import { libraryFamily } from '../../model/fonts/library';
 import { normalizeHex } from '../../model/freeTextStyle';
+import { arcOps, curveDrawing, isCurveTool, type CurveTool } from '../../model/measureCurve';
 import {
   bounds,
   corners,
@@ -79,6 +86,7 @@ const SUBTYPES = new Set<unknown>([
   PdfAnnotationSubtype.LINE,
   PdfAnnotationSubtype.POLYLINE,
   PdfAnnotationSubtype.POLYGON,
+  PdfAnnotationSubtype.STAMP,
 ]);
 
 export interface MeasureCall {
@@ -89,6 +97,9 @@ export interface MeasureCall {
   meta: MeasureMeta;
   text: string;
   arg: MeasureArg;
+  /** The executor's document and page objects (a curve's points are turned into user space with them). */
+  doc: unknown;
+  page: unknown;
 }
 
 /** The measurement a create or update draws, or null (a move keeps its appearance). */
@@ -98,13 +109,26 @@ export function measureCallOf(method: string, args: readonly unknown[]): Measure
   if (!a || !SUBTYPES.has(a.type) || typeof a.id !== 'string') return null;
   const meta = metaOf(a);
   if (!meta) return null;
+  // A Stamp is ours only as an Angle, Radius or Diameter with its points; those are never anything else.
+  const stamp = a.type === PdfAnnotationSubtype.STAMP;
+  if (stamp !== isCurveTool(meta.tool) || (stamp && (meta.pts?.length ?? 0) < 2)) return null;
   const opts = args[3] as { regenerateAppearance?: unknown } | undefined;
   if (method === 'updatePageAnnotation' && opts?.regenerateAppearance === false) return null;
   const docId = (args[0] as { id?: unknown } | undefined)?.id;
   const pageIndex = (args[1] as { index?: unknown } | undefined)?.index;
   if (typeof docId !== 'string' || typeof pageIndex !== 'number') return null;
   const text = typeof a.contents === 'string' ? a.contents : '';
-  return { docId, pageIndex, id: a.id, type: a.type as PdfAnnotationSubtype, meta, text, arg: a };
+  return {
+    docId,
+    pageIndex,
+    id: a.id,
+    type: a.type as PdfAnnotationSubtype,
+    meta,
+    text,
+    arg: a,
+    doc: args[0],
+    page: args[1],
+  };
 }
 
 const prepared = new WeakMap<readonly unknown[], Promise<CommentFaces | null>>();
@@ -263,7 +287,10 @@ export function drawMeasureAppearance(
   annot: number,
   call: MeasureCall,
   faces: CommentFaces | null,
+  native?: PdfiumNative,
 ): MeasureOutcome {
+  if (call.type === PdfAnnotationSubtype.STAMP)
+    return native ? drawCurveAppearance(mod, native, annot, call, faces) : 'fallback';
   const a = call.arg;
   const isLine = call.type === PdfAnnotationSubtype.LINE;
   const isArea = call.type === PdfAnnotationSubtype.POLYGON;
@@ -371,6 +398,104 @@ export function drawMeasureAppearance(
   return 'drawn';
 }
 
+interface PointConverter {
+  convertDevicePointToPagePoint(doc: unknown, page: unknown, p: Pt): Pt;
+}
+
+/**
+ * A curve's points in user space: EmbedPDF's own conversion (the one that
+ * places every /Rect it writes), so the drawing lands where the main thread
+ * placed the points.
+ */
+function curvePoints(native: PdfiumNative, call: MeasureCall): Pt[] | null {
+  const conv = native as unknown as Partial<PointConverter>;
+  if (typeof conv.convertDevicePointToPagePoint !== 'function') return null;
+  return (call.meta.pts ?? []).map((p) =>
+    (conv as PointConverter).convertDevicePointToPagePoint(call.doc, call.page, p),
+  );
+}
+
+/**
+ * Draws an Angle's, Radius's or Diameter's own appearance on its Stamp: the
+ * geometry and the caption in user space, /Rect the bounds of both (never
+ * smaller than the one the main thread set, so a later move fits it unscaled).
+ */
+export function drawCurveAppearance(
+  mod: WrappedPdfiumModule,
+  native: PdfiumNative,
+  annot: number,
+  call: MeasureCall,
+  faces: CommentFaces | null,
+): MeasureOutcome {
+  const a = call.arg;
+  const tool = call.meta.tool as CurveTool;
+  const pts = curvePoints(native, call);
+  if (!pts) return 'fallback';
+  const width = typeof a.strokeWidth === 'number' && a.strokeWidth >= 0 ? a.strokeWidth : 1;
+  const drawing = curveDrawing(tool, pts, {
+    width,
+    ...(call.meta.shape ? { shape: call.meta.shape } : {}),
+  });
+  if (!drawing) return 'fallback';
+  if (call.text.trim() && !faces) return 'fallback';
+  const placed = faces ? placeCaption(call, faces, pts, null) : null;
+  let rect = bounds(drawing.extent, width / 2 + 1);
+  if (placed) rect = unionBox(rect, bounds(corners(placed.box), 1));
+  const now = readRect(mod, annot);
+  if (now) rect = unionBox(rect, now);
+  if (!setRect(mod, annot, rect)) return 'fallback';
+  const exported = exportAppearance(mod, annot);
+  if (!exported) return 'fallback';
+  const stroke = rgbOf(a.strokeColor);
+  const opacity = typeof a.opacity === 'number' && a.opacity >= 0 && a.opacity <= 1 ? a.opacity : 1;
+  const geo: string[] = [];
+  for (const [p, q] of drawing.lines) geo.push(`${xy(p)} m ${xy(q)} l`);
+  for (const arc of drawing.arcs) geo.push(arcOps(arc, f));
+  const parts: string[] = [
+    `q ${opacity < 1 ? '/TMOp gs ' : ''}${c3(stroke)} RG ${f(width)} w 1 J 1 j\n${geo.join('\n')}\nS\nQ`,
+  ];
+  let usage: Usage = new Map();
+  let names = new Map<Face, string>();
+  if (placed && faces) {
+    const c = captionOps(placed, faces, stroke);
+    usage = c.usage;
+    names = c.names;
+    parts.push(`q ${opacity < 1 ? '/TMOp gs ' : ''}\n${c.ops}\nQ`);
+  }
+  const res: PdfDict = new Map<string, PdfValue>();
+  if (opacity < 1)
+    res.set(
+      'ExtGState',
+      new Map<string, PdfValue>([
+        [
+          'TMOp',
+          new Map<string, PdfValue>([
+            ['Type', new PdfName('ExtGState')],
+            ['ca', opacity],
+            ['CA', opacity],
+          ]),
+        ],
+      ]),
+    );
+  const sub = faces?.sub ?? (null as unknown as Subsetter);
+  try {
+    // Our ops are in user space: the form's box is /Rect, with no matrix.
+    const { file } = assemble(
+      exported.bytes,
+      { ...exported.ex.page, bbox: rect, matrix: [1, 0, 0, 1, 0, 0] },
+      res,
+      parts.join('\n'),
+      usage,
+      names,
+      sub,
+      { italic: false },
+    );
+    return setAppearanceFile(mod, annot, file) ? 'drawn' : 'fallback';
+  } catch {
+    return 'fallback';
+  }
+}
+
 const fallbacks = new Map<string, number>();
 
 /** Measurements whose caption could not be drawn since the last call (diagnostics, never shown). */
@@ -398,7 +523,7 @@ export function applyMeasureAppearance(
     );
     if (!annot) return 'none';
     try {
-      out = drawMeasureAppearance(mod, annot, call, faces);
+      out = drawMeasureAppearance(mod, annot, call, faces, native);
     } catch {
       out = 'fallback';
     } finally {

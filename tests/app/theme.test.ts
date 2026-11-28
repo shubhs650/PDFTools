@@ -304,6 +304,8 @@ describe('where the theme is reached', () => {
       'pdftools.compareTipsSeen',
       // The Measure loupe and automatic snapping choices (M13-02).
       'pdftools.measureLoupe',
+      // How Radius and Diameter are picked (M14-05).
+      'pdftools.measureCurveMethod',
       // Thin Lines on (M13-05).
       'pdftools.thinLines',
     ]);

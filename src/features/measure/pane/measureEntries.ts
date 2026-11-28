@@ -15,7 +15,7 @@ import type { Box } from '../../../model/scaleViewport';
 import { samePick } from '../../../model/viewportEdit';
 import { annotationCapability } from '../../annotate/selection';
 import { goToPoint } from '../../view/controller';
-import { choiceFor, metaFor, toolOf, type MeasureChoice } from '../measurements';
+import { choiceFor, metaFor, toolOf, withFileCurve, type MeasureChoice } from '../measurements';
 import { entriesOf, mediaBoxOf, scaleStore } from '../scaleStore';
 import { rectOfBox } from '../viewports';
 
@@ -42,7 +42,9 @@ export function measureEntries(
   objects: readonly PdfAnnotationObject[],
 ): MeasureEntry[] {
   const out: MeasureEntry[] = [];
-  for (const a of objects) {
+  for (const o of objects) {
+    // A curve read from a file: its points from its Triya data (M14-05).
+    const a = withFileCurve(docId, o);
     const tool = toolOf(docId, a);
     if (!tool) continue;
     const c = choiceFor(docId, a);
@@ -63,7 +65,7 @@ export function measureEntries(
         points: measurePoints(a),
         scale,
         spans: c.kind === 'spanning' ? c.viewports : null,
-        where: whereText(c),
+        where: tool === 'angle' ? t('measurements.noScaleNeeded') : whereText(c),
         at: a.rect.origin,
       }),
     );

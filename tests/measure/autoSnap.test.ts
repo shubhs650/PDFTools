@@ -19,10 +19,13 @@ const change = (
 ) => onToolChange(session, { from, to, enabled, autoSnap });
 
 describe('auto snap', () => {
-  it('covers the four Measure tools, Calibrate and drawing a Scale Viewport', () => {
+  it('covers the Measure tools, Calibrate and drawing a Scale Viewport', () => {
     expect([...AUTO_SNAP_TOOLS].sort()).toEqual(
       [
         'calibrate',
+        'measureAngle',
+        'measureRadius',
+        'measureDiameter',
         'measureArea',
         'measureLength',
         'measurePolylength',

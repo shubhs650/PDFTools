@@ -13,19 +13,42 @@
 // another editor moved or reshaped the markup the fingerprint differs, and the
 // shape-bound data (/Co) is dropped while the rest is kept. Other applications'
 // /PieceInfo entries, and entries this version does not write, are kept as read.
+//
+// An Angle, Radius or Diameter (M14-05) is a Stamp, which has no geometry of
+// its own, so its entry also holds /P its clicked points (user space), /Rc the
+// Stamp's /Rect when saved, /Sh a three-point curve's arc or circle, /C and /W
+// its colour and line width (a Stamp has neither), and /Sc the scale its value
+// was taken in ([paper real (unit)], as spike S34 proposed; no /Measure on a
+// Stamp). Its fingerprint is of /Rect. Moved elsewhere (same size), its points
+// move with it; resized or redrawn there, they are dropped and it stays a
+// plain stamp with its value as its text.
 // Pure; values are the wire form (PdfJson) the object layer stages.
-import { fingerprint, type Pt } from './measureGeometry';
+import { fingerprint, type Box, type Pt } from './measureGeometry';
 import { TOOL_TOKEN, toolOfToken, type MeasureMeta } from './measureMarkup';
+import { isCurveTool } from './measureCurve';
+import type { Scale } from './scale';
 import { fromJson, type PdfJson } from './pdf/wire';
 import { PdfString } from './pdf/objects';
 
 export const APP_KEY = 'TriyaPDF';
 
+/** An Angle's, Radius's or Diameter's own data in its entry (user space). */
+export interface CurveEntry {
+  pts: Pt[];
+  /** The Stamp's /Rect when saved. */
+  rect: Box;
+  color?: string;
+  width?: number;
+  scale?: Pick<Scale, 'paper' | 'real' | 'unit'> | null;
+}
+
 /** One measurement's entry, read or to be written. */
 export interface MeasureEntry {
+  /** A curve's `pts` are in `curve` (user space), never here. */
   meta: MeasureMeta;
   /** The geometry fingerprint it was saved with. */
   fp: string;
+  curve?: CurveEntry;
 }
 
 type Dict = Record<string, PdfJson>;
@@ -57,8 +80,36 @@ export function entryToPdf(e: MeasureEntry): PdfJson {
   if (e.meta.label) d['Lb'] = { text: e.meta.label };
   if (e.meta.fill) d['Fc'] = { text: e.meta.fill };
   if (e.meta.capOffset) d['Co'] = [round(e.meta.capOffset.x), round(e.meta.capOffset.y)];
+  if (e.meta.shape) d['Sh'] = { name: e.meta.shape === 'arc' ? 'Arc' : 'Circle' };
+  const c = e.curve;
+  if (c) {
+    d['P'] = c.pts.flatMap((p) => [round(p.x), round(p.y)]);
+    d['Rc'] = c.rect.map(round);
+    if (c.color) d['C'] = { text: c.color };
+    if (typeof c.width === 'number') d['W'] = round(c.width);
+    if (c.scale) d['Sc'] = [c.scale.paper, c.scale.real, { text: c.scale.unit }];
+  }
   d['F'] = { text: e.fp };
   return { dict: d };
+}
+
+const nums = (j: PdfJson | undefined): number[] | null =>
+  Array.isArray(j) && j.every((n) => typeof n === 'number' && Number.isFinite(n))
+    ? (j as number[])
+    : null;
+
+/** A curve's own data from its entry; null when it has no points this version can use. */
+function curveFromPdf(d: Dict): CurveEntry | null {
+  const p = nums(d['P']);
+  const r = nums(d['Rc']);
+  if (!p || r?.length !== 4 || p.length % 2 !== 0 || p.length < 4 || p.length > 6) return null;
+  const pts: Pt[] = [];
+  for (let i = 0; i < p.length; i += 2) pts.push({ x: p[i] ?? 0, y: p[i + 1] ?? 0 });
+  const out: CurveEntry = { pts, rect: r as Box };
+  const color = textOf(d['C']);
+  if (color && /^#[0-9A-Fa-f]{6}$/u.test(color)) out.color = color;
+  if (typeof d['W'] === 'number' && d['W'] >= 0) out.width = d['W'];
+  return out;
 }
 
 /** An entry read from the file; null when it is not one this version knows. */
@@ -79,7 +130,30 @@ export function entryFromPdf(j: PdfJson | undefined): MeasureEntry | null {
     (co[0] !== 0 || co[1] !== 0)
   )
     meta.capOffset = { x: co[0], y: co[1] };
-  return { meta, fp: textOf(d['F']) ?? '' };
+  const sh = nameOf(d['Sh']);
+  if (sh === 'Arc') meta.shape = 'arc';
+  else if (sh === 'Circle') meta.shape = 'circle';
+  const out: MeasureEntry = { meta, fp: textOf(d['F']) ?? '' };
+  if (isCurveTool(tool)) {
+    const curve = curveFromPdf(d);
+    if (curve) out.curve = curve;
+  }
+  return out;
+}
+
+/**
+ * A curve's points now (user space): as saved while its Stamp is where it was
+ * saved; moved with it when another editor moved it (same size, to 0.01 pt);
+ * null when it was resized or its points are missing (its shape is unknown).
+ */
+export function curvePointsNow(saved: CurveEntry | undefined, rect: Box): Pt[] | null {
+  if (!saved) return null;
+  const [a0, b0, a1, b1] = saved.rect;
+  const same = (x: number, y: number): boolean => Math.abs(x - y) < 0.01;
+  if (!same(a1 - a0, rect[2] - rect[0]) || !same(b1 - b0, rect[3] - rect[1])) return null;
+  const dx = rect[0] - a0;
+  const dy = rect[1] - b0;
+  return saved.pts.map((p) => ({ x: p.x + dx, y: p.y + dy }));
 }
 
 /** The page's entries by /NM, as read (raw, so ones this version cannot read are kept). */

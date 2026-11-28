@@ -30,6 +30,10 @@ export const DRAW_TOOLS = [
   'measurePolylength',
   'measurePerimeter',
   'measureArea',
+  // Angle, Radius and Diameter (M14-05): a Stamp each, placed by clicks (measure/curveTool.ts).
+  'measureAngle',
+  'measureRadius',
+  'measureDiameter',
   // Scale viewport (M3-17): a rectangle, then the dialog (measure/viewports.ts).
   'scaleViewport',
   // Visual signatures (M6-13): @embedpdf/plugin-signature's placement tools (sign/signDocument.ts).
@@ -111,6 +115,9 @@ export const VERTEX_TOOLS: ReadonlySet<DrawTool> = new Set([
   'measurePolylength',
   'measurePerimeter',
   'measureArea',
+  'measureAngle',
+  'measureRadius',
+  'measureDiameter',
 ]);
 
 /** Shift keeps lines at multiples of 45° … */
@@ -124,6 +131,10 @@ const ANGLED: ReadonlySet<DrawTool> = new Set([
   'measurePolylength',
   'measurePerimeter',
   'measureArea',
+  // An Angle's arms, a Radius's or Diameter's line from its centre (M14-05).
+  'measureAngle',
+  'measureRadius',
+  'measureDiameter',
 ]);
 /** Shift locks this tool's lines to 0°, 45° or 90° (and still snaps, M14-02). */
 export const isAngled = (tool: string): boolean => ANGLED.has(tool as DrawTool);

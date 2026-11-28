@@ -10397,3 +10397,19 @@ textarea.form-field {
   outline: var(--focus-width) solid var(--color-focus);
   outline-offset: var(--focus-offset);
 }
+
+/* An Angle, Radius or Diameter while placed or selected (M14-05): drawn in SVG. */
+.measure-curve {
+  position: absolute;
+  inset: var(--space-0);
+  width: 100%;
+  height: 100%;
+  overflow: visible;
+  pointer-events: none;
+}
+
+/* Drawn by the annotation tiles, or whole by SelectedMeasure while selected: the
+   plugin's image of the Stamp (which may lag behind its points) never shows. */
+.annotation-body[data-measure-curve] img {
+  visibility: hidden;
+}

@@ -41,6 +41,10 @@ export const STYLE_TOOLS = [
   'measurePolylength',
   'measurePerimeter',
   'measureArea',
+  // M14-05: Angle, Radius and Diameter (a Stamp each: colour, width and opacity).
+  'measureAngle',
+  'measureRadius',
+  'measureDiameter',
 ] as const;
 
 export type StyleTool = (typeof STYLE_TOOLS)[number];
@@ -120,6 +124,9 @@ const MEASURE: StyleProps = {
   opacity: 1,
 };
 
+/** Angle, Radius and Diameter (M14-05). */
+const CURVE: StyleProps = { strokeColor: MEASURE_RED, strokeWidth: DEFAULT_LINE_WIDTH, opacity: 1 };
+
 /** The shipped defaults (B6). */
 export const SHIPPED_DEFAULTS: Readonly<Record<StyleTool, Readonly<StyleProps>>> = {
   freeText: TEXT,
@@ -169,6 +176,10 @@ export const SHIPPED_DEFAULTS: Readonly<Record<StyleTool, Readonly<StyleProps>>>
   measurePolylength: { ...MEASURE, lineEndings: { start: BUTT, end: BUTT } },
   measurePerimeter: { ...MEASURE, lineEndings: { start: BUTT, end: BUTT } },
   measureArea: { ...MEASURE, color: MEASURE_RED },
+  // M14-05: a Stamp has no fill or line ends; its appearance is drawn in this colour and width.
+  measureAngle: CURVE,
+  measureRadius: CURVE,
+  measureDiameter: CURVE,
 };
 
 /** The stored record's schema version (IndexedDB `toolDefaults`, keyed by tool id). */

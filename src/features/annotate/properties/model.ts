@@ -136,9 +136,17 @@ const measureOf = (a: PdfAnnotationObject): MeasureMeta | null => metaOf(a);
 const measureFill = (a: PdfAnnotationObject): boolean =>
   a.type === S.POLYGON && measureOf(a) !== null;
 
+/**
+ * An Angle, Radius or Diameter (a Stamp, M14-05): its line colour and width
+ * are its appearance's (the Render worker draws it); it does not turn.
+ */
+const measureCurve = (a: PdfAnnotationObject): boolean =>
+  a.type === S.STAMP && measureOf(a) !== null;
+const CURVE_PROPS: ReadonlySet<Prop> = new Set<Prop>(['stroke', 'width', 'opacity']);
+
 /** Whether `a` has property `p`. */
 export const has = (a: PdfAnnotationObject, p: Prop): boolean =>
-  TYPES[p].has(a.type) &&
+  (measureCurve(a) ? CURVE_PROPS.has(p) : TYPES[p].has(a.type)) &&
   !(p === 'rotation' && isCallout(a)) &&
   !(p === 'border' && !hasBorder(a)) &&
   !((p === 'contents' || p === 'subject') && measureOf(a) !== null);

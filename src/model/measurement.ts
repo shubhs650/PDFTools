@@ -5,6 +5,7 @@
 // goes. Pure; coordinates are EmbedPDF's (page points, top-left origin) unless
 // a function says otherwise — lengths and areas don't depend on the origin.
 import { dimensionMiddle, type Leader } from './dimension';
+import { curveValue, isCurveTool, type CurveTool } from './measureCurve';
 import type { PdfJson } from './pdf/wire';
 import {
   formatLength,
@@ -16,7 +17,14 @@ import {
   type Scale,
 } from './scale';
 
-export type { Kind as MeasureKind };
+/**
+ * What a measurement measures: a length, a path, an area (with standard
+ * /IT and /Measure), or an Angle, Radius or Diameter (M14-05: a Stamp, its
+ * points in its Triya data).
+ */
+export type MeasureKind = Kind | CurveTool;
+
+export const isCurveKind = (k: MeasureKind | null | undefined): k is CurveTool => isCurveTool(k);
 
 /** /IT per kind (ISO 32000-1 §12.5.6.7, 12.5.6.9). */
 export const MEASURE_INTENT: Record<Kind, string> = {
@@ -44,6 +52,8 @@ export interface MeasureShape {
   vertices?: Pt[];
   /** A Distance drawn as a dimension: the leader line entries (M13-10, model/dimension.ts). */
   leader?: Leader | null;
+  /** Angle, Radius, Diameter (a Stamp): the points in its `measure` field (measureMarkup.ts). */
+  measure?: unknown;
 }
 
 const LINE = 4;
@@ -59,10 +69,27 @@ export function measureKind(a: MeasureShape): Kind | null {
   return null;
 }
 
-/** The measured points: a line's two ends, a polyline's or polygon's vertices. */
+const STAMP = 13;
+
+/** An Angle, Radius or Diameter (a Stamp with our `measure` field), or null. */
+export function curveKind(a: MeasureShape): CurveTool | null {
+  if (a.type !== STAMP) return null;
+  const tool = (a.measure as { tool?: unknown } | null | undefined)?.tool;
+  return isCurveTool(tool) ? tool : null;
+}
+
+/**
+ * The measured points: a line's two ends, a polyline's or polygon's vertices,
+ * an Angle's, Radius's or Diameter's clicked points (M14-05).
+ */
 export function measurePoints(a: MeasureShape): Pt[] {
   if (a.linePoints) return [a.linePoints.start, a.linePoints.end];
-  return a.vertices ? [...a.vertices] : [];
+  if (a.vertices) return [...a.vertices];
+  if (a.type === STAMP) {
+    const pts = (a.measure as { pts?: unknown } | null | undefined)?.pts;
+    if (Array.isArray(pts)) return (pts as Pt[]).map((p) => ({ x: p.x, y: p.y }));
+  }
+  return [];
 }
 
 /**
@@ -70,7 +97,21 @@ export function measurePoints(a: MeasureShape): Pt[] {
  * millimetres (mm²) — shown as uncalibrated. A perimeter is the polyline as
  * drawn (open, as in Acrobat): clicking the first vertex again closes it.
  */
-export function measuredValue(kind: Kind, pts: readonly Pt[], scale: Scale | null): number {
+export function measuredValue(kind: MeasureKind, pts: readonly Pt[], scale: Scale | null): number {
+  if (isCurveTool(kind)) {
+    const v = curveValue(kind, pts) ?? Number.NaN;
+    // Degrees need no scale; a radius or diameter is a length on the page.
+    return kind === 'angle'
+      ? v
+      : measure(
+          'distance',
+          [
+            { x: 0, y: 0 },
+            { x: v, y: 0 },
+          ],
+          scale ?? PAPER,
+        );
+  }
   return measure(kind === 'perimeter' ? 'distance' : kind, [...pts], scale ?? PAPER);
 }
 
@@ -83,15 +124,35 @@ export interface ValueText {
   calibrated: boolean;
 }
 
-/** The formatted value (the caller adds "uncalibrated" in the UI's words). */
+/** An Angle's decimals (Q40: degrees with 1 decimal). */
+export const ANGLE_DECIMALS = 1;
+
+/** The words around a curve's number ("∠ {{value}}°", "R {{value}}", "Ø {{value}}"). */
+export type CurveWords = (kind: CurveTool, value: string) => string;
+
+/**
+ * The formatted value (the caller adds "uncalibrated" in the UI's words). An
+ * Angle, Radius or Diameter needs `words` for its sign; without them the
+ * number alone. An Angle is always "calibrated" (Q9: no scale needed).
+ */
 export function valueText(
-  kind: Kind,
+  kind: MeasureKind,
   pts: readonly Pt[],
   scale: Scale | null,
   f: LengthFormat,
+  words?: CurveWords,
 ): ValueText {
   const s = scale ?? PAPER;
-  return { value: formatLength(measuredValue(kind, pts, scale), s, f, kind), calibrated: !!scale };
+  const v = measuredValue(kind, pts, scale);
+  if (isCurveTool(kind)) {
+    const n = Number.isFinite(v)
+      ? kind === 'angle'
+        ? f.fixed(v, ANGLE_DECIMALS)
+        : formatLength(v, s, f, 'distance')
+      : '–';
+    return { value: words ? words(kind, n) : n, calibrated: kind === 'angle' || !!scale };
+  }
+  return { value: formatLength(v, s, f, kind), calibrated: !!scale };
 }
 
 /**
@@ -101,10 +162,12 @@ export function valueText(
  * caption (its offset along and across the line, ISO 32000-1 Table 175).
  */
 export function measureKeys(
-  kind: Kind,
+  kind: MeasureKind,
   scale: Scale | null,
   caption: { place?: 'top' | 'inline'; offset?: Pt | null; leader?: Leader | null } = {},
 ): { set: Record<string, PdfJson>; remove: string[] } {
+  // An Angle, Radius or Diameter is a Stamp: no /IT, no /Measure; its scale is in its Triya data.
+  if (isCurveTool(kind)) return { set: {}, remove: [] };
   const set: Record<string, PdfJson> = { IT: { name: MEASURE_INTENT[kind] } };
   const remove: string[] = [];
   if (scale) set['Measure'] = measureToPdf(scale);
@@ -146,7 +209,7 @@ export function labelSize(text: string, fontSize = LABEL_FONT_SIZE): Rect['size'
  * Where a label sits: above a line's midpoint (a dimension's: the middle of its
  * dimension line, M13-10), at a polygon's centre, by a polyline's last vertex.
  */
-export function labelAnchor(kind: Kind, pts: readonly Pt[], leader?: Leader | null): Pt {
+export function labelAnchor(kind: MeasureKind, pts: readonly Pt[], leader?: Leader | null): Pt {
   const first = pts[0] ?? { x: 0, y: 0 };
   if (kind === 'distance') return dimensionMiddle(first, pts[1] ?? first, leader);
   if (kind === 'area') {
@@ -164,7 +227,7 @@ export function labelAnchor(kind: Kind, pts: readonly Pt[], leader?: Leader | nu
  * anchor for areas, just above it otherwise.
  */
 export function labelRect(
-  kind: Kind,
+  kind: MeasureKind,
   pts: readonly Pt[],
   text: string,
   page: { width: number; height: number },
@@ -188,4 +251,12 @@ export function toUserSpace(
   frame: { height: number; originX: number; originY: number },
 ): Pt[] {
   return pts.map((p) => ({ x: frame.originX + p.x, y: frame.originY + frame.height - p.y }));
+}
+
+/** PDF user space → EmbedPDF points (top-left origin in the page box). */
+export function fromUserSpace(
+  pts: readonly Pt[],
+  frame: { height: number; originX: number; originY: number },
+): Pt[] {
+  return pts.map((p) => ({ x: p.x - frame.originX, y: frame.originY + frame.height - p.y }));
 }

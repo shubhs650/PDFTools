@@ -183,3 +183,75 @@ describe('Perimeter and Area by clicks', () => {
     expect(finish(null)).toEqual({ gesture: null });
   });
 });
+
+describe('Angle, Radius and Diameter by a fixed number of clicks (M14-05)', () => {
+  const W: Where = { doc: 'd1', tool: 'measureAngle', page: 0 };
+  const go = (kind: 'angle' | 'circle2' | 'circle3', pts: { x: number; y: number }[]) => {
+    let g: Gesture | null = null;
+    let last: ReturnType<typeof click> | null = null;
+    for (const p of pts) {
+      last = click(g, W, kind, p, 3);
+      g = last.gesture;
+    }
+    return last;
+  };
+
+  it('an Angle is placed by its third click', () => {
+    const two = go('angle', [
+      { x: 0, y: 0 },
+      { x: 10, y: 0 },
+    ]);
+    expect(two?.commit).toBeUndefined();
+    expect(two?.gesture?.pts).toHaveLength(2);
+    const three = go('angle', [
+      { x: 0, y: 0 },
+      { x: 10, y: 0 },
+      { x: 10, y: 10 },
+    ]);
+    expect(three?.gesture).toBeNull();
+    expect(three?.commit?.pts).toEqual([
+      { x: 0, y: 0 },
+      { x: 10, y: 0 },
+      { x: 10, y: 10 },
+    ]);
+  });
+
+  it('a Radius by centre and edge on its second click; by three points on its third', () => {
+    expect(
+      go('circle2', [
+        { x: 0, y: 0 },
+        { x: 10, y: 0 },
+      ])?.commit?.pts,
+    ).toHaveLength(2);
+    expect(
+      go('circle3', [
+        { x: 0, y: 0 },
+        { x: 10, y: 0 },
+      ])?.commit,
+    ).toBeUndefined();
+  });
+
+  it('a click on a point already placed adds nothing (a double-click)', () => {
+    const r = go('angle', [
+      { x: 0, y: 0 },
+      { x: 10, y: 0 },
+      { x: 10.4, y: 0.2 },
+    ]);
+    expect(r?.commit).toBeUndefined();
+    expect(r?.gesture?.pts).toHaveLength(2);
+    const back = go('circle3', [
+      { x: 0, y: 0 },
+      { x: 10, y: 0 },
+      { x: 0.3, y: 0 },
+    ]);
+    expect(back?.gesture?.pts).toHaveLength(2);
+  });
+
+  it('Enter places it only when it has all its points', () => {
+    const g = go('angle', [
+      { x: 0, y: 0 },
+      { x: 10, y: 0 },
+    ])?.gesture;
+    expect(finish(g ?? null).commit).toBeUndefined();
+  });
+});

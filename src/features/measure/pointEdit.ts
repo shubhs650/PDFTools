@@ -11,6 +11,7 @@ import { createStore, useStore } from 'zustand';
 import { documentStore, securityOf } from '../../app/store/documentStore';
 import type { PagePoint } from '../../app/commands/dispatch';
 import { leaderFor, leaderOf, offsetOf } from '../../model/dimension';
+import { curveValue, isCurveTool } from '../../model/measureCurve';
 import { handlesOf, pointAction, storedOf, type PointAction } from '../../model/measureEdit';
 import { metaOf, type MeasureTool } from '../../model/measureMarkup';
 import { measurePoints } from '../../model/measurement';
@@ -21,6 +22,7 @@ import { annotationCapability } from '../annotate/selection';
 import { snapAngle } from '../annotate/tools/drawModel';
 import { loupeSettingsStore } from './loupeSettings';
 import { hideLoupe, loupeStore } from './loupePointer';
+import { measureRect } from './measurements';
 import { clearSnapMarker, snapPointIn } from './snapping';
 
 /** A right-click this close to a point (CSS px) is on it; to an edge, beside it. */
@@ -71,6 +73,14 @@ export function withHandles(
   handles: readonly Pt[],
 ): PdfAnnotationObject {
   const stored = storedOf(tool, handles);
+  const meta = metaOf(a);
+  if (isCurveTool(tool) && meta) {
+    // An Angle, Radius or Diameter (a Stamp, M14-05): its points are in its meta,
+    // its rect holds its drawing and caption (the Render worker redraws it).
+    const next = { ...meta, pts: stored };
+    const moved = { ...a, measure: next } as unknown as PdfAnnotationObject;
+    return { ...moved, rect: measureRect(moved, next, a.contents ?? '') };
+  }
   const changes =
     a.type === PdfAnnotationSubtype.LINE
       ? { linePoints: { start: stored[0] ?? { x: 0, y: 0 }, end: stored[1] ?? { x: 0, y: 0 } } }
@@ -99,7 +109,8 @@ export function withOffsetAt(a: PdfAnnotationObject, p: Pt): PdfAnnotationObject
 function patchOf(before: PdfAnnotationObject, after: PdfAnnotationObject) {
   const o = after as unknown as Record<string, unknown>;
   const patch: Record<string, unknown> = { rect: after.rect };
-  if (after.type === PdfAnnotationSubtype.LINE) patch['linePoints'] = o['linePoints'];
+  if (after.type === PdfAnnotationSubtype.STAMP) patch['measure'] = o['measure'];
+  else if (after.type === PdfAnnotationSubtype.LINE) patch['linePoints'] = o['linePoints'];
   else patch['vertices'] = o['vertices'];
   if ('leader' in o && o['leader'] !== (before as unknown as Record<string, unknown>)['leader'])
     patch['leader'] = o['leader'] ?? null;
@@ -114,6 +125,10 @@ export function commitEdit(docId: string, before: PdfAnnotationObject, after: Pd
     JSON.stringify(measurePoints(before)) === JSON.stringify(measurePoints(after)) &&
     JSON.stringify(leaderOf(before)) === JSON.stringify(leaderOf(after));
   if (same) return;
+  // A curve whose points no longer make one (in a line, on top of each other) stays as it was.
+  const meta = metaOf(after);
+  if (meta && isCurveTool(meta.tool) && curveValue(meta.tool, measurePoints(after)) === null)
+    return;
   scope.updateAnnotation(before.pageIndex, before.id, patchOf(before, after));
 }
 

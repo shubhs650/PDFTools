@@ -42,6 +42,7 @@ import { applyProp } from './style';
 import { isDesignTool } from '../../forms/fieldModel';
 import { FieldDesignProperties } from '../../forms/FieldProperties';
 import { setToolProp, TOOL_NAME_KEYS, toolPropsOf, toolSample } from './toolProperties';
+import { CurveMethodField } from '../../measure/CurveMethodField';
 import type { PdfAnnotationObject } from '@embedpdf/models';
 
 const ENDINGS: readonly { value: LE; key: MessageKey }[] = [
@@ -503,6 +504,9 @@ function ToolProperties({ tool }: { tool: StyleTool }) {
           void setToolProp(tool, p, v);
         }}
       />
+      {tool === 'measureRadius' || tool === 'measureDiameter' ? (
+        <CurveMethodField tool={tool === 'measureRadius' ? 'radius' : 'diameter'} />
+      ) : null}
       <div className="prop-actions">
         <Button
           size="small"

@@ -55,6 +55,9 @@ const FALLBACK: Readonly<Record<StyleTool, Record<string, unknown>>> = {
   measurePolylength: { type: S.POLYLINE, intent: 'PolyLineDimension' },
   measurePerimeter: { type: S.POLYLINE, intent: 'PolyLineDimension' },
   measureArea: { type: S.POLYGON, intent: 'PolygonDimension' },
+  measureAngle: { type: S.STAMP, measure: { tool: 'angle' } },
+  measureRadius: { type: S.STAMP, measure: { tool: 'radius' } },
+  measureDiameter: { type: S.STAMP, measure: { tool: 'diameter' } },
 };
 
 /** `props` over the tool's current style, as an annotation object (no placement). */

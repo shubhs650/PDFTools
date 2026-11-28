@@ -25,6 +25,7 @@ import { lastTemplateCrs } from '../features/crs/templates/templateExportFlow';
 import { lastAnnotationExport } from '../features/annotate/export/annotationExport';
 import { placeDynamicStamp } from '../features/stamps/stampTools';
 import { MEASURE_INTENT, type MeasureKind } from '../model/measurement';
+import type { CurveTool } from '../model/measureCurve';
 import { isStyleTool, type StyleProps } from '../features/annotate/tools/toolDefaults';
 import {
   defaultsFor,
@@ -267,7 +268,7 @@ export function registerAnnotateProbe(hook: TestHook): void {
     measure: async (
       docId: string,
       page: number,
-      kind: MeasureKind,
+      kind: Exclude<MeasureKind, CurveTool>,
       pts: { x: number; y: number }[],
     ) => {
       await requestProfile();

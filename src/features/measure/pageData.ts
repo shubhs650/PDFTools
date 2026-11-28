@@ -7,23 +7,29 @@
 // entry it had; a removed one loses its entry. Other applications' /PieceInfo
 // entries are kept (model/measureData.ts). Never undoable on its own: it
 // follows the annotations, which are.
-import type { PdfAnnotationObject } from '@embedpdf/models';
+import { PdfAnnotationSubtype, type PdfAnnotationObject } from '@embedpdf/models';
 import { recordError } from '../../app/diagnostics';
 import { documentStore } from '../../app/store/documentStore';
 import {
+  curvePointsNow,
   entryFromPdf,
   entryToPdf,
   geometryFingerprint,
   metaFromEntry,
   pageData,
   readItems,
+  type CurveEntry,
+  type MeasureEntry,
 } from '../../model/measureData';
+import { isCurveTool } from '../../model/measureCurve';
+import type { Box } from '../../model/measureGeometry';
 import { metaOf, type MeasureMeta } from '../../model/measureMarkup';
-import { measurePoints, toUserSpace } from '../../model/measurement';
+import { fromUserSpace, measurePoints, toUserSpace } from '../../model/measurement';
 import type { PdfJson } from '../../model/pdf/wire';
+import type { Scale } from '../../model/scale';
 import { renderEngine } from '../view/host';
 import { scaleStore } from './scaleStore';
-import { frameOf } from './viewports';
+import { boxFromPoints, frameOf } from './viewports';
 
 /** The file's /PieceInfo of a page, as read when the document opened (null: none, or unknown yet). */
 function filePieceInfo(docId: string, page: number): PdfJson {
@@ -32,20 +38,89 @@ function filePieceInfo(docId: string, page: number): PdfJson {
   return d.pages[page]?.pieceInfo ?? null;
 }
 
-/** The fingerprint of an annotation's geometry in user space (what its entry is saved against). */
+/** An annotation's /Rect in user space. */
+function userRect(docId: string, a: PdfAnnotationObject): Box {
+  const { origin: o, size } = a.rect;
+  return boxFromPoints(docId, a.pageIndex, o, {
+    x: o.x + size.width,
+    y: o.y + size.height,
+  });
+}
+
+const isStamp = (a: PdfAnnotationObject): boolean => a.type === PdfAnnotationSubtype.STAMP;
+
+/**
+ * The fingerprint of an annotation's geometry in user space (what its entry is
+ * saved against); a Stamp's (Angle, Radius, Diameter) is of its /Rect.
+ */
 export function fingerprintOf(docId: string, a: PdfAnnotationObject): string {
+  if (isStamp(a)) {
+    const [x0, y0, x1, y1] = userRect(docId, a);
+    return geometryFingerprint([
+      { x: x0, y: y0 },
+      { x: x1, y: y1 },
+    ]);
+  }
   return geometryFingerprint(toUserSpace(measurePoints(a), frameOf(docId, a.pageIndex)));
+}
+
+function fileEntry(docId: string, a: PdfAnnotationObject): MeasureEntry | null {
+  const raw = readItems(filePieceInfo(docId, a.pageIndex)).get(a.id);
+  return raw === undefined ? null : entryFromPdf(raw);
 }
 
 /**
  * The meta the file holds for a measurement read from it: its Triya entry
  * (without the shape-bound part when another editor moved or reshaped it), or
- * null when the file has none.
+ * null when the file has none. An Angle's, Radius's or Diameter's points come
+ * back in page points, moved with its Stamp when another editor moved it, and
+ * not at all when it was resized there (M14-05).
  */
 export function fileMeta(docId: string, a: PdfAnnotationObject): MeasureMeta | null {
-  const raw = readItems(filePieceInfo(docId, a.pageIndex)).get(a.id);
-  const e = raw === undefined ? null : entryFromPdf(raw);
-  return e ? metaFromEntry(e, fingerprintOf(docId, a)) : null;
+  const e = fileEntry(docId, a);
+  if (!e) return null;
+  const meta = metaFromEntry(e, fingerprintOf(docId, a));
+  if (!isCurveTool(meta.tool)) return meta;
+  if (!isStamp(a)) return null;
+  const now = curvePointsNow(e.curve, userRect(docId, a));
+  if (now) {
+    meta.pts = fromUserSpace(now, frameOf(docId, a.pageIndex));
+    // Its caption's offset is in its own frame: it moved with it.
+    if (e.meta.capOffset) meta.capOffset = e.meta.capOffset;
+  } else delete meta.shape;
+  return meta;
+}
+
+/** A curve's colour and line width from the file's Triya data (a Stamp keeps neither). */
+export function fileStyle(
+  docId: string,
+  a: PdfAnnotationObject,
+): { strokeColor?: string; strokeWidth?: number } {
+  const c = fileEntry(docId, a)?.curve;
+  return {
+    ...(c?.color ? { strokeColor: c.color } : {}),
+    ...(typeof c?.width === 'number' ? { strokeWidth: c.width } : {}),
+  };
+}
+
+/** The scale a measurement is valued in (measurements.ts), for a curve's /Sc. */
+let scaleOf: (docId: string, a: PdfAnnotationObject) => Scale | null = () => null;
+
+export function setCurveScaleSource(fn: typeof scaleOf): void {
+  scaleOf = fn;
+}
+
+/** An Angle's, Radius's or Diameter's own data for its entry (user space). */
+function curveEntry(docId: string, a: PdfAnnotationObject, meta: MeasureMeta): CurveEntry {
+  const o = a as unknown as { strokeColor?: unknown; strokeWidth?: unknown };
+  const s = meta.tool === 'angle' ? null : scaleOf(docId, a);
+  return {
+    pts: toUserSpace(meta.pts ?? [], frameOf(docId, a.pageIndex)),
+    rect: userRect(docId, a),
+    ...(typeof o.strokeColor === 'string' ? { color: o.strokeColor } : {}),
+    ...(typeof o.strokeWidth === 'number' ? { width: o.strokeWidth } : {}),
+    ...(s ? { scale: { paper: s.paper, real: s.real, unit: s.unit } } : {}),
+  };
 }
 
 /** A date as PDF writes it (ISO 32000-1 §7.9.4), in UTC. */
@@ -65,7 +140,15 @@ export function itemsFor(
   for (const a of annots) {
     if (a.pageIndex !== page) continue;
     const meta = metaOf(a);
-    if (meta) out.set(a.id, entryToPdf({ meta, fp: fingerprintOf(docId, a) }));
+    if (meta && isCurveTool(meta.tool) && isStamp(a)) {
+      // The points go in the entry's own keys, in user space.
+      const rest = { ...meta };
+      delete rest.pts;
+      out.set(
+        a.id,
+        entryToPdf({ meta: rest, fp: fingerprintOf(docId, a), curve: curveEntry(docId, a, meta) }),
+      );
+    } else if (meta) out.set(a.id, entryToPdf({ meta, fp: fingerprintOf(docId, a) }));
     else {
       const raw = file.get(a.id);
       if (raw !== undefined) out.set(a.id, raw);

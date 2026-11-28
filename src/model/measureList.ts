@@ -10,19 +10,29 @@
 // paper size (no scale, or a 1 : 1 scale) is never added to a real one: it has
 // its own "at paper size" sum. A measurement that spans two scales has no
 // number and stays out of both (Q30).
+import { isCurveTool } from './measureCurve';
 import { MEASURE_TOOL_IDS, VALUE_KIND, type MeasureTool } from './measureMarkup';
-import { measuredValue, PAPER } from './measurement';
+import { ANGLE_DECIMALS, measuredValue, PAPER } from './measurement';
 import { formatLength, MM_PER_UNIT, type LengthFormat, type Pt, type Scale } from './scale';
 
-/** What a group adds up. */
-export type Quantity = 'length' | 'area';
+/** What a group adds up (an angle is in degrees, whatever the scale). */
+export type Quantity = 'length' | 'area' | 'angle';
 
 export const QUANTITY: Record<MeasureTool, Quantity> = {
   length: 'length',
   polylength: 'length',
   perimeter: 'length',
   area: 'area',
+  angle: 'angle',
+  radius: 'length',
+  diameter: 'length',
 };
+
+/**
+ * Whether a group has a total: angles, radii and diameters (M14-05) don't add
+ * up to anything useful.
+ */
+export const hasTotal = (tool: MeasureTool): boolean => !isCurveTool(tool);
 
 /** One measurement as the pane reads it. */
 export interface MeasureEntryInput {
@@ -67,16 +77,20 @@ export interface MeasureEntry {
 export const isPaperScale = (s: Scale | null): boolean =>
   !s || Math.abs(s.real / s.paper - 1) < 1e-9;
 
-const power = (q: Quantity): number => (q === 'area' ? 2 : 1);
+const power = (q: Quantity): number => (q === 'area' ? 2 : q === 'angle' ? 0 : 1);
 
 /** Millimetres (mm²) in one `unit` (unit²) of the scale. */
 const mmPer = (s: Scale, q: Quantity): number => MM_PER_UNIT[s.unit] ** power(q);
 
 export function measureEntry(i: MeasureEntryInput): MeasureEntry {
   const quantity = QUANTITY[i.tool];
+  const angle = quantity === 'angle';
   const scale = i.scale ?? PAPER;
-  const spans = i.spans && i.spans.length > 1 ? i.spans : null;
-  const value = spans ? null : measuredValue(VALUE_KIND[i.tool], i.points, i.scale);
+  // An angle needs no scale (Q9): never "spans" or "at paper size".
+  const spans = !angle && i.spans && i.spans.length > 1 ? i.spans : null;
+  const kind = isCurveTool(i.tool) ? i.tool : VALUE_KIND[i.tool];
+  const raw = spans ? null : measuredValue(kind, i.points, i.scale);
+  const value = raw === null || Number.isFinite(raw) ? raw : null;
   return {
     id: i.id,
     page: i.page,
@@ -86,7 +100,7 @@ export function measureEntry(i: MeasureEntryInput): MeasureEntry {
     value,
     base: value === null ? null : value * mmPer(scale, quantity),
     scale,
-    paper: isPaperScale(i.scale),
+    paper: !angle && isPaperScale(i.scale),
     spans,
     where: i.where,
     at: i.at,
@@ -95,6 +109,7 @@ export function measureEntry(i: MeasureEntryInput): MeasureEntry {
 
 /** A value in a scale's unit, as the markups show it ("20.00 m", "12'-6\"", "42.50 m²"). */
 export function quantityText(value: number, s: Scale, q: Quantity, f: LengthFormat): string {
+  if (q === 'angle') return `${f.fixed(value, ANGLE_DECIMALS)}°`;
   return formatLength(value, s, f, q === 'area' ? 'area' : 'distance');
 }
 
@@ -190,7 +205,8 @@ export function groupMeasurements(
   for (const tool of MEASURE_TOOL_IDS) {
     const list = shown.filter((e) => e.tool === tool).sort(byPlace);
     if (list.length === 0) continue;
-    out.push({ key: tool, tool, quantity: QUANTITY[tool], entries: list, total: totalOf(list) });
+    const total = hasTotal(tool) ? totalOf(list) : { real: null, paper: null, left: 0 };
+    out.push({ key: tool, tool, quantity: QUANTITY[tool], entries: list, total });
   }
   return out;
 }

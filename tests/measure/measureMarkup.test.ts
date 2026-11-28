@@ -149,7 +149,31 @@ describe('the markup’s own data', () => {
       fill: '#E44234',
       label: 'S1',
     });
-    expect(metaOf({ measure: { tool: 'angle' } })).toBeNull();
+    expect(metaOf({ measure: { tool: 'protractor' } })).toBeNull();
+    // An Angle, Radius or Diameter (M14-05) keeps its points and its shape, nothing else.
+    expect(
+      metaOf({
+        measure: {
+          tool: 'radius',
+          pts: [
+            { x: 0, y: 0 },
+            { x: 3, y: 4 },
+          ],
+          shape: 'circle',
+          fill: 'red',
+        },
+      }),
+    ).toEqual({
+      tool: 'radius',
+      pts: [
+        { x: 0, y: 0 },
+        { x: 3, y: 4 },
+      ],
+      shape: 'circle',
+    });
+    expect(metaOf({ measure: { tool: 'angle', pts: [{ x: 0, y: Number.NaN }] } })).toEqual({
+      tool: 'angle',
+    });
     expect(
       metaOf({ measure: { tool: 'length', cap: 'side', fill: 'red', capOffset: { x: 0, y: 0 } } }),
     ).toEqual({

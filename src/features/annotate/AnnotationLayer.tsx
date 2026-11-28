@@ -29,8 +29,10 @@ import { pressComment, type PageGeometry } from './textPointer';
 import { isTextMarkup } from './pointerModes';
 import { annotationCapability } from './selection';
 import { SelectedMeasure } from '../measure/SelectedMeasure';
+import { withFileCurve } from '../measure/measurements';
 import { useEditPreview } from '../measure/pointEdit';
 import { metaOf } from '../../model/measureMarkup';
+import { isCurveTool } from '../../model/measureCurve';
 
 const readLibraryFont = (a: PdfAnnotationObject): string | undefined => {
   const v = (a as unknown as { libraryFont?: unknown }).libraryFont;
@@ -64,6 +66,10 @@ function Body({
   const { id } = annotation;
   // A measurement whose point is being dragged: its preview is drawn instead (M14-04).
   const editing = useEditPreview(isSelected ? documentId : null, id) !== null;
+  // An Angle, Radius or Diameter (a Stamp, M14-05): drawn by SelectedMeasure while
+  // selected, not by the plugin's image of it (app.css).
+  const shown = isSelected ? withFileCurve(documentId, annotation) : annotation;
+  const curve = isMeasureCurve(shown);
   // A text comment in a library font (M11-07, D-52): its editor draws that face.
   const lib = text ? libraryFamily(readLibraryFont(annotation)) : undefined;
   const font = lib?.group ? lib.id : undefined;
@@ -84,6 +90,7 @@ function Body({
       className="annotation-body"
       data-selected={isSelected || undefined}
       data-measure-editing={editing || undefined}
+      data-measure-curve={curve || undefined}
       // Which comment a Shift or Ctrl press is on (commentSelection.ts, M7-04).
       data-annotation-id={id}
       data-page-index={annotation.pageIndex}
@@ -105,9 +112,16 @@ function Body({
     >
       {children}
       {/* A selected measurement's caption and fill (M14-03): the plugin draws only its points. */}
-      {isSelected ? <SelectedMeasure annotation={annotation} scale={geometry.scale} /> : null}
+      {isSelected ? <SelectedMeasure annotation={shown} scale={geometry.scale} /> : null}
     </div>
   );
+}
+
+/** An Angle, Radius or Diameter: a Stamp with a curve's `measure` field. */
+function isMeasureCurve(a: PdfAnnotationObject): boolean {
+  if (a.type !== PdfAnnotationSubtype.STAMP) return false;
+  const meta = metaOf(a);
+  return !!meta && isCurveTool(meta.tool);
 }
 
 /**

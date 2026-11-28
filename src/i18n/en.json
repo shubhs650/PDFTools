@@ -145,6 +145,9 @@
       "polylength": "Polylength",
       "perimeter": "Perimeter",
       "area": "Area",
+      "angle": "Angle",
+      "radius": "Radius",
+      "diameter": "Diameter",
       "calibrate": "Calibrate",
       "setScale": "Set Scale",
       "scaleViewport": "Scale Viewport",
@@ -350,6 +353,7 @@
       "measure": {
         "length": "Length",
         "area": "Area",
+        "curves": "Curves and Angles",
         "scale": "Scale",
         "settings": "Settings",
         "snap": "Snap"
@@ -928,6 +932,7 @@
       "closeOutHighlights": "Whether a comparison's close-out list hides highlights",
       "compareTips": "Whether the first-time tips of Compare were seen",
       "measureLoupe": "The Measure loupe and snapping choices: loupe on or off, size, magnification, View › Loupe",
+      "measureCurveMethod": "How Radius and Diameter are picked: centre and edge, or three points",
       "thinLines": "Whether Thin Lines is on"
     },
     "clearHint": "To delete this data, use File → Settings → Clear all local data."
@@ -1468,7 +1473,10 @@
       "other": "Comment",
       "distance": "Length measurement",
       "perimeter": "Polylength or perimeter measurement",
-      "area": "Area measurement"
+      "area": "Area measurement",
+      "angle": "Angle measurement",
+      "radius": "Radius measurement",
+      "diameter": "Diameter measurement"
     },
     "anonymous": "Anonymous",
     "caret": {
@@ -1485,7 +1493,12 @@
       "length": "Click two points, move sideways to set the dimension line, then click. Double-click the second point or press Enter for no offset. Esc cancels.",
       "polylength": "Click each point, then double-click or press Enter. Esc cancels.",
       "perimeter": "Click each corner, then click the first one, double-click or press Enter: it closes back to the first corner. Esc cancels.",
-      "area": "Click each corner, then click the first one, double-click or press Enter. Esc cancels."
+      "area": "Click each corner, then click the first one, double-click or press Enter. Esc cancels.",
+      "angle": "Click the end of the first arm, then the corner, then the end of the second arm. Esc cancels.",
+      "radiusCentre": "Click the centre, then a point on the edge. Esc cancels.",
+      "radiusThree": "Click three points on the circle or arc. Esc cancels.",
+      "diameterCentre": "Click the centre, then a point on the edge. Esc cancels.",
+      "diameterThree": "Click three points on the circle or arc. Esc cancels."
     },
     "link": {
       "title": "Link",
@@ -1711,7 +1724,10 @@
       "measureLength": "Length",
       "measurePolylength": "Polylength",
       "measurePerimeter": "Perimeter",
-      "measureArea": "Area"
+      "measureArea": "Area",
+      "measureAngle": "Angle",
+      "measureRadius": "Radius",
+      "measureDiameter": "Diameter"
     }
   },
   "comments": {
@@ -1970,10 +1986,16 @@
       "length": "Length",
       "polylength": "Polylength",
       "perimeter": "Perimeter",
-      "area": "Area"
+      "area": "Area",
+      "angle": "Angle",
+      "radius": "Radius",
+      "diameter": "Diameter"
     },
     "caption": {
-      "labelled": "{{label}}: {{value}}"
+      "labelled": "{{label}}: {{value}}",
+      "angle": "∠ {{value}}°",
+      "radius": "R {{value}}",
+      "diameter": "Ø {{value}}"
     },
     "props": {
       "heading": "Measurement",
@@ -1983,7 +2005,14 @@
       "above": "Above the line",
       "inline": "In the line",
       "resetCaption": "Put the caption back",
-      "captionMoved": "The caption was moved."
+      "captionMoved": "The caption was moved.",
+      "noScaleNeeded": "An angle needs no scale.",
+      "shape": "Shown as",
+      "shapeArc": "The arc through the points",
+      "shapeCircle": "The whole circle",
+      "method": "Pick by",
+      "methodCentre": "Centre, then a point on the edge",
+      "methodThree": "Three points on the curve"
     },
     "captionDrag": {
       "handle": "Move the caption of this measurement"
@@ -2007,6 +2036,9 @@
       "done_one": "{{count}} measurement updated. Undo puts it back as it was.",
       "done_other": "{{count}} measurements updated. Undo puts them back as they were.",
       "none": "This file has no measurements from an earlier version."
+    },
+    "curve": {
+      "noCircle": "These three points are in a line, so no circle goes through them. Pick three points on the curve."
     }
   },
   "measurements": {
@@ -2031,6 +2063,7 @@
     "where": "Page {{page}} · {{where}}",
     "ownScale": "{{ratio}} (from the file)",
     "noScale": "No scale",
+    "noScaleNeeded": "No scale needed",
     "flag": {
       "spans_one": "Spans {{n}} scale",
       "spans_other": "Spans {{n}} scales",
