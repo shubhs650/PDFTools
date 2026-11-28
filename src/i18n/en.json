@@ -2074,7 +2074,8 @@
     "page": "Page {{page}}",
     "currentPage": "(current)",
     "setScaleOf": "Set the scale of page {{page}}",
-    "viewportsOf": "Scale viewports on page {{page}}"
+    "viewportsOf": "Scale viewports on page {{page}}",
+    "viewportHint": "Arrow keys move the viewport on its page (Shift: 10 pt). Delete removes it."
   },
   "viewport": {
     "baseName": "Detail",
@@ -2097,6 +2098,20 @@
     "error": {
       "name": "Enter a name.",
       "box": "Enter a box inside the page, at least 4 pt wide and high."
+    },
+    "onPage": {
+      "frame": "{{label}} scale viewport",
+      "hint": "Arrow keys move it (Shift: 10 pt). Enter edits its name and scale. Delete removes it.",
+      "resize": {
+        "nw": "Resize {{name}} from its top-left corner",
+        "n": "Resize {{name}} from its top edge",
+        "ne": "Resize {{name}} from its top-right corner",
+        "e": "Resize {{name}} from its right edge",
+        "se": "Resize {{name}} from its bottom-right corner",
+        "s": "Resize {{name}} from its bottom edge",
+        "sw": "Resize {{name}} from its bottom-left corner",
+        "w": "Resize {{name}} from its left edge"
+      }
     }
   },
   "crs": {

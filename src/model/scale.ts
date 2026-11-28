@@ -341,6 +341,15 @@ export function viewportToPdf(vp: {
   };
 }
 
+/**
+ * A /VP entry with a new /BBox (M14-09, D-77): moved or resized on the page.
+ * Every other key is kept as it was, so a viewer's own entries survive.
+ */
+export function entryWithBox(entry: PdfJson, bbox: [number, number, number, number]): PdfJson {
+  const d = dict(entry);
+  return d ? { dict: { ...d, BBox: [...bbox] } } : entry;
+}
+
 /** A page's /VP array (ours or a viewer's) read back; entries it can't read are skipped. */
 export function viewportsFromPdf(vp: PdfJson | undefined): PageViewport[] {
   if (!Array.isArray(vp)) return [];
