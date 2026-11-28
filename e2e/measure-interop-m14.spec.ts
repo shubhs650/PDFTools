@@ -153,7 +153,7 @@ test('the M14 interop file from the real tools: five measurements, one markup ea
         ((await cap(page, 'annotate', 'objects', id)) as Obj[]).find((o) => o.id === area.id)
           ?.contents,
     )
-    .toMatch(/^Workshop: [\d.,]+ mm²$/);
+    .toMatch(/^Workshop: [\d.,]+ m²$/);
 
   const { file, tail } = await save(page, id, bytes);
   expect(tail).not.toMatch(/\/FreeText/);

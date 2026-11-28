@@ -16,6 +16,11 @@
 //  4. `assemble` (commentFonts/appearance.ts) wraps it as one form with
 //     PDFium's resources, our see-through states and the font subsets.
 //
+// An Area's or Volume's cutouts (M14-06, ADR-035 Amendment 1 decision 5) are
+// left out of its see-through fill (even-odd) and outlined dashed in its
+// colour; its caption keeps clear of them. Their points come in its `measure`
+// field (EmbedPDF page points) and are turned into user space as a curve's are.
+//
 // An Angle, Radius or Diameter (M14-05, ADR-035 Amendment 1) is a Stamp whose
 // appearance is entirely ours: its arms and arc, or its circle (or arc) and
 // radius or diameter line with open arrows, and the caption, drawn from the
@@ -246,14 +251,29 @@ function placeCaption(
   faces: CommentFaces,
   pts: Pt[],
   leader: Leader | null,
+  holes: Pt[][] = [],
 ): Placed | null {
   if (!call.text.trim()) return null;
   const lines = call.text
     .split('\n')
     .flatMap((p) => layout(p, faces.primary, faces.fallbacks, CAPTION_SIZE, 100_000));
   const { width, height } = captionSize(Math.max(0, ...lines.map((l) => l.width)), lines.length);
-  return { lines, box: captionPlace(call.meta, pts, leader, width, height) };
+  return { lines, box: captionPlace(call.meta, pts, leader, width, height, holes) };
 }
+
+/** An Area's or Volume's cutouts in user space (none without a converter: no holes drawn). */
+function holesOf(call: MeasureCall, native: PdfiumNative | undefined): Pt[][] {
+  const holes = call.type === PdfAnnotationSubtype.POLYGON ? (call.meta.holes ?? []) : [];
+  if (!holes.length || !native) return [];
+  const conv = native as unknown as Partial<PointConverter>;
+  if (typeof conv.convertDevicePointToPagePoint !== 'function') return [];
+  const to = (p: Pt): Pt =>
+    (conv as PointConverter).convertDevicePointToPagePoint(call.doc, call.page, p);
+  return holes.map((h) => h.map(to));
+}
+
+/** The dash of a cutout's outline (points), as the selected markup shows it. */
+const HOLE_DASH = '[4 3] 0 d';
 
 /** The caption's text ops in user space, with one font name per face. */
 function captionOps(
@@ -299,10 +319,11 @@ export function drawMeasureAppearance(
   if (pts.length < 2) return 'fallback';
   const leader = isLine ? leaderOf(a) : null;
   if (call.text.trim() && !faces) return 'fallback';
+  const holes = isArea ? holesOf(call, native) : [];
   // 1. No /IC: the fill is ours, see-through, in the appearance only.
   if (isArea) rawCall(mod, 'EPDFAnnot_ClearColor', annot, PdfAnnotationColorType.InteriorColor);
   // 2. The caption, and /Rect that holds the geometry, the arrows and the caption.
-  const placed = faces ? placeCaption(call, faces, pts, leader) : null;
+  const placed = faces ? placeCaption(call, faces, pts, leader, holes) : null;
   const width = typeof a.strokeWidth === 'number' ? a.strokeWidth : 1;
   const extent =
     isLine && pts[0] && pts[1]
@@ -332,10 +353,12 @@ export function drawMeasureAppearance(
   const parts: string[] = [];
   const ours: string[] = [];
   const states: Record<string, { ca?: number; CA?: number }> = {};
+  const ring = (q: Pt[]): string => `${q.map((p, i) => `${xy(p)} ${i ? 'l' : 'm'}`).join(' ')} h`;
   if (isArea && call.meta.fill) {
+    // The cutouts are rings of their own: the even-odd fill leaves them out.
     states['TMFill'] = { ca: FILL_ALPHA * opacity };
-    const ring = `${pts.map((p, i) => `${xy(p)} ${i ? 'l' : 'm'}`).join(' ')} h`;
-    parts.push(`q ${toForm}/TMFill gs ${c3(rgbOf(call.meta.fill))} rg ${ring} f* Q`);
+    const rings = [pts, ...holes].map(ring).join(' ');
+    parts.push(`q ${toForm}/TMFill gs ${c3(rgbOf(call.meta.fill))} rg ${rings} f* Q`);
   }
   if (base && placed && isLine && call.meta.cap === 'inline') {
     // The line broken for an In line caption: an even-odd clip of /Rect minus the caption.
@@ -348,6 +371,13 @@ export function drawMeasureAppearance(
   } else if (base) parts.push(`q\n${base}\nQ`);
   let usage: Usage = new Map();
   let names = new Map<Face, string>();
+  if (holes.length) {
+    // Each cutout outlined dashed in the markup's colour and width.
+    if (opacity < 1) states['TMHole'] = { CA: opacity };
+    ours.push(
+      `q ${opacity < 1 ? '/TMHole gs ' : ''}${c3(stroke)} RG ${f(width)} w ${HOLE_DASH} 0 J 0 j\n${holes.map(ring).join('\n')}\nS\nQ`,
+    );
+  }
   if (placed && faces) {
     const c = captionOps(placed, faces, stroke);
     usage = c.usage;

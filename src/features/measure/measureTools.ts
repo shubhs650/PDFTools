@@ -9,7 +9,9 @@
 // points live outside the handlers (gesture.ts, M14-02), so any view change
 // keeps a measurement in progress. The live value shows next to the pointer
 // (measureStore); the value, caption and keys follow on commit (measurements.ts).
-// Each tool remembers its own style (Q31: toolDefaults.ts).
+// Each tool remembers its own style (Q31: toolDefaults.ts). A Volume (M14-06)
+// is an Area with a depth; an Area's or Volume's cutouts (its `measure`
+// field's holes) follow its outline when it is moved or resized.
 import type { PluginRegistry } from '@embedpdf/core';
 import { PdfAnnotationSubtype, type PdfAnnotationObject } from '@embedpdf/models';
 import type { AnnotationCapability } from '@embedpdf/plugin-annotation';
@@ -22,7 +24,9 @@ import {
   type MeasureKind,
 } from '../../model/measurement';
 import { isCurveTool, type CurveTool } from '../../model/measureCurve';
+import { affineFrom } from '../../model/measureQuantity';
 import {
+  isAreaTool,
   metaOf,
   mirror,
   toolFromShape,
@@ -32,10 +36,13 @@ import {
 import type { Pt } from '../../model/scale';
 import type { DrawTool } from '../annotate/tools/drawModel';
 import { wrapFactory } from '../annotate/tools/drawTools';
+import { documentStore } from '../../app/store/documentStore';
 import { capability } from '../view/host';
 import { curveHandlerFactory } from './curveTool';
+import { CUTOUT_TOOL, cutoutHandlerFactory } from './cutoutTool';
 import { dimensionHandlerFactory, withLeaderRect, type Patch } from './dimensionTool';
 import { gestureAnchor, registeringDoc } from './gesture';
+import { withFileMeta } from './measurements';
 import { vertexHandlerFactory } from './vertexTool';
 
 /** Each measuring tool's value kind (model/scale.ts). */
@@ -44,6 +51,7 @@ export const MEASURE_TOOLS = {
   measurePolylength: 'perimeter',
   measurePerimeter: 'perimeter',
   measureArea: 'area',
+  measureVolume: 'area',
   measureAngle: 'angle',
   measureRadius: 'radius',
   measureDiameter: 'diameter',
@@ -59,6 +67,7 @@ export const TOOL_OF: Record<MeasureTool, Tool> = {
   measurePolylength: 'polylength',
   measurePerimeter: 'perimeter',
   measureArea: 'area',
+  measureVolume: 'volume',
   measureAngle: 'angle',
   measureRadius: 'radius',
   measureDiameter: 'diameter',
@@ -70,6 +79,7 @@ export const PLUGIN_TOOL: Record<Tool, MeasureTool> = {
   polylength: 'measurePolylength',
   perimeter: 'measurePerimeter',
   area: 'measureArea',
+  volume: 'measureVolume',
   angle: 'measureAngle',
   radius: 'measureRadius',
   diameter: 'measureDiameter',
@@ -81,6 +91,7 @@ export const MEASURE_COMMANDS: Record<string, MeasureTool> = {
   'measure.polylength': 'measurePolylength',
   'measure.perimeter': 'measurePerimeter',
   'measure.area': 'measureArea',
+  'measure.volume': 'measureVolume',
   'measure.angle': 'measureAngle',
   'measure.radius': 'measureRadius',
   'measure.diameter': 'measureDiameter',
@@ -92,6 +103,7 @@ const BASE: Record<MeasureTool, string> = {
   measurePolylength: 'polyline',
   measurePerimeter: 'polyline',
   measureArea: 'polygon',
+  measureVolume: 'polygon',
   measureAngle: 'stamp',
   measureRadius: 'stamp',
   measureDiameter: 'stamp',
@@ -117,6 +129,36 @@ export const curveTransform: Patch = (orig, ctx) => {
   } as unknown as typeof ctx.changes;
 };
 
+/**
+ * An Area's or Volume's transform (M14-06): its cutouts (in its `measure`
+ * field) follow its outline when the plugin moves, resizes or turns it, by
+ * the map that takes its old vertices to its new ones.
+ */
+export function withHoles(base: Patch | undefined): Patch {
+  return (orig, ctx) => {
+    const changes = base ? base(orig, ctx) : ctx.changes;
+    // One read from a file has its cutouts in its Triya data (the active document's).
+    const docId = documentStore.getState().activeId;
+    const meta = metaOf(orig) ?? (docId ? metaOf(withFileMeta(docId, orig)) : null);
+    if (!meta?.holes?.length || ctx.type === 'vertex-edit' || ctx.type === 'property-update')
+      return changes;
+    const before = (orig as { vertices?: Pt[] }).vertices ?? [];
+    let after = (changes as { vertices?: Pt[] }).vertices;
+    const rect = (changes as { rect?: { origin: Pt } }).rect;
+    if (!after && ctx.type === 'move' && rect) {
+      const dx = rect.origin.x - orig.rect.origin.x;
+      const dy = rect.origin.y - orig.rect.origin.y;
+      after = before.map((p) => ({ x: p.x + dx, y: p.y + dy }));
+    }
+    const map = after ? affineFrom(before, after) : null;
+    if (!map) return changes;
+    return {
+      ...changes,
+      measure: { ...meta, holes: meta.holes.map((h) => h.map(map)) },
+    } as unknown as typeof changes;
+  };
+}
+
 interface PreviewData {
   linePoints?: { start: Pt; end: Pt };
   vertices?: Pt[];
@@ -139,7 +181,7 @@ function toolMatch(a: PdfAnnotationObject): Tool | null {
   return kind ? toolFromShape(kind, measurePoints(a).map(mirror)) : null;
 }
 
-const anchorFor = (id: MeasureTool) => (page: number) => {
+const anchorFor = (id: string) => (page: number) => {
   const where = { doc: registeringDoc(), tool: id, page };
   return () => gestureAnchor(where);
 };
@@ -194,6 +236,20 @@ export function installMeasureTools(registry: PluginRegistry): void {
   } catch {
     return;
   }
+  // Cutout (M14-06): holes clicked into the selected Area or Volume; it makes no markup of its own.
+  const polygon = cap.getTool('polygon');
+  if (polygon)
+    cap.addTool({
+      ...polygon,
+      id: CUTOUT_TOOL,
+      name: CUTOUT_TOOL,
+      labelKey: `annotation.${CUTOUT_TOOL}`,
+      categories: ['annotation', 'measure'],
+      matchScore: () => 0,
+      pointerHandler: wrapFactory(CUTOUT_TOOL, cutoutHandlerFactory(), undefined, {
+        anchor: anchorFor(CUTOUT_TOOL),
+      }),
+    });
   for (const [id, kind] of Object.entries(MEASURE_TOOLS) as [MeasureTool, MeasureKind][]) {
     const base = cap.getTool(BASE[id]);
     if (!base) continue;
@@ -204,10 +260,11 @@ export function installMeasureTools(registry: PluginRegistry): void {
     }
     // Placed by clicks with the points kept outside the handler, so a view change
     // between two clicks keeps them (M13-10, M14-02): dimensionTool.ts, vertexTool.ts.
+    // A Volume is drawn as an Area (its depth comes from the remembered one, quantitySettings.ts).
     const handler =
       tool === 'length'
         ? dimensionHandlerFactory
-        : vertexHandlerFactory(tool === 'area' ? 'area' : tool, id);
+        : vertexHandlerFactory(isAreaTool(tool) ? 'area' : tool, id);
     const measure: MeasureMeta = tool === 'length' ? { tool, cap: 'top' } : { tool };
     cap.addTool({
       ...base,
@@ -227,7 +284,9 @@ export function installMeasureTools(registry: PluginRegistry): void {
             clickBehavior: { enabled: false, defaultLength: 0 },
             transform: withLeaderRect(base.transform as Patch | undefined),
           }
-        : {}),
+        : isAreaTool(tool)
+          ? { transform: withHoles(base.transform as Patch | undefined) }
+          : {}),
       // The live value comes from the gesture (gesture.ts); Shift locks from its last point.
       pointerHandler: wrapFactory(id, handler, undefined, { anchor: anchorFor(id) }),
     });

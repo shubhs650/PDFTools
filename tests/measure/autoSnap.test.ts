@@ -27,6 +27,8 @@ describe('auto snap', () => {
         'measureRadius',
         'measureDiameter',
         'measureArea',
+        'measureVolume',
+        'measureCutout',
         'measureLength',
         'measurePolylength',
         'measurePerimeter',

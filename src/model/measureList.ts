@@ -10,19 +10,41 @@
 // paper size (no scale, or a 1 : 1 scale) is never added to a real one: it has
 // its own "at paper size" sum. A measurement that spans two scales has no
 // number and stays out of both (Q30).
+//
+// An Area's or Volume's value is its net area (less its cutouts) or volume
+// in its own unit and decimals (M14-06, Q28); a group's sum is in the unit
+// most of them use. A Volume's row also has its area and depth.
 import { isCurveTool } from './measureCurve';
-import { MEASURE_TOOL_IDS, VALUE_KIND, type MeasureTool } from './measureMarkup';
+import { isAreaTool, MEASURE_TOOL_IDS, VALUE_KIND, type MeasureTool } from './measureMarkup';
 import { ANGLE_DECIMALS, measuredValue, PAPER } from './measurement';
+import {
+  areaValue,
+  AREA_SYMBOL,
+  DEFAULT_DEPTH,
+  MM2_PER,
+  MM3_PER,
+  volumeValue,
+  VOLUME_SYMBOL,
+  type AreaUnit,
+  type AreaValue,
+  type Depth,
+  type QuantityMeta,
+  type VolumeUnit,
+} from './measureQuantity';
 import { formatLength, MM_PER_UNIT, type LengthFormat, type Pt, type Scale } from './scale';
 
 /** What a group adds up (an angle is in degrees, whatever the scale). */
-export type Quantity = 'length' | 'area' | 'angle';
+export type Quantity = 'length' | 'area' | 'volume' | 'angle';
+
+/** An area's or volume's own unit (M14-06, Q28). */
+export type QuantityUnit = AreaUnit | VolumeUnit;
 
 export const QUANTITY: Record<MeasureTool, Quantity> = {
   length: 'length',
   polylength: 'length',
   perimeter: 'length',
   area: 'area',
+  volume: 'volume',
   angle: 'angle',
   radius: 'length',
   diameter: 'length',
@@ -52,6 +74,8 @@ export interface MeasureEntryInput {
   where: string;
   /** Its place on the page (top left of its box): the order inside a group. */
   at: Pt;
+  /** An Area's or Volume's cutouts, depth and units (its `measure` field, M14-06). */
+  q?: QuantityMeta;
 }
 
 export interface MeasureEntry {
@@ -60,10 +84,21 @@ export interface MeasureEntry {
   tool: MeasureTool;
   label: string;
   quantity: Quantity;
-  /** The value in the scale's unit (unit² for an area); null when it spans scales. */
+  /**
+   * The value in the scale's unit (an area's or volume's in its own unit);
+   * null when it spans scales.
+   */
   value: number | null;
-  /** The same in millimetres (mm²), for totals; null when it spans scales. */
+  /** The same in millimetres (mm², mm³), for totals; null when it spans scales. */
   base: number | null;
+  /** An area's or volume's own unit and decimals (M14-06); null for the others. */
+  unit: QuantityUnit | null;
+  decimals: number;
+  /** How many cutouts an Area or Volume has (Q8: "3 cutouts"). */
+  cutouts: number;
+  /** A Volume's net area and depth (Q40: shown in the pane); null for the others. */
+  area: AreaValue | null;
+  depth: Depth | null;
   /** The scale it is shown in (paper size: 1 : 1 mm when it has none). */
   scale: Scale;
   /** Valued at paper size: no scale, or a 1 : 1 scale (Q29). */
@@ -77,7 +112,8 @@ export interface MeasureEntry {
 export const isPaperScale = (s: Scale | null): boolean =>
   !s || Math.abs(s.real / s.paper - 1) < 1e-9;
 
-const power = (q: Quantity): number => (q === 'area' ? 2 : q === 'angle' ? 0 : 1);
+const power = (q: Quantity): number =>
+  q === 'area' ? 2 : q === 'volume' ? 3 : q === 'angle' ? 0 : 1;
 
 /** Millimetres (mm²) in one `unit` (unit²) of the scale. */
 const mmPer = (s: Scale, q: Quantity): number => MM_PER_UNIT[s.unit] ** power(q);
@@ -89,8 +125,15 @@ export function measureEntry(i: MeasureEntryInput): MeasureEntry {
   // An angle needs no scale (Q9): never "spans" or "at paper size".
   const spans = !angle && i.spans && i.spans.length > 1 ? i.spans : null;
   const kind = isCurveTool(i.tool) ? i.tool : VALUE_KIND[i.tool];
-  const raw = spans ? null : measuredValue(kind, i.points, i.scale);
+  const q = i.q ?? {};
+  const own = isAreaTool(i.tool)
+    ? i.tool === 'volume'
+      ? volumeValue(i.points, q, i.scale)
+      : areaValue(i.points, q, i.scale)
+    : null;
+  const raw = spans ? null : own ? own.value : measuredValue(kind, i.points, i.scale);
   const value = raw === null || Number.isFinite(raw) ? raw : null;
+  const base = value === null ? null : own ? own.base : value * mmPer(scale, quantity);
   return {
     id: i.id,
     page: i.page,
@@ -98,7 +141,12 @@ export function measureEntry(i: MeasureEntryInput): MeasureEntry {
     label: i.label?.trim() ?? '',
     quantity,
     value,
-    base: value === null ? null : value * mmPer(scale, quantity),
+    base,
+    unit: own?.unit ?? null,
+    decimals: own?.decimals ?? scale.precision,
+    cutouts: isAreaTool(i.tool) ? (q.holes?.length ?? 0) : 0,
+    area: i.tool === 'volume' && !spans ? areaValue(i.points, q, i.scale) : null,
+    depth: i.tool === 'volume' ? (q.depth ?? DEFAULT_DEPTH) : null,
     scale,
     paper: !angle && isPaperScale(i.scale),
     spans,
@@ -107,21 +155,43 @@ export function measureEntry(i: MeasureEntryInput): MeasureEntry {
   };
 }
 
-/** A value in a scale's unit, as the markups show it ("20.00 m", "12'-6\"", "42.50 m²"). */
-export function quantityText(value: number, s: Scale, q: Quantity, f: LengthFormat): string {
+/** An area's or volume's own unit and decimals, when it has them. */
+export interface OwnUnit {
+  unit: QuantityUnit | null;
+  decimals: number;
+}
+
+/**
+ * A value as the markups show it ("20.00 m", "12'-6\"", "42.50 m²",
+ * "12.75 m³"): a length in its scale's unit, an area or volume in its own.
+ */
+export function quantityText(
+  value: number,
+  s: Scale,
+  q: Quantity,
+  f: LengthFormat,
+  own?: OwnUnit,
+): string {
   if (q === 'angle') return `${f.fixed(value, ANGLE_DECIMALS)}°`;
+  if (own?.unit && q === 'area')
+    return `${f.fixed(value, own.decimals)} ${AREA_SYMBOL[own.unit as AreaUnit]}`;
+  if (own?.unit && q === 'volume')
+    return `${f.fixed(value, own.decimals)} ${VOLUME_SYMBOL[own.unit as VolumeUnit]}`;
   return formatLength(value, s, f, q === 'area' ? 'area' : 'distance');
 }
 
 /** The entry's value as shown; null when it spans scales (no number, Q30). */
 export const entryText = (e: MeasureEntry, f: LengthFormat): string | null =>
-  e.value === null ? null : quantityText(e.value, e.scale, e.quantity, f);
+  e.value === null ? null : quantityText(e.value, e.scale, e.quantity, f, e);
 
-/** A sum of like values: millimetres (mm²), shown in `scale`'s unit. */
+/** A sum of like values: millimetres (mm², mm³), shown in `scale`'s unit or its own. */
 export interface Sum {
   base: number;
   scale: Scale;
   count: number;
+  /** An area's or volume's sum: the unit and decimals most of them use. */
+  unit: QuantityUnit | null;
+  decimals: number;
 }
 
 export interface GroupTotal {
@@ -133,35 +203,46 @@ export interface GroupTotal {
   left: number;
 }
 
-const unitKey = (s: Scale): string => `${s.unit}/${s.ftIn ? 'ftin' : ''}`;
+const unitKey = (e: MeasureEntry): string =>
+  e.unit ?? `${e.scale.unit}/${e.scale.ftIn ? 'ftin' : ''}`;
 
 /** The sum of `entries` (all with a value), in the unit most of them use. */
 export function sumOf(entries: readonly MeasureEntry[]): Sum | null {
   const valued = entries.filter((e) => e.base !== null);
   const first = valued[0];
   if (!first) return null;
-  const counts = new Map<string, { n: number; scale: Scale }>();
+  const counts = new Map<string, { n: number; e: MeasureEntry }>();
   for (const e of valued) {
-    const k = unitKey(e.scale);
+    const k = unitKey(e);
     const c = counts.get(k);
     if (c) c.n++;
-    else counts.set(k, { n: 1, scale: e.scale });
+    else counts.set(k, { n: 1, e });
   }
-  let best = { n: 0, scale: first.scale };
+  let best = { n: 0, e: first };
   // Map order is first-seen order, so a tie keeps the first.
   for (const c of counts.values()) if (c.n > best.n) best = c;
   return {
     base: valued.reduce((s, e) => s + (e.base ?? 0), 0),
-    scale: best.scale,
+    scale: best.e.scale,
     count: valued.length,
+    unit: best.e.unit,
+    decimals: best.e.decimals,
   };
 }
 
-/** A sum in its scale's unit (unit²). */
-export const sumValue = (s: Sum, q: Quantity): number => s.base / mmPer(s.scale, q);
+/** Millimetres (mm², mm³) in one unit of a sum. */
+const perUnit = (s: Sum, q: Quantity): number =>
+  s.unit && q === 'area'
+    ? MM2_PER[s.unit as AreaUnit]
+    : s.unit && q === 'volume'
+      ? MM3_PER[s.unit as VolumeUnit]
+      : mmPer(s.scale, q);
+
+/** A sum in its unit (its scale's, unit², or an area's or volume's own). */
+export const sumValue = (s: Sum, q: Quantity): number => s.base / perUnit(s, q);
 
 export const sumText = (s: Sum, q: Quantity, f: LengthFormat): string =>
-  quantityText(sumValue(s, q), s.scale, q, f);
+  quantityText(sumValue(s, q), s.scale, q, f, s);
 
 export function totalOf(entries: readonly MeasureEntry[]): GroupTotal {
   return {

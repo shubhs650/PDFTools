@@ -94,6 +94,28 @@ describe('caption placement (M14-03, Q40)', () => {
       expect(inside(q, l)).toBe(true);
   });
 
+  it('an Area’s or Volume’s value keeps clear of its cutouts (M14-06)', () => {
+    const square = [
+      { x: 0, y: 0 },
+      { x: 100, y: 0 },
+      { x: 100, y: 100 },
+      { x: 0, y: 100 },
+    ];
+    const hole = [
+      { x: 30, y: 30 },
+      { x: 70, y: 30 },
+      { x: 70, y: 70 },
+      { x: 30, y: 70 },
+    ];
+    for (const tool of ['area', 'volume'] as const) {
+      const box = captionPlace({ tool }, square, null, 30, 10, [hole]);
+      const pts = corners(box).concat([box.at]);
+      expect(pts.every((q) => inside(q, square))).toBe(true);
+      expect(pts.some((q) => inside(q, hole))).toBe(false);
+      expect(hole.some((q) => inside(q, corners(box)))).toBe(false);
+    }
+  });
+
   it('a dragged offset is along the caption, then up from it', () => {
     const c = { at: { x: 0, y: 0 }, angle: Math.PI / 2, width: 1, height: 1 };
     close(offsetBox(c, { x: 5, y: 0 }).at, { x: 0, y: 5 });
@@ -180,6 +202,48 @@ describe('the markup’s own data', () => {
       tool: 'length',
     });
     expect(metaOf({})).toBeNull();
+    // An Area's cutouts and units; a Volume's depth, always there (M14-06).
+    const hole = [
+      { x: 1, y: 1 },
+      { x: 2, y: 1 },
+      { x: 2, y: 2 },
+    ];
+    expect(
+      metaOf({
+        measure: {
+          tool: 'area',
+          holes: [hole, [{ x: 0, y: 0 }], 'x'],
+          areaUnit: 'ft2',
+          areaDecimals: 9,
+          depth: { value: 2, unit: 'm' },
+        },
+      }),
+    ).toEqual({ tool: 'area', holes: [hole], areaUnit: 'ft2' });
+    expect(metaOf({ measure: { tool: 'volume' } })).toEqual({
+      tool: 'volume',
+      depth: { value: 1, unit: 'm' },
+    });
+    expect(
+      metaOf({
+        measure: {
+          tool: 'volume',
+          depth: { value: 250, unit: 'mm' },
+          volumeUnit: 'yd3',
+          volumeDecimals: 0,
+        },
+      }),
+    ).toEqual({
+      tool: 'volume',
+      depth: { value: 250, unit: 'mm' },
+      volumeUnit: 'yd3',
+      volumeDecimals: 0,
+    });
+    expect(
+      sameMeta(
+        { tool: 'area', holes: [hole] },
+        { tool: 'area', holes: [hole.map((p) => ({ ...p, x: p.x + 1 }))] },
+      ),
+    ).toBe(false);
     expect(sameMeta({ tool: 'length' }, { tool: 'length', cap: undefined } as never)).toBe(true);
   });
 
@@ -208,6 +272,29 @@ describe('Triya data in /PieceInfo (D-74)', () => {
   it('an entry round-trips', () => {
     const e = entryFromPdf(entryToPdf({ meta, fp: 'abc' }));
     expect(e).toEqual({ meta, fp: 'abc' });
+  });
+
+  it('a Volume’s depth, units and cutouts round-trip (M14-06)', () => {
+    const volume = {
+      tool: 'volume' as const,
+      depth: { value: 250, unit: 'mm' as const },
+      areaUnit: 'm2' as const,
+      areaDecimals: 3,
+      volumeUnit: 'yd3' as const,
+      volumeDecimals: 0,
+    };
+    const holes = [
+      [
+        { x: 10.5, y: 20 },
+        { x: 30, y: 20 },
+        { x: 30, y: 40.25 },
+      ],
+    ];
+    const pdf = entryToPdf({ meta: volume, fp: 'f1', holes });
+    expect(entryFromPdf(pdf)).toEqual({ meta: volume, fp: 'f1', holes });
+    // A depth that makes no sense is left out (the Volume gets the default back).
+    const bad = { dict: { T: { name: 'Volume' }, Dp: [-1, { text: 'mm' }], F: { text: 'x' } } };
+    expect(entryFromPdf(bad)).toEqual({ meta: { tool: 'volume' }, fp: 'x' });
   });
 
   it('a markup another editor reshaped keeps its label and fill but not its caption offset', () => {

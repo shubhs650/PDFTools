@@ -11,9 +11,17 @@ import {
   type MeasureEntry,
   type MeasureGroup,
   type Quantity,
+  type QuantityUnit,
   type Sum,
 } from './measureList';
-import type { Scale } from './scale';
+import {
+  AREA_SYMBOL,
+  depthMm,
+  VOLUME_SYMBOL,
+  type AreaUnit,
+  type VolumeUnit,
+} from './measureQuantity';
+import { MM_PER_UNIT, type Scale } from './scale';
 import { ANGLE_DECIMALS } from './measurement';
 
 /** A cell of the workbook: text, a number shown with `fmt`, an Excel date (serial, local time), or empty. */
@@ -53,8 +61,6 @@ export interface ExportItem {
   scale: string;
   /** The count group or the label (Q27). */
   group: string;
-  /** A Volume's depth in its unit (M14-06), else null. */
-  depth: number | null;
   author: string;
   /** Last changed (else made), or null. */
   date: Date | null;
@@ -126,16 +132,24 @@ const PICTURE_WIDTH = 36;
 /** Excel's date format for the Date column (shown in the reader's own way by Excel). */
 export const DATE_FORMAT = 'yyyy-mm-dd hh:mm';
 
-/** A unit as the sheet writes it: "m", "m²", "°". */
-export function unitText(scale: Scale, q: Quantity): string {
-  if (q === 'area') return `${scale.unit}²`;
+/**
+ * A unit as the sheet writes it: "m", "m²", "°"; an area or volume in its own
+ * unit when it has one (M14-06: "sq ft", "m³").
+ */
+export function unitText(scale: Scale, q: Quantity, own?: QuantityUnit | null): string {
+  if (q === 'area') return own ? AREA_SYMBOL[own as AreaUnit] : `${scale.unit}²`;
+  if (q === 'volume') return own ? VOLUME_SYMBOL[own as VolumeUnit] : `${scale.unit}³`;
   if (q === 'length') return scale.unit;
   return '°'; // an angle (M14-05), whatever the scale
 }
 
-/** Decimals a value is shown with: its scale's (ft-in in decimal feet: at least 2). */
-export function decimalsOf(scale: Scale, q: Quantity): number {
+/**
+ * Decimals a value is shown with: its scale's (ft-in in decimal feet: at
+ * least 2); an area's or volume's own (M14-06) when it has its own unit.
+ */
+export function decimalsOf(scale: Scale, q: Quantity, own?: { decimals: number }): number {
   if (q === 'angle') return ANGLE_DECIMALS;
+  if (own && (q === 'area' || q === 'volume')) return own.decimals;
   const p = Math.max(0, Math.min(6, Math.round(scale.precision)));
   return scale.ftIn && q === 'length' ? Math.max(2, p) : p;
 }
@@ -159,6 +173,10 @@ const num = (n: number, decimals: number): BookCell => ({
 });
 const whole = (n: number): BookCell => ({ n, fmt: '0' });
 
+/** An area's or volume's own unit and decimals, when it has one. */
+const ownOf = (o: { unit: QuantityUnit | null; decimals: number }) =>
+  o.unit ? { decimals: o.decimals } : undefined;
+
 /** Sheet 1's cells for one measurement, numbered `no` (1-based). */
 export function itemCells(item: ExportItem, no: number, tool: string): BookCell[] {
   const e = item.entry;
@@ -168,9 +186,12 @@ export function itemCells(item: ExportItem, no: number, tool: string): BookCell[
     area: item.area,
     tool,
     group: item.group,
-    value: e.value === null ? null : num(e.value, decimalsOf(e.scale, e.quantity)),
-    unit: e.value === null ? '' : unitText(e.scale, e.quantity),
-    depth: item.depth === null ? null : num(item.depth, decimalsOf(e.scale, 'length')),
+    value: e.value === null ? null : num(e.value, decimalsOf(e.scale, e.quantity, ownOf(e))),
+    unit: e.value === null ? '' : unitText(e.scale, e.quantity, e.unit),
+    // A Volume's depth (M14-06), in its scale's length unit.
+    depth: e.depth
+      ? num(depthMm(e.depth) / MM_PER_UNIT[e.scale.unit], decimalsOf(e.scale, 'length'))
+      : null,
     scale: item.scale,
     author: item.author,
     date: item.date ? { date: excelDate(item.date) } : null,
@@ -186,8 +207,8 @@ function sumRow(name: string, sum: Sum, q: Quantity, note: string): BookCell[] {
   const cells: Record<TotalColumn, BookCell> = {
     group: name,
     count: whole(sum.count),
-    total: num(sumValue(sum, q), decimalsOf(sum.scale, q)),
-    unit: unitText(sum.scale, q),
+    total: num(sumValue(sum, q), decimalsOf(sum.scale, q, ownOf(sum))),
+    unit: unitText(sum.scale, q, sum.unit),
     note,
   };
   return TOTAL_COLUMNS.map((c) => cells[c]);

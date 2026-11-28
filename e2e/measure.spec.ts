@@ -327,10 +327,11 @@ test('Perimeter and Area: click, Enter finishes; exact S2 values; a new scale re
   await expect.poll(() => contentsOf(page, id, per.m.id)).toBe('60.00 m');
   await expect.poll(() => contentsOf(page, id, area.m.id)).toBe('200.00 m²');
 
-  // The same paper geometry at 1:5 in millimetres (the S2 detail): 5,000 / 1,000 × …
+  // The same paper geometry at 1:5 in millimetres (the S2 detail): 3,000 mm around, and the
+  // area in its own unit (m², Automatic for a metric scale, D-73): 500,000 mm² is 0.50 m².
   await setScale(page, '5', 'Millimetres', '1');
   await expect.poll(() => contentsOf(page, id, per.m.id)).toBe('3,000.0 mm');
-  await expect.poll(() => contentsOf(page, id, area.m.id)).toBe('500,000.0 mm²');
+  await expect.poll(() => contentsOf(page, id, area.m.id)).toBe('0.50 m²');
 
   const { tail } = await save(page, id, bytes);
   expect(tail).toMatch(/\/IT\s*\/PolyLineDimension/);

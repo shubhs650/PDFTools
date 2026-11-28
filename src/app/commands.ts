@@ -1181,6 +1181,29 @@ export const COMMANDS: readonly CommandDef[] = [
     shipped: true, // M3-16
     custom: 'measure.area', // M3-06
   },
+  // M14-06 (D-73, Q26): Volume and Cutout complete the Area group.
+  {
+    id: 'measure.volume',
+    tab: 'measure',
+    group: 'area',
+    size: 'large',
+    fluent: 'Cube',
+    milestone: 'M3',
+    toggle: true,
+    shipped: true, // M14-06
+    custom: 'measure.volume',
+  },
+  {
+    id: 'measure.cutout',
+    tab: 'measure',
+    group: 'area',
+    size: 'large',
+    fluent: 'Pentagon',
+    milestone: 'M3',
+    toggle: true,
+    shipped: true, // M14-06
+    custom: 'measure.cutout',
+  },
   // M14-05 (D-73, Q26): the Curves and Angles group (Angle, Radius, Diameter).
   {
     id: 'measure.angle',

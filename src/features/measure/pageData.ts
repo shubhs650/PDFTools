@@ -23,7 +23,7 @@ import {
 } from '../../model/measureData';
 import { isCurveTool } from '../../model/measureCurve';
 import type { Box } from '../../model/measureGeometry';
-import { metaOf, type MeasureMeta } from '../../model/measureMarkup';
+import { isAreaTool, metaOf, type MeasureMeta } from '../../model/measureMarkup';
 import { summaryOf, summaryToPdf } from '../../model/measureSummary';
 import { fromUserSpace, measurePoints, toUserSpace } from '../../model/measurement';
 import type { PdfJson } from '../../model/pdf/wire';
@@ -80,7 +80,14 @@ function fileEntry(docId: string, a: PdfAnnotationObject): MeasureEntry | null {
 export function fileMeta(docId: string, a: PdfAnnotationObject): MeasureMeta | null {
   const e = fileEntry(docId, a);
   if (!e) return null;
-  const meta = metaFromEntry(e, fingerprintOf(docId, a));
+  const fp = fingerprintOf(docId, a);
+  const meta = metaFromEntry(e, fp);
+  // An Area's or Volume's cutouts (M14-06): kept while its outline is the one saved.
+  if (isAreaTool(meta.tool)) {
+    if (e.holes?.length && e.fp === fp)
+      meta.holes = e.holes.map((h) => fromUserSpace(h, frameOf(docId, a.pageIndex)));
+    return meta;
+  }
   if (!isCurveTool(meta.tool)) return meta;
   if (!isStamp(a)) return null;
   const now = curvePointsNow(e.curve, userRect(docId, a));
@@ -150,6 +157,19 @@ export function itemsFor(
       out.set(
         a.id,
         entryToPdf({ meta: rest, fp: fingerprintOf(docId, a), curve: curveEntry(docId, a, meta) }),
+      );
+    } else if (meta && isAreaTool(meta.tool) && meta.holes?.length) {
+      // An area's cutouts go in the entry's own key, in user space (M14-06).
+      const rest = { ...meta };
+      delete rest.holes;
+      const frame = frameOf(docId, a.pageIndex);
+      out.set(
+        a.id,
+        entryToPdf({
+          meta: rest,
+          fp: fingerprintOf(docId, a),
+          holes: meta.holes.map((h) => toUserSpace(h, frame)),
+        }),
       );
     } else if (meta) out.set(a.id, entryToPdf({ meta, fp: fingerprintOf(docId, a) }));
     else if (summary) out.set(a.id, summaryToPdf(summary));

@@ -145,6 +145,8 @@
       "polylength": "Polylength",
       "perimeter": "Perimeter",
       "area": "Area",
+      "volume": "Volume",
+      "cutout": "Cutout",
       "angle": "Angle",
       "radius": "Radius",
       "diameter": "Diameter",
@@ -936,7 +938,8 @@
       "measureLoupe": "The Measure loupe and snapping choices: loupe on or off, size, magnification, View › Loupe",
       "measureCurveMethod": "How Radius and Diameter are picked: centre and edge, or three points",
       "thinLines": "Whether Thin Lines is on",
-      "measureExport": "The measurements export's format and whether it includes pictures"
+      "measureExport": "The measurements export's format and whether it includes pictures",
+      "measureQuantities": "The depth of the next volume, and the units and decimals chosen for new areas and volumes"
     },
     "clearHint": "To delete this data, use File → Settings → Clear all local data."
   },
@@ -1477,6 +1480,7 @@
       "distance": "Length measurement",
       "perimeter": "Polylength or perimeter measurement",
       "area": "Area measurement",
+      "volume": "Volume measurement",
       "angle": "Angle measurement",
       "radius": "Radius measurement",
       "diameter": "Diameter measurement"
@@ -1497,6 +1501,8 @@
       "polylength": "Click each point, then double-click or press Enter. Esc cancels.",
       "perimeter": "Click each corner, then click the first one, double-click or press Enter: it closes back to the first corner. Esc cancels.",
       "area": "Click each corner, then click the first one, double-click or press Enter. Esc cancels.",
+      "volume": "Click each corner, then click the first one, double-click or press Enter. The depth is in the Properties pane. Esc cancels.",
+      "cutout": "Click each corner of the hole inside the selected area, then click the first one, double-click or press Enter. Esc stops cutting.",
       "angle": "Click the end of the first arm, then the corner, then the end of the second arm. Esc cancels.",
       "radiusCentre": "Click the centre, then a point on the edge. Esc cancels.",
       "radiusThree": "Click three points on the circle or arc. Esc cancels.",
@@ -1728,6 +1734,7 @@
       "measurePolylength": "Polylength",
       "measurePerimeter": "Perimeter",
       "measureArea": "Area",
+      "measureVolume": "Volume",
       "measureAngle": "Angle",
       "measureRadius": "Radius",
       "measureDiameter": "Diameter"
@@ -1990,6 +1997,7 @@
       "polylength": "Polylength",
       "perimeter": "Perimeter",
       "area": "Area",
+      "volume": "Volume",
       "angle": "Angle",
       "radius": "Radius",
       "diameter": "Diameter"
@@ -2015,7 +2023,23 @@
       "shapeCircle": "The whole circle",
       "method": "Pick by",
       "methodCentre": "Centre, then a point on the edge",
-      "methodThree": "Three points on the curve"
+      "methodThree": "Three points on the curve",
+      "areaUnit": "Area unit",
+      "areaDecimals": "Area decimals",
+      "volumeUnit": "Volume unit",
+      "volumeDecimals": "Volume decimals",
+      "unitAuto": "Automatic, from the scale",
+      "unitAutoNow": "Automatic ({{unit}})",
+      "depth": "Depth",
+      "depthUnit": "Depth unit",
+      "depthHint": "Each new volume takes this depth. Change it here before drawing.",
+      "area": "Area: {{value}}",
+      "gross": "Before cutouts: {{value}}",
+      "depthLine": "Depth: {{value}}",
+      "cutouts": "Cutouts",
+      "cutout": "Cutout {{n}}: {{value}}",
+      "deleteCutout": "Delete cutout {{n}}",
+      "cutoutHint": "To cut a hole, select the area, choose Cutout on the Measure tab and click around the hole."
     },
     "captionDrag": {
       "handle": "Move the caption of this measurement"
@@ -2023,7 +2047,9 @@
     "edit": {
       "point": "Point {{n}} of {{count}}: drag it, or move it with the arrow keys",
       "pointRemovable": "Point {{n}} of {{count}}: drag it, or move it with the arrow keys; Delete removes it",
-      "line": "Dimension line: drag it, or move it with the arrow keys"
+      "line": "Dimension line: drag it, or move it with the arrow keys",
+      "hole": "Cutout {{h}}, point {{n}} of {{count}}: drag it, or move it with the arrow keys",
+      "holeRemovable": "Cutout {{h}}, point {{n}} of {{count}}: drag it, or move it with the arrow keys; Delete removes it"
     },
     "scaleNote": {
       "name": "Measurements updated",
@@ -2042,6 +2068,34 @@
     },
     "curve": {
       "noCircle": "These three points are in a line, so no circle goes through them. Pick three points on the curve."
+    },
+    "units": {
+      "area": {
+        "mm2": "Square millimetres (mm²)",
+        "cm2": "Square centimetres (cm²)",
+        "m2": "Square metres (m²)",
+        "in2": "Square inches (sq in)",
+        "ft2": "Square feet (sq ft)",
+        "yd2": "Square yards (sq yd)"
+      },
+      "volume": {
+        "mm3": "Cubic millimetres (mm³)",
+        "cm3": "Cubic centimetres (cm³)",
+        "m3": "Cubic metres (m³)",
+        "in3": "Cubic inches (cu in)",
+        "ft3": "Cubic feet (cu ft)",
+        "yd3": "Cubic yards (cu yd)"
+      }
+    },
+    "cutout": {
+      "noTarget": "Select one Area or Volume measurement first: the cutout goes into it.",
+      "outside": "A cutout must lie inside the outline of its area. Nothing was cut.",
+      "overlap": "A cutout must not overlap another cutout. Nothing was cut.",
+      "tooSmall": "A cutout needs three points or more around a hole. Nothing was cut.",
+      "otherPage": "A cutout goes on the page of its area (page {{page}}).",
+      "gone": "The area to cut was removed, so Cutout stopped.",
+      "dropped_one": "{{n}} cutout no longer fits inside the outline and was removed. Undo brings it back.",
+      "dropped_other": "{{n}} cutouts no longer fit inside the outline and were removed. Undo brings them back."
     }
   },
   "measurements": {
@@ -2067,6 +2121,9 @@
     "ownScale": "{{ratio}} (from the file)",
     "noScale": "No scale",
     "noScaleNeeded": "No scale needed",
+    "cutouts_one": "{{n}} cutout",
+    "cutouts_other": "{{n}} cutouts",
+    "volumeOf": "Area {{area}} · Depth {{depth}}",
     "flag": {
       "spans_one": "Spans {{n}} scale",
       "spans_other": "Spans {{n}} scales",

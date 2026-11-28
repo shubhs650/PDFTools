@@ -1,14 +1,34 @@
+import { Delete20Regular } from '@fluentui/react-icons/svg/delete';
 import { useTranslation } from 'react-i18next';
+import type { PdfAnnotationObject } from '@embedpdf/models';
 import { securityOf, useDocuments } from '../../app/store/documentStore';
 import { allows } from '../../model/permissions';
 import { defaultShape, isCurveTool, type CurveShape } from '../../model/measureCurve';
-import { metaOf, type CaptionPlace } from '../../model/measureMarkup';
+import { isAreaTool, metaOf, type CaptionPlace } from '../../model/measureMarkup';
 import { measurePoints } from '../../model/measurement';
-import { Button } from '../../ui/components';
+import {
+  areaText,
+  areaValue,
+  autoAreaUnit,
+  autoVolumeUnit,
+  depthText,
+  DEFAULT_DEPTH,
+} from '../../model/measureQuantity';
+import { format } from '../../i18n';
+import { Button, IconButton } from '../../ui/components';
 import { SelectField, TextProp } from '../annotate/properties/fields';
 import { GridSection } from '../annotate/properties/GridSection';
 import { useSelectedAnnotations } from '../annotate/selection';
-import { choiceFor, choiceText, kindOf, setMeasureMeta, withFileCurve } from './measurements';
+import {
+  choiceFor,
+  choiceText,
+  kindOf,
+  metaFor,
+  scaleForMeasurement,
+  setMeasureMeta,
+  withFileMeta,
+} from './measurements';
+import { QuantityFields } from './QuantityFields';
 import { useScales } from './scaleStore';
 
 const TOP: CaptionPlace = 'top';
@@ -20,7 +40,9 @@ const TOP: CaptionPlace = 'top';
  * Label, a Length's caption place (Above or In line) and Put the caption back
  * after a drag (Q27, Q40). An area's fill is the Style section's Fill. An
  * Angle needs no scale; a Radius or Diameter picked by three points is shown
- * as an arc or as the whole circle (M14-05, Q10).
+ * as an arc or as the whole circle (M14-05, Q10). An Area or Volume shows
+ * its area, depth and cutouts (each can be deleted), and its own units and
+ * decimals; a Volume's Depth can be changed (M14-06, Q7, Q8, Q28).
  */
 export function MeasureInfo({ docId }: { docId: string }) {
   const { t } = useTranslation();
@@ -34,9 +56,9 @@ export function MeasureInfo({ docId }: { docId: string }) {
   const one = sel.length === 1 ? sel[0] : undefined;
   if (!one || !kindOf(docId, one)) return null;
   // A curve read from a file: its points and shape from its Triya data (M14-05).
-  const a = withFileCurve(docId, one);
+  const a = withFileMeta(docId, one);
   const c = choiceFor(docId, a);
-  const meta = metaOf(a);
+  const meta = metaOf(a) ?? metaFor(docId, a);
   const locked = !canEdit || (a.flags?.includes('locked') ?? false);
   const cap: CaptionPlace = meta?.cap ?? TOP;
   const places: { value: CaptionPlace; label: string }[] = [
@@ -54,6 +76,7 @@ export function MeasureInfo({ docId }: { docId: string }) {
         {meta?.tool === 'angle' ? t('measure.props.noScaleNeeded') : choiceText(c)}
       </p>
       {c.kind === 'spanning' ? <p className="prop-empty">{t('measure.spansHint')}</p> : null}
+      {meta && isAreaTool(meta.tool) ? <AreaFacts docId={docId} a={a} /> : null}
       {meta ? (
         <GridSection id="measurement" title={t('measure.props.heading')}>
           <TextProp
@@ -87,6 +110,18 @@ export function MeasureInfo({ docId }: { docId: string }) {
               }}
             />
           ) : null}
+          {isAreaTool(meta.tool) ? (
+            <QuantityFields
+              tool={meta.tool}
+              value={meta}
+              autoArea={autoAreaUnit(scaleForMeasurement(docId, a))}
+              autoVolume={autoVolumeUnit(scaleForMeasurement(docId, a))}
+              disabled={locked}
+              onChange={(change) => {
+                setMeasureMeta(docId, a.id, change);
+              }}
+            />
+          ) : null}
           {meta.capOffset ? (
             <div className="prop-field">
               <span className="prop-label">{t('measure.props.captionMoved')}</span>
@@ -102,6 +137,77 @@ export function MeasureInfo({ docId }: { docId: string }) {
           ) : null}
         </GridSection>
       ) : null}
+    </div>
+  );
+}
+
+/**
+ * An Area's or Volume's facts (M14-06, Q40): a Volume's area and depth, the
+ * area before its cutouts, and each cutout with its area and a Delete button
+ * (one undo step each).
+ */
+function AreaFacts({ docId, a }: { docId: string; a: PdfAnnotationObject }) {
+  const { t } = useTranslation();
+  const canEdit = useDocuments((s) => {
+    const m = s.docs[docId]?.meta;
+    return m ? allows(securityOf(m), 'annotate') : false;
+  });
+  const meta = metaOf(a) ?? metaFor(docId, a);
+  if (!meta || !isAreaTool(meta.tool)) return null;
+  const locked = !canEdit || (a.flags?.includes('locked') ?? false);
+  const s = scaleForMeasurement(docId, a);
+  const pts = measurePoints(a);
+  const holes = meta.holes ?? [];
+  const units = { areaUnit: meta.areaUnit, areaDecimals: meta.areaDecimals };
+  const net = areaText(areaValue(pts, { ...units, holes }, s), format);
+  return (
+    <div className="measure-facts" data-testid="measure-facts">
+      {meta.tool === 'volume' ? (
+        <>
+          <p className="prop-summary">{t('measure.props.area', { value: net })}</p>
+          <p className="prop-summary">
+            {t('measure.props.depthLine', {
+              value: depthText(meta.depth ?? DEFAULT_DEPTH, format),
+            })}
+          </p>
+        </>
+      ) : null}
+      {holes.length > 0 ? (
+        <>
+          <p className="prop-summary">
+            {t('measure.props.gross', { value: areaText(areaValue(pts, units, s), format) })}
+          </p>
+          <GridSection id="cutouts" title={t('measure.props.cutouts')}>
+            <ul className="measure-cutouts" data-testid="measure-cutouts">
+              {holes.map((h, i) => {
+                const n = format.number(i + 1, 0);
+                return (
+                  <li key={i} className="measure-cutout">
+                    <span>
+                      {t('measure.props.cutout', {
+                        n,
+                        value: areaText(areaValue(h, units, s), format),
+                      })}
+                    </span>
+                    <IconButton
+                      size="small"
+                      icon={<Delete20Regular />}
+                      disabled={locked}
+                      label={t('measure.props.deleteCutout', { n })}
+                      onClick={() => {
+                        const next = holes.filter((_, k) => k !== i);
+                        setMeasureMeta(docId, a.id, { holes: next.length ? next : undefined });
+                      }}
+                    />
+                  </li>
+                );
+              })}
+            </ul>
+          </GridSection>
+        </>
+      ) : (
+        <p className="prop-empty-hint">{t('measure.props.cutoutHint')}</p>
+      )}
     </div>
   );
 }

@@ -6,7 +6,9 @@
 // annotations as the plugin's (a POLYLINE or POLYGON with the tool's
 // defaults); the points live in gesture.ts. A Perimeter always closes: its
 // PolyLine repeats its first vertex (ADR-035 Amendment 1), and its preview
-// shows the closing side. Points are EmbedPDF page points.
+// shows the closing side. An Area or Volume starts with the remembered units
+// and a Volume with the remembered Depth (M14-06, quantitySettings.ts); its
+// live value is the volume. Points are EmbedPDF page points.
 import {
   expandRect,
   PdfAnnotationBorderStyle,
@@ -30,7 +32,9 @@ import {
   registeringDoc,
   type Drawer,
 } from './gesture';
+import { metaOf, type MeasureMeta } from '../../model/measureMarkup';
 import { setLive } from './measureStore';
+import { rememberedMeta } from './quantitySettings';
 
 /** The plugin's handle around an area's first corner (CSS px): a click inside it closes the area. */
 const CLOSE_HANDLE_PX = 14;
@@ -68,6 +72,12 @@ const closed = (pts: Pt[]): Pt[] => {
   return first ? [...pts, first] : pts;
 };
 
+/** The tool's `measure` default with what an Area or Volume remembers (M14-06). */
+function measureOf(d: Record<string, unknown>): MeasureMeta | null {
+  const m = metaOf(d);
+  return m ? (metaOf({ measure: { ...m, ...rememberedMeta(m.tool) } }) ?? m) : null;
+}
+
 /** The live value's kind (a Polylength is valued as a path, like a Perimeter). */
 const liveKind = (kind: VertexKind): 'perimeter' | 'area' =>
   kind === 'area' ? 'area' : 'perimeter';
@@ -94,13 +104,16 @@ export function vertexDrawer(kind: VertexKind): Drawer {
           currentVertex: pointer,
         },
       });
-      setLive({ page: g.page, kind: liveKind(kind), pts: path });
+      const m = measureOf(d);
+      setLive({ page: g.page, kind: liveKind(kind), pts: path, ...(m ? { q: m } : {}) });
     },
     place(g: Gesture, context: HandlerContext) {
       const d = defaultsOf(context);
       const vertices = kind === 'perimeter' ? closed(g.pts) : g.pts;
+      const measure = measureOf(d);
       const annotation = {
         ...d,
+        ...(measure ? { measure } : {}),
         vertices,
         rect: boundsFor(kind, vertices, d),
         type,

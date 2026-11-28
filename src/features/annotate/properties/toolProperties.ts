@@ -34,6 +34,7 @@ export const TOOL_NAME_KEYS: Record<StyleTool, MessageKey> = {
   measurePolylength: msg('annotProps.toolName.measurePolylength'),
   measurePerimeter: msg('annotProps.toolName.measurePerimeter'),
   measureArea: msg('annotProps.toolName.measureArea'),
+  measureVolume: msg('annotProps.toolName.measureVolume'),
   measureAngle: msg('annotProps.toolName.measureAngle'),
   measureRadius: msg('annotProps.toolName.measureRadius'),
   measureDiameter: msg('annotProps.toolName.measureDiameter'),

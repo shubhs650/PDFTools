@@ -15,7 +15,7 @@ import type { Box } from '../../../model/scaleViewport';
 import { samePick } from '../../../model/viewportEdit';
 import { annotationCapability } from '../../annotate/selection';
 import { goToPoint } from '../../view/controller';
-import { choiceFor, metaFor, toolOf, withFileCurve, type MeasureChoice } from '../measurements';
+import { choiceFor, metaFor, toolOf, withFileMeta, type MeasureChoice } from '../measurements';
 import { entriesOf, mediaBoxOf, scaleStore } from '../scaleStore';
 import { rectOfBox } from '../viewports';
 
@@ -44,7 +44,7 @@ export function measureEntries(
   const out: MeasureEntry[] = [];
   for (const o of objects) {
     // A curve read from a file: its points from its Triya data (M14-05).
-    const a = withFileCurve(docId, o);
+    const a = withFileMeta(docId, o);
     const tool = toolOf(docId, a);
     if (!tool) continue;
     const c = choiceFor(docId, a);
@@ -56,12 +56,15 @@ export function measureEntries(
           : c.kind === 'page'
             ? c.scale
             : null;
+    // An Area's or Volume's cutouts, depth and units (M14-06), from the session or the file.
+    const meta = metaFor(docId, a);
     out.push(
       measureEntry({
         id: a.id,
         page: a.pageIndex,
         tool,
-        label: metaFor(docId, a)?.label,
+        label: meta?.label,
+        ...(meta ? { q: meta } : {}),
         points: measurePoints(a),
         scale,
         spans: c.kind === 'spanning' ? c.viewports : null,
