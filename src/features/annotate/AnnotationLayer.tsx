@@ -29,6 +29,8 @@ import { pressComment, type PageGeometry } from './textPointer';
 import { isTextMarkup } from './pointerModes';
 import { annotationCapability } from './selection';
 import { SelectedMeasure } from '../measure/SelectedMeasure';
+import { useEditPreview } from '../measure/pointEdit';
+import { metaOf } from '../../model/measureMarkup';
 
 const readLibraryFont = (a: PdfAnnotationObject): string | undefined => {
   const v = (a as unknown as { libraryFont?: unknown }).libraryFont;
@@ -42,12 +44,14 @@ const readLibraryFont = (a: PdfAnnotationObject): string | undefined => {
  * marked so Select Text lets presses through to the text under it (M11-06).
  */
 function Body({
+  documentId,
   annotation,
   isSelected,
   geometry,
   movable,
   children,
 }: {
+  documentId: string;
   annotation: PdfAnnotationObject;
   isSelected: boolean;
   geometry: PageGeometry;
@@ -58,6 +62,8 @@ function Body({
   const text = annotation.type === PdfAnnotationSubtype.FREETEXT;
   const markup = isTextMarkup(annotation);
   const { id } = annotation;
+  // A measurement whose point is being dragged: its preview is drawn instead (M14-04).
+  const editing = useEditPreview(isSelected ? documentId : null, id) !== null;
   // A text comment in a library font (M11-07, D-52): its editor draws that face.
   const lib = text ? libraryFamily(readLibraryFont(annotation)) : undefined;
   const font = lib?.group ? lib.id : undefined;
@@ -77,6 +83,7 @@ function Body({
     <div
       className="annotation-body"
       data-selected={isSelected || undefined}
+      data-measure-editing={editing || undefined}
       // Which comment a Shift or Ctrl press is on (commentSelection.ts, M7-04).
       data-annotation-id={id}
       data-page-index={annotation.pageIndex}
@@ -131,6 +138,7 @@ const bodyRenderer =
       <></>
     ) : (
       <Body
+        documentId={docId}
         annotation={annotation}
         isSelected={isSelected}
         geometry={{ scale, rotation, pageWidth, pageHeight }}
@@ -202,6 +210,24 @@ const RENDERERS = [FILE_ATTACHMENT, FIELD_RENDERER];
 /** The selection outline in the focus colour (a token, rules 11–12: no literal colours). */
 const OUTLINE = { color: 'var(--color-focus)', width: 2 };
 
+type VertexUI = NonNullable<Parameters<typeof PluginLayer>[0]['vertexUI']>;
+type VertexProps = Parameters<NonNullable<VertexUI['component']>>[0];
+
+/**
+ * The plugin's vertex handles, except on a measurement: its points have our
+ * own handles, which snap, lock with Shift and show the loupe (M14-04,
+ * MeasureEditor.tsx). Only one annotation shows vertices at a time (a single
+ * selection), so the selection says whose they are.
+ */
+const vertexUIFor = (docId: string): VertexUI => ({
+  component: ({ key, backgroundColor, ...p }: VertexProps) => {
+    const sel = annotationCapability()?.forDocument(docId).getSelectedAnnotations() ?? [];
+    const one = sel.length === 1 ? sel[0]?.object : undefined;
+    if (one && metaOf(one)) return <span key={key} hidden />;
+    return <div key={key} {...p} style={{ ...p.style, backgroundColor }} />;
+  },
+});
+
 export function AnnotationLayer({
   documentId,
   pageIndex,
@@ -219,6 +245,7 @@ export function AnnotationLayer({
     return meta ? allows(securityOf(meta), 'annotate') : false;
   });
   const renderBody = useMemo(() => bodyRenderer(documentId), [documentId, annotate]); // eslint-disable-line react-hooks/exhaustive-deps
+  const vertexUI = useMemo(() => vertexUIFor(documentId), [documentId]);
   return (
     <PluginLayer
       key={epoch}
@@ -228,6 +255,7 @@ export function AnnotationLayer({
       className="annotation-layer"
       selectionOutline={OUTLINE}
       customAnnotationRenderer={renderBody}
+      vertexUI={vertexUI}
       annotationRenderers={RENDERERS}
     />
   );

@@ -116,6 +116,26 @@ export function pagePointAt(docId: string, clientX: number, clientY: number): Pa
   return null;
 }
 
+/**
+ * The point of a given page under a client position, kept on that page (a
+ * drag that strays past its edge, M14-04). Null: the page is not laid out.
+ */
+export function pointOnPage(
+  docId: string,
+  page: number,
+  clientX: number,
+  clientY: number,
+): Point | null {
+  const g = geometry(docId, page);
+  if (!g) return null;
+  return toPagePoint(
+    { x: clientX - g.box.left, y: clientY - g.box.top },
+    g.size,
+    g.rotation,
+    g.scale,
+  );
+}
+
 /** Where a page point is on screen (null: its page is not laid out). */
 export function clientPointOf(docId: string, page: number, point: Point): Point | null {
   const g = geometry(docId, page);

@@ -103,7 +103,7 @@ export function valueText(
 export function measureKeys(
   kind: Kind,
   scale: Scale | null,
-  caption: { place?: 'top' | 'inline'; offset?: Pt | null } = {},
+  caption: { place?: 'top' | 'inline'; offset?: Pt | null; leader?: Leader | null } = {},
 ): { set: Record<string, PdfJson>; remove: string[] } {
   const set: Record<string, PdfJson> = { IT: { name: MEASURE_INTENT[kind] } };
   const remove: string[] = [];
@@ -116,6 +116,15 @@ export function measureKeys(
     if (o && (o.x !== 0 || o.y !== 0))
       set['CO'] = [Math.round(o.x * 100) / 100, Math.round(o.y * 100) / 100];
     else remove.push('CO');
+    // A dimension line dragged back onto the points (M14-04, Q24): its leader
+    // entries go. Written whenever it has them, so an earlier removal never wins.
+    if (caption.leader) {
+      const l = caption.leader;
+      set['LL'] = l.ll;
+      set['LLE'] = l.lle;
+      if (l.llo > 0) set['LLO'] = l.llo;
+      else remove.push('LLO');
+    } else if (caption.leader === null) remove.push('LL', 'LLE', 'LLO');
   }
   return { set, remove };
 }

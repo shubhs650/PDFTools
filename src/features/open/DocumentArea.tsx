@@ -3,6 +3,7 @@ import { documentStore, useDocuments } from '../../app/store/documentStore';
 import { PermissionBanner } from '../protect/PermissionBanner';
 import { XfaBanner } from '../forms/XfaBanner';
 import { OldMeasurementsBar } from '../measure/OldMeasurementsBar';
+import { ScaleNoteBar } from '../measure/ScaleNoteBar';
 import { SignatureBanner } from '../signatures/SignatureBanner';
 import { FindBar } from '../search/FindBar';
 import { ScalePrompt } from '../measure/ScalePrompt';
@@ -74,6 +75,8 @@ export function DocumentArea() {
               <DocumentView key={activeId} documentId={activeId} />
               {/* The no-scale question floats over the page (M14-02): nothing moves under the pointer. */}
               <ScalePrompt documentId={activeId} />
+              {/* "12 measurements updated" after a scale change (M14-04), floating too. */}
+              <ScaleNoteBar documentId={activeId} />
             </div>
           </div>
         ) : (

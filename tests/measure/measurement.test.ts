@@ -104,6 +104,18 @@ describe('object keys', () => {
     expect(k.remove).toEqual([]);
   });
 
+  it('a length with leader lines writes /LL and /LLE; without them they go (M14-04)', () => {
+    const k = measureKeys('distance', s100, { leader: { ll: -12.5, lle: 3, llo: 0 } });
+    expect(k.set.LL).toBe(-12.5);
+    expect(k.set.LLE).toBe(3);
+    expect(k.remove).toEqual(['CO', 'LLO']);
+    const none = measureKeys('distance', s100, { leader: null });
+    expect(none.set.LL).toBeUndefined();
+    expect(none.remove).toEqual(['CO', 'LL', 'LLE', 'LLO']);
+    // Not said: not touched (a 1.1.0 measurement).
+    expect(measureKeys('distance', s100).remove).toEqual(['CO']);
+  });
+
   it('areas have no caption keys; no scale removes /Measure', () => {
     const k = measureKeys('area', null);
     expect(Object.keys(k.set)).toEqual(['IT']);
