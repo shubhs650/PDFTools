@@ -11,6 +11,7 @@ import { toScale, useScaleFields } from './scaleFields';
 import { mediaBoxOf, scaleStore, useScales } from './scaleStore';
 import { closeViewportDialog, saveViewport, useViewports, type ViewportEdit } from './viewports';
 import { dialogHelp } from '../help/openHelp';
+import { measurePaneStore } from './pane/measureEntries';
 
 /** Measure → Scale Viewport (M3-17): name, box and scale (ratio, or the box's real width). */
 export function ViewportDialog() {
@@ -41,6 +42,17 @@ function ViewportForm({ e }: { e: ViewportEdit }) {
   const [known, setKnown] = useState('');
   const [box, setBox] = useState(e.bbox.map(num));
   const [error, setError] = useState<'name' | 'box' | 'ratio' | 'length' | null>(null);
+  // A viewport picked on the page or in the Scales section as the dialog opened
+  // stays picked under its new name (M14-09).
+  const [keep] = useState(() => {
+    const was = measurePaneStore.getState().viewport;
+    return e.index !== undefined &&
+      was?.docId === e.docId &&
+      was.page === e.page &&
+      was.index === e.index
+      ? was
+      : null;
+  });
 
   const parse = (v: string): number | null => parseLocaleNumber(v, format.locale);
   const b = box.map(parse);
@@ -83,7 +95,9 @@ function ViewportForm({ e }: { e: ViewportEdit }) {
       setError(scale);
       return;
     }
-    saveViewport({ ...e, name: name.trim(), bbox: nb }, scale);
+    void saveViewport({ ...e, name: name.trim(), bbox: nb }, scale).then((ok) => {
+      if (ok && keep) measurePaneStore.setState({ viewport: keep });
+    });
     closeViewportDialog();
   };
   const boxLabels = [t('viewport.x1'), t('viewport.y1'), t('viewport.x2'), t('viewport.y2')];

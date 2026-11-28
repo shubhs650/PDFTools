@@ -1,7 +1,8 @@
 // Scale viewports (M3-17, §7.4, ADR-007): "Detail A 1:5" regions of a page
 // with their own scale, written as page /VP entries (/BBox, /Name, /Measure)
 // in the single Ctrl+S revision. Drawn with a rectangle tool (then the dialog),
-// or added, edited and deleted from the Properties pane (keyboard path).
+// or added, edited and deleted from the Measurements pane's Scales section
+// (keyboard path), and moved and resized on the page (M14-09, ViewportLayer).
 // Every change is one undo step. Boxes are PDF user space.
 import type { PluginRegistry } from '@embedpdf/core';
 import { PdfAnnotationSubtype, type PdfAnnotationObject } from '@embedpdf/models';
@@ -15,7 +16,13 @@ import { appStore } from '../../app/store/appStore';
 import { documentStore } from '../../app/store/documentStore';
 import { t } from '../../i18n';
 import type { PdfJson } from '../../model/pdf/wire';
-import { viewportToPdf, type PageViewport, type Pt, type Scale } from '../../model/scale';
+import {
+  entryWithBox,
+  viewportToPdf,
+  type PageViewport,
+  type Pt,
+  type Scale,
+} from '../../model/scale';
 import {
   nextViewportName,
   normBox,
@@ -23,6 +30,7 @@ import {
   withoutEntry,
   type Box,
 } from '../../model/scaleViewport';
+import { moveRect, sameRect, type Rect } from '../../model/viewportEdit';
 import { capability, hostStore } from '../view/host';
 import { trackLoupe } from './loupePointer';
 import { snapPoint } from './snapping';
@@ -90,19 +98,59 @@ export function rectOfBox(docId: string, page: number, box: Box) {
 }
 
 /** Replaces the page's /VP list as one undo step; its measurements follow (D-77). */
-function change(docId: string, page: number, after: PdfJson[]): void {
-  void changeScales(docId, new Map([[page, after]]));
+function change(docId: string, page: number, after: PdfJson[]): Promise<boolean> {
+  return changeScales(docId, new Map([[page, after]]));
 }
 
 /** Saves the dialog's viewport (added, or replacing the one at its index). */
-export function saveViewport(e: ViewportEdit, scale: Scale): void {
+export function saveViewport(e: ViewportEdit, scale: Scale): Promise<boolean> {
   const list = entriesOf(scaleStore.getState(), e.docId, e.page);
   const entry = viewportToPdf({ name: e.name, bbox: normBox(e.bbox), scale });
-  change(e.docId, e.page, withEntry(list, entry, e.index));
+  return change(e.docId, e.page, withEntry(list, entry, e.index));
+}
+
+/** Viewport `index`'s rectangle on the page (page points, top-left origin); null: none there. */
+export function viewportRect(docId: string, page: number, index: number): Rect | null {
+  const v = readEntries(entriesOf(scaleStore.getState(), docId, page))[index];
+  return v ? rectOfBox(docId, page, v.bbox) : null;
+}
+
+const hundredths = (n: number): number => Math.round(n * 100) / 100;
+
+/**
+ * Moves or resizes viewport `index` to `rect` (page points, top-left origin,
+ * M14-09): its /VP entry gets the new /BBox and keeps everything else. One
+ * undo step; the measurements using it follow (D-77).
+ */
+export function setViewportRect(docId: string, page: number, index: number, rect: Rect): void {
+  const list = entriesOf(scaleStore.getState(), docId, page);
+  const entry = list[index];
+  const now = viewportRect(docId, page, index);
+  if (entry === undefined || !now || sameRect(now, rect)) return;
+  const box = boxFromPoints(
+    docId,
+    page,
+    { x: rect.left, y: rect.top },
+    { x: rect.left + rect.width, y: rect.top + rect.height },
+  ).map(hundredths) as Box;
+  void change(docId, page, withEntry(list, entryWithBox(entry, box), index));
+}
+
+/** Viewport `index` moved by (dx, dy) page points from the keyboard (Q36), kept on the page. */
+export function nudgeViewport(
+  docId: string,
+  page: number,
+  index: number,
+  dx: number,
+  dy: number,
+): void {
+  const now = viewportRect(docId, page, index);
+  if (!now) return;
+  setViewportRect(docId, page, index, moveRect(now, dx, dy, frameOf(docId, page)));
 }
 
 export function deleteViewport(docId: string, page: number, index: number): void {
-  change(docId, page, withoutEntry(entriesOf(scaleStore.getState(), docId, page), index));
+  void change(docId, page, withoutEntry(entriesOf(scaleStore.getState(), docId, page), index));
 }
 
 /** Opens the dialog for a new viewport over `bbox` (the page's scale as a start). */
