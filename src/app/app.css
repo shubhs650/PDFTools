@@ -5304,6 +5304,28 @@ textarea.form-field {
   padding: var(--space-3);
 }
 
+/* An Area's or Volume's facts and cutouts (M14-06). */
+.measure-facts {
+  display: grid;
+  gap: var(--space-2);
+}
+
+.measure-cutouts {
+  grid-column: 1 / -1;
+  display: grid;
+  gap: var(--space-1);
+  margin: var(--space-0);
+  padding: var(--space-0);
+  list-style: none;
+}
+
+.measure-cutout {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-2);
+}
+
 .viewport-box {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));

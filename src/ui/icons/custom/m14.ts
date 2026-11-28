@@ -2,7 +2,7 @@
 // in Fluent's Regular line style on the 20-unit grid, with a Filled variant for
 // the toggle's pressed state. Nothing is copied or traced from another
 // product's artwork.
-import { bar, box, disc, poly, ring, strokes, type Pt } from './draw';
+import { bar, box, dashed, disc, poly, ring, strokes, type Pt } from './draw';
 import type { Design } from './m3';
 
 /** An open path of three segments: a Polylength's run. */
@@ -70,8 +70,62 @@ export const DIAMETER: Design = {
   filled: (k) => [ring(C[0], C[1], 8, k, 2), bar(FAR, EDGE, k, 2)],
 };
 
+/** A box seen from above and the front: its front face, top and side (a Volume, M14-06). */
+const FRONT: Pt[] = [
+  [3, 8],
+  [13, 8],
+  [13, 17],
+  [3, 17],
+];
+const BACK_TOP: Pt[] = [
+  [3, 8],
+  [7, 4],
+  [17, 4],
+  [13, 8],
+];
+const SIDE: Pt[] = [
+  [13, 8],
+  [17, 4],
+  [17, 13],
+  [13, 17],
+];
+
+export const VOLUME: Design = {
+  // A box: an area given a depth.
+  regular: (k) => [strokes(FRONT, k, true), strokes(BACK_TOP, k, true), strokes(SIDE, k, true)],
+  filled: (k) => [poly(FRONT, k), strokes(BACK_TOP, k, true, 2), strokes(SIDE, k, true, 2)],
+};
+
+/** The outline of the Cutout icon and the hole cut out of it. */
+const OUTLINE: Pt[] = [
+  [2.5, 3.5],
+  [17.5, 3.5],
+  [17.5, 16.5],
+  [2.5, 16.5],
+];
+const HOLE: [Pt, Pt, Pt, Pt] = [
+  [7, 7.5],
+  [13, 7.5],
+  [13, 12.5],
+  [7, 12.5],
+];
+
+export const CUTOUT: Design = {
+  // An area with a hole in it, the hole's edge dashed as the markup draws it.
+  regular: (k) => [
+    strokes(OUTLINE, k, true),
+    dashed(HOLE[0], HOLE[1], k, 2, 1),
+    dashed(HOLE[1], HOLE[2], k, 2, 1),
+    dashed(HOLE[2], HOLE[3], k, 2, 1),
+    dashed(HOLE[3], HOLE[0], k, 2, 1),
+  ],
+  filled: (k) => [poly(OUTLINE, k) + ' ' + poly(HOLE, k, true)],
+};
+
 export const M14_DESIGNS: Record<string, { design: Design; large?: true }> = {
   'measure.polylength': { design: POLYLENGTH, large: true },
+  'measure.volume': { design: VOLUME, large: true },
+  'measure.cutout': { design: CUTOUT, large: true },
   'measure.angle': { design: ANGLE, large: true },
   'measure.radius': { design: RADIUS, large: true },
   'measure.diameter': { design: DIAMETER, large: true },

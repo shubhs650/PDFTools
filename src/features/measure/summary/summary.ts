@@ -38,7 +38,7 @@ import { isReplaying, joinStep, outsideHistory } from '../../annotate/historyJoi
 import { pageSize, showStatusToast } from '../../snapshot/snapshot';
 import { goToPoint } from '../../view/controller';
 import { capability, hostStore } from '../../view/host';
-import { TOOL_SUBJECT, toolOf, withFileCurve } from '../measurements';
+import { TOOL_SUBJECT, toolOf, withFileMeta } from '../measurements';
 import { stagePageData } from '../pageData';
 import { measureEntries } from '../pane/measureEntries';
 import { loadScales, scaleStore } from '../scaleStore';
@@ -263,7 +263,7 @@ export function installSummaryKeeper(registry: PluginRegistry): () => void {
       );
       return;
     }
-    if (!toolOf(docId, withFileCurve(docId, a))) return;
+    if (!toolOf(docId, withFileMeta(docId, a))) return;
     schedule(registry, docId, isReplaying() ? 'outside' : 'join');
   });
   // A scale changed (not the first read): values change, outside history (as the measurements).

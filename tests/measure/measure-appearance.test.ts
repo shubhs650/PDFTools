@@ -253,6 +253,39 @@ describe('a measurement is one markup with its value in its appearance (M14-03)'
     expect(await appearances(saved)).toMatch(/ActualText <FEFF0052006F006F006D/u);
   });
 
+  it('Area with a cutout: no fill in the hole, its edge dashed, the value clear of it (M14-06)', async () => {
+    const original = simplePdf(1);
+    const doc = await open(original);
+    // A 100 × 100 pt hole in the middle of the 200 × 200 pt square (page points, y down).
+    const hole = [
+      { x: 150, y: 550 },
+      { x: 250, y: 550 },
+      { x: 250, y: 650 },
+      { x: 150, y: 650 },
+    ];
+    expect(
+      await create(
+        doc,
+        poly(
+          'h1',
+          PdfAnnotationSubtype.POLYGON,
+          SQUARE,
+          { tool: 'area', fill: RED, holes: [hole] },
+          '3.00 m²',
+        ),
+      ),
+    ).toBe('drawn');
+    // The fill outside the hole, none inside it (away from its dashed edge and the caption).
+    expect(inkIn(doc.id, [110, 510, 140, 540], tint)).toBe(true);
+    expect(inkIn(doc.id, [170, 570, 230, 630], tint)).toBe(false);
+    expect(inkIn(doc.id, [170, 570, 230, 630], red)).toBe(false);
+    // The hole's edge: dashes of red along its left side.
+    expect(inkIn(doc.id, [149.5, 555, 150.5, 645], red)).toBe(true);
+    expect(await appearances(concatBytes([original, (await tracker.save(doc.id)).tail]))).toMatch(
+      /\[4 3\] 0 d/u,
+    );
+  });
+
   it('Polylength and Perimeter: the value on the longest segment', async () => {
     const doc = await open(simplePdf(1));
     const path = [

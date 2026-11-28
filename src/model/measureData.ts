@@ -22,10 +22,16 @@
 // Stamp). Its fingerprint is of /Rect. Moved elsewhere (same size), its points
 // move with it; resized or redrawn there, they are dropped and it stays a
 // plain stamp with its value as its text.
+//
+// An Area or Volume (M14-06) also holds /Ho its cutouts (each a flat list of
+// user-space numbers; shape-bound, so dropped when another editor reshaped
+// the outline), /Dp a Volume's depth [value (unit)], and /Au /Ad, /Vu /Vd the
+// area's and volume's own unit and decimals when chosen (Q28).
 // Pure; values are the wire form (PdfJson) the object layer stages.
 import { fingerprint, type Box, type Pt } from './measureGeometry';
 import { TOOL_TOKEN, toolOfToken, type MeasureMeta } from './measureMarkup';
 import { isCurveTool } from './measureCurve';
+import { isAreaUnit, isDecimals, isDepth, isVolumeUnit } from './measureQuantity';
 import type { Scale } from './scale';
 import { fromJson, type PdfJson } from './pdf/wire';
 import { PdfString } from './pdf/objects';
@@ -44,11 +50,13 @@ export interface CurveEntry {
 
 /** One measurement's entry, read or to be written. */
 export interface MeasureEntry {
-  /** A curve's `pts` are in `curve` (user space), never here. */
+  /** A curve's `pts` are in `curve`, an area's `holes` in `holes` (user space), never here. */
   meta: MeasureMeta;
   /** The geometry fingerprint it was saved with. */
   fp: string;
   curve?: CurveEntry;
+  /** An Area's or Volume's cutouts in user space (M14-06). */
+  holes?: Pt[][];
 }
 
 type Dict = Record<string, PdfJson>;
@@ -81,6 +89,12 @@ export function entryToPdf(e: MeasureEntry): PdfJson {
   if (e.meta.fill) d['Fc'] = { text: e.meta.fill };
   if (e.meta.capOffset) d['Co'] = [round(e.meta.capOffset.x), round(e.meta.capOffset.y)];
   if (e.meta.shape) d['Sh'] = { name: e.meta.shape === 'arc' ? 'Arc' : 'Circle' };
+  if (e.holes?.length) d['Ho'] = e.holes.map((h) => h.flatMap((p) => [round(p.x), round(p.y)]));
+  if (e.meta.depth) d['Dp'] = [round(e.meta.depth.value), { text: e.meta.depth.unit }];
+  if (e.meta.areaUnit) d['Au'] = { name: e.meta.areaUnit };
+  if (e.meta.areaDecimals !== undefined) d['Ad'] = e.meta.areaDecimals;
+  if (e.meta.volumeUnit) d['Vu'] = { name: e.meta.volumeUnit };
+  if (e.meta.volumeDecimals !== undefined) d['Vd'] = e.meta.volumeDecimals;
   const c = e.curve;
   if (c) {
     d['P'] = c.pts.flatMap((p) => [round(p.x), round(p.y)]);
@@ -133,7 +147,28 @@ export function entryFromPdf(j: PdfJson | undefined): MeasureEntry | null {
   const sh = nameOf(d['Sh']);
   if (sh === 'Arc') meta.shape = 'arc';
   else if (sh === 'Circle') meta.shape = 'circle';
+  const au = nameOf(d['Au']);
+  if (isAreaUnit(au)) meta.areaUnit = au;
+  if (isDecimals(d['Ad'])) meta.areaDecimals = d['Ad'];
+  const vu = nameOf(d['Vu']);
+  if (isVolumeUnit(vu)) meta.volumeUnit = vu;
+  if (isDecimals(d['Vd'])) meta.volumeDecimals = d['Vd'];
+  const dp = d['Dp'];
+  const depth = Array.isArray(dp) ? { value: dp[0], unit: textOf(dp[1]) } : null;
+  if (isDepth(depth)) meta.depth = { value: depth.value, unit: depth.unit };
   const out: MeasureEntry = { meta, fp: textOf(d['F']) ?? '' };
+  const ho = d['Ho'];
+  if (Array.isArray(ho)) {
+    const holes = ho
+      .map(nums)
+      .filter((h): h is number[] => !!h && h.length >= 6 && h.length % 2 === 0)
+      .map((h) => {
+        const pts: Pt[] = [];
+        for (let i = 0; i < h.length; i += 2) pts.push({ x: h[i] ?? 0, y: h[i + 1] ?? 0 });
+        return pts;
+      });
+    if (holes.length) out.holes = holes;
+  }
   if (isCurveTool(tool)) {
     const curve = curveFromPdf(d);
     if (curve) out.curve = curve;

@@ -33,10 +33,12 @@ import { documentStore } from '../../app/store/documentStore';
 import { format, msg, t, type MessageKey } from '../../i18n';
 import { leaderOf, unionRect } from '../../model/dimension';
 import { curveDrawing, isCurveTool, type CurveTool } from '../../model/measureCurve';
+import { areaValue } from '../../model/measureQuantity';
 import { bounds } from '../../model/measureGeometry';
 import {
   captionBoundsEP,
   captionText,
+  isAreaTool,
   metaOf,
   mirror,
   sameMeta,
@@ -79,6 +81,7 @@ export const TOOL_SUBJECT: Record<MeasureTool, MessageKey> = {
   polylength: msg('measure.subject.polylength'),
   perimeter: msg('measure.subject.perimeter'),
   area: msg('measure.subject.area'),
+  volume: msg('measure.subject.volume'),
   angle: msg('measure.subject.angle'),
   radius: msg('measure.subject.radius'),
   diameter: msg('measure.subject.diameter'),
@@ -169,9 +172,18 @@ export function choiceText(c: MeasureChoice): string {
   }
 }
 
-/** The value as shown and written: "20.00 m", or "200.0 mm (uncalibrated)". */
-export function measurementText(kind: MeasureKind, a: PdfAnnotationObject, s: Scale | null) {
-  const v = valueText(kind, measurePoints(a), s, format, curveWords);
+/**
+ * The value as shown and written: "20.00 m", or "200.0 mm (uncalibrated)".
+ * An Area's or Volume's comes from its `measure` field (`meta`, its own by
+ * default): net of its cutouts, in its own unit, a Volume's times its depth.
+ */
+export function measurementText(
+  kind: MeasureKind,
+  a: PdfAnnotationObject,
+  s: Scale | null,
+  meta: MeasureMeta | null = metaOf(a),
+) {
+  const v = valueText(kind, measurePoints(a), s, format, curveWords, meta ?? {});
   return v.calibrated ? v.value : t('measure.uncalibrated', { value: v.value });
 }
 
@@ -215,12 +227,18 @@ export function metaFor(
 }
 
 /**
- * An Angle, Radius or Diameter read from a file (M14-05): the Stamp keeps
- * neither its points nor its style, so they come from its Triya data (D-74),
- * for drawing and editing it. Anything else comes back as it is.
+ * A measurement read from a file, with what its Triya data (D-74) adds, for
+ * drawing and editing it. An Angle, Radius or Diameter (M14-05): the Stamp
+ * keeps neither its points nor its style. An Area or Volume (M14-06): its
+ * cutouts, depth and own units. Anything else comes back as it is.
  */
-export function withFileCurve(docId: string, a: PdfAnnotationObject): PdfAnnotationObject {
-  if (a.type !== PdfAnnotationSubtype.STAMP || metaOf(a)) return a;
+export function withFileMeta(docId: string, a: PdfAnnotationObject): PdfAnnotationObject {
+  if (metaOf(a)) return a;
+  if (a.type === PdfAnnotationSubtype.POLYGON) {
+    const meta = fileMeta(docId, a);
+    return meta && isAreaTool(meta.tool) ? ({ ...a, measure: meta } as PdfAnnotationObject) : a;
+  }
+  if (a.type !== PdfAnnotationSubtype.STAMP) return a;
   const meta = fileMeta(docId, a);
   if (!meta || !isCurveTool(meta.tool) || (meta.pts?.length ?? 0) < 2) return a;
   return { ...a, ...fileStyle(docId, a), measure: meta } as PdfAnnotationObject;
@@ -253,6 +271,9 @@ async function stage(
 ) {
   // An Angle, Radius or Diameter is a plain Stamp in the file: nothing of its own to stage.
   if (isCurveKind(kind)) return;
+  // An Area's or Volume's own area unit goes in its /Measure /A (M14-06, Q28).
+  const area =
+    kind === 'area' && meta && isAreaTool(meta.tool) ? areaValue(measurePoints(a), meta, s) : null;
   const keys = measureKeys(
     kind,
     s,
@@ -261,6 +282,7 @@ async function stage(
           place: meta.cap ?? 'top',
           offset: meta.capOffset ?? null,
           ...(a.type === PdfAnnotationSubtype.LINE ? { leader: leaderOf(a) } : {}),
+          ...(area ? { area: { unit: area.unit, decimals: area.decimals } } : {}),
         }
       : {},
   );
@@ -360,7 +382,8 @@ function refresh(registry: PluginRegistry, docId: string, id: string, how: 'join
   // A curve whose points are gone (another editor reshaped it): kept as drawn, with its text.
   if (isCurveKind(kind) && measurePoints(a).length < 2) return;
   const s = scaleForMeasurement(docId, a);
-  const value = measurementText(kind, a, s);
+  // A file's Area or Volume: its cutouts, depth and units are in its Triya data (M14-06).
+  const value = measurementText(kind, a, s, found ?? metaOf(a));
   let apply: () => void;
   if (found) {
     // An area's fill comes in as the plugin's fill colour (the tool's style, a

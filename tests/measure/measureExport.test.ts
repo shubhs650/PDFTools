@@ -88,7 +88,6 @@ const item = (e: ReturnType<typeof entry>, o: Partial<ExportItem> = {}): ExportI
   area: 'Page',
   scale: '1 : 100',
   group: '',
-  depth: null,
   author: 'Ana',
   date: new Date(2026, 10, 28, 14, 5),
   region: { page: e.page, x: 10, y: 20, width: 30, height: 4 },
@@ -160,6 +159,50 @@ describe('the measurements sheet (M14-10, Q32)', () => {
     expect(decimalsOf(s5, 'angle')).toBe(1);
     // 1 January 2026, 00:00 local → Excel serial 46023.
     expect(excelDate(new Date(2026, 0, 1))).toBeCloseTo(46023, 9);
+  });
+});
+
+describe('volumes and own units (M14-06)', () => {
+  // The corpus slab at 1:100: 9 m × 9 m, 250 mm deep (20.25 m³), and an area in cm².
+  const vol = entry({
+    tool: 'volume',
+    points: rect(90, 90),
+    q: { tool: 'volume', depth: { value: 250, unit: 'mm' } },
+  });
+  const cm = entry({
+    tool: 'area',
+    points: rect(30, 20),
+    q: { tool: 'area', areaUnit: 'cm2', areaDecimals: 0 },
+  });
+  const groups = groupMeasurements([vol, cm]);
+  const items = groups.flatMap((g) => g.entries).map((x) => item(x));
+  const book = exportBook(groups, items, WORDS, false);
+  const col = (c: (typeof MEASURE_COLUMNS)[number]) => MEASURE_COLUMNS.indexOf(c);
+  const row = (tool: string) => book.sheets[0]?.rows.find((r) => r[col('tool')] === tool);
+
+  it('writes a volume in m³ with its depth in the scale unit', () => {
+    const r = row('Volume');
+    expect(r?.[col('value')]).toEqual({ n: 20.25, fmt: '0.00' });
+    expect(r?.[col('unit')]).toBe('m³');
+    expect(r?.[col('depth')]).toEqual({ n: 0.25, fmt: '0.00' });
+    expect(unitText(s100, 'volume')).toBe('m³');
+  });
+
+  it('writes an area in its own unit and decimals', () => {
+    const r = row('Area');
+    expect(r?.[col('value')]).toEqual({ n: 60_000, fmt: '0' });
+    expect(r?.[col('unit')]).toBe('cm²');
+    expect(r?.[col('depth')]).toBeNull();
+  });
+
+  it('totals volumes in m³ and areas in their own unit', () => {
+    const totals = book.sheets[1]?.rows ?? [];
+    const v = totals.find((r) => r[0] === 'Volume');
+    expect(v?.[2]).toEqual({ n: 20.25, fmt: '0.00' });
+    expect(v?.[3]).toBe('m³');
+    const a = totals.find((r) => r[0] === 'Area');
+    expect(a?.[2]).toEqual({ n: 60_000, fmt: '0' });
+    expect(a?.[3]).toBe('cm²');
   });
 });
 

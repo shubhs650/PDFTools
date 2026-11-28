@@ -5,7 +5,8 @@
 // release is one undo step. From the keyboard (rule 12, Q36) each handle is a
 // button: the arrow keys move it (Shift: 10 pt), Delete removes a point where
 // the measurement keeps enough. New points come from a right-click on an edge
-// (pointEdit.ts). No PDF work here (rule 1).
+// (pointEdit.ts). An Area's or Volume's cutouts have handles of their own,
+// edited the same way (M14-06, Q8). No PDF work here (rule 1).
 import { useRef, type KeyboardEvent, type PointerEvent, type ReactNode } from 'react';
 import { useTranslation } from 'react-i18next';
 import { PdfAnnotationSubtype, type PdfAnnotationObject } from '@embedpdf/models';
@@ -20,7 +21,7 @@ import {
   removePoint,
   stepPoint,
 } from '../../model/measureEdit';
-import { FILL_ALPHA, metaOf, type MeasureTool } from '../../model/measureMarkup';
+import { FILL_ALPHA, isAreaTool, metaOf, type MeasureTool } from '../../model/measureMarkup';
 import { measurePoints } from '../../model/measurement';
 import type { Pt } from '../../model/scale';
 import { useSelectedAnnotations } from '../annotate/selection';
@@ -30,7 +31,7 @@ import {
   measurementText,
   scaleForMeasurement,
   sheetText,
-  withFileCurve,
+  withFileMeta,
 } from './measurements';
 import {
   commitEdit,
@@ -38,10 +39,12 @@ import {
   editPoint,
   editTarget,
   endEdit,
+  holesOf,
   setPreview,
   trackEditLoupe,
   useEditPreview,
   withHandles,
+  withHole,
   withOffsetAt,
 } from './pointEdit';
 import { SelectedMeasure } from './SelectedMeasure';
@@ -56,11 +59,17 @@ const ARROWS: Record<string, Pt> = {
   ArrowDown: { x: 0, y: 1 },
 };
 
+/** A cutout's point: hole `hole`, point `i` (M14-06). */
+interface HolePoint {
+  hole: number;
+  i: number;
+}
+
 /** A drag in progress: which pointer, what it moves, the measurement as it was. */
 interface Drag {
   pointer: number;
-  /** A point's index, or 'line' for a Length's dimension line. */
-  what: number | 'line';
+  /** A point's index, 'line' for a Length's dimension line, or a cutout's point. */
+  what: number | 'line' | HolePoint;
   base: PdfAnnotationObject;
   tool: MeasureTool;
   handles: Pt[];
@@ -124,14 +133,29 @@ function Ghost({ a, scale }: { a: PdfAnnotationObject; scale: number }) {
     );
   } else if (a.type === PdfAnnotationSubtype.POLYGON) {
     const fill = metaOf(a)?.fill;
+    const holes = holesOf(a);
+    const ring = (q: Pt[]): string => `M${q.map(xy).join(' L')} Z`;
     shape = (
-      <polygon
-        points={pts.map(xy).join(' ')}
-        stroke={color}
-        strokeWidth={width}
-        fill={fill ?? 'none'}
-        fillOpacity={fill ? FILL_ALPHA : undefined}
-      />
+      <>
+        <path
+          d={[pts, ...holes].map(ring).join(' ')}
+          fillRule="evenodd"
+          stroke="none"
+          fill={fill ?? 'none'}
+          fillOpacity={fill ? FILL_ALPHA : undefined}
+        />
+        <polygon points={pts.map(xy).join(' ')} stroke={color} strokeWidth={width} fill="none" />
+        {holes.map((h, i) => (
+          <polygon
+            key={i}
+            points={h.map(xy).join(' ')}
+            stroke={color}
+            strokeWidth={width}
+            strokeDasharray={`${String(4 * scale)} ${String(3 * scale)}`}
+            fill="none"
+          />
+        ))}
+      </>
     );
   } else {
     shape = (
@@ -186,11 +210,12 @@ export function MeasureEditor({
   const drag = useRef<Drag | null>(null);
   const layer = useRef<HTMLDivElement>(null);
   // A curve read from a file: its points from its Triya data (M14-05).
-  const a = sel.length === 1 && sel[0] ? withFileCurve(documentId, sel[0]) : undefined;
+  const a = sel.length === 1 && sel[0] ? withFileMeta(documentId, sel[0]) : undefined;
   const target = a?.pageIndex === pageIndex && tool === 'select' ? editTarget(documentId, a) : null;
   if (!a || !target) return null;
   const shown = preview?.id === a.id ? preview.object : a;
   const handles = handlesOf(target.tool, measurePoints(shown));
+  const holes = isAreaTool(target.tool) ? holesOf(shown) : [];
   const grip = target.tool === 'length' ? lineGrip(shown) : null;
   const pageSize = pageSizeOf(documentId, pageIndex) ?? { width: 612, height: 792 };
 
@@ -201,6 +226,12 @@ export function MeasureEditor({
     let next: PdfAnnotationObject;
     if (d.what === 'line') {
       next = withOffsetAt(d.base, editPoint(documentId, pageIndex, raw, e, null));
+    } else if (typeof d.what === 'object') {
+      // A cutout's point: Shift locks it from the point before it in its hole.
+      const hole = holesOf(d.base)[d.what.hole] ?? [];
+      const anchor = lockAnchor('area', hole, d.what.i);
+      const p = editPoint(documentId, pageIndex, raw, e, anchor);
+      next = withHole(d.base, d.what.hole, movePoint(hole, d.what.i, p));
     } else {
       const anchor = lockAnchor(d.tool, d.handles, d.what);
       const p = editPoint(documentId, pageIndex, raw, e, anchor);
@@ -222,10 +253,13 @@ export function MeasureEditor({
     if (keep && p) commitEdit(documentId, d.base, p);
   };
 
-  /** The handle a pointer event is on: a point's index, or 'line' (data-what). */
-  const whatOf = (e: PointerEvent<HTMLElement>): number | 'line' => {
-    const w = e.currentTarget.dataset['what'];
-    return w === 'line' ? 'line' : Number(w);
+  /** The handle a pointer event is on: a point's index, 'line', or a cutout's "h.i" (data-what). */
+  const whatOf = (e: PointerEvent<HTMLElement>): number | 'line' | HolePoint => {
+    const w = e.currentTarget.dataset['what'] ?? '';
+    if (w === 'line') return 'line';
+    const hole = /^h(\d+)\.(\d+)$/u.exec(w);
+    if (hole) return { hole: Number(hole[1]), i: Number(hole[2]) };
+    return Number(w);
   };
 
   const onDown = (e: PointerEvent<HTMLElement>): void => {
@@ -301,6 +335,38 @@ export function MeasureEditor({
     commitEdit(documentId, a, withHandles(a, target.tool, movePoint(handles, i, p)));
   };
 
+  /** Focus a cutout's point once the measurement is drawn again (after a removal). */
+  const focusHolePoint = (k: number, i: number): void => {
+    requestAnimationFrame(() => {
+      layer.current
+        ?.querySelector<HTMLElement>(`[data-what="h${String(k)}.${String(i)}"]`)
+        ?.focus({ preventScroll: true });
+    });
+  };
+
+  const onHoleKey = (k: number, i: number) => (e: KeyboardEvent<HTMLElement>) => {
+    const hole = holes[k];
+    if (!hole) return;
+    if (e.key === 'Delete' || e.key === 'Backspace') {
+      e.preventDefault();
+      e.stopPropagation();
+      const next = removePoint('area', hole, i);
+      if (!next) return;
+      commitEdit(documentId, a, withHole(a, k, next));
+      focusHolePoint(k, Math.min(i, next.length - 1));
+      return;
+    }
+    const dir = ARROWS[e.key];
+    if (!dir || e.ctrlKey || e.metaKey || e.altKey) return;
+    e.preventDefault();
+    e.stopPropagation();
+    const n = e.shiftKey ? BIG_STEP : STEP;
+    const at = hole[i];
+    if (!at) return;
+    const p = stepPoint(at, dir.x * n, dir.y * n, pageSize);
+    commitEdit(documentId, a, withHole(a, k, movePoint(hole, i, p)));
+  };
+
   const onLineKey = (e: KeyboardEvent<HTMLElement>) => {
     const dir = ARROWS[e.key];
     if (!dir || e.ctrlKey || e.metaKey || e.altKey || !grip) return;
@@ -361,6 +427,29 @@ export function MeasureEditor({
           onLostPointerCapture={onLost}
         />
       ))}
+      {holes.map((hole, k) =>
+        hole.map((p, i) => (
+          <button
+            key={`h${String(k)}.${String(i)}`}
+            type="button"
+            className="measure-point measure-point--hole ui-focusable"
+            data-testid="measure-hole-point"
+            data-what={`h${String(k)}.${String(i)}`}
+            aria-label={
+              canRemovePoint('area', hole.length)
+                ? t('measure.edit.holeRemovable', { h: k + 1, n: i + 1, count: hole.length })
+                : t('measure.edit.hole', { h: k + 1, n: i + 1, count: hole.length })
+            }
+            style={{ left: p.x * scale, top: p.y * scale }}
+            onKeyDown={onHoleKey(k, i)}
+            onPointerDown={onDown}
+            onPointerMove={onMove}
+            onPointerUp={onUp}
+            onPointerCancel={onCancel}
+            onLostPointerCapture={onLost}
+          />
+        )),
+      )}
     </div>
   );
 }

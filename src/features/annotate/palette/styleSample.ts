@@ -55,6 +55,7 @@ const FALLBACK: Readonly<Record<StyleTool, Record<string, unknown>>> = {
   measurePolylength: { type: S.POLYLINE, intent: 'PolyLineDimension' },
   measurePerimeter: { type: S.POLYLINE, intent: 'PolyLineDimension' },
   measureArea: { type: S.POLYGON, intent: 'PolygonDimension' },
+  measureVolume: { type: S.POLYGON, intent: 'PolygonDimension', measure: { tool: 'volume' } },
   measureAngle: { type: S.STAMP, measure: { tool: 'angle' } },
   measureRadius: { type: S.STAMP, measure: { tool: 'radius' } },
   measureDiameter: { type: S.STAMP, measure: { tool: 'diameter' } },

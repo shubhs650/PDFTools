@@ -8,6 +8,14 @@ import { dimensionMiddle, type Leader } from './dimension';
 import { curveValue, isCurveTool, type CurveTool } from './measureCurve';
 import type { PdfJson } from './pdf/wire';
 import {
+  areaText,
+  areaValue,
+  volumeText,
+  volumeValue,
+  type AreaUnit,
+  type QuantityMeta,
+} from './measureQuantity';
+import {
   formatLength,
   measure,
   measureToPdf,
@@ -133,7 +141,10 @@ export type CurveWords = (kind: CurveTool, value: string) => string;
 /**
  * The formatted value (the caller adds "uncalibrated" in the UI's words). An
  * Angle, Radius or Diameter needs `words` for its sign; without them the
- * number alone. An Angle is always "calibrated" (Q9: no scale needed).
+ * number alone. An Angle is always "calibrated" (Q9: no scale needed). An
+ * Area's value is its net area (less its cutouts) in its own unit, a
+ * Volume's that area times its depth (M14-06, Q7, Q8, Q28): both from `q`,
+ * the measurement's `measure` field (`pts` and its holes in one space).
  */
 export function valueText(
   kind: MeasureKind,
@@ -141,7 +152,15 @@ export function valueText(
   scale: Scale | null,
   f: LengthFormat,
   words?: CurveWords,
+  q: QuantityMeta = {},
 ): ValueText {
+  if (kind === 'area') {
+    const value =
+      q.tool === 'volume'
+        ? volumeText(volumeValue(pts, q, scale), f)
+        : areaText(areaValue(pts, q, scale), f);
+    return { value, calibrated: !!scale };
+  }
   const s = scale ?? PAPER;
   const v = measuredValue(kind, pts, scale);
   if (isCurveTool(kind)) {
@@ -164,13 +183,19 @@ export function valueText(
 export function measureKeys(
   kind: MeasureKind,
   scale: Scale | null,
-  caption: { place?: 'top' | 'inline'; offset?: Pt | null; leader?: Leader | null } = {},
+  caption: {
+    place?: 'top' | 'inline';
+    offset?: Pt | null;
+    leader?: Leader | null;
+    /** An Area's or Volume's own area unit and decimals (M14-06, Q28), in its /Measure /A. */
+    area?: { unit: AreaUnit; decimals: number };
+  } = {},
 ): { set: Record<string, PdfJson>; remove: string[] } {
   // An Angle, Radius or Diameter is a Stamp: no /IT, no /Measure; its scale is in its Triya data.
   if (isCurveTool(kind)) return { set: {}, remove: [] };
   const set: Record<string, PdfJson> = { IT: { name: MEASURE_INTENT[kind] } };
   const remove: string[] = [];
-  if (scale) set['Measure'] = measureToPdf(scale);
+  if (scale) set['Measure'] = measureToPdf(scale, kind === 'area' ? caption.area : undefined);
   else remove.push('Measure');
   if (kind === 'distance') {
     set['Cap'] = true;

@@ -11,6 +11,7 @@ import { HIDE_HIGHLIGHTS_STORAGE_KEY } from '../compare/closeout/closeOutStore';
 import { LOUPE_STORAGE_KEY } from '../measure/loupeSettings';
 import { CURVE_METHOD_STORAGE_KEY } from '../measure/curveMethod';
 import { MEASURE_EXPORT_STORAGE_KEY } from '../measure/export/exportSettings';
+import { QUANTITY_STORAGE_KEY } from '../measure/quantitySettings';
 import { THIN_LINES_STORAGE_KEY } from '../view/thinLines';
 import { COMPARE_TIPS_STORAGE_KEY } from '../compare/tips/tipsKey';
 import { DB_NAME } from '../../storage/idb';
@@ -206,6 +207,14 @@ export const LOCAL_DATA: readonly LocalDataItem[] = [
     location: CURVE_METHOD_STORAGE_KEY,
     store: CURVE_METHOD_STORAGE_KEY,
     what: msg('privacy.data.measureCurveMethod'),
+    cleared: true,
+  },
+  {
+    // The next Volume's depth and the area and volume units chosen (M14-06, Q7, Q28).
+    kind: 'localStorage',
+    location: QUANTITY_STORAGE_KEY,
+    store: QUANTITY_STORAGE_KEY,
+    what: msg('privacy.data.measureQuantities'),
     cleared: true,
   },
   {

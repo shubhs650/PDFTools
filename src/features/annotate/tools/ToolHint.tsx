@@ -14,6 +14,8 @@ const HINTS: Partial<Record<string, MessageKey>> = {
   measurePolylength: msg('annotate.toolHint.polylength'),
   measurePerimeter: msg('annotate.toolHint.perimeter'),
   measureArea: msg('annotate.toolHint.area'),
+  measureVolume: msg('annotate.toolHint.volume'),
+  measureCutout: msg('annotate.toolHint.cutout'),
   measureAngle: msg('annotate.toolHint.angle'),
   measureRadius: msg('annotate.toolHint.radiusCentre'),
   measureDiameter: msg('annotate.toolHint.diameterCentre'),

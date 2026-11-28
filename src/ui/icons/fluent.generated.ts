@@ -48,6 +48,7 @@ import { CommentMultiple20Filled, CommentMultiple20Regular } from '@fluentui/rea
 import { Copy20Regular } from '@fluentui/react-icons/svg/copy';
 import { Crop20Regular, Crop32Regular } from '@fluentui/react-icons/svg/crop';
 import { CropInterim20Filled, CropInterim20Regular, CropInterim24Filled, CropInterim24Regular } from '@fluentui/react-icons/svg/crop-interim';
+import { Cube20Filled, Cube20Regular, Cube32Filled, Cube32Regular } from '@fluentui/react-icons/svg/cube';
 import { Cursor20Filled, Cursor20Regular } from '@fluentui/react-icons/svg/cursor';
 import { Cut20Regular } from '@fluentui/react-icons/svg/cut';
 import { Delete20Regular, Delete32Regular } from '@fluentui/react-icons/svg/delete';
@@ -278,6 +279,8 @@ export const FLUENT_GLYPHS: Record<string, FluentGlyphs> = {
   'measure.polylength': { regular: { small: Ruler20Regular, large: Ruler32Regular, largeNative: 32 }, filled: { small: Ruler20Filled, large: Ruler32Filled, largeNative: 32 } },
   'measure.perimeter': { regular: { small: Pentagon20Regular, large: Pentagon32Regular, largeNative: 32 }, filled: { small: Pentagon20Filled, large: Pentagon32Filled, largeNative: 32 } },
   'measure.area': { regular: { small: Pentagon20Regular, large: Pentagon32Regular, largeNative: 32 }, filled: { small: Pentagon20Filled, large: Pentagon32Filled, largeNative: 32 } },
+  'measure.volume': { regular: { small: Cube20Regular, large: Cube32Regular, largeNative: 32 }, filled: { small: Cube20Filled, large: Cube32Filled, largeNative: 32 } },
+  'measure.cutout': { regular: { small: Pentagon20Regular, large: Pentagon32Regular, largeNative: 32 }, filled: { small: Pentagon20Filled, large: Pentagon32Filled, largeNative: 32 } },
   'measure.angle': { regular: { small: Ruler20Regular, large: Ruler32Regular, largeNative: 32 }, filled: { small: Ruler20Filled, large: Ruler32Filled, largeNative: 32 } },
   'measure.radius': { regular: { small: Ruler20Regular, large: Ruler32Regular, largeNative: 32 }, filled: { small: Ruler20Filled, large: Ruler32Filled, largeNative: 32 } },
   'measure.diameter': { regular: { small: Ruler20Regular, large: Ruler32Regular, largeNative: 32 }, filled: { small: Ruler20Filled, large: Ruler32Filled, largeNative: 32 } },

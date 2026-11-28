@@ -66,7 +66,14 @@ export function MeasureOverlay({
       return { text: t('measure.live.crosses', { name: where.name }), warning: true };
     if (where.kind === 'leaves')
       return { text: t('measure.live.leaves', { name: where.name }), warning: true };
-    const v = valueText(live.kind, live.pts, scaleOfChoice(where.choice), format, curveWords);
+    const v = valueText(
+      live.kind,
+      live.pts,
+      scaleOfChoice(where.choice),
+      format,
+      curveWords,
+      live.q,
+    );
     return {
       text: v.calibrated ? v.value : t('measure.uncalibrated', { value: v.value }),
       warning: false,

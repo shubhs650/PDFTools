@@ -41,6 +41,8 @@ export const STYLE_TOOLS = [
   'measurePolylength',
   'measurePerimeter',
   'measureArea',
+  // M14-06: Volume, an Area with a depth (same style properties as Area).
+  'measureVolume',
   // M14-05: Angle, Radius and Diameter (a Stamp each: colour, width and opacity).
   'measureAngle',
   'measureRadius',
@@ -176,6 +178,7 @@ export const SHIPPED_DEFAULTS: Readonly<Record<StyleTool, Readonly<StyleProps>>>
   measurePolylength: { ...MEASURE, lineEndings: { start: BUTT, end: BUTT } },
   measurePerimeter: { ...MEASURE, lineEndings: { start: BUTT, end: BUTT } },
   measureArea: { ...MEASURE, color: MEASURE_RED },
+  measureVolume: { ...MEASURE, color: MEASURE_RED },
   // M14-05: a Stamp has no fill or line ends; its appearance is drawn in this colour and width.
   measureAngle: CURVE,
   measureRadius: CURVE,

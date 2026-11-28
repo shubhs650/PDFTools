@@ -55,12 +55,26 @@ describe('values match the S2 expected table', () => {
     ['200.00 m²', 'area', building, s100],
     ['400.0 mm', 'distance', plate.slice(0, 2), s5],
     ['1,200.0 mm', 'perimeter', closed(plate), s5],
-    ['80,000.0 mm²', 'area', plate, s5],
+    // An area in its own unit since M14-06 (Q28): m² for a length in mm.
+    ['0.08 m²', 'area', plate, s5],
   ];
   for (const [text, kind, pts, s] of cases)
     it(`${kind} → ${text}`, () => {
       expect(valueText(kind, pts, s, en)).toEqual({ value: text, calibrated: true });
     });
+
+  it('an area in a unit and decimals of its own, a volume by its depth (M14-06)', () => {
+    expect(
+      valueText('area', plate, s5, en, undefined, { areaUnit: 'mm2', areaDecimals: 1 }),
+    ).toEqual({ value: '80,000.0 mm²', calibrated: true });
+    const v = valueText('area', plate, s5, en, undefined, {
+      tool: 'volume',
+      depth: { value: 50, unit: 'mm' },
+      volumeUnit: 'cm3',
+      volumeDecimals: 0,
+    });
+    expect(v.value).toBe('4,000 cm³');
+  });
 
   it('a polyline perimeter is open: the closing side is not added', () => {
     expect(measuredValue('perimeter', building, s100)).toBeCloseTo(50, 9);

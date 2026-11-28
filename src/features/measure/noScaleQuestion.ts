@@ -60,6 +60,8 @@ const keyOf = (docId: string, page: number): string => `${docId}/${String(page)}
  */
 export function needsScale(w: Where, kind: GestureKind, at: Pt): boolean {
   if (!SIZED.has(kind)) return false;
+  // A cutout goes into an area already measured (M14-06): never asks.
+  if (w.tool === 'measureCutout') return false;
   if (scalePromptStore.getState().asked.has(keyOf(w.doc, w.page))) return false;
   const st = scaleStore.getState();
   const d = st.docs[w.doc];

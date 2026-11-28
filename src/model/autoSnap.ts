@@ -11,6 +11,8 @@ export const AUTO_SNAP_TOOLS: ReadonlySet<string> = new Set([
   'measurePolylength',
   'measurePerimeter',
   'measureArea',
+  'measureVolume',
+  'measureCutout',
   'measureAngle',
   'measureRadius',
   'measureDiameter',

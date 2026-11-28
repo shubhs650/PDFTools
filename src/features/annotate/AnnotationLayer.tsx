@@ -29,7 +29,7 @@ import { pressComment, type PageGeometry } from './textPointer';
 import { isTextMarkup } from './pointerModes';
 import { annotationCapability } from './selection';
 import { SelectedMeasure } from '../measure/SelectedMeasure';
-import { withFileCurve } from '../measure/measurements';
+import { withFileMeta } from '../measure/measurements';
 import { isSummary } from '../measure/summary/summary';
 import { SummaryPreview } from '../measure/summary/SummaryPreview';
 import { useEditPreview } from '../measure/pointEdit';
@@ -70,7 +70,7 @@ function Body({
   const editing = useEditPreview(isSelected ? documentId : null, id) !== null;
   // An Angle, Radius or Diameter (a Stamp, M14-05): drawn by SelectedMeasure while
   // selected, not by the plugin's image of it (app.css).
-  const shown = isSelected ? withFileCurve(documentId, annotation) : annotation;
+  const shown = isSelected ? withFileMeta(documentId, annotation) : annotation;
   const curve = isMeasureCurve(shown);
   // A text comment in a library font (M11-07, D-52): its editor draws that face.
   const lib = text ? libraryFamily(readLibraryFont(annotation)) : undefined;

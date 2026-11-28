@@ -306,6 +306,8 @@ describe('where the theme is reached', () => {
       'pdftools.measureLoupe',
       // How Radius and Diameter are picked (M14-05).
       'pdftools.measureCurveMethod',
+      // The next Volume's depth and the area and volume units (M14-06).
+      'pdftools.measureQuantities',
       // Thin Lines on (M13-05).
       'pdftools.thinLines',
       // The measurements export's format and pictures (M14-10).

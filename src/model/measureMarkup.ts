@@ -19,16 +19,30 @@ import {
   type Pt,
 } from './measureGeometry';
 import { curveDrawing, isCurveTool, type CurveShape, type CurveTool } from './measureCurve';
+import {
+  DEFAULT_DEPTH,
+  isAreaUnit,
+  isDecimals,
+  isDepth,
+  isVolumeUnit,
+  type AreaUnit,
+  type Depth,
+  type VolumeUnit,
+} from './measureQuantity';
 import type { Kind } from './scale';
 
-/** Angle, Radius and Diameter (M14-05) are Stamps; the rest Line, PolyLine, Polygon. */
-export type MeasureTool = 'length' | 'polylength' | 'perimeter' | 'area' | CurveTool;
+/**
+ * Angle, Radius and Diameter (M14-05) are Stamps; the rest Line, PolyLine,
+ * Polygon (a Volume, M14-06, is a Polygon too).
+ */
+export type MeasureTool = 'length' | 'polylength' | 'perimeter' | 'area' | 'volume' | CurveTool;
 
 export const MEASURE_TOOL_IDS: readonly MeasureTool[] = [
   'length',
   'polylength',
   'perimeter',
   'area',
+  'volume',
   'angle',
   'radius',
   'diameter',
@@ -40,7 +54,13 @@ export const VALUE_KIND: Record<Exclude<MeasureTool, CurveTool>, Kind> = {
   polylength: 'perimeter',
   perimeter: 'perimeter',
   area: 'area',
+  // A Volume's outline is an area (/IT /PolygonDimension); its depth is in its Triya data.
+  volume: 'area',
 };
+
+/** An Area or a Volume (M14-06): a Polygon with net area, cutouts and its own units. */
+export const isAreaTool = (t: MeasureTool | null | undefined): t is 'area' | 'volume' =>
+  t === 'area' || t === 'volume';
 
 /** The tool's name in the file (the Triya data's /T; never shown, never translated). */
 export const TOOL_TOKEN: Record<MeasureTool, string> = {
@@ -48,6 +68,7 @@ export const TOOL_TOKEN: Record<MeasureTool, string> = {
   polylength: 'Polylength',
   perimeter: 'Perimeter',
   area: 'Area',
+  volume: 'Volume',
   angle: 'Angle',
   radius: 'Radius',
   diameter: 'Diameter',
@@ -79,6 +100,19 @@ export interface MeasureMeta {
   pts?: Pt[];
   /** A three-point Radius or Diameter drawn as its arc or the whole circle (absent: the tool's default). */
   shape?: CurveShape;
+  /**
+   * An Area's or Volume's cutouts (M14-06, Q8): each hole's points, EmbedPDF
+   * page points, inside the outline and clear of each other.
+   */
+  holes?: Pt[][];
+  /** A Volume's depth (Q7); always there on a Volume. */
+  depth?: Depth;
+  /** An Area's or Volume's own area unit and decimals (Q28); absent: from the scale. */
+  areaUnit?: AreaUnit;
+  areaDecimals?: number;
+  /** A Volume's own unit and decimals (Q28); absent: from the scale. */
+  volumeUnit?: VolumeUnit;
+  volumeDecimals?: number;
 }
 
 /** Caption size (Q40: 10 pt in the app's own font). */
@@ -92,6 +126,21 @@ export const FILL_ALPHA = 0.2;
 
 const HEX = /^#[0-9A-Fa-f]{6}$/u;
 const TOOLS = new Set<string>(MEASURE_TOOL_IDS);
+
+const isPt = (p: unknown): p is Pt =>
+  typeof p === 'object' &&
+  p !== null &&
+  Number.isFinite((p as Pt).x) &&
+  Number.isFinite((p as Pt).y);
+
+/** Well-formed holes: lists of three or more points (copied), or undefined when none. */
+function holesOf(v: unknown): Pt[][] | undefined {
+  if (!Array.isArray(v)) return undefined;
+  const out = v
+    .filter((h): h is unknown[] => Array.isArray(h) && h.length >= 3 && h.every(isPt))
+    .map((h) => (h as Pt[]).map((p) => ({ x: p.x, y: p.y })));
+  return out.length ? out : undefined;
+}
 
 /** The well-formed `measure` field of an annotation object, or null. */
 export function metaOf(a: unknown): MeasureMeta | null {
@@ -131,6 +180,18 @@ export function metaOf(a: unknown): MeasureMeta | null {
       out.pts = (pts as Pt[]).map((p) => ({ x: p.x, y: p.y }));
     if (r['shape'] === 'arc' || r['shape'] === 'circle') out.shape = r['shape'];
   }
+  if (isAreaTool(out.tool)) {
+    const holes = holesOf(r['holes']);
+    if (holes) out.holes = holes;
+    if (isAreaUnit(r['areaUnit'])) out.areaUnit = r['areaUnit'];
+    if (isDecimals(r['areaDecimals'])) out.areaDecimals = r['areaDecimals'];
+  }
+  if (out.tool === 'volume') {
+    const d = r['depth'];
+    out.depth = isDepth(d) ? { value: d.value, unit: d.unit } : { ...DEFAULT_DEPTH };
+    if (isVolumeUnit(r['volumeUnit'])) out.volumeUnit = r['volumeUnit'];
+    if (isDecimals(r['volumeDecimals'])) out.volumeDecimals = r['volumeDecimals'];
+  }
   return out;
 }
 
@@ -153,7 +214,15 @@ export function sameMeta(a: MeasureMeta | null, b: MeasureMeta | null): boolean 
     (a.capOffset?.y ?? 0) === (b.capOffset?.y ?? 0) &&
     (a.fill ?? '') === (b.fill ?? '') &&
     samePts(a.pts, b.pts) &&
-    (a.shape ?? '') === (b.shape ?? '')
+    (a.shape ?? '') === (b.shape ?? '') &&
+    (a.holes?.length ?? 0) === (b.holes?.length ?? 0) &&
+    (a.holes ?? []).every((h, i) => samePts(h, b.holes?.[i])) &&
+    (a.depth?.value ?? 0) === (b.depth?.value ?? 0) &&
+    (a.depth?.unit ?? '') === (b.depth?.unit ?? '') &&
+    (a.areaUnit ?? '') === (b.areaUnit ?? '') &&
+    (a.areaDecimals ?? -1) === (b.areaDecimals ?? -1) &&
+    (a.volumeUnit ?? '') === (b.volumeUnit ?? '') &&
+    (a.volumeDecimals ?? -1) === (b.volumeDecimals ?? -1)
   );
 }
 
@@ -199,9 +268,10 @@ export function offsetBox(c: CaptionBox, o: Pt | undefined): CaptionBox {
 /**
  * Where a measurement's caption goes (Q40): a Length's along its dimension
  * line (Above or In line), a Polylength's or Perimeter's on its longest
- * segment, an Area's in the middle of the shape; then its dragged offset.
- * `pts`: a line's two points or the vertices (a Perimeter's last repeats its
- * first), in user space (y up).
+ * segment, an Area's or Volume's in the middle of the shape, clear of its
+ * cutouts; then its dragged offset. `pts`: a line's two points or the
+ * vertices (a Perimeter's last repeats its first), in user space (y up);
+ * `holes` in the same space.
  */
 export function captionPlace(
   meta: Pick<MeasureMeta, 'tool' | 'cap' | 'capOffset' | 'shape'>,
@@ -209,6 +279,7 @@ export function captionPlace(
   leader: Leader | null | undefined,
   width: number,
   height: number,
+  holes: readonly (readonly Pt[])[] = [],
 ): CaptionBox {
   const zero = { x: 0, y: 0 };
   let box: CaptionBox;
@@ -220,8 +291,8 @@ export function captionPlace(
     // An Angle's outside its arc; a Radius's or Diameter's above its line (measureCurve.ts).
     const d = curveDrawing(meta.tool, pts, { ...(meta.shape ? { shape: meta.shape } : {}) });
     box = d ? d.caption(width, height) : { at: pts[0] ?? zero, angle: 0, width, height };
-  } else if (meta.tool === 'area') {
-    box = { at: areaLabelPoint(pts, width, height), angle: 0, width, height };
+  } else if (isAreaTool(meta.tool)) {
+    box = { at: areaLabelPoint(pts, width, height, holes), angle: 0, width, height };
   } else {
     const [a, b] = longestSegment(pts, false);
     box = lineCaption(a, b, 'top', width, height);
@@ -231,6 +302,10 @@ export function captionPlace(
 
 /** EmbedPDF's page points (y down) ↔ the mirror the caption geometry works in (y up). */
 export const mirror = (p: Pt): Pt => ({ x: p.x, y: -p.y });
+
+/** An area's cutouts mirrored as its points are (EmbedPDF page points → y up). */
+export const mirroredHoles = (meta: Pick<MeasureMeta, 'holes'>): Pt[][] =>
+  (meta.holes ?? []).map((h) => h.map(mirror));
 
 /**
  * The caption box's bounds in EmbedPDF's page points (y down), for the
@@ -249,7 +324,7 @@ export function captionBoundsEP(
     Math.max(...lines.map((l) => estimateWidth(l))),
     lines.length,
   );
-  const box = captionPlace(meta, ptsEP.map(mirror), leader, width, height);
+  const box = captionPlace(meta, ptsEP.map(mirror), leader, width, height, mirroredHoles(meta));
   return bounds(corners(box).map(mirror), 1);
 }
 
@@ -290,7 +365,7 @@ export function dragOffset(
   leader: Leader | null | undefined,
   d: Pt,
 ): Pt {
-  const box = captionPlace(meta, ptsEP.map(mirror), leader, 0, 0);
+  const box = captionPlace(meta, ptsEP.map(mirror), leader, 0, 0, mirroredHoles(meta));
   const u = mirror(d);
   const cos = Math.cos(box.angle);
   const sin = Math.sin(box.angle);

@@ -9,6 +9,7 @@ import {
 } from '@embedpdf/models';
 import { msg, type MessageKey } from '../../i18n';
 import type { CurveTool } from '../../model/measureCurve';
+import { metaOf } from '../../model/measureMarkup';
 import { curveKind, measureKind } from '../../model/measurement';
 import type { CrsType } from '../../model/crs/template';
 
@@ -74,7 +75,10 @@ const CURVE_KEYS: Record<CurveTool, MessageKey> = {
 
 export function annotationTypeKey(a: PdfAnnotationObject): MessageKey {
   const curve = curveKind(a);
-  return curve ? CURVE_KEYS[curve] : TYPE_KEYS[annotationTypeId(a)];
+  if (curve) return CURVE_KEYS[curve];
+  // A Volume (M14-06) is an Area in the file and to the CRS template, named as what it is.
+  if (metaOf(a)?.tool === 'volume') return msg('annotate.type.volume');
+  return TYPE_KEYS[annotationTypeId(a)];
 }
 
 const ARROW_ENDS: ReadonlySet<End> = new Set([

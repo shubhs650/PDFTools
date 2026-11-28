@@ -27,6 +27,7 @@ import { loadScales, openScaleDialog, scaleStore } from '../measure/scaleStore';
 import { isMeasureTool, MEASURE_COMMANDS } from '../measure/measureTools';
 import { lastMeasureTool, measureCommandOf } from '../measure/lastMeasureTool';
 import { pairsOf, upgradeOldMeasurements } from '../measure/upgradeOld';
+import { CUTOUT_TOOL, cutoutBlocked, startCutout } from '../measure/cutoutTool';
 import { setSnapping, snapStore, toggleKind } from '../measure/snapping';
 import { loupeSettingsStore, setLoupeSettings } from '../measure/loupeSettings';
 import { LOUPE_TOOLS } from '../measure/loupePointer';
@@ -282,6 +283,23 @@ export function registerAnnotateCommands(): () => void {
         },
       }),
     ),
+    // Cutout (M14-06, Q8): holes into the selected Area or Volume; on until Esc or the command again.
+    registerCommand('measure.cutout', {
+      requires: 'annotate',
+      isPressed: () => appStore.getState().tool === CUTOUT_TOOL,
+      disabledReason: () => cutoutBlocked(activeId()),
+      run: async () => {
+        if (appStore.getState().tool === CUTOUT_TOOL) {
+          appStore.getState().setTool('select');
+          return;
+        }
+        const id = activeId();
+        if (!id) return;
+        void loadScales(id);
+        await requestProfile();
+        startCutout(id);
+      },
+    }),
     // Home's and Comment's Measure button (M14-03): the last measuring tool used.
     registerCommand('measure.lastTool', {
       requires: 'annotate',

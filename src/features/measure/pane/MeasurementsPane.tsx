@@ -15,6 +15,7 @@ import {
 } from '../export/measureExport';
 import { placeSummary } from '../summary/summary';
 import { format, t as tGlobal } from '../../../i18n';
+import { areaText, depthText } from '../../../model/measureQuantity';
 import {
   entryText,
   groupMeasurements,
@@ -392,6 +393,20 @@ function MeasureRow({
       <span className="mpane-row-meta">
         {t('measurements.where', { page: format.number(e.page + 1, 0), where: e.where })}
       </span>
+      {e.area && e.depth ? (
+        // A Volume's area and depth (M14-06, Q40).
+        <span className="mpane-row-meta" data-testid="measure-row-volume">
+          {t('measurements.volumeOf', {
+            area: areaText(e.area, format),
+            depth: depthText(e.depth, format),
+          })}
+        </span>
+      ) : null}
+      {e.cutouts > 0 ? (
+        <span className="mpane-row-meta" data-testid="measure-row-cutouts">
+          {t('measurements.cutouts', { count: e.cutouts, n: format.number(e.cutouts, 0) })}
+        </span>
+      ) : null}
       {e.spans || e.paper ? (
         <span className="mpane-row-flags">
           {e.spans ? (

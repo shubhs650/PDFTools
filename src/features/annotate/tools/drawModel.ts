@@ -30,6 +30,9 @@ export const DRAW_TOOLS = [
   'measurePolylength',
   'measurePerimeter',
   'measureArea',
+  // Volume (M14-06): an Area with a depth; Cutout cuts holes into a selected Area or Volume.
+  'measureVolume',
+  'measureCutout',
   // Angle, Radius and Diameter (M14-05): a Stamp each, placed by clicks (measure/curveTool.ts).
   'measureAngle',
   'measureRadius',
@@ -115,6 +118,8 @@ export const VERTEX_TOOLS: ReadonlySet<DrawTool> = new Set([
   'measurePolylength',
   'measurePerimeter',
   'measureArea',
+  'measureVolume',
+  'measureCutout',
   'measureAngle',
   'measureRadius',
   'measureDiameter',
@@ -131,6 +136,8 @@ const ANGLED: ReadonlySet<DrawTool> = new Set([
   'measurePolylength',
   'measurePerimeter',
   'measureArea',
+  'measureVolume',
+  'measureCutout',
   // An Angle's arms, a Radius's or Diameter's line from its centre (M14-05).
   'measureAngle',
   'measureRadius',

@@ -4,6 +4,7 @@
 // ft-in parsing and locale formatting. Coordinates are PDF default user space
 // (points, origin bottom-left). Pure.
 import type { PdfJson } from './pdf/wire';
+import { AREA_LABEL, MM2_PER, type AreaUnit } from './measureQuantity';
 
 export type Unit = 'mm' | 'cm' | 'm' | 'in' | 'ft';
 export const MM_PER_UNIT: Record<Unit, number> = { mm: 1, cm: 10, m: 1000, in: 25.4, ft: 304.8 };
@@ -155,12 +156,33 @@ export interface MeasureRL {
   A: NumberFormat[];
 }
 
+/** An area's own unit and decimals for /A (M14-06, Q28). */
+export interface AreaFormat {
+  unit: AreaUnit;
+  decimals: number;
+}
+
+/**
+ * The /A number format of an area in its own unit: its label, the factor from
+ * X units squared, its decimals (ft-in keeps the scale's precision there,
+ * which is where it is read back from).
+ */
+function areaFormat(s: Scale, a: AreaFormat): NumberFormat {
+  const c = MM_PER_UNIT[s.unit] ** 2 / MM2_PER[a.unit];
+  return {
+    U: AREA_LABEL[a.unit],
+    C: Number(c.toPrecision(12)),
+    D: s.ftIn && s.unit === 'ft' ? 10 ** s.precision : 10 ** a.decimals,
+  };
+}
+
 /**
  * The /Measure <</Subtype /RL>> content for a scale, in the shape Acrobat
  * writes: X converts user-space units to real units; D and A then apply
- * factor 1 (distance) and 1 (area, in X units squared).
+ * factor 1 (distance) and 1 (area, in X units squared). An Area or Volume
+ * (M14-06) gives its own area unit for A.
  */
-export function toMeasureRL(s: Scale): MeasureRL {
+export function toMeasureRL(s: Scale, area?: AreaFormat): MeasureRL {
   const d = 10 ** s.precision;
   const fmt = (n: number): string =>
     Number.isInteger(n) ? String(n) : String(Number(n.toPrecision(6)));
@@ -172,14 +194,14 @@ export function toMeasureRL(s: Scale): MeasureRL {
       R,
       X: [{ U: 'ft', C: unitsPerPoint(s), D: 1 }, inches],
       D: [{ U: 'ft', C: 1, D: 1 }, inches],
-      A: [{ U: 'sq ft', C: 1, D: d }],
+      A: [area ? areaFormat(s, area) : { U: 'sq ft', C: 1, D: d }],
     };
   }
   return {
     R,
     X: [{ U: s.unit, C: unitsPerPoint(s), D: d }],
     D: [{ U: s.unit, C: 1, D: d }],
-    A: [{ U: `sq ${s.unit}`, C: 1, D: d }],
+    A: [area ? areaFormat(s, area) : { U: `sq ${s.unit}`, C: 1, D: d }],
   };
 }
 
@@ -291,8 +313,8 @@ const dict = (j: PdfJson | undefined): Record<string, PdfJson> | null =>
   j && typeof j === 'object' && !Array.isArray(j) && 'dict' in j ? j.dict : null;
 
 /** A /Measure RL dictionary as the object layer writes it (viewports, measurements). */
-export function measureToPdf(s: Scale): PdfJson {
-  const m = toMeasureRL(s);
+export function measureToPdf(s: Scale, area?: AreaFormat): PdfJson {
+  const m = toMeasureRL(s, area);
   const nf = (f: NumberFormat): PdfJson => ({
     dict: {
       Type: { name: 'NumberFormat' },

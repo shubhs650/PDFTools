@@ -4,6 +4,7 @@
 import { createStore, useStore } from 'zustand';
 import type { CurveMethod } from '../../model/measureCurve';
 import type { MeasureKind } from '../../model/measurement';
+import type { QuantityMeta } from '../../model/measureQuantity';
 import type { Pt } from '../../model/scale';
 
 export interface LiveMeasure {
@@ -22,6 +23,8 @@ export interface LiveMeasure {
    * drawn here (a Stamp has none in the plugin), by the method it is picked with.
    */
   method?: CurveMethod;
+  /** An Area's or Volume's own units, and a Volume's depth (M14-06): the live value is its volume. */
+  q?: QuantityMeta;
 }
 
 interface MeasureState {

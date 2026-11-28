@@ -153,14 +153,24 @@ export function inside(p: Pt, poly: readonly Pt[]): boolean {
 
 /**
  * Where an area's value goes (Q40, the middle of the shape): the centroid when
- * the caption box fits inside the outline there; otherwise the nearest grid
- * point where it does; otherwise the centroid (a shape too small for its value).
+ * the caption box fits inside the outline there, clear of its cutouts (M14-06);
+ * otherwise the nearest grid point where it does; otherwise the centroid (a
+ * shape too small for its value).
  */
-export function areaLabelPoint(outer: readonly Pt[], w: number, h: number): Pt {
-  const ok = (p: Pt): boolean =>
-    corners({ at: p, angle: 0, width: w, height: h })
-      .concat([p])
-      .every((q) => inside(q, outer));
+export function areaLabelPoint(
+  outer: readonly Pt[],
+  w: number,
+  h: number,
+  holes: readonly (readonly Pt[])[] = [],
+): Pt {
+  const ok = (p: Pt): boolean => {
+    const box = corners({ at: p, angle: 0, width: w, height: h });
+    const pts = box.concat([p]);
+    return (
+      pts.every((q) => inside(q, outer)) &&
+      holes.every((hole) => !pts.some((q) => inside(q, hole)) && !hole.some((q) => inside(q, box)))
+    );
+  };
   const c = centroid(outer);
   if (outer.length < 3 || ok(c)) return c;
   const [x0, y0, x1, y1] = bounds(outer);
