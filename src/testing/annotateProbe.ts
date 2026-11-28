@@ -274,7 +274,7 @@ export function registerAnnotateProbe(hook: TestHook): void {
     measure: async (
       docId: string,
       page: number,
-      kind: Exclude<MeasureKind, CurveTool>,
+      kind: Exclude<MeasureKind, CurveTool | 'count'>,
       pts: { x: number; y: number }[],
     ) => {
       await requestProfile();

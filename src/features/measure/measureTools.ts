@@ -16,17 +16,18 @@ import type { PluginRegistry } from '@embedpdf/core';
 import { PdfAnnotationSubtype, type PdfAnnotationObject } from '@embedpdf/models';
 import type { AnnotationCapability } from '@embedpdf/plugin-annotation';
 import {
-  curveKind,
-  isCurveKind,
+  isStampKind,
   MEASURE_INTENT,
   measureKind,
   measurePoints,
+  stampKind,
   type MeasureKind,
 } from '../../model/measurement';
 import { isCurveTool, type CurveTool } from '../../model/measureCurve';
 import { affineFrom } from '../../model/measureQuantity';
 import {
   isAreaTool,
+  isStampTool,
   metaOf,
   mirror,
   toolFromShape,
@@ -38,8 +39,10 @@ import type { DrawTool } from '../annotate/tools/drawModel';
 import { wrapFactory } from '../annotate/tools/drawTools';
 import { documentStore } from '../../app/store/documentStore';
 import { capability } from '../view/host';
+import { setDrawnByUs } from '../../engine/hostedEngine';
 import { curveHandlerFactory } from './curveTool';
 import { CUTOUT_TOOL, cutoutHandlerFactory } from './cutoutTool';
+import { countHandlerFactory } from './countTool';
 import { dimensionHandlerFactory, withLeaderRect, type Patch } from './dimensionTool';
 import { gestureAnchor, registeringDoc } from './gesture';
 import { withFileMeta } from './measurements';
@@ -55,6 +58,7 @@ export const MEASURE_TOOLS = {
   measureAngle: 'angle',
   measureRadius: 'radius',
   measureDiameter: 'diameter',
+  measureCount: 'count',
 } as const satisfies Partial<Record<DrawTool, MeasureKind>>;
 
 export type MeasureTool = keyof typeof MEASURE_TOOLS;
@@ -71,6 +75,7 @@ export const TOOL_OF: Record<MeasureTool, Tool> = {
   measureAngle: 'angle',
   measureRadius: 'radius',
   measureDiameter: 'diameter',
+  measureCount: 'count',
 };
 
 /** The measuring tool → its plugin tool. */
@@ -83,6 +88,7 @@ export const PLUGIN_TOOL: Record<Tool, MeasureTool> = {
   angle: 'measureAngle',
   radius: 'measureRadius',
   diameter: 'measureDiameter',
+  count: 'measureCount',
 };
 
 /** Measure tab command → tool. */
@@ -95,6 +101,7 @@ export const MEASURE_COMMANDS: Record<string, MeasureTool> = {
   'measure.angle': 'measureAngle',
   'measure.radius': 'measureRadius',
   'measure.diameter': 'measureDiameter',
+  'measure.count': 'measureCount',
 };
 
 /** The plugin tool each measuring tool is built on (Angle, Radius, Diameter: a Stamp, M14-05). */
@@ -107,6 +114,7 @@ const BASE: Record<MeasureTool, string> = {
   measureAngle: 'stamp',
   measureRadius: 'stamp',
   measureDiameter: 'stamp',
+  measureCount: 'stamp',
 };
 
 /**
@@ -172,12 +180,27 @@ export function previewPoints(data: PreviewData | undefined): Pt[] {
   return [...(data.vertices ?? []), ...(data.currentVertex ? [data.currentVertex] : [])];
 }
 
-/** The measuring tool an annotation was made with, without a document (the plugin's tool match). */
+/** toolMatch's answers by annotation object (objects are replaced, never changed). */
+const matched = new WeakMap<PdfAnnotationObject, Tool | null>();
+
+/**
+ * The measuring tool an annotation was made with, without a document (the
+ * plugin's tool match). Asked by every measuring tool for every annotation on
+ * every change, so each object's answer is kept (a sheet may hold 1,000 counts).
+ */
 function toolMatch(a: PdfAnnotationObject): Tool | null {
+  const hit = matched.get(a);
+  if (hit !== undefined) return hit;
+  const tool = matchNow(a);
+  matched.set(a, tool);
+  return tool;
+}
+
+function matchNow(a: PdfAnnotationObject): Tool | null {
   const own = metaOf(a);
   if (own) return own.tool;
-  const kind = measureKind(a) ?? curveKind(a);
-  if (isCurveKind(kind)) return kind;
+  const kind = measureKind(a) ?? stampKind(a);
+  if (isStampKind(kind)) return kind;
   return kind ? toolFromShape(kind, measurePoints(a).map(mirror)) : null;
 }
 
@@ -194,7 +217,7 @@ const anchorFor = (id: string) => (page: number) => {
 function curveTool(
   base: ReturnType<AnnotationCapability['getTool']> & object,
   id: MeasureTool,
-  tool: CurveTool,
+  tool: CurveTool | 'count',
 ): Parameters<AnnotationCapability['addTool']>[0] {
   const measure: MeasureMeta = { tool };
   return {
@@ -222,9 +245,13 @@ function curveTool(
       measure,
     },
     transform: curveTransform,
-    pointerHandler: wrapFactory(id, curveHandlerFactory(tool, id), undefined, {
-      anchor: anchorFor(id),
-    }),
+    // A Count is one click (M14-07): no gesture, no snapping, no Shift.
+    pointerHandler:
+      tool === 'count'
+        ? countHandlerFactory()
+        : wrapFactory(id, curveHandlerFactory(tool, id), undefined, {
+            anchor: anchorFor(id),
+          }),
   };
 }
 
@@ -236,6 +263,11 @@ export function installMeasureTools(registry: PluginRegistry): void {
   } catch {
     return;
   }
+  // Our measurement Stamps are drawn by the annotation tiles: the plugin never asks for an image of one.
+  setDrawnByUs(
+    (docId, a) =>
+      a.type === PdfAnnotationSubtype.STAMP && isStampTool(metaOf(withFileMeta(docId, a))?.tool),
+  );
   // Cutout (M14-06): holes clicked into the selected Area or Volume; it makes no markup of its own.
   const polygon = cap.getTool('polygon');
   if (polygon)
@@ -254,8 +286,8 @@ export function installMeasureTools(registry: PluginRegistry): void {
     const base = cap.getTool(BASE[id]);
     if (!base) continue;
     const tool = TOOL_OF[id];
-    if (isCurveTool(tool) || isCurveKind(kind)) {
-      if (isCurveTool(tool)) cap.addTool(curveTool(base, id, tool));
+    if (isCurveTool(tool) || tool === 'count' || isStampKind(kind)) {
+      if (isCurveTool(tool) || tool === 'count') cap.addTool(curveTool(base, id, tool));
       continue;
     }
     // Placed by clicks with the points kept outside the handler, so a view change

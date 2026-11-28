@@ -59,6 +59,7 @@ const FALLBACK: Readonly<Record<StyleTool, Record<string, unknown>>> = {
   measureAngle: { type: S.STAMP, measure: { tool: 'angle' } },
   measureRadius: { type: S.STAMP, measure: { tool: 'radius' } },
   measureDiameter: { type: S.STAMP, measure: { tool: 'diameter' } },
+  measureCount: { type: S.STAMP, measure: { tool: 'count' } },
 };
 
 /** `props` over the tool's current style, as an annotation object (no placement). */

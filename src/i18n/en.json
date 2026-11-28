@@ -87,7 +87,8 @@
       "fullScreen": "Full Screen",
       "exitFullScreen": "Exit Full Screen",
       "darkTheme": "Dark Theme",
-      "compactDensity": "Compact Density"
+      "compactDensity": "Compact Density",
+      "countNumbers": "Same-Size Count Numbers"
     },
     "comment": {
       "highlight": "Highlight",
@@ -163,7 +164,8 @@
       "lastTool": "Measure",
       "updateOld": "Update Old Measurements",
       "export": "Export Measurements",
-      "placeSummary": "Place Summary"
+      "placeSummary": "Place Summary",
+      "count": "Count"
     },
     "organize": {
       "insertBlank": "Insert Blank Page",
@@ -360,7 +362,8 @@
         "curves": "Curves and Angles",
         "scale": "Scale",
         "settings": "Settings",
-        "snap": "Snap"
+        "snap": "Snap",
+        "count": "Count"
       },
       "organize": {
         "pages": "Pages",
@@ -939,7 +942,9 @@
       "measureCurveMethod": "How Radius and Diameter are picked: centre and edge, or three points",
       "thinLines": "Whether Thin Lines is on",
       "measureExport": "The measurements export's format and whether it includes pictures",
-      "measureQuantities": "The depth of the next volume, and the units and decimals chosen for new areas and volumes"
+      "measureQuantities": "The depth of the next volume, and the units and decimals chosen for new areas and volumes",
+      "countGroups": "The count groups you made (name, symbol, colour, size) and the last one used",
+      "countNumbers": "Whether Same-Size Count Numbers is on"
     },
     "clearHint": "To delete this data, use File → Settings → Clear all local data."
   },
@@ -1483,7 +1488,8 @@
       "volume": "Volume measurement",
       "angle": "Angle measurement",
       "radius": "Radius measurement",
-      "diameter": "Diameter measurement"
+      "diameter": "Diameter measurement",
+      "count": "Count"
     },
     "anonymous": "Anonymous",
     "caret": {
@@ -1507,7 +1513,8 @@
       "radiusCentre": "Click the centre, then a point on the edge. Esc cancels.",
       "radiusThree": "Click three points on the circle or arc. Esc cancels.",
       "diameterCentre": "Click the centre, then a point on the edge. Esc cancels.",
-      "diameterThree": "Click three points on the circle or arc. Esc cancels."
+      "diameterThree": "Click three points on the circle or arc. Esc cancels.",
+      "count": "Click to place a count of the group chosen in the Properties pane; each click takes the next number. Esc ends."
     },
     "link": {
       "title": "Link",
@@ -1737,7 +1744,8 @@
       "measureVolume": "Volume",
       "measureAngle": "Angle",
       "measureRadius": "Radius",
-      "measureDiameter": "Diameter"
+      "measureDiameter": "Diameter",
+      "measureCount": "Count"
     }
   },
   "comments": {
@@ -2000,13 +2008,15 @@
       "volume": "Volume",
       "angle": "Angle",
       "radius": "Radius",
-      "diameter": "Diameter"
+      "diameter": "Diameter",
+      "count": "Count"
     },
     "caption": {
       "labelled": "{{label}}: {{value}}",
       "angle": "∠ {{value}}°",
       "radius": "R {{value}}",
-      "diameter": "Ø {{value}}"
+      "diameter": "Ø {{value}}",
+      "count": "{{group}} {{n}}"
     },
     "props": {
       "heading": "Measurement",
@@ -2096,6 +2106,32 @@
       "gone": "The area to cut was removed, so Cutout stopped.",
       "dropped_one": "{{n}} cutout no longer fits inside the outline and was removed. Undo brings it back.",
       "dropped_other": "{{n}} cutouts no longer fit inside the outline and were removed. Undo brings them back."
+    },
+    "count": {
+      "defaultGroup": "Item",
+      "newGroupName": "Group {{n}}",
+      "shape": {
+        "circle": "Circle",
+        "square": "Square",
+        "triangle": "Triangle",
+        "diamond": "Diamond",
+        "cross": "Cross",
+        "tick": "Tick"
+      },
+      "groupBox": "Count group",
+      "group": "Group",
+      "newGroup": "New group",
+      "name": "Name",
+      "nameTaken": "Another group already has this name.",
+      "nameEmpty": "A group needs a name.",
+      "colour": "Colour",
+      "size": "Size",
+      "sizePt": "{{n}} pt",
+      "next": "Next click: {{text}}",
+      "groupHint": "Changes to the group apply to all its counts.",
+      "showNumber": "Show number",
+      "symbol": "Symbol",
+      "sameSizeHint": "Keeps count numbers readable at any zoom, on screen only"
     }
   },
   "measurements": {
@@ -2135,7 +2171,9 @@
     "currentPage": "(current)",
     "setScaleOf": "Set the scale of page {{page}}",
     "viewportsOf": "Scale viewports on page {{page}}",
-    "viewportHint": "Arrow keys move the viewport on its page (Shift: 10 pt). Delete removes it."
+    "viewportHint": "Arrow keys move the viewport on its page (Shift: 10 pt). Delete removes it.",
+    "countGaps": "{{group}}: some numbers are missing.",
+    "renumber": "Renumber {{group}}"
   },
   "measureExport": {
     "title": {

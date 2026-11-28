@@ -14,7 +14,10 @@ import {
 import { liveScale, scaleOfChoice } from '../../model/scaleViewport';
 import { useAnnotationMap } from '../annotate/comments/commentsStore';
 import { CurveShapeSvg } from './CurveShape';
-import { choiceFor, curveWords, kindOf } from './measurements';
+import { CountSymbolSvg } from './CountSymbol';
+import { countCaption, DEFAULT_COUNT_SIZE } from '../../model/measureCount';
+import { captionSize, estimateWidth, type MeasureMeta } from '../../model/measureMarkup';
+import { choiceFor, countText, curveWords, kindOf } from './measurements';
 import { useDocuments } from '../../app/store/documentStore';
 import { useMeasure } from './measureStore';
 import { layoutFor, useScales } from './scaleStore';
@@ -24,6 +27,7 @@ const CURRENT = 'currentColor';
 
 /** Its test id (not shown). */
 const LIVE_ID = 'measure-curve-live';
+const GHOST_ID = 'measure-count-ghost';
 
 /**
  * The value of the measurement being drawn, next to the pointer (M3-16,
@@ -92,12 +96,12 @@ export function MeasureOverlay({
     if (!byUid || !hasDetails) return [];
     return Object.values(byUid)
       .map((x) => x.object)
-      .filter(
-        (o) =>
-          o.pageIndex === pageIndex &&
-          kindOf(documentId, o) &&
-          choiceFor(documentId, o).kind === 'spanning',
-      )
+      .filter((o) => {
+        if (o.pageIndex !== pageIndex) return false;
+        const k = kindOf(documentId, o);
+        // A count is one point: it never spans (M14-07).
+        return !!k && k !== 'count' && choiceFor(documentId, o).kind === 'spanning';
+      })
       .map((o) => {
         const k = kindOf(documentId, o) ?? 'distance';
         return { id: o.id, at: labelAnchor(k, measurePoints(o), leaderOf(o)) };
@@ -106,9 +110,11 @@ export function MeasureOverlay({
   }, [byUid, hasDetails, documentId, pageIndex, entry]); // eslint-disable-line react-hooks/exhaustive-deps
   const at = live?.at ?? live?.pts[live.pts.length - 1];
   const curve = live && isCurveTool(live.kind) ? live.kind : null;
-  if ((!text || !at) && spans.length === 0 && !curve) return null;
+  const count = live?.kind === 'count' && live.count ? live.count : null;
+  if ((!text || !at) && spans.length === 0 && !curve && !count) return null;
   return (
     <div className="measure-overlay" aria-hidden="true">
+      {count && at ? <CountGhost meta={count} at={at} color={live?.color} scale={scale} /> : null}
       {live && curve ? (
         <CurveShapeSvg
           tool={curve}
@@ -157,5 +163,46 @@ export function MeasureOverlay({
         </span>
       ))}
     </div>
+  );
+}
+
+/** The count the next click places (M14-07): its symbol and number, under the pointer. */
+function CountGhost({
+  meta,
+  at,
+  color,
+  scale,
+}: {
+  meta: MeasureMeta;
+  at: { x: number; y: number };
+  color: string | undefined;
+  scale: number;
+}) {
+  const size = meta.size ?? DEFAULT_COUNT_SIZE;
+  const text = countText(meta);
+  const { width, height } = captionSize(estimateWidth(text), 1);
+  // Its centre, beside the symbol (the caption is never turned).
+  const c = countCaption(at, size, width, height).at;
+  return (
+    <>
+      <CountSymbolSvg
+        shape={meta.sym ?? 'circle'}
+        at={at}
+        size={size}
+        color={color ?? CURRENT}
+        opacity={0.6}
+        scale={scale}
+        data-testid={GHOST_ID}
+      />
+      {meta.hideN ? null : (
+        <span
+          className="measure-count-ghost-text"
+          data-testid="measure-count-next"
+          style={{ left: c.x * scale, top: c.y * scale, color, fontSize: 10 * scale }}
+        >
+          {text}
+        </span>
+      )}
+    </>
   );
 }

@@ -13,7 +13,8 @@ import type { Pt, Scale, ScaleChoice } from './scale';
  * A Length has its two points only, an Angle, Radius or Diameter the points it
  * was picked with (M14-05); the others add and remove points (Q24).
  */
-export const canAddPoints = (tool: MeasureTool): boolean => tool !== 'length' && !isCurveTool(tool);
+export const canAddPoints = (tool: MeasureTool): boolean =>
+  tool !== 'length' && tool !== 'count' && !isCurveTool(tool);
 
 /** A Perimeter and an Area are closed: an edge joins the last point to the first. */
 export const isClosed = (tool: MeasureTool): boolean => tool === 'perimeter' || tool === 'area';

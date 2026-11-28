@@ -56,7 +56,9 @@ export function summaryRows(
     const { real, paper, left } = g.total;
     const extra = left ? words.leftOut(left) : '';
     if (!real && !paper) {
-      out.push([name, f.number(g.entries.length, 0), left ? extra.trim() : words.noTotal]);
+      // A count group's count is its total (M14-07).
+      const none = g.quantity === 'count' ? '' : words.noTotal;
+      out.push([name, f.number(g.entries.length, 0), left ? extra.trim() : none]);
       continue;
     }
     if (real) out.push([name, f.number(real.count, 0), sumText(real, g.quantity, f) + extra]);

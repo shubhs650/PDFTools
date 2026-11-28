@@ -195,6 +195,30 @@ export function taskFromJob<T>(job: TextJob<T>): PdfTask<T> {
  * (the Work worker). Through the Render worker's one-call-at-a-time queue they
  * tripled visible-tile latency (ADR-012 finding 1).
  */
+/**
+ * Markups whose screen image is entirely ours (M14-07): a measurement Stamp
+ * (Angle, Radius, Diameter, Count) is drawn by our annotation tiles and, while
+ * selected, by SelectedMeasure; the plugin's own image of it is hidden
+ * (app.css). Asking the Render worker for that image anyway queues one task
+ * per Stamp, and EmbedPDF sorts its whole queue before each task: a sheet of
+ * 1,000 counts kept the main thread busy for over 100 ms per click.
+ */
+let drawnByUs: ((docId: string, a: PdfAnnotationObject) => boolean) | null = null;
+
+export function setDrawnByUs(
+  fn: ((docId: string, a: PdfAnnotationObject) => boolean) | null,
+): void {
+  drawnByUs = fn;
+}
+
+/** A transparent 1 × 1 PNG: the plugin's image of a markup we draw ourselves. */
+const BLANK_PNG = Uint8Array.from(
+  atob(
+    'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNkYPhfDwAChwGA60e6kgAAAABJRU5ErkJggg==',
+  ),
+  (c) => c.charCodeAt(0),
+);
+
 export class RoutedPdfEngine extends PdfEngine {
   private readonly text: TextSource;
 
@@ -227,6 +251,20 @@ export class RoutedPdfEngine extends PdfEngine {
     return job
       ? (taskFromJob(job) as unknown as ReturnType<PdfEngine['getAllAnnotations']>)
       : super.getAllAnnotations(doc);
+  }
+
+  override renderPageAnnotation(
+    doc: PdfDocumentObject,
+    page: PdfPageObject,
+    annotation: PdfAnnotationObject,
+    options?: Parameters<PdfEngine['renderPageAnnotation']>[3],
+  ): PdfTask<Blob> {
+    if (drawnByUs?.(doc.id, annotation)) {
+      const task = new Task<Blob, { code: PdfErrorCode; message: string }>();
+      task.resolve(new Blob([BLANK_PNG], { type: 'image/png' }));
+      return task;
+    }
+    return super.renderPageAnnotation(doc, page, annotation, options);
   }
 
   /**

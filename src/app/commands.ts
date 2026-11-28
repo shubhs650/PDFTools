@@ -631,6 +631,18 @@ export const COMMANDS: readonly CommandDef[] = [
     custom: 'view.thinLines',
   },
   {
+    // Same-size count numbers (M14-07, D-75): count numbers kept readable at any zoom,
+    // on screen only; also in the status bar beside Thin Lines. Off by default.
+    id: 'view.countNumbers',
+    tab: 'view',
+    group: 'pageDisplay',
+    size: 'small',
+    fluent: 'NumberSymbol',
+    milestone: 'M1',
+    toggle: true,
+    custom: 'view.countNumbers',
+  },
+  {
     id: 'view.leftPanes',
     tab: 'view',
     group: 'window',
@@ -1237,6 +1249,18 @@ export const COMMANDS: readonly CommandDef[] = [
     toggle: true,
     shipped: true, // M14-05
     custom: 'measure.diameter',
+  },
+  // M14-07 (D-75, Q11): the Count group.
+  {
+    id: 'measure.count',
+    tab: 'measure',
+    group: 'count',
+    size: 'large',
+    fluent: 'NumberSymbol',
+    milestone: 'M3',
+    toggle: true,
+    shipped: true, // M14-07
+    custom: 'measure.count',
   },
   {
     // M14-03 (Q26): Home's and Comment's one Measure button. Its face is the last measuring

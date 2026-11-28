@@ -308,6 +308,9 @@ describe('where the theme is reached', () => {
       'pdftools.measureCurveMethod',
       // The next Volume's depth and the area and volume units (M14-06).
       'pdftools.measureQuantities',
+      // The count groups, and Same-size count numbers on (M14-07).
+      'pdftools.countGroups',
+      'pdftools.countNumbers',
       // Thin Lines on (M13-05).
       'pdftools.thinLines',
       // The measurements export's format and pictures (M14-10).

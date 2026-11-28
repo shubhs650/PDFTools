@@ -67,7 +67,8 @@ export interface EditTarget {
 /** A measurement (one markup, M14-03) whose points can be edited by this person now. */
 export function editTarget(docId: string, a: PdfAnnotationObject): EditTarget | null {
   const meta = metaOf(a);
-  if (!meta || isFixed(a)) return null;
+  // A Count is one point: it moves as a whole, with the plugin's own drag (M14-07).
+  if (!meta || meta.tool === 'count' || isFixed(a)) return null;
   const doc = documentStore.getState().docs[docId];
   if (!doc || !allows(securityOf(doc.meta), 'annotate')) return null;
   return { tool: meta.tool, handles: handlesOf(meta.tool, measurePoints(a)) };

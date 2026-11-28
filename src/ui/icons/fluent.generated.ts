@@ -100,7 +100,7 @@ import { LockOpen20Regular, LockOpen32Regular } from '@fluentui/react-icons/svg/
 import { LockShield20Regular, LockShield32Regular } from '@fluentui/react-icons/svg/lock-shield';
 import { Markdown20Regular, Markdown28Regular } from '@fluentui/react-icons/svg/markdown';
 import { Note20Filled, Note20Regular, Note28Filled, Note28Regular } from '@fluentui/react-icons/svg/note';
-import { NumberSymbol20Regular } from '@fluentui/react-icons/svg/number-symbol';
+import { NumberSymbol20Filled, NumberSymbol20Regular, NumberSymbol32Filled, NumberSymbol32Regular } from '@fluentui/react-icons/svg/number-symbol';
 import { NumberSymbolSquare20Filled, NumberSymbolSquare20Regular } from '@fluentui/react-icons/svg/number-symbol-square';
 import { Open20Regular } from '@fluentui/react-icons/svg/open';
 import { Options20Regular, Options32Regular } from '@fluentui/react-icons/svg/options';
@@ -225,6 +225,7 @@ export const FLUENT_GLYPHS: Record<string, FluentGlyphs> = {
   'view.rotateCw': { regular: { small: ArrowRotateClockwise20Regular } },
   'view.rotateCcw': { regular: { small: ArrowRotateCounterclockwise20Regular } },
   'view.thinLines': { regular: { small: LineThickness20Regular }, filled: { small: LineThickness20Filled } },
+  'view.countNumbers': { regular: { small: NumberSymbol20Regular }, filled: { small: NumberSymbol20Filled } },
   'view.leftPanes': { regular: { small: PanelLeft20Regular }, filled: { small: PanelLeft20Filled } },
   'view.propertiesPane': { regular: { small: PanelRight20Regular }, filled: { small: PanelRight20Filled } },
   'view.collapseRibbon': { regular: { small: PanelTopContract20Regular } },
@@ -284,6 +285,7 @@ export const FLUENT_GLYPHS: Record<string, FluentGlyphs> = {
   'measure.angle': { regular: { small: Ruler20Regular, large: Ruler32Regular, largeNative: 32 }, filled: { small: Ruler20Filled, large: Ruler32Filled, largeNative: 32 } },
   'measure.radius': { regular: { small: Ruler20Regular, large: Ruler32Regular, largeNative: 32 }, filled: { small: Ruler20Filled, large: Ruler32Filled, largeNative: 32 } },
   'measure.diameter': { regular: { small: Ruler20Regular, large: Ruler32Regular, largeNative: 32 }, filled: { small: Ruler20Filled, large: Ruler32Filled, largeNative: 32 } },
+  'measure.count': { regular: { small: NumberSymbol20Regular, large: NumberSymbol32Regular, largeNative: 32 }, filled: { small: NumberSymbol20Filled, large: NumberSymbol32Filled, largeNative: 32 } },
   'measure.lastTool': { regular: { small: Ruler20Regular, large: Ruler32Regular, largeNative: 32 }, filled: { small: Ruler20Filled, large: Ruler32Filled, largeNative: 32 } },
   'measure.updateOld': { regular: { small: ArrowSync20Regular } },
   'measure.export': { regular: { small: ArrowExport20Regular } },

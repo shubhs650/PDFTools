@@ -204,14 +204,31 @@ const table = (b: Uint8Array | undefined): Table | null => {
   return { u16: (o) => d.getUint16(o), i16: (o) => d.getInt16(o), u32: (o) => d.getUint32(o) };
 };
 
-/** Objects a face needs, numbered from `first`: Type0 is `first`. */
+/** The object numbers of a face's five objects. */
+export interface FontNums {
+  type0: number;
+  cid: number;
+  desc: number;
+  file: number;
+  tounicode: number;
+}
+
+/**
+ * Objects a face needs, numbered from `first` (Type0 is `first`), or with the
+ * numbers given (a shared measurement font rewritten in place, save/sharedFonts.ts).
+ */
 export function fontObjects(
   face: Face,
-  used: Map<number, string>,
-  first: number,
+  used: ReadonlyMap<number, string>,
+  first: number | FontNums,
   sub: Subsetter,
   styleFlags: { italic: boolean },
-): { objects: Uint8Array[]; type0: PdfRef; bytes: { program: number; compressed: number } } {
+): {
+  objects: Uint8Array[];
+  type0: PdfRef;
+  baseFont: string;
+  bytes: { program: number; compressed: number };
+} {
   const hbFace = face.font.face;
   // The library is TrueType only (S26: CFF embeds badly in MuPDF and poppler).
   if (hbFace.referenceTable('CFF ') || hbFace.referenceTable('CFF2'))
@@ -255,13 +272,10 @@ export function fontObjects(
     }
   }
   if (runStart >= 0) W.push(runStart, runWidths);
-  const n = {
-    type0: first,
-    cid: first + 1,
-    desc: first + 2,
-    file: first + 3,
-    tounicode: first + 4,
-  };
+  const n: FontNums =
+    typeof first === 'number'
+      ? { type0: first, cid: first + 1, desc: first + 2, file: first + 3, tounicode: first + 4 }
+      : first;
   const flags = 32 | (fixed ? 1 : 0) | (styleFlags.italic || italicAngle !== 0 ? 64 : 0);
   const compressed = zlibSync(embedded, { level: 9 });
   const N = (s: string): PdfName => new PdfName(s);
@@ -368,6 +382,7 @@ export function fontObjects(
   return {
     objects,
     type0: new PdfRef(n.type0, 0),
+    baseFont,
     bytes: { program: program.length, compressed: compressed.length },
   };
 }
@@ -414,7 +429,12 @@ export function assemble(
   names: Map<Face, string>,
   sub: Subsetter,
   opts: { italic: boolean },
-): { file: Uint8Array; fontBytes: number } {
+): {
+  file: Uint8Array;
+  fontBytes: number;
+  /** Each embedded face's /BaseFont and the glyphs it holds (the shared measurement fonts). */
+  fonts: { face: Face; baseFont: string; used: ReadonlyMap<number, string> }[];
+} {
   const size = trailerSize(exported);
   let next = size;
   const contentNum = next++;
@@ -422,8 +442,10 @@ export function assemble(
   const fontRefs = new Map<string, PdfValue>();
   const extra: Uint8Array[] = [];
   let fontBytes = 0;
+  const fonts: { face: Face; baseFont: string; used: ReadonlyMap<number, string> }[] = [];
   for (const [face, used] of usage) {
     const r = fontObjects(face, used, next, sub, { italic: opts.italic });
+    fonts.push({ face, baseFont: r.baseFont, used });
     next += 5;
     fontRefs.set(names.get(face) ?? 'F0', r.type0);
     extra.push(...r.objects);
@@ -520,5 +542,5 @@ export function assemble(
     `/Root ${root} /Prev ${String(lastStartxref(exported))}`,
   );
   parts.push(xref.bytes);
-  return { file: concatBytes(parts), fontBytes };
+  return { file: concatBytes(parts), fontBytes, fonts };
 }

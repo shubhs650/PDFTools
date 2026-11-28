@@ -44,6 +44,7 @@ import { FieldDesignProperties } from '../../forms/FieldProperties';
 import { setToolProp, TOOL_NAME_KEYS, toolPropsOf, toolSample } from './toolProperties';
 import { CurveMethodField } from '../../measure/CurveMethodField';
 import { QuantityToolFields } from '../../measure/QuantityFields';
+import { CountGroupBox } from '../../measure/CountGroupBox';
 import type { PdfAnnotationObject } from '@embedpdf/models';
 
 const ENDINGS: readonly { value: LE; key: MessageKey }[] = [
@@ -479,6 +480,7 @@ function ToolProperties({ tool }: { tool: StyleTool }) {
   // Re-read whenever the tool's defaults change.
   useToolDefaults((s) => s.overrides[tool]);
   const canEdit = useCanEdit();
+  const docId = useDocuments((s) => s.activeId);
   const sample = toolSample(tool);
   if (!sample) return <Empty />;
   const shown = new Set(toolPropsOf(sample));
@@ -511,6 +513,7 @@ function ToolProperties({ tool }: { tool: StyleTool }) {
       {tool === 'measureArea' || tool === 'measureVolume' ? (
         <QuantityToolFields tool={tool === 'measureArea' ? 'area' : 'volume'} />
       ) : null}
+      {tool === 'measureCount' ? <CountGroupBox docId={docId} disabled={!canEdit} /> : null}
       <div className="prop-actions">
         <Button
           size="small"

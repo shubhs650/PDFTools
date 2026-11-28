@@ -37,6 +37,8 @@ export const DRAW_TOOLS = [
   'measureAngle',
   'measureRadius',
   'measureDiameter',
+  // Count (M14-07): a Stamp per click (measure/countTool.ts).
+  'measureCount',
   // Scale viewport (M3-17): a rectangle, then the dialog (measure/viewports.ts).
   'scaleViewport',
   // Visual signatures (M6-13): @embedpdf/plugin-signature's placement tools (sign/signDocument.ts).

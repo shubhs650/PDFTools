@@ -16,7 +16,8 @@ import {
 } from '../../model/measureQuantity';
 import { format } from '../../i18n';
 import { Button, IconButton } from '../../ui/components';
-import { SelectField, TextProp } from '../annotate/properties/fields';
+import { CheckField, SelectField, TextProp } from '../annotate/properties/fields';
+import { CountGroupBox } from './CountGroupBox';
 import { GridSection } from '../annotate/properties/GridSection';
 import { useSelectedAnnotations } from '../annotate/selection';
 import {
@@ -73,11 +74,30 @@ export function MeasureInfo({ docId }: { docId: string }) {
     <div className="measure-info" data-testid="measure-info">
       <p className="prop-summary">{a.contents ?? ''}</p>
       <p className={c.kind === 'spanning' ? 'measure-warning' : 'prop-summary'} role="status">
-        {meta?.tool === 'angle' ? t('measure.props.noScaleNeeded') : choiceText(c)}
+        {meta?.tool === 'angle' || meta?.tool === 'count'
+          ? t('measure.props.noScaleNeeded')
+          : choiceText(c)}
       </p>
-      {c.kind === 'spanning' ? <p className="prop-empty">{t('measure.spansHint')}</p> : null}
+      {c.kind === 'spanning' && meta?.tool !== 'count' ? (
+        <p className="prop-empty">{t('measure.spansHint')}</p>
+      ) : null}
       {meta && isAreaTool(meta.tool) ? <AreaFacts docId={docId} a={a} /> : null}
-      {meta ? (
+      {meta?.tool === 'count' ? (
+        // A Count (M14-07): its group, and whether its number shows (Q11, Q14).
+        <>
+          <GridSection id="measurement" title={t('measure.props.heading')}>
+            <CheckField
+              label={t('measure.count.showNumber')}
+              value={!meta.hideN}
+              disabled={locked}
+              onCommit={(on) => {
+                setMeasureMeta(docId, a.id, { hideN: on ? undefined : true });
+              }}
+            />
+          </GridSection>
+          <CountGroupBox docId={docId} countId={a.id} disabled={locked} />
+        </>
+      ) : meta ? (
         <GridSection id="measurement" title={t('measure.props.heading')}>
           <TextProp
             label={t('measure.props.label')}

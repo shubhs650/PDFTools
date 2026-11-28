@@ -29,13 +29,28 @@ import {
   type Depth,
   type VolumeUnit,
 } from './measureQuantity';
+import {
+  countCaption,
+  DEFAULT_COUNT_SIZE,
+  isCountShape,
+  MAX_COUNT_SIZE,
+  MIN_COUNT_SIZE,
+  cleanGroupName,
+  type CountShape,
+} from './measureCount';
 import type { Kind } from './scale';
 
 /**
- * Angle, Radius and Diameter (M14-05) are Stamps; the rest Line, PolyLine,
- * Polygon (a Volume, M14-06, is a Polygon too).
+ * Angle, Radius, Diameter (M14-05) and Count (M14-07) are Stamps; the rest
+ * Line, PolyLine, Polygon (a Volume, M14-06, is a Polygon too).
  */
-export type MeasureTool = 'length' | 'polylength' | 'perimeter' | 'area' | 'volume' | CurveTool;
+export type MeasureTool =
+  'length' | 'polylength' | 'perimeter' | 'area' | 'volume' | CurveTool | 'count';
+
+/** The tools whose markup is a Stamp with its points in `measure.pts`. */
+export type StampTool = CurveTool | 'count';
+
+export const isStampTool = (t: unknown): t is StampTool => isCurveTool(t) || t === 'count';
 
 export const MEASURE_TOOL_IDS: readonly MeasureTool[] = [
   'length',
@@ -46,10 +61,11 @@ export const MEASURE_TOOL_IDS: readonly MeasureTool[] = [
   'angle',
   'radius',
   'diameter',
+  'count',
 ];
 
 /** How each length and area tool's value is computed (model/scale.ts): a Perimeter repeats its first vertex. */
-export const VALUE_KIND: Record<Exclude<MeasureTool, CurveTool>, Kind> = {
+export const VALUE_KIND: Record<Exclude<MeasureTool, StampTool>, Kind> = {
   length: 'distance',
   polylength: 'perimeter',
   perimeter: 'perimeter',
@@ -72,6 +88,7 @@ export const TOOL_TOKEN: Record<MeasureTool, string> = {
   angle: 'Angle',
   radius: 'Radius',
   diameter: 'Diameter',
+  count: 'Count',
 };
 
 export const toolOfToken = (t: string | undefined): MeasureTool | null =>
@@ -113,6 +130,16 @@ export interface MeasureMeta {
   /** A Volume's own unit and decimals (Q28); absent: from the scale. */
   volumeUnit?: VolumeUnit;
   volumeDecimals?: number;
+  /** Count (M14-07, Q11, Q14): its group's name; `pts` holds its centre alone. */
+  group?: string;
+  /** Count: its number in its group (1, 2, 3 …; gaps kept, Q15). */
+  n?: number;
+  /** Count: its symbol's shape. */
+  sym?: CountShape;
+  /** Count: its symbol's size, points. */
+  size?: number;
+  /** Count: its number is not drawn beside the symbol (the Properties pane, Q11). */
+  hideN?: true;
 }
 
 /** Caption size (Q40: 10 pt in the app's own font). */
@@ -142,11 +169,24 @@ function holesOf(v: unknown): Pt[][] | undefined {
   return out.length ? out : undefined;
 }
 
-/** The well-formed `measure` field of an annotation object, or null. */
+/** metaOf's answers by `measure` object: read for every markup on every change (1,000 counts on a sheet). */
+const READ = new WeakMap<object, MeasureMeta | null>();
+
+/**
+ * The well-formed `measure` field of an annotation object, or null. The same
+ * field gives the same object back: treat it as read-only (copy to change it).
+ */
 export function metaOf(a: unknown): MeasureMeta | null {
   const m = (a as { measure?: unknown } | null)?.measure;
   if (typeof m !== 'object' || m === null) return null;
-  const r = m as Record<string, unknown>;
+  const known = READ.get(m);
+  if (known !== undefined) return known;
+  const out = readMeta(m as Record<string, unknown>);
+  READ.set(m, out);
+  return out;
+}
+
+function readMeta(r: Record<string, unknown>): MeasureMeta | null {
   const tool = r['tool'];
   if (typeof tool !== 'string' || !TOOLS.has(tool)) return null;
   const out: MeasureMeta = { tool: tool as MeasureTool };
@@ -192,6 +232,25 @@ export function metaOf(a: unknown): MeasureMeta | null {
     if (isVolumeUnit(r['volumeUnit'])) out.volumeUnit = r['volumeUnit'];
     if (isDecimals(r['volumeDecimals'])) out.volumeDecimals = r['volumeDecimals'];
   }
+  if (out.tool === 'count') {
+    const p = Array.isArray(r['pts']) ? (r['pts'] as unknown[])[0] : undefined;
+    if (
+      typeof p === 'object' &&
+      p !== null &&
+      Number.isFinite((p as Pt).x) &&
+      Number.isFinite((p as Pt).y)
+    )
+      out.pts = [{ x: (p as Pt).x, y: (p as Pt).y }];
+    const group = typeof r['group'] === 'string' ? cleanGroupName(r['group']) : '';
+    if (group) out.group = group;
+    const n = r['n'];
+    if (typeof n === 'number' && Number.isInteger(n) && n > 0) out.n = n;
+    if (isCountShape(r['sym'])) out.sym = r['sym'];
+    const size = r['size'];
+    if (typeof size === 'number' && Number.isFinite(size))
+      out.size = Math.min(MAX_COUNT_SIZE, Math.max(MIN_COUNT_SIZE, size));
+    if (r['hideN'] === true) out.hideN = true;
+  }
   return out;
 }
 
@@ -222,7 +281,12 @@ export function sameMeta(a: MeasureMeta | null, b: MeasureMeta | null): boolean 
     (a.areaUnit ?? '') === (b.areaUnit ?? '') &&
     (a.areaDecimals ?? -1) === (b.areaDecimals ?? -1) &&
     (a.volumeUnit ?? '') === (b.volumeUnit ?? '') &&
-    (a.volumeDecimals ?? -1) === (b.volumeDecimals ?? -1)
+    (a.volumeDecimals ?? -1) === (b.volumeDecimals ?? -1) &&
+    (a.group ?? '') === (b.group ?? '') &&
+    (a.n ?? 0) === (b.n ?? 0) &&
+    (a.sym ?? '') === (b.sym ?? '') &&
+    (a.size ?? 0) === (b.size ?? 0) &&
+    !!a.hideN === !!b.hideN
   );
 }
 
@@ -274,7 +338,7 @@ export function offsetBox(c: CaptionBox, o: Pt | undefined): CaptionBox {
  * `holes` in the same space.
  */
 export function captionPlace(
-  meta: Pick<MeasureMeta, 'tool' | 'cap' | 'capOffset' | 'shape'>,
+  meta: Pick<MeasureMeta, 'tool' | 'cap' | 'capOffset' | 'shape' | 'size'>,
   pts: readonly Pt[],
   leader: Leader | null | undefined,
   width: number,
@@ -283,7 +347,10 @@ export function captionPlace(
 ): CaptionBox {
   const zero = { x: 0, y: 0 };
   let box: CaptionBox;
-  if (meta.tool === 'length') {
+  if (meta.tool === 'count') {
+    // Beside the symbol, to the right (M14-07, Q11).
+    box = countCaption(pts[0] ?? zero, meta.size ?? DEFAULT_COUNT_SIZE, width, height);
+  } else if (meta.tool === 'length') {
     const a = pts[0] ?? zero;
     const g = dimensionGeometry(a, pts[1] ?? a, leader, false);
     box = lineCaption(g.start, g.end, meta.cap ?? 'top', width, height);

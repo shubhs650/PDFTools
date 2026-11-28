@@ -5,6 +5,7 @@ import { createStore, useStore } from 'zustand';
 import type { CurveMethod } from '../../model/measureCurve';
 import type { MeasureKind } from '../../model/measurement';
 import type { QuantityMeta } from '../../model/measureQuantity';
+import type { MeasureMeta } from '../../model/measureMarkup';
 import type { Pt } from '../../model/scale';
 
 export interface LiveMeasure {
@@ -25,6 +26,8 @@ export interface LiveMeasure {
   method?: CurveMethod;
   /** An Area's or Volume's own units, and a Volume's depth (M14-06): the live value is its volume. */
   q?: QuantityMeta;
+  /** The count the next click places (M14-07): its group, number and look; `pts` its centre. */
+  count?: MeasureMeta;
 }
 
 interface MeasureState {

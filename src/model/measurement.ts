@@ -27,12 +27,17 @@ import {
 
 /**
  * What a measurement measures: a length, a path, an area (with standard
- * /IT and /Measure), or an Angle, Radius or Diameter (M14-05: a Stamp, its
- * points in its Triya data).
+ * /IT and /Measure), an Angle, Radius or Diameter (M14-05: a Stamp, its
+ * points in its Triya data), or a Count (M14-07: a Stamp with its group and
+ * number).
  */
-export type MeasureKind = Kind | CurveTool;
+export type MeasureKind = Kind | CurveTool | 'count';
 
 export const isCurveKind = (k: MeasureKind | null | undefined): k is CurveTool => isCurveTool(k);
+
+/** A Stamp measurement: an Angle, Radius, Diameter or Count. */
+export const isStampKind = (k: MeasureKind | null | undefined): k is CurveTool | 'count' =>
+  isCurveTool(k) || k === 'count';
 
 /** /IT per kind (ISO 32000-1 §12.5.6.7, 12.5.6.9). */
 export const MEASURE_INTENT: Record<Kind, string> = {
@@ -86,6 +91,15 @@ export function curveKind(a: MeasureShape): CurveTool | null {
   return isCurveTool(tool) ? tool : null;
 }
 
+/** A Count (a Stamp with our `measure` field, M14-07). */
+export function isCountShapeOf(a: MeasureShape): boolean {
+  return a.type === STAMP && (a.measure as { tool?: unknown } | null | undefined)?.tool === 'count';
+}
+
+/** An Angle, Radius, Diameter or Count made in this session, or null. */
+export const stampKind = (a: MeasureShape): CurveTool | 'count' | null =>
+  curveKind(a) ?? (isCountShapeOf(a) ? 'count' : null);
+
 /**
  * The measured points: a line's two ends, a polyline's or polygon's vertices,
  * an Angle's, Radius's or Diameter's clicked points (M14-05).
@@ -106,6 +120,8 @@ export function measurePoints(a: MeasureShape): Pt[] {
  * drawn (open, as in Acrobat): clicking the first vertex again closes it.
  */
 export function measuredValue(kind: MeasureKind, pts: readonly Pt[], scale: Scale | null): number {
+  // A count's value is its number (its `measure` field), never its point.
+  if (kind === 'count') return Number.NaN;
   if (isCurveTool(kind)) {
     const v = curveValue(kind, pts) ?? Number.NaN;
     // Degrees need no scale; a radius or diameter is a length on the page.
@@ -162,6 +178,8 @@ export function valueText(
     return { value, calibrated: !!scale };
   }
   const s = scale ?? PAPER;
+  // A count's text is its group and number (measurements.ts), not a value.
+  if (kind === 'count') return { value: '', calibrated: true };
   const v = measuredValue(kind, pts, scale);
   if (isCurveTool(kind)) {
     const n = Number.isFinite(v)
@@ -191,8 +209,8 @@ export function measureKeys(
     area?: { unit: AreaUnit; decimals: number };
   } = {},
 ): { set: Record<string, PdfJson>; remove: string[] } {
-  // An Angle, Radius or Diameter is a Stamp: no /IT, no /Measure; its scale is in its Triya data.
-  if (isCurveTool(kind)) return { set: {}, remove: [] };
+  // An Angle, Radius, Diameter or Count is a Stamp: no /IT, no /Measure; its data is in its Triya entry.
+  if (isCurveTool(kind) || kind === 'count') return { set: {}, remove: [] };
   const set: Record<string, PdfJson> = { IT: { name: MEASURE_INTENT[kind] } };
   const remove: string[] = [];
   if (scale) set['Measure'] = measureToPdf(scale, kind === 'area' ? caption.area : undefined);

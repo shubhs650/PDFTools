@@ -27,10 +27,13 @@
 // user-space numbers; shape-bound, so dropped when another editor reshaped
 // the outline), /Dp a Volume's depth [value (unit)], and /Au /Ad, /Vu /Vd the
 // area's and volume's own unit and decimals when chosen (Q28).
+// A Count (M14-07, D-75) is a Stamp too: /P holds its centre alone, and its
+// entry adds /G its group's name, /N its number, /Sy its symbol's shape, /Sz
+// its size and /Hn true when its number is not drawn.
 // Pure; values are the wire form (PdfJson) the object layer stages.
 import { fingerprint, type Box, type Pt } from './measureGeometry';
-import { TOOL_TOKEN, toolOfToken, type MeasureMeta } from './measureMarkup';
-import { isCurveTool } from './measureCurve';
+import { isStampTool, TOOL_TOKEN, toolOfToken, type MeasureMeta } from './measureMarkup';
+import { cleanGroupName, isCountShape, MAX_COUNT_SIZE, MIN_COUNT_SIZE } from './measureCount';
 import { isAreaUnit, isDecimals, isDepth, isVolumeUnit } from './measureQuantity';
 import type { Scale } from './scale';
 import { fromJson, type PdfJson } from './pdf/wire';
@@ -95,6 +98,11 @@ export function entryToPdf(e: MeasureEntry): PdfJson {
   if (e.meta.areaDecimals !== undefined) d['Ad'] = e.meta.areaDecimals;
   if (e.meta.volumeUnit) d['Vu'] = { name: e.meta.volumeUnit };
   if (e.meta.volumeDecimals !== undefined) d['Vd'] = e.meta.volumeDecimals;
+  if (e.meta.group) d['G'] = { text: e.meta.group };
+  if (e.meta.n) d['N'] = e.meta.n;
+  if (e.meta.sym) d['Sy'] = { name: e.meta.sym };
+  if (e.meta.size) d['Sz'] = round(e.meta.size);
+  if (e.meta.hideN) d['Hn'] = true;
   const c = e.curve;
   if (c) {
     d['P'] = c.pts.flatMap((p) => [round(p.x), round(p.y)]);
@@ -112,11 +120,15 @@ const nums = (j: PdfJson | undefined): number[] | null =>
     ? (j as number[])
     : null;
 
-/** A curve's own data from its entry; null when it has no points this version can use. */
-function curveFromPdf(d: Dict): CurveEntry | null {
+/**
+ * A Stamp measurement's own data from its entry (a curve's 2 or 3 points, a
+ * count's 1); null when it has no points this version can use.
+ */
+function curveFromPdf(d: Dict, count: boolean): CurveEntry | null {
   const p = nums(d['P']);
   const r = nums(d['Rc']);
-  if (!p || r?.length !== 4 || p.length % 2 !== 0 || p.length < 4 || p.length > 6) return null;
+  const [lo, hi] = count ? [2, 2] : [4, 6];
+  if (!p || r?.length !== 4 || p.length % 2 !== 0 || p.length < lo || p.length > hi) return null;
   const pts: Pt[] = [];
   for (let i = 0; i < p.length; i += 2) pts.push({ x: p[i] ?? 0, y: p[i + 1] ?? 0 });
   const out: CurveEntry = { pts, rect: r as Box };
@@ -156,6 +168,18 @@ export function entryFromPdf(j: PdfJson | undefined): MeasureEntry | null {
   const dp = d['Dp'];
   const depth = Array.isArray(dp) ? { value: dp[0], unit: textOf(dp[1]) } : null;
   if (isDepth(depth)) meta.depth = { value: depth.value, unit: depth.unit };
+  if (tool === 'count') {
+    const group = cleanGroupName(textOf(d['G']) ?? '');
+    if (group) meta.group = group;
+    const n = d['N'];
+    if (typeof n === 'number' && Number.isInteger(n) && n > 0) meta.n = n;
+    const sym = nameOf(d['Sy']);
+    if (isCountShape(sym)) meta.sym = sym;
+    const size = d['Sz'];
+    if (typeof size === 'number' && Number.isFinite(size))
+      meta.size = Math.min(MAX_COUNT_SIZE, Math.max(MIN_COUNT_SIZE, size));
+    if (d['Hn'] === true) meta.hideN = true;
+  }
   const out: MeasureEntry = { meta, fp: textOf(d['F']) ?? '' };
   const ho = d['Ho'];
   if (Array.isArray(ho)) {
@@ -169,8 +193,8 @@ export function entryFromPdf(j: PdfJson | undefined): MeasureEntry | null {
       });
     if (holes.length) out.holes = holes;
   }
-  if (isCurveTool(tool)) {
-    const curve = curveFromPdf(d);
+  if (isStampTool(tool)) {
+    const curve = curveFromPdf(d, tool === 'count');
     if (curve) out.curve = curve;
   }
   return out;

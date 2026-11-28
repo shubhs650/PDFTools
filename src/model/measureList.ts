@@ -33,8 +33,8 @@ import {
 } from './measureQuantity';
 import { formatLength, MM_PER_UNIT, type LengthFormat, type Pt, type Scale } from './scale';
 
-/** What a group adds up (an angle is in degrees, whatever the scale). */
-export type Quantity = 'length' | 'area' | 'volume' | 'angle';
+/** What a group adds up (an angle is in degrees, whatever the scale; a count is how many). */
+export type Quantity = 'length' | 'area' | 'volume' | 'angle' | 'count';
 
 /** An area's or volume's own unit (M14-06, Q28). */
 export type QuantityUnit = AreaUnit | VolumeUnit;
@@ -48,13 +48,14 @@ export const QUANTITY: Record<MeasureTool, Quantity> = {
   angle: 'angle',
   radius: 'length',
   diameter: 'length',
+  count: 'count',
 };
 
 /**
  * Whether a group has a total: angles, radii and diameters (M14-05) don't add
- * up to anything useful.
+ * up to anything useful; a count group's total is how many it has (M14-07).
  */
-export const hasTotal = (tool: MeasureTool): boolean => !isCurveTool(tool);
+export const hasTotal = (tool: MeasureTool): boolean => !isCurveTool(tool) && tool !== 'count';
 
 /** One measurement as the pane reads it. */
 export interface MeasureEntryInput {
@@ -76,6 +77,9 @@ export interface MeasureEntryInput {
   at: Pt;
   /** An Area's or Volume's cutouts, depth and units (its `measure` field, M14-06). */
   q?: QuantityMeta;
+  /** A count's group name and number (M14-07). */
+  group?: string | undefined;
+  n?: number | undefined;
 }
 
 export interface MeasureEntry {
@@ -106,6 +110,9 @@ export interface MeasureEntry {
   spans: readonly string[] | null;
   where: string;
   at: Pt;
+  /** A count's group ('' for the other tools) and number (0 for the other tools). */
+  group: string;
+  n: number;
 }
 
 /** A scale of 1 : 1, or none: values at paper size. */
@@ -113,25 +120,32 @@ export const isPaperScale = (s: Scale | null): boolean =>
   !s || Math.abs(s.real / s.paper - 1) < 1e-9;
 
 const power = (q: Quantity): number =>
-  q === 'area' ? 2 : q === 'volume' ? 3 : q === 'angle' ? 0 : 1;
+  q === 'area' ? 2 : q === 'volume' ? 3 : q === 'angle' || q === 'count' ? 0 : 1;
 
 /** Millimetres (mm²) in one `unit` (unit²) of the scale. */
 const mmPer = (s: Scale, q: Quantity): number => MM_PER_UNIT[s.unit] ** power(q);
 
 export function measureEntry(i: MeasureEntryInput): MeasureEntry {
   const quantity = QUANTITY[i.tool];
-  const angle = quantity === 'angle';
+  // An angle or a count needs no scale (Q9, Q11): never "spans" or "at paper size".
+  const angle = quantity === 'angle' || quantity === 'count';
   const scale = i.scale ?? PAPER;
-  // An angle needs no scale (Q9): never "spans" or "at paper size".
   const spans = !angle && i.spans && i.spans.length > 1 ? i.spans : null;
-  const kind = isCurveTool(i.tool) ? i.tool : VALUE_KIND[i.tool];
+  const kind = isCurveTool(i.tool) || i.tool === 'count' ? i.tool : VALUE_KIND[i.tool];
   const q = i.q ?? {};
   const own = isAreaTool(i.tool)
     ? i.tool === 'volume'
       ? volumeValue(i.points, q, i.scale)
       : areaValue(i.points, q, i.scale)
     : null;
-  const raw = spans ? null : own ? own.value : measuredValue(kind, i.points, i.scale);
+  const raw =
+    i.tool === 'count'
+      ? (i.n ?? null)
+      : spans
+        ? null
+        : own
+          ? own.value
+          : measuredValue(kind, i.points, i.scale);
   const value = raw === null || Number.isFinite(raw) ? raw : null;
   const base = value === null ? null : own ? own.base : value * mmPer(scale, quantity);
   return {
@@ -152,6 +166,8 @@ export function measureEntry(i: MeasureEntryInput): MeasureEntry {
     spans,
     where: i.where,
     at: i.at,
+    group: i.tool === 'count' ? (i.group ?? '') : '',
+    n: i.tool === 'count' ? (i.n ?? 0) : 0,
   };
 }
 
@@ -173,6 +189,7 @@ export function quantityText(
   own?: OwnUnit,
 ): string {
   if (q === 'angle') return `${f.fixed(value, ANGLE_DECIMALS)}°`;
+  if (q === 'count') return f.number(value, 0);
   if (own?.unit && q === 'area')
     return `${f.fixed(value, own.decimals)} ${AREA_SYMBOL[own.unit as AreaUnit]}`;
   if (own?.unit && q === 'volume')
@@ -253,9 +270,11 @@ export function totalOf(entries: readonly MeasureEntry[]): GroupTotal {
 }
 
 export interface MeasureGroup {
-  /** The tool now; a count group's own key once Count exists (M14-07). */
+  /** The tool, or a count group's own key ("count:" and its name, M14-07). */
   key: string;
   tool: MeasureTool;
+  /** A count group's name (M14-07); absent for the other tools. */
+  group?: string;
   quantity: Quantity;
   entries: MeasureEntry[];
   total: GroupTotal;
@@ -272,9 +291,16 @@ const byPlace = (a: MeasureEntry, b: MeasureEntry): number =>
   a.at.x - b.at.x ||
   (a.id < b.id ? -1 : a.id > b.id ? 1 : 0);
 
+/** A count group's key in the pane (case and spacing ignored, as its counts are). */
+export const countGroupKey = (name: string): string =>
+  `count:${name.replace(/\s+/gu, ' ').trim().toLocaleLowerCase()}`;
+
+const byNumber = (a: MeasureEntry, b: MeasureEntry): number => a.n - b.n || byPlace(a, b);
+
 /**
  * The pane's groups: one per tool that has measurements (in the ribbon's
- * order), each in page order (top to bottom, left to right), with its total.
+ * order), each in page order (top to bottom, left to right), with its total;
+ * Count last, one group per count group (by name), in number order (M14-07).
  */
 export function groupMeasurements(
   entries: readonly MeasureEntry[],
@@ -284,6 +310,29 @@ export function groupMeasurements(
   const shown = page === null ? entries : entries.filter((e) => e.page === page);
   const out: MeasureGroup[] = [];
   for (const tool of MEASURE_TOOL_IDS) {
+    if (tool === 'count') {
+      const byGroup = new Map<string, MeasureEntry[]>();
+      for (const e of shown) {
+        if (e.tool !== 'count') continue;
+        const k = countGroupKey(e.group);
+        const list = byGroup.get(k);
+        if (list) list.push(e);
+        else byGroup.set(k, [e]);
+      }
+      const keys = [...byGroup.keys()].sort((a, b) => a.localeCompare(b));
+      for (const key of keys) {
+        const list = (byGroup.get(key) ?? []).sort(byNumber);
+        out.push({
+          key,
+          tool,
+          group: list[0]?.group ?? '',
+          quantity: 'count',
+          entries: list,
+          total: { real: null, paper: null, left: 0 },
+        });
+      }
+      continue;
+    }
     const list = shown.filter((e) => e.tool === tool).sort(byPlace);
     if (list.length === 0) continue;
     const total = hasTotal(tool) ? totalOf(list) : { real: null, paper: null, left: 0 };

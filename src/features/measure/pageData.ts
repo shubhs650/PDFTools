@@ -21,9 +21,8 @@ import {
   type CurveEntry,
   type MeasureEntry,
 } from '../../model/measureData';
-import { isCurveTool } from '../../model/measureCurve';
 import type { Box } from '../../model/measureGeometry';
-import { isAreaTool, metaOf, type MeasureMeta } from '../../model/measureMarkup';
+import { isAreaTool, isStampTool, metaOf, type MeasureMeta } from '../../model/measureMarkup';
 import { summaryOf, summaryToPdf } from '../../model/measureSummary';
 import { fromUserSpace, measurePoints, toUserSpace } from '../../model/measurement';
 import type { PdfJson } from '../../model/pdf/wire';
@@ -88,7 +87,8 @@ export function fileMeta(docId: string, a: PdfAnnotationObject): MeasureMeta | n
       meta.holes = e.holes.map((h) => fromUserSpace(h, frameOf(docId, a.pageIndex)));
     return meta;
   }
-  if (!isCurveTool(meta.tool)) return meta;
+  // An Angle, Radius, Diameter (M14-05) or Count (M14-07): its points from its entry.
+  if (!isStampTool(meta.tool)) return meta;
   if (!isStamp(a)) return null;
   const now = curvePointsNow(e.curve, userRect(docId, a));
   if (now) {
@@ -121,12 +121,13 @@ export function setCurveScaleSource(fn: typeof scaleOf): void {
 /** An Angle's, Radius's or Diameter's own data for its entry (user space). */
 function curveEntry(docId: string, a: PdfAnnotationObject, meta: MeasureMeta): CurveEntry {
   const o = a as unknown as { strokeColor?: unknown; strokeWidth?: unknown };
-  const s = meta.tool === 'angle' ? null : scaleOf(docId, a);
+  // An Angle and a Count need no scale (Q9, Q11); a Count has no line width of its own.
+  const s = meta.tool === 'angle' || meta.tool === 'count' ? null : scaleOf(docId, a);
   return {
     pts: toUserSpace(meta.pts ?? [], frameOf(docId, a.pageIndex)),
     rect: userRect(docId, a),
     ...(typeof o.strokeColor === 'string' ? { color: o.strokeColor } : {}),
-    ...(typeof o.strokeWidth === 'number' ? { width: o.strokeWidth } : {}),
+    ...(typeof o.strokeWidth === 'number' && meta.tool !== 'count' ? { width: o.strokeWidth } : {}),
     ...(s ? { scale: { paper: s.paper, real: s.real, unit: s.unit } } : {}),
   };
 }
@@ -138,6 +139,9 @@ export function pdfDate(d: Date): string {
 }
 
 /** The page's items now: ours from `measure`, the file's for untouched annotations still there. */
+/** A count's entry by its annotation object (objects are replaced, never changed). */
+const countEntries = new WeakMap<PdfAnnotationObject, { sig: string; json: PdfJson }>();
+
 export function itemsFor(
   docId: string,
   page: number,
@@ -150,7 +154,26 @@ export function itemsFor(
     const meta = metaOf(a);
     // A measurement summary made or changed here (M14-10): its scope.
     const summary = meta ? null : summaryOf(a);
-    if (meta && isCurveTool(meta.tool) && isStamp(a)) {
+    if (meta?.tool === 'count' && isStamp(a)) {
+      // A Count (M14-07): kept from the last time while the object and its page are the same
+      // (a sheet holds hundreds, and this runs on every change; a count needs no scale).
+      const f = frameOf(docId, a.pageIndex);
+      const sig = `${docId}|${String(f.width)},${String(f.height)},${String(f.originX)},${String(f.originY)}`;
+      const hit = countEntries.get(a);
+      if (hit?.sig === sig) {
+        out.set(a.id, hit.json);
+        continue;
+      }
+      const rest = { ...meta };
+      delete rest.pts;
+      const json = entryToPdf({
+        meta: rest,
+        fp: fingerprintOf(docId, a),
+        curve: curveEntry(docId, a, meta),
+      });
+      countEntries.set(a, { sig, json });
+      out.set(a.id, json);
+    } else if (meta && isStampTool(meta.tool) && isStamp(a)) {
       // The points go in the entry's own keys, in user space.
       const rest = { ...meta };
       delete rest.pts;
@@ -208,9 +231,10 @@ async function stageNow(
   const key = `${docId}/${String(page)}`;
   const items = itemsFor(docId, page, annots);
   const fileItems = readItems(filePieceInfo(docId, page));
-  const sig = JSON.stringify([...items].sort(([a], [b]) => a.localeCompare(b)));
+  const sig = JSON.stringify([...items].sort(([a], [b]) => (a < b ? -1 : a > b ? 1 : 0)));
   const before =
-    staged.get(key) ?? JSON.stringify([...fileItems].sort(([a], [b]) => a.localeCompare(b)));
+    staged.get(key) ??
+    JSON.stringify([...fileItems].sort(([a], [b]) => (a < b ? -1 : a > b ? 1 : 0)));
   if (sig === before) return;
   staged.set(key, sig);
   const { set, remove } = pageData(filePieceInfo(docId, page), items, pdfDate(new Date()));

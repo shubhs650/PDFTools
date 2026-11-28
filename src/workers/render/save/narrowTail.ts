@@ -100,6 +100,8 @@ export interface NarrowOptions {
    * appended objects are only read for its trailer (/Root, /Info, /ID).
    */
   onlyExtra?: boolean;
+  /** Objects never written, whatever else says to keep them (left-out shared-font copies, M14-07). */
+  drop?: ReadonlySet<number>;
 }
 
 export interface ObjectPatch {
@@ -152,8 +154,9 @@ export function narrowTail(
   for (const p of patches.values()) if (p.force) keep.add(p.num);
   for (const num of spans.keys()) if (opts.keepAll || isNew(num)) keep.add(num);
   for (const d of dirty) if (spans.has(d)) keep.add(d);
+  const drop = opts.drop ?? new Set<number>();
   for (const num of spans.keys()) {
-    if (!keep.has(num) && refsOf(num).some(isNew)) keep.add(num);
+    if (!keep.has(num) && refsOf(num).some((r) => isNew(r) && !drop.has(r))) keep.add(num);
   }
   let grew = true;
   while (grew) {
@@ -169,6 +172,7 @@ export function narrowTail(
     }
   }
 
+  for (const n of drop) if (!extra.has(n)) keep.delete(n);
   const kept = [...keep].sort((a, b) => a - b);
   const droppedNums = [...spans.keys()].filter((n) => !keep.has(n)).sort((a, b) => a - b);
   if (kept.length === 0) {

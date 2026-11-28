@@ -122,6 +122,47 @@ export const CUTOUT: Design = {
   filled: (k) => [poly(OUTLINE, k) + ' ' + poly(HOLE, k, true)],
 };
 
+/** Where the Count icon's three marks sit: placed one by one, as the tool does. */
+const MARKS: Pt[] = [
+  [5, 14.5],
+  [10, 5.5],
+  [15, 14.5],
+];
+
+export const COUNT: Design = {
+  // Three count marks (M14-07), each a small circle: a count is one mark per click.
+  regular: (k) => MARKS.map(([x, y]) => ring(x, y, 3.5, k)),
+  filled: (k) => MARKS.map(([x, y]) => disc(x, y, 3.75, k)),
+};
+
+/** The Same-size count numbers icon's label box, beside a count mark. */
+const LABEL: Pt[] = [
+  [10, 6.5],
+  [18, 6.5],
+  [18, 13.5],
+  [10, 13.5],
+];
+
+export const COUNT_NUMBERS: Design = {
+  // A count mark and its number's label: the label kept one size (M14-07).
+  regular: (k) => [ring(5, 10, 3, k), strokes(LABEL, k, true), bar([12.5, 10], [15.5, 10], k)],
+  filled: (k) => [
+    disc(5, 10, 3.25, k),
+    poly(LABEL, k) +
+      ' ' +
+      poly(
+        [
+          [12.5, 9.5],
+          [15.5, 9.5],
+          [15.5, 10.5],
+          [12.5, 10.5],
+        ],
+        k,
+        true,
+      ),
+  ],
+};
+
 export const M14_DESIGNS: Record<string, { design: Design; large?: true }> = {
   'measure.polylength': { design: POLYLENGTH, large: true },
   'measure.volume': { design: VOLUME, large: true },
@@ -129,4 +170,6 @@ export const M14_DESIGNS: Record<string, { design: Design; large?: true }> = {
   'measure.angle': { design: ANGLE, large: true },
   'measure.radius': { design: RADIUS, large: true },
   'measure.diameter': { design: DIAMETER, large: true },
+  'measure.count': { design: COUNT, large: true },
+  'view.countNumbers': { design: COUNT_NUMBERS },
 };

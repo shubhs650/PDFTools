@@ -12,6 +12,7 @@ import { LOUPE_STORAGE_KEY } from '../measure/loupeSettings';
 import { CURVE_METHOD_STORAGE_KEY } from '../measure/curveMethod';
 import { MEASURE_EXPORT_STORAGE_KEY } from '../measure/export/exportSettings';
 import { QUANTITY_STORAGE_KEY } from '../measure/quantitySettings';
+import { COUNT_GROUPS_STORAGE_KEY, COUNT_NUMBERS_STORAGE_KEY } from '../measure/countKeys';
 import { THIN_LINES_STORAGE_KEY } from '../view/thinLines';
 import { COMPARE_TIPS_STORAGE_KEY } from '../compare/tips/tipsKey';
 import { DB_NAME } from '../../storage/idb';
@@ -215,6 +216,22 @@ export const LOCAL_DATA: readonly LocalDataItem[] = [
     location: QUANTITY_STORAGE_KEY,
     store: QUANTITY_STORAGE_KEY,
     what: msg('privacy.data.measureQuantities'),
+    cleared: true,
+  },
+  {
+    // The count groups made on this device and the last one used (M14-07, D-75, Q14).
+    kind: 'localStorage',
+    location: COUNT_GROUPS_STORAGE_KEY,
+    store: COUNT_GROUPS_STORAGE_KEY,
+    what: msg('privacy.data.countGroups'),
+    cleared: true,
+  },
+  {
+    // Same-size count numbers on (M14-07, D-75): one setting for every document.
+    kind: 'localStorage',
+    location: COUNT_NUMBERS_STORAGE_KEY,
+    store: COUNT_NUMBERS_STORAGE_KEY,
+    what: msg('privacy.data.countNumbers'),
     cleared: true,
   },
   {

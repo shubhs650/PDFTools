@@ -380,6 +380,7 @@ const MEASURE_STYLE_TOOLS = [
   'measureAngle',
   'measureRadius',
   'measureDiameter',
+  'measureCount',
 ] as const satisfies readonly StyleTool[];
 
 /** The plugin's own tools we rewrap under the same id. */

@@ -21,6 +21,8 @@ import { resetLoupeSettings } from '../measure/loupeSettings';
 import { resetCurveMethods } from '../measure/curveMethod';
 import { resetExportSettings } from '../measure/export/exportSettings';
 import { resetQuantities } from '../measure/quantitySettings';
+import { resetCountGroups } from '../measure/countGroups';
+import { resetCountNumbers } from '../measure/countNumbers';
 import { resetCrsTemplates } from '../crs/templates/crsTemplateStore';
 import { resetThinLines } from '../view/thinLines';
 import type { ClearDeps } from './clearAll';
@@ -69,6 +71,9 @@ export const appClearDeps: ClearDeps = {
     resetCurveMethods();
     // The next Volume's depth and the area and volume units, back to their defaults (M14-06).
     resetQuantities();
+    // The count groups and Same-size count numbers, back to their defaults (M14-07).
+    resetCountGroups();
+    resetCountNumbers();
     // The CRS project templates (M13-07).
     resetCrsTemplates();
     // Thin Lines back to off (M13-05).

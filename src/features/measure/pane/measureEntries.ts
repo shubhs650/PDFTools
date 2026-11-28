@@ -65,10 +65,14 @@ export function measureEntries(
         tool,
         label: meta?.label,
         ...(meta ? { q: meta } : {}),
+        // A count's group and number (M14-07).
+        ...(meta?.group !== undefined ? { group: meta.group } : {}),
+        ...(meta?.n !== undefined ? { n: meta.n } : {}),
         points: measurePoints(a),
         scale,
         spans: c.kind === 'spanning' ? c.viewports : null,
-        where: tool === 'angle' ? t('measurements.noScaleNeeded') : whereText(c),
+        where:
+          tool === 'angle' || tool === 'count' ? t('measurements.noScaleNeeded') : whereText(c),
         at: a.rect.origin,
       }),
     );

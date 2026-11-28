@@ -10,7 +10,7 @@ import {
 import { msg, type MessageKey } from '../../i18n';
 import type { CurveTool } from '../../model/measureCurve';
 import { metaOf } from '../../model/measureMarkup';
-import { curveKind, measureKind } from '../../model/measurement';
+import { measureKind, stampKind } from '../../model/measurement';
 import type { CrsType } from '../../model/crs/template';
 
 /** Every type id's display name (`annotate.type.<id>`). */
@@ -67,14 +67,15 @@ export function annotationTypeId(a: PdfAnnotationObject): CrsType {
  * An Angle, Radius or Diameter (M14-05) is a Stamp in the file and to the CRS
  * template, but is named as the measurement it is.
  */
-const CURVE_KEYS: Record<CurveTool, MessageKey> = {
+const CURVE_KEYS: Record<CurveTool | 'count', MessageKey> = {
   angle: msg('annotate.type.angle'),
   radius: msg('annotate.type.radius'),
   diameter: msg('annotate.type.diameter'),
+  count: msg('annotate.type.count'),
 };
 
 export function annotationTypeKey(a: PdfAnnotationObject): MessageKey {
-  const curve = curveKind(a);
+  const curve = stampKind(a);
   if (curve) return CURVE_KEYS[curve];
   // A Volume (M14-06) is an Area in the file and to the CRS template, named as what it is.
   if (metaOf(a)?.tool === 'volume') return msg('annotate.type.volume');

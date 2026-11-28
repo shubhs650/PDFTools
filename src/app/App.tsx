@@ -73,6 +73,7 @@ import { CalibrateDialog, SetScaleDialog } from '../features/measure/ScaleDialog
 import { ViewportDialog } from '../features/measure/ViewportDialog';
 import { SnapStatus } from '../features/measure/SnapStatus';
 import { ThinLinesStatus } from '../features/view/ThinLinesStatus';
+import { CountNumbersStatus } from '../features/measure/CountNumbersStatus';
 import { CrsDialog } from '../features/crs/CrsDialog';
 import { MeasureExportDialog } from '../features/measure/export/MeasureExportDialog';
 import { TemplateManager } from '../features/crs/templates/TemplateManager';
@@ -223,6 +224,7 @@ export function App() {
               <>
                 <ScaleIndicator />
                 <ThinLinesStatus />
+                <CountNumbersStatus />
                 <SnapStatus />
                 <StatusDivider />
                 <ViewModeSwitch />

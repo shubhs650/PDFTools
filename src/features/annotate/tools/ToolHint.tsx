@@ -19,6 +19,7 @@ const HINTS: Partial<Record<string, MessageKey>> = {
   measureAngle: msg('annotate.toolHint.angle'),
   measureRadius: msg('annotate.toolHint.radiusCentre'),
   measureDiameter: msg('annotate.toolHint.diameterCentre'),
+  measureCount: msg('annotate.toolHint.count'),
 };
 
 /** Radius and Diameter by three points (M14-05): their own hints. */
