@@ -51,15 +51,30 @@ describe('release list', () => {
       expect(text, words).toContain(words);
   });
 
-  it('1.1.0 announces Compare (M12-22)', () => {
-    expect(list.map((r) => r.id)).toEqual(['v1.1.0', 'v1.0.0']);
+  it('1.2.0 announces the measuring overhaul (M14-11)', () => {
+    expect(list.map((r) => r.id)).toEqual(['v1.2.0', 'v1.1.0', 'v1.0.0']);
     const text = list[0]?.items.join(' ') ?? '';
+    for (const words of [
+      'Polylength',
+      'Volume',
+      'Cutout',
+      'Angle',
+      'Count',
+      'Measurements pane',
+      'Excel',
+      'offline',
+    ])
+      expect(text, words).toContain(words);
+  });
+
+  it('1.1.0 announces Compare (M12-22)', () => {
+    const text = list[1]?.items.join(' ') ?? '';
     for (const words of ['PDF Overlay', 'Text Comparison', 'change register', 'offline'])
       expect(text, words).toContain(words);
   });
 
   it('1.1.0 also announces the final improvements (M13-09)', () => {
-    const text = list[0]?.items.join(' ') ?? '';
+    const text = list[1]?.items.join(' ') ?? '';
     for (const words of ['sample', 'loupe', 'Thin Lines', 'Previous View', 'Excel form'])
       expect(text, words).toContain(words);
   });

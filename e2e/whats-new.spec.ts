@@ -9,8 +9,9 @@ import { expect, test } from './support/fixtures.ts';
 // moving anything or taking focus. "See what's new" opens About at the list.
 
 const KEY = 'pdftools.whatsNewSeen';
-const LATEST_ID = 'v1.1.0';
-const LATEST_TITLE = 'Version 1.1.0: compare revisions, and more for drawings and reviews';
+const LATEST_ID = 'v1.2.0';
+const LATEST_TITLE = 'Version 1.2.0: measuring, rebuilt for engineers';
+const PREVIOUS_TITLE = 'Version 1.1.0: compare revisions, and more for drawings and reviews';
 const FIRST_TITLE = 'Version 1.0.0, the first public release';
 /** How many lines the newest release has (each PR of a release may add one). */
 const LATEST_ITEMS = (
@@ -37,7 +38,7 @@ const axe = async (page: Page) =>
   (await new AxeBuilder({ page }).analyze()).violations.map((v) => v.id);
 
 test(
-  "About lists what's new: 1.1.0 first, 1.0.0 under earlier versions (ADR-029, M12-22)",
+  "About lists what's new: 1.2.0 first, 1.1.0 and 1.0.0 under earlier versions (ADR-029, M14-11)",
   { tag: '@smoke' },
   async ({ page }) => {
     await page.goto('/');
@@ -50,15 +51,16 @@ test(
     await expect(latest.getByRole('heading', { name: LATEST_TITLE })).toBeVisible();
     await expect(latest).toContainText(/Released \w+ \d+, \d{4}|Released \d+/);
     await expect(latest.getByRole('listitem')).toHaveCount(LATEST_ITEMS ?? 0);
-    await expect(latest).toContainText('PDF Overlay');
+    await expect(latest).toContainText('Polylength');
 
-    // 1.0.0, the first public release, is folded under the earlier versions.
+    // 1.1.0 and 1.0.0, the first public release, are folded under the earlier versions.
     const earlier = section.getByTestId('whats-new-earlier');
     await expect(earlier).toHaveCount(1);
     await earlier.locator('summary').click();
+    await expect(earlier.getByRole('heading', { name: PREVIOUS_TITLE })).toBeVisible();
     await expect(earlier.getByRole('heading', { name: FIRST_TITLE })).toBeVisible();
     await expect(earlier).toContainText('Measure drawings to scale');
-    await expect(earlier.getByRole('heading')).toHaveCount(1);
+    await expect(earlier.getByRole('heading')).toHaveCount(2);
 
     // It sits between the actions and Built with.
     const headings = await backstage(page).getByTestId('about').locator('h3').allTextContents();

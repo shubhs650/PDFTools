@@ -1,6 +1,25 @@
 {
   "releases": [
     {
+      "id": "v1.2.0",
+      "date": "2026-11-28",
+      "title": "Version 1.2.0: measuring, rebuilt for engineers",
+      "items": [
+        "Ten measuring tools on the Measure tab: Length, Polylength, Perimeter, Area, Volume, Cutout, Angle, Radius, Diameter and Count. On Home and Comment, one Measure button starts the tool you used last.",
+        "Each measurement is now one standard PDF comment with its value drawn inside it, so other PDF viewers and editors show it, select it, move it and delete it as one item. A file measured with 1.1.0 offers Update old measurements.",
+        "Zoom, scroll and pan while you measure: the points you placed stay. Shift keeps the next point at 0°, 45° or 90° and still snaps to the drawing.",
+        "Change a placed measurement point by point: drag its points, its dimension line or its caption, and right-click to add or remove a point. A Label goes in front of the value, and a length's caption sits above or in the line.",
+        "Volume from an area and a depth that is remembered, and Cutout for openings, with the value net. Areas and volumes have their own units: m², m³, sq ft, cu ft or cu yd.",
+        "Angle by three clicks, and Radius and Diameter by the centre and the edge or by three points on the curve.",
+        "Count doors, valves or fittings: each click places a symbol and the next number, in groups with their own name, symbol and colour. Renumber closes gaps, and Same-Size Count Numbers in the status bar keeps the numbers readable at any zoom.",
+        "The Measurements pane lists every measurement by tool and count group, with totals, and every page's scale and viewports.",
+        "Scale viewports are moved, resized, renamed and deleted on the page, and measurements follow any change of scale, in one Undo step.",
+        "A page with no scale asks once: set a scale, calibrate, or measure at paper size. A measurement that runs into another scale area warns you while you draw.",
+        "Export measurements to Excel or CSV, with a picture of each one if you like, attach the workbook to the PDF, or place a table of the totals on the sheet.",
+        "All of it on this device and offline. Help has a new topic for each of these, and a shortcut sheet with Shift for measuring."
+      ]
+    },
+    {
       "id": "v1.1.0",
       "date": "2026-11-24",
       "title": "Version 1.1.0: compare revisions, and more for drawings and reviews",

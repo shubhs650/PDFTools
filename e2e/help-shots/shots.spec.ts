@@ -52,7 +52,23 @@ import {
   openCommentsPane,
   reviewedDrawing,
   setScale100,
+  type Doc,
 } from './scenes.ts';
+import {
+  FLOOR,
+  PIPES,
+  SCALES,
+  clickPoints,
+  countDoors,
+  holes,
+  item,
+  measureTool,
+  objects,
+  openMeasurementsPane,
+  placeMeasure,
+  setMeasure,
+  steadyPage,
+} from './measureScenes.ts';
 
 test.describe.configure({ timeout: 120_000 });
 
@@ -735,10 +751,17 @@ test('measure-scale-1: the Set scale dialog', async ({ page }) => {
 test('measure-tools-1: the Measure tab', async ({ page }) => {
   await start(page);
   await open(page);
-  await ribbonShot(page, 'measure-tools-1', 'Measure', ['Measure', 'Scale', 'Snap']);
+  await ribbonShot(page, 'measure-tools-1', 'Measure', [
+    'Length',
+    'Area',
+    'Curves and Angles',
+    'Count',
+    'Scale',
+    'Snap',
+  ]);
 });
 
-test('measure-tools-2: a distance and an area', async ({ page }) => {
+test('measure-tools-2: a length and an area', async ({ page }) => {
   const { top, bottom } = await measuredDrawing(page);
   await shoot(page, 'measure-tools-2', {
     clip: await pageBox(page, DRAWING, 80, top - 85, 720, bottom - top + 125),
@@ -746,7 +769,7 @@ test('measure-tools-2: a distance and an area', async ({ page }) => {
   });
 });
 
-test('measure-tools-3: placing a distance, the dimension line set sideways', async ({ page }) => {
+test('measure-tools-3: placing a length, the dimension line set sideways', async ({ page }) => {
   await start(page);
   await open(page);
   await fitPage(page);
@@ -813,7 +836,7 @@ test('snapping-1: the Snap options', async ({ page }) => {
   });
 });
 
-test('loupe-1: the loupe while measuring a distance', async ({ page }) => {
+test('loupe-1: the loupe while measuring a length', async ({ page }) => {
   await start(page);
   await open(page);
   await fitPage(page);
@@ -863,6 +886,288 @@ test('loupe-2: Settings, Measure', async ({ page }) => {
   await section.scrollIntoViewIfNeeded();
   await expect(section).toBeVisible();
   await shoot(page, 'loupe-2', { clip: section, pad: 8 });
+});
+
+// M14-11: the measuring overhaul (ADR-035, D-73 … D-78), on the measure corpus
+// sheets (self-made, M14-01) with each measurement placed by the real tool.
+
+/** A corpus sheet open on the Measure tab, the page at fit and still. */
+async function openSheet(page: Page, doc: Doc, properties = false): Promise<string> {
+  await start(page);
+  const id = await open(page, doc);
+  await fitPage(page);
+  if (properties) await run(page, 'view.propertiesPane');
+  await ribbonTab(page, 'Measure').click();
+  await steadyPage(page);
+  return id;
+}
+
+const run = (page: Page, cmd: string) =>
+  page.evaluate(
+    (c) =>
+      (
+        window as unknown as {
+          __pdftoolsTest: { capabilities: { commands: { run(id: string): Promise<boolean> } } };
+        }
+      ).__pdftoolsTest.capabilities.commands.run(c),
+    cmd,
+  );
+
+const propertiesPane = (page: Page) => page.getByTestId('properties-pane');
+
+test('measure-tools-4: the Properties pane of a labelled area', async ({ page }) => {
+  const id = await openSheet(page, FLOOR, true);
+  const office = await placeMeasure(page, FLOOR, id, 'Area', item(FLOOR, 'office-area'), {
+    text: /m²$/,
+  });
+  await escapeTool(page);
+  await setMeasure(page, id, office.id, { label: 'Office' });
+  await cap(page, 'annotate', 'select', id, 0, office.id);
+  const pane = propertiesPane(page);
+  await expect(pane.getByLabel('Label', { exact: true })).toHaveValue('Office');
+  // The value, its scale and the Measurement section (label and area unit).
+  // General and Style folded, so the measurement's own part shows.
+  for (const name of ['General', 'Style']) {
+    const head = pane.getByRole('button', { name, exact: true });
+    if ((await head.getAttribute('aria-expanded')) === 'true') await head.click();
+  }
+  const facts = pane.getByTestId('measure-info');
+  await facts.evaluate((el) => {
+    el.scrollIntoView({ block: 'center' });
+  });
+  const decimals = pane.getByLabel('Area decimals', { exact: true });
+  const p = (await pane.boundingBox()) as Box;
+  const f = (await facts.boundingBox()) as Box;
+  const d = (await decimals.boundingBox()) as Box;
+  await shoot(page, 'measure-tools-4', {
+    clip: { x: p.x, y: f.y - 12, width: p.width, height: d.y + d.height + 14 - (f.y - 12) },
+    pad: 0,
+  });
+});
+
+test('scale-viewports-1: a selected viewport on the page', async ({ page }) => {
+  await openSheet(page, SCALES);
+  // On the Measure tab with Select, a click on a viewport's name selects it.
+  await escapeTool(page);
+  await page.locator('.viewport-label--button', { hasText: 'Detail A' }).click();
+  const frame = page.getByTestId('viewport-frame');
+  await expect(frame).toBeFocused();
+  await expect(page.getByTestId('viewport-handle')).toHaveCount(8);
+  await shoot(page, 'scale-viewports-1', {
+    clip: await pageBox(page, SCALES, 60, 400, 760, 360),
+    pad: 0,
+    callouts: [
+      { n: 1, target: frame, at: 'tr', dx: 14, dy: -4 },
+      {
+        n: 2,
+        target: page.locator('[data-testid="viewport-handle"][data-handle="se"]'),
+        at: 'br',
+        dx: 14,
+        dy: 10,
+      },
+    ],
+  });
+});
+
+test('measure-volume-1: a volume with two cutouts and its Properties pane', async ({ page }) => {
+  const id = await openSheet(page, FLOOR, true);
+  await measureTool(page, 'Volume');
+  await page.getByLabel('Depth unit', { exact: true }).selectOption({ label: 'Millimetres' });
+  const depth = page.getByLabel('Depth', { exact: true });
+  await depth.fill('250');
+  await depth.press('Enter');
+  const slab = item(FLOOR, 'slab-volume');
+  const vol = await placeMeasure(page, FLOOR, id, 'Volume', slab, { text: /m³$/ });
+  await escapeTool(page);
+  await cap(page, 'annotate', 'select', id, 0, vol.id);
+  await measureTool(page, 'Cutout');
+  for (const hole of holes(FLOOR, 'slab-volume')) {
+    await clickPoints(page, FLOOR, hole);
+    await page.keyboard.press('Enter');
+  }
+  await expect
+    .poll(async () => (await objects(page, id)).find((o) => o.id === vol.id)?.measure?.holes)
+    .toHaveLength(2);
+  await page.keyboard.press('Escape');
+  // The holes set on the corpus points, as a point drag does: 17.69 m³ net.
+  await setMeasure(page, id, vol.id, {
+    holes: holes(FLOOR, 'slab-volume').map((h) => h.map(([x, y]) => ({ x, y }))),
+  });
+  await expect
+    .poll(async () => (await objects(page, id)).find((o) => o.id === vol.id)?.contents)
+    .toBe('17.69 m³');
+  await cap(page, 'annotate', 'select', id, 0, vol.id);
+  const facts = page.getByTestId('measure-facts');
+  await expect(facts).toContainText('Before cutouts');
+  // The note that measuring turned snapping on gone first.
+  await expect(page.getByTestId('snapshot-toast')).toBeHidden({
+    timeout: 15_000,
+  });
+  await facts.evaluate((el) => {
+    el.scrollIntoView({ block: 'center' });
+  });
+  const plan = await pageBox(page, FLOOR, 110, 85, 300, 280);
+  await shoot(page, 'measure-volume-1', {
+    clip: [plan, facts],
+    pad: 6,
+    callouts: [
+      { n: 1, target: await pageBox(page, FLOOR, 283, 142, 57, 113), at: 'tr', dx: 10 },
+      { n: 2, target: facts, at: 'tr', dx: -16, dy: 14 },
+    ],
+  });
+});
+
+test('measure-curves-1: an angle, a radius and a diameter on a pipe run', async ({ page }) => {
+  const id = await openSheet(page, PIPES, true);
+  const free: [number, number, number, number] = [120, 640, 160, 120];
+  await placeMeasure(page, PIPES, id, 'Angle', item(PIPES, 'deflection-B'), {
+    free,
+    text: /^∠ 37\.5°$/,
+  });
+  // The bend by three points on it, so it shows as its arc.
+  await measureTool(page, 'Radius');
+  await page
+    .getByTestId('tool-properties')
+    .getByLabel('Pick by')
+    .selectOption({ label: 'Three points on the curve' });
+  await placeMeasure(page, PIPES, id, 'Radius', item(PIPES, 'bend-radius-B', 'onCircle'), {
+    free,
+    text: /^R 1,200/,
+  });
+  const tank = item(PIPES, 'tank-diameter');
+  await placeMeasure(page, PIPES, id, 'Diameter', tank, { free, text: /^Ø 3,000/ });
+  await escapeTool(page);
+  await deselect(page);
+  await run(page, 'view.propertiesPane');
+  await steadyPage(page);
+  await shoot(page, 'measure-curves-1', {
+    clip: await pageBox(page, PIPES, 90, 60, 900, 520),
+    pad: 0,
+    callouts: [
+      { n: 1, target: await pageBox(page, PIPES, 520, 505, 40, 20), at: 'r', dx: 14 },
+      { n: 2, target: await pageBox(page, PIPES, 400, 450, 40, 20), at: 'l', dx: -14 },
+      { n: 3, target: await pageBox(page, PIPES, 890, 150, 40, 20), at: 'r', dx: 14 },
+    ],
+  });
+});
+
+test('measure-count-1: doors counted, and the Count group box', async ({ page }) => {
+  const id = await openSheet(page, FLOOR, true);
+  const box = await countDoors(page, id);
+  await expect(page.getByTestId('count-next')).toHaveText('Next click: Door 8');
+  await page.mouse.move(5, 5);
+  const plan = await pageBox(page, FLOOR, 100, 80, 740, 470);
+  await shoot(page, 'measure-count-1', {
+    clip: [plan, box],
+    pad: 0,
+    callouts: [
+      { n: 1, target: await pageBox(page, FLOOR, 575, 320, 12, 12), at: 'tl', dx: -12, dy: -8 },
+      { n: 2, target: box.getByRole('heading', { name: 'Count group' }), at: 'r', dx: 16 },
+    ],
+  });
+});
+
+test('measure-editing-1: dragging a point of a polylength', async ({ page }) => {
+  const id = await openSheet(page, FLOOR);
+  const run = item(FLOOR, 'wall-run');
+  // The loupe off for this picture, so the dragged point shows clearly.
+  const loupe = toolbar(page, 'Measure').getByRole('button', { name: 'Loupe', exact: true });
+  if ((await loupe.getAttribute('aria-pressed')) === 'true') await loupe.click();
+  const m = await placeMeasure(page, FLOOR, id, 'Polylength', run, { text: /^23,000 mm$/ });
+  await escapeTool(page);
+  await cap(page, 'annotate', 'select', id, 0, m.id);
+  await expect(page.getByTestId('measure-point').first()).toBeVisible();
+  // The third point, dragged 2 m down (Alt: no snap), held mid-drag.
+  const third = run[2];
+  if (!third) throw new Error('the wall run has four points');
+  const [x, y] = third;
+  const from = await at(page, FLOOR, x, y);
+  const to = await at(page, FLOOR, x, y + 2000 * (72 / 25.4 / 100));
+  await page.mouse.move(from.x, from.y);
+  await page.mouse.down();
+  await page.keyboard.down('Alt');
+  await page.mouse.move(to.x, to.y, { steps: 8 });
+  await page.waitForTimeout(400);
+  await shoot(page, 'measure-editing-1', {
+    clip: await pageBox(page, FLOOR, 520, 60, 360, 500),
+    pad: 0,
+    mouseAway: false,
+  });
+  await page.mouse.up();
+  await page.keyboard.up('Alt');
+});
+
+/** A small takeoff on the floor plan: a length, two areas and the seven doors. */
+async function takeoff(page: Page) {
+  const id = await openSheet(page, FLOOR, true);
+  // The doors first: a click inside an earlier area would select it.
+  await countDoors(page, id);
+  await escapeTool(page);
+  await placeMeasure(page, FLOOR, id, 'Length', item(FLOOR, 'overall-length'), {
+    offset: 30,
+    text: /^24,000 mm$/,
+  });
+  const office = await placeMeasure(page, FLOOR, id, 'Area', item(FLOOR, 'office-area'), {
+    text: /m²$/,
+  });
+  const shop = await placeMeasure(page, FLOOR, id, 'Area', item(FLOOR, 'workshop-area'), {
+    text: /m²$/,
+  });
+  await escapeTool(page);
+  await setMeasure(page, id, office.id, { label: 'Office' });
+  await setMeasure(page, id, shop.id, { label: 'Workshop' });
+  await deselect(page);
+  await run(page, 'view.propertiesPane');
+  return id;
+}
+
+test('measurements-pane-1: groups, totals and the Scales section', async ({ page }) => {
+  // A taller window, so the whole pane fits.
+  await page.setViewportSize({ width: 1366, height: 1040 });
+  await takeoff(page);
+  const pane = await openMeasurementsPane(page);
+  await expect(pane.getByTestId('measure-row')).toHaveCount(10);
+  await pane.evaluate((el) => {
+    el.scrollIntoView({ block: 'start' });
+  });
+  await shoot(page, 'measurements-pane-1', { clip: pane, pad: 0 });
+});
+
+test('measure-export-1: the Export measurements dialog', async ({ page }) => {
+  await takeoff(page);
+  const pane = await openMeasurementsPane(page);
+  await pane.getByRole('button', { name: 'Export…' }).click();
+  const d = dialog(page, 'Export measurements');
+  await expect(d).toBeVisible();
+  await d.getByLabel('Include pictures').check();
+  await d.getByLabel('Attach to this PDF').check();
+  await shoot(page, 'measure-export-1', { clip: d, pad: 8 });
+});
+
+test('measure-export-2: a summary of the totals on the sheet', async ({ page }) => {
+  const id = await takeoff(page);
+  const pane = await openMeasurementsPane(page);
+  await pane.getByRole('button', { name: 'Place summary' }).click();
+  await expect
+    .poll(async () => (await objects(page, id)).filter((o) => o.type === 3).length)
+    .toBe(1);
+  await deselect(page);
+  await page.waitForTimeout(500);
+  const summary = (await objects(page, id)).find((o) => o.type === 3) as unknown as {
+    rect: { origin: { x: number; y: number }; size: { width: number; height: number } };
+  };
+  const r = summary.rect;
+  await shoot(page, 'measure-export-2', {
+    clip: await pageBox(
+      page,
+      FLOOR,
+      r.origin.x - 60,
+      r.origin.y - 10,
+      r.size.width + 80,
+      r.size.height + 60,
+    ),
+    pad: 0,
+  });
 });
 
 // --- Forms -----------------------------------------------------------------------
@@ -1051,7 +1356,7 @@ test('compare-start-1: the Compare tab', async ({ page }) => {
 });
 
 test('compare-start-2: the input window of a PDF overlay', async ({ page }) => {
-  await page.setViewportSize({ width: 1366, height: 1200 });
+  await page.setViewportSize({ width: 1366, height: 1040 });
   await start(page);
   await compareInputs(page, 'overlay', '05', [
     'W-310 Weldment RevA.pdf',
@@ -1126,7 +1431,7 @@ async function picturesDrawn(page: Page): Promise<void> {
 
 /** The structural set (corpus pair 17) on its input window: a removed and two swapped sheets. */
 async function setPairing(page: Page): Promise<void> {
-  await page.setViewportSize({ width: 1366, height: 1200 });
+  await page.setViewportSize({ width: 1366, height: 1040 });
   await start(page);
   await compareInputs(page, 'overlay', '17', ['S-100 Set RevA.pdf', 'S-100 Set RevB.pdf']);
 }

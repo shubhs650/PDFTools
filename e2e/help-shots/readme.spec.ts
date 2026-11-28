@@ -43,7 +43,7 @@ test('readme window-dark: the same in the dark theme', async ({ page }) => {
   await shoot(page, 'window-dark', { dir: DIR });
 });
 
-test('readme measure: a distance and an area to scale', async ({ page }) => {
+test('readme measure: a length and an area to scale', async ({ page }) => {
   await measuredDrawing(page);
   await ribbonTab(page, 'Measure').click();
   await shoot(page, 'measure', { dir: DIR });

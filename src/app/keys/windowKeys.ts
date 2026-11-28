@@ -33,6 +33,8 @@ export const WINDOW_KEYS: readonly WindowKey[] = [
   k('hand', ['Space'], msg('shortcuts.window.spaceHand'), true),
   k('zoomHold', ['Z'], msg('shortcuts.window.zoomHold'), true),
   k('noSnap', ['Alt'], msg('shortcuts.window.noSnap'), true),
+  // M14-02 (D-78, Q25): Shift keeps the next point at 0°, 45° or 90° and still snaps.
+  k('lockAngle', ['Shift'], msg('shortcuts.window.lockAngle'), true),
   k('nextDifference', [NEXT_DIFFERENCE_KEY], msg('shortcuts.window.nextDifference')),
   k('prevDifference', [PREV_DIFFERENCE_KEYS], msg('shortcuts.window.prevDifference')),
   k('blink', [BLINK_KEY.toUpperCase()], msg('shortcuts.window.blink'), true),

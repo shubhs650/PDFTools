@@ -49,7 +49,7 @@
           "steps": [
             "The <b>top bar</b> has the quick commands (Open, Save, Print, Undo, Redo), your open documents as tabs, the dark theme switch, full screen and the link to report an issue on GitHub.",
             "The <b>ribbon</b> has the commands, grouped in tabs: <b>File</b>, <b>Home</b>, <b>View</b>, <b>Comment</b>, <b>Form</b>, <b>Measure</b>, <b>Organize</b>, <b>Convert</b>, <b>Protect</b> and <b>Help</b>. Point at any button to see its name and shortcut.",
-            "The <b>side panes</b> on the left show thumbnails, bookmarks, attachments, layers, signatures, comments and search results.",
+            "The <b>side panes</b> on the left show thumbnails, bookmarks, attachments, layers, signatures, comments, measurements and search results.",
             "The <b>document</b> area shows the pages. Scroll, zoom and work on them here.",
             "The <b>Properties pane</b> on the right shows the selected comment, form field or tool, and lets you change it.",
             "The <b>status bar</b> has the page number, the zoom, the view mode, snapping and whether {{app}} is ready offline."
@@ -68,7 +68,7 @@
           "list": [
             "[Open a PDF](#opening-files), then [zoom and move around](#zoom-and-pages).",
             "[Add comments](#comment-tab) and [review them](#reviewing-comments) with others.",
-            "[Measure](#measure-tools) distances and areas on a drawing.",
+            "[Measure](#measure-tools) lengths, areas, volumes, angles and counts on a drawing, with totals in the [Measurements pane](#measurements-pane).",
             "[Fill in or create forms](#filling-forms), [sign](#signing) or [redact](#redaction) a document."
           ]
         }
@@ -210,7 +210,7 @@
             "<b>Zoom</b>: zoom in and out, fit the page or its width, or show it at its actual size.",
             "<b>View</b>: rotate the view, and open the Comments, Thumbnails, Bookmarks and Attachments panes or the Properties pane.",
             "<b>Comment</b>: the comment tools you use most.",
-            "<b>Measure</b>: distance, perimeter and area.",
+            "<b>Measure</b>: the measuring tool you used last. Its arrow lists every measuring tool.",
             "<b>Protect</b>: Sign Document."
           ]
         },
@@ -853,7 +853,7 @@
         },
         {
           "list": [
-            "<b>Options</b> sorts, groups and filters the cards by page, author, type or status.",
+            "<b>Options</b> sorts, groups and filters the cards by page, author, type or status. Clear <b>Measurements</b> there to hide measurements from the list.",
             "<b>Find</b> (press <kbd>Enter</kbd>) looks through the comments' text and replies.",
             "Click a card to go to its comment. <kbd>F2</kbd> edits its text.",
             "<b>Comment</b> › <b>Export CRS (Excel)</b> builds a comment review sheet, in the Standard CRS or your project's own Excel form (see [Comment review sheets (CRS) and project templates](#crs-templates))."
@@ -1055,7 +1055,7 @@
     },
     "measure-scale": {
       "title": "Setting the scale",
-      "summary": "Tell {{app}} the drawing's scale, so measurements show real lengths and areas.",
+      "summary": "Tell {{app}} the drawing's scale, so measurements show real lengths, areas and volumes.",
       "body": [
         {
           "h": "To set a known scale"
@@ -1082,46 +1082,370 @@
           ]
         },
         {
+          "h": "A page with no scale"
+        },
+        {
+          "p": "The first time you measure a length or an area on a page with no scale, {{app}} asks once what to do: <b>Set scale</b>, <b>Calibrate</b>, or <b>Measure at paper size</b> (1:1, for a sketch). Angle and Count never ask, because they need no scale."
+        },
+        {
+          "h": "When the scale changes"
+        },
+        {
+          "p": "Setting a new scale, calibrating again, or changing a [scale viewport](#scale-viewports) updates every measurement that uses it. A note says how many were updated, with <b>Undo</b> to put them all back in one step."
+        },
+        {
           "list": [
-            "<b>Scale Viewport</b> gives part of a page its own scale, for a sheet with details at another scale.",
-            "<b>Units and Precision</b> sets the units, decimal places and rounding."
+            "<b>Scale Viewport</b> gives part of a page its own scale, for a sheet with details at another scale (see [Scale viewports](#scale-viewports)).",
+            "<b>Units and Precision</b> sets the length units, decimal places and rounding. Areas and volumes have their own units (see [Volume, cutouts and area units](#measure-volume)).",
+            "The Scales section of the [Measurements pane](#measurements-pane) lists every page's scale and viewports."
           ]
         }
       ]
     },
+    "scale-viewports": {
+      "title": "Scale viewports",
+      "summary": "Give part of a sheet its own scale, such as a detail at 1:5 on a 1:50 drawing, and change it on the page.",
+      "body": [
+        {
+          "h": "To add a viewport"
+        },
+        {
+          "steps": [
+            "Choose <b>Measure</b> › <b>Scale Viewport</b>.",
+            "Drag a box around the detail.",
+            "Type its name and its scale, or the real width of the box, and choose <b>Save</b>."
+          ]
+        },
+        {
+          "h": "To change a viewport on the page"
+        },
+        {
+          "p": "On the <b>Measure</b> tab, with the <b>Select</b> tool, the viewports show their borders and names."
+        },
+        {
+          "list": [
+            "Click a viewport's border or name to select it. Drag it to move it.",
+            "Drag one of its eight handles to resize it.",
+            "Double-click it, or press <kbd>Enter</kbd>, to change its name and scale.",
+            "Press <kbd>{{delete}}</kbd> to remove it.",
+            "The arrow keys move a selected viewport by 1 point, and by 10 points with <kbd>Shift</kbd>."
+          ]
+        },
+        {
+          "shot": "scale-viewports-1",
+          "alt": "A sheet with three scale areas; the selected viewport Detail A shows its border, its name and eight handles",
+          "caption": "1 The selected viewport, with its name · 2 A handle to resize it"
+        },
+        {
+          "p": "Measurements inside a viewport follow it: moving, resizing or rescaling one updates their values in one Undo step. On the other ribbon tabs, viewport borders take no clicks, so they never get in the way of comments."
+        },
+        {
+          "h": "A measurement across two scales"
+        },
+        {
+          "p": "A measurement must sit in one scale area. While you draw, the value turns into a warning such as <b>Crosses Detail A</b> as soon as the pointer leaves the area you started in. A measurement placed across two scales has no value, shows <b>Spans 2 scales</b> in the Measurements pane, and is left out of the totals. Move its points into one area to give it a value."
+        },
+        {
+          "tip": "Every viewport can also be reached from the keyboard: the Scales section of the [Measurements pane](#measurements-pane) lists them, and the arrow keys move the one you pick there."
+        }
+      ]
+    },
     "measure-tools": {
-      "title": "Measuring distance, perimeter and area",
-      "summary": "Measure on the page. Each measurement is a comment with its value, saved in the file.",
+      "title": "Measuring length, perimeter and area",
+      "summary": "Measure on the page with Length, Polylength, Perimeter and Area. Each measurement is one comment with its value, saved in the file.",
       "body": [
         {
           "shot": "measure-tools-1",
-          "alt": "The Measure tab of the ribbon",
-          "caption": "1 Measure tools · 2 Scale · 3 Snapping"
+          "alt": "The Measure tab of the ribbon, with its groups numbered",
+          "caption": "1 Length · 2 Area · 3 Curves and angles · 4 Count · 5 Scale · 6 Snap"
         },
         {
           "steps": [
             "Set the scale first (see [Setting the scale](#measure-scale)).",
-            "Choose <b>Distance</b>, <b>Perimeter</b> or <b>Area</b> on the <b>Measure</b> tab.",
-            "For <b>Distance</b>, click the first point, then the second. Move the pointer sideways: the dimension line follows it, with a leader line from each point. Click to place it. <kbd>Enter</kbd> places it where it is, and a second click on the second point gives a plain line.",
-            "For <b>Perimeter</b> and <b>Area</b>, click each point, then double-click or press <kbd>Enter</kbd> to finish. An area also finishes when you click its first corner again.",
-            "Press <kbd>Esc</kbd> to drop a measurement you are placing; the tool stays on. The [loupe](#loupe) beside the pointer shows each point larger, and each click snaps when snapping is on.",
-            "The value shows on the page and in the Properties pane."
+            "Choose a tool on the <b>Measure</b> tab. On <b>Home</b> and <b>Comment</b>, the <b>Measure</b> button starts the tool you used last, and its arrow lists them all.",
+            "Click the points, as below. The value shows beside the pointer while you draw.",
+            "Press <kbd>Esc</kbd> to drop a measurement you are placing; the tool stays on."
+          ]
+        },
+        {
+          "list": [
+            "<b>Length</b>: click the first point, then the second. Move the pointer sideways: the dimension line follows it, with a leader line from each point. Click to place it. <kbd>Enter</kbd>, or a double-click on the second point, places it on the line itself.",
+            "<b>Polylength</b>: an open path, such as a pipe run. Click each point, then double-click or press <kbd>Enter</kbd>.",
+            "<b>Perimeter</b>: the same, but it always closes back to the first point, so the closing side counts.",
+            "<b>Area</b>: click each corner, then click the first corner again, double-click or press <kbd>Enter</kbd>. Edges are straight."
           ]
         },
         {
           "shot": "measure-tools-2",
-          "alt": "A distance and an area measured on a drawing, with their values; the distance's dimension line sits above the plan"
+          "alt": "A length and an area measured on a drawing, with their values; the length's dimension line sits above the plan"
         },
         {
           "shot": "measure-tools-3",
-          "alt": "Placing a distance: the dimension line and its leader lines follow the pointer, with the value beside it",
+          "alt": "Placing a length: the dimension line and its leader lines follow the pointer, with the value beside it",
           "caption": "1 The two points · 2 The dimension line, set by moving the pointer sideways"
         },
         {
-          "tip": "A distance ends in open arrows, like a dimension line. Its dimension line is saved as standard PDF leader lines, so other PDF viewers show it in the same place. Dragging a point of a placed distance keeps the dimension line beside it."
+          "h": "While you measure"
         },
         {
-          "tip": "Measurements are comments, so they appear in the Comments pane and can be exported with the other comments."
+          "list": [
+            "Zoom, scroll and pan as you like, with the wheel, the keys or <kbd>Space</kbd> held: the points you placed stay, and the next click carries on. Only <kbd>Esc</kbd>, another tool or another page ends a measurement.",
+            "Hold <kbd>Shift</kbd> to keep the next point horizontal, vertical or at 45° from the last one. It still snaps, where that direction meets a line of the drawing.",
+            "Hold <kbd>Alt</kbd> while you click for a point that does not snap. The [loupe](#loupe) beside the pointer shows each point larger."
+          ]
+        },
+        {
+          "h": "The text on the sheet"
+        },
+        {
+          "p": "The sheet shows the value alone, such as “5,000 mm” or “42.50 m²”. In the Properties pane, a <b>Label</b> goes in front of it (“Slab S1: 42.50 m²”), and a length's <b>Caption</b> sits <b>Above the line</b> or <b>In the line</b>. Drag a caption to move it; <b>Put the caption back</b> returns it to its place."
+        },
+        {
+          "shot": "measure-tools-4",
+          "alt": "The Properties pane of a selected area: its value and scale, its label and its area unit"
+        },
+        {
+          "tip": "Each tool keeps its own colour, line width, line ends and fill. Change them in the Properties pane while the tool is on, and the next measurement of that tool uses them."
+        },
+        {
+          "tip": "Measurements are comments: they are listed in the Comments pane and in the [Measurements pane](#measurements-pane), and other PDF viewers show them (see [Measurements in other PDF viewers](#measure-other-viewers))."
+        }
+      ]
+    },
+    "measure-volume": {
+      "title": "Volume, cutouts and area units",
+      "summary": "Measure a volume from an area and a depth, cut openings out of an area or volume, and choose the units of each.",
+      "body": [
+        {
+          "h": "To measure a volume"
+        },
+        {
+          "steps": [
+            "Choose <b>Measure</b> › <b>Volume</b>.",
+            "In the Properties pane, type the <b>Depth</b> and choose its unit. The next volume takes it, and {{app}} remembers it.",
+            "Click each corner of the outline, then click the first one, double-click or press <kbd>Enter</kbd>."
+          ]
+        },
+        {
+          "p": "The sheet shows the volume. The Properties pane and the Measurements pane show its area and depth as well. Select a volume to change its depth later: its value updates."
+        },
+        {
+          "h": "To cut an opening out"
+        },
+        {
+          "steps": [
+            "Select the Area or Volume.",
+            "Choose <b>Measure</b> › <b>Cutout</b>.",
+            "Click each corner of the opening, then click the first one, double-click or press <kbd>Enter</kbd>. Cut more openings the same way.",
+            "Press <kbd>Esc</kbd> when you are done. The area is selected again."
+          ]
+        },
+        {
+          "p": "The value is net, with the openings taken off. The Properties pane lists each cutout with its area, the area <b>Before cutouts</b>, and a button to delete each one. An opening must lie inside the outline and clear of the other openings, or it is not cut and a note says why."
+        },
+        {
+          "shot": "measure-volume-1",
+          "alt": "A slab volume with two cutouts, selected, and its Properties pane with the depth, the area before cutouts and each cutout",
+          "caption": "1 The cutouts · 2 Depth, area and cutouts in the Properties pane"
+        },
+        {
+          "h": "Area and volume units"
+        },
+        {
+          "p": "A length takes its unit from the scale. Areas and volumes have their own <b>Area unit</b>, <b>Volume unit</b> and decimals in the Properties pane. <b>Automatic</b> gives m² and m³ on a metric scale, sq ft and cu ft on an imperial one, and mm² and mm³ at paper size. Choose another unit, such as cu yd, for the selected one or, with the tool on, for the next."
+        },
+        {
+          "tip": "The points of an opening are edited like any other point (see [Changing a measurement](#measure-editing)). Moving the outline takes its openings with it."
+        }
+      ]
+    },
+    "measure-curves": {
+      "title": "Angle, radius and diameter",
+      "summary": "Measure the angle between two lines, and the radius or diameter of a circle or arc.",
+      "body": [
+        {
+          "h": "To measure an angle"
+        },
+        {
+          "steps": [
+            "Choose <b>Measure</b> › <b>Angle</b>.",
+            "Click the end of the first arm, then the corner, then the end of the second arm."
+          ]
+        },
+        {
+          "p": "The inside angle is drawn as an arc at the corner, with its value in degrees (“∠ 37.5°”). An angle needs no scale."
+        },
+        {
+          "h": "To measure a radius or a diameter"
+        },
+        {
+          "steps": [
+            "Choose <b>Measure</b> › <b>Radius</b> or <b>Diameter</b>.",
+            "In the Properties pane, choose <b>Pick by</b>: <b>Centre, then a point on the edge</b>, or <b>Three points on the curve</b>. {{app}} remembers your choice.",
+            "Click the centre and a point on the edge, or three points anywhere on the circle or arc."
+          ]
+        },
+        {
+          "p": "The result shows the curve, a radius or diameter line and the value (“R 1,200 mm”, “Ø 3,000 mm”). <b>Shown as</b> in the Properties pane draws the arc through the points or the whole circle. Three points in a line make no circle, and a note says so."
+        },
+        {
+          "shot": "measure-curves-1",
+          "alt": "A pipe run with the inside angle at a bend, the bend's radius and a tank's diameter measured",
+          "caption": "1 Angle · 2 Radius · 3 Diameter"
+        }
+      ]
+    },
+    "measure-count": {
+      "title": "Counting items",
+      "summary": "Count doors, valves or fittings with a click on each: every one gets a symbol and a number.",
+      "body": [
+        {
+          "steps": [
+            "Choose <b>Measure</b> › <b>Count</b>.",
+            "In the <b>Count group</b> box of the Properties pane, choose a group or choose <b>New group</b>, and set its <b>Name</b>, <b>Symbol</b>, <b>Colour</b> and <b>Size</b>. <b>Next click</b> shows what the next one will be.",
+            "Click each item on the drawing. Each click places its symbol and the next number, such as “Door 7”.",
+            "Press <kbd>Esc</kbd> when you are done."
+          ]
+        },
+        {
+          "shot": "measure-count-1",
+          "alt": "Doors counted on a floor plan with numbered squares, and the Count group box in the Properties pane",
+          "caption": "1 Counted items · 2 The Count group box"
+        },
+        {
+          "list": [
+            "Numbers start at 1 for each group and run across every page of the document.",
+            "Deleting a count leaves a gap; the next new one takes the highest number plus one. <b>Renumber</b> in the [Measurements pane](#measurements-pane) closes the gaps, in one Undo step.",
+            "A change to a group, such as its symbol or colour, changes all its counts at once. Choosing another group for a selected count moves it there with that group's next number.",
+            "Clear <b>Show number</b> for a count to show its symbol alone.",
+            "Count needs no scale, and {{app}} remembers your groups on this device."
+          ]
+        },
+        {
+          "h": "Numbers you can read at any zoom"
+        },
+        {
+          "p": "Zoomed out on a big sheet, count numbers get small. <b>Same-Size Count Numbers</b> in the status bar (or <b>View</b> › <b>Same-Size Count Numbers</b>) keeps them readable on screen at any zoom, on a see-through label. It is off at first, changes the screen only, and never the file, printing or exports."
+        }
+      ]
+    },
+    "measure-editing": {
+      "title": "Changing a measurement",
+      "summary": "Move the points of a measurement, add and remove points, and keep values right when the scale changes.",
+      "body": [
+        {
+          "p": "Click a measurement with the <b>Select</b> tool to select it. Its points show as handles."
+        },
+        {
+          "list": [
+            "Drag a point to move it. The value updates while you drag, and snapping, <kbd>Shift</kbd> and the loupe work as when you measure.",
+            "Drag a length's dimension line to move it nearer or further.",
+            "Right-click an edge to add a point there, or right-click a point to remove it (Polylength, Perimeter, Area, Volume and cutouts).",
+            "Drag a caption to move it.",
+            "With a point focused (<kbd>Tab</kbd> moves to it), the arrow keys move it and <kbd>{{delete}}</kbd> removes it. With the whole measurement selected, the arrow keys move all of it.",
+            "Each change is one Undo step."
+          ]
+        },
+        {
+          "shot": "measure-editing-1",
+          "alt": "A selected polylength with a handle on each point, one of them being dragged, and its value updated"
+        },
+        {
+          "h": "Measurements from version 1.1.0"
+        },
+        {
+          "p": "Version 1.1.0 saved a distance as a line with a separate text box, which other PDF editors treat as two items. When you open such a file, a bar offers <b>Update old measurements</b>. One click turns each into one measurement, in one Undo step. Nothing changes until you click it."
+        }
+      ]
+    },
+    "measurements-pane": {
+      "title": "The Measurements pane",
+      "summary": "Every measurement of the document in one list, grouped by tool and count group, with totals and the page scales.",
+      "body": [
+        {
+          "p": "Open it with the <b>Measurements</b> button in the left rail."
+        },
+        {
+          "shot": "measurements-pane-1",
+          "alt": "The Measurements pane: Export and Place summary, This page or All pages, groups for Length, Area and Door with their totals, and the Scales section"
+        },
+        {
+          "list": [
+            "Measurements are grouped by tool, and counts by count group, each group with its total. Choose <b>This page</b> or <b>All pages</b>.",
+            "Each row shows the value, the label, the page and the scale. Click a row, or press <kbd>Enter</kbd> on it, to show the measurement and select it.",
+            "<b>Spans 2 scales</b> marks a measurement across two scale areas: it has no value and is left out of the total. <b>Paper size</b> marks one measured with no scale; its total is shown on its own.",
+            "A count group with gaps in its numbers shows <b>Renumber</b>.",
+            "<b>Export…</b> and <b>Place summary</b> are at the top of the pane (see [Exporting measurements](#measure-export))."
+          ]
+        },
+        {
+          "h": "Scales"
+        },
+        {
+          "p": "The Scales section lists each page's scale and its [scale viewports](#scale-viewports) with their names and ratios. Click a viewport to show and select it; the arrow keys move it, and <kbd>{{delete}}</kbd> removes it."
+        },
+        {
+          "h": "Measurements among the comments"
+        },
+        {
+          "p": "Measurements are comments too. To hide them from the Comments pane, clear <b>Measurements</b> in its <b>Options</b>. <b>Export CRS (Excel)</b> leaves them out unless you choose <b>Include measurements</b>."
+        }
+      ]
+    },
+    "measure-export": {
+      "title": "Exporting measurements",
+      "summary": "Export every measurement to Excel or CSV, attach the workbook to the PDF, or put a table of totals on the sheet.",
+      "body": [
+        {
+          "h": "To export to Excel or CSV"
+        },
+        {
+          "steps": [
+            "In the [Measurements pane](#measurements-pane), choose <b>Export…</b>.",
+            "Choose <b>This page</b> or <b>All pages</b>, and <b>Excel workbook</b> or <b>CSV</b>.",
+            "For a workbook, choose <b>Include pictures</b> to add a picture of each measurement and what is around it.",
+            "Choose where it goes: <b>Save as a file</b>, <b>Attach to this PDF</b>, or both. Then choose <b>Export</b>."
+          ]
+        },
+        {
+          "shot": "measure-export-1",
+          "alt": "The Export measurements dialog with Excel, pictures and Attach to this PDF chosen"
+        },
+        {
+          "p": "The workbook has two sheets: <b>Measurements</b>, one row each with the page, scale area, tool, group or label, value, unit, depth, scale, author and date, and <b>Totals</b>, the total of each group. Values are real numbers, ready for formulas. A CSV file has the rows only. A long export shows its progress and can be cancelled."
+        },
+        {
+          "h": "Attached to the PDF"
+        },
+        {
+          "p": "<b>Attach to this PDF</b> puts the workbook in the document's attachments, so it travels with the file; attaching again replaces the earlier copy. It is saved with the PDF the next time you save. When measurements change later, the Measurements pane says the attachment is out of date, with <b>Refresh</b>. Saving never refreshes it by itself."
+        },
+        {
+          "h": "A summary on the sheet"
+        },
+        {
+          "p": "<b>Place summary</b> puts a table of the totals on the page, as one comment that you can move and resize. {{app}} keeps it up to date as measurements change, and other PDF viewers and printouts show it as it is."
+        },
+        {
+          "shot": "measure-export-2",
+          "alt": "A summary table on the floor plan, listing each group with its count and total"
+        }
+      ]
+    },
+    "measure-other-viewers": {
+      "title": "Measurements in other PDF viewers",
+      "summary": "What other PDF viewers and editors show of your measurements, and what only {{app}} can change.",
+      "body": [
+        {
+          "p": "Each measurement is saved as one standard PDF comment that draws itself, with its value in its text. Other PDF viewers, such as the one in your web browser and the desktop PDF editors, show it as it looks in {{app}}, and select, move and delete it as one item. The value also shows as the comment's text in their comment lists, with the tool's name (Length, Area, Count) as its subject."
+        },
+        {
+          "list": [
+            "Only {{app}} edits a measurement as a measurement: moving its points with the value following, cutouts, depth, count groups and numbers.",
+            "Some editors draw a line or area again when you change it there, and may then drop the caption. The value stays in the comment's text, and {{app}} draws it again when you open the file.",
+            "If another editor drops {{app}}'s own details when it saves, {{app}} reads a measurement back from its shape and its scale.",
+            "For totals in other viewers, use [Place summary](#measure-export) or attach the Excel export."
+          ]
         }
       ]
     },
@@ -1131,9 +1455,10 @@
       "body": [
         {
           "steps": [
-            "Turn snapping on with <b>Enable Snapping</b> in the status bar, or <b>Measure</b> › <b>Enable Snapping</b>. Distance, Perimeter, Area, Calibrate and Scale Viewport turn it on for you (see [The loupe and automatic snapping](#loupe)).",
+            "Turn snapping on with <b>Enable Snapping</b> in the status bar, or <b>Measure</b> › <b>Enable Snapping</b>. Every measuring tool except Count, and Calibrate and Scale Viewport, turn it on for you (see [The loupe and automatic snapping](#loupe)).",
             "Choose what to snap to on the <b>Measure</b> tab: endpoints, midpoints, intersections and nearest point on a line.",
-            "Move the pointer near the drawing. A marker shows the point it will snap to, and the loupe shows it larger. Hold <kbd>Alt</kbd> while you click for a point that does not snap."
+            "Move the pointer near the drawing. A marker shows the point it will snap to, and the loupe shows it larger. Hold <kbd>Alt</kbd> while you click for a point that does not snap.",
+            "Hold <kbd>Shift</kbd> to keep the next point horizontal, vertical or at 45°: it snaps where that direction meets a line."
           ]
         },
         {
@@ -1151,7 +1476,7 @@
         },
         {
           "shot": "loupe-1",
-          "alt": "Measuring a distance on a drawing, with the loupe beside the pointer showing a snapped endpoint",
+          "alt": "Measuring a length on a drawing, with the loupe beside the pointer showing a snapped endpoint",
           "caption": "1 The loupe · 2 The point it will snap to, and its kind"
         },
         {
@@ -1159,7 +1484,7 @@
         },
         {
           "list": [
-            "With <b>Distance</b>, <b>Perimeter</b>, <b>Area</b>, <b>Calibrate</b> and <b>Scale Viewport</b>, and with the <b>Line</b>, <b>Arrow</b>, <b>Polyline</b> and <b>Callout</b> comments, while <b>Measure</b> › <b>Loupe</b> (in the Snap group) is on. It is on at first.",
+            "With every measuring tool except Count, with <b>Calibrate</b> and <b>Scale Viewport</b>, and with the <b>Line</b>, <b>Arrow</b>, <b>Polyline</b> and <b>Callout</b> comments, while <b>Measure</b> › <b>Loupe</b> (in the Snap group) is on. It is on at first.",
             "With every tool while <b>View</b> › <b>Loupe</b> is on, for example to read small text with Select or Hand. It is off at first.",
             "Press <kbd>{{loupe}}</kbd> in the document to show or hide it in the tool you are using.",
             "It moves to the other side of the pointer near the edge of the window, and hides off the page."
@@ -1169,7 +1494,7 @@
           "h": "Automatic snapping"
         },
         {
-          "p": "Picking <b>Distance</b>, <b>Perimeter</b>, <b>Area</b>, <b>Calibrate</b> or <b>Scale Viewport</b> turns snapping on, and a short note in the status bar says so. When you finish measuring (<kbd>Esc</kbd> or another tool), snapping goes back to how it was, unless you switched it yourself in the meantime. Hold <kbd>Alt</kbd> while you click for a point that does not snap."
+          "p": "Picking a measuring tool (all but Count), <b>Calibrate</b> or <b>Scale Viewport</b> turns snapping on, and a short note in the status bar says so. When you finish measuring (<kbd>Esc</kbd> or another tool), snapping goes back to how it was, unless you switched it yourself in the meantime. Hold <kbd>Alt</kbd> while you click for a point that does not snap."
         },
         {
           "h": "Settings"

@@ -107,7 +107,7 @@ test('the shortcut sheet opens from Help and lists every binding', async ({ page
   // M13-09: the keys a pane or window reads itself, in their own section.
   await expect(
     dialog.getByTestId('shortcut-sheet').locator('tbody[data-part="window"] tr'),
-  ).toHaveCount(11); // a heading row and 10 keys
+  ).toHaveCount(12); // a heading row and 11 keys (Shift for measuring, M14-11)
   await expect(dialog.getByRole('row', { name: /^Show or Hide the Loupe/ })).toContainText('M');
   await expect(dialog.getByRole('row', { name: /^Thin Lines/ })).toContainText('Ctrl+Alt+5');
   await expect(dialog.getByRole('row', { name: /^Blink between Old and New/ })).toContainText('X');
