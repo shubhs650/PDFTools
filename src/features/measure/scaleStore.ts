@@ -19,7 +19,8 @@ import { coversPage, layoutOf, type Box, type PageLayout } from '../../model/sca
 import type { PdfJson } from '../../model/pdf/wire';
 import { appDb } from '../../storage/appDb';
 import type { PageVp } from '../../workers/work/viewports';
-import { renderEngine, workClient } from '../view/host';
+import type { HistoryCapability } from '@embedpdf/plugin-history';
+import { capability, hostStore, renderEngine, workClient } from '../view/host';
 
 const DEFAULTS_KEY = 'measureDefaults';
 
@@ -143,9 +144,67 @@ export async function setEntries(
   return true;
 }
 
+function historyOf(docId: string) {
+  const registry = hostStore.getState().registry;
+  if (!registry) return null;
+  try {
+    return capability<HistoryCapability>(registry, 'history').forDocument(docId);
+  } catch {
+    return null;
+  }
+}
+
+/** Documents whose next scale change the person made (not an undo or redo): its note (Q23). */
+const noting = new Set<string>();
+
+/**
+ * True once for a scale change the person made: the measurements that follow
+ * it say how many were updated (measurements.ts, D-77, Q23).
+ */
+export const takeScaleNote = (docId: string): boolean => noting.delete(docId);
+
+/**
+ * Replaces pages' /VP lists as one undo step (D-77, Q23): a new scale, a
+ * recalibration, a viewport added, moved, resized, re-scaled or deleted. The
+ * measurements using them follow (measurements.ts), and undo or redo brings
+ * them back with the scale. Resolves once the first change is staged.
+ */
+export function changeScales(
+  docId: string,
+  after: ReadonlyMap<number, PdfJson[]>,
+): Promise<boolean> {
+  const st = scaleStore.getState();
+  const before = new Map([...after.keys()].map((page) => [page, entriesOf(st, docId, page)]));
+  const run = async (lists: ReadonlyMap<number, PdfJson[]>, note: boolean): Promise<boolean> => {
+    if (note) noting.add(docId);
+    try {
+      return await setEntries(docId, lists);
+    } finally {
+      noting.delete(docId);
+    }
+  };
+  const h = historyOf(docId);
+  if (!h) return run(after, true);
+  const done: { first: Promise<boolean> | null } = { first: null };
+  h.register(
+    {
+      execute: () => {
+        const p = run(after, done.first === null);
+        done.first ??= p;
+      },
+      undo: () => {
+        void run(before, false);
+      },
+    },
+    'viewports',
+  );
+  return done.first ?? Promise.resolve(false);
+}
+
 /**
  * Sets `scale` on `pages`: each page's /VP keeps its other viewports and gets
- * a whole-page viewport with the scale (replacing an earlier one).
+ * a whole-page viewport with the scale (replacing an earlier one). One undo
+ * step (D-77).
  */
 export async function applyScale(
   docId: string,
@@ -169,7 +228,7 @@ export async function applyScale(
       viewportToPdf({ name: PAGE_VIEWPORT_NAME, bbox: p.mediaBox, scale }),
     ]);
   }
-  const ok = await setEntries(docId, lists);
+  const ok = await changeScales(docId, lists);
   if (ok)
     void rememberDefaults({
       unit: scale.unit,

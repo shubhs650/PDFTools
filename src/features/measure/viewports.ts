@@ -10,7 +10,6 @@ import type {
   AnnotationTool,
   HandlerFactory,
 } from '@embedpdf/plugin-annotation';
-import type { HistoryCapability } from '@embedpdf/plugin-history';
 import { createStore, useStore } from 'zustand';
 import { appStore } from '../../app/store/appStore';
 import { documentStore } from '../../app/store/documentStore';
@@ -27,7 +26,14 @@ import {
 import { capability, hostStore } from '../view/host';
 import { trackLoupe } from './loupePointer';
 import { snapPoint } from './snapping';
-import { entriesOf, loadScales, readEntries, scaleOf, scaleStore, setEntries } from './scaleStore';
+import {
+  changeScales,
+  entriesOf,
+  loadScales,
+  readEntries,
+  scaleOf,
+  scaleStore,
+} from './scaleStore';
 
 /** A viewport being added (index undefined) or edited, for the dialog. */
 export interface ViewportEdit {
@@ -83,36 +89,9 @@ export function rectOfBox(docId: string, page: number, box: Box) {
   };
 }
 
-function history(docId: string) {
-  const registry = hostStore.getState().registry;
-  if (!registry) return null;
-  try {
-    return capability<HistoryCapability>(registry, 'history').forDocument(docId);
-  } catch {
-    return null;
-  }
-}
-
-/** Replaces the page's /VP list as one undo step. */
+/** Replaces the page's /VP list as one undo step; its measurements follow (D-77). */
 function change(docId: string, page: number, after: PdfJson[]): void {
-  const before = entriesOf(scaleStore.getState(), docId, page);
-  const run = (list: PdfJson[]): void => {
-    void setEntries(docId, new Map([[page, list]]));
-  };
-  const h = history(docId);
-  if (!h) run(after);
-  else
-    h.register(
-      {
-        execute: () => {
-          run(after);
-        },
-        undo: () => {
-          run(before);
-        },
-      },
-      'viewports',
-    );
+  void changeScales(docId, new Map([[page, after]]));
 }
 
 /** Saves the dialog's viewport (added, or replacing the one at its index). */

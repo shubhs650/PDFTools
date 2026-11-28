@@ -7,7 +7,8 @@
 // (workers/render/measureAppearance.ts); the object layer stages /IT,
 // /Measure, /Cap, /CP and /CO, and the page's /PieceInfo (pageData.ts), for
 // the single Ctrl+S revision. The value and caption join the edit's undo step
-// (historyJoin.ts). A scale change re-values the page's measurements.
+// (historyJoin.ts). A scale change re-values the page's measurements, in the
+// scale change's own undo step, with a note (D-77, Q23).
 //
 // Which scale: a measurement from a file keeps its own /Measure (ADR-007 d3:
 // what its author saw) unless that is the page's own scale, in which case it
@@ -58,12 +59,14 @@ import {
   type Scale,
   type ScaleChoice,
 } from '../../model/scale';
+import { touchedBy } from '../../model/measureEdit';
 import { layoutOf, scaleChoice, scaleOfChoice } from '../../model/scaleViewport';
 import { isReplaying, joinStep, outsideHistory } from '../annotate/historyJoin';
 import { capability, hostStore, renderEngine } from '../view/host';
 import { dimensionRect } from './dimensionTool';
 import { fileMeta, stagePageData } from './pageData';
-import { layoutFor, readEntries, scaleStore } from './scaleStore';
+import { layoutFor, readEntries, scaleStore, takeScaleNote } from './scaleStore';
+import { showScaleNote } from './scaleNote';
 import { frameOf } from './viewports';
 
 /** The tool's name as the markup's subject (/Subj), so other editors' lists say it (Q27). */
@@ -212,7 +215,13 @@ async function stage(
   const keys = measureKeys(
     kind,
     s,
-    meta ? { place: meta.cap ?? 'top', offset: meta.capOffset ?? null } : {},
+    meta
+      ? {
+          place: meta.cap ?? 'top',
+          offset: meta.capOffset ?? null,
+          ...(a.type === PdfAnnotationSubtype.LINE ? { leader: leaderOf(a) } : {}),
+        }
+      : {},
   );
   const key = `${docId}/${a.id}`;
   const sig = JSON.stringify(keys);
@@ -440,7 +449,10 @@ export function installMeasurements(registry: PluginRegistry): () => void {
     if (keep.length !== sel.length) scope.setSelection(keep.map((o) => o.id));
   });
 
-  // A page's scale set (or changed): its measurements re-valued, not undoable.
+  // A page's scale set or changed (D-77, Q23): its measurements follow. The
+  // scale change is the undo step (scaleStore.ts changeScales), so undo and
+  // redo bring the values back with it; a change the person made says how
+  // many measurements it updated, with Undo (scaleNote.ts).
   const offScales = scaleStore.subscribe((s, prev) => {
     for (const [docId, d] of Object.entries(s.docs)) {
       const p = prev.docs[docId];
@@ -452,8 +464,26 @@ export function installMeasurements(registry: PluginRegistry): () => void {
           .map(Number)
           .filter((n) => before?.vp[n] !== d.vp[n]),
       );
-      for (const page of pages)
-        for (const id of followers(registry, docId, page)) refresh(registry, docId, id, 'outside');
+      const note = pages.size > 0 && takeScaleNote(docId);
+      const scope = cap.forDocument(docId);
+      let touched = 0;
+      for (const page of pages) {
+        const ids = followers(registry, docId, page);
+        if (note) {
+          const frame = frameOf(docId, page);
+          const items = ids.flatMap((id) => {
+            const o = scope.getAnnotationById(id)?.object;
+            return o ? [{ id, pts: toUserSpace(measurePoints(o), frame) }] : [];
+          });
+          touched += touchedBy(
+            items,
+            layoutFor(prev, docId, page),
+            layoutFor(s, docId, page),
+          ).length;
+        }
+        for (const id of ids) refresh(registry, docId, id, 'outside');
+      }
+      if (touched > 0) showScaleNote(docId, touched);
     }
   });
 

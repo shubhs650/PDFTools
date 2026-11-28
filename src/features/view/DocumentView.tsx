@@ -38,6 +38,7 @@ import { NumberOverlay } from '../annotate/comments/NumberOverlay';
 import { NotePopupLayer } from '../annotate/notes/NotePopupLayer';
 import { MeasureOverlay } from '../measure/MeasureOverlay';
 import { CaptionHandle } from '../measure/CaptionHandle';
+import { MeasureEditor } from '../measure/MeasureEditor';
 import { ViewportLayer } from '../measure/ViewportLayer';
 import { TableOverlay } from '../tables/TableOverlay';
 import { RedactionLayer } from '../redact/RedactionLayer';
@@ -184,6 +185,8 @@ function Page({
               <MeasureOverlay documentId={documentId} pageIndex={layout.pageIndex} scale={scale} />
               {/* A selected measurement's caption, draggable (M14-03). */}
               <CaptionHandle documentId={documentId} pageIndex={layout.pageIndex} scale={scale} />
+              {/* A selected measurement's points and dimension line, editable (M14-04). */}
+              <MeasureEditor documentId={documentId} pageIndex={layout.pageIndex} scale={scale} />
               {/* Links (M2-10) sit above the text layer, so a click follows them. */}
               <LinkLayer documentId={documentId} pageIndex={layout.pageIndex} scale={scale} />
               {/* Form fields (M2-14) on top: a field under a link is still filled. */}
