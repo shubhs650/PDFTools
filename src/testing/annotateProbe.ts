@@ -21,6 +21,7 @@ import { ensurePage, rtts, snapStore } from '../features/measure/snapping';
 import { loupeStats } from '../features/view/loupe/loupeModel';
 import { loupeStore } from '../features/measure/loupePointer';
 import { lastCrs } from '../features/crs/crsExport';
+import { lastMeasureExport } from '../features/measure/export/measureExport';
 import { lastTemplateCrs } from '../features/crs/templates/templateExportFlow';
 import { lastAnnotationExport } from '../features/annotate/export/annotationExport';
 import { placeDynamicStamp } from '../features/stamps/stampTools';
@@ -173,6 +174,11 @@ export function registerAnnotateProbe(hook: TestHook): void {
       let bin = '';
       for (const b of f.bytes) bin += String.fromCharCode(b);
       return { name: f.name, b64: btoa(bin) };
+    },
+    /** The last measurements export made (M14-10): name, whether it was attached, base64. */
+    lastMeasureExport: () => {
+      const f = lastMeasureExport;
+      return f ? { name: f.name, attached: f.attached, b64: toBase64(f.bytes) } : null;
     },
     /** The last CRS file made from a project template by the dialog (M13-08): name, sheets, base64. */
     lastTemplateCrs: () => {

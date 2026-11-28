@@ -19,6 +19,7 @@ import { resetHideHighlights } from '../compare/closeout/closeOutStore';
 import { resetCompareTips } from '../compare/tips/tipsStore';
 import { resetLoupeSettings } from '../measure/loupeSettings';
 import { resetCurveMethods } from '../measure/curveMethod';
+import { resetExportSettings } from '../measure/export/exportSettings';
 import { resetCrsTemplates } from '../crs/templates/crsTemplateStore';
 import { resetThinLines } from '../view/thinLines';
 import type { ClearDeps } from './clearAll';
@@ -69,5 +70,7 @@ export const appClearDeps: ClearDeps = {
     resetCrsTemplates();
     // Thin Lines back to off (M13-05).
     resetThinLines();
+    // The measurements export's choices back to their defaults (M14-10).
+    resetExportSettings();
   },
 };

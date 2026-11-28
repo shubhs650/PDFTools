@@ -83,6 +83,9 @@ function fakeSpawn(world: FakeWorld) {
       crs: () => {
         throw new Error('not used');
       },
+      measureExport: () => {
+        throw new Error('not used');
+      },
       crsTemplate: () => {
         throw new Error('not used');
       },

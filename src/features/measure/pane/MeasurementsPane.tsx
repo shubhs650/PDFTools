@@ -1,6 +1,19 @@
+import { ArrowExport20Regular } from '@fluentui/react-icons/svg/arrow-export';
+import { TableCalculator20Regular } from '@fluentui/react-icons/svg/table-calculator';
 import { useEffect, useId, useMemo, useState, type KeyboardEvent } from 'react';
 import { useTranslation } from 'react-i18next';
-import { useDocuments } from '../../../app/store/documentStore';
+import { securityOf, useDocuments } from '../../../app/store/documentStore';
+import { readStamp } from '../../../model/measureExport';
+import { allows } from '../../../model/permissions';
+import { Button } from '../../../ui/components';
+import { loadAttached, setRefreshing, useAttached } from '../export/attachedExport';
+import {
+  canAttach,
+  currentStamp,
+  openMeasureExport,
+  refreshAttachment,
+} from '../export/measureExport';
+import { placeSummary } from '../summary/summary';
 import { format, t as tGlobal } from '../../../i18n';
 import {
   entryText,
@@ -62,6 +75,8 @@ export function MeasurementsPane() {
   const shown = groups.reduce((n, g) => n + g.entries.length, 0);
   return (
     <div className="measurements-pane" data-testid="measurements-pane">
+      <MeasureActions docId={docId} scope={scope} hasEntries={!!entries && entries.length > 0} />
+      <AttachedNote docId={docId} />
       <fieldset className="mpane-scope">
         <legend className="ui-visually-hidden">{t('measurements.scope')}</legend>
         {SCOPES.map((v: PaneScope) => (
@@ -95,6 +110,115 @@ export function MeasurementsPane() {
           : ''}
       </p>
       <ScalesSection docId={docId} page={page} scope={scope} />
+    </div>
+  );
+}
+
+/**
+ * Export… and Place summary (M14-10, D-76): the export dialog, and a table of
+ * the totals on the current page for This page or All pages.
+ */
+function MeasureActions({
+  docId,
+  scope,
+  hasEntries,
+}: {
+  docId: string;
+  scope: PaneScope;
+  hasEntries: boolean;
+}) {
+  const { t } = useTranslation();
+  const hintId = useId();
+  const annotate = useDocuments((s) => {
+    const meta = s.docs[docId]?.meta;
+    return meta ? allows(securityOf(meta), 'annotate') : false;
+  });
+  return (
+    <div className="mpane-actions" role="group" aria-label={t('measureExport.pane.actions')}>
+      <Button
+        size="small"
+        icon={<ArrowExport20Regular />}
+        label={t('measureExport.pane.export')}
+        disabled={!hasEntries}
+        onClick={() => {
+          openMeasureExport(docId);
+        }}
+      />
+      <Button
+        size="small"
+        icon={<TableCalculator20Regular />}
+        label={t('measureExport.pane.placeSummary')}
+        disabled={!annotate}
+        aria-describedby={hintId}
+        onClick={() => {
+          void placeSummary(docId, scope);
+        }}
+      />
+      <span id={hintId} hidden>
+        {t('measureExport.pane.placeSummaryHint')}
+      </span>
+    </div>
+  );
+}
+
+/**
+ * The attached export's note (M14-10, Q18): its name, and when the
+ * measurements have changed since, "out of date" with Refresh (made again the
+ * same way; never by Ctrl+S).
+ */
+function AttachedNote({ docId }: { docId: string }) {
+  const { t } = useTranslation();
+  const doc = useAttached((s) => s.docs[docId]);
+  const refreshing = useAttached((s) => !!s.refreshing[docId]);
+  const byUid = useAnnotationMap(docId);
+  const scales = useScales((s) => s.docs[docId]);
+  const [failed, setFailed] = useState(false);
+  useEffect(() => {
+    loadAttached(docId);
+  }, [docId]);
+  const attached = doc?.state === 'ready' ? doc.attached : null;
+  const how = attached ? readStamp(attached.stamp) : null;
+  // The stamp the measurements would give now (plain work over what is in memory).
+  const now = useMemo(
+    () =>
+      how && byUid && scales && typeof scales !== 'string'
+        ? currentStamp(docId, how.scope, how.pictures)
+        : null,
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [docId, attached?.stamp, byUid, scales],
+  );
+  if (!attached) return null;
+  const stale = now !== null && now !== attached.stamp;
+  return (
+    <div
+      className={stale ? 'mpane-attached is-stale' : 'mpane-attached'}
+      data-testid="measure-attached"
+      data-stale={stale || undefined}
+    >
+      <p className="mpane-attached-text" role="status">
+        {refreshing
+          ? t('measureExport.pane.refreshing')
+          : failed
+            ? t('measureExport.pane.refreshFailed')
+            : stale
+              ? t('measureExport.pane.outOfDate', { name: attached.name })
+              : t('measureExport.pane.attached', { name: attached.name })}
+      </p>
+      {stale && how ? (
+        <Button
+          size="small"
+          label={t('measureExport.pane.refresh')}
+          disabled={refreshing || !canAttach(docId)}
+          onClick={() => {
+            setFailed(false);
+            setRefreshing(docId, true);
+            void refreshAttachment(docId, how).then((ok) => {
+              setRefreshing(docId, false);
+              setFailed(!ok);
+            });
+          }}
+        />
+      ) : null}
     </div>
   );
 }

@@ -30,6 +30,8 @@ import { isTextMarkup } from './pointerModes';
 import { annotationCapability } from './selection';
 import { SelectedMeasure } from '../measure/SelectedMeasure';
 import { withFileCurve } from '../measure/measurements';
+import { isSummary } from '../measure/summary/summary';
+import { SummaryPreview } from '../measure/summary/SummaryPreview';
 import { useEditPreview } from '../measure/pointEdit';
 import { metaOf } from '../../model/measureMarkup';
 import { isCurveTool } from '../../model/measureCurve';
@@ -218,8 +220,40 @@ const FILE_ATTACHMENT = createRenderer({
   },
 });
 
+/**
+ * The measurement summary (M14-10, D-76): a table drawn in its appearance, not
+ * a text box to type in. This renderer gives it a hit area (the plugin's
+ * appearance image draws it, or SummaryPreview until the plugin has that
+ * image), so it selects, moves and deletes as one item; it never opens the text editor and is never resized
+ * (Triya PDF sizes it to its rows).
+ */
+const SUMMARY = createRenderer({
+  id: 'measureSummary',
+  matches: (a): a is PdfAnnotationObject => isSummary(a),
+  render: ({ currentObject, isSelected, onClick, appearanceActive }) => (
+    <div
+      className="file-attachment-hit"
+      data-measure-summary=""
+      style={{
+        pointerEvents: !onClick || isSelected ? 'none' : 'auto',
+        cursor: isSelected ? 'move' : 'pointer',
+      }}
+      onPointerDown={onClick}
+    >
+      {appearanceActive ? null : <SummaryPreview annotation={currentObject} />}
+    </div>
+  ),
+  interactionDefaults: {
+    isDraggable: true,
+    isResizable: false,
+    isRotatable: false,
+    lockAspectRatio: true,
+  },
+  onDoubleClick: () => undefined,
+});
+
 // Form fields (M6-14): boxes to select, move and resize with Select Fields.
-const RENDERERS = [FILE_ATTACHMENT, FIELD_RENDERER];
+const RENDERERS = [FILE_ATTACHMENT, SUMMARY, FIELD_RENDERER];
 
 /** The selection outline in the focus colour (a token, rules 11–12: no literal colours). */
 const OUTLINE = { color: 'var(--color-focus)', width: 2 };

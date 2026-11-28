@@ -159,7 +159,9 @@
       "snapIntersection": "Snap to Intersection",
       "snapNearest": "Snap to Nearest",
       "lastTool": "Measure",
-      "updateOld": "Update Old Measurements"
+      "updateOld": "Update Old Measurements",
+      "export": "Export Measurements",
+      "placeSummary": "Place Summary"
     },
     "organize": {
       "insertBlank": "Insert Blank Page",
@@ -933,7 +935,8 @@
       "compareTips": "Whether the first-time tips of Compare were seen",
       "measureLoupe": "The Measure loupe and snapping choices: loupe on or off, size, magnification, View › Loupe",
       "measureCurveMethod": "How Radius and Diameter are picked: centre and edge, or three points",
-      "thinLines": "Whether Thin Lines is on"
+      "thinLines": "Whether Thin Lines is on",
+      "measureExport": "The measurements export's format and whether it includes pictures"
     },
     "clearHint": "To delete this data, use File → Settings → Clear all local data."
   },
@@ -2076,6 +2079,89 @@
     "setScaleOf": "Set the scale of page {{page}}",
     "viewportsOf": "Scale viewports on page {{page}}",
     "viewportHint": "Arrow keys move the viewport on its page (Shift: 10 pt). Delete removes it."
+  },
+  "measureExport": {
+    "title": {
+      "dialog": "Export measurements",
+      "all": "Measurements: {{name}}",
+      "page": "Measurements on page {{page}}: {{name}}",
+      "totalsAll": "Totals: {{name}}",
+      "totalsPage": "Totals on page {{page}}: {{name}}"
+    },
+    "description": "A workbook with every measurement and the totals of each group, or the measurements alone as CSV.",
+    "which": "Measurements",
+    "thisPage": "This page (page {{page}})",
+    "allPages": "All pages",
+    "format": "Format",
+    "xlsx": "Excel workbook (.xlsx)",
+    "csv": "CSV, the measurements only (.csv)",
+    "pictures": "Include pictures",
+    "excelOnly": "Only for an Excel workbook.",
+    "where": "Where it goes",
+    "saveFile": "Save as a file",
+    "attach": "Attach to this PDF",
+    "attachNote": "Attaching again replaces the copy attached before. It is saved with the PDF the next time you save it.",
+    "restricted": "This document's security doesn't allow attaching files.",
+    "export": "Export",
+    "close": "Close",
+    "cancel": "Cancel",
+    "progressName": "Export progress",
+    "progress": "{{done}} of {{total}} measurements",
+    "empty": "There are no measurements to export.",
+    "nothing": "Choose where the export goes.",
+    "failed": "The measurements couldn't be exported.",
+    "fileName": "{{base}} (Measurements).{{ext}}",
+    "attachDescription": "Measurements exported by {{app}}",
+    "sheet": {
+      "measurements": "Measurements",
+      "totals": "Totals"
+    },
+    "col": {
+      "number": "No.",
+      "page": "Page",
+      "area": "Scale area",
+      "tool": "Tool",
+      "group": "Group or label",
+      "value": "Value",
+      "unit": "Unit",
+      "depth": "Depth",
+      "scale": "Scale",
+      "author": "Author",
+      "date": "Date",
+      "picture": "Picture",
+      "totalGroup": "Group",
+      "count": "Count",
+      "total": "Total",
+      "note": "Note"
+    },
+    "pageArea": "Page",
+    "atPaper": "{{name}} (at paper size)",
+    "leftOut_one": "{{n}} not in the total (spans 2 scales)",
+    "leftOut_other": "{{n}} not in the total (span 2 scales)",
+    "noTotal": "No total",
+    "pane": {
+      "actions": "Measurement actions",
+      "export": "Export…",
+      "placeSummary": "Place summary",
+      "placeSummaryHint": "Puts a table of the totals on this page. {{app}} keeps it up to date.",
+      "attached": "Attached to this PDF as {{name}}.",
+      "outOfDate": "The attached export {{name}} is out of date.",
+      "refresh": "Refresh",
+      "refreshing": "Refreshing the attached export…",
+      "refreshFailed": "The attached export couldn't be refreshed."
+    }
+  },
+  "measureSummary": {
+    "subject": "Measurement summary",
+    "headPage": "Measurements on page {{page}}",
+    "headAll": "Measurements, all pages",
+    "count": "Count",
+    "total": "Total",
+    "leftOut_one": ", {{n}} left out",
+    "leftOut_other": ", {{n}} left out",
+    "noTotal": "No total",
+    "none": "No measurements yet",
+    "restricted": "This document's security doesn't allow comments."
   },
   "viewport": {
     "baseName": "Detail",

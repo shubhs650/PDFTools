@@ -6075,6 +6075,36 @@ textarea.form-field {
   inset: var(--space-0);
 }
 
+/* The measurement summary until the plugin has its appearance (M14-10): the page's
+   colours in every theme, like the table drawn into the PDF. */
+.measure-summary-preview {
+  display: block;
+  overflow: visible;
+}
+
+.measure-summary-paper {
+  fill: var(--color-sheet-paper);
+}
+
+.measure-summary-head {
+  fill: var(--color-sheet-head);
+}
+
+.measure-summary-grid {
+  fill: none;
+  stroke: var(--color-sheet-ink);
+  stroke-width: 0.5;
+}
+
+.measure-summary-frame {
+  stroke-width: 0.75;
+}
+
+.measure-summary-text {
+  fill: var(--color-sheet-ink);
+  font-family: var(--font-family);
+}
+
 /* Field Properties' tab order panel (M6-14): the page's fields in tab order. */
 .tab-order-list {
   display: grid;
@@ -10136,6 +10166,39 @@ textarea.form-field {
 }
 
 /* This page or All pages: two radio buttons drawn as one segmented control. */
+/* The Measurements pane's Export… and Place summary (M14-10, D-76). */
+.mpane-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+  margin: var(--density-pad-y) var(--density-pad-x) var(--space-0);
+}
+
+/* The attached export's note, out of date with Refresh (M14-10, Q18). */
+.mpane-attached {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-2);
+  margin: var(--density-pad-y) var(--density-pad-x) var(--space-0);
+  padding: var(--space-1) var(--space-2);
+  border: var(--border-width) solid var(--color-border);
+  border-radius: var(--radius-m);
+  background: var(--color-surface);
+  font-size: var(--font-size-s);
+}
+
+.mpane-attached.is-stale {
+  border-color: var(--color-danger);
+}
+
+.mpane-attached-text {
+  flex: 1;
+  min-width: 0;
+  margin: var(--space-0);
+  overflow-wrap: anywhere;
+}
+
 .mpane-scope {
   display: flex;
   margin: var(--density-pad-y) var(--density-pad-x);

@@ -78,6 +78,10 @@ function executorWith(
     fileAttachment: () => {
       throw new Error('not used');
     },
+    attachExport: () => {
+      throw new Error('not used');
+    },
+    exportAttachment: () => null,
     renderProgressive: () => {
       throw new Error('not used');
     },

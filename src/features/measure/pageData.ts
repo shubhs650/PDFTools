@@ -24,6 +24,7 @@ import {
 import { isCurveTool } from '../../model/measureCurve';
 import type { Box } from '../../model/measureGeometry';
 import { metaOf, type MeasureMeta } from '../../model/measureMarkup';
+import { summaryOf, summaryToPdf } from '../../model/measureSummary';
 import { fromUserSpace, measurePoints, toUserSpace } from '../../model/measurement';
 import type { PdfJson } from '../../model/pdf/wire';
 import type { Scale } from '../../model/scale';
@@ -140,6 +141,8 @@ export function itemsFor(
   for (const a of annots) {
     if (a.pageIndex !== page) continue;
     const meta = metaOf(a);
+    // A measurement summary made or changed here (M14-10): its scope.
+    const summary = meta ? null : summaryOf(a);
     if (meta && isCurveTool(meta.tool) && isStamp(a)) {
       // The points go in the entry's own keys, in user space.
       const rest = { ...meta };
@@ -149,6 +152,7 @@ export function itemsFor(
         entryToPdf({ meta: rest, fp: fingerprintOf(docId, a), curve: curveEntry(docId, a, meta) }),
       );
     } else if (meta) out.set(a.id, entryToPdf({ meta, fp: fingerprintOf(docId, a) }));
+    else if (summary) out.set(a.id, summaryToPdf(summary));
     else {
       const raw = file.get(a.id);
       if (raw !== undefined) out.set(a.id, raw);

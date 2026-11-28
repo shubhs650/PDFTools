@@ -42,6 +42,7 @@ import { checkSignatures } from './work/signatures';
 import { extractGeometry } from './work/geometry';
 import { mayHoldTables, pageObjects, tablesOf } from './work/compareStructure';
 import { exportCrs } from './work/crs';
+import { exportMeasures } from './work/measureWorkbook';
 import { exportTemplateCrs } from './work/crsTemplate/job';
 import { inspectTemplate } from './work/crsTemplate/inspect';
 import { previewOf } from './work/crsTemplate/previewCache';
@@ -827,6 +828,30 @@ serve<WorkApi>(self, {
           copy ? docPtrOf(need(), copy.candidateId) : null,
           spec,
           snapshots,
+          slice,
+          (p) => {
+            ctx.progress(p);
+          },
+        );
+        return new Transfer({ bytes }, [bytes]);
+      } finally {
+        if (copy) await docs.closeCandidate(copy.candidateId);
+        wasmBytes(); // a large workbook grows the heap (ADR-004 respawn policy)
+      }
+    }),
+
+  measureExport: ({ docId, piece, spec, pictures }, ctx) =>
+    scheduler.run('interactive', ctx.signal, async (slice) => {
+      if (!mod) throw new RpcError('not-initialized', 'The work worker is not initialized');
+      const m = mod;
+      // Pictures come from a separate copy with the unsaved edits (ADR-013 route).
+      const copy = pictures ? await docs.openCandidate(docId, piece ?? null) : null;
+      try {
+        const bytes = await exportMeasures(
+          m,
+          copy ? docPtrOf(need(), copy.candidateId) : null,
+          spec,
+          pictures,
           slice,
           (p) => {
             ctx.progress(p);

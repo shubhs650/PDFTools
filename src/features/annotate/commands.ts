@@ -2,6 +2,9 @@
 // document (plugin-history, ADR-014 decision 4), delete, nudge with the arrow
 // keys and cycle with Tab. Every change needs the annotate permission (rule 9);
 // the Render worker refuses independently (M1-20).
+import { openMeasureExport } from '../measure/export/measureExport';
+import { measurePaneStore } from '../measure/pane/measureEntries';
+import { placeSummary } from '../measure/summary/summary';
 import type { AnnotationCapability } from '@embedpdf/plugin-annotation';
 import { startTransition } from 'react';
 import type { HistoryCapability } from '@embedpdf/plugin-history';
@@ -299,6 +302,22 @@ export function registerAnnotateCommands(): () => void {
       run: () => {
         const id = activeId();
         if (id) upgradeOldMeasurements(id);
+      },
+    }),
+    // Export measurements (M14-10, D-76, Q32): the export dialog.
+    registerCommand('measure.export', {
+      requiresDocument: true,
+      run: () => {
+        const id = activeId();
+        if (id) openMeasureExport(id);
+      },
+    }),
+    // A table of the totals on the page, kept up to date (M14-10, D-76, Q17).
+    registerCommand('measure.placeSummary', {
+      requires: 'annotate',
+      run: async () => {
+        const id = activeId();
+        if (id) await placeSummary(id, measurePaneStore.getState().scope);
       },
     }),
     // Enter on the page: place a note or text box at its centre (M3-Q6), or
