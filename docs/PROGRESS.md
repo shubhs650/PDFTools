@@ -75,6 +75,9 @@ interop is in the M6 pack (CHECKLIST §M6 R1–R4). Rev 0 (M0–M4) is complete 
     gesture tests; e2e on the measure corpus pipe run against its manifest (142.5°, 37.5°,
     R 300 mm, R 1,200 mm, Ø 3,000 mm), save and reopen, method remembered, point drag with undo,
     axe light and dark (`e2e/measure-curves.spec.ts`). Screenshots: `/mnt/project-files/M14-05/`.
+  - Bundle budget (M1-27): the core precache reached 9.01 MB against the 9.00 MB budget, so
+    `CORE_BUDGET` is now 9.5 MB (`scripts/bundle-report.ts`), with room for the rest of M14
+    (Volume, Cutout, Count). Install total 82.48 MB (the 60 MB reference is not a limit).
 
 - **M14-08 — The Measurements pane (D-76, ADR-035; plan [M14](plan/M14.md) §8).**
   - A Measurements pane in the left rail, after Comments (`rail.measurements`,

@@ -25,10 +25,13 @@ const BROTLI_QUALITY = 9;
 export const INSTALL_BUDGET = 60 * MB;
 /**
  * Core precache (installed before the app counts as ready offline). M1
- * measured 6.66 MB; the budget leaves ~35 % headroom for M2–M4 UI code.
+ * measured 6.66 MB; the budget left ~35 % headroom for M2–M4 UI code.
  * Raise it only with a reason in the PR (and the M1-27 status note).
+ * Raised to 9.5 MB in M14-05 (2026-11-28): the measuring overhaul's tools
+ * live in the core UI and Render worker; with Angle, Radius and Diameter the
+ * core measured 9.01 MB, and M14 still adds Volume, Cutout and Count.
  */
-export const CORE_BUDGET = 9 * MB;
+export const CORE_BUDGET = 9.5 * MB;
 
 export type ModuleId =
   | 'app'
