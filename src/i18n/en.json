@@ -2063,6 +2063,7 @@
     "where": "Page {{page}} · {{where}}",
     "ownScale": "{{ratio}} (from the file)",
     "noScale": "No scale",
+    "noScaleNeeded": "No scale needed",
     "flag": {
       "spans_one": "Spans {{n}} scale",
       "spans_other": "Spans {{n}} scales",

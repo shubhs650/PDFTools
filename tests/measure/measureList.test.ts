@@ -190,3 +190,39 @@ describe('groups (M14-08)', () => {
     expect(groupMeasurements(list, { page: 5 })).toEqual([]);
   });
 });
+
+describe('Angle, Radius and Diameter in the pane (M14-05)', () => {
+  const corner = [
+    { x: 200, y: 100 },
+    { x: 100, y: 100 },
+    { x: 100, y: 0 },
+  ];
+  it('an angle is in degrees, never at paper size or spanning, with no total', () => {
+    const a = measureEntry(
+      input({ tool: 'angle', points: corner, scale: null, spans: ['A', 'B'] }),
+    );
+    expect(a.value).toBeCloseTo(90, 9);
+    expect(a.paper).toBe(false);
+    expect(a.spans).toBeNull();
+    expect(entryText(a, en)).toBe('90.0°');
+    const [g] = groupMeasurements([a]);
+    expect(g?.tool).toBe('angle');
+    expect(g?.total).toEqual({ real: null, paper: null, left: 0 });
+  });
+
+  it('a radius and a diameter are lengths in the scale, listed after Area, with no total', () => {
+    const r = measureEntry(input({ tool: 'radius', points: line(10) }));
+    expect(entryText(r, en)).toBe('1.00 m');
+    const d = measureEntry(input({ tool: 'diameter', points: line(10) }));
+    expect(entryText(d, en)).toBe('2.00 m');
+    const area = measureEntry(input({ tool: 'area', points: rect(10, 10) }));
+    const groups = groupMeasurements([d, r, area]);
+    expect(groups.map((g) => g.tool)).toEqual(['area', 'radius', 'diameter']);
+    expect(groups[1]?.total.real).toBeNull();
+  });
+
+  it('three points in a line: no value', () => {
+    const e = measureEntry(input({ tool: 'radius', points: [...line(10), { x: 300, y: 100 }] }));
+    expect(e.value).toBeNull();
+  });
+});

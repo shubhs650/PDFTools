@@ -10300,6 +10300,8 @@ textarea.form-field {
 .mpane-viewport-show:focus-visible {
   outline: var(--focus-width) solid var(--color-focus);
   outline-offset: var(--focus-offset);
+}
+
 /* An Angle, Radius or Diameter while placed or selected (M14-05): drawn in SVG. */
 .measure-curve {
   position: absolute;

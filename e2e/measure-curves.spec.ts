@@ -295,6 +295,16 @@ test('Radius and Diameter: centre and edge, or three points (remembered); saved 
     measureTab(page).getByRole('button', { name: 'Radius', exact: true }),
   ).toHaveAttribute('aria-pressed', 'false');
 
+  // The Measurements pane lists them by tool, read back from the file, with no totals.
+  await page.locator('[data-rail="rail.measurements"] button').click();
+  const radii = page.getByTestId('measure-group-radius');
+  await expect(radii).toContainText('Radius');
+  await expect(radii.getByTestId('measure-row')).toHaveCount(2);
+  await expect(radii).toContainText('1,200');
+  await expect(radii).not.toContainText('Total');
+  await expect(page.getByTestId('measure-group-diameter')).toContainText('3,000');
+  await shot(page, 'measurements-pane-curves');
+
   // A point dragged on the read-back bend: a new value in one undo step.
   const bend2 = (await objects(page, back)).find((o) => o.contents?.startsWith('R 1,200'))!;
   await cap(page, 'annotate', 'select', back, 0, bend2.id);
